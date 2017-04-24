@@ -1,0 +1,22 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": false,
+        "noImplicitAny": false,
+        "allowJs": true,
+        "outDir": "./src/js"
+    },
+    "exclude": [
+        "./node_modules",
+        "jspm_packages",
+        "./src/**/*.js",
+        "./lib/**/*.js",
+        "./_bak/**/*.js"
+    ],
+    "include": [
+        "./src/**/*.ts"
+    ]
+}

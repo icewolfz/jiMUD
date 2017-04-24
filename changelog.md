@@ -1,0 +1,101 @@
+## Changelog
+- **Known Issues:**
+  - Flashing blocks may blink out of sync when flashing enabled in display or advanced editor
+  - Advanced editor 
+    - Paste may lose some colors/background colors on pasted, this is a bug in   TinyMCE editor
+    - When apply styles to all text some styles may get stuck  
+    - Some styles will not flash when flashing is enabled depending on order of styles applied
+    - Toolbar text/background color picker may be cut off in small window sizes
+    - Reverse style has wierd results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
+---
+##### 0.1.6 - 2017-05-??
+- **New:**
+  - Advanced editor 
+    - Now supports Overline (ctrl+o), Double Underline (ctrl+d), Flash (ctrl+f), and Reverse (ctrl+r) styles
+    - Added send as command no echo for both formated and verbatium
+    - Can now be opened using Ctrl+A
+  - Auto copy selected text from display to clipboard when done
+  - Copying from main client should be smarter, if selected text and command input is focued it will copy display, if command focused and has selected text will copy that text
+  - Profile manager can now be opened using Ctrl+P
+- **Changed:**
+  - Advanced editor now uses monospaced font
+  - Removed insert date/time from advanced editor context
+  - Display recoded into an iframe to fix selection disappearing when lost focus.
+  - Simplifed mapper image export
+  - Can no longer close client until profile manager has been closed
+  - Changed how deleted profiles where moved to trash, now uses framework instead of extra node module
+  - Upgraded to electron 1.6.8
+  - All css/js files are ran into minifiers to gain some speed
+- **Fixed:**  
+  - Context menus in advanced editor have been converted into native context menus, fixing menus being cut off in small window size  
+  - When underline would remove double underline effect when following double underline ansi attribute
+  - Status > Visible menu check was not updating to show current state  
+  - Profile Manager
+    - When closing the profile manager it always asked to save even if no changes had been made
+    - When editing a macro they where not correctly being saved
+##### 0.1.5 - 2017-04-??
+- **New:**
+  - Advanced editor has been added
+    - Supports full WYSIWYG style for bold, italic, underline, strikeout, and all colors by simple select text and clicking a button
+    - Import a text file into editor
+    - Send to mud in multi ways
+      - Formatted as commands - send after formatting into color codes as standard commands with full parsing (Default)
+      - Text as commands - strip all formatting and send as standard commands
+      - Formatted verbatim (No echo) - send formatted with no parsing and no echo
+      - Text verbatim (No echo) - strip all formatting and send with no parsing and no echo
+      - Raw formatted (No echo) - send formatted text as raw data
+      - Raw text (No echo) - send text as raw data    
+  - Basic context menu for all editable fields
+  - When closing profile manager will ask to save changes when using the window close button
+  - When closing client will now warn if still connected with option to never ask again
+  - Added javascript aliases for OoMUD so webclient scripts will work with little to no changes.
+- **Changed:**
+  - Minified all javascript code to try and improve speed
+  - Compressed all PNG files to reduce size for loading improvements
+- **Fixed:**
+  - Profile manager
+    - Button preview was broken in last update, now working again
+    - Profiles where not deleted correctly
+    - Copy/cut/paste should once again work with input areas when they have focus
+  - Properly working Linux packages
+##### 0.1.4 - 2017-04-??
+- **New:**
+  - Application icon, temporary for now will create a better one in th future
+  - Profile manager 
+    - Properly tracks all changes for future undo/redo stack        
+    - Ask to save changes on cancel, with option to never ask again
+    - Cut/Copy/Paste/Delete now work
+    - Treeview context menu
+    - Import defaults will import and merge the default profile aliases, macros, triggers, and buttons if any
+    - Reset will reset current profile to empty profile with default settings
+    - Sidebar width should now be remembered
+    - Advanced option panel on each editor will remember show/hidden state
+- **Fixed:**
+  - When changing enable TYPE on profile editor it would not update treeview check state
+  - When saving profiles and closing, if invalid profile name supplied it would not save profile, now it will properly cancel save until name fixed
+  - When cloning a profile default macros where appended.
+##### 0.1.3 - 2017-04-??
+- **Changed:**
+  - Mapper Clear/Walk path are now disabled when no path highlighted
+- **Fixed:**
+  - Mapper vertical and horizontal scroll where not correctly being restored on load.
+  - Profile cloning was erroring do to calling the wrong collections
+  - Client was emitting wrong event when new text was added to display causing
+  - triggers and anything that relied on that event to fail
+##### 0.1.2 - 2017-04-??
+- **New:**
+  - Trainer mapper npc type
+- **Changed:**
+  - Mapper room details editor updated
+- **Fixed:**
+  - Mapper saving open/close state
+  - Missing RGBColor module for settings dialog
+  - Window size not being sent to mud when resized
+##### 0.1.1 - 2017-04-??
+- **Fixed:**
+  - Profile menu looking for a profile folder when does not exist
+  - Turned off debug mode by default
+- **Changed:**
+  - Upgraded to electron 1.6.7
+##### 0.1.0 - 2017-04-??
+- Initial release

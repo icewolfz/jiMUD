@@ -1,0 +1,8 @@
+node_modules/
+_bak/
+_raw/
+_test/
+.DS_Store
+npm-debug.log
+typings/
+.idea/

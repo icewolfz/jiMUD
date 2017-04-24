@@ -1,0 +1,23 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "files.autoSave": "onFocusChange",
+    "editor.rulers": [
+        80
+    ],
+    "taskButtons.buttons": [
+        {
+            "task": "tsc",
+            "buttonLabel": "TypeScript"
+        }
+    ],
+    "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/tmp": true,
+        "**/_bak":true,
+        "**/_raw":true,
+        "**/_test":true,
+        "**/lib":true
+    }
+}

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Preferences</title>
+    <link rel="shortcut icon" href="../assets/icons/png/preferences.png" />
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/form.css" rel="stylesheet" type="text/css" />
+    <style>
+      body {
+        -webkit-user-select: none;
+        user-select: none;
+      }
+    </style>
+    <script>
+      if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-select.min.js"></script>
+    <script>
+      const library = require('./js/library');
+      const Settings = require('./js/settings').Settings;
+      const { ipcRenderer } = require('electron');
+      const RGBColor = require('rgbcolor');
+      const path = require('path')
+      const fs = require('fs');
+
+      var _settings;
+      if (window.module) module.module;
+      $(window).keydown((event) => {
+        if (event.which == 27)
+          window.close();
+      });
+
+      $(document).ready(() => {
+        $('#font').change(() => {
+          $("#fontsample").css("font-family", $("#font").val() + ", monospace");
+          $("#fontsample").css("font-size", $("#fontSize").val());
+        });
+
+        $('#fontSize').change(() => {
+          $("#fontsample").css("font-family", $("#font").val() + ", monospace");
+          $("#fontsample").css("font-size", $("#fontSize").val());
+        });
+
+        $('#cmdfont').change(() => {
+          $("#cmdfontsample").css("font-family", $("#cmdfont").val() + ", monospace");
+          $("#cmdfontsample").css("font-size", $("#cmdfontSize").val());
+        });
+
+        $('#cmdfontSize').change(() => {
+          $("#cmdfontsample").css("font-family", $("#cmdfont").val() + ", monospace");
+          $("#cmdfontsample").css("font-size", $("#cmdfontSize").val());
+        });
+
+        _settings = Settings.load(path.join(library.parseTemplate("{data}"), 'settings.json'));
+        loadSettings();
+
+        $("#colorScheme").parent().find('.dropdown-menu.inner li').click(() => {
+          $("#colorScheme").change();
+        });
+
+
+      });
+
+      function loadSettings() {
+        $('#autoConnect').prop('checked', _settings.autoConnect);
+        $('#dev').prop('checked', _settings.dev);
+        $('#lagMeter').prop('checked', _settings.lagMeter);
+        $('#enablePing').prop('checked', _settings.enablePing);
+        $('#showScriptErrors').prop('checked', _settings.showScriptErrors);
+        $('#enableDebug').prop('checked', _settings.enableDebug);
+        $('#lagMeter').prop('checked', _settings.lagMeter);
+        //$('#font').selectpicker('val', _settings.font);
+        $('#font').val(_settings.font);
+        $('#font').selectpicker('render');
+        $('#fontSize').val(_settings.fontSize);
+        $('#font').change();
+        //$('#cmdfont').selectpicker('val', _settings.cmdfont);
+        $('#cmdfont').val(_settings.font);
+        $('#cmdfont').selectpicker('render');
+        $('#cmdfontSize').val(_settings.cmdfontSize);
+        $('#cmdfont').change();
+        $('#commandEcho').prop('checked', _settings.commandEcho);
+        $('#AutoCopySelectedToClipboard').prop('checked', _settings.AutoCopySelectedToClipboard);
+        $('#flashing').prop('checked', _settings.flashing);
+        $('#enableURLDetection').prop('checked', _settings.enableURLDetection);
+        $('#CommandonClick').prop('checked', _settings.CommandonClick);
+        $('#bufferSize').val(_settings.bufferSize);
+        LoadColors();
+        $('#keepLastCommand').prop('checked', _settings.keepLastCommand);
+        $('#commandHistorySize').val(_settings.commandHistorySize);
+        $('#commandStacking').prop('checked', _settings.commandStacking);
+        $('#commandStackingChar').val(_settings.commandStackingChar);
+
+        $('#enableSpeedpaths').prop('checked', _settings.enableSpeedpaths);
+        $('#speedpathsChar').val(_settings.speedpathsChar);
+        $('#parseSpeedpaths').prop('checked', _settings.parseSpeedpaths);
+
+        $('#parseDoubleQuotes').prop('checked', _settings.parseDoubleQuotes);
+        $('#parseSingleQuotes').prop('checked', _settings.parseSingleQuotes);
+
+        $('#logEnabled').prop('checked', _settings.logEnabled);
+        $('#logPrepend').prop('checked', _settings.logPrepend);
+        $('#logOffline').prop('checked', _settings.logOffline);
+        $('#logUniqueOnConnect').prop('checked', _settings.logUniqueOnConnect);
+        $('#logPath').val(_settings.logPath);
+
+
+        $('#MapperSplitArea').prop('checked', _settings.mapper.split);
+        $('#mapFollow').prop('checked', _settings.mapper.follow);
+        $('#mapEnabled').prop('checked', _settings.mapper.enabled);
+        $('#mapLegend').prop('checked', _settings.mapper.legend);
+        $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
+
+        $('#showMapper').prop('checked', _settings.showMapper);
+        $('#commandDelay').val(_settings.commandDelay);
+        $('#commandDelayCount').val(_settings.commandDelayCount);
+
+        $('#enableMCCP').prop('checked', _settings.enableMCCP);
+        $('#enableUTF8').prop('checked', _settings.enableUTF8);
+        $('#enableMXP').prop('checked', _settings.enableMXP);
+        $('#enableEcho').prop('checked', _settings.enableEcho);
+        $('#enableMSP').prop('checked', _settings.enableMSP);
+        $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
+
+        $('input[type="checkbox"]').change(function () {
+          switch ($(this).attr('id')) {
+            case 'MapperSplitArea':
+              _settings.mapper.split = this.checked;
+              break;
+            case 'mapFollow':
+              _settings.mapper.follow = this.checked;
+              break;
+            case 'mapEnabled':
+              _settings.mapper.enabled = this.checked;
+              break;
+            case 'MapperFillWalls':
+              _settings.mapper.fill = this.checked;
+              break;
+            case 'mapLegend':
+              _settings.mapper.legend = this.checked;
+              break;
+            default:
+              _settings[$(this).attr('id')] = this.checked;
+              break;
+          }
+        });
+
+        $('input[type="text"]').change(function () {
+          _settings[$(this).attr('id')] = $(this).val();
+        });
+        $('input[type="number"]').change(function () {
+          _settings[$(this).attr('id')] = $(this).val();
+        });
+        $('input[type="color"]').change(function () {
+          var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
+          var color = new RGBColor($(this).val());
+          if (color.ok)
+            _settings.colors[idx] = color.toRGB();;
+        });
+      }
+
+      function LoadColors() {
+        $("#colorScheme").val("0");
+        var colors = _settings.colors;
+        var _colors = Settings.getColors();
+        var c;
+        for (c = 0; c < 16; c++)
+          setColor("color" + c, colors[c] || _colors[c]);
+        for (c = 256; c < 280; c++)
+          setColor("color" + c, colors[c] || _colors[c]);
+
+      }
+
+      function resetSettings() {
+        _settings = new Settings();
+        loadSettings();
+      }
+
+      function setColor(id, color) {
+        if (!color || typeof color === "undefined" || color.length === 0) {
+          $("#" + id).val("");
+        }
+        else {
+          var color = new RGBColor(color);
+          if (!color.ok)
+            $("#" + id).val("");
+          else
+            $("#" + id).val(color.toHex());
+        }
+      }
+
+      function updateScheme(idx) {
+        switch (idx) {
+          case 1://Classic
+            setColor("color0", "rgb(0,0,0)"); //black fore
+            setColor("color1", "rgb(128, 0, 0)");//red fore
+            setColor("color2", "rgb(0, 128, 0)");//green fore
+            setColor("color3", "rgb(128, 128, 0)");//yellow fore
+            setColor("color4", "rgb(0, 0, 128)");//blue fore
+            setColor("color5", "rgb(128, 0, 128)");//magenta fore
+            setColor("color6", "rgb(0, 128, 128)");//cyan fore
+            setColor("color7", "rgb(192, 192, 192)");//white fore
+            setColor("color8", "rgb(128, 128, 128)");//black  bold
+            setColor("color9", "rgb(255, 0, 0)"); //Red bold
+            setColor("color10", "rgb(0, 255, 0)"); //green bold
+            setColor("color11", "rgb(255, 255, 0)");//yellow bold
+            setColor("color12", "rgb(0, 0, 255)");//blue bold
+            setColor("color13", "rgb(255, 0, 255)");//magenta bold
+            setColor("color14", "rgb(0, 255, 255)");//cyan bold
+            setColor("color15", "rgb(255, 255, 255)");//white bold
+            setColor("color256", "rgb(0, 0, 0)");//black faint
+            setColor("color257", "rgb(118, 0, 0)");//red  faint
+            setColor("color258", "rgb(0, 108, 0)");//green faint
+            setColor("color259", "rgb(145, 136, 0)");//yellow faint
+            setColor("color260", "rgb(0, 0, 108)");//blue faint
+            setColor("color261", "rgb(108, 0, 108)");//magenta faint
+            setColor("color262", "rgb(0, 108, 108)");//cyan faint
+            setColor("color263", "rgb(160, 160, 160)");//white faint	   	    
+            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+            setColor("color265", "rgb(128, 0, 0)");//red back
+            setColor("color266", "rgb(0, 128, 0)");//greenback
+            setColor("color267", "rgb(128, 128, 0)");//yellow back
+            setColor("color268", "rgb(0, 0, 128)");//blue back
+            setColor("color269", "rgb(128, 0, 128)");//magenta back
+            setColor("color270", "rgb(0, 128, 128)");//cyan back
+            setColor("color271", "rgb(192, 192, 192)");//white back		
+            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+            setColor("color273", "rgb(0, 255, 255)");//iceMudInfoText
+            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+            setColor("color275", "rgb(255, 255, 0)");//LocalEchoText
+            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+            setColor("color277", "rgb(192, 192, 192)");//DefaultFore	 	    
+            setColor("color278", "rgb(128, 0, 0)");//ErrorFore
+            setColor("color279", "rgb(192, 192, 192)");//ErrorBack          
+            break;
+          case 2://VGA
+            setColor("color0", "rgb(0,0,0)"); //black fore
+            setColor("color1", "rgb(170, 0, 0)");//red fore
+            setColor("color2", "rgb(0, 170, 0)");//green fore
+            setColor("color3", "rgb(170, 85, 0)");//yellow fore
+            setColor("color4", "rgb(0, 0, 170)");//blue fore
+            setColor("color5", "rgb(170, 0, 170)");//magenta fore
+            setColor("color6", "rgb(0, 170, 170)");//cyan fore
+            setColor("color7", "rgb(170, 170, 170)");//white fore
+            setColor("color8", "rgb(85, 85, 85)");//black  bold
+            setColor("color9", "rgb(255, 85, 85)"); //Red bold
+            setColor("color10", "rgb(85, 255, 85)"); //green bold
+            setColor("color11", "rgb(255, 255, 85)");//yellow bold
+            setColor("color12", "rgb(85, 85, 255)");//blue bold
+            setColor("color13", "rgb(255, 85, 255)");//magenta bold
+            setColor("color14", "rgb(85, 255, 255)");//cyan bold
+            setColor("color15", "rgb(255, 255, 255)");//white bold
+            setColor("color256", "rgb(0,0,0)");
+            setColor("color257", "rgb(119,0,0)");
+            setColor("color258", "rgb(0,119,0)");
+            setColor("color259", "rgb(119,60,0)");
+            setColor("color260", "rgb(0,0,119)");
+            setColor("color261", "rgb(119,0,119)");
+            setColor("color262", "rgb(0,119,119)");
+            setColor("color263", "rgb(119,119,119)");
+            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+            setColor("color265", "rgb(170, 0, 0)");//red back
+            setColor("color266", "rgb(0, 170, 0)");//greenback
+            setColor("color267", "rgb(170, 85, 0)");//yellow back
+            setColor("color268", "rgb(0, 0, 170)");//blue back
+            setColor("color269", "rgb(170, 0, 170)");//magenta back
+            setColor("color270", "rgb(0, 170, 170)");//cyan back
+            setColor("color271", "rgb(170, 170, 170)");//white back		
+            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+            setColor("color273", "rgb(85, 255, 255)");//iceMudInfoText
+            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+            setColor("color275", "rgb(255, 255, 85)");//LocalEchoText
+            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+            setColor("color277", "rgb(170, 170, 170)");//DefaultFore    	
+            setColor("color278", "rgb(170, 0, 0)");//ErrorFore
+            setColor("color279", "rgb(170, 170, 170)");//ErrorBack
+            break;
+          case 3://Terminal.app
+            setColor("color0", "rgb(0,0,0)"); //black fore
+            setColor("color1", "rgb(194, 54, 33)");//red fore
+            setColor("color2", "rgb(37, 188, 36)");//green fore
+            setColor("color3", "rgb(173, 173, 39)");//yellow fore
+            setColor("color4", "rgb(73, 46, 225)");//blue fore
+            setColor("color5", "rgb(211, 56, 211)");//magenta fore
+            setColor("color6", "rgb(51, 187, 200)");//cyan fore
+            setColor("color7", "rgb(203, 204, 205)");//white fore
+            setColor("color8", "rgb(129, 131, 131)");//black  bold
+            setColor("color9", "rgb(252,57,31)"); //Red bold
+            setColor("color10", "rgb(49, 231, 34)"); //green bold
+            setColor("color11", "rgb(234, 236, 35)");//yellow bold
+            setColor("color12", "rgb(88, 51, 255)");//blue bold
+            setColor("color13", "rgb(249, 53, 248)");//magenta bold
+            setColor("color14", "rgb(20, 240, 240)");//cyan bold
+            setColor("color15", "rgb(233, 235, 235)");//white bold
+            setColor("color256", "rgb(0,0,0)");
+            setColor("color257", "rgb(136,38,24)");
+            setColor("color258", "rgb(26,132,26)");
+            setColor("color259", "rgb(122,122,28)");
+            setColor("color260", "rgb(52,33,158)");
+            setColor("color261", "rgb(148,40,148)");
+            setColor("color262", "rgb(36,131,140)");
+            setColor("color263", "rgb(143,143,144)");
+            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+            setColor("color265", "rgb(194, 54, 33)");//red back
+            setColor("color266", "rgb(37, 188, 36)");//greenback
+            setColor("color267", "rgb(173, 173, 39)");//yellow back
+            setColor("color268", "rgb(73, 46, 225)");//blue back
+            setColor("color269", "rgb(211, 56, 211)");//magenta back
+            setColor("color270", "rgb(51, 187, 200)");//cyan back
+            setColor("color271", "rgb(203, 204, 205)");//white back		    
+            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+            setColor("color273", "rgb(20, 240, 240)");//iceMudInfoText
+            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+            setColor("color275", "rgb(234, 236, 35)");//LocalEchoText
+            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+            setColor("color277", "rgb(203, 204, 205)");//DefaultFore	 	
+            setColor("color278", "rgb(194, 54, 33)");//ErrorFore
+            setColor("color279", "rgb(203, 204, 205)");//ErrorBack    	
+            break;
+          case 4://PuTTY
+            setColor("color0", "rgb(0,0,0)"); //black fore
+            setColor("color1", "rgb(187, 0, 0)");//red fore
+            setColor("color2", "rgb(0, 187, 0)");//green fore
+            setColor("color3", "rgb(187, 187, 0)");//yellow fore
+            setColor("color4", "rgb(0, 0, 187)");//blue fore
+            setColor("color5", "rgb(187, 0, 187)");//magenta fore
+            setColor("color6", "rgb(0, 187, 187)");//cyan fore
+            setColor("color7", "rgb(187, 187, 187)");//white fore
+            setColor("color8", "rgb(85, 85, 85)");//black  bold
+            setColor("color9", "rgb(255, 85, 85)"); //Red bold
+            setColor("color10", "rgb(85, 255, 85)"); //green bold
+            setColor("color11", "rgb(255, 255, 85)");//yellow bold
+            setColor("color12", "rgb(85, 85, 255)");//blue bold
+            setColor("color13", "rgb(255, 85, 255)");//magenta bold
+            setColor("color14", "rgb(85, 255, 255)");//cyan bold
+            setColor("color15", "rgb(255, 255, 255)");//white bold
+            setColor("color256", "rgb(0,0,0)");
+            setColor("color257", "rgb(131,0,0)");
+            setColor("color258", "rgb(0,131,0)");
+            setColor("color259", "rgb(131,131,0)");
+            setColor("color260", "rgb(0,0,131)");
+            setColor("color261", "rgb(131,0,131)");
+            setColor("color262", "rgb(0,131,131)");
+            setColor("color263", "rgb(131,131,131)");
+            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+            setColor("color265", "rgb(187, 0, 0)");//red back
+            setColor("color266", "rgb(0, 187, 0)");//greenback
+            setColor("color267", "rgb(187, 187, 0)");//yellow back
+            setColor("color268", "rgb(0, 0, 187)");//blue back
+            setColor("color269", "rgb(187, 0, 187)");//magenta back
+            setColor("color270", "rgb(0, 187, 187)");//cyan back
+            setColor("color271", "rgb(187, 187, 187)");//white back		
+            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+            setColor("color273", "rgb(85, 255, 255)");//iceMudInfoText
+            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+            setColor("color275", "rgb(255, 255, 85)");//LocalEchoText
+            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+            setColor("color277", "rgb(187, 187, 187)");//DefaultFore	 	 
+            setColor("color278", "rgb(187, 0, 0)");//ErrorFore
+            setColor("color279", "rgb(187, 187, 187)");//ErrorBack    	   
+            break;
+          case 5://mIRC
+            setColor("color0", "rgb(0,0,0)"); //black fore
+            setColor("color1", "rgb(127, 0, 0)");//red fore
+            setColor("color2", "rgb(0, 147, 0)");//green fore
+            setColor("color3", "rgb(252, 127, 0)");//yellow fore
+            setColor("color4", "rgb(0, 0, 127)");//blue fore
+            setColor("color5", "rgb(156, 0, 156)");//magenta fore
+            setColor("color6", "rgb(0, 147, 147)");//cyan fore
+            setColor("color7", "rgb(210, 210, 210)");//white fore
+            setColor("color8", "rgb(127, 127, 127)");//black  bold
+            setColor("color9", "rgb(255, 0, 0)"); //Red bold
+            setColor("color10", "rgb(0, 252, 0)"); //green bold
+            setColor("color11", "rgb(255, 255, 0)");//yellow bold
+            setColor("color12", "rgb(0, 0, 252)");//blue bold
+            setColor("color13", "rgb(255, 0, 255)");//magenta bold
+            setColor("color14", "rgb(0, 255, 255)");//cyan bold
+            setColor("color15", "rgb(255, 255, 255)");//white bold
+            setColor("color256", "rgb(0,0,0)");
+            setColor("color257", "rgb(89,0,0)");
+            setColor("color258", "rgb(0,103,0)");
+            setColor("color259", "rgb(177,89,0)");
+            setColor("color260", "rgb(0,0,89)");
+            setColor("color261", "rgb(110,0,110)");
+            setColor("color262", "rgb(0,103,103)");
+            setColor("color263", "rgb(147,147,147)");
+            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+            setColor("color265", "rgb(127, 0, 0)");//red back
+            setColor("color266", "rgb(0, 147, 0)");//greenback
+            setColor("color267", "rgb(252, 127, 0)");//yellow back
+            setColor("color268", "rgb(0, 0, 127)");//blue back
+            setColor("color269", "rgb(156, 0, 156)");//magenta back
+            setColor("color270", "rgb(0, 147, 147)");//cyan back
+            setColor("color271", "rgb(210, 210, 210)");//white back		
+            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+            setColor("color273", "rgb(0, 255, 255)");//iceMudInfoText
+            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+            setColor("color275", "rgb(255, 255, 0)");//LocalEchoText
+            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+            setColor("color277", "rgb(210, 210, 210)");//DefaultFore	 
+            setColor("color278", "rgb(127, 0, 0)");//ErrorFore
+            setColor("color279", "rgb(210, 210, 210)");//ErrorBack    	    	
+            break;
+          case 6://xterm
+            setColor("color0", "rgb(0,0,0)"); //black fore
+            setColor("color1", "rgb(205, 0, 0)");//red fore
+            setColor("color2", "rgb(0, 205, 0)");//green fore
+            setColor("color3", "rgb(205, 205, 0)");//yellow fore
+            setColor("color4", "rgb(0, 0, 238)");//blue fore
+            setColor("color5", "rgb(205, 0, 205)");//magenta fore
+            setColor("color6", "rgb(0, 205, 205)");//cyan fore
+            setColor("color7", "rgb(229, 229, 229)");//white fore
+            setColor("color8", "rgb(127, 127, 127)");//black  bold
+            setColor("color9", "rgb(255, 0, 0)"); //Red bold
+            setColor("color10", "rgb(0, 255, 0)"); //green bold
+            setColor("color11", "rgb(255, 255, 0)");//yellow bold
+            setColor("color12", "rgb(92, 92, 255)");//blue bold
+            setColor("color13", "rgb(255, 0, 255)");//magenta bold
+            setColor("color14", "rgb(0, 255, 255)");//cyan bold
+            setColor("color15", "rgb(255, 255, 255)");//white bold
+            setColor("color256", "rgb(0,0,0)");
+            setColor("color257", "rgb(144,0,0)");
+            setColor("color258", "rgb(0,144,0)");
+            setColor("color259", "rgb(144,144,0)");
+            setColor("color260", "rgb(0,0,167)");
+            setColor("color261", "rgb(144,0,144)");
+            setColor("color262", "rgb(0,144,144)");
+            setColor("color263", "rgb(161,161,161)");
+            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+            setColor("color265", "rgb(205, 0, 0)");//red back
+            setColor("color266", "rgb(0, 205, 0)");//greenback
+            setColor("color267", "rgb(205, 205, 0)");//yellow back
+            setColor("color268", "rgb(0, 0, 238)");//blue back
+            setColor("color269", "rgb(205, 0, 205)");//magenta back
+            setColor("color270", "rgb(0, 205, 205)");//cyan back
+            setColor("color271", "rgb(229, 229, 229)");//white back		
+            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+            setColor("color273", "rgb(0, 255, 255)");//iceMudInfoText
+            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+            setColor("color275", "rgb(255, 255, 0)");//LocalEchoText
+            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+            setColor("color277", "rgb(229, 229, 229)");//DefaultFore	 	 
+            setColor("color278", "rgb(205, 0, 0)");//ErrorFore
+            setColor("color279", "rgb(229, 229, 229)");//ErrorBack    	    	   
+            break;
+          default:
+            var _colors = Settings.getColors();
+            var c;
+            for (c = 0; c < 16; c++)
+              setColor("color" + c, _colors[c]);
+            for (c = 256; c < 280; c++)
+              setColor("color" + c, _colors[c]);
+            break;
+        }
+      }
+
+      function saveSettings() {
+        _settings.save(path.join(library.parseTemplate("{data}"), 'settings.json'));
+        ipcRenderer.send('reload-options');
+        window.close()
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="dialog-body">
+
+      <!-- Nav tabs -->
+      <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a></li>
+        <li role="presentation"><a href="#display" aria-controls="display" role="tab" data-toggle="tab">Display</a></li>
+        <li role="presentation"><a href="#colors" aria-controls="colors" role="tab" data-toggle="tab">Colors</a></li>
+        <li role="presentation"><a href="#command" aria-controls="command" role="tab" data-toggle="tab">Command Line</a></li>
+        <li role="presentation"><a href="#logging" aria-controls="logging" role="tab" data-toggle="tab">Logging</a></li>
+        <li role="presentation"><a href="#mapper" aria-controls="mapper" role="tab" data-toggle="tab">Mapper</a></li>
+        <li role="presentation"><a href="#telnet" aria-controls="telnet" role="tab" data-toggle="tab">Telnet</a></li>
+      </ul>
+
+      <!-- Tab panes -->
+      <div class="tab-content">
+        <div role="tabpanel" class="container tab-pane fade in active" id="general">
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="autoConnect" />
+          Auto connect on load
+          </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="dev" />
+          Connect to development
+          </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="lagMeter" />
+          Show lagmeter
+          </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="enablePing" />
+          Enable GMCP ping for lagmeter
+          </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="showScriptErrors" />
+          Show script errors
+          </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="enableDebug" />
+          Enable debug
+          </label>
+          </div>
+        </div>
+        <div role="tabpanel" class="tab-pane fade" id="display">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label class="control-label">Font<br>
+              <select id="font" class="form-control selectpicker" data-width="250px">
+                <option>'Courier New', Courier, monospace</option>
+                <option>'Lucida Console', Monaco, monospace</option>
+                <option>Georgia, serif</option>
+                <option>'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
+                <option>'Times New Roman', Times, serif</option>
+                <option>Arial, Helvetica, sans-serif</option>
+                <option>'Arial Black', Gadget, sans-serif</option>
+                <option>'Comic Sans MS', cursive, sans-serif</option>
+                <option>Impact, Charcoal, sans-serif</option>
+                <option>'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
+                <option>Tahoma, Geneva, sans-serif</option>
+                <option>'Trebuchet MS', Helvetica, sans-serif</option>
+                <option>Verdana, Geneva, sans-serif</option>            
+              </select>
+            </label>
+            </div>
+            <div class="form-group">
+              <label class="control-label">Font size
+              <input type="text" class="form-control" id="fontSize" style="width: 252px" />
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="control-label">Font sample
+            <div id="fontsample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;width: 280px">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+            </label>
+            </div>
+
+            <div class="form-group">
+              <label class="control-label">
+          <input type="checkbox" id="flashing" />
+          Enable flashing text
+          </label>
+            </div>
+
+          </div>
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="AutoCopySelectedToClipboard" />
+          Auto copy selected to clipboard
+          </label>
+          </div>
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="commandEcho" />
+          Echo commands
+          </label>
+          </div>
+
+
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="enableURLDetection" />
+          Enable url detection
+          </label>
+          </div>
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="CommandonClick" />
+          Focus command input on click
+          </label>
+          </div>
+
+          <div class="form-group">
+            <label class="control-label">
+          Buffer size
+          <input type="number" id="bufferSize" class="form-control" min="100" max="1000000"/>
+          </label>
+          </div>
+
+        </div>
+        <div role="tabpanel" class="tab-pane fade" id="colors">
+          <div class="col-sm-4 form-group">
+            <label>Color scheme 
+				<select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" onchange="updateScheme(this.options.selectedIndex)" data-width="auto">
+					<option value="0">Default</option>
+					<option>Classic</option>
+          <option>VGA</option>
+					<option>Terminal.app</option>
+					<option>PuTTY</option>
+					<option>mIRC</option>
+					<option>xterm</option>
+				</select></label>
+
+            <div class="col-sm-12 form-group" style="text-align:center">
+              <div>
+                <div class="col-sm-4"></div>
+                <div class="col-sm-4">Fore</div>
+                <div class="col-sm-4">Back</div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Default</div>
+                <div class="col-sm-4"><input type="color" class="form-control" id="color277"></div>
+                <div class="col-sm-4"><input type="color" class="form-control" id="color276"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Echo</div>
+                <div class="col-sm-4"><input type="color" class="form-control" id="color275"></div>
+                <div class="col-sm-4"><input type="color" class="form-control" id="color274"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Info</div>
+                <div class="col-sm-4"><input type="color" class="form-control" id="color273"></div>
+                <div class="col-sm-4"><input type="color" class="form-control" id="color272"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Error</div>
+                <div class="col-sm-4"><input type="color" class="form-control" id="color278"></div>
+                <div class="col-sm-4"><input type="color" class="form-control" id="color279"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-8 form-group">
+            <div class="col-sm-12 form-group" style="text-align:center">
+              <div>
+                <div class="col-sm-4"></div>
+                <div class="col-sm-2">Fore</div>
+                <div class="col-sm-2">Back</div>
+                <div class="col-sm-2">Bold</div>
+                <div class="col-sm-2">Faint</div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Black</div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color0"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color264"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color8"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color256"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Red</div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color1"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color265"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color9"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color257"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Green</div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color2"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color266"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color10"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color258"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Yellow</div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color3"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color267"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color11"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color259"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Blue</div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color4"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color268"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color12"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color260"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Magenta</div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color5"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color269"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color13"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color261"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">Cyan</div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color6"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color270"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color14"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color262"></div>
+              </div>
+              <div>
+                <div class="col-sm-4" style="text-align:left">White</div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color7"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color271"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color15"></div>
+                <div class="col-sm-2"><input type="color" class="form-control" id="color263"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div role="tabpanel" class="tab-pane fade" id="command">
+          <div class="col-sm-5">
+            <div class="form-group">
+              <label class="control-label">Font<br>
+              <select id="cmdfont" class="form-control selectpicker" data-width="250px">
+                <option>'Courier New', Courier, monospace</option>
+                <option>'Lucida Console', Monaco, monospace</option>
+                <option>Georgia, serif</option>
+                <option>'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
+                <option>'Times New Roman', Times, serif</option>
+                <option>Arial, Helvetica, sans-serif</option>
+                <option>'Arial Black', Gadget, sans-serif</option>
+                <option>'Comic Sans MS', cursive, sans-serif</option>
+                <option>Impact, Charcoal, sans-serif</option>
+                <option>'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
+                <option>Tahoma, Geneva, sans-serif</option>
+                <option>'Trebuchet MS', Helvetica, sans-serif</option>
+                <option>Verdana, Geneva, sans-serif</option>            
+              </select>
+            </label>
+            </div>
+            <div class="form-group">
+              <label class="control-label">Font size
+              <input type="text" class="form-control" id="cmdfontSize" style="width: 252px" />
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="control-label">Font sample
+            <div id="cmdfontsample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;width: 280px">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+            </label>
+            </div>
+
+          </div>
+
+          <div class="col-sm-3 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="keepLastCommand" />
+          Keep last command
+          </label>
+          </div>
+
+          <div class="col-sm-3 form-group">
+            <label class="control-label">
+          History size
+          <input type="number" id="commandHistorySize" class="form-control" min="1" max="2000" style="width: 100px"/>
+          </label>
+          </div>
+
+          <div class="col-sm-3 form-group">
+            <label class="control-label">
+          Command stacking
+          <div class="input-group"  style="width: 40px">
+          <input type="text" id="commandStackingChar" class="form-control" style="width: 40px" size="1" maxlength ="1"/>
+          <div class="input-group-addon"><label><input type="checkbox" id="commandStacking" /> Enable</label></div>
+        </div>
+        </label>
+      </div>
+
+      <div class="col-sm-3 form-group">
+        <label class="control-label">
+          Speedpaths
+          <div class="input-group"  style="width: 40px">
+            <input type="text" id="speedpathsChar" class="form-control" style="width: 40px" size="1" maxlength ="1"/>
+            <div class="input-group-addon" style="border-left: 0px"><label><input type="checkbox" id="enableSpeedpaths" /> Enable</label></div>
+      <div class="input-group-addon"><label><input type="checkbox" id="parseSpeedpaths" /> Parse</label></div>
+    </div>
+    </label>
+
+    </div>
+
+    <div class="col-sm-3 form-group">
+      <label class="control-label">
+          <input type="checkbox" id="parseSingleQuotes" />
+          Parse single quotes as string 
+          </label>
+    </div>
+
+    <div class="col-sm-3 form-group">
+      <label class="control-label">
+          <input type="checkbox" id="parseDoubleQuotes" />
+          Parse double quotes as string
+          </label>
+    </div>
+
+    </div>
+    <div role="tabpanel" class="tab-pane fade" id="logging">
+
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="logEnabled" />
+          Enable logging
+          </label>
+      </div>
+
+
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="logPrepend" />
+          Prepend current buffer to log
+          </label>
+      </div>
+
+
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="logOffline" />
+          Enable logging of offline text
+          </label>
+      </div>
+
+
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="logUniqueOnConnect" />
+          Create log for every connection
+          </label>
+      </div>
+
+      <div class="col-sm-12 form-group">
+        <label class="control-label" style="width:100%">          
+          Save path
+          <div class="input-group">
+          <input type="text" id="logPath" style="width:100%" class="form-control"/>
+          <span class="input-group-btn">
+                  <button class = "btn btn-default" type = "button">
+                     &hellip;
+                  </button>
+          </div>
+          </label>
+      </div>
+
+    </div>
+    <div role="tabpanel" class="tab-pane fade" id="mapper">
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="showMapper" />
+          Open on load
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="mapEnabled" />
+          Enable mapper
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="mapFollow" />
+          Follow player
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="mapLegend" />
+          Show legend
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="MapperSplitArea" />
+          Split areas
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="MapperFillWalls" />
+          Display walls
+          </label>
+      </div>
+      <div class="col-sm-12 form-group">
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            Delay between directions
+            <div class="input-group">
+              <input type="number" id="commandDelay" class="form-control"/>
+              <div class="input-group-addon">ms</div>
+            </div>
+            </label>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">
+            Directions to send
+            <input type="number" id="commandDelayCount" class="form-control"/>
+            </label>
+        </div>
+      </div>
+    </div>
+    <div role="tabpanel" class="tab-pane fade" id="telnet">
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="enableMCCP" />
+          MUD Compression Protocol (MCCP)
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="enableUTF8" />
+          UTF-8
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="enableMXP" />
+          MUD eXtension Protocol (MXP)
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="enableEcho" />
+          Echo
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="enableMSP" />
+          MUD Sound Protocol (MSP)
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="notifyMSPPlay" />
+          Display Notification on MSP Play
+          </label>
+      </div>
+
+    </div>
+    </div>
+
+    </div>
+    <div class="dialog-footer">
+      <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
+      <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
+      <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
+    </div>
+  </body>
+  </div>

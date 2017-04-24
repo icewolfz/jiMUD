@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>jiMUD</title>
+        <link href="css/main.css" rel="stylesheet" type="text/css" />
+        <link href="css/ansi.css" rel="stylesheet" type="text/css" />
+        <link href="css/status.css" rel="stylesheet" type="text/css" />
+        <style>
+             ::selection {
+                background-color: #3399ff;
+                color: white;
+            }
+            
+             ::selection:window-inactive {
+                background-color: #3399ff;
+                color: white;
+            }
+        </style>
+        <script src="../lib/jquery.js"></script>
+        <script src="js/jquery.ext.js"></script>
+        <script>
+            function selectAll() {
+                if (document.selection) {
+                    var range = document.body.createTextRange();
+                    range.moveToElementText(document.getElementById('display'));
+                    range.select();
+                }
+                else if (window.getSelection) {
+                    var range = document.createRange();
+                    range.selectNode(document.getElementById('display'));
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(range);
+                }
+            }
+        </script>
+    </head>
+
+    <body>
+        <div id="display"></div>
+        <script>
+            parent.init()
+        </script>
+    </body>
+
+</html>

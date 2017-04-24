@@ -1,0 +1,85 @@
+{
+  "name": "jimud",
+  "productName": "jiMUD",
+  "icon": "./assets/icons/png/app.png",
+  "website": "https://github.com/icewolfz/jiMUD",
+  "homepage": "https://github.com/icewolfz/jiMUD",
+  "url": "https://github.com/icewolfz/jiMUD/issues",
+  "version": "0.1.6",
+  "main": "build/main.js",
+  "description": "MUD client coded in javascript.",
+  "author": "Icewolfz",
+  "electronVersion": "1.6.7",
+  "email": "none@rightnow.com",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --debug",
+    "clean:dist": "rm -rf ./dist",
+    "build": "npm run build:win && npm run build:linux",
+    "build:osx": "electron-packager . %npm_package_productName% --out=dist --ignore=\"^/(dist|.vscode|_raw|_bak|src|_test)$\" --overwrite --prune --asar --arch=all --platform=darwin --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/mac/app.icns",
+    "build:win": "electron-packager . %npm_package_productName% --out=dist --arch=all --platform=win32 --ignore=\"^/(dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/win/app.ico",
+    "build:linux": "electron-packager . $npm_package_productName --out=dist --arch=all --platform=linux --ignore=\"^/(dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=$npm_package_electronVersion --app-version=$npm_package_version --icon=./assets/icons/png/app.png",
+    "build:linuxwin": "electron-packager . %npm_package_productName% --out=dist --arch=all --platform=linux --ignore=\"^/(dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/png/app.png",
+    "package": "npm run package:winall && npm run package:linux",
+    "package:winall": "npm run package:win && npm run package:winportable",
+    "package:win": "npm run package:win32 && npm run package:win64",
+    "package:win64": "node_modules/.bin/build --pd=dist/jiMUD-win32-x64/ --win --x64 && ren \"dist\\jiMUD Setup %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows-x64.exe",
+    "package:win32": "node_modules/.bin/build --pd=dist/jiMUD-win32-ia32/ --win --ia32 && ren \"dist\\jiMUD Setup %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows-x32.exe",
+    "package:winportable": "npm run package:winportable32 && npm run package:winportable64",
+    "package:winportable64": "node_modules/.bin/build --pd=dist/jiMUD-win32-x64/ --win portable:x64 && ren \"dist\\jiMUD %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows_portable-x64.exe",
+    "package:winportable32": "node_modules/.bin/build --pd=dist/jiMUD-win32-ia32/ --win portable:ia32 && ren \"dist\\jiMUD %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows_portable-x32.exe",
+    "package:osx": "hdiutil create -format UDZO -srcfolder dist/jiMUD-darwin-x64/jiMUD.app dist/jiMUD_Mac.dmg",
+    "package:linux": "cd dist/ && tar -jcvf jiMUD_${npm_package_version}_Linux_x64.tar.bz2 jiMUD-linux-x64 && tar -jcvf jiMUD_${npm_package_version}_Linux_ia32.tar.bz2 jiMUD-linux-ia32 && tar -jcvf jiMUD_${npm_package_version}_Linux_armv7l.tar.bz2 jiMUD-linux-armv7l && cd ../",
+    "package:linuxx": "cd dist/ && tar -Jcvf jiMUD_${npm_package_version}_Linux_x64.tar.xz jiMUD-linux-x64 && tar -Jcvf jiMUD_${npm_package_version}_Linux_ia32.tar.xz jiMUD-linux-ia32 && tar -Jcvf jiMUD_${npm_package_version}_Linux_armv7l.tar.xz jiMUD-linux-armv7l && cd ../",
+    "package:linuxwin": "cd dist && \"C:\\Program Files\\7-Zip\\7z.exe\" a -r -mx9 jiMUD_%npm_package_version%_Linux_x64.7z jiMUD-linux-x64 && \"C:\\Program Files\\7-Zip\\7z.exe\" a -r -mx9 jiMUD_%npm_package_version%_Linux_ia32.7z jiMUD-linux-ia32 && \"C:\\Program Files\\7-Zip\\7z.exe\" a -r -mx9 jiMUD_%npm_package_version%_Linux_armv7l.7z jiMUD-linux-armv7l && cd ../",
+    "package:linux-other": "npm run package:linux-other32 && npm run package:linux-other64 && npm run package:linux-otherarm",
+    "package:linux-other32": "build --pd=dist/jiMUD-linux-ia32/ --l deb AppImage rpm --ia32",
+    "package:linux-other64": "build --pd=dist/jiMUD-linux-x64/ --l deb AppImage rpm --x64",
+    "package:linux-otherarm": "build --pd=dist/jiMUD-linux-armv7l/ --l deb AppImage rpm --armv7l",
+    "test": "npm run lint",
+    "lint": "standard",
+    "min": "./node_modules/.bin/babili --minified src/js -d build/js",
+    "rebuild-win": ".\\node_modules\\.bin\\electron-rebuild.cmd",
+    "rebuild-linux": "./node_modules/.bin/electron-rebuild",
+    "sass":"node-sass src/css/ -o build/css/ --output-style compressed"
+  },
+  "devDependencies": {
+    "@types/electron": "^1.4.32",
+    "@types/jquery": "^2.0.40",
+    "@types/node": "^7.0.13",
+    "babel-cli": "^6.24.1",
+    "babili": "0.0.12",
+    "devtron": "^1.4.0",
+    "electron": "^1.6.7",
+    "electron-builder": "^17.1.1",
+    "electron-installer-dmg": "^0.2.1",
+    "electron-packager": "^8.6.0",
+    "electron-prebuilt": "^1.4.13",
+    "electron-rebuild": "^1.5.7",
+    "electron-winstaller": "^2.5.2",
+    "ts-node": "^2.0.0",
+    "typescript": "^2.2.2"
+  },
+  "build": {
+    "appId": "jiMUD",
+    "win": {
+      "icon": "./assets/icons/win/app.ico"
+    },
+    "nsis": {
+      "installerIcon": "./assets/icons/win/app.ico"
+    },
+    "linux": {
+      "maintainer": "icewolfz"
+    }
+  },
+  "dependencies": {
+    "buzz": "^1.2.0",
+    "jquery": "^3.1.1",
+    "lz-string": "^1.4.4",
+    "menubar": "^5.2.0",
+    "rgbcolor": "^1.0.0",
+    "sqlite3": "^3.1.8",
+    "trash": "^4.0.1"
+  }
+}

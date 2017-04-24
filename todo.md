@@ -1,0 +1,46 @@
+# TODO list
+## Context menus 
+* Display - expand besides basic select  
+  * Allow custom items based on profiles like buttons
+  * Figure out some way to capture word under mouse pt to allow setting a variable in script and some type of variable in parse like %selectedword% || %selword%
+  * Extra Variables:
+    * A variable for current selected text, %selected%
+    * A variable for current line text under mouse, %selectedline% || %selline%
+    * A variable for currnet url under mouse, %selectedurl% || %selurl%
+    * Maybe only support variables in javascript for ease of maintaining
+* Status - allow manual refresh as well as the visible toggles
+* Buttonbar - allow disable, maybe open in editor directly
+* Input - wait for native, or leave as custom 
+## Advanced editor
+* Expand color tooltips/display names to have proper names base on xterm / color daemon + color code   
+* Make color table use options for the colors and flash
+* add console.log when debug option enabled to display raw html
+* Test pasted html and see if formated correctly all formats
+* add a pre paste processer to process html and strip styles and code not supported and convert any to proper formats/extra data
+  * [PastePreProcess - https://www.tinymce.com/docs/advanced/events/#pastepreprocess](https://www.tinymce.com/docs/advanced/events/#pastepreprocess)
+* Maybe create a new textcolor plugin with different color selectors to fix being cut off when using small window size, maybe a real window to display grid
+  * [Textcolor plugin source - https://github.com/tinymce/tinymce/blob/master/src/plugins/textcolor/src/main/js/Plugin.js](https://github.com/tinymce/tinymce/blob/master/src/plugins/textcolor/src/main/js/Plugin.js)
+## Mapper 
+* Add room exist and coords/zone check x/y/z/zone and if room found bump zone context menu, right click room list a remove room option, maybe exports
+* Add a file menu and add all the featuers from the toolbar?
+## Profile manager
+* Undo/Redo
+* Maybe add a file menu ?
+* Test more then when multiple client instances open
+* possible slow down due yo file locks, loading profiles, converting from json, or loading built in icons for buttons
+* Context menu
+  * An editor add custom context menu items to appear when right click display
+  * Icon preview similar to button, but on a white/grey bg and limit to 16x16
+  * Support action image/fa/custom and genrate a proper nativeImage format using canvas like image export or createIcon from Advanced editor
+## MSP
+* Recode to not stream but dl to local storage
+* Make local storage create proper folder structure based in {data}/sounds/..
+## Miscellaneous
+* Create better application icons, and new ones where needed
+* Finish monster css icons
+* maybe convert from using a bell sound file in ansi parer to using electron shell.beep() [https://github.com/electron/electron/blob/master/docs/api/shell.md](https://github.com/electron/electron/blob/master/docs/api/shell.md), do this by capturing the bell event in parer or from index.html as client.parser.on('bell', ()  => { shell.beep() });
+* ***Mac - needs a mac, can't build or test***
+* Help files
+  * Sections for profile manager, settings, mapper, change log
+  * Scripting referance that list all publicly supported javascript functions
+* Code documentation - comment all classes/functions/enums for all typescript and javascript

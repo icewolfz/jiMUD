@@ -1,0 +1,235 @@
+$images : './../../assets';
+
+body {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+#displaycontainer {
+    left: 37px;
+    right: 187px;
+    top: 7px;
+    bottom: 31px;
+    position: absolute;
+    color: #BBBBBB;
+    border: 0px solid silver;
+    font-family: "Courier New", monospace;
+    font-size: 1em;
+    text-align: left;
+    font-size: 1em;
+    background-color: black;
+    text-shadow: none;
+    z-index: 5;
+    overflow: hidden;
+    border: 1px solid #908271;
+    -webkit-user-select: auto;
+    user-select: auto;
+    padding: 0px;
+}
+
+#display {
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    position: absolute;
+    color: #BBBBBB;
+    border: 0px solid silver;
+    font-family: "Courier New", monospace;
+    font-size: 1em;
+    overflow-y: scroll;
+    text-align: left;
+    font-size: 1em;
+    /*white-space: pre;*/
+    background-color: black;
+    text-shadow: none;
+    z-index: 5;
+    overflow-y: scroll;
+    /*border: 1px solid #908271;*/
+    padding: 2px;
+    -webkit-user-select: auto;
+    user-select: auto;
+}
+
+#displayborder {
+    border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
+    border-image-slice: 95 95;
+    border-image-repeat: round;
+    background-color: transparent;
+    border-width: 95px;
+    left: 30px;
+    right: 180px;
+    top: -1px;
+    bottom: 24px;
+    position: absolute;
+    z-index: 1;
+    border-style: solid;
+}
+
+#Character, #CmdCharacter {
+    position: absolute;
+    visibility: hidden;
+    height: auto;
+    width: auto;
+    font-family: "Courier New", monospace;
+    font-size: 1em;
+    border: 1px solid #d7d7d7;
+    top: -100px;
+    left: -100px;
+    margin: 0px;
+    text-decoration: underline overline;
+}
+
+#command {
+    height: 26px;
+    position: absolute;
+    bottom: 0px;
+    left: 33px;
+    right: 183px;
+    background-color: transparent;
+    z-index: 2;
+    background-image: url(#{$images}/input.png);
+    /*#1b1002*/
+}
+
+#commandbox {
+    left: 8px;
+    position: absolute;
+    right: 24px;
+    height: 18px;
+    bottom: 6px;
+}
+
+#commandeditor {
+    top: 6px;
+    left: 8px;
+    position: absolute;
+    right: 8px;
+    min-height: 18px;
+    bottom: 6px;
+}
+
+#commandleft {
+    float: left;
+    background-image: url(#{$images}/input.left.png);
+    height: 26px;
+    width: 5px;
+}
+
+#commandright {
+    float: right;
+    background-image: url(#{$images}/input.right.png);
+    height: 26px;
+    width: 5px;
+}
+
+#commandinput, #commandeditorinput {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    border: 0px;
+    background-color: transparent;
+    color: wheat;
+    outline: none;
+    resize: none;
+}
+
+#commandinput:focus {
+    outline: none;
+}
+
+#commandsend {
+    position: absolute;
+    width: 36px;
+    height: 27px;
+    background-image: url(#{$images}/button.png);
+    background-color: maroon;
+    right: 1px;
+    bottom: 0px;
+    border: 0px;
+    text-align: center;
+    z-index: 5;
+    padding-top: 2px;
+}
+
+#buttonbar {
+    z-index: 15;
+    width: 34px;
+    /*
+    border-left: 1px solid #ebe1c5;
+    border-top: 1px solid #ebe1c5;
+    border-bottom: 1px solid #ebe1c5;
+    */
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+}
+
+.icon {
+    color: wheat;
+}
+
+#advedit {
+    position: absolute;
+    top: 5px;
+    right: 6px;
+    text-align: center;
+    height: 16px;
+    width: 16px;
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+#advedit .icon {
+    margin-top: 2px;
+    margin-left: 1px;
+}
+
+a.icon:hover {
+    background-color: #d70000;
+}
+
+a.icon:active {
+    background-color: #790000;
+}
+
+
+/* Let's get this party started */
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+
+/* Track */
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background-color: #191814;
+    border: 1px solid #494238;
+}
+
+
+/* Handle */
+
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #33302b;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    border: 1px solid #908271;
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+    background: rgba(51, 48, 43, 0.4);
+}
+
+::-webkit-scrollbar-corner {
+    background-color: black;
+}

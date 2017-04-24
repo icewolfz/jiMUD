@@ -1,0 +1,129 @@
+.mce-content-body {
+	color: #BBBBBB;
+	background-color: #000000;
+	font-family: "Courier New", monospace;
+	/*
+    word-wrap: break-word;
+    word-break: break-all;
+    white-space: pre;    
+    */
+}
+
+.dblunderline {
+	text-decoration: underline !important;
+	border-bottom: 1px solid !important;
+}
+
+.overline {
+	text-decoration: overline !important;
+	border: inherit;
+}
+
+.underline {
+	text-decoration: underline !important;
+	border: inherit;
+}
+
+.strikeout {
+	text-decoration: line-through !important;
+	border: inherit;
+}
+
+.dblunderline.overline {
+	text-decoration: underline overline !important;
+	border-bottom: 1px solid !important;
+}
+
+.dblunderline.strikeout {
+	text-decoration: underline line-through !important;
+	border-bottom: 1px solid !important;
+}
+
+.dblunderline.strikeout.overline {
+	text-decoration: underline line-through overline !important;
+	border-bottom: 1px solid !important;
+}
+
+.overline.underline {
+	text-decoration: underline overline !important;
+	border: inherit;
+}
+
+.overline.underline.strikeout {
+	text-decoration: underline overline line-through !important;
+	border: inherit;
+}
+
+.overline.strikeout {
+	text-decoration: overline line-through !important;
+	border: inherit;
+}
+
+.strikeout.underline {
+	text-decoration: underline line-through !important;
+	border: inherit;
+}
+
+.reverse {
+	text-decoration: inherit;
+	border: inherit;
+	color: inherit;
+	background-color: inherit;
+}
+
+@-webkit-keyframes blinker {
+	0% {
+		opacity: 1.0;
+	}
+	50% {
+		opacity: 0.0;
+	}
+	100% {
+		opacity: 1.0;
+	}
+}
+
+@keyframes blinker {
+	0% {
+		opacity: 1.0;
+	}
+	50% {
+		opacity: 0.0;
+	}
+	100% {
+		opacity: 1.0;
+	}
+}
+
+.flash {
+	animation-name: blinker;
+	animation-iteration-count: infinite;
+	animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+	animation-duration: 1s;
+	-webkit-animation-name: blinker;
+	-webkit-animation-iteration-count: infinite;
+	-webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+	-webkit-animation-duration: 1s;
+	text-decoration: inherit;
+	border: inherit;
+}
+
+.noflash {
+	text-decoration: underline !important;
+	border: inherit;
+}
+
+.noflash.overline {
+	text-decoration: underline overline !important;
+	border: inherit;
+}
+
+.noflash.strikeout {
+	text-decoration: underline line-through !important;
+	border: inherit;
+}
+
+.noflash.overline.strikeout, .underline.overline.strikeout {
+	text-decoration: underline overline line-through !important;
+	border: inherit;
+}

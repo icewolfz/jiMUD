@@ -1,0 +1,1 @@
+(function(a){a.fn.hasHorizontalScrollBar=function(){return a(this)[0].scrollWidth>a(this).innerWidth()}})(jQuery);

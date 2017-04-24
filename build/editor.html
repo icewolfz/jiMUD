@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>Advanced Editor</title>
+        <link rel="shortcut icon" href="../assets/icons/png/edit.png" />
+        <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/editor.css" rel="stylesheet" type="text/css" />
+        <script>
+            if (typeof module === 'object') { window.module = module; module = undefined; }
+        </script>
+        <script src="../lib/jquery.js"></script>
+        <script src="../lib/bootstrap.min.js"></script>
+        <script src="../lib/bootstrap-select.min.js"></script>
+        <script src="../lib/tinymce/tinymce.min.js" type="text/javascript" charset="utf-8"></script>
+        <script>
+            const { remote, ipcRenderer, webFrame } = require('electron');
+            const { nativeImage, dialog, Menu, MenuItem } = remote;
+            const { htmlEncode, parseTemplate } = require('./js/library');
+            const { Settings } = require('./js/settings');
+            const rgbcolor = require("rgbcolor");
+            const fs = require('fs');
+            const path = require('path');
+
+            var _colors = {};
+            var _ColorTable;
+
+            function clearReverse(els, c) {
+                els.each(
+                    function (idx) {
+                        if (!$(this).data('reverse'))
+                            return;
+                        if (c && $(this).hasClass('reverse'))
+                            return;
+                        var back, fore;
+                        if (c) {
+                            back = $(this).css('color');
+                            fore = $(this).css('background-color');
+                        }
+                        else {
+                            fore = $(this).parent().css('color');
+                            back = $(this).parent().css('background-color');
+                        }
+                        if (back == "black")
+                            back = ""
+                        if (fore == "rgba(0, 0, 0, 0)")
+                            fore = "black";
+                        $(this).css('color', fore);
+                        $(this).css('background-color', back);
+                        if ($(this).children().length)
+                            clearReverse($(this).children(), true);
+                    }
+                );
+            }
+
+            function addReverse(els, c) {
+                els.each(
+                    function (idx) {
+                        if (c && $(this).hasClass('reverse'))
+                            return;
+                        var back, fore;
+                        if (c) {
+                            back = $(this).css('color');
+                            fore = $(this).css('background-color');
+                        }
+                        else {
+                            back = $(this).parent().css('color');
+                            fore = $(this).parent().css('background-color');
+                        }
+                        if (back == "rgba(0, 0, 0, 0)")
+                            back = "black";
+                        if (fore == "rgba(0, 0, 0, 0)")
+                            fore = "black";
+                        if ($(this).children().length) {
+                            clearReverse($(this).children(), true);
+                            addReverse($(this).children(), true);
+                        }
+                        $(this).css('color', fore);
+                        $(this).css('background-color', back);
+                        $(this).data('reverse', true);
+
+                    }
+                );
+            }
+
+
+            function toggleConextFormat(item) {
+                var format = item.format || item.label;
+                format = format.toLowerCase();
+                tinymce.activeEditor.undoManager.transact(function () {
+                    clearReverse($(".reverse", $(tinymce.activeEditor.getDoc()).contents()));
+                    tinymce.activeEditor.execCommand('mceToggleFormat', false, format);
+                    addReverse($(".reverse", $(tinymce.activeEditor.getDoc()).contents()));
+                });
+            }
+
+
+            const cMenu = new Menu();
+            cMenu.append(new MenuItem({ role: 'undo', icon: path.join(__dirname, '../assets/icons/png/undo.png') }));
+
+            cMenu.append(new MenuItem({ role: 'redo', icon: path.join(__dirname, '../assets/icons/png/redo.png') }));
+            cMenu.append(new MenuItem({ type: 'separator' }));
+            cMenu.append(new MenuItem({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') }));
+            cMenu.append(new MenuItem({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') }));
+            cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
+            cMenu.append(new MenuItem({ type: 'separator' }));
+            cMenu.append(new MenuItem({ role: 'selectall' }));
+            cMenu.append(new MenuItem({ type: 'separator' }));
+
+            cMenu.append(new MenuItem({
+                label: 'Style',
+                submenu: [
+                    {
+                        label: 'Bold',
+                        icon: path.join(__dirname, '../assets/icons/png/bold.png'),
+                        click: toggleConextFormat
+                    },
+                    {
+                        label: 'Italic',
+                        icon: path.join(__dirname, '../assets/icons/png/italic.png'),
+                        click: toggleConextFormat
+                    },
+                    {
+                        label: 'Underline',
+                        icon: path.join(__dirname, '../assets/icons/png/underline.png'),
+                        click: toggleConextFormat
+                    },
+                    {
+                        label: 'Strikethrough',
+                        icon: path.join(__dirname, '../assets/icons/png/strikethrough.png'),
+                        click: toggleConextFormat
+                    },
+                    {
+                        label: 'Overline',
+                        icon: path.join(__dirname, '../assets/icons/png/overline.png'),
+                        click: toggleConextFormat
+                    },
+                    {
+                        label: 'Double Underline',
+                        format: 'dblunderline',
+                        icon: path.join(__dirname, '../assets/icons/png/dblunderline.png'),
+                        click: toggleConextFormat
+                    },
+                    {
+                        label: 'Flash',
+                        icon: path.join(__dirname, '../assets/icons/png/flash.png'),
+                        click: toggleConextFormat
+                    },
+                    {
+                        label: 'Reverse',
+                        icon: path.join(__dirname, '../assets/icons/png/reverse.png'),
+                        click: toggleConextFormat
+                    }
+                ]
+            }));
+
+
+            function createIcon(txt, name, fore, back, border, save) {
+                if (!name) name = "image";
+                var canvas = document.createElement('canvas');
+                canvas.width = 16;
+                canvas.height = 16;
+                if (!canvas || !canvas.getContext)
+                    return;
+                var ctx = canvas.getContext("2d");
+                ctx.fillStyle = back || 'white';
+                ctx.fillRect(0, 0, 16, 16);
+                if (!back) {
+                    var image = ctx.getImageData(0, 0, 16, 16);
+                    var imageData = image.data, length = imageData.length;
+                    for (var i = 3; i < length; i += 4) {
+                        imageData[i] = 0;
+                    }
+                    image.data = imageData;
+                    ctx.putImageData(image, 0, 0);
+                }
+                if (txt) {
+                    ctx.fillStyle = fore || '#333333';
+                    //ctx.font = "16px tinymce";
+                    ctx.font = 'bold 20px Helvetica'
+                    ctx.fillText(txt, 2, 15);
+                }
+                if (border) {
+                    ctx.fillStyle = "#d6d6d6";
+                    ctx.strokeRect(0, 0, 16, 16);
+                }
+                if (save)
+                    return fs.writeFileSync('C:\\Development\\jiMUD\\assets\\icons\\png\\colors\\' + name + '.png', nativeImage.createFromDataURL(canvas.toDataURL('image/png', 0.92)).toPng());
+
+                return nativeImage.createFromDataURL(canvas.toDataURL('image/png', 0.92));
+            }
+
+
+            function appendFile() {
+                dialog.showOpenDialog(remote.getCurrentWindow(),
+                    {
+                        filters: [
+                            { name: 'Text files (*.txt)', extensions: ['txt'] },
+                            { name: 'LPC files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
+                            { name: 'All files (*.*)', extensions: ['*'] },
+                        ]
+                    },
+                    function (fileNames) {
+                        if (fileNames === undefined) {
+                            return;
+                        }
+                        for (var f = 0, fl = fileNames.length; f < fl; f++)
+                            fs.readFile(fileNames[f], 'utf8', (err, data) => {
+                                if (err) {
+                                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                                        type: 'error',
+                                        title: 'Error importing file',
+                                        message: err
+                                    });
+                                    return;
+                                }
+                                data = htmlEncode(data);
+                                data = data.replace(/ /g, '&nbsp;');
+                                data = data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;');
+                                data = data.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+                                var content = tinymce.activeEditor.getContent({ format: 'text' });
+                                if (content == "\n") {
+                                    tinymce.activeEditor.undoManager.transact(function () {
+                                        tinymce.activeEditor.setContent(data);
+                                    });
+                                }
+                                else {
+                                    if (!content.endsWith("\n"))
+                                        data = "<br>" + data;
+                                    tinymce.activeEditor.undoManager.transact(function () {
+                                        tinymce.activeEditor.dom.add(tinymce.activeEditor.getBody(), 'span', {}, data);
+                                    });
+                                }
+
+                                //tinymce.activeEditor.insertContent(data);
+                            });
+                    });
+            }
+
+            /*
+                        webFrame.setSpellCheckProvider("en-US", true, {
+                            spellCheck: function (text) {
+                                return !(require('spellchecker').isMisspelled(text));
+                            }
+                        });
+                        //https://www.npmjs.com/package/electron-spell-check-provider
+                        */
+
+            function buildHTMLStack(els) {
+                var tag, $el;
+                var stack = [];
+                for (var e = 0, el = els.length; e < el; e++) {
+                    $el = $(els[e]);
+                    tag = $el.prop("tagName");
+                    if (tag == "EM" || tag == "I")
+                        tag = "ITALIC";
+                    else if (tag == "STRONG" || tag == "B")
+                        tag = "BOLD";
+                    if (!tag)
+                        stack.push('"' + $el.text() + '"');
+                    else if (tag == "SPAN") {
+                        if (els[e].className != "") {
+                            tag = els[e].className.toUpperCase().split(/\s+/g);
+                            var t, tl = tag.length;
+                            for (t = 0; t < tl; t++) {
+                                if (tag[t] == "noflash")
+                                    stack.push("flash");
+                                else if (tag[t].length > 0)
+                                    stack.push(tag[t]);
+                            }
+                            stack = stack.concat(buildHTMLStack($el.contents()));
+                            for (t = 0; t < tl; t++) {
+                                if (tag[t] == "noflash")
+                                    stack.push("flash");
+                                else if (tag[t].length > 0)
+                                    stack.push("/" + tag[t]);
+                            }
+                            continue;
+                        }
+                        else if ($el.css('text-decoration') == "line-through")
+                            tag = "STRIKEOUT"
+                        else if ($el.css('text-decoration') == "underline")
+                            tag = "UNDERLINE";
+                        else if ($el.data('mce-style')) {
+                            tag = $el.data('mce-style').toUpperCase().split(";");
+                            var t, tl = tag.length;
+                            for (t = 0; t < tl; t++) {
+                                if (tag[t].endsWith("INHERIT") || tag[t].endsWith("BLACK"))
+                                    continue;
+                                if (tag[t].length > 0)
+                                    stack.push(tag[t].trim());
+                            }
+                            stack = stack.concat(buildHTMLStack($el.contents()));
+                            for (t = 0; t < tl; t++) {
+                                if (tag[t].endsWith("INHERIT") || tag[t].endsWith("BLACK"))
+                                    continue;
+                                if (tag[t].length > 0)
+                                    stack.push("/" + tag[t].trim());
+                            }
+                            continue;
+                        }
+                        else if ($el.css("color") || $el.css("background-color")) {
+                            tag = [];
+                            if ($el.css("color"))
+                                tag.push("COLOR: " + new rgbcolor($el.css("color")).toHex().toUpperCase());
+                            if ($el.css("background-color"))
+                                tag.push("BACKGROUND-COLOR: " + new rgbcolor($el.css("background-color")).toHex().toUpperCase());
+                            var t, tl = tag.length;
+                            for (t = 0; t < tl; t++) {
+                                if (tag[t].length > 0)
+                                    stack.push(tag[t].trim());
+                            }
+                            stack = stack.concat(buildHTMLStack($el.contents()));
+                            for (t = 0; t < tl; t++) {
+                                if (tag[t].length > 0)
+                                    stack.push("/" + tag[t].trim());
+                            }
+                            continue;
+                        }
+
+                        stack.push(tag);
+                        stack = stack.concat(buildHTMLStack($el.contents()));
+                        stack.push("/" + tag);
+                    }
+                    else {
+                        stack.push(tag);
+                        stack = stack.concat(buildHTMLStack($el.contents()));
+                        stack.push("/" + tag);
+                    }
+                }
+                return stack;
+            }
+
+            function getFormatedText() {
+                var data = buildHTMLStack($("<html>" + tinymce.activeEditor.getContent({ format: 'raw' }) + "</html>"));
+                var buffer = [];
+                var codes = [];
+                var color;
+                for (var d = data.length - 1; d >= 0; d--) {
+                    if (!data[d].startsWith('"'))
+                        data.pop();
+                    else
+                        break;
+                }
+
+                for (var d = 0, dl = data.length; d < dl; d++) {
+                    switch (data[d]) {
+                        case "BOLD":
+                        case "ITALIC":
+                        case "UNDERLINE":
+                        case "STRIKEOUT":
+                        case "DBLUNDERLINE":
+                        case "OVERLINE":
+                        case "FLASH":
+                        case "REVERSE":
+                            codes.push("%^" + data[d] + "%^");
+                            buffer.push("%^" + data[d] + "%^");
+                            break;
+                        case "/DBLUNDERLINE":
+                        case "/OVERLINE":
+                        case "/FLASH":
+                        case "/REVERSE":
+                        case "/UNDERLINE":
+                        case "/BOLD":
+                        case "/ITALIC":
+                        case "/STRIKEOUT":
+                            codes.pop();
+                            buffer.push("%^RESET%^");
+                            if (codes.length > 0)
+                                buffer.push(codes.join(''));
+                            break;
+                        case "SPAN":
+                        case "/SPAN":
+                        case "/BR":
+                            break;
+                        case "BR":
+                            if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith("%^RESET%^"))
+                                buffer.push("%^RESET%^");
+                            buffer.push("\n");
+                            if (codes.length > 0)
+                                buffer.push(codes.join(''));
+                            break;
+                        default:
+                            if (data[d].startsWith("COLOR: #")) {
+                                color = data[d].substr(8);
+                                if (!_colors[color])
+                                    color = nearestHex("#" + color).substr(1);
+                                color = _colors[color];
+                                codes.push("%^" + color + "%^");
+                                buffer.push("%^" + color + "%^");
+                            }
+                            else if (data[d].startsWith("/COLOR: #")) {
+                                codes.pop();
+                                buffer.push("%^RESET%^");
+                                if (codes.length > 0)
+                                    buffer.push(codes.join(''));
+                            }
+                            else if (data[d].startsWith("BACKGROUND-COLOR: #")) {
+                                color = data[d].substr(19);
+                                if (!_colors[color])
+                                    color = nearestHex("#" + color).substr(1);
+                                if (_colors["B" + color])
+                                    color = _colors["B" + color];
+                                else
+                                    color = _colors[color];
+                                color = "%^B_" + color + "%^";
+                                codes.push(color);
+                                buffer.push(color);
+                            }
+                            else if (data[d].startsWith("/BACKGROUND-COLOR: #")) {
+                                codes.pop();
+                                buffer.push("%^RESET%^");
+                                if (codes.length > 0)
+                                    buffer.push(codes.join(''));
+                            }
+                            else
+                                buffer.push(data[d].substring(1, data[d].length - 1));
+                            break;
+                    }
+                }
+                return buffer.join('');
+            }
+
+            function getText() {
+                return tinymce.activeEditor.getContent({ format: 'text' });
+            }
+
+            function getHTML() {
+                return tinymce.activeEditor.getContent({ format: 'html' })
+            }
+
+            var colorList = [
+                /*
+                { color: 'red', hex: '#EA4235', rgb: { r: 234, g: 66, b: 53 } },
+                { color: 'green', hex: '#34A853', rgb: { r: 512,  g: 168, b: 83 } },
+                { color: 'blue', hex: '#4285F4', rgb: { r: 66, g: 133, b: 244 } },
+                { color: 'yellow', hex: '#FBBC05', rgb: { r: 251, g: 188, b: 5 } }
+                */
+            ];
+
+            function nearestHex(hex) {
+                //https://codereview.stackexchange.com/questions/132225/given-hexadecimal-rgb-color-find-the-closest-predefined-color
+                var hexToRgb = function (hex) {
+                    var shortRegEx = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+                    //hex = hex.replace(shortRegEx, "$1$1$2$2$3$3");
+                    hex = hex.replace(shortRegEx, function (full, r, g, b) {
+                        return [r, r, g, g, b, b].join();
+                    });
+                    var longRegEx = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?/i;
+                    var rgbArray = longRegEx.exec(hex);
+                    var rgbObj = rgbArray ? {
+                        r: parseInt(rgbArray[1], 16),
+                        g: parseInt(rgbArray[2], 16),
+                        b: parseInt(rgbArray[3], 16)
+                    } : null;
+                    return rgbObj;
+                };
+
+                var closestHexFromRgb = function (rgbObj) {
+                    if (!rgbObj) {
+                        throw new Error("The hex you provided is not formatted correctly. Please try in a format such as '#FFF' or '#DDFFDD'.");
+                    };
+
+                    var minDistance = Number.MAX_SAFE_INTEGER;
+                    var nearestHex = null;
+
+                    for (var i = 0; i < colorList.length; i++) {
+                        var currentColor = colorList[i];
+                        var distance = Math.sqrt(
+                            Math.pow((rgbObj.r - currentColor.rgb.r), 2) +
+                            Math.pow((rgbObj.g - currentColor.rgb.g), 2) +
+                            Math.pow((rgbObj.b - currentColor.rgb.b), 2)
+                        );
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            nearestHex = currentColor.hex;
+                        }
+                    };
+                    return nearestHex;
+                };
+
+                return closestHexFromRgb(hexToRgb(hex));
+
+            };
+
+
+            function initShadowMUD() {
+                tinymce.PluginManager.add('shadowmud', function (editor, url) {
+
+                    function applyFormat(format, value) {
+                        editor.undoManager.transact(function () {
+                            editor.focus();
+                            clearReverse($(".reverse", $(editor.getDoc()).contents()));
+                            if (value)
+                                editor.formatter.apply(format, { value: value });
+                            else
+                                editor.formatter.apply(format);
+                            addReverse($(".reverse", $(editor.getDoc()).contents()));
+                            editor.nodeChanged();
+                        });
+                    }
+
+                    function removeFormat(format) {
+                        editor.undoManager.transact(function () {
+                            editor.focus();
+                            clearReverse($(".reverse", $(editor.getDoc()).contents()));
+                            editor.formatter.remove(format, { value: null }, null, true);
+                            addReverse($(".reverse", $(editor.getDoc()).contents()));
+                            editor.nodeChanged();
+                        });
+                    }
+
+                    function buttonColorClick(evt) {
+                        if (evt.color == 'transparent')
+                            removeFormat(evt.format);
+                        else
+                            applyFormat(evt.format, evt.color);
+                    }
+
+                    function buttonPostRender() {
+                        var btn = this;
+                        editor.on('init', function () {
+                            editor.formatter.formatChanged(btn.settings.format, function (state) {
+                                btn.active(state);
+                            });
+                        });
+                    }
+
+                    function toggleFormat(format) {
+                        if (!format || typeof format !== "string") format = this.settings.format;
+                        tinymce.activeEditor.undoManager.transact(function () {
+                            clearReverse($(".reverse", $(editor.getDoc()).contents()));
+                            editor.execCommand('mceToggleFormat', false, format);
+                            addReverse($(".reverse", $(editor.getDoc()).contents()));
+                        });
+                    }
+
+                    editor.addButton('send', {
+                        type: 'splitbutton',
+                        icon: 'fa-sendraw',
+                        tooltip: 'Send to mud',
+                        onclick: function () {
+                            ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
+                        },
+                        menu: [
+                            {
+                                text: 'Formatted as commands',
+                                onclick: function () {
+                                    ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Text as commands',
+                                onclick: function () {
+                                    ipcRenderer.send('send-command', getText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Formatted as commands (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send-background', getFormatedText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Text as commands (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send-background', getText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Formatted verbatim (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send', getFormatedText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Text verbatim (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send', getText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Raw formatted (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send-raw', getFormatedText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Raw text (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send-raw', getText().replace(/(?:\r)/g, ''));
+                                }
+                            }
+                        ]
+                    });
+                    editor.addButton('append', {
+                        icon: 'fa-open',
+                        tooltip: 'Append file...',
+                        onclick: appendFile
+                    });
+                    editor.addButton('overline', {
+                        image: '../assets/icons/png/overline.png',
+                        tooltip: 'Overline',
+                        format: 'overline',
+                        onclick: toggleFormat,
+                        onpostrender: buttonPostRender
+                    });
+                    editor.addButton('dblunderline', {
+                        image: '../assets/icons/png/dblunderline.png',
+                        tooltip: 'Double Underline',
+                        format: 'dblunderline',
+                        onclick: toggleFormat,
+                        onpostrender: buttonPostRender
+                    });
+                    editor.addButton('flash', {
+                        tooltip: 'Flash',
+                        format: 'flash',
+                        image: '../assets/icons/png/flash.png',
+                        onclick: toggleFormat,
+                        onpostrender: buttonPostRender
+                    });
+                    editor.addButton('reverse', {
+                        image: '../assets/icons/png/reverse.png',
+                        tooltip: 'Reverse',
+                        format: 'reverse',
+                        onclick: toggleFormat,
+                        onpostrender: buttonPostRender
+                    });
+
+                    /*
+                                        editor.addMenuItem('overline', {
+                                            image: '../assets/icons/png/overline.png',
+                                            text: 'Overline',
+                                            format: 'overline',
+                                            onclick: toggleFormat,
+                                        });
+                    
+                                        editor.addMenuItem('dblunderline', {
+                                            image: '../assets/icons/png/dblunderline.png',
+                                            text: 'Double underline',
+                                            format: 'dblunderline',
+                                            onclick: toggleFormat,
+                                        });
+                    
+                                        editor.addMenuItem('flash', {
+                                            image: '../assets/icons/png/flash.png',
+                                            text: 'Flash',
+                                            format: 'flash',
+                                            onclick: toggleFormat,
+                                        });
+                    
+                                        editor.addMenuItem('reverse', {
+                                            image: '../assets/icons/png/reverse.png',
+                                            text: 'Reverse',
+                                            format: 'reverse',
+                                            onclick: toggleFormat,
+                                        });
+                                        */
+                    var fmi = [
+                        {
+                            label: 'No color',
+                            icon: path.join(__dirname, '../assets/icons/png/nocolor.png'),
+                            format: 'transparent',
+                            click: toggleConextFormat
+                        }
+                    ]
+                    var bmi = [
+                        {
+                            label: 'No color',
+                            icon: path.join(__dirname, '../assets/icons/png/nocolor.png'),
+                            format: 'transparent',
+                            click: toggleConextFormat
+                        }
+                    ]
+                    /*
+                    menuItems = [{
+                        text: 'No color',
+                        color: "transparent",
+                        format: 'forecolor',
+                        icon: "sm-icon sm-transparent",
+                        onclick: buttonColorClick
+                    }];
+                    */
+                    for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
+                        /*
+                        menuItems.push({
+                            text: _ColorTable[c + 1],
+                            color: "#" + _ColorTable[c],
+                            format: 'forecolor',
+                            icon: "sm-icon sm-" + _ColorTable[c + 1].replace(" ", "-"),
+                            onclick: buttonColorClick
+                        });
+                        */
+                        fmi.push({
+                            label: _ColorTable[c + 1],
+                            icon: path.join(__dirname, '../assets/icons/png/colors/' + _ColorTable[c + 1].replace(/\s+/g, "-") + '.png'),
+                            //icon: createIcon(0, _ColorTable[c + 1].replace(/\s+/g, "-"), 0, "#" + _ColorTable[c], true, true),
+                            format: 'forecolor',
+                            color: "#" + _ColorTable[c],
+                            click: buttonColorClick
+                        });
+                        bmi.push({
+                            label: _ColorTable[c + 1],
+                            icon: path.join(__dirname, '../assets/icons/png/colors/' + _ColorTable[c + 1].replace(/\s+/g, "-") + '.png'),
+                            //icon: createIcon(0, 0, 0, "#" + _ColorTable[c], true),
+                            format: 'hilitecolor',
+                            color: "#" + _ColorTable[c],
+                            click: buttonColorClick
+                        });
+                    }
+                    /*
+                                        editor.addMenuItem('shadowfore', {
+                                            text: 'Text color',
+                                            menu: menuItems,
+                                            icon: 'forecolor',
+                                        });
+                                        */
+                    /*
+bmenuItems = [{
+    text: 'No color',
+    color: "transparent",
+    format: 'hilitecolor',
+    icon: "sm-icon sm-transparent",
+    onclick: buttonColorClick
+}];
+*/
+                    //for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
+                    /*
+                    bmenuItems.push({
+                        text: _ColorTable[c + 1],
+                        color: "#" + _ColorTable[c],
+                        icon: "sm-icon sm-" + _ColorTable[c + 1].replace(" ", "-"),
+                        format: 'hilitecolor',
+                        onclick: buttonColorClick
+                    });
+                    */
+                    //}
+
+
+                    cMenu.append(new MenuItem({ type: 'separator' }));
+                    cMenu.append(new MenuItem({ label: 'Text color', icon: path.join(__dirname, '../assets/icons/png/forecolor.png'), submenu: fmi }));
+                    cMenu.append(new MenuItem({ label: 'Background color', icon: path.join(__dirname, '../assets/icons/png/backcolor.png'), submenu: bmi }));
+                    /*
+                                        editor.addMenuItem('shadowback', {
+                                            text: 'Background color',
+                                            menu: bmenuItems,
+                                            icon: 'backcolor',
+                                        });
+                    */
+                    editor.on('Change', function (e) {
+
+                        addReverse($(".reverse", $(editor.getDoc()).contents()));
+                        /*
+                        $(".reverse", $(editor.getDoc()).contents()).each(
+                            function (idx) {
+                                back = $(this).parent().css('color');
+                                fore = $(this).parent().css('background-color');
+                                if (back == "rgba(0, 0, 0, 0)")
+                                    back = "black";
+                                if (fore == "rgba(0, 0, 0, 0)")
+                                    fore = "black";
+                                $(this).css('color', fore);
+                                $(this).css('background-color', back);
+                            }
+                        );
+                        */
+
+                    });
+                    //s - strike, o - overline, d - double underline, f - flash, r - reverse
+                    editor.addShortcut('ctrl+s', 'Strikethrough', function () {
+                        //editor.formatter.apply('strikethrough');
+                        toggleFormat('strikethrough');
+                    });
+                    editor.addShortcut('ctrl+o', 'Overline', function () {
+                        toggleFormat('overline');
+                    });
+                    editor.addShortcut('ctrl+d', 'Double Underline', function () {
+                        toggleFormat('dblunderline');
+                    });
+                    editor.addShortcut('ctrl+f', 'Flash', function () {
+                        toggleFormat('flash');
+                    });
+                    editor.addShortcut('ctrl+r', 'Reverse', function () {
+                        toggleFormat('reverse');
+                    });
+
+                });
+            }
+
+            $(document).ready(() => {
+                _ColorTable = [];
+                var c, color, r, g, b, idx;
+                _colors["000000"] = "BLACK";
+                _colors["800000"] = "RED";
+                _colors["008000"] = "GREEN";
+                _colors["808000"] = "ORANGE";
+                _colors["0000EE"] = "BLUE";
+                _colors["800080"] = "MAGENTA";
+                _colors["008080"] = "CYAN";
+                _colors["BBBBBB"] = "WHITE";
+                _colors["808080"] = "BOLD%^%^BLACK";
+                _colors["FF0000"] = "BOLD%^%^RED";
+                _colors["00FF00"] = "BOLD%^%^GREEN";
+                _colors["FFFF00"] = "BOLD%^%^YELLOW";
+                _colors["9292FF"] = "BOLD%^%^BLUE";
+                _colors["FF00FF"] = "BOLD%^%^MAGENTA";
+                _colors["00FFFF"] = "BOLD%^%^CYAN";
+                _colors["FFFFFF"] = "BOLD%^%^WHITE";
+                _colors["B808080"] = "B_mono12";
+                _colors["BFF0000"] = "RGB500";
+                _colors["B00FF00"] = "RGB050";
+                _colors["BFFFF00"] = "RGB550";
+                _colors["B9292FF"] = "RGB225";
+                _colors["BFF00FF"] = "RGB505";
+                _colors["B00FFFF"] = "RGB055";
+                _colors["BFFFFFF"] = "mono23";
+
+
+                _ColorTable.push("000000", "BLACK");
+                _ColorTable.push("800000", "RED");
+                _ColorTable.push("008000", "GREEN");
+                _ColorTable.push("808000", "ORANGE");
+                _ColorTable.push("0000EE", "BLUE");
+                _ColorTable.push("800080", "MAGENTA");
+                _ColorTable.push("008080", "CYAN");
+                _ColorTable.push("BBBBBB", "WHITE");
+                _ColorTable.push("808080", "BOLD BLACK");
+                _ColorTable.push("FF0000", "BOLD RED");
+                _ColorTable.push("00FF00", "BOLD GREEN");
+                _ColorTable.push("FFFF00", "BOLD YELLOW");
+                _ColorTable.push("9292FF", "BOLD BLUE");
+                _ColorTable.push("FF00FF", "BOLD MAGENTA");
+                _ColorTable.push("00FFFF", "BOLD CYAN");
+                _ColorTable.push("FFFFFF", "BOLD WHITE");
+
+                for (r = 0; r < 6; r++) {
+                    for (g = 0; g < 6; g++) {
+                        for (b = 0; b < 6; b++) {
+                            idx = "RGB" + r + "" + g + "" + b;
+                            color = "";
+                            c = 0;
+                            c = r * 40 + 55;
+                            if (c < 16)
+                                color += "0";
+                            color += c.toString(16);
+                            c = 0;
+                            c = g * 40 + 55;
+                            if (c < 16)
+                                color += "0";
+                            color += c.toString(16)
+                            c = 0;
+                            c = b * 40 + 55;
+                            if (c < 16)
+                                color += "0";
+                            color += c.toString(16)
+                            color = color.toUpperCase();
+                            _ColorTable.push(color);
+                            _ColorTable.push(idx);
+                            if (!_colors[color])
+                                _colors[color] = idx;
+                            colorList.push({ color: idx, hex: '#' + color, rgb: { r: r * 40 + 55, g: g * 40 + 55, b: b * 40 + 55 } });
+                        }
+                    }
+                }
+
+                for (r = 232; r <= 255; r++)//greyscale
+                {
+                    g = (r - 232) * 10 + 8;
+                    if (g < 16)
+                        g = "0" + g.toString(16).toUpperCase();
+                    else
+                        g = g.toString(16).toUpperCase();
+                    g = g + g + g;
+                    _ColorTable.push(g);
+                    if (r < 242) {
+                        _ColorTable.push("mono0" + (r - 232));
+                        if (!_colors[g])
+                            _colors[g] = "mono0" + (r - 232);
+                    }
+                    else {
+                        _ColorTable.push("mono" + (r - 232));
+                        if (!_colors[g])
+                            _colors[g] = "mono" + (r - 232);
+                    }
+                }
+                initShadowMUD();
+
+                tinymce.init({
+                    selector: 'textarea',
+                    height: 500,
+                    menubar: false,
+                    browser_spellcheck: true,
+                    //contextmenu: false,
+                    resize: false,
+                    statusbar: false,
+                    nowrap: true,
+                    force_br_newlines: true,
+                    force_p_newlines: false,
+                    forced_root_block: "<span>",
+                    plugins: [
+                        //contextmenu
+                        "shadowmud insertdatetime textcolor nonbreaking"
+                    ],
+                    //contextmenu: "shadowfore shadowback | bold italic underline strikethrough overline dblunderline flash reverse",
+                    nonbreaking_force_tab: true,
+                    textcolor_map: _ColorTable,
+                    textcolor_rows: "17",
+                    textcolor_cols: "16",
+                    toolbar: 'send | append | undo redo | forecolor backcolor | bold italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
+                    content_css: 'css/editorcontent.css',
+                    formats: {
+                        bold: { inline: 'strong', exact: true, links: true, remove_similar: true },
+                        italic: { inline: 'em', exact: true, links: true, remove_similar: true },
+                        overline: { inline: 'span', 'classes': 'overline', links: true, remove_similar: true },
+                        dblunderline: { inline: 'span', 'classes': 'dblunderline', links: true, remove_similar: true },
+                        flash: { inline: 'span', 'classes': 'flash', links: true, remove_similar: true },
+                        reverse: { inline: 'span', 'classes': 'reverse', links: true, remove_similar: true },
+                        underline: { inline: 'span', 'classes': 'underline', links: true, remove_similar: true },
+                        strikethrough: { inline: 'span', 'classes': 'strikeout', links: true, remove_similar: true },
+                        forecolor: { inline: 'span', styles: { textDecoration: 'inherit', border: 'inherit', color: '%value' }, exact: true, links: true, remove_similar: true },
+                        hilitecolor: { inline: 'span', styles: { textDecoration: 'inherit', border: 'inherit', backgroundColor: '%value' }, exact: true, links: true, remove_similar: true }
+                        //forecolor: { block: 'span', attributes: { 'data-color': '%value' }, styles: { textDecoration: 'inherit', border: 'inherit', color: '%value' }, exact: true, links: true, remove_similar: true },
+                        //hilitecolor: { block: 'span', attributes: { 'data-backcolor': '%value' }, styles: { textDecoration: 'inherit', border: 'inherit', backgroundColor: '%value' }, exact: true, links: true, remove_similar: true }
+
+                    }
+                });
+
+                tinymce.activeEditor.on('contextmenu', function (e) {
+                    e.preventDefault();
+                    cMenu.popup(remote.getCurrentWindow());
+                });
+                /*
+                                window.addEventListener('contextmenu', function (e) {
+                                    e.preventDefault();
+                                    cMenu.popup(remote.getCurrentWindow());
+                                }, false);
+                                */
+            });
+
+            /*
+textcolor_map: [
+                        "000000", "Black",
+                        "993300", "Burnt orange",
+                        "333300", "Dark olive",
+                        "003300", "Dark green",
+                        "003366", "Dark azure",
+                        "000080", "Navy Blue",
+                        "333399", "Indigo",
+                        "333333", "Very dark gray",
+                        "800000", "Maroon",
+                        "FF6600", "Orange",
+                        "808000", "Olive",
+                        "008000", "Green",
+                        "008080", "Teal",
+                        "0000FF", "Blue",
+                        "666699", "Grayish blue",
+                        "808080", "Gray",
+                        "FF0000", "Red",
+                        "FF9900", "Amber",
+                        "99CC00", "Yellow green",
+                        "339966", "Sea green",
+                        "33CCCC", "Turquoise",
+                        "3366FF", "Royal blue",
+                        "800080", "Purple",
+                        "999999", "Medium gray",
+                        "FF00FF", "Magenta",
+                        "FFCC00", "Gold",
+                        "FFFF00", "Yellow",
+                        "00FF00", "Lime",
+                        "00FFFF", "Aqua",
+                        "00CCFF", "Sky blue",
+                        "993366", "Red violet",
+                        "FFFFFF", "White",
+                        "FF99CC", "Pink",
+                        "FFCC99", "Peach",
+                        "FFFF99", "Light yellow",
+                        "CCFFCC", "Pale green",
+                        "CCFFFF", "Pale cyan",
+                        "99CCFF", "Light sky blue",
+                        "CC99FF", "Plum",
+                    ],            
+            */
+        </script>
+    </head>
+
+    <body>
+        <textarea></textarea>
+    </body>
+
+</html>

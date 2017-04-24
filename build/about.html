@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>jiMUD</title>
+  <style type="text/css">
+  body {text-align: center;}
+  #logo {
+      width:400px; 
+      height:140px;
+      border: 0px solid silver;
+      background-image: url(./../assets/logo@3x.png);
+    }
+
+    #logoversion {
+      position: absolute;
+      right: 30px;
+      top: 120px;
+      z-index: 1;
+      color: white;
+      font-weight: bold;
+    }  
+
+    .info {
+      text-align: left;
+      border: 1px black solid;
+      padding: 2px;
+      width: 395px;
+      margin: 4px;
+    }
+  </style>
+  <script>
+    if (typeof module === 'object') { window.module = module; module = undefined; }
+  </script>
+  <script src="../lib/jquery.js"></script>
+  <script>
+    if (window.module) module.module;
+  </script>  
+  <script>
+    const { version } = require("../package.json");
+
+    $(document).ready(() => {
+      $("#ev").text(process.versions.electron);
+      $("#nv").text(process.versions.node);
+      $("#cv").text(process.versions.chrome);
+      $("#jv").text(version);
+      $("#logoversion").text("v"+version);
+      
+    });
+  </script>
+</head>
+<body>
+    <img id="logo" src="./../assets/logo@3x.png"/>
+    <div id="logoversion"></div>
+    <div class="info">Version: <span id="jv"></span> </div>
+    <div class="info">      
+      Electron: <span id="ev"></span> - http://electron.atom.io<br/>
+      Node: <span id="nv"></span> - http://www.nodejs.org/<br/>
+      Chromium: <span id="cv"></span> - https://www.chromium.org/Home<br/>
+      Buzz: 1.2.0 - http://buzz.jaysalvat.com<br/>
+      jQuery: 3.1.1 - http://www.jquery.com<br/>
+      Icons - http://opengameart.org/<br/>
+      <br/>&copy; 2017
+    </div>
+</body>
+</div>

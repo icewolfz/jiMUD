@@ -1,0 +1,356 @@
+html, body{
+	overflow: hidden;
+    -webkit-user-select:none;
+    user-select:none;	
+}
+
+#toolbar
+{
+	background-color: menu;
+	margin-left:2px;
+	margin-right:2px;
+	padding-top: 2px;
+	padding-bottom:2px;
+}
+
+/*
+#toolbar a
+{
+	height: 20px;
+	min-width: 20px;
+	display: inline-block;
+	text-align:center;
+}
+*/
+
+#toolbar .btn {
+  outline: none !important;
+}
+
+#toolbar button
+{
+	min-width: 26px;
+}
+
+#toolbar input
+{
+	padding: 0px 2px;
+	margin: 0px;
+	width: 60px;
+	float: left;
+	height: 22px;
+	margin-left: 5px;
+}
+
+#toolbar .fa-circle
+{
+	color: red;
+}
+
+#toolbar select
+{
+	float: left;
+	min-width: 100px;
+	width: auto;
+	padding: 0px 2px;
+	margin: 0px;
+	height: 22px;
+	margin-left: 5px;
+}
+
+
+#toolbar label
+{
+	margin-bottom: 0 !important;
+}
+
+/*
+#toolbar span
+{
+	height: 24px;
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #fff;
+	margin: 2px 1px;
+	float: left;
+}
+*/
+
+#body
+{
+	top:26px;
+	bottom:55px;
+	left:0;
+	right:0;
+	position: absolute;
+}
+
+.panel-resizable 
+{
+	resize: horizontal;
+	overflow: auto;
+}
+
+#sidebar{
+   	min-width:200px;
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+}
+
+#tree
+{
+	padding:0px;
+	margin: 0;
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	right: 3px;	
+	overflow: auto;
+}
+
+#tree .list-group
+{
+	margin: 0;
+	box-shadow: none;
+}
+
+#editor
+{
+	position: absolute;
+	right: 0px;
+	top: 0;
+	bottom: 0px;
+	left: 202px;
+	margin: 0;
+}
+
+#editor .panel{
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	margin: 0;
+}
+
+#dragbar{
+  background-color:transparent;
+  height:100%;
+  float: right;
+  width: 3px;
+  cursor: col-resize;
+}
+#ghostbar{
+  width:3px;
+  background-color:#000;
+  opacity:0.5;
+  position:absolute;
+  cursor: col-resize;
+  z-index:999
+}
+
+.panel-body
+{
+	overflow: auto;
+	bottom: 0px;
+	right: 0;
+	left: 0;
+	position: absolute;
+	top:41px;
+}
+
+.control-label 
+{
+	word-wrap:break-word;
+	word-break:break-all;
+	white-space: nowrap;
+}
+
+@media (min-width: 768px)
+{
+	.form-inline input.form-control  {
+		width: 100%;
+	}
+
+	.control-label {
+		width: 100%;
+	}
+
+	.control-label[class*=col-] {
+		width: auto;
+		line-height: 34px;
+	}
+	.form-inline .form-group {
+    	margin-bottom: 15px;
+	}	
+}
+
+table .control-label
+{
+	text-align:right;
+	padding-right: 5px;
+}
+
+td, th {
+	padding-bottom: 15px;
+}
+
+table tr:last-child td
+{
+	padding: 0px;
+}
+
+.list-group-item {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;  
+}
+
+.btn-adv
+{
+	height: 11px;
+    padding: 0;
+    margin: 0;
+    font-size: 8px;
+    width: 75px;
+}
+
+.panel-adv 
+{
+	margin:0;
+	font-size: 8px;
+	height: 8px;
+	padding:0;
+	text-align:center;
+}
+
+.panel-adv-body
+{
+	display:none;
+}
+
+.panel-adv-body.first > td
+{	
+	padding-top: 15px;
+	border-top: 1px solid #ddd;		
+}
+
+#triggers .tab-content 
+{
+    position: absolute;
+    top: 50px;
+    bottom: 15px;
+    right: 0;
+    left: 0;	
+}
+
+#triggers .tab-pane
+{
+	height: 100%;
+	width: 100%;
+	padding: 0;
+	margin: 0;
+}
+
+#triggers .control-label
+{
+	margin-bottom: 0px;
+}
+
+.btn-warning
+{
+	text-shadow: 0 -1px 0 rgba(0,0,0,.2) !important;
+}
+
+.action-icon
+{
+	width: 32px;
+	height: 32px;
+}
+
+#buttonActionsDropdown
+{
+	height: 200px;
+	width: 204px;
+    overflow: auto;
+	padding: 0px;
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+#addMenu
+{
+	min-width:auto
+}
+
+#buttonActionsDropdown li {
+	display: block;
+	float: left;
+}
+
+#buttonActionsDropdown li a
+{
+	padding-left:2px;
+	padding-right:2px;
+	position: relative;
+}
+
+.overlay
+{
+	display:none;
+	width:100%;
+	height:100%;
+	position: absolute;
+	left:0px;
+	right:0px;
+	top:0px;
+	opacity: 0.70;
+	background-color: #e8e8e8;
+	z-index: 100;
+	border-radius: 4px;
+}
+
+#buttonActionsDropdown li a:hover .overlay
+{
+	display:block;
+}
+
+.editor
+{
+	height: 100%;
+	width: 100%;
+	display: none;
+}
+
+#enabled
+{
+	float: right;
+}
+
+#aliases
+{
+	display: none
+}
+
+.editorbody
+{
+	width: 100%; 
+	height: 100%;
+	padding: 0px; 
+	margin:0px;
+}
+
+.editorbody tr:first-child
+{
+	padding-bottom: 2px;
+	height: 22px;
+}
+
+.valueeditor
+{
+	vertical-align: top;
+	height: 100%;
+	padding-bottom:15px
+}
