@@ -70,7 +70,7 @@
 - `Preivew` - a preview of how the button will look
 - `Enable` enable/disable button
 - `Caption` The button caption to display for tooltip
-- `Icon` A path to an icon to display, may pick from build in icons or from a file - [Predefined variables for paths](faq.md##what-predefined-variables-can-be-use-for-paths)
+- `Icon` A path to an icon to display, may pick from build in icons or from a file - [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Style` how the value is processed
   - `Text` send value as is
   - `Parse` do standard parsing
