@@ -6,3 +6,4 @@ _test/
 npm-debug.log
 typings/
 .idea/
+src/js/
