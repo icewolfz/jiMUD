@@ -1,13 +1,4 @@
 ## Changelog
-- **Known Issues:**
-  - Flashing blocks may blink out of sync when flashing enabled in display or advanced editor
-  - Advanced editor 
-    - Paste may lose some colors/background colors on pasted, this is a bug in   TinyMCE editor
-    - When apply styles to all text some styles may get stuck  
-    - Some styles will not flash when flashing is enabled depending on order of styles applied
-    - Toolbar text/background color picker may be cut off in small window sizes
-    - Reverse style has wierd results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
----
 ##### 0.1.6 - 2017-05-??
 - **New:**
   - Advanced editor 
@@ -17,6 +8,7 @@
   - Auto copy selected text from display to clipboard when done
   - Copying from main client should be smarter, if selected text and command input is focued it will copy display, if command focused and has selected text will copy that text
   - Profile manager can now be opened using Ctrl+P
+  - Added some [docs](docs/README.md) to the GIT repo
 - **Changed:**
   - Advanced editor now uses monospaced font
   - Removed insert date/time from advanced editor context

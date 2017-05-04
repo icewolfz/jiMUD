@@ -4,7 +4,8 @@
     "version": "0.1.0",
     "command": "tsc",
     "isShellCommand": true,
-    "args": ["-p", "."],
+    "args": ["-p", ".", "--listEmittedFiles"],
     "showOutput": "always",
-    "problemMatcher": "$tsc"
+    "problemMatcher": "$tsc",
+    "listEmittedFiles": true
 }

@@ -7,7 +7,8 @@
         "sourceMap": false,
         "noImplicitAny": false,
         "allowJs": true,
-        "outDir": "./src/js"
+        "outDir": "./src/js",
+        "newLine": "LF"
     },
     "exclude": [
         "./node_modules",

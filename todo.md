@@ -38,6 +38,7 @@
 ## Miscellaneous
 * Create better application icons, and new ones where needed
 * Finish monster css icons
+* Add advanced color pref systems to allow customizing the 256 xterm colors
 * maybe convert from using a bell sound file in ansi parer to using electron shell.beep() [https://github.com/electron/electron/blob/master/docs/api/shell.md](https://github.com/electron/electron/blob/master/docs/api/shell.md), do this by capturing the bell event in parer or from index.html as client.parser.on('bell', ()  => { shell.beep() });
 * ***Mac - needs a mac, can't build or test***
 * Help files
