@@ -396,7 +396,12 @@ var menutemp = [
           shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
         }
       },
-      { label: '&jiMUD' },
+      {
+        label: '&jiMUD',
+        click: () => {
+          shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
+        }
+      },
       { type: 'separator' },
       {
         label: '&About...',

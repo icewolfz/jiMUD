@@ -42,6 +42,6 @@
 * maybe convert from using a bell sound file in ansi parer to using electron shell.beep() [https://github.com/electron/electron/blob/master/docs/api/shell.md](https://github.com/electron/electron/blob/master/docs/api/shell.md), do this by capturing the bell event in parer or from index.html as client.parser.on('bell', ()  => { shell.beep() });
 * ***Mac - needs a mac, can't build or test***
 * Help files
-  * Sections for profile manager, settings, mapper, change log
-  * Scripting referance that list all publicly supported javascript functions
+  * Sections for mapper
+  * Create a local help file based on docs
 * Code documentation - comment all classes/functions/enums for all typescript and javascript
