@@ -38,6 +38,10 @@
       });
 
       $(document).ready(() => {
+        if (process.platform === 'win32')
+          $('.win32').css('display', 'inline-block');
+        else
+          $('.win32').css('display', 'none');
         $('#font').change(() => {
           $("#fontsample").css("font-family", $("#font").val() + ", monospace");
           $("#fontsample").css("font-size", $("#fontSize").val());
@@ -118,6 +122,10 @@
         $('#mapLegend').prop('checked', _settings.mapper.legend);
         $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
 
+        $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
+        $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
+
+
         $('#showMapper').prop('checked', _settings.showMapper);
         $('#commandDelay').val(_settings.commandDelay);
         $('#commandDelayCount').val(_settings.commandDelayCount);
@@ -131,6 +139,12 @@
 
         $('input[type="checkbox"]').change(function () {
           switch ($(this).attr('id')) {
+            case 'mapper-alwaysOnTop':
+              _settings.mapper.alwaysOnTop = this.checked;
+              break;
+            case 'mapper-alwaysOnTopClient':
+              _settings.mapper.alwaysOnTopClient = this.checked;
+              break;
             case 'MapperSplitArea':
               _settings.mapper.split = this.checked;
               break;
@@ -855,6 +869,21 @@
           <input type="checkbox" id="mapEnabled" />
           Enable mapper
           </label>
+      </div>
+      <div class="col-sm-12 form-group" style="margin:0;padding:0">
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="mapper-alwaysOnTopClient" />
+          Always on top of the main window
+          <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="mapper-alwaysOnTop" />
+          Always on top of all windows
+          </label>
+        </div>
       </div>
       <div class="col-sm-6 form-group">
         <label class="control-label">

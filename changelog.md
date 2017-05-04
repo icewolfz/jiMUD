@@ -9,6 +9,7 @@
   - Copying from main client should be smarter, if selected text and command input is focued it will copy display, if command focused and has selected text will copy that text
   - Profile manager can now be opened using Ctrl+P
   - Added some [docs](docs/README.md) to the GIT repo
+  - Mapper can now be set to always be on top of client, all windows, or independant
 - **Changed:**
   - Advanced editor now uses monospaced font
   - Removed insert date/time from advanced editor context
@@ -18,6 +19,7 @@
   - Changed how deleted profiles where moved to trash, now uses framework instead of extra node module
   - Upgraded to electron 1.6.8
   - All css/js files are ran into minifiers to gain some speed
+  - Help > jiMUD now opens up to the github docs
 - **Fixed:**  
   - Context menus in advanced editor have been converted into native context menus, fixing menus being cut off in small window size  
   - When underline would remove double underline effect when following double underline ansi attribute

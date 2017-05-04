@@ -6,8 +6,8 @@
     ],
     "taskButtons.buttons": [
         {
-            "task": "tsc",
-            "buttonLabel": "TypeScript"
+            "task": "compile",
+            "buttonLabel": "Compile"
         }
     ],
     "search.exclude": {

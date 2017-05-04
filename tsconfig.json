@@ -8,7 +8,8 @@
         "noImplicitAny": false,
         "allowJs": true,
         "outDir": "./src/js",
-        "newLine": "LF"
+        "newLine": "LF",
+        "checkJs": true
     },
     "exclude": [
         "./node_modules",

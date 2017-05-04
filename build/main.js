@@ -822,8 +822,14 @@ app.on('activate', () => {
 
 ipcMain.on('reload-options', () => {
   win.webContents.executeJavaScript('client.loadOptions()');
-  if (winmap)
+  set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+  if (winmap) {
     winmap.webContents.send('reload-options');
+    if(winmap.setParentWindow)
+      winmap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
+    winmap.setAlwaysOnTop(set.mapper.alwaysOnTop);
+    winmap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
+  }
   if (winprofiles)
     winprofiles.webContents.send('reload-options');
 });
@@ -854,6 +860,14 @@ ipcMain.on('reload-profiles', (event) => {
 })
 
 ipcMain.on('setting-changed', (event, data) => {
+  if (data.type == "mapper" && data.name == "alwaysOnTopClient") {
+    winmap.setParentWindow(data.value ? win : null);
+    winmap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
+  }
+  if (data.type == "mapper" && data.name == "setAlwaysOnTop") {
+    winmap.setAlwaysOnTop(data.value);
+    winmap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
+  }
   if (event.sender != win.webContents)
     win.webContents.send('setting-changed', data);
   if (winmap && event.sender != winmap.webContents)
@@ -1060,7 +1074,8 @@ function showPrefs() {
 function createMapper(show) {
   s = loadWindowState('mapper')
   winmap = new BrowserWindow({
-    parent: win,
+    parent: set.mapper.alwaysOnTopClient ? win : null,
+    alwaysOnTop: set.mapper.alwaysOnTop,
     title: 'Mapper',
     x: s.x,
     y: s.y,
@@ -1068,7 +1083,7 @@ function createMapper(show) {
     height: s.height,
     backgroundColor: '#eae4d6',
     show: false,
-    skipTaskbar: false,
+    skipTaskbar: (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false,
     icon: path.join(__dirname, '../assets/icons/png/map2.png')
   })
 

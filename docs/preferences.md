@@ -1,5 +1,5 @@
 # Preferences
-## <a name="general"></a>General
+## General
 
 - `Auto Connect onload` This will cause the client to try and connect as soon as the client has finished loading.
 - `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
@@ -7,7 +7,7 @@
 - `Enable Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
 - `Enable debug` Will display debug data to the dev tool console
 
-## <a name="display"></a>Display
+## Display
 
 - `Font` The font for the display area, mono spaced fonts work the best.
 - `Font size` The font size for the display area
@@ -18,31 +18,21 @@
 - `Focus to command input on click` Will auto focus to the command input when the display area is clicked.
 - `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
 
-## <a name="colors"></a>Colors
+## Colors
 
-- `Color scheme` 
-Let you pick prefined colors schemes
-- `Default` 
-The default font color when no color codes have been supplied
-- `Local echo` 
-The local echo color
-- `Information` 
-The color of any information from the client
-- `Error` 
-The color of errors` 
-- `Ansi colors` 
-You can set the 8 regular colors, 8 background colors, 8 bold/bright colors and the 8 faint colors.
+- `Color scheme` Let you pick prefined colors schemes
+- `Default` The default font color when no color codes have been supplied
+- `Local echo` The local echo color
+- `Information` The color of any information from the client
+- `Error` The color of error messages
+- `Ansi colors` You can set the 8 regular colors, 8 background colors, 8 bold/bright colors and the 8 faint colors.
 
-## <a name="commandline"></a>Command Line
+## Command Line
 
-- `Command font` 
-The font for the command input box
-- `Command font size` 
-The font size for the command input box
-- `Keep Last Command` 
-This leaves the last command entered into the command input and selected it, if disabled it will be cleared
-- `History Size` 
-The number of items to keep in command history when navigating using the up/down arrow.
+- `Command font` The font for the command input box
+- `Command font size` The font size for the command input box
+- `Keep Last Command` This leaves the last command entered into the command input and selected it, if disabled it will be cleared
+- `History Size` The number of items to keep in command history when navigating using the up/down arrow.
 - `Command Stacking` 
   - `Character` The character to use when repeating command into multiple commands.
   - `Enable` This will enable command stacking systems and use the command stacking character to know where to break a command into a list commands.
@@ -51,55 +41,36 @@ The number of items to keep in command history when navigating using the up/down
   - `Enable` Weather or not to expand speedpaths, if disabled the line is parsed as normal command
   - `Parse` Parse each command as if it was sent from the command line, if disabled each command is sent to the mud as is.
 - `Parse single quotes as strings` Treat single quotes as string encasing, meaning all text found inside single quotes are treated as is and not parsed.
-- `Parse double quotes as strings` 
-Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
+- `Parse double quotes as strings` Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
 
-## <a name="logging"></a>Logging
+## Logging
 
-- `Enable Logging` 
-Enable logger, can also be toggled by the log icon on the toolbar.
-- `Prepend current buffer starting to log` 
-Will prepend the current text on display to the log when started
-- `Enable Logging of offline text` 
-Log text when not connected.
-- `Create logs for every connection`
-This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session. 
-- `Save path`
-The location to save log files to, **note** path must exist supports
+- `Enable Logging` Enable logger, can also be toggled by the log icon on the toolbar.
+- `Prepend current buffer starting to log` Will prepend the current text on display to the log when started
+- `Enable Logging of offline text` Log text when not connected.
+- `Create logs for every connection` This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session. 
+- `Save path` The location to save log files to, **note** path must exist supports
 [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
-## <a name="mapper"></a>Mapper
+## Mapper
 
-- `Open on load`
-Open the mapper when you load the client
-- `Enable Mapper`
-Enable the mapper and create rooms as player moves
-- `Follow Player`
-Set the current room to the players as they move
-- `Show legend`
-Show map legend
-- `Split Areas`
-Attempt to draw maps split up by area/zones
-- `Display Walls`
-Draw walls between rooms to try and help display a more dungeon feel
-- `Reset Window`
-Reset the mapper windows to default, this allows you to re-center window in case you dragged it off screen.
-- `Delay between directions`
-The amount of milliseconds between sending # of directions for speed walking.
-- `Directions to send`
-the # of directions to send between delays
+- `Open on load` Open the mapper when you load the client
+- `Enable Mapper` Enable the mapper and create rooms as player moves
+- `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. _When disabled requires mapper to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of all windows` Force mapper to always be on top of all windows
+- `Follow Player` Set the current room to the players as they move
+- `Show legend` Show map legend
+- `Split Areas` Attempt to draw maps split up by area/zones
+- `Display Walls` Draw walls between rooms to try and help display a more dungeon feel
+- `Reset Window` Reset the mapper windows to default, this allows you to re-center window in case you dragged it off screen.
+- `Delay between directions` The amount of milliseconds between sending # of directions for speed walking.
+- `Directions to send` the # of directions to send between delays
 
-## <a name="telnet"></a>Telnet
+## Telnet
 Settings to control how to handle telnet options and emulation
 
-- `MUD Compression Protocol (MCCP)`
-Disables or enables MUD Client Compression Protocol, this allows the mud to send all data as compressed to save bandwidth, only disable if you seem to have issues or need to try and save some local resources.
-- `UTF-8`
-Disables or enables UTF8 processing, disabling it may gain you some cpu or speed but you cuold get garbled or incorrectly displayed text.
-- `MUD eXtension Protocol (MXP)`
-Disables or enables MUD eXtension Protocol parsing and telnet option
-- `Echo`
-Disable or enables Echo option to display/hide text when server requests
-- `MUD Sound Protocol (MSP)`
-Disable or enable MSP
-- `Display Notification on MSP Play`
-Display a message when a file has started to play
+- `MUD Compression Protocol (MCCP)` Disables or enables MUD Client Compression Protocol, this allows the mud to send all data as compressed to save bandwidth, only disable if you seem to have issues or need to try and save some local resources.
+- `UTF-8` Disables or enables UTF8 processing, disabling it may gain you some cpu or speed but you cuold get garbled or incorrectly displayed text.
+- `MUD eXtension Protocol (MXP)` Disables or enables MUD eXtension Protocol parsing and telnet option
+- `Echo` Disable or enables Echo option to display/hide text when server requests
+- `MUD Sound Protocol (MSP)` Disable or enable MSP
+- `Display Notification on MSP Play` Display a message when a file has started to play

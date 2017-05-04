@@ -1,3 +1,4 @@
+/*
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
@@ -8,4 +9,75 @@
     "showOutput": "always",
     "problemMatcher": "$tsc",
     "listEmittedFiles": true
+}
+*/
+{
+    "version": "0.1.0",
+    "command": "npm",
+    "isShellCommand": true,
+    "suppressTaskName": true,
+    "tasks": [
+        {
+            // Build task, Ctrl+Shift+B
+            // "npm install --loglevel info"
+            "taskName": "compile",
+            "isBuildCommand": true,
+            "args": [
+                "run",
+                "compile"
+            ]
+        },
+        {
+            // "npm run debug"
+            "taskName": "debug",
+            "args": [
+                "run",
+                "debug"
+            ]
+        },
+        {
+            // "npm run debug"
+            "taskName": "build",
+            "windows": {
+                "args": [
+                    "run",
+                    "build:win"
+                ]
+            },
+            "linux": {
+                "args": [
+                    "run",
+                    "build:linux"
+                ]
+            },
+            "osx": {
+                "args": [
+                    "run",
+                    "build:osx"
+                ]
+            }
+        },
+        {
+            // "npm run debug"
+            "taskName": "package",
+            "windows": {
+                "args": [
+                    "run",
+                    "package:win"
+                ]
+            },
+            "linux": {
+                "args": [
+                    "run",
+                    "package:linuxall"
+                ]
+            },
+            "osx": {
+                "args": [
+                    "run",
+                    "package:osx"
+                ]
+            }
+        }
+    ]
 }

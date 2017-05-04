@@ -21,6 +21,8 @@ export class Mapper {
 	public room: boolean = false;
 	public vscroll: number = 0;
 	public hscroll: number = 0;
+	public alwaysOnTop: boolean = false;
+	public alwaysOnTopClient: boolean = true;
 	public active =
 	{
 		ID: null,
