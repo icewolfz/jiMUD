@@ -26,12 +26,12 @@ create or alter and alias from command line
 delete an alias from command line
   - name argument is the same as #alias
 - `#setsetting name value` or `#sets`
-alter a setting from command line, [Keys and value types](faq.md#settings)
+alter a setting from command line, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
   - name argument is the same as #alias
   - value same as #alias`
     - toggle - if type is boolean this speical value allows you toggle the setting the oppisite of the current value.
 - `#getsetting name` or `#gets`
-display a setting value from command line, [Keys and value types](faq.md#settings)
+display a setting value from command line, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
   - name argument is the same as #alias, if name is all it will list all settings and current value
 - `#profile name enable/disable` or `#pro`
 enable or disable a profile

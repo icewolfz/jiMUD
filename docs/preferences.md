@@ -54,7 +54,7 @@ The number of items to keep in command history when navigating using the up/down
 - `Parse double quotes as strings` 
 Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
 
-## <a name="loggin"></a>Logging
+## <a name="logging"></a>Logging
 
 - `Enable Logging` 
 Enable logger, can also be toggled by the log icon on the toolbar.
@@ -66,7 +66,7 @@ Log text when not connected.
 This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session. 
 - `Save path`
 The location to save log files to, **note** path must exist supports
-[Predefined variables for paths](faq.md@variables)
+[Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
 ## <a name="mapper"></a>Mapper
 
 - `Open on load`
