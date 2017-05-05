@@ -821,17 +821,19 @@ app.on('activate', () => {
 })
 
 ipcMain.on('reload-options', () => {
-  win.webContents.executeJavaScript('client.loadOptions()');
+  win.webContents.send('reload-options');
   set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
   if (winmap) {
     winmap.webContents.send('reload-options');
-    if(winmap.setParentWindow)
+    if (winmap.setParentWindow)
       winmap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
     winmap.setAlwaysOnTop(set.mapper.alwaysOnTop);
     winmap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
   }
   if (winprofiles)
     winprofiles.webContents.send('reload-options');
+  if (wineditor)
+    wineditor.webContents.send('reload-options');
 });
 
 ipcMain.on('send-background', (event, command) => {
@@ -852,6 +854,10 @@ ipcMain.on('send', (event, raw) => {
 
 ipcMain.on('log', (event, raw) => {
   console.log(raw);
+})
+
+ipcMain.on('debug', (event, msg) => {
+  win.webContents.send('send', msg);
 })
 
 ipcMain.on('reload-profiles', (event) => {
@@ -897,7 +903,7 @@ ipcMain.on('set-overlay', (event, args) => {
   }
 });
 
-ipcMain.on('set-progress', (event, args)=> {
+ipcMain.on('set-progress', (event, args) => {
   win.setProgressBar(args.value, args.options);
 });
 

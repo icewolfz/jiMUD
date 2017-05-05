@@ -26,8 +26,8 @@
             const fs = require('fs');
             const path = require('path');
 
-            var _colors = {};
-            var _ColorTable;
+            var _colors, _ColorTable, options;
+            var cMenu;
 
             function clearReverse(els, c) {
                 els.each(
@@ -98,67 +98,6 @@
                 });
             }
 
-
-            const cMenu = new Menu();
-            cMenu.append(new MenuItem({ role: 'undo', icon: path.join(__dirname, '../assets/icons/png/undo.png') }));
-
-            cMenu.append(new MenuItem({ role: 'redo', icon: path.join(__dirname, '../assets/icons/png/redo.png') }));
-            cMenu.append(new MenuItem({ type: 'separator' }));
-            cMenu.append(new MenuItem({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') }));
-            cMenu.append(new MenuItem({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') }));
-            cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
-            cMenu.append(new MenuItem({ type: 'separator' }));
-            cMenu.append(new MenuItem({ role: 'selectall' }));
-            cMenu.append(new MenuItem({ type: 'separator' }));
-
-            cMenu.append(new MenuItem({
-                label: 'Style',
-                submenu: [
-                    {
-                        label: 'Bold',
-                        icon: path.join(__dirname, '../assets/icons/png/bold.png'),
-                        click: toggleConextFormat
-                    },
-                    {
-                        label: 'Italic',
-                        icon: path.join(__dirname, '../assets/icons/png/italic.png'),
-                        click: toggleConextFormat
-                    },
-                    {
-                        label: 'Underline',
-                        icon: path.join(__dirname, '../assets/icons/png/underline.png'),
-                        click: toggleConextFormat
-                    },
-                    {
-                        label: 'Strikethrough',
-                        icon: path.join(__dirname, '../assets/icons/png/strikethrough.png'),
-                        click: toggleConextFormat
-                    },
-                    {
-                        label: 'Overline',
-                        icon: path.join(__dirname, '../assets/icons/png/overline.png'),
-                        click: toggleConextFormat
-                    },
-                    {
-                        label: 'Double Underline',
-                        format: 'dblunderline',
-                        icon: path.join(__dirname, '../assets/icons/png/dblunderline.png'),
-                        click: toggleConextFormat
-                    },
-                    {
-                        label: 'Flash',
-                        icon: path.join(__dirname, '../assets/icons/png/flash.png'),
-                        click: toggleConextFormat
-                    },
-                    {
-                        label: 'Reverse',
-                        icon: path.join(__dirname, '../assets/icons/png/reverse.png'),
-                        click: toggleConextFormat
-                    }
-                ]
-            }));
-
-
             function createIcon(txt, name, fore, back, border, save) {
                 if (!name) name = "image";
                 var canvas = document.createElement('canvas');
@@ -193,7 +132,6 @@
 
                 return nativeImage.createFromDataURL(canvas.toDataURL('image/png', 0.92));
             }
-
 
             function appendFile() {
                 dialog.showOpenDialog(remote.getCurrentWindow(),
@@ -344,6 +282,8 @@
                 var buffer = [];
                 var codes = [];
                 var color;
+                if (options.enableDebug)
+                    ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
                 for (var d = data.length - 1; d >= 0; d--) {
                     if (!data[d].startsWith('"'))
                         data.pop();
@@ -462,14 +402,8 @@
                 return tinymce.activeEditor.getContent({ format: 'html' })
             }
 
-            var colorList = [
-                /*
-                { color: 'red', hex: '#EA4235', rgb: { r: 234, g: 66, b: 53 } },
-                { color: 'green', hex: '#34A853', rgb: { r: 512,  g: 168, b: 83 } },
-                { color: 'blue', hex: '#4285F4', rgb: { r: 66, g: 133, b: 244 } },
-                { color: 'yellow', hex: '#FBBC05', rgb: { r: 251, g: 188, b: 5 } }
-                */
-            ];
+            //{ color: 'red', hex: '#EA4235', rgb: { r: 234, g: 66, b: 53 } },
+            var colorList = [];
 
             function nearestHex(hex) {
                 //https://codereview.stackexchange.com/questions/132225/given-hexadecimal-rgb-color-find-the-closest-predefined-color
@@ -515,7 +449,6 @@
                 return closestHexFromRgb(hexToRgb(hex));
 
             };
-
 
             function initShadowMUD() {
                 tinymce.PluginManager.add('shadowmud', function (editor, url) {
@@ -566,6 +499,108 @@
                             editor.execCommand('mceToggleFormat', false, format);
                             addReverse($(".reverse", $(editor.getDoc()).contents()));
                         });
+                    }
+
+                    this.buildMenu = function () {
+                        cMenu = new Menu();
+                        cMenu.append(new MenuItem({ role: 'undo', icon: path.join(__dirname, '../assets/icons/png/undo.png') }));
+
+                        cMenu.append(new MenuItem({ role: 'redo', icon: path.join(__dirname, '../assets/icons/png/redo.png') }));
+                        cMenu.append(new MenuItem({ type: 'separator' }));
+                        cMenu.append(new MenuItem({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') }));
+                        cMenu.append(new MenuItem({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') }));
+                        cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
+                        cMenu.append(new MenuItem({ type: 'separator' }));
+                        cMenu.append(new MenuItem({ role: 'selectall' }));
+                        cMenu.append(new MenuItem({ type: 'separator' }));
+
+                        cMenu.append(new MenuItem({
+                            label: 'Style',
+                            submenu: [
+                                {
+                                    label: 'Bold',
+                                    icon: path.join(__dirname, '../assets/icons/png/bold.png'),
+                                    click: toggleConextFormat
+                                },
+                                {
+                                    label: 'Italic',
+                                    icon: path.join(__dirname, '../assets/icons/png/italic.png'),
+                                    click: toggleConextFormat
+                                },
+                                {
+                                    label: 'Underline',
+                                    icon: path.join(__dirname, '../assets/icons/png/underline.png'),
+                                    click: toggleConextFormat
+                                },
+                                {
+                                    label: 'Strikethrough',
+                                    icon: path.join(__dirname, '../assets/icons/png/strikethrough.png'),
+                                    click: toggleConextFormat
+                                },
+                                {
+                                    label: 'Overline',
+                                    icon: path.join(__dirname, '../assets/icons/png/overline.png'),
+                                    click: toggleConextFormat
+                                },
+                                {
+                                    label: 'Double Underline',
+                                    format: 'dblunderline',
+                                    icon: path.join(__dirname, '../assets/icons/png/dblunderline.png'),
+                                    click: toggleConextFormat
+                                },
+                                {
+                                    label: 'Flash',
+                                    icon: path.join(__dirname, '../assets/icons/png/flash.png'),
+                                    click: toggleConextFormat
+                                },
+                                {
+                                    label: 'Reverse',
+                                    icon: path.join(__dirname, '../assets/icons/png/reverse.png'),
+                                    click: toggleConextFormat
+                                }
+                            ]
+                        }));
+
+                        var fmi = [
+                            {
+                                label: 'No color',
+                                icon: path.join(__dirname, '../assets/icons/png/nocolor.png'),
+                                format: 'transparent',
+                                click: toggleConextFormat
+                            }
+                        ]
+                        var bmi = [
+                            {
+                                label: 'No color',
+                                icon: path.join(__dirname, '../assets/icons/png/nocolor.png'),
+                                format: 'transparent',
+                                click: toggleConextFormat
+                            }
+                        ]
+                        for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
+                            //generate icon for the first 16 user definable colors, else use predefined icons
+                            if (c >= 64)
+                                icon = path.join(__dirname, '../assets/icons/png/colors/' + _ColorTable[c + 1].replace(/\s+/g, "-") + '.png');
+                            else
+                                icon = createIcon(0, 0, 0, "#" + _ColorTable[c], true);
+                            fmi.push({
+                                label: _ColorTable[c + 1],
+                                icon: icon,
+                                format: 'forecolor',
+                                color: "#" + _ColorTable[c],
+                                click: buttonColorClick
+                            });
+                            bmi.push({
+                                label: _ColorTable[c + 1],
+                                icon: icon,
+                                format: 'hilitecolor',
+                                color: "#" + _ColorTable[c],
+                                click: buttonColorClick
+                            });
+                        }
+                        cMenu.append(new MenuItem({ type: 'separator' }));
+                        cMenu.append(new MenuItem({ label: 'Text color', icon: path.join(__dirname, '../assets/icons/png/forecolor.png'), submenu: fmi }));
+                        cMenu.append(new MenuItem({ label: 'Background color', icon: path.join(__dirname, '../assets/icons/png/backcolor.png'), submenu: bmi }));
                     }
 
                     editor.addButton('send', {
@@ -660,148 +695,10 @@
                         onpostrender: buttonPostRender
                     });
 
-                    /*
-                                        editor.addMenuItem('overline', {
-                                            image: '../assets/icons/png/overline.png',
-                                            text: 'Overline',
-                                            format: 'overline',
-                                            onclick: toggleFormat,
-                                        });
-                    
-                                        editor.addMenuItem('dblunderline', {
-                                            image: '../assets/icons/png/dblunderline.png',
-                                            text: 'Double underline',
-                                            format: 'dblunderline',
-                                            onclick: toggleFormat,
-                                        });
-                    
-                                        editor.addMenuItem('flash', {
-                                            image: '../assets/icons/png/flash.png',
-                                            text: 'Flash',
-                                            format: 'flash',
-                                            onclick: toggleFormat,
-                                        });
-                    
-                                        editor.addMenuItem('reverse', {
-                                            image: '../assets/icons/png/reverse.png',
-                                            text: 'Reverse',
-                                            format: 'reverse',
-                                            onclick: toggleFormat,
-                                        });
-                                        */
-                    var fmi = [
-                        {
-                            label: 'No color',
-                            icon: path.join(__dirname, '../assets/icons/png/nocolor.png'),
-                            format: 'transparent',
-                            click: toggleConextFormat
-                        }
-                    ]
-                    var bmi = [
-                        {
-                            label: 'No color',
-                            icon: path.join(__dirname, '../assets/icons/png/nocolor.png'),
-                            format: 'transparent',
-                            click: toggleConextFormat
-                        }
-                    ]
-                    /*
-                    menuItems = [{
-                        text: 'No color',
-                        color: "transparent",
-                        format: 'forecolor',
-                        icon: "sm-icon sm-transparent",
-                        onclick: buttonColorClick
-                    }];
-                    */
-                    for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
-                        /*
-                        menuItems.push({
-                            text: _ColorTable[c + 1],
-                            color: "#" + _ColorTable[c],
-                            format: 'forecolor',
-                            icon: "sm-icon sm-" + _ColorTable[c + 1].replace(" ", "-"),
-                            onclick: buttonColorClick
-                        });
-                        */
-                        fmi.push({
-                            label: _ColorTable[c + 1],
-                            icon: path.join(__dirname, '../assets/icons/png/colors/' + _ColorTable[c + 1].replace(/\s+/g, "-") + '.png'),
-                            //icon: createIcon(0, _ColorTable[c + 1].replace(/\s+/g, "-"), 0, "#" + _ColorTable[c], true, true),
-                            format: 'forecolor',
-                            color: "#" + _ColorTable[c],
-                            click: buttonColorClick
-                        });
-                        bmi.push({
-                            label: _ColorTable[c + 1],
-                            icon: path.join(__dirname, '../assets/icons/png/colors/' + _ColorTable[c + 1].replace(/\s+/g, "-") + '.png'),
-                            //icon: createIcon(0, 0, 0, "#" + _ColorTable[c], true),
-                            format: 'hilitecolor',
-                            color: "#" + _ColorTable[c],
-                            click: buttonColorClick
-                        });
-                    }
-                    /*
-                                        editor.addMenuItem('shadowfore', {
-                                            text: 'Text color',
-                                            menu: menuItems,
-                                            icon: 'forecolor',
-                                        });
-                                        */
-                    /*
-bmenuItems = [{
-    text: 'No color',
-    color: "transparent",
-    format: 'hilitecolor',
-    icon: "sm-icon sm-transparent",
-    onclick: buttonColorClick
-}];
-*/
-                    //for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
-                    /*
-                    bmenuItems.push({
-                        text: _ColorTable[c + 1],
-                        color: "#" + _ColorTable[c],
-                        icon: "sm-icon sm-" + _ColorTable[c + 1].replace(" ", "-"),
-                        format: 'hilitecolor',
-                        onclick: buttonColorClick
-                    });
-                    */
-                    //}
-
-
-                    cMenu.append(new MenuItem({ type: 'separator' }));
-                    cMenu.append(new MenuItem({ label: 'Text color', icon: path.join(__dirname, '../assets/icons/png/forecolor.png'), submenu: fmi }));
-                    cMenu.append(new MenuItem({ label: 'Background color', icon: path.join(__dirname, '../assets/icons/png/backcolor.png'), submenu: bmi }));
-                    /*
-                                        editor.addMenuItem('shadowback', {
-                                            text: 'Background color',
-                                            menu: bmenuItems,
-                                            icon: 'backcolor',
-                                        });
-                    */
                     editor.on('Change', function (e) {
-
                         addReverse($(".reverse", $(editor.getDoc()).contents()));
-                        /*
-                        $(".reverse", $(editor.getDoc()).contents()).each(
-                            function (idx) {
-                                back = $(this).parent().css('color');
-                                fore = $(this).parent().css('background-color');
-                                if (back == "rgba(0, 0, 0, 0)")
-                                    back = "black";
-                                if (fore == "rgba(0, 0, 0, 0)")
-                                    fore = "black";
-                                $(this).css('color', fore);
-                                $(this).css('background-color', back);
-                            }
-                        );
-                        */
-
                     });
-                    //s - strike, o - overline, d - double underline, f - flash, r - reverse
                     editor.addShortcut('ctrl+s', 'Strikethrough', function () {
-                        //editor.formatter.apply('strikethrough');
                         toggleFormat('strikethrough');
                     });
                     editor.addShortcut('ctrl+o', 'Overline', function () {
@@ -816,55 +713,157 @@ bmenuItems = [{
                     editor.addShortcut('ctrl+r', 'Reverse', function () {
                         toggleFormat('reverse');
                     });
-
+                    this.buildMenu();
                 });
             }
 
             $(document).ready(() => {
+                initShadowMUD();
+
+                tinymce.init({
+                    selector: 'textarea',
+                    height: 500,
+                    menubar: false,
+                    browser_spellcheck: true,
+                    //contextmenu: false,
+                    resize: false,
+                    statusbar: false,
+                    nowrap: true,
+                    force_br_newlines: true,
+                    force_p_newlines: false,
+                    forced_root_block: "<span>",
+                    plugins: [
+                        //contextmenu
+                        "paste shadowmud insertdatetime textcolor nonbreaking"
+                    ],
+                    //contextmenu: "shadowfore shadowback | bold italic underline strikethrough overline dblunderline flash reverse",
+                    nonbreaking_force_tab: true,
+                    textcolor_map: _ColorTable,
+                    textcolor_rows: "17",
+                    textcolor_cols: "16",
+                    toolbar: 'send | append | undo redo | forecolor backcolor | bold italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
+                    content_css: 'css/editorcontent.css',
+                    formats: {
+                        bold: { inline: 'strong', exact: true, links: true, remove_similar: true },
+                        italic: { inline: 'em', exact: true, links: true, remove_similar: true },
+                        overline: { inline: 'span', 'classes': 'overline', links: true, remove_similar: true },
+                        dblunderline: { inline: 'span', 'classes': 'dblunderline', links: true, remove_similar: true },
+                        flash: { inline: 'span', 'classes': 'flash', links: true, remove_similar: true },
+                        reverse: { inline: 'span', 'classes': 'reverse', links: true, remove_similar: true },
+                        underline: { inline: 'span', 'classes': 'underline', links: true, remove_similar: true },
+                        strikethrough: { inline: 'span', 'classes': 'strikeout', links: true, remove_similar: true },
+                        forecolor: { inline: 'span', styles: { textDecoration: 'inherit', border: 'inherit', color: '%value' }, exact: true, links: true, remove_similar: true },
+                        hilitecolor: { inline: 'span', styles: { textDecoration: 'inherit', border: 'inherit', backgroundColor: '%value' }, exact: true, links: true, remove_similar: true }
+                        //forecolor: { block: 'span', attributes: { 'data-color': '%value' }, styles: { textDecoration: 'inherit', border: 'inherit', color: '%value' }, exact: true, links: true, remove_similar: true },
+                        //hilitecolor: { block: 'span', attributes: { 'data-backcolor': '%value' }, styles: { textDecoration: 'inherit', border: 'inherit', backgroundColor: '%value' }, exact: true, links: true, remove_similar: true }
+
+                    },
+                    init_instance_callback: function (editor) {
+                        editor.on('PastePreProcess', function (e) {
+                            if (options.enableDebug)
+                                ipcRenderer.send('debug', 'Advanced Before Editor PastePreProcess: ' + e.content);
+                            clearReverse($(".reverse", $(editor.getDoc()).contents()));
+                            e.content = e.content.replace(/\<\/p>/g, '<br>');
+                            e.content = e.content.replace(/\<\/h[1-6]>/g, '<br>');
+                            e.content = e.content.replace(/\<\/li>/g, '<br>');
+                            var regex = /\<pre(.*?)>((.|\s)*)\<\/pre>/mgi;
+                            while ((m = regex.exec(e.content)) !== null) {
+                                if (m.index === regex.lastIndex) {
+                                    regex.lastIndex++;
+                                }
+                                e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/\n/g, "<br>") + e.content.substring(regex.lastIndex);
+                            }
+                            if (options.enableDebug)
+                                ipcRenderer.send('debug', 'Advanced After Editor PastePreProcess: ' + e.content);                            
+                        });
+                        editor.on('PastePreProcess', function (e) {
+                            addReverse($(".reverse", $(editor.getDoc()).contents()));
+                        });
+                    },
+                    paste_data_images: false,
+                    paste_word_valid_elements: 'b,strong,i,em,u,s,span,strike',
+                    paste_webkit_styles: "color background background-color text-decoration",
+                    paste_retain_style_properties: "color background background-color text-decoration font-weight",
+                    valid_elements: 'strong/b,em/i,u,span[style],strike/s,br',
+                    valid_styles: {
+                        '*': 'color,background,background-color,text-decoration,font-weight'
+                    }
+                });
+
+                tinymce.activeEditor.on('contextmenu', function (e) {
+                    e.preventDefault();
+                    cMenu.popup(remote.getCurrentWindow());
+                });
+                loadOptions();
+            });
+
+            function loadColors() {
+                var _dcolors = Settings.getColors();
+                var c, color, r, g, b, idx, _bold = [];
                 _ColorTable = [];
-                var c, color, r, g, b, idx;
-                _colors["000000"] = "BLACK";
-                _colors["800000"] = "RED";
-                _colors["008000"] = "GREEN";
-                _colors["808000"] = "ORANGE";
-                _colors["0000EE"] = "BLUE";
-                _colors["800080"] = "MAGENTA";
-                _colors["008080"] = "CYAN";
-                _colors["BBBBBB"] = "WHITE";
-                _colors["808080"] = "BOLD%^%^BLACK";
-                _colors["FF0000"] = "BOLD%^%^RED";
-                _colors["00FF00"] = "BOLD%^%^GREEN";
-                _colors["FFFF00"] = "BOLD%^%^YELLOW";
-                _colors["9292FF"] = "BOLD%^%^BLUE";
-                _colors["FF00FF"] = "BOLD%^%^MAGENTA";
-                _colors["00FFFF"] = "BOLD%^%^CYAN";
-                _colors["FFFFFF"] = "BOLD%^%^WHITE";
-                _colors["B808080"] = "B_mono12";
-                _colors["BFF0000"] = "RGB500";
-                _colors["B00FF00"] = "RGB050";
-                _colors["BFFFF00"] = "RGB550";
-                _colors["B9292FF"] = "RGB225";
-                _colors["BFF00FF"] = "RGB505";
-                _colors["B00FFFF"] = "RGB055";
-                _colors["BFFFFFF"] = "mono23";
+                _colors = {};
 
+                color = new rgbcolor(options.colors[0] || _dcolors[0]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BLACK";
+                _ColorTable.push(color, "BLACK");
 
-                _ColorTable.push("000000", "BLACK");
-                _ColorTable.push("800000", "RED");
-                _ColorTable.push("008000", "GREEN");
-                _ColorTable.push("808000", "ORANGE");
-                _ColorTable.push("0000EE", "BLUE");
-                _ColorTable.push("800080", "MAGENTA");
-                _ColorTable.push("008080", "CYAN");
-                _ColorTable.push("BBBBBB", "WHITE");
-                _ColorTable.push("808080", "BOLD BLACK");
-                _ColorTable.push("FF0000", "BOLD RED");
-                _ColorTable.push("00FF00", "BOLD GREEN");
-                _ColorTable.push("FFFF00", "BOLD YELLOW");
-                _ColorTable.push("9292FF", "BOLD BLUE");
-                _ColorTable.push("FF00FF", "BOLD MAGENTA");
-                _ColorTable.push("00FFFF", "BOLD CYAN");
-                _ColorTable.push("FFFFFF", "BOLD WHITE");
+                color = new rgbcolor(options.colors[1] || _dcolors[1]).toHex().substr(1).toUpperCase();
+                _colors[color] = "RED";
+                _ColorTable.push(color, "RED");
+
+                color = new rgbcolor(options.colors[2] || _dcolors[2]).toHex().substr(1).toUpperCase();
+                _colors[color] = "GREEN";
+                _ColorTable.push(color, "GREEN");
+
+                color = new rgbcolor(options.colors[3] || _dcolors[3]).toHex().substr(1).toUpperCase();
+                _colors[color] = "ORANGE";
+                _ColorTable.push(color, "ORANGE");
+
+                color = new rgbcolor(options.colors[4] || _dcolors[4]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BLUE";
+                _ColorTable.push(color, "BLUE");
+                color = new rgbcolor(options.colors[5] || _dcolors[5]).toHex().substr(1).toUpperCase();
+                _colors[color] = "MAGENTA";
+                _ColorTable.push(color, "MAGENTA");
+                color = new rgbcolor(options.colors[6] || _dcolors[6]).toHex().substr(1).toUpperCase();
+                _colors[color] = "CYAN";
+                _ColorTable.push(color, "CYAN");
+                color = new rgbcolor(options.colors[7] || _dcolors[7]).toHex().substr(1).toUpperCase();
+                _colors[color] = "WHITE";
+                _ColorTable.push(color, "WHITE");
+
+                color = new rgbcolor(options.colors[8] || _dcolors[8]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BOLD%^%^BLACK";
+                _ColorTable.push(color, "BOLD BLACK");
+                _bold.push(color);
+                color = new rgbcolor(options.colors[9] || _dcolors[9]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BOLD%^%^RED";
+                _ColorTable.push(color, "BOLD RED");
+                _bold.push(color);
+                color = new rgbcolor(options.colors[10] || _dcolors[10]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BOLD%^%^GREEN";
+                _ColorTable.push(color, "BOLD GREEN");
+                _bold.push(color);
+                color = new rgbcolor(options.colors[11] || _dcolors[11]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BOLD%^%^YELLOW";
+                _ColorTable.push(color, "BOLD YELLOW");
+                _bold.push(color);
+                color = new rgbcolor(options.colors[12] || _dcolors[12]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BOLD%^%^BLUE";
+                _ColorTable.push(color, "BOLD BLUE");
+                _bold.push(color);
+                color = new rgbcolor(options.colors[13] || _dcolors[13]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BOLD%^%^MAGENTA";
+                _ColorTable.push(color, "BOLD MAGENTA");
+                _bold.push(color);
+                color = new rgbcolor(options.colors[14] || _dcolors[14]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BOLD%^%^CYAN";
+                _ColorTable.push(color, "BOLD CYAN");
+                _bold.push(color);
+                color = new rgbcolor(options.colors[15] || _dcolors[15]).toHex().substr(1).toUpperCase();
+                _colors[color] = "BOLD%^%^WHITE";
+                _ColorTable.push(color, "BOLD WHITE");
+                _bold.push(color);
 
                 for (r = 0; r < 6; r++) {
                     for (g = 0; g < 6; g++) {
@@ -916,135 +915,28 @@ bmenuItems = [{
                             _colors[g] = "mono" + (r - 232);
                     }
                 }
-                initShadowMUD();
+                for (var b = 0, bl = _bold.length; b < bl; b++) {
+                    _colors["B" + _bold[b]] = _colors[nearestHex("#" + _bold[b]).substr(1)].toUpperCase();
+                }
 
-                tinymce.init({
-                    selector: 'textarea',
-                    height: 500,
-                    menubar: false,
-                    browser_spellcheck: true,
-                    //contextmenu: false,
-                    resize: false,
-                    statusbar: false,
-                    nowrap: true,
-                    force_br_newlines: true,
-                    force_p_newlines: false,
-                    forced_root_block: "<span>",
-                    plugins: [
-                        //contextmenu
-                        "paste shadowmud insertdatetime textcolor nonbreaking"
-                    ],
-                    //contextmenu: "shadowfore shadowback | bold italic underline strikethrough overline dblunderline flash reverse",
-                    nonbreaking_force_tab: true,
-                    textcolor_map: _ColorTable,
-                    textcolor_rows: "17",
-                    textcolor_cols: "16",
-                    toolbar: 'send | append | undo redo | forecolor backcolor | bold italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
-                    content_css: 'css/editorcontent.css',
-                    formats: {
-                        bold: { inline: 'strong', exact: true, links: true, remove_similar: true },
-                        italic: { inline: 'em', exact: true, links: true, remove_similar: true },
-                        overline: { inline: 'span', 'classes': 'overline', links: true, remove_similar: true },
-                        dblunderline: { inline: 'span', 'classes': 'dblunderline', links: true, remove_similar: true },
-                        flash: { inline: 'span', 'classes': 'flash', links: true, remove_similar: true },
-                        reverse: { inline: 'span', 'classes': 'reverse', links: true, remove_similar: true },
-                        underline: { inline: 'span', 'classes': 'underline', links: true, remove_similar: true },
-                        strikethrough: { inline: 'span', 'classes': 'strikeout', links: true, remove_similar: true },
-                        forecolor: { inline: 'span', styles: { textDecoration: 'inherit', border: 'inherit', color: '%value' }, exact: true, links: true, remove_similar: true },
-                        hilitecolor: { inline: 'span', styles: { textDecoration: 'inherit', border: 'inherit', backgroundColor: '%value' }, exact: true, links: true, remove_similar: true }
-                        //forecolor: { block: 'span', attributes: { 'data-color': '%value' }, styles: { textDecoration: 'inherit', border: 'inherit', color: '%value' }, exact: true, links: true, remove_similar: true },
-                        //hilitecolor: { block: 'span', attributes: { 'data-backcolor': '%value' }, styles: { textDecoration: 'inherit', border: 'inherit', backgroundColor: '%value' }, exact: true, links: true, remove_similar: true }
+                tinymce.activeEditor.settings.textcolor_map = _ColorTable;
+            }
 
-                    },
-                    init_instance_callback: function (editor) {
-                        editor.on('PastePreProcess', function (e) {
-                            clearReverse($(".reverse", $(editor.getDoc()).contents()));
+            function loadOptions() {
+                options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
 
-                            e.content = e.content.replace(/\<\/p>/g, '<br>');
-                            e.content = e.content.replace(/\<\/h[1-6]>/g, '<br>');
-                            e.content = e.content.replace(/\<\/li>/g, '<br>');
-                            var regex = /\<pre(.*?)>((.|\s)*)\<\/pre>/mgi;
+                $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-size", options.cmdfontSize);
+                $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-family", options.cmdfont + ", monospace");
+                if (tinymce.activeEditor.formatter)
+                    tinymce.activeEditor.formatter.register('flash', { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true })
+                else
+                    tinymce.activeEditor.settings.formats['flash'] = { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true };
+                loadColors();
+            }
 
-                            while ((m = regex.exec(e.content)) !== null) {
-                                if (m.index === regex.lastIndex) {
-                                    regex.lastIndex++;
-                                }
-                                e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/\n/g, "<br>") + e.content.substring(regex.lastIndex);
-                            }
-
-                            console.log(e.content);
-                        });
-                        editor.on('PastePreProcess', function (e) {
-                            addReverse($(".reverse", $(editor.getDoc()).contents()));
-                        });
-                    },
-                    paste_data_images: false,
-                    paste_word_valid_elements: 'b,strong,i,em,u,s,span,strike',
-                    paste_webkit_styles: "color background background-color text-decoration",
-                    paste_retain_style_properties: "color background background-color text-decoration font-weight",
-                    valid_elements: 'strong/b,em/i,u,span[style],strike/s,br',
-                    valid_styles: {
-                        '*': 'color,background,backgorund-color,text-decoration,font-weight'
-                    }
-
-
-                });
-
-                tinymce.activeEditor.on('contextmenu', function (e) {
-                    e.preventDefault();
-                    cMenu.popup(remote.getCurrentWindow());
-                });
-                /*
-                                window.addEventListener('contextmenu', function (e) {
-                                    e.preventDefault();
-                                    cMenu.popup(remote.getCurrentWindow());
-                                }, false);
-                                */
+            ipcRenderer.on('reload-options', (event) => {
+                loadOptions();
             });
-
-            /*
-textcolor_map: [
-                        "000000", "Black",
-                        "993300", "Burnt orange",
-                        "333300", "Dark olive",
-                        "003300", "Dark green",
-                        "003366", "Dark azure",
-                        "000080", "Navy Blue",
-                        "333399", "Indigo",
-                        "333333", "Very dark gray",
-                        "800000", "Maroon",
-                        "FF6600", "Orange",
-                        "808000", "Olive",
-                        "008000", "Green",
-                        "008080", "Teal",
-                        "0000FF", "Blue",
-                        "666699", "Grayish blue",
-                        "808080", "Gray",
-                        "FF0000", "Red",
-                        "FF9900", "Amber",
-                        "99CC00", "Yellow green",
-                        "339966", "Sea green",
-                        "33CCCC", "Turquoise",
-                        "3366FF", "Royal blue",
-                        "800080", "Purple",
-                        "999999", "Medium gray",
-                        "FF00FF", "Magenta",
-                        "FFCC00", "Gold",
-                        "FFFF00", "Yellow",
-                        "00FF00", "Lime",
-                        "00FFFF", "Aqua",
-                        "00CCFF", "Sky blue",
-                        "993366", "Red violet",
-                        "FFFFFF", "White",
-                        "FF99CC", "Pink",
-                        "FFCC99", "Peach",
-                        "FFFF99", "Light yellow",
-                        "CCFFCC", "Pale green",
-                        "CCFFFF", "Pale cyan",
-                        "99CCFF", "Light sky blue",
-                        "CC99FF", "Plum",
-                    ],            
-            */
         </script>
     </head>
 

@@ -5,6 +5,10 @@
     - Now supports Overline (ctrl+o), Double Underline (ctrl+d), Flash (ctrl+f), and Reverse (ctrl+r) styles
     - Added send as command no echo for both formated and verbatium
     - Can now be opened using Ctrl+A
+    - Fonts are now set to same font as command box
+    - Normal and bold colors are now created from settings
+    - Flashing style is now styled based on setting, if off will style as underline
+    - Basic debug is sent to the main client when enable debug option is enabled from preferances
   - Auto copy selected text from display to clipboard when done
   - Copying from main client should be smarter, if selected text and command input is focued it will copy display, if command focused and has selected text will copy that text
   - Profile manager can now be opened using Ctrl+P
@@ -21,6 +25,7 @@
   - Upgraded to electron 1.6.8
   - All css/js files are ran into minifiers to gain some speed
   - Help > jiMUD now opens up to the github docs
+  - Change how options are reloaded for main client, instead of a direct call, fire event
 - **Fixed:**  
   - Context menus in advanced editor have been converted into native context menus, fixing menus being cut off in small window size  
   - When underline would remove double underline effect when following double underline ansi attribute

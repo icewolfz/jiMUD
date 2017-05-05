@@ -57,7 +57,7 @@
         }
         console.log()
 
-        if (url.constructor === Array || url.__proto__.constructor === Array  || Object.prototype.toString.call(url)=="[object Array]") {
+        if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) == "[object Array]") {
           var menu = new Menu();
           var item;
           for (var i = 0, il = url.length; i < il; i++) {
@@ -290,7 +290,6 @@
         window.client = client;
         window.OoMUD = client;
         client.version = version;
-        //client.enableDebug = true;
         client.host = "www.shadowmud.com";
         client.port = client.options.dev ? 1035 : 1030;
 
@@ -601,6 +600,15 @@
       ipcRenderer.on('reload-profiles', (event) => {
         client.loadProfiles();
         buildButtons();
+      });
+
+      ipcRenderer.on('reload-options', (event) => {
+        client.loadOptions()
+      });
+
+      ipcRenderer.on('debug', (event, msg) => {
+        if (client.options.enableDebug)
+          client.debug(msg);
       });
     </script>
   </head>

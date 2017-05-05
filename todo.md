@@ -12,12 +12,9 @@
 * Buttonbar - allow disable, maybe open in editor directly
 * Input - wait for native, or leave as custom 
 ## Advanced editor
-* Expand color tooltips/display names to have proper names base on xterm / color daemon + color code   
-* Make color table use options for the colors and flash
-* add console.log when debug option enabled to display raw html
-* Test pasted html and see if formated correctly all formats
-* add a pre paste processer to process html and strip styles and code not supported and convert any to proper formats/extra data
-  * [PastePreProcess - https://www.tinymce.com/docs/advanced/events/#pastepreprocess](https://www.tinymce.com/docs/advanced/events/#pastepreprocess)
+* Expand color tooltips/display names to have proper names base on xterm / color list from ShadowMUD + color code  
+* Figure out how to enable spell checker
+* Test pasted html from more sources and continue to adjust paste processing to fix issues
 * Maybe create a new textcolor plugin with different color selectors to fix being cut off when using small window size, maybe a real window to display grid
   * [Textcolor plugin source - https://github.com/tinymce/tinymce/blob/master/src/plugins/textcolor/src/main/js/Plugin.js](https://github.com/tinymce/tinymce/blob/master/src/plugins/textcolor/src/main/js/Plugin.js)
 ## Mapper 
@@ -27,14 +24,14 @@
 * Undo/Redo
 * Maybe add a file menu ?
 * Test more then when multiple client instances open
-* possible slow down due yo file locks, loading profiles, converting from json, or loading built in icons for buttons
+* possible slow down due to file locks, loading profiles, converting from json, or loading icons for buttons
 * Context menu
-  * An editor add custom context menu items to appear when right click display
+  * An editor to add/edit custom context menu items to appear when right click display
   * Icon preview similar to button, but on a white/grey bg and limit to 16x16
   * Support action image/fa/custom and genrate a proper nativeImage format using canvas like image export or createIcon from Advanced editor
 ## MSP
 * Recode to not stream but dl to local storage
-* Make local storage create proper folder structure based in {data}/sounds/..
+* Make local storage create proper folder structure based in {data}/sounds/.. using MSP protocol docs
 ## Miscellaneous
 * Create better application icons, and new ones where needed
 * Finish monster css icons
