@@ -10,6 +10,7 @@
   - Profile manager can now be opened using Ctrl+P
   - Added some [docs](docs/README.md) to the GIT repo
   - Mapper can now be set to always be on top of client, all windows, or independant
+  - Mapper import, profile import, and backup load now set windows taskbar progress bar
 - **Changed:**
   - Advanced editor now uses monospaced font
   - Removed insert date/time from advanced editor context

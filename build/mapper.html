@@ -378,6 +378,7 @@
               if (fileName === undefined) {
                 return;
               }
+              ipcRenderer.send('set-progress', { value: 0 });
               $("#mapProgressbar").html('<progress max="100"></progress>');
               $("#mapProgressTitle").html("Exporting '" + mapper.active.area + "' map data...");
               $("#mapProgress")[0].showModal();
@@ -403,6 +404,7 @@
               }
               $("#mapProgressbar").html('<progress max="100"></progress>');
               $("#mapProgressTitle").html("Exporting map data...");
+              ipcRenderer.send('set-progress', { value: 0 });
               $("#mapProgress")[0].showModal();
               mapper.exportAll(fileName);
             });
@@ -435,6 +437,7 @@
                     });
                     return;
                   }
+                  ipcRenderer.send('set-progress', { value: 0 });
                   $("#mapProgressbar").html('<progress max="100"></progress>');
                   $("#mapProgressTitle").html("Importing map data...");
                   $("#mapProgress")[0].showModal();
@@ -469,6 +472,7 @@
                     });
                     return;
                   }
+                  ipcRenderer.send('set-progress', { value: 0 });
                   $("#mapProgressbar").html('<progress max="100"></progress>');
                   $("#mapProgressTitle").html("Importing map data...");
                   $("#mapProgress")[0].showModal();
@@ -704,11 +708,15 @@
           if (this._cancelImport)
             return;
           if (value != -1)
+          {
             $("#mapProgress progress").val(value);
+            ipcRenderer.send('set-progress', { value: value / 100.0 });
+          }
           if (value >= 100) {
             //setTimeout(updateAreas, 1);
             updateAreas();
             $("#mapProgress")[0].close();
+            ipcRenderer.send('set-progress', { value: -1 });
           }
         });
 
@@ -824,6 +832,7 @@
         $("#mapProgressbar").html('<progress max="100"></progress>');
         $("#mapProgressTitle").html("Importing map data...");
         $("#mapProgress")[0].showModal();
+        ipcRenderer.send('set-progress', { value: 0 });
         mapper.import(data, ImportType.Replace);
       });
 

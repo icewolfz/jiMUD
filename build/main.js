@@ -897,6 +897,10 @@ ipcMain.on('set-overlay', (event, args) => {
   }
 });
 
+ipcMain.on('set-progress', (event, args)=> {
+  win.setProgressBar(args.value, args.options);
+});
+
 ipcMain.on('show-window', (event, window) => {
   if (window == "prefs")
     showPrefs();

@@ -561,7 +561,7 @@ export function UpdateTrigger() {
         changed++;
         currentProfile.triggers[currentNode.dataAttr.index].style = parseInt($('#TriggerStyle').selectpicker('val'), 10);
     }
-    
+
     val = getEditorValue('TriggerValue', currentProfile.triggers[currentNode.dataAttr.index].style);
     if (currentProfile.triggers[currentNode.dataAttr.index].value != val) {
         data.value = currentProfile.triggers[currentNode.dataAttr.index].value;
@@ -2206,7 +2206,7 @@ function importProfiles() {
                         });
                         return;
                     }
-
+                    ipcRenderer.send('set-progress', {value: 0.5, options:{mode: 'indeterminate'}});
                     if (data.profiles) {
                         var names = [];
                         var keys = Object.keys(data.profiles);
@@ -2368,7 +2368,7 @@ function importProfiles() {
                         }
                         pushUndo({ action: 'add', type: 'profile', item: names });
                     }
-
+                    ipcRenderer.send('set-progress', {value: -1, options:{mode: 'normal'}});
                 });
         });
 }
