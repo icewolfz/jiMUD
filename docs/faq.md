@@ -7,15 +7,14 @@ If you are getting garbled or missing text try disabling MCCP, MXP, or UTF-8 in 
 This means there is an error, most of the time the error is from a broken profile item with bad or invalid javascript.        
 ## If your question is not listed:
 Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using the jiMUD or the [ShadowMUD web client](http://www,shadowmud.com/mud.php)
-## <a name="#variables"></a>What predefined variables can be use for paths
-* `   ` User's home directory.
+## What predefined variables can be use for paths
+* `{home}` User's home directory.
 * `{path}` The current application directory.
 * `{appData}` Per-user application data directory, which by default points to:
   * `%APPDATA%` on Windows
   * `$XDG_CONFIG_HOME` or `~/.config` on Linux
   * `~/Library/Application Support` on macOS
-* `{data}` The directory for storing your app's configuration files, which by
-  default it is the `appData` directory appended with jiMUD.
+* `{data}` The directory for storing jiMUD's configuration files is `{appData}\jiMUD`
 * `{temp}` Temporary directory.
 * `{desktop}` The current user's Desktop directory.
 * `{documents}` Directory for a user's "My Documents".
@@ -24,7 +23,7 @@ Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using 
 * `{pictures}` Directory for a user's pictures.
 * `{videos}` Directory for a user's videos.
 * `{assets}` Directory for accessing client assets, ***Read only***
-## <a name="#settings"></a>Setting keys, value type and default value
+## Setting keys, value type and default value
 Setting             | Type    | Default
 --------------------|---------|-------------
 bufferSize          | integer | 200

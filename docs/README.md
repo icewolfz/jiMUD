@@ -8,6 +8,8 @@ Basic questions answered about jiMUD
 - [Preferences](preferences.md)
 - [Sripting](scripting.md)
 - [Profiles](profiles.md)
+- [Customizing](customizing.md)
+- [Assets](assets.md)
 
 ## Known Issues
 - Flashing blocks may blink out of sync when flashing enabled in display or advanced editor
