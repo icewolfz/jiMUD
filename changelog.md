@@ -25,9 +25,13 @@
   - Context menus in advanced editor have been converted into native context menus, fixing menus being cut off in small window size  
   - When underline would remove double underline effect when following double underline ansi attribute
   - Status > Visible menu check was not updating to show current state  
+  - Advanced editor
+    - Should strip all unsupported html tags when sending pasted text.
+    - Will properly convert pre tags and preserve newlines
   - Profile Manager
     - When closing the profile manager it always asked to save even if no changes had been made
     - When editing a macro they where not correctly being saved
+    - Better color detection for pasted formated text, it will now attempt to find the closet color supported in the 256 colors
 ##### 0.1.5 - 2017-04-??
 - **New:**
   - Advanced editor has been added

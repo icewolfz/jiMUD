@@ -291,8 +291,10 @@
                             for (t = 0; t < tl; t++) {
                                 if (tag[t].endsWith("INHERIT") || tag[t].endsWith("BLACK"))
                                     continue;
+                                tag[t] = tag[t].trim();
+                                tag[t] = tag[t].replace("BACKGROUND:", "BACKGROUND-COLOR:")
                                 if (tag[t].length > 0)
-                                    stack.push(tag[t].trim());
+                                    stack.push(tag[t]);
                             }
                             stack = stack.concat(buildHTMLStack($el.contents()));
                             for (t = 0; t < tl; t++) {
@@ -303,12 +305,14 @@
                             }
                             continue;
                         }
-                        else if ($el.css("color") || $el.css("background-color")) {
+                        else if ($el.css("color") || $el.css("background-color") || $el.css("background")) {
                             tag = [];
                             if ($el.css("color"))
                                 tag.push("COLOR: " + new rgbcolor($el.css("color")).toHex().toUpperCase());
                             if ($el.css("background-color"))
                                 tag.push("BACKGROUND-COLOR: " + new rgbcolor($el.css("background-color")).toHex().toUpperCase());
+                            if ($el.css("background"))
+                                tag.push("BACKGROUND-COLOR: " + new rgbcolor($el.css("background")).toHex().toUpperCase());
                             var t, tl = tag.length;
                             for (t = 0; t < tl; t++) {
                                 if (tag[t].length > 0)
@@ -387,13 +391,24 @@
                         default:
                             if (data[d].startsWith("COLOR: #")) {
                                 color = data[d].substr(8);
+                                if (!_colors[color]) {
+                                    var rgb = new rgbcolor(color)
+                                    color = nearestHex(rgb.toHex()).substr(1);
+                                }
+                                color = _colors[color];
+                                codes.push("%^" + color + "%^");
+                                buffer.push("%^" + color + "%^");
+                            }
+                            else if (data[d].startsWith("COLOR: ")) {
+                                var color = new rgbcolor(data[d].substr(7)).toHex().substr(1);
                                 if (!_colors[color])
                                     color = nearestHex("#" + color).substr(1);
                                 color = _colors[color];
                                 codes.push("%^" + color + "%^");
                                 buffer.push("%^" + color + "%^");
+
                             }
-                            else if (data[d].startsWith("/COLOR: #")) {
+                            else if (data[d].startsWith("/COLOR: ")) {
                                 codes.pop();
                                 buffer.push("%^RESET%^");
                                 if (codes.length > 0)
@@ -401,8 +416,10 @@
                             }
                             else if (data[d].startsWith("BACKGROUND-COLOR: #")) {
                                 color = data[d].substr(19);
-                                if (!_colors[color])
-                                    color = nearestHex("#" + color).substr(1);
+                                if (!_colors[color]) {
+                                    var rgb = new rgbcolor(color)
+                                    color = nearestHex(rgb.toHex()).substr(1);
+                                }
                                 if (_colors["B" + color])
                                     color = _colors["B" + color];
                                 else
@@ -411,13 +428,25 @@
                                 codes.push(color);
                                 buffer.push(color);
                             }
-                            else if (data[d].startsWith("/BACKGROUND-COLOR: #")) {
+                            else if (data[d].startsWith("BACKGROUND-COLOR: ")) {
+                                var color = new rgbcolor(data[d].substr(18)).toHex().substr(1);
+                                if (!_colors[color])
+                                    color = nearestHex("#" + color).substr(1);
+                                if (_colors["B" + color])
+                                    color = _colors["B" + color];
+                                else
+                                    color = _colors[color];
+                                color = "%^B_" + color + "%^";
+                                codes.push("%^" + color + "%^");
+                                buffer.push("%^" + color + "%^");
+                            }
+                            else if (data[d].startsWith("/BACKGROUND-COLOR: ")) {
                                 codes.pop();
                                 buffer.push("%^RESET%^");
                                 if (codes.length > 0)
                                     buffer.push(codes.join(''));
                             }
-                            else
+                            else if (data[d].startsWith('"'))
                                 buffer.push(data[d].substring(1, data[d].length - 1));
                             break;
                     }
@@ -903,7 +932,7 @@ bmenuItems = [{
                     forced_root_block: "<span>",
                     plugins: [
                         //contextmenu
-                        "shadowmud insertdatetime textcolor nonbreaking"
+                        "paste shadowmud insertdatetime textcolor nonbreaking"
                     ],
                     //contextmenu: "shadowfore shadowback | bold italic underline strikethrough overline dblunderline flash reverse",
                     nonbreaking_force_tab: true,
@@ -926,7 +955,39 @@ bmenuItems = [{
                         //forecolor: { block: 'span', attributes: { 'data-color': '%value' }, styles: { textDecoration: 'inherit', border: 'inherit', color: '%value' }, exact: true, links: true, remove_similar: true },
                         //hilitecolor: { block: 'span', attributes: { 'data-backcolor': '%value' }, styles: { textDecoration: 'inherit', border: 'inherit', backgroundColor: '%value' }, exact: true, links: true, remove_similar: true }
 
+                    },
+                    init_instance_callback: function (editor) {
+                        editor.on('PastePreProcess', function (e) {
+                            clearReverse($(".reverse", $(editor.getDoc()).contents()));
+
+                            e.content = e.content.replace(/\<\/p>/g, '<br>');
+                            e.content = e.content.replace(/\<\/h[1-6]>/g, '<br>');
+                            e.content = e.content.replace(/\<\/li>/g, '<br>');
+                            var regex = /\<pre(.*?)>((.|\s)*)\<\/pre>/mgi;
+
+                            while ((m = regex.exec(e.content)) !== null) {
+                                if (m.index === regex.lastIndex) {
+                                    regex.lastIndex++;
+                                }
+                                e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/\n/g, "<br>") + e.content.substring(regex.lastIndex);
+                            }
+
+                            console.log(e.content);
+                        });
+                        editor.on('PastePreProcess', function (e) {
+                            addReverse($(".reverse", $(editor.getDoc()).contents()));
+                        });
+                    },
+                    paste_data_images: false,
+                    paste_word_valid_elements: 'b,strong,i,em,u,s,span,strike',
+                    paste_webkit_styles: "color background background-color text-decoration",
+                    paste_retain_style_properties: "color background background-color text-decoration font-weight",
+                    valid_elements: 'strong/b,em/i,u,span[style],strike/s,br',
+                    valid_styles: {
+                        '*': 'color,background,backgorund-color,text-decoration,font-weight'
                     }
+
+
                 });
 
                 tinymce.activeEditor.on('contextmenu', function (e) {

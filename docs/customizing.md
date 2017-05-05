@@ -19,14 +19,14 @@ Runs javascript code after the client finishes loading allowing to define custom
 jiMUD assigns all monster/party member icons with a list of supported css classes based on monster/player data supplied from the mud in order of broad to more detailed naming all.
 - Monster classes
   - `.monster-classname` the monster's class if it has one
-  - `.monster-gender` the monster's gender, `.male`, `.female`, or `.it`
-  - `.monster-race` the monster's race, for example `.elf`
+  - `.monster-gender` the monster's gender, `.monster-male`, `.monster-female`, or `.monster-it`
+  - `.monster-race` the monster's race, for example `.monster-elf`
   - `.monster-guild` the monster's guild
   - `.monster-name` the monster's name
 - Party member classes
   - `.party-classname` the monster's class if it has one
-  - `.party-gender` the monster's gender, `.male`, `.female`, or `.it`
-  - `.party-race` the monster's race, for example `.elf`
+  - `.party-gender` the monster's gender, `.party-male`, `.party-female`, or `.party-it`
+  - `.party-race` the monster's race, for example `.party-elf`
   - `.party-guild` the monster's guild
   - `.party-name` the monster's name
 #### Examples
