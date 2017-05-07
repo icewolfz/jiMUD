@@ -5,7 +5,7 @@ import { AnsiColorCode } from "./ansi";
 import { stripHTML, Size, parseTemplate } from "./library";
 import { Settings } from "./settings";
 import { input } from "./input";
-import { ProfileCollection, Alias, Trigger, Macro, Profile, Button } from "./profile";
+import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context } from "./profile";
 import { MSP } from "./msp";
 const { version } = require("../../package.json");
 const path = require('path');
@@ -54,6 +54,10 @@ export class Client extends EventEmitter {
 
     get buttons(): Button[] {
         return this.profiles.buttons;
+    }
+
+    get contexts(): Context[] {
+        return this.profiles.contexts;
     }
 
     get activeProfile(): Profile {

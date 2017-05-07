@@ -3,8 +3,8 @@
 
     <head>
         <meta charset="UTF-8">
-        <title>Profiles</title>
-        <link rel="shortcut icon" href="../assets/icons/png/map.png" />
+        <title>Profile Manager</title>
+        <link rel="shortcut icon" href="../assets/icons/png/profiles.png" />
         <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
         <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
@@ -17,61 +17,64 @@
 
     <body>
         <div id="toolbar" class="btn-toolbar" role="toolbar">
-            <button id="btnRefresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="profileui.doRefresh()"><i class="fa fa-refresh"></i></button>
+            <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="profileui.doRefresh()"><i class="fa fa-refresh"></i></button>
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-default btn-xs" title="Add" onclick="profileui.AddNewItem();"><i class="fa fa-plus"></i></button>
-                <button id="addMenu" type="button" class="btn btn-default btn-xs" title="Add" onclick=""><span class="caret"></span></button>
+                <button id="btn-add-dropdown" type="button" class="btn btn-default btn-xs" title="Add" onclick=""><span class="caret"></span></button>
             </div>
             <div class="btn-group" role="group">
-                <button id="btnUndo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Undo" onclick="profileui.doUndo()"><i class="fa fa-undo"></i></button>
-                <button id="btnRedo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Redo" onclick="profileui.doRedo()"><i class="fa fa-repeat"></i></button>
+                <button id="btn-undo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Undo" onclick="profileui.doUndo()"><i class="fa fa-undo"></i></button>
+                <button id="btn-redo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Redo" onclick="profileui.doRedo()"><i class="fa fa-repeat"></i></button>
             </div>
             <div class="btn-group" role="group">
-                <button id="btnCut" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Cut" onclick="profileui.doCut()"><i class="fa fa-cut"></i></button>
-                <button id="btnCopy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick="profileui.doCopy()"><i class="fa fa-copy"></i></button>
-                <button id="btnPaste" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Paste" onclick="profileui.doPaste()"><i class="fa fa-paste"></i></button>
-                <button id="btnDelete" type="button" disabled="disabled" class="btn btn-danger btn-xs" title="Delete" onclick="profileui.doDelete()"><i class="fa fa-times"></i></button>
+                <button id="btn-cut" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Cut" onclick="profileui.doCut()"><i class="fa fa-cut"></i></button>
+                <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick="profileui.doCopy()"><i class="fa fa-copy"></i></button>
+                <button id="btn-paste" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Paste" onclick="profileui.doPaste()"><i class="fa fa-paste"></i></button>
+                <button id="btn-delete" type="button" disabled="disabled" class="btn btn-danger btn-xs" title="Delete" onclick="profileui.doDelete()"><i class="fa fa-times"></i></button>
             </div>
         </div>
         <div id="body">
             <div id="sidebar">
-                <div id="tree" class="panel panel-default"></div>
+                <div id="profile-tree" class="panel panel-default"></div>
                 <div id="dragbar"></div>
             </div>
-            <div id="editor">
+            <div id="content">
                 <div class="panel panel-default">
-                    <div class="panel-heading"><span id="title">Profile: Default</span> <input type="checkbox" id="enabled" onchange="profileui.UpdateEnabled()"></div>
-                    <div class="panel-body" id="profile">
+                    <div class="panel-heading">
+                        <span id="editor-title">Profile: Default</span>
+                        <input type="checkbox" id="editor-enabled" onchange="profileui.UpdateEnabled()">
+                    </div>
+                    <div class="panel-body" id="profile-editor">
                         <div class="form-group">
                             <label class="control-label" style="width:100%">Name
-                            <input type="text" class="form-control" id="ProfileName" disabled="disabled"/>
+                            <input type="text" class="form-control" id="profile-name" disabled="disabled"/>
                             </label>
                         </div>
 
                         <div class="col-sm-3 form-group">
                             <label class="control-label">
-                                <input type="checkbox" id="enableAliases" onchange="profileui.updateProfileChecks()"/>Enable Aliases
+                                <input type="checkbox" id="profile-enableAliases" onchange="profileui.updateProfileChecks()"/>Enable Aliases
                             </label>
                         </div>
                         <div class="col-sm-3 form-group">
                             <label class="control-label">
-                                <input type="checkbox" id="enableMacros" onchange="profileui.updateProfileChecks()"/>Enable Macros
+                                <input type="checkbox" id="profile-enableMacros" onchange="profileui.updateProfileChecks()"/>Enable Macros
                             </label>
                         </div>
                         <div class="col-sm-3 form-group">
                             <label class="control-label">
-                                <input type="checkbox" id="enableTriggers" onchange="profileui.updateProfileChecks()"/>Enable Triggers
+                                <input type="checkbox" id="profile-enableTriggers" onchange="profileui.updateProfileChecks()"/>Enable Triggers
                             </label>
                         </div>
                         <div class="col-sm-3 form-group">
                             <label class="control-label">
-                                <input type="checkbox" id="enableButtons" onchange="profileui.updateProfileChecks()"/>Enable Buttons
+                                <input type="checkbox" id="profile-enableButtons" onchange="profileui.updateProfileChecks()"/>Enable Buttons
                             </label>
                         </div>
 
                         <div class="form-group">
                             <label class="control-label" style="width:100%">Priority
-                            <input type="number" class="form-control" id="profilePriority"/>
+                            <input type="number" class="form-control" id="profile-priority"/>
                             </label>
                         </div>
                         <button class="btn btn-default" onclick="profileui.doImport()">
@@ -82,20 +85,20 @@
                         </button>
                         <p class="help-block">Note: #alias/#unalias will add to the highest priority profile enabled.</p>
                     </div>
-                    <div class="form-inline panel-body" id="aliases">
-                        <table class="editorbody">
+                    <div class="form-inline panel-body" id="alias-editor" class="editor-panel" style="display:none">
+                        <table class="editor-body">
                             <tr>
                                 <td style="width: 60px">
-                                    <label class="control-label" for="AliasName">Name</label>
+                                    <label class="control-label" for="alias-pattern">Name</label>
                                 </td>
                                 <td colspan="4">
-                                    <input class="form-control" type="text" id="AliasName">
+                                    <input class="form-control" type="text" id="alias-pattern">
                                 </td>
                                 <td style="padding-left:5px;width: 45px">
-                                    <label class="control-label" for="AliasStyle" style="padding-right:4px;">Style</label>
+                                    <label class="control-label" for="alias-style" style="padding-right:4px;">Style</label>
                                 </td>
                                 <td style="width: 100px;text-align: right">
-                                    <select class="form-control selectpicker" id="AliasStyle">
+                                    <select class="form-control selectpicker" id="alias-style" onchange="profileui.UpdateEditorMode('alias')">
 									<option value="0">Text</option>
 									<option value="1">Parse</option>
 									<option value="2">Script</option>
@@ -104,11 +107,11 @@
                             </tr>
                             <tr>
                                 <td style="vertical-align: top;">
-                                    <label class="control-label" for="AliasValue">Value</label>
+                                    <label class="control-label" for="alias-value">Value</label>
                                 </td>
-                                <td colspan="6" class="valueeditor">
-                                    <textarea class="form-control" id="AliasValue" style="height:100%;width: 100%;" wrap="off"></textarea>
-                                    <pre id="AliasValueEditor" class="editor"></pre>
+                                <td colspan="6" class="value-editor">
+                                    <textarea class="form-control" id="alias-value" style="height:100%;width: 100%;" wrap="off"></textarea>
+                                    <pre id="alias-value-editor" class="editor"></pre>
                                 </td>
                             </tr>
                             <tr>
@@ -120,44 +123,44 @@
                             </tr>
                             <tr class="panel-adv-body first">
                                 <td>
-                                    <label class="control-label" for="AliasParams">Params</label>
+                                    <label class="control-label" for="alias-params">Params</label>
                                 </td>
                                 <td colspan="6">
-                                    <input class="form-control" type="text" id="AliasParams">
+                                    <input class="form-control" type="text" id="alias-params">
                                 </td>
                             </tr>
                             <tr class="panel-adv-body">
                                 <td>
-                                    <label class="control-label" for="AliasPriority">Priority</label>
+                                    <label class="control-label" for="alias-priority">Priority</label>
                                 </td>
                                 <td style="vertical-align:middle;padding: 0px; border: 0px;width: 75px">
-                                    <input type="number" class="form-control" id="AliasPriority" style="width: 75px">
+                                    <input type="number" class="form-control" id="alias-priority" style="width: 75px">
                                 </td>
                                 <td colspan="5" style="padding-left:5px;vertical-align: bottom;">
-                                    <label class="col-sm-6" for="AliasAppend">
-                                    <input type="checkbox" id="AliasAppend" style="border: 0px">
+                                    <label class="col-sm-6" for="alias-append">
+                                    <input type="checkbox" id="alias-append" style="border: 0px">
                                     Append arguments</label>
-                                    <label class="col-sm-6" for="AliasMulti">
-                                    <input type="checkbox" id="AliasMulti" style="border: 0px">
+                                    <label class="col-sm-6" for="alias-multi">
+                                    <input type="checkbox" id="alias-multi" style="border: 0px">
                                     Multi</label>
                                 </td>
                             </tr>
                         </table>
                     </div>
-                    <div class="form-inline panel-body" id="triggers" style="display: none">
-                        <table class="editorbody">
+                    <div class="form-inline panel-body" id="trigger-editor" class="editor-panel" style="display:none">
+                        <table class="editor-body">
                             <tr>
                                 <td style="width: 60px">
-                                    <label class="control-label" for="TriggerName">Pattern</label>
+                                    <label class="control-label" for="trigger-pattern">Pattern</label>
                                 </td>
                                 <td colspan="4">
-                                    <input class="form-control" type="text" id="TriggerName">
+                                    <input class="form-control" type="text" id="trigger-pattern">
                                 </td>
                                 <td style="padding-left:4px;width: 45px">
-                                    <label class="control-label" for="TriggerStyle" style="padding-right:4px;">Style</label>
+                                    <label class="control-label" for="trigger-style" style="padding-right:4px;">Style</label>
                                 </td>
                                 <td style="width: 100px;text-align: right">
-                                    <select class="form-control selectpicker" id="TriggerStyle">
+                                    <select class="form-control selectpicker" id="trigger-style" onchange="profileui.UpdateEditorMode('trigger')">
 									<option value="0">Text</option>
 									<option value="1">Parse</option>
 									<option value="2">Script</option>
@@ -167,22 +170,22 @@
                             <tr>
                                 <td colspan="7" style="vertical-align:top;position: relative;height: 100%;padding-bottom:15px">
                                     <ul class="nav nav-tabs" role="tablist">
-                                        <li role="presentation" class="active"><a href="#tvalue" aria-controls="value" role="tab" data-toggle="tab">Value</a></li>
-                                        <li role="presentation"><a href="#triggertest" aria-controls="Test" role="tab" data-toggle="tab">Test</a></li>
+                                        <li role="presentation" class="active"><a href="#tab-trigger-value" aria-controls="value" role="tab" data-toggle="tab">Value</a></li>
+                                        <li role="presentation"><a href="#tab-trigger-test" aria-controls="Test" role="tab" data-toggle="tab">Test</a></li>
                                     </ul>
                                     <div class="tab-content">
-                                        <div role="tabpanel" class="container tab-pane fade in active" id="tvalue">
-                                            <textarea class="form-control" id="TriggerValue" style="height:100%;width: 100%;" wrap="off"></textarea>
-                                            <pre id="TriggerValueEditor" class="editor"></pre>
+                                        <div role="tabpanel" class="container tab-pane fade in active" id="tab-trigger-value">
+                                            <textarea class="form-control" id="trigger-value" style="height:100%;width: 100%;" wrap="off"></textarea>
+                                            <pre id="trigger-value-editor" class="editor"></pre>
                                         </div>
-                                        <div role="tabpanel" class="container tab-pane fade in" id="triggertest">
-                                            <table class="editorbody">
+                                        <div role="tabpanel" class="container tab-pane fade in" id="tab-trigger-test">
+                                            <table class="editor-body">
                                                 <tr>
                                                     <td style="width: 45px;padding-right:2px;">
-                                                        <label class="control-label" for="TriggerTestText">Text</label>
+                                                        <label class="control-label" for="trigger-test-text">Text</label>
                                                     </td>
                                                     <td style="width:100%;">
-                                                        <input class="form-control" style="width:100%;" type="text" id="TriggerTestText">
+                                                        <input class="form-control" style="width:100%;" type="text" id="trigger-test-text" data-ignore="true">
                                                     </td>
                                                     <td style="width: 40px;padding-left:5px">
                                                         <button class="btn btn-default" onclick="profileui.RunTester()">
@@ -192,10 +195,10 @@
                                                 </tr>
                                                 <tr>
                                                     <td style="vertical-align: top;padding-right:4px;">
-                                                        <label class="control-label" for="TriggerTestResults">Results</label>
+                                                        <label class="control-label" for="trigger-test-results">Results</label>
                                                     </td>
                                                     <td style="vertical-align: top;position: relative;" colspan="2">
-                                                        <textarea class="form-control" id="TriggerTestResults" style="position: absolute;top: 0;bottom: 0;width: 100%;" wrap="off" readonly="readonly"></textarea>
+                                                        <textarea class="form-control" id="trigger-test-results" style="position: absolute;top: 0;bottom: 0;width: 100%;" wrap="off" readonly="readonly" data-ignore="true"></textarea>
                                                     </td>
                                                 </tr>
                                             </table>
@@ -216,49 +219,49 @@
                                     <table style="padding:0;margin:0;width:100%">
                                         <tr>
                                             <td style="width: 60px">
-                                                <label class="control-label" for="TriggerType">Type</label>
+                                                <label class="control-label" for="trigger-type">Type</label>
                                             </td>
                                             <td>
-                                                <select id="TriggerType" data-container="body" class="selectpicker form-control" style="width: 140px">
-														<option value="0">Regular Expression</option>
-														<option value="1">Command Input Regular Expression</option>
-													</select>
+                                                <select id="trigger-type" data-container="body" class="selectpicker form-control" style="width: 140px">
+                                                    <option value="0">Regular Expression</option>
+                                                    <option value="1">Command Input Regular Expression</option>
+												</select>
                                             </td>
-                                            <td style="width: 60px;padding-left:5px"><label class="control-label" for="TriggerPriority">Priority</label></td>
-                                            <td style="width: 100px"><input type="number" class="form-control" id="TriggerPriority" style="width: 100%"></td>
+                                            <td style="width: 60px;padding-left:5px"><label class="control-label" for="trigger-priority">Priority</label></td>
+                                            <td style="width: 100px"><input type="number" class="form-control" id="trigger-priority" style="width: 100%"></td>
                                         </tr>
                                     </table>
                                 </td>
                             </tr>
                             <tr class="panel-adv-body">
                                 <td colspan="7" style="padding-left:5px;vertical-align: bottom;">
-                                    <label class="col-sm-4" for="TriggerVerbatim">
-                                    <input type="checkbox" id="TriggerVerbatim" style="border: 0px">
+                                    <label class="col-sm-4" for="trigger-verbatim">
+                                    <input type="checkbox" id="trigger-verbatim" style="border: 0px">
                                     Verbatim</label>
-                                    <label class="col-sm-4" for="TriggerNewline">
-                                    <input type="checkbox" id="TriggerNewline" style="border: 0px">
+                                    <label class="col-sm-4" for="trigger-triggerNewline">
+                                    <input type="checkbox" id="trigger-triggerNewline" style="border: 0px">
                                     Trigger on newline</label>
-                                    <label class="col-sm-4" for="TriggerPrompt">
-                                    <input type="checkbox" id="TriggerPrompt" style="border: 0px">
+                                    <label class="col-sm-4" for="trigger-triggerPrompt">
+                                    <input type="checkbox" id="trigger-triggerPrompt" style="border: 0px">
                                     Trigger on prompt</label>
                                 </td>
                             </tr>
                         </table>
                     </div>
-                    <div class="form-inline panel-body" id="macros" style="display: none">
-                        <table class="editorbody">
+                    <div class="form-inline panel-body" id="macro-editor" class="editor-panel" style="display:none">
+                        <table class="editor-body">
                             <tr>
                                 <td style="width: 60px">
-                                    <label class="control-label" for="MacroKey">Key</label>
+                                    <label class="control-label" for="macro-key">Key</label>
                                 </td>
                                 <td>
-                                    <input class="form-control" type="text" id="MacroKey">
+                                    <input class="form-control" type="text" id="macro-key">
                                 </td>
                                 <td style="padding-left:5px;width: 45px">
-                                    <label class="control-label" for="MacroStyle" style="padding-right:4px;">Style</label>
+                                    <label class="control-label" for="macro-style" style="padding-right:4px;">Style</label>
                                 </td>
                                 <td style="width: 100px;text-align: right">
-                                    <select class="form-control selectpicker" id="MacroStyle">
+                                    <select class="form-control selectpicker" id="macro-style" onchange="profileui.UpdateEditorMode('macro')">
 									<option value="0">Text</option>
 									<option value="1">Parse</option>
 									<option value="2">Script</option>
@@ -267,11 +270,11 @@
                             </tr>
                             <tr>
                                 <td style="vertical-align: top;">
-                                    <label class="control-label" for="MacroValue">Value</label>
+                                    <label class="control-label" for="macro-value">Value</label>
                                 </td>
-                                <td colspan="3" class="valueeditor">
-                                    <textarea class="form-control" id="MacroValue" style="height:100%;width: 100%;" wrap="off"></textarea>
-                                    <pre id="MacroValueEditor" class="editor"></pre>
+                                <td colspan="3" class="value-editor">
+                                    <textarea class="form-control" id="macro-value" style="height:100%;width: 100%;" wrap="off"></textarea>
+                                    <pre id="macro-value-editor" class="editor"></pre>
                                 </td>
                             </tr>
                             <tr>
@@ -283,64 +286,64 @@
                             </tr>
                             <tr class="panel-adv-body first">
                                 <td>
-                                    <label class="control-label" for="MacroName">Name</label>
+                                    <label class="control-label" for="macro-name">Name</label>
                                 </td>
                                 <td colspan="3">
-                                    <input class="form-control" style="width: 100%" type="text" id="MacroName">
+                                    <input class="form-control" style="width: 100%" type="text" id="macro-name">
                                 </td>
                             </tr>
                             <tr class="panel-adv-body">
                                 <td colspan="4" style="vertical-align:middle;padding: 0px; border: 0px">
-                                    <label class="col-sm-4" for="MacroSend">
-                                    <input type="checkbox" id="MacroSend" style="border: 0px;">
+                                    <label class="col-sm-4" for="macro-send">
+                                    <input type="checkbox" id="macro-send" style="border: 0px;">
                                     Send to MUD</label>
-                                    <label class="col-sm-4" for="MacroAppend">
-                                    <input type="checkbox" id="MacroAppend" style="border: 0px">
+                                    <label class="col-sm-4" for="macro-append">
+                                    <input type="checkbox" id="macro-append" style="border: 0px">
                                     Append to command</label>
-                                    <label class="col-sm-4" for="MacroChain">
-                                    <input type="checkbox" id="MacroChain" style="border: 0px">
+                                    <label class="col-sm-4" for="macro-chain">
+                                    <input type="checkbox" id="macro-chain" style="border: 0px">
                                     Daisy chain</label>
                                 </td>
                             </tr>
                         </table>
                     </div>
-                    <div class="form-inline panel-body" id="buttons" style="display: none">
-                        <table class="editorbody">
+                    <div class="form-inline panel-body" id="button-editor" class="editor-panel" style="display:none">
+                        <table class="editor-body">
                             <tr>
                                 <td id="buttonbar" style="width: 54px;text-align:center;">
-                                    <a style="float:none" href="javascript:void(0)" title="" id="buttonsample" class="button"><i class="fa fa-heartbeat"></i></a>
+                                    <a style="float:none" href="javascript:void(0)" title="" id="button-sample" class="button"><i class="fa fa-heartbeat"></i></a>
                                 </td>
                                 <td style="width: 60px">
-                                    <label class="control-label" for="ButtonCaption">Caption</label>
+                                    <label class="control-label" for="button-caption">Caption</label>
                                 </td>
                                 <td colspan="2">
-                                    <input class="form-control" type="text" id="ButtonCaption" onkeyup="UpdateButtonSample();" onchange="profileui.UpdateButtonSample();">
+                                    <input class="form-control" type="text" id="button-caption" onkeyup="profileui.UpdateButtonSample();" onchange="profileui.UpdateButtonSample();">
                                 </td>
                                 <td style="padding-left:5px;width: 45px">
-                                    <label class="control-label" for="ButtonIcon" style="padding-right:4px;">Icon</label>
+                                    <label class="control-label" for="button-icon" style="padding-right:4px;">Icon</label>
                                 </td>
                                 <td>
                                     <div class="input-group" style="width:100%;">
-                                        <input class="form-control" style="width:100%" type="text" id="ButtonIcon" onkeyup="UpdateButtonSample();" onchange="profileui.UpdateButtonSample();">
+                                        <input class="form-control" style="width:100%" type="text" id="button-icon" onkeyup="profileui.UpdateButtonSample();" onchange="profileui.UpdateButtonSample();">
                                         <span class="input-group-btn" style="width: 17px;">
-                                            <button id="buttonActions" class="btn btn-default" style="width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                            <button id="button-actions" class="btn btn-default" style="width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                                                 <span class="caret"></span>
                                         </button>
-                                        <div id="buttonActionsDropdown" class="dropdown-menu" aria-labelledby="buttonActions">
+                                        <div id="button-actions-dropdown" class="dropdown-menu" aria-labelledby="button-actions">
                                         </div>
                                         </span>
                                         <span class="input-group-btn">
-                                            <button class = "btn btn-default" type = "button" onclick="profileui.openImage()">
+                                            <button class = "btn btn-default" type="button" onclick="profileui.openImage()">
                                                 &hellip;
                                             </button>
                                         </span>
                                     </div>
                                 </td>
                                 <td style="padding-left:5px;width: 45px">
-                                    <label class="control-label" for="ButtonStyle" style="padding-right:4px;">Style</label>
+                                    <label class="control-label" for="button-style" style="padding-right:4px;">Style</label>
                                 </td>
                                 <td style="width: 100px;text-align: right">
-                                    <select class="form-control selectpicker" id="ButtonStyle">
+                                    <select class="form-control selectpicker" id="button-style" onchange="profileui.UpdateEditorMode('button')">
 									<option value="0">Text</option>
 									<option value="1">Parse</option>
 									<option value="2">Script</option>
@@ -349,11 +352,11 @@
                             </tr>
                             <tr>
                                 <td style="vertical-align: top;">
-                                    <label class="control-label" for="ButtonValue">Value</label>
+                                    <label class="control-label" for="button-value">Value</label>
                                 </td>
-                                <td colspan="7" class="valueeditor">
-                                    <textarea class="form-control" id="ButtonValue" style="height:100%;width: 100%;" wrap="off"></textarea>
-                                    <pre id="ButtonValueEditor" class="editor"></pre>
+                                <td colspan="7" class="value-editor">
+                                    <textarea class="form-control" id="button-value" style="height:100%;width: 100%;" wrap="off"></textarea>
+                                    <pre id="button-value-editor" class="editor"></pre>
                                 </td>
                             </tr>
                             <tr>
@@ -365,32 +368,32 @@
                             </tr>
                             <tr class="panel-adv-body first">
                                 <td>
-                                    <label class="control-label" for="ButtonName">Name</label>
+                                    <label class="control-label" for="button-name">Name</label>
                                 </td>
                                 <td colspan="7">
-                                    <input class="form-control" type="text" id="ButtonName">
+                                    <input class="form-control" type="text" id="button-name">
                                 </td>
                             </tr>
                             <tr class="panel-adv-body">
                                 <td>
-                                    <label class="control-label" for="ButtonPriority">Priority</label>
+                                    <label class="control-label" for="button-priority">Priority</label>
                                 </td>
                                 <td style="vertical-align:middle;padding: 0px; border: 0px;width: 60px">
-                                    <input type="number" class="form-control" id="ButtonPriority" style="width: 100%">
+                                    <input type="number" class="form-control" id="button-priority" style="width: 100%">
                                 </td>
                                 <td colspan="6" style="padding-left:5px;vertical-align: bottom;">
-                                    <label class="col-sm-6" for="ButtonSend">
-                                    <input type="checkbox" id="ButtonSend" style="border: 0px;">
+                                    <label class="col-sm-6" for="button-send">
+                                    <input type="checkbox" id="button-send" style="border: 0px;">
                                     Send to MUD</label>
-                                    <label class="col-sm-6" for="ButtonAppend">
-                                    <input type="checkbox" id="ButtonAppend" style="border: 0px">
+                                    <label class="col-sm-6" for="button-append">
+                                    <input type="checkbox" id="button-append" style="border: 0px">
                                     Append to command</label>
-                                    <label class="col-sm-6" for="ButtonChain">
-                                    <input type="checkbox" id="ButtonChain" style="border: 0px">
+                                    <label class="col-sm-6" for="button-chain">
+                                    <input type="checkbox" id="button-chain" style="border: 0px">
                                     Daisy chain</label>
 
-                                    <label class="col-sm-6" for="ButtonStretch">
-                                    <input type="checkbox" id="ButtonStretch" style="border: 0px" onchange="profileui.UpdateButtonSample();">
+                                    <label class="col-sm-6" for="button-stretch">
+                                    <input type="checkbox" id="button-stretch" style="border: 0px" onchange="profileui.UpdateButtonSample();">
                                     Stretch icon</label>
                                 </td>
                             </tr>

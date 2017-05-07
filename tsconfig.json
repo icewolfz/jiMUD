@@ -7,7 +7,7 @@
         "sourceMap": false,
         "noImplicitAny": false,
         "allowJs": true,
-        "outDir": "./src/js",
+        "outDir": "./out",
         "newLine": "LF",
         "checkJs": true
     },
@@ -16,7 +16,8 @@
         "jspm_packages",
         "./src/**/*.js",
         "./lib/**/*.js",
-        "./_bak/**/*.js"
+        "./_bak/**/*.js",
+        "./out/**/*.js"
     ],
     "include": [
         "./src/**/*.ts"

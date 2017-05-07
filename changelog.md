@@ -25,7 +25,8 @@
   - Upgraded to electron 1.6.8
   - All css/js files are ran into minifiers to gain some speed
   - Help > jiMUD now opens up to the github docs
-  - Change how options are reloaded for main client, instead of a direct call, fire event
+  - Changed how options are reloaded for main client, instead of a direct call, fire event
+  - Rearranged the profile manager interface to simply and condense code
 - **Fixed:**  
   - Context menus in advanced editor have been converted into native context menus, fixing menus being cut off in small window size  
   - When underline would remove double underline effect when following double underline ansi attribute
@@ -37,6 +38,7 @@
     - When closing the profile manager it always asked to save even if no changes had been made
     - When editing a macro they where not correctly being saved
     - Better color detection for pasted formated text, it will now attempt to find the closet color supported in the 256 colors
+    - Changing the item style will now correctly change the editor mode again
 ##### 0.1.5 - 2017-04-??
 - **New:**
   - Advanced editor has been added

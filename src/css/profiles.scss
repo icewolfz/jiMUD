@@ -13,6 +13,14 @@ html, body{
 	padding-bottom:2px;
 }
 
+#editor-title {
+	display: inline-block;
+}
+
+#editor-title::first-letter{
+	text-transform:capitalize;
+}
+
 /*
 #toolbar a
 {
@@ -98,7 +106,7 @@ html, body{
 	bottom: 0;
 }
 
-#tree
+#profile-tree
 {
 	padding:0px;
 	margin: 0;
@@ -110,13 +118,13 @@ html, body{
 	overflow: auto;
 }
 
-#tree .list-group
+#profile-tree .list-group
 {
 	margin: 0;
 	box-shadow: none;
 }
 
-#editor
+#content
 {
 	position: absolute;
 	right: 0px;
@@ -126,7 +134,7 @@ html, body{
 	margin: 0;
 }
 
-#editor .panel{
+#content .panel{
 	position: absolute;
 	right: 0;
 	top: 0;
@@ -237,7 +245,7 @@ table tr:last-child td
 	border-top: 1px solid #ddd;		
 }
 
-#triggers .tab-content 
+#trigger-editor .tab-content 
 {
     position: absolute;
     top: 50px;
@@ -246,7 +254,7 @@ table tr:last-child td
     left: 0;	
 }
 
-#triggers .tab-pane
+#trigger-editor .tab-pane
 {
 	height: 100%;
 	width: 100%;
@@ -254,7 +262,7 @@ table tr:last-child td
 	margin: 0;
 }
 
-#triggers .control-label
+#trigger-editor .control-label
 {
 	margin-bottom: 0px;
 }
@@ -270,7 +278,7 @@ table tr:last-child td
 	height: 32px;
 }
 
-#buttonActionsDropdown
+#button-actions-dropdown
 {
 	height: 200px;
 	width: 204px;
@@ -280,17 +288,17 @@ table tr:last-child td
 	border-bottom-right-radius: 0;
 }
 
-#addMenu
+#btn-add-dropdown
 {
 	min-width:auto
 }
 
-#buttonActionsDropdown li {
+#button-actions-dropdown li {
 	display: block;
 	float: left;
 }
 
-#buttonActionsDropdown li a
+#button-actions-dropdown li a
 {
 	padding-left:2px;
 	padding-right:2px;
@@ -312,29 +320,22 @@ table tr:last-child td
 	border-radius: 4px;
 }
 
-#buttonActionsDropdown li a:hover .overlay
+#button-actions-dropdown li a:hover .overlay
 {
 	display:block;
 }
 
-.editor
-{
-	height: 100%;
-	width: 100%;
-	display: none;
-}
-
-#enabled
+#editor-enabled
 {
 	float: right;
 }
 
-#aliases
+.editor-panel
 {
-	display: none
+	display: none;
 }
 
-.editorbody
+.editor-body
 {
 	width: 100%; 
 	height: 100%;
@@ -342,15 +343,22 @@ table tr:last-child td
 	margin:0px;
 }
 
-.editorbody tr:first-child
+.editor-body tr:first-child
 {
 	padding-bottom: 2px;
 	height: 22px;
 }
 
-.valueeditor
+.value-editor
 {
 	vertical-align: top;
 	height: 100%;
 	padding-bottom:15px
+}
+
+.editor
+{
+	height: 100%;
+	width: 100%;
+	display: none;
 }

@@ -41,7 +41,7 @@ export class Profiles {
 	public aliasesAdvanced: boolean = false;
 	public buttonsAdvanced: boolean = false;
 	public macrosAdvanced: boolean = false;
-
+	public contextsAdvanced: boolean = false;
 }
 
 export class Settings {
@@ -69,6 +69,7 @@ export class Settings {
 	public enableTriggers: boolean = true;
 	public enableButtons: boolean = true;
 	public enableMacros: boolean = true;
+	public enableContexts: boolean = true;
 	public commandStacking: boolean = true;
 	public htmlLog: boolean = true;
 	public keepLastCommand: boolean = true;

@@ -6,7 +6,9 @@ _test/
 npm-debug.log
 typings/
 .idea/
+.vscode/
 src/js/
+out/
 /build/js/logging.js
 /build/js/mapper.js
 /build/js/msp.js

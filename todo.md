@@ -35,8 +35,10 @@
 ## Miscellaneous
 * Create better application icons, and new ones where needed
 * Finish monster css icons
+* Finish party css icons, do genric ones for each player race and gender if good enough icons, possible a silhouette bust of just each races head?
 * Add advanced color pref systems to allow customizing the 256 xterm colors
 * maybe convert from using a bell sound file in ansi parer to using electron shell.beep() [https://github.com/electron/electron/blob/master/docs/api/shell.md](https://github.com/electron/electron/blob/master/docs/api/shell.md), do this by capturing the bell event in parer or from index.html as client.parser.on('bell', ()  => { shell.beep() });
+* Fix flashing out of sync issue, [http://stackoverflow.com/questions/16650741/syncing-several-css3-animations](http://stackoverflow.com/questions/16650741/syncing-several-css3-animations) has a few possible solutions as does [http://tjwoon.com/article/synchronizing-css-animations](http://tjwoon.com/article/synchronizing-css-animations), the best soluton i beleave would be to remove the animate from the .flash class and make it .animateflash .flash { ...} and before adding new text remove the animateflash css class from the container (display/editor) and once all the new text has been processed and added readd animateflash to the container and restart all the flashing, that should solve the sync issue but needs testing
 * ***Mac - needs a mac, can't build or test***
 * Help files
   * Sections for mapper

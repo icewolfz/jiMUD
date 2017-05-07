@@ -1078,7 +1078,7 @@ function showPrefs() {
   pref.once('ready-to-show', () => {
     pref.show()
   })
-  addInutContext(pref);
+  //addInutContext(pref);
 }
 
 function createMapper(show) {

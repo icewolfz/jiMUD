@@ -18,6 +18,9 @@
         "**/_bak":true,
         "**/_raw":true,
         "**/_test":true,
-        "**/lib":true
+        "**/lib":true,
+        "**/build/css":true,
+        "**/build/js":true,
+        "**/src/js":true
     }
 }

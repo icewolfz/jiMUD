@@ -588,12 +588,12 @@
         */
 
         mapper.on('path-shown', () => {
-          $("#btnClear").prop('disabled', false);
+          $("#btn-clear").prop('disabled', false);
           $("#btnWalk").prop('disabled', false);
         });
 
         mapper.on('path-cleared', () => {
-          $("#btnClear").prop('disabled', true);
+          $("#btn-clear").prop('disabled', true);
           $("#btnWalk").prop('disabled', true);
         });
 
@@ -863,7 +863,7 @@
         <button id="btnLegend" type="button" class="btn btn-default btn-xs" title="Show legend" onclick="mapper.showLegend = !mapper.showLegend" data-toggle="button"><i class="fa fa-map-marker"></i></button>
         <button id="btnRoom" type="button" class="btn btn-default btn-xs" title="Show room properties" onclick="toggleRooms();" data-toggle="button"><i class="fa fa-list-alt"></i></button>
       </div>
-      <button id="btnRefresh" type="button" class="btn btn-default btn-xs" title="Refresh map" onclick="saveRoom();mapper.refresh();"><i class="fa fa-refresh"></i></button>
+      <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh map" onclick="saveRoom();mapper.refresh();"><i class="fa fa-refresh"></i></button>
       <div class="btn-group" role="group">
         <button id="btnSplit" type="button" class="btn btn-default btn-xs" title="Split areas" onclick="mapper.splitArea = !mapper.splitArea" data-toggle="button"><i class="fa fa-object-ungroup"></i></button>
         <button id="btnFill" type="button" class="btn btn-default btn-xs" title="Fill walls" onclick="mapper.fillWalls = !mapper.fillWalls" data-toggle="button"><i class="fa fa-building-o"></i></button>
@@ -890,7 +890,7 @@
       <div class="btn-group" role="group">
         <button type="button" class="btn btn-default btn-xs" title="Set selected as current" onclick="mapper.setCurrent()"><i class="fa fa-circle"></i></button>
         <button type="button" class="btn btn-default btn-xs" title="Highlight path" onclick="mapper.showPath()"><i class="fa fa-paint-brush"></i></button>
-        <button id="btnClear" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Clear path" onclick="mapper.clearPath()"><i class="fa fa-times"></i></button>
+        <button id="btn-clear" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Clear path" onclick="mapper.clearPath()"><i class="fa fa-times"></i></button>
         <button id="btnWalk" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Walk path" onclick="mapper.walkPath()"><i class="fa fa-blind"></i></button>
       </div>
     </div>
