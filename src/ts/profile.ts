@@ -230,7 +230,7 @@ export class Profile {
 	public enableTriggers: boolean = true;
 	public enableAliases: boolean = true;
 	public enableButtons: boolean = true;
-	public enableContext: boolean = true;
+	public enableContexts: boolean = true;
 	public enableDefaultContext: boolean = true;
 
 	constructor(name?: (string | boolean), defaults?: boolean) {
@@ -490,7 +490,7 @@ export class Profile {
 				enableTriggers: this.enableTriggers,
 				enableAliases: this.enableAliases,
 				enableButtons: this.enableButtons,
-				enableContext: this.enableContext,
+				enableContexts: this.enableContexts,
 				enableDefaultContext: this.enableDefaultContext
 			}
 
@@ -913,12 +913,12 @@ export class ProfileCollection {
 		var tmp = [], k = 0, kl = keys.length;
 		if (kl === 0) return [];
 		if (kl === 1) {
-			if (!this.items[keys[0]].enabled || !this.items[keys[0]].enableContext)
+			if (!this.items[keys[0]].enabled || !this.items[keys[0]].enableContexts)
 				return [];
 			return this.items[keys[0]].contexts;
 		}
 		for (; k < kl; k++) {
-			if (!this.items[keys[k]].enabled || !this.items[keys[k]].enableContext || this.items[keys[k]].contexts.length === 0)
+			if (!this.items[keys[k]].enabled || !this.items[keys[k]].enableContexts || this.items[keys[k]].contexts.length === 0)
 				continue;
 			tmp = tmp.concat(this.items[keys[k]].contexts);
 		}

@@ -12,6 +12,7 @@
   - Auto copy selected text from display to clipboard when done
   - Copying from main client should be smarter, if selected text and command input is focued it will copy display, if command focused and has selected text will copy that text
   - Profile manager can now be opened using Ctrl+P
+  - Profile manager now supports undo/redo systems only limited by your system's memory and cpu
   - Added some [docs](docs/README.md) to the GIT repo
   - Mapper can now be set to always be on top of client, all windows, or independant
   - Mapper import, profile import, and backup load now set windows taskbar progress bar
@@ -27,6 +28,7 @@
   - Help > jiMUD now opens up to the github docs
   - Changed how options are reloaded for main client, instead of a direct call, fire event
   - Rearranged the profile manager interface to simply and condense code
+  - Cleaned up profile manager code to reduce size and improve load speeds
 - **Fixed:**  
   - Context menus in advanced editor have been converted into native context menus, fixing menus being cut off in small window size  
   - When underline would remove double underline effect when following double underline ansi attribute

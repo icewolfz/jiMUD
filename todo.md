@@ -21,7 +21,7 @@
 * Add room exist and coords/zone check x/y/z/zone and if room found bump zone context menu, right click room list a remove room option, maybe exports
 * Add a file menu and add all the featuers from the toolbar?
 ## Profile manager
-* Undo/Redo
+* Add backup systems to allow easier backup/export of profiles with out the need to open file explorer
 * Maybe add a file menu ?
 * Test more then when multiple client instances open
 * possible slow down due to file locks, loading profiles, converting from json, or loading icons for buttons
