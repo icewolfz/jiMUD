@@ -1,26 +1,26 @@
 ## Changelog
-##### 0.1.6 - 2017-05-??
+##### 0.1.6 - 2017-05-07
 - **New:**
   - Advanced editor 
     - Now supports Overline (ctrl+o), Double Underline (ctrl+d), Flash (ctrl+f), and Reverse (ctrl+r) styles
-    - Added send as command no echo for both formated and verbatium
+    - Added send as command no echo for both formatted and verbatim
     - Can now be opened using Ctrl+A
     - Fonts are now set to same font as command box
     - Normal and bold colors are now created from settings
     - Flashing style is now styled based on setting, if off will style as underline
-    - Basic debug is sent to the main client when enable debug option is enabled from preferances
+    - Basic debug is sent to the main client when enable debug option is enabled from preferences
   - Auto copy selected text from display to clipboard when done
-  - Copying from main client should be smarter, if selected text and command input is focued it will copy display, if command focused and has selected text will copy that text
+  - Copying from main client should be smarter, if selected text and command input is focused it will copy display, if command focused and has selected text will copy that text
   - Profile manager can now be opened using Ctrl+P
   - Profile manager now supports undo/redo systems only limited by your system's memory and cpu
   - Added some [docs](docs/README.md) to the GIT repo
-  - Mapper can now be set to always be on top of client, all windows, or independant
+  - Mapper can now be set to always be on top of client, all windows, or independent
   - Mapper import, profile import, and backup load now set windows taskbar progress bar
 - **Changed:**
   - Advanced editor now uses monospaced font
   - Removed insert date/time from advanced editor context
   - Display recoded into an iframe to fix selection disappearing when lost focus.
-  - Simplifed mapper image export
+  - Simplified mapper image export
   - Can no longer close client until profile manager has been closed
   - Changed how deleted profiles where moved to trash, now uses framework instead of extra node module
   - Upgraded to electron 1.6.8
@@ -34,12 +34,12 @@
   - When underline would remove double underline effect when following double underline ansi attribute
   - Status > Visible menu check was not updating to show current state  
   - Advanced editor
-    - Should strip all unsupported html tags when sending pasted text.
+    - Should strip all unsupported HTML tags when sending pasted text.
     - Will properly convert pre tags and preserve newlines
   - Profile Manager
     - When closing the profile manager it always asked to save even if no changes had been made
     - When editing a macro they where not correctly being saved
-    - Better color detection for pasted formated text, it will now attempt to find the closet color supported in the 256 colors
+    - Better color detection for pasted formatted text, it will now attempt to find the closet color supported in the 256 colors
     - Changing the item style will now correctly change the editor mode again
 ##### 0.1.5 - 2017-04-??
 - **New:**
