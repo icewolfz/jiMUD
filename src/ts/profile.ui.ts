@@ -422,7 +422,7 @@ export function UpdateEnabled() {
     }
 }
 
-export function UpdateItemNode(item, unode?) {
+function UpdateItemNode(item, unode?) {
     if (!unode)
         unode = currentNode;
     else if (typeof unode == 'string')
@@ -473,7 +473,7 @@ export function UpdateEditorMode(type) {
     }
 }
 
-export function UpdateMacro(customundo?: boolean) {
+function UpdateMacro(customundo?: boolean) {
     var data: any = UpdateItem(currentProfile.macros[currentNode.dataAttr.index], 'macro', { key: true });
     if (currentProfile.macros[currentNode.dataAttr.index].key != parseInt($("#macro-key").data('key'), 10)) {
         if (!data) data = {};
@@ -493,7 +493,7 @@ export function UpdateMacro(customundo?: boolean) {
     }
 }
 
-export function UpdateAlias(customundo?: boolean) {
+function UpdateAlias(customundo?: boolean) {
     var data: any = UpdateItem(currentProfile.aliases[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.aliases[currentNode.dataAttr.index]);
@@ -503,7 +503,7 @@ export function UpdateAlias(customundo?: boolean) {
     }
 }
 
-export function UpdateTrigger(customundo?: boolean) {
+function UpdateTrigger(customundo?: boolean) {
     var data: any = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index]);
@@ -513,7 +513,7 @@ export function UpdateTrigger(customundo?: boolean) {
     }
 }
 
-export function UpdateButton(customundo?: boolean) {
+function UpdateButton(customundo?: boolean) {
     var data: any = UpdateItem(currentProfile.buttons[currentNode.dataAttr.index]);
     if (data) {
         UpdateButtonSample();
@@ -745,7 +745,7 @@ function cleanNode(node) {
     return node;
 }
 
-export function UpdateProfile(customundo?: boolean) {
+function UpdateProfile(customundo?: boolean) {
     var data: any = {};
     var changed = 0;
     var val;
@@ -982,7 +982,7 @@ function canPaste() {
     return false;
 }
 
-export function UpdatePaste() {
+function UpdatePaste() {
     $("#btn-paste").prop('disabled', !canPaste());
 }
 
@@ -1566,7 +1566,7 @@ export function doDelete(node?) {
             break;
     }
 }
-export function updateCurrent() {
+function updateCurrent() {
     if (currentNode && _loading == 0) {
         //currentNode.state.selected = false;
         var t = "profile";
@@ -2461,7 +2461,7 @@ function importProfiles() {
         });
 }
 
-export function trashProfiles(p) {
+function trashProfiles(p) {
     if (_remove.length > 0) {
         for (var r = 0, rl = _remove.length; r < rl; r++) {
             shell.moveItemToTrash(path.join(p, _remove[r] + ".json"));
@@ -2635,7 +2635,7 @@ function pushUndo(data) {
     updateUndoState();
 }
 
-export function updateUndoState() {
+function updateUndoState() {
     $("#btn-undo").prop('disabled', _undo.length == 0);
     $("#btn-redo").prop('disabled', _redo.length == 0);
     console.log(_undo);
