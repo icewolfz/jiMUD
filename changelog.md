@@ -9,6 +9,7 @@
   - Logging now logs per line instead of when all lines are done parsed, this fixes the issue of allow gagged lines to be captured
 - **Fixed:**
   - A bug in autocopy not clearing when mouse leaves the window
+  - A bug when using the cancel button on profile manager and warning about saving changes when nothing has been changed
 ##### 0.1.6 - 2017-05-07
 - **New:**
   - Advanced editor 

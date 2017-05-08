@@ -490,7 +490,9 @@ function UpdateMacro(customundo?: boolean) {
         $("#editor-title").text("Macro: " + GetDisplay(currentProfile.macros[currentNode.dataAttr.index]));
         if (!customundo)
             pushUndo({ action: 'update', type: 'macro', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
+        return true;
     }
+    return false;
 }
 
 function UpdateAlias(customundo?: boolean) {
@@ -500,7 +502,9 @@ function UpdateAlias(customundo?: boolean) {
         $("#editor-title").text("Alias: " + GetDisplay(currentProfile.aliases[currentNode.dataAttr.index]));
         if (!customundo)
             pushUndo({ action: 'update', type: 'alias', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
+        return true;
     }
+    return false;
 }
 
 function UpdateTrigger(customundo?: boolean) {
@@ -510,7 +514,9 @@ function UpdateTrigger(customundo?: boolean) {
         $("#editor-title").text("Trigger: " + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]))
         if (!customundo)
             pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
+        return true;
     }
+    return false;
 }
 
 function UpdateButton(customundo?: boolean) {
@@ -521,7 +527,9 @@ function UpdateButton(customundo?: boolean) {
         $("#editor-title").text("Button: " + GetDisplay(currentProfile.buttons[currentNode.dataAttr.index]))
         if (!customundo)
             pushUndo({ action: 'update', type: 'button', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
+        return true;
     }
+    return false;
 }
 
 function UpdateItem(item, type?, options?) {
@@ -845,9 +853,11 @@ function UpdateProfile(customundo?: boolean) {
     else
         $("#profile-tree").treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "buttons$", 'id'])]);
 
-    if (changed > 0 && !customundo)
+    if (changed > 0 && !customundo) {
         pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: data });
-    return true;
+        return true;
+    }
+    return false;
 }
 
 export function updateProfileChecks() {
@@ -1582,20 +1592,16 @@ function updateCurrent() {
             case "profile":
                 return UpdateProfile();
             case "alias":
-                UpdateAlias();
-                break;
+                return UpdateAlias();
             case "macro":
-                UpdateMacro();
-                break;
+                return UpdateMacro();
             case "trigger":
-                UpdateTrigger();
-                break;
+                return UpdateTrigger();
             case "button":
-                UpdateButton();
-                break;
+                return UpdateButton();
         }
     }
-    return true;
+    return false;
 }
 
 function buildTreeview(data) {
