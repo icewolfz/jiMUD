@@ -306,12 +306,14 @@
           var res;
           console.log(data.fragment);
           if (_captures.length == 0) return;
+          //custom capture to ignore who list
           res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.raw);
           if (res && res.length > 0) {
             capture = 0;
             _nocapture = true;
             return;
           }
+          //end capture blocking for who list
           res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.raw);
           if (res && res.length > 0) {
             capture = 0;
@@ -319,12 +321,14 @@
             return;
           }
           if (_nocapture) return;
+          //capture indented text
           if (capture > 0 && data.raw.startsWith("    ")) {
             ipcRenderer.send('chat', data.line);
             data.gagged = true;
             return;
           }
           var res, re;
+          //search capture review blocks
           for (var c = 0, cl = _captureReviews.length; c < cl; c++) {
             re = new RegExp(_captureReviews[c], 'g');
             res = re.exec(data.raw);
@@ -335,6 +339,7 @@
             data.gagged = true;
             return;
           }
+          //if in a review capture until end review
           if (captureReview > 0) {
             ipcRenderer.send('chat', data.line);
             data.gagged = true;
@@ -343,6 +348,7 @@
               captureReview = -1;
             return;
           }
+          //review requires 1 extra capture to get the current date/time
           if (captureReview == -1) {
             ipcRenderer.send('chat', data.line);
             data.gagged = true;
@@ -351,7 +357,7 @@
           }
 
 
-
+          //capture lines based on matching regex's
           for (var c = 0, cl = _captures.length; c < cl; c++) {
             re = new RegExp(_captures[c], 'g');
             res = re.exec(data.raw);
@@ -364,8 +370,7 @@
             data.gagged = true;
             return;
           }
-
-
+          //no matching capture so if in capture mode reduce
           if (capture > 0)
             capture--;
         });
@@ -640,12 +645,18 @@
         ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
 
       }
-
+      
+      /**
+       * Build capture array
+       *
+       * Builds an array of regular expressions to text lines againest to know if they should be captured, built
+       * based on chat capture prefs
+      */
       function buildCaptures() {
         _captures = [];
         _captureReviews = [];
         if (client.options.chat.captureTells) {
-          _captures.push('^([a-zA-Z-]*) tells you:(.*)$',
+          _captures.push('^([a-zA-Z_-]*) tells you:(.*)$',
             '^You tell ([a-zA-Z_-]*):(.*)$',
             '^\\*([a-zA-Z_-]*)(\\s?)(.*?)$',
             '^([a-zA-Z_-]*) is idle, and may not have been paying attention.$',
@@ -657,11 +668,11 @@
             _captureReviews.push('^-=-=- Tell Review -=-=-$');
         }
         if (client.options.chat.captureTalk) {
-          _captures.push('^([a-zA-Z-]*) says:(.*)$',
+          _captures.push('^([a-zA-Z_-]*) says:(.*)$',
             '^You say:(.*)$',
             '^([a-zA-Z_-]*) whispers to you:(.*)$',
             'You whisper to ([a-zA-Z_-]*):(.*)',
-            '^([a-zA-Z-]*) yells:(.*)$',
+            '^([a-zA-Z_-]*) yells:(.*)$',
             '^You yell:(.*)$',
             'You say in (.*):(.*)',
             '([a-zA-Z_-]*) says something in (.*).',
