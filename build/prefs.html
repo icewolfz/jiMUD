@@ -110,6 +110,7 @@
         $('#parseSingleQuotes').prop('checked', _settings.parseSingleQuotes);
 
         $('#logEnabled').prop('checked', _settings.logEnabled);
+        $('#logGagged').prop('checked', _settings.logEnabled);
         $('#logPrepend').prop('checked', _settings.logPrepend);
         $('#logOffline').prop('checked', _settings.logOffline);
         $('#logUniqueOnConnect').prop('checked', _settings.logUniqueOnConnect);
@@ -125,6 +126,20 @@
         $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
         $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
 
+        $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
+        $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
+
+        $('#chat-captureLines').prop('checked', _settings.chat.captureLines);
+        $('#chat-captureReviews').prop('checked', _settings.chat.captureReviews);
+        $('#chat-captureTells').prop('checked', _settings.chat.captureTells);
+        $('#chat-captureTalk').prop('checked', _settings.chat.captureTalk);
+        $('#chat-captureAllLines').prop('checked', _settings.chat.captureAllLines);
+        $('#chat-selective').prop('checked', !_settings.chat.captureAllLines);
+        $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
+        $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
+        $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
+
+        $('#chat-lines').val(_settings.chat.lines.join(','));
 
         $('#showMapper').prop('checked', _settings.showMapper);
         $('#commandDelay').val(_settings.commandDelay);
@@ -139,6 +154,28 @@
 
         $('input[type="checkbox"]').change(function () {
           switch ($(this).attr('id')) {
+            case 'chat-alwaysOnTop':
+              _settings.chat.alwaysOnTop = this.checked;
+              break;
+            case 'chat-alwaysOnTopClient':
+              _settings.chat.alwaysOnTopClient = this.checked;
+              break;
+            case 'chat-captureLines':
+              _settings.chat.captureLines = this.checked;
+              $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
+
+              $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
+              $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
+              break;
+            case 'chat-captureReviews':
+              _settings.chat.captureReviews = this.checked;
+              break;
+            case 'chat-captureTells':
+              _settings.chat.captureTells = this.checked;
+              break;
+            case 'chat-captureTalk':
+              _settings.chat.captureTalk = this.checked;
+              break;
             case 'mapper-alwaysOnTop':
               _settings.mapper.alwaysOnTop = this.checked;
               break;
@@ -162,6 +199,19 @@
               break;
             default:
               _settings[$(this).attr('id')] = this.checked;
+              break;
+          }
+        });
+
+        $('input[type="radio"]').change(function () {
+          switch ($(this).attr('id')) {
+            case 'chat-selective':
+              _settings.chat.captureAllLines = !this.checked;
+              $("#chat-lines").prop('readonly', !_settings.chat.captureLines || !this.checked);
+              break;
+            case 'chat-captureAllLines':
+              _settings.chat.captureAllLines = this.checked;
+              $("#chat-lines").prop('readonly', !_settings.chat.captureLines || this.checked);
               break;
           }
         });
@@ -476,6 +526,7 @@
       }
 
       function saveSettings() {
+        _settings.chat.lines = $("#chat-lines").val().split(',');
         _settings.save(path.join(library.parseTemplate("{data}"), 'settings.json'));
         ipcRenderer.send('reload-options');
         window.close()
@@ -494,6 +545,7 @@
         <li role="presentation"><a href="#command" aria-controls="command" role="tab" data-toggle="tab">Command Line</a></li>
         <li role="presentation"><a href="#logging" aria-controls="logging" role="tab" data-toggle="tab">Logging</a></li>
         <li role="presentation"><a href="#mapper" aria-controls="mapper" role="tab" data-toggle="tab">Mapper</a></li>
+        <li role="presentation"><a href="#chat" aria-controls="chat" role="tab" data-toggle="tab">Chat</a></li>
         <li role="presentation"><a href="#telnet" aria-controls="telnet" role="tab" data-toggle="tab">Telnet</a></li>
       </ul>
 
@@ -842,7 +894,12 @@
           Create log for every connection
           </label>
       </div>
-
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="logEnabled" />
+          Log gagged lines
+          </label>
+      </div>
       <div class="col-sm-12 form-group">
         <label class="control-label" style="width:100%">          
           Save path
@@ -927,6 +984,77 @@
             </label>
         </div>
       </div>
+    </div>
+    <div role="tabpanel" class="tab-pane fade" id="chat">
+
+      <div class="col-sm-12 form-group" style="margin:0;padding:0">
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="chat-alwaysOnTopClient" />
+          Always on top of the main window
+          <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="chat-alwaysOnTop" />
+          Always on top of all windows
+          </label>
+        </div>
+      </div>
+      <div class="col-sm-12 form-group" style="margin:0;padding:0">
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="chat-captureTells" />
+          Capture tells          
+          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Tell and emoteto</span>
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="chat-captureTalk" />
+          Capture talk
+          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Say, yell, whisper and speak</span>
+          </label>
+        </div>
+      </div>
+      <div class="col-sm-12 form-group" style="margin:0;padding:0">
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="chat-captureReviews" />
+          Capture reviews
+          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Captures based on enabled captures</span>
+          </label>
+        </div>
+      </div>
+
+
+
+      <div class="col-sm-12 form-group" style="margin:0;padding:0">
+        <div class="col-sm-3 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="chat-captureLines" />
+          Capture lines          
+          </label><br>
+          <label class="control-label">
+          <input type="radio" name="lines" id="chat-captureAllLines" />
+          All
+          </label><br>
+          <label class="control-label">
+      <input type="radio" name="lines" id="chat-selective" />
+          Selective          
+          </label>
+        </div>
+        <div class="col-sm-9 form-group">
+          <div class="form-group">
+            <label class="control-label" style="width: 100%">Selective Lines
+              <textarea class="form-control" id="chat-lines" style="width: 100%"></textarea>
+              <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Case sensitive and seperate each name with a comma(,) for example: Chat,Rp</span>
+              </label>
+          </div>
+        </div>
+      </div>
+
     </div>
     <div role="tabpanel" class="tab-pane fade" id="telnet">
       <div class="col-sm-6 form-group">

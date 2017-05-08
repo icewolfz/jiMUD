@@ -32,6 +32,9 @@
       var client, _status, _logger, _backup;
       var OoMUD;
       var active = false;
+      var capture = 0, captureReview = 0;
+      var _captures = [], _captureReviews = [];
+      var _nocapture = false;
 
       function doLink(url) {
         if (confirm("Open '" + url + "'?") === true)
@@ -55,7 +58,6 @@
           var y = Math.floor(e.clientY - offset.top);
           extra = "?" + x + "," + y;
         }
-        console.log()
 
         if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) == "[object Array]") {
           var menu = new Menu();
@@ -302,6 +304,73 @@
         client.on('profiles-updated', () => {
           updateMenu();
         });
+        client.on('addLine', (data) => {
+          var res;
+          console.log(data.fragment);
+          if (_captures.length == 0) return;
+          res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.raw);
+          if (res && res.length > 0) {
+            capture = 0;
+            _nocapture = true;
+            return;
+          }
+          res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.raw);
+          if (res && res.length > 0) {
+            capture = 0;
+            _nocapture = false;
+            return;
+          }
+          if (_nocapture) return;
+          if (capture > 0 && data.raw.startsWith("    ")) {
+            ipcRenderer.send('chat', data.line);
+            data.gagged = true;
+            return;
+          }
+          var res, re;
+          for (var c = 0, cl = _captureReviews.length; c < cl; c++) {
+            re = new RegExp(_captureReviews[c], 'g');
+            res = re.exec(data.raw);
+            if (!res || res.length === 0)
+              continue;
+            captureReview = 1;
+            ipcRenderer.send('chat', data.line);
+            data.gagged = true;
+            return;
+          }
+          if (captureReview > 0) {
+            ipcRenderer.send('chat', data.line);
+            data.gagged = true;
+            res = /^-=-=- End Review -=-=-$/.exec(data.raw);
+            if (res && res.length > 0)
+              captureReview = -1;
+            return;
+          }
+          if (captureReview == -1) {
+            ipcRenderer.send('chat', data.line);
+            data.gagged = true;
+            captureReview = 0;
+            return;
+          }
+
+
+
+          for (var c = 0, cl = _captures.length; c < cl; c++) {
+            re = new RegExp(_captures[c], 'g');
+            res = re.exec(data.raw);
+            if (!res || res.length === 0)
+              continue;
+            if (capture > 0)
+              capture--;
+            capture++;
+            ipcRenderer.send('chat', data.line);
+            data.gagged = true;
+            return;
+          }
+
+
+          if (capture > 0)
+            capture--;
+        });
 
         client.on('notify', (title, message) => {
           var notify = new window.Notification(title, { body: message });
@@ -311,6 +380,7 @@
         });
         client.on('optionsLoaded', () => {
           updateInterface();
+          buildCaptures();
           client.port = client.options.dev ? 1035 : 1030;
         });
         client.on('scrolllock', (lock) => {
@@ -406,6 +476,7 @@
 
         _backup.on('imported-settings', (data) => {
           updateInterface();
+          buildCaptures();
         });
 
         _backup.on('finish-load', (data) => {
@@ -443,6 +514,7 @@
         });
         updateMenu();
         updateInterface();
+        buildCaptures();
 
         window.onbeforeunload = function () {
           if (client.options.askonclose && client.connected) {
@@ -565,6 +637,49 @@
 
       }
 
+      function buildCaptures() {
+        _captures = [];
+        _captureReviews = [];
+        if (client.options.chat.captureTells) {
+          _captures.push('^([a-zA-Z-]*) tells you:(.*)$',
+            '^You tell ([a-zA-Z_-]*):(.*)$',
+            '^\\*([a-zA-Z_-]*)(\\s?)(.*?)$',
+            '^([a-zA-Z_-]*) is idle, and may not have been paying attention.$',
+            '^([a-zA-Z_-]*) is in combat and may not have heard you.$',
+            '^([a-zA-Z_-]*) is in edit and may not be in a position to respond.$',
+            '^([a-zA-Z_-]*) is arrested and can not respond.$',
+            '^\\*You emote to ([a-zA-Z_-]*):(.*)$');
+          if (client.options.chat.captureReviews)
+            _captureReviews.push('^-=-=- Tell Review -=-=-$');
+        }
+        if (client.options.chat.captureTalk) {
+          _captures.push('^([a-zA-Z-]*) says:(.*)$',
+            '^You say:(.*)$',
+            '^([a-zA-Z_-]*) whispers to you:(.*)$',
+            'You whisper to ([a-zA-Z_-]*):(.*)',
+            '^([a-zA-Z-]*) yells:(.*)$',
+            '^You yell:(.*)$',
+            'You say in (.*):(.*)',
+            '([a-zA-Z_-]*) says something in (.*).',
+            '([a-zA-Z_-]*) says in (.*):(.*)');
+          if (client.options.chat.captureReviews)
+            _captureReviews.push('^-=-=- Say Review -=-=-$');
+        }
+        if (client.options.chat.captureLines) {
+          if (client.options.chat.captureAllLines) {
+            _captures.push('^\\[([a-zA-Z_-]*)\\](.*)$');
+            if (client.options.chat.captureReviews)
+              _captureReviews.push('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$');
+          }
+          else
+            for (var l = 0, ll = client.options.chat.lines.length; l < ll; l++) {
+              _captures.push('\\[' + client.options.chat.lines[l].trim() + '\\](.*)');
+              if (client.options.chat.captureReviews)
+                _captureReviews.push('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$');
+            }
+        }
+      }
+
       ipcRenderer.on('setting-changed', (event, data) => {
         if (data.type == "mapper") {
           client.options.mapper[data.name] = data.value;
@@ -572,6 +687,10 @@
         }
         else if (data.type == "profiles") {
           client.options.profiles[data.name] = data.value;
+          client.saveOptions();
+        }
+        else if (data.type == "chat") {
+          client.options.chat[data.name] = data.value;
           client.saveOptions();
         }
       });

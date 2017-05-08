@@ -38,8 +38,12 @@ export class Logger extends EventEmitter {
         this.client.on('connected', () => {
             this.start();
         });
+        this.client.on('addLineDone', (data) => {
+            if (!data.gagged || (this.client.options.logGagged && data.gagged))
+                this.write(data.line);
+        })
         this.client.on('parseDone', (lines) => {
-            this.writeLines(lines);
+            //this.writeLines(lines);
         })
         if (this.client.options.logOffline)
             this.start();

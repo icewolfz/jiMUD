@@ -8,8 +8,8 @@ const settings = require('./js/settings');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winhelp, winwho, winmap, winprofiles, wineditor
-let set, mappermax = false, editormax, debug = false;
+let win, winhelp, winwho, winmap, winprofiles, wineditor, winchat
+let set, mappermax = false, editormax = false, chatmax = false, debug = false;
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
@@ -17,6 +17,7 @@ let states = {
   'mapper': { x: 0, y: 0, width: 800, height: 600 },
   'profiles': { x: 0, y: 0, width: 800, height: 600 },
   'editor': { x: 0, y: 0, width: 300, height: 225 },
+  'chat': { x: 0, y: 0, width: 300, height: 225 },
 };
 
 process.argv.forEach((val, index) => {
@@ -364,10 +365,16 @@ var menutemp = [
     id: 'window',
     submenu: [
       {
-        label: '&Advanced Editor...',
+        label: '&Advanced editor...',
         id: 'editor',
         click: showEditor,
         accelerator: 'CmdOrCtrl+A'
+      },
+      {
+        label: '&Chat...',
+        id: 'chat',
+        click: showChat,
+        accelerator: 'CmdOrCtrl+L'
       },
       {
         label: '&Map...',
@@ -775,6 +782,11 @@ function createWindow() {
       showEditor();
     else
       createEditor();
+    if (set.showChat)
+      showChat();
+    else
+      createChat();
+
   })
 
   win.on('close', (e) => {
@@ -830,10 +842,19 @@ ipcMain.on('reload-options', () => {
     winmap.setAlwaysOnTop(set.mapper.alwaysOnTop);
     winmap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
   }
+  if (winchat) {
+    winchat.webContents.send('reload-options');
+    if (winchat.setParentWindow)
+      winchat.setParentWindow(set.chat.alwaysOnTopClient ? win : null);
+    winchat.setAlwaysOnTop(set.chat.alwaysOnTop);
+    winchat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
+  }
+
   if (winprofiles)
     winprofiles.webContents.send('reload-options');
   if (wineditor)
     wineditor.webContents.send('reload-options');
+
 });
 
 ipcMain.on('send-background', (event, command) => {
@@ -865,6 +886,10 @@ ipcMain.on('reload-profiles', (event) => {
   win.webContents.send('reload-profiles');
 })
 
+ipcMain.on('chat', (event, text) => {
+  winchat.webContents.send('chat', text);
+})
+
 ipcMain.on('setting-changed', (event, data) => {
   if (data.type == "mapper" && data.name == "alwaysOnTopClient") {
     winmap.setParentWindow(data.value ? win : null);
@@ -878,6 +903,16 @@ ipcMain.on('setting-changed', (event, data) => {
     win.webContents.send('setting-changed', data);
   if (winmap && event.sender != winmap.webContents)
     winmap.webContents.send('setting-changed', data);
+
+  if (data.type == "chat" && data.name == "alwaysOnTopClient") {
+    winchat.setParentWindow(data.value ? win : null);
+    winchat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
+  }
+  if (data.type == "chat" && data.name == "setAlwaysOnTop") {
+    winchat.setAlwaysOnTop(data.value);
+    winchat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
+  }
+
 })
 
 ipcMain.on('GMCP-received', (event, data) => {
@@ -916,6 +951,8 @@ ipcMain.on('show-window', (event, window) => {
     showEditor();
   else if (window == "profiles")
     showProfiles();
+  else if (window == "chat")
+    showChat();
 });
 
 ipcMain.on('import-map', (event, data) => {
@@ -1313,4 +1350,87 @@ function showEditor() {
   }
   else
     createEditor(true);
+}
+
+function createChat(show) {
+  s = loadWindowState('chat')
+  winchat = new BrowserWindow({
+    parent: set.chat.alwaysOnTopClient ? win : null,
+    title: 'Chat',
+    x: s.x,
+    y: s.y,
+    width: s.width,
+    height: s.height,
+    backgroundColor: '#eae4d6',
+    show: false,
+    skipTaskbar: (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false,
+    icon: path.join(__dirname, '../assets/icons/png/edit.png')
+  })
+
+  if (s.fullscreen)
+    winchat.setFullScreen(s.fullscreen);
+
+  winchat.setMenu(null);
+  winchat.loadURL(url.format({
+    pathname: path.join(__dirname, 'chat.html'),
+    protocol: 'file:',
+    slashes: true
+  }));
+
+  winchat.on('closed', () => {
+    winchat = null;
+  });
+
+  winchat.on('resize', () => {
+    if (!winchat.isMaximized() && !winchat.isFullScreen())
+      trackWindowState('chat', winchat);
+  })
+
+  winchat.on('move', () => {
+    trackWindowState('chat', winchat);
+  })
+
+  winchat.on('unmaximize', () => {
+    trackWindowState('chat', winchat);
+  })
+
+  //if (s.devTools)
+  if (debug)
+    winchat.webContents.openDevTools()
+
+  winchat.once('ready-to-show', () => {
+    addInutContext(winchat);
+    if (show) {
+      if (s.maximized)
+        winchat.maximize();
+      else
+        winchat.show();
+    }
+    else
+      chatmax = s.maximized;
+  })
+
+  winchat.on('close', (e) => {
+    set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+    set.showChat = false;
+    set.windows['hat'] = getWindowState('chat', winchat);
+    set.save(path.join(app.getPath('userData'), 'settings.json'));
+    e.preventDefault();
+    winchat.hide();
+  })
+}
+
+function showChat() {
+  set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+  set.showChat = true;
+  set.save(path.join(app.getPath('userData'), 'settings.json'));
+  if (winchat != null) {
+    if (chatmax)
+      winchat.maximize();
+    else
+      winchat.show();
+    chatmax = false;
+  }
+  else
+    createChat(true);
 }

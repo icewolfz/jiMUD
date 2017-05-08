@@ -44,12 +44,29 @@ export class Profiles {
 	public contextsAdvanced: boolean = false;
 }
 
+export class Chat {
+	//chat lines
+	public captureLines: boolean = false;
+	public captureAllLines: boolean = false;
+	//reivews for lines, tell or talking
+	public captureReviews: boolean = false;
+	//tell and emotetos
+	public captureTells: boolean = false;
+	//Say, whisper, yells, and speak
+	public captureTalk: boolean = false;
+	//list of lines to capture
+	public lines: string[] = [];
+	public alwaysOnTop: boolean = false;
+	public alwaysOnTopClient: boolean = true;
+}
+
 export class Settings {
 	public AutoCopySelectedToClipboard: boolean = false;
 	public askonclose: boolean = true;
 	public dev: boolean = false;
 	public mapper: Mapper = new Mapper();
 	public profiles: Profiles = new Profiles();
+	public chat: Chat = new Chat();
 	public showScriptErrors: boolean = false;
 	public title: string = "$t";
 	public flashing: boolean = false;
@@ -59,6 +76,7 @@ export class Settings {
 	public logEnabled: boolean = false;
 	public logOffline: boolean = false;
 	public logPrepend: boolean = false;
+	public logGagged: boolean = false;
 	public notifyMSPPlay: boolean = false;
 	public bufferSize: number = 5000;
 	public commandHistorySize: number = 20;
@@ -115,6 +133,7 @@ export class Settings {
 	public scrollLocked: boolean = false;
 	public showStatus: boolean = true;
 	public showMapper: boolean = false;
+	public showChat: boolean = false;
 	public showEditor: boolean = false;
 	public showArmor: boolean = false;
 	public showStatusWeather: boolean = true;

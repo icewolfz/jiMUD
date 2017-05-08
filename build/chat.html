@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>Chat</title>
+        <link rel="shortcut icon" href="../assets/icons/png/chat.png" />
+        <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/main.css" rel="stylesheet" type="text/css" />
+        <link href="css/ansi.css" rel="stylesheet" type="text/css" />
+        <script>
+            if (typeof module === 'object') { window.module = module; module = undefined; }
+        </script>
+        <script src="../lib/jquery.js"></script>
+        <script src="../lib/bootstrap.min.js"></script>
+        <script src="../lib/bootstrap-select.min.js"></script>
+        <script>
+            const { shell, clipboard, ipcRenderer, remote } = require('electron');
+            const { dialog, Menu, MenuItem, app } = remote;
+            const { parseTemplate, setSelectionRange } = require("./js/library.js");
+            const fs = require('fs');
+            const path = require('path');
+            const { version } = require("../package.json");
+
+            ipcRenderer.on('chat', (event, text) => {
+                $("#display").append(text);
+                scrollDisplay();
+            });
+
+            function scrollDisplay() {
+                $("#display")[0].scrollTop = $("#display")[0].scrollHeight;
+            }
+        </script>
+    </head>
+
+    <body>
+        <div id="display"></div>
+    </body>
+
+</html>

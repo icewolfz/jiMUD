@@ -49,8 +49,10 @@
 - `Prepend current buffer starting to log` Will prepend the current text on display to the log when started
 - `Enable Logging of offline text` Log text when not connected.
 - `Create logs for every connection` This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session. 
+- `Log gagged lines` This forces the logger to include any lines that may have been hidden, for example when capture chat is enabled the lines are removed from the main flow, this setting will enable you keep them or keep the log as only whats on the display.
 - `Save path` The location to save log files to, **note** path must exist supports
 [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
+
 ## Mapper
 
 - `Open on load` Open the mapper when you load the client
@@ -65,7 +67,23 @@
 - `Delay between directions` The amount of milliseconds between sending # of directions for speed walking.
 - `Directions to send` the # of directions to send between delays
 
+## Chat
+Controls what is captured into the chat window
+
+- `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. _When disabled requires chat to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of all windows` Force chat window to always be on top of all windows
+- `Capture tells` Causes all tells, emoteto and any related lines.
+- `Capture talk` Capture all talking, which are says, yells, whispers, and speaking and any related lines.
+- `Capture reviews` Determines if line, say, or tell reviews are captured. The capturing is determied based on the settings enabled. Tell reviews are only captured if capture tells is enabled, say review with only capture say, all line reviews or selective reviews when enabled.
+- `Capture lines` Enable capture of chat lines
+  - `All` capture all chat lines
+  - `Selective` capture only those provided in the selective lines list
+- `Selective lines` A comma delimited list of lines to selectivly capture, For example: Chat,Rp,Mudinfo will capture Chat, Rp, and Mudinfo lines.
+
+**Note:** line names are case sensitive.
+
 ## Telnet
+
 Settings to control how to handle telnet options and emulation
 
 - `MUD Compression Protocol (MCCP)` Disables or enables MUD Client Compression Protocol, this allows the mud to send all data as compressed to save bandwidth, only disable if you seem to have issues or need to try and save some local resources.

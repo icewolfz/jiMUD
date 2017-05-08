@@ -255,6 +255,7 @@ export class Client extends EventEmitter {
             this.emit('addLine', data);
             if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined" || data.line.length === 0)
                 return;
+            this.emit('addLineDone', data);
             if (data.gagged)
                 return;
             this.lineCache.push(data.line);
