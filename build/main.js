@@ -1398,7 +1398,7 @@ function createChat(show) {
     backgroundColor: '#eae4d6',
     show: false,
     skipTaskbar: (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false,
-    icon: path.join(__dirname, '../assets/icons/png/edit.png')
+    icon: path.join(__dirname, '../assets/icons/png/chat.png')
   })
 
   if (s.fullscreen)

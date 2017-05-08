@@ -7,6 +7,8 @@
   - Added log gagged lines option.
 - **Changed:**
   - Logging now logs per line instead of when all lines are done parsed, this fixes the issue of allow gagged lines to be captured
+- **Fixed:**
+  - A bug in autocopy not clearing when mouse leaves the window
 ##### 0.1.6 - 2017-05-07
 - **New:**
   - Advanced editor 

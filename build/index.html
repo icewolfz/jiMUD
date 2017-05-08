@@ -252,7 +252,7 @@
           sel = false;
         });
 
-        doc.addEventListener("mouseenter", function () {
+        doc.addEventListener("mouseleave", function () {
           if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
             clipboard.writeText(getDisplaySelectionText(), 'selection');
             clearDisplaySelection()
@@ -276,8 +276,6 @@
 
         ['cut', 'copy', 'paste'].forEach(function (event) {
           document.addEventListener(event, function (e) {
-            console.debug(e);
-            console.debug(document.activeElement);
             if (document.activeElement && (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA")) {
               if ($(document.activeElement).val().length > 0 || getDisplaySelectionText().length == 0)
                 return;
