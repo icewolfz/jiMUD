@@ -33,6 +33,7 @@
 * Recode to not stream but dl to local storage
 * Make local storage create proper folder structure based in {data}/sounds/.. using MSP protocol docs
 ## Miscellaneous
+* Add chat window ot capture all lines/tell/says/whispers?
 * Create better application icons, and new ones where needed
 * Finish monster css icons
 * Finish party css icons, do genric ones for each player race and gender if good enough icons, possible a silhouette bust of just each races head?
