@@ -414,6 +414,11 @@
           ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
           ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
           ipcRenderer.send('set-overlay', 0);
+          ipcRenderer.send('closed');
+        });
+
+        client.on('connected', () => {
+          ipcRenderer.send('connected');
         });
 
         client.on('receivedData', (data) => {
@@ -511,6 +516,7 @@
         _status.ac = client.options.showArmor;
         _status.on('set-title', (title) => {
           _logger.name = title;
+          ipcRenderer.send('set-title', title);
         });
         updateMenu();
         updateInterface();

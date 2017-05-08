@@ -58,6 +58,7 @@ export class Chat {
 	public lines: string[] = [];
 	public alwaysOnTop: boolean = false;
 	public alwaysOnTopClient: boolean = true;
+	public log: boolean = false;
 }
 
 export class Settings {

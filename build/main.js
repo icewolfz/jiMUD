@@ -857,6 +857,40 @@ ipcMain.on('reload-options', () => {
 
 });
 
+ipcMain.on('set-title', (event, title) => {
+  if (winchat)
+    winchat.webContents.send('set-title', title);
+  if (winprofiles)
+    winprofiles.webContents.send('set-title', title);
+  if (wineditor)
+    wineditor.webContents.send('set-title', title);
+  if (winmap)
+    winmap.webContents.send('set-title', title);
+})
+
+ipcMain.on('closed', (event, title) => {
+  if (winchat)
+    winchat.webContents.send('closed', title);
+  if (winprofiles)
+    winprofiles.webContents.send('closed', title);
+  if (wineditor)
+    wineditor.webContents.send('closed', title);
+  if (winmap)
+    winmap.webContents.send('closed', title);
+})
+
+ipcMain.on('connected', (event, title) => {
+  if (winchat)
+    winchat.webContents.send('connected', title);
+  if (winprofiles)
+    winprofiles.webContents.send('connected', title);
+  if (wineditor)
+    wineditor.webContents.send('connected', title);
+  if (winmap)
+    winmap.webContents.send('connected', title);
+})
+
+
 ipcMain.on('send-background', (event, command) => {
   win.webContents.send('send-background', command);
 })

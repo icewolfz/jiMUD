@@ -1,7 +1,9 @@
 ## Changelog
 ##### 0.1.7 - 2017-
 - **New:**
-  - New chat window with option to capture lines/tells/room talk and related reviews, including related settings to control the window and what to capture into the new chat window.
+  - New chat window 
+    - Capture lines/tells/room talk and related reviews, including related settings to control the window and what to capture into the new chat window.
+    - Independant logging using logging settings to create a seperate log.
   - Added log gagged lines option.
 - **Changed:**
   - Logging now logs per line instead of when all lines are done parsed, this fixes the issue of allow gagged lines to be captured
