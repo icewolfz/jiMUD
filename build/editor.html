@@ -92,9 +92,11 @@
                 var format = item.format || item.label;
                 format = format.toLowerCase();
                 tinymce.activeEditor.undoManager.transact(function () {
+                    $("#tinymce", tinymce.activeEditor.getDoc()).removeClass('animate');
                     clearReverse($(".reverse", $(tinymce.activeEditor.getDoc()).contents()));
                     tinymce.activeEditor.execCommand('mceToggleFormat', false, format);
                     addReverse($(".reverse", $(tinymce.activeEditor.getDoc()).contents()));
+                    $("#tinymce", tinymce.activeEditor.getDoc()).addClass('animate');
                 });
             }
 
@@ -495,9 +497,11 @@
                     function toggleFormat(format) {
                         if (!format || typeof format !== "string") format = this.settings.format;
                         tinymce.activeEditor.undoManager.transact(function () {
+                            $("#tinymce", tinymce.activeEditor.getDoc()).removeClass('animate');
                             clearReverse($(".reverse", $(editor.getDoc()).contents()));
                             editor.execCommand('mceToggleFormat', false, format);
                             addReverse($(".reverse", $(editor.getDoc()).contents()));
+                            $("#tinymce", tinymce.activeEditor.getDoc()).addClass('animate');
                         });
                     }
 

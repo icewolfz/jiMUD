@@ -12,9 +12,8 @@ Basic questions answered about jiMUD
 - [Assets](assets.md)
 
 ## Known Issues
-- Flashing blocks may blink out of sync when flashing enabled in display or advanced editor
 - Advanced editor 
-  - Paste may lose some colors/background colors on pasted, this is a bug in   TinyMCE editor
+  - Paste may lose some colors/background colors on pasted, this is a bug in TinyMCE editor
   - When apply styles to all text some styles may get stuck  
   - Some styles will not flash when flashing is enabled depending on order of styles applied
   - Toolbar text/background color picker may be cut off in small window sizes

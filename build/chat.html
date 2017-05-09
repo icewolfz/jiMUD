@@ -84,7 +84,9 @@
             }
 
             ipcRenderer.on('chat', (event, text) => {
+                $("#display").removeClass("animate");
                 $("#display").append(text);
+                $("#display").addClass("animate");
                 scrollDisplay();
                 if (options.chat.log)
                     write(text);

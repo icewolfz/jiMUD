@@ -278,6 +278,7 @@ export class Client extends EventEmitter {
         });
 
         this.parser.on("parseDone", () => {
+            this.display.removeClass("animate");
             if (this.lineCache.length > 0) {
                 this.emit('parseDone', this.lineCache);
                 var bar = this.display.hasHorizontalScrollBar();
@@ -294,6 +295,7 @@ export class Client extends EventEmitter {
                     $(lines[l]).remove();
             }
             lines = null;
+            this.display.addClass("animate");
         });
         this.parser.on('setTitle', (title, type) => {
 
