@@ -14,7 +14,7 @@
 - `Enable Aliases` enable/disable aliases from being executed before text is sent to the mud. for the selected profile
 - `Enable Macros` enable/disable keyboard macros when keys are key combinations are pressed for the selected profile
 - `Enable Buttons` enable/disable buttons
-- `Priority` The profile's priority, this allows you to control the order in which profiles are sorted when executing alaises, triggers and macros in case of duplate names
+- `Priority` The profile's priority, this allows you to control the order in which profiles are sorted when executing aliases, triggers and macros in case of duplicate names
 - `Import defaults` Import and append any default items
 - `Reset profile` Reset profile into an empty profile with default settings
 
@@ -41,7 +41,7 @@
   - `Parse` do standard parsing
   - `Script` the value is javascript, it will evaluate and any thing returned will be sent to the mud. the value is wrapped as a function and any matched patterns are passed as arguments, use standard arguments[#] to access.
 - `Value` the value to send to the mud
-- `Name` a simple descriptive name for easy iding when editing macros
+- `Name` a simple descriptive name for easy identifying when editing macros
 - `Send to Mud` send the value to the mud
 - `Append to Command` append value to the end of the command input
 - `Daisy Chain` this will append the value to the command line if it ends with a space then send the command line to the mud, if no space it will be handled as a standard macro and send the value.
@@ -55,19 +55,19 @@
   - `Parse` do standard parsing, allows %0 ... %n to access arguments regex matches
   - `Script` the value is javascript, it will evaluate and any thing returned will be sent to the mud, the value is wrapped as a function and any matched patterns are passed as arguments, use standard arguments[#] to access.
 - `Value` the value to send to the mud
-- `Test` Allows you to test your pattern agaist a string and return results and any arguments found
-  - `Text` the text to test pattern agaist.
+- `Test` Allows you to test your pattern against a string and return results and any arguments found
+  - `Text` the text to test pattern against.
   - `Results` the results of the test, either no match or a list of arguments found.
 - `Type` the type of trigger
-  - `Regular Expression` use javascript regular expressions when matching the pattern agaist text.
-  - `Command Input Regular Expression` same as Regular Expression but only triggered agaist text sent from teh command input.
+  - `Regular Expression` use javascript regular expressions when matching the pattern against text.
+  - `Command Input Regular Expression` same as Regular Expression but only triggered against text sent from teh command input.
 - `Priority` the sort order of triggers
-- `Verbatim` the text is combared exactly how it is, including case
+- `Verbatim` the text is compared exactly how it is, including case
 - `Trigger on Newline` this causes the trigger to execute if it is a full line of text
 - `Trigger on Prompt` this causes the trigger to execute if prompt/partial line of text.
 
 ## Buttons
-- `Preivew` - a preview of how the button will look
+- `Preview` - a preview of how the button will look
 - `Enable` enable/disable button
 - `Caption` The button caption to display for tooltip
 - `Icon` A path to an icon to display, may pick from build in icons or from a file - [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
@@ -80,4 +80,4 @@
 - `Send to Mud` send the value to the mud
 - `Append to Command` append value to the end of the command input
 - `Daisy Chain` this will append the value to the command line if it ends with a space then send the command line to the mud, if no space it will be handled as a standard macro and send the value.
-- `Stretch icon` this will cause the icon to be streched and fill all space on a button
+- `Stretch icon` this will cause the icon to be stretched and fill all space on a button

@@ -6,7 +6,7 @@
   * Extra Variables:
     * A variable for current selected text, %selected%
     * A variable for current line text under mouse, %selectedline% || %selline%
-    * A variable for currnet url under mouse, %selectedurl% || %selurl%
+    * A variable for current url under mouse, %selectedurl% || %selurl%
     * Maybe only support variables in javascript for ease of maintaining
 * Status - allow manual refresh as well as the visible toggles
 * Buttonbar - allow disable, maybe open in editor directly
@@ -19,7 +19,7 @@
   * [Textcolor plugin source - https://github.com/tinymce/tinymce/blob/master/src/plugins/textcolor/src/main/js/Plugin.js](https://github.com/tinymce/tinymce/blob/master/src/plugins/textcolor/src/main/js/Plugin.js)
 ## Mapper 
 * Add room exist and coords/zone check x/y/z/zone and if room found bump zone context menu, right click room list a remove room option, maybe exports
-* Add a file menu and add all the featuers from the toolbar?
+* Add a file menu and add all the features from the toolbar?
 ## Profile manager
 * Add backup systems to allow easier backup/export of profiles with out the need to open file explorer
 * Maybe add a file menu ?
@@ -28,17 +28,16 @@
 * Context menu
   * An editor to add/edit custom context menu items to appear when right click display
   * Icon preview similar to button, but on a white/grey bg and limit to 16x16
-  * Support action image/fa/custom and genrate a proper nativeImage format using canvas like image export or createIcon from Advanced editor
+  * Support action image/fa/custom and generate a proper nativeImage format using canvas like image export or createIcon from Advanced editor
 ## MSP
-* Recode to not stream but dl to local storage
+* Re-code to not stream but dl to local storage
 * Make local storage create proper folder structure based in {data}/sounds/.. using MSP protocol docs
 ## Miscellaneous
 * Create better application icons, and new ones where needed
 * Finish monster css icons
-* Finish party css icons, do genric ones for each player race and gender if good enough icons, possible a silhouette bust of just each races head?
+* Finish party css icons, do generic ones for each player race and gender if good enough icons, possible a silhouette bust of just each races head?
 * Add advanced color pref systems to allow customizing the 256 xterm colors
 * maybe convert from using a bell sound file in ansi parer to using electron shell.beep() [https://github.com/electron/electron/blob/master/docs/api/shell.md](https://github.com/electron/electron/blob/master/docs/api/shell.md), do this by capturing the bell event in parer or from index.html as client.parser.on('bell', ()  => { shell.beep() });
-* Fix flashing out of sync issue, [http://stackoverflow.com/questions/16650741/syncing-several-css3-animations](http://stackoverflow.com/questions/16650741/syncing-several-css3-animations) has a few possible solutions as does [http://tjwoon.com/article/synchronizing-css-animations](http://tjwoon.com/article/synchronizing-css-animations), the best soluton i beleave would be to remove the animate from the .flash class and make it .animateflash .flash { ...} and before adding new text remove the animateflash css class from the container (display/editor) and once all the new text has been processed and added readd animateflash to the container and restart all the flashing, that should solve the sync issue but needs testing
 * ***Mac - needs a mac, can't build or test***
 * Help files
   * Sections for mapper

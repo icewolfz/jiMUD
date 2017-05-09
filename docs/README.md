@@ -1,3 +1,7 @@
+# jiMUD
+
+A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on it's web client.
+
 ## FAQ
 Basic questions answered about jiMUD
 - [jiMUD FAQ](faq.md)
@@ -6,7 +10,7 @@ Basic questions answered about jiMUD
 - [Speedpaths](speedpaths.md)
 - [Commands](commands.md)
 - [Preferences](preferences.md)
-- [Sripting](scripting.md)
+- [Scripting](scripting.md)
 - [Profiles](profiles.md)
 - [Customizing](customizing.md)
 - [Assets](assets.md)
@@ -18,4 +22,3 @@ Basic questions answered about jiMUD
   - Some styles will not flash when flashing is enabled depending on order of styles applied
   - Toolbar text/background color picker may be cut off in small window sizes
   - Reverse style has wierd results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
----

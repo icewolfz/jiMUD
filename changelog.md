@@ -3,17 +3,16 @@
 - **New:**
   - New chat window 
     - Capture lines/tells/room talk and related reviews, including related settings to control the window and what to capture into the new chat window.
-    - Independant logging using logging settings to create a seperate log.
+    - Independent logging using logging settings to create a separate log.
   - Added log gagged lines option.
   - Mapper
     - A compact button to allow you to cause the db to compact and free space for a possible speed boost.
-    - A memory only mode, requires a restart after enableing, will cause the memory to be loaded 100% into memory and only access the disk on load or when the window or client are closed. **WARNING _if the client or OS crash all in memory data will be lost and not saved to disk_**
+    - A memory only mode, requires a restart after enabling, will cause the memory to be loaded 100% into memory and only access the disk on load or when the window or client are closed. **WARNING _if the client or OS crash all in memory data will be lost and not saved to disk_**
 - **Changed:**
   - Logging now logs per line instead of when all lines are done parsed, this fixes the issue of allow gagged lines to be captured
-  - Mapper journal mode is now trucate
   - Updated jquery to v3.2.1
 - **Fixed:**
-  - A bug in autocopy not clearing when mouse leaves the window
+  - A bug in auto copy not clearing when mouse leaves the window
   - A bug when using the cancel button on profile manager and warning about saving changes when nothing has been changed
   - Flashing when enabled should now correctly sync blocks in advanced editor, display, and chat window.
 ##### 0.1.6 - 2017-05-07
@@ -36,7 +35,7 @@
 - **Changed:**
   - Advanced editor now uses monospaced font
   - Removed insert date/time from advanced editor context
-  - Display recoded into an iframe to fix selection disappearing when lost focus.
+  - Display re-coded into an iframe to fix selection disappearing when lost focus.
   - Simplified mapper image export
   - Can no longer close client until profile manager has been closed
   - Changed how deleted profiles where moved to trash, now uses framework instead of extra node module
@@ -73,7 +72,7 @@
   - Basic context menu for all editable fields
   - When closing profile manager will ask to save changes when using the window close button
   - When closing client will now warn if still connected with option to never ask again
-  - Added javascript aliases for OoMUD so webclient scripts will work with little to no changes.
+  - Added javascript aliases for OoMUD so web client scripts will work with little to no changes.
 - **Changed:**
   - Minified all javascript code to try and improve speed
   - Compressed all PNG files to reduce size for loading improvements

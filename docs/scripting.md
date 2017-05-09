@@ -4,14 +4,14 @@
 - `this.send(text)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new lien as most muds require it to process any text.
 - `this.sendRaw(text)` sends raw text directly to the mud as is
 - `this.sendCommand(text)` sends a command as if sent from the command line
-- `this.sendBackground(text)` sends a command as if sent from the command line with out modifing the current command line
+- `this.sendBackground(text)` sends a command as if sent from the command line with out modifying the current command line
 - `this.print(text, newline)` print text to screen, newline argument is optional and controls weather to start a newline if last line was a fragment/prompt
 - `this.echo(text, fore, back, newline, forceline)` echo text to the screen
   - `test` the text to echo
-  - `fore` ansi foreground code default is localecho
+  - `fore` ansi foreground code default is local echo
   - `back` background color
   - `newline` see this.print
-  - `foreline` always force a new line reguardless of current last line state
+  - `foreline` always force a new line regardless of current last line state
 - `this.parse(text)` send raw text to the screen to be parsed and displayed, can be used to send raw ansi or MXP coded
 - `this.sendGMCP(text)` send a GMCP formatted string to the mud, see GMCP spec notes for formatting, its mostly in {module, data} where data is a JSON formatted string
 ### **WARNING**: you can effect the client if you access the wrong function, so any function used other then this list may caused unknown results and could cause the client to stop working
@@ -21,7 +21,7 @@ Notice how all the functions have a this. in front of them, this is the client o
 #### Mono grayscale rainbow text alias
 ```
 /*
-Start mono grayscale rainbow example
+Start mono gray-scale rainbow example
 
 syntax: monoline [line] [text]
 

@@ -3,7 +3,7 @@
 
 - `Auto Connect onload` This will cause the client to try and connect as soon as the client has finished loading.
 - `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
-- `Show Lagmeter` Weather to enable the lagmeter, **note** this is not 100% correct always due to overhead varibles that cant be controlled.
+- `Show Lagmeter` Weather to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Enable Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
 - `Enable debug` Will display debug data to the dev tool console
 
@@ -12,7 +12,7 @@
 - `Font` The font for the display area, mono spaced fonts work the best.
 - `Font size` The font size for the display area
 - `Enable flashing text` Enable ansi flashing/blinking text, when disabled flashing text appears as underlined text **note** this can cause a preformance hit when enabled.
-- `Auto copy selected to clipboard` This will copy selected text to the clipboard automaticly when mouse released and then clear selection
+- `Auto copy selected to clipboard` This will copy selected text to the clipboard automatically when mouse released and then clear selection
 - `Echo commands` Will display commands as they are sent to the mud
 - `Enable URL detection` Attempt to detect urls and convert them into links that can be clicked to.
 - `Focus to command input on click` Will auto focus to the command input when the display area is clicked.
@@ -20,7 +20,7 @@
 
 ## Colors
 
-- `Color scheme` Let you pick prefined colors schemes
+- `Color scheme` Let you pick predefined colors schemes
 - `Default` The default font color when no color codes have been supplied
 - `Local echo` The local echo color
 - `Information` The color of any information from the client
@@ -37,7 +37,7 @@
   - `Character` The character to use when repeating command into multiple commands.
   - `Enable` This will enable command stacking systems and use the command stacking character to know where to break a command into a list commands.
 - `Speedpaths`
-  - `Character` The charcter that is used to determine if the command is a speedpath to expand, default is !
+  - `Character` The character that is used to determine if the command is a speedpath to expand, default is !
   - `Enable` Weather or not to expand speedpaths, if disabled the line is parsed as normal command
   - `Parse` Parse each command as if it was sent from the command line, if disabled each command is sent to the mud as is.
 - `Parse single quotes as strings` Treat single quotes as string encasing, meaning all text found inside single quotes are treated as is and not parsed.
@@ -46,7 +46,7 @@
 ## Logging
 
 - `Enable Logging` Enable logger, can also be toggled by the log icon on the toolbar.
-- `Prepend current buffer starting to log` Will prepend the current text on display to the log when started
+- `Pre-pend current buffer starting to log` Will pre-pend the current text on display to the log when started
 - `Enable Logging of offline text` Log text when not connected.
 - `Create logs for every connection` This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session. 
 - `Log gagged lines` This forces the logger to include any lines that may have been hidden, for example when capture chat is enabled the lines are removed from the main flow, this setting will enable you keep them or keep the log as only whats on the display.
@@ -75,11 +75,11 @@ Controls what is captured into the chat window
 - `Always on top of all windows` Force chat window to always be on top of all windows
 - `Capture tells` Causes all tells, emoteto and any related lines.
 - `Capture talk` Capture all talking, which are says, yells, whispers, and speaking and any related lines.
-- `Capture reviews` Determines if line, say, or tell reviews are captured. The capturing is determied based on the settings enabled. Tell reviews are only captured if capture tells is enabled, say review with only capture say, all line reviews or selective reviews when enabled.
+- `Capture reviews` Determines if line, say, or tell reviews are captured. The capturing is determined based on the settings enabled. Tell reviews are only captured if capture tells is enabled, say review with only capture say, all line reviews or selective reviews when enabled.
 - `Capture lines` Enable capture of chat lines
   - `All` capture all chat lines
   - `Selective` capture only those provided in the selective lines list
-- `Selective lines` A comma delimited list of lines to selectivly capture, For example: Chat,Rp,Mudinfo will capture Chat, Rp, and Mudinfo lines.
+- `Selective lines` A comma delimited list of lines to selectively capture, For example: Chat,Rp,Mudinfo will capture Chat, Rp, and Mudinfo lines.
 
 **Note:** line names are case sensitive.
 
