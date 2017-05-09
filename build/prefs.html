@@ -25,7 +25,8 @@
     <script>
       const library = require('./js/library');
       const Settings = require('./js/settings').Settings;
-      const { ipcRenderer } = require('electron');
+      const { remote, ipcRenderer } = require('electron');
+      const { dialog } = remote;
       const RGBColor = require('rgbcolor');
       const path = require('path')
       const fs = require('fs');
@@ -124,6 +125,7 @@
         $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
 
         $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
+        $('#mapper-memory').prop('checked', _settings.mapper.memory);
         $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
 
         $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
@@ -196,6 +198,16 @@
               break;
             case 'mapLegend':
               _settings.mapper.legend = this.checked;
+              break;
+            case 'mapper-memory':
+              _settings.mapper.memory = this.checked;
+              if (this.checked) {
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                  type: 'warning',
+                  title: 'Warning',
+                  message: 'If client or OS crash, all in memory data will be lost and not saved to disk'
+                });
+              }
               break;
             default:
               _settings[$(this).attr('id')] = this.checked;
@@ -915,18 +927,53 @@
 
     </div>
     <div role="tabpanel" class="tab-pane fade" id="mapper">
-      <div class="col-sm-6 form-group">
+      <div class="col-sm-4 form-group">
         <label class="control-label">
           <input type="checkbox" id="showMapper" />
           Open on load
           </label>
       </div>
-      <div class="col-sm-6 form-group">
+      <div class="col-sm-4 form-group">
         <label class="control-label">
           <input type="checkbox" id="mapEnabled" />
           Enable mapper
           </label>
       </div>
+
+      <div class="col-sm-4 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="mapFollow" />
+          Follow player
+          </label>
+      </div>
+      <div class="col-sm-4 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="mapLegend" />
+          Show legend
+          </label>
+      </div>
+      <div class="col-sm-4 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="MapperSplitArea" />
+          Split areas
+          </label>
+      </div>
+      <div class="col-sm-4 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="MapperFillWalls" />
+          Display walls
+          </label>
+      </div>
+      <div class="col-sm-12 form-group" style="margin:0;padding:0">
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="mapper-memory" />
+          Load in memory
+          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Requires restart</span>
+          </label>
+        </div>
+      </div>
+
       <div class="col-sm-12 form-group" style="margin:0;padding:0">
         <div class="col-sm-6 form-group">
           <label class="control-label">
@@ -942,30 +989,6 @@
           </label>
         </div>
       </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="mapFollow" />
-          Follow player
-          </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="mapLegend" />
-          Show legend
-          </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="MapperSplitArea" />
-          Split areas
-          </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="MapperFillWalls" />
-          Display walls
-          </label>
-      </div>
       <div class="col-sm-12 form-group">
         <div class="col-sm-6 form-group">
           <label class="control-label">
@@ -978,7 +1001,7 @@
         </div>
 
         <div class="form-group">
-          <label class="control-label">
+          <label class="col-sm-6 control-label">
             Directions to send
             <input type="number" id="commandDelayCount" class="form-control"/>
             </label>

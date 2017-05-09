@@ -23,6 +23,7 @@ export class Mapper {
 	public hscroll: number = 0;
 	public alwaysOnTop: boolean = false;
 	public alwaysOnTopClient: boolean = true;
+	public memory: boolean = false;
 	public active =
 	{
 		ID: null,

@@ -5,7 +5,9 @@
     - Capture lines/tells/room talk and related reviews, including related settings to control the window and what to capture into the new chat window.
     - Independant logging using logging settings to create a seperate log.
   - Added log gagged lines option.
-  - Mapper now has a compact button to allow you to cause the db to compact and free space for a possible speed boost.
+  - Mapper
+    - A compact button to allow you to cause the db to compact and free space for a possible speed boost.
+    - A memory only mode, requires a restart after enableing, will cause the memory to be loaded 100% into memory and only access the disk on load or when the window or client are closed. **WARNING _if the client or OS crash all in memory data will be lost and not saved to disk_**
 - **Changed:**
   - Logging now logs per line instead of when all lines are done parsed, this fixes the issue of allow gagged lines to be captured
   - Mapper journal mode is now trucate

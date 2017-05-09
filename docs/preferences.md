@@ -66,6 +66,7 @@
 - `Reset Window` Reset the mapper windows to default, this allows you to re-center window in case you dragged it off screen.
 - `Delay between directions` The amount of milliseconds between sending # of directions for speed walking.
 - `Directions to send` the # of directions to send between delays
+- `Load in Memory` load mapper in to memory and only access disk on load and window/client close, try if slow or have large amounts of memory. **Requires restart on windows**, **WARNING _if the client or OS crash all in memory data will be lost and not saved to disk_**
 
 ## Chat
 Controls what is captured into the chat window

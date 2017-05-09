@@ -747,7 +747,7 @@ function createWindow() {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     if (winmap)
-      winmap.webContents.executeJavaScript('saveRoom()');
+      winmap.webContents.executeJavaScript('save();');
     win = null;
   })
 
@@ -794,7 +794,7 @@ function createWindow() {
     set.windows['main'] = getWindowState('main', win);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
     if (winmap)
-      winmap.webContents.executeJavaScript('saveRoom()');
+      winmap.webContents.executeJavaScript('save();');
     if (winprofiles) {
       e.preventDefault();
       dialog.showMessageBox(winprofiles, {
@@ -1217,7 +1217,7 @@ function createMapper(show) {
     set.windows['mapper'] = getWindowState('mapper', winmap);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
     e.preventDefault();
-    winmap.webContents.executeJavaScript('saveRoom()');
+    winmap.webContents.executeJavaScript('save();');
     winmap.hide();
   })
 }

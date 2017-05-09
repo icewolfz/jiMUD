@@ -75,6 +75,7 @@ export class Backup extends EventEmitter {
                     MapperFillWalls: this.client.options.mapper.fill,
                     vscroll: this.client.options.mapper.vscroll,
                     hscroll: this.client.options.mapper.hscroll,
+                    mapperMemory: this.client.options.mapper.memory,
                     showScriptErrors: this.client.options.showScriptErrors,
                     title: this.client.options.title,
                     flashing: this.client.options.flashing,
@@ -371,7 +372,7 @@ export class Backup extends EventEmitter {
             this.client.options.mapper.fill = data.settings.MapperFillWalls;
             this.client.options.mapper.vscroll = data.settings.vscroll;
             this.client.options.mapper.hscroll = data.settings.hscroll;
-
+            this.client.options.mapper.memory = data.settings.mapperMemory;
             this.client.options.showScriptErrors = data.settings.showScriptErrors;
             if (data.settings.title)
                 this.client.options.title = data.settings.title;

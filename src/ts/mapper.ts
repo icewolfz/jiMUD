@@ -118,6 +118,7 @@ export class Mapper extends EventEmitter {
     public _fillWalls: boolean = false;
     public _enabled: boolean = true;
     public _follow: boolean = true;
+    public _memory: boolean = false;
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;
 
@@ -129,6 +130,7 @@ export class Mapper extends EventEmitter {
     }
     get enabled(): boolean { return this._enabled; }
 
+    get memory(): boolean { return this._memory; }
 
     set follow(value: boolean) {
         if (this._follow != value) {
@@ -167,23 +169,43 @@ export class Mapper extends EventEmitter {
 
     get fillWalls(): boolean { return this._fillWalls; }
 
-    constructor(canvas) {
+    createDatabase(prefix?) {
+        if (prefix)
+            prefix += ".";
+        else
+            prefix = "";
+        this._db.serialize(() => {
+            //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
+            this._db.run("PRAGMA " + prefix + "synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;");
+            this._db.run("CREATE TABLE IF NOT EXISTS " + prefix + "Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)");
+            this._db.run("CREATE TABLE IF NOT EXISTS " + prefix + "Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)");
+            this._db.run("CREATE UNIQUE INDEX IF NOT EXISTS " + prefix + "index_id on Rooms (ID);")
+            this._db.run("CREATE INDEX IF NOT EXISTS " + prefix + "exits_id on Exits (ID);")
+            //this._db.run("CREATE TABLE IF NOT EXISTS Areas (ID INTEGER PRIMARY KEY AUTOINCREMENT, Area TEXT)");
+        });
+    }
+
+    constructor(canvas, memory?: boolean) {
         super();
         this._canvas = canvas;
         this._context = canvas.getContext("2d");
         //rooms - ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors
         //exits - ID, Exit, DestID
-        this._db = new sqlite3.Database(path.join(parseTemplate("{data}"), "map.sqlite"));
-        this._db.serialize(() => {
-            //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
-            this._db.run("PRAGMA journal_mode=TRUNCATE;PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;");
-            this._db.run("CREATE TABLE IF NOT EXISTS Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)");
-            this._db.run("CREATE TABLE IF NOT EXISTS Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)");
-            this._db.run("CREATE UNIQUE INDEX IF NOT EXISTS index_id on Rooms (ID);")
-            this._db.run("CREATE INDEX IF NOT EXISTS exits_id on Exits (ID);")
-            //this._db.run("CREATE TABLE IF NOT EXISTS Areas (ID INTEGER PRIMARY KEY AUTOINCREMENT, Area TEXT)");
-        });
+        if (memory) {
+            this._memory = memory;
+            this._db = new sqlite3.Database(":memory:");
+        }
+        else
+            this._db = new sqlite3.Database(path.join(parseTemplate("{data}"), "map.sqlite"));
+        this.createDatabase();
         this._db.serialize();
+        if (this._memory) {
+            this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
+            this.createDatabase('Disk');
+            this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
+            this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
+            this._db.run('DETACH DATABASE Disk');
+        }
 
         $(this._canvas).mousemove((event) => {
             this.MousePrev = this.Mouse;
@@ -1845,8 +1867,21 @@ export class Mapper extends EventEmitter {
         });
     }
 
-    executeCommand(cmd: string) {
+    executeCommand(cmd: string, callback?) {
         if (!cmd || cmd.length === 0) return;
-        this._db.run(cmd);
+        this._db.run(cmd, callback);
+    }
+
+    save() {
+        if (this._memory) {
+            this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
+            this.createDatabase('Disk');
+            this._db.run('DELETE FROM Disk.Rooms');
+            this._db.run('DELETE FROM Disk.Exits');
+            this._db.run('INSERT INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms');
+            this._db.run('INSERT INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits');
+            this._db.run('VACUUM Disk');
+            this._db.run('DETACH DATABASE Disk');
+        }
     }
 }
