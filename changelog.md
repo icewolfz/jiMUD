@@ -57,7 +57,7 @@
     - When editing a macro they where not correctly being saved
     - Better color detection for pasted formatted text, it will now attempt to find the closet color supported in the 256 colors
     - Changing the item style will now correctly change the editor mode again
-##### 0.1.5 - 2017-04-??
+##### 0.1.5 - 2017-05-01
 - **New:**
   - Advanced editor has been added
     - Supports full WYSIWYG style for bold, italic, underline, strikeout, and all colors by simple select text and clicking a button
@@ -82,7 +82,7 @@
     - Profiles where not deleted correctly
     - Copy/cut/paste should once again work with input areas when they have focus
   - Properly working Linux packages
-##### 0.1.4 - 2017-04-??
+##### 0.1.4 - 2017-04-29
 - **New:**
   - Application icon, temporary for now will create a better one in th future
   - Profile manager 
@@ -98,7 +98,7 @@
   - When changing enable TYPE on profile editor it would not update treeview check state
   - When saving profiles and closing, if invalid profile name supplied it would not save profile, now it will properly cancel save until name fixed
   - When cloning a profile default macros where appended.
-##### 0.1.3 - 2017-04-??
+##### 0.1.3 - 2017-04-26
 - **Changed:**
   - Mapper Clear/Walk path are now disabled when no path highlighted
 - **Fixed:**
@@ -106,7 +106,7 @@
   - Profile cloning was erroring do to calling the wrong collections
   - Client was emitting wrong event when new text was added to display causing
   - triggers and anything that relied on that event to fail
-##### 0.1.2 - 2017-04-??
+##### 0.1.2 - 2017-04-25
 - **New:**
   - Trainer mapper npc type
 - **Changed:**
@@ -115,11 +115,11 @@
   - Mapper saving open/close state
   - Missing RGBColor module for settings dialog
   - Window size not being sent to mud when resized
-##### 0.1.1 - 2017-04-??
+##### 0.1.1 - 2017-04-24
 - **Fixed:**
   - Profile menu looking for a profile folder when does not exist
   - Turned off debug mode by default
 - **Changed:**
   - Upgraded to electron 1.6.7
-##### 0.1.0 - 2017-04-??
+##### 0.1.0 - 2017-04-24
 - Initial release
