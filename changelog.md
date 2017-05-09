@@ -8,6 +8,7 @@
   - Mapper now has a compact button to allow you to cause the db to compact and free space for a possible speed boost.
 - **Changed:**
   - Logging now logs per line instead of when all lines are done parsed, this fixes the issue of allow gagged lines to be captured
+  - Mapper journal mode is now trucate
 - **Fixed:**
   - A bug in autocopy not clearing when mouse leaves the window
   - A bug when using the cancel button on profile manager and warning about saving changes when nothing has been changed

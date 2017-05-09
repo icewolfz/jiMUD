@@ -28,9 +28,13 @@
             const { version } = require("../package.json");
             var options, currentfile, _path, timeStamp, _name;
 
-            $(document).ready(function () {
+            function loadOptions() {
                 options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
                 _path = parseTemplate(options.logPath);
+            }
+
+            $(document).ready(function () {
+                loadOptions();
                 if (options.chat.log)
                     start();
 
@@ -74,8 +78,7 @@
                 });
             });
 
-            function doCopy()
-            {
+            function doCopy() {
                 if (getDisplaySelectionText().length > 0)
                     clipboard.writeText(getDisplaySelectionText(), 'selection');
             }
@@ -121,12 +124,13 @@
             }
 
             ipcRenderer.on('reload-options', (event) => {
-                options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
-                _path = parseTemplate(options.logPath);
+                loadOptions();
                 buildFilename();
             });
 
             ipcRenderer.on('connected', (event) => {
+                if (!options)
+                    loadOptions();
                 if (options.logUniqueOnConnect || !timeStamp)
                     timeStamp = new Date().getTime();
                 buildFilename();

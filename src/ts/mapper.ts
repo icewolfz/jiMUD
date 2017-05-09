@@ -176,7 +176,7 @@ export class Mapper extends EventEmitter {
         this._db = new sqlite3.Database(path.join(parseTemplate("{data}"), "map.sqlite"));
         this._db.serialize(() => {
             //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
-            this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;");
+            this._db.run("PRAGMA journal_mode=TRUNCATE;PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;");
             this._db.run("CREATE TABLE IF NOT EXISTS Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)");
             this._db.run("CREATE TABLE IF NOT EXISTS Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)");
             this._db.run("CREATE UNIQUE INDEX IF NOT EXISTS index_id on Rooms (ID);")
@@ -1843,5 +1843,10 @@ export class Mapper extends EventEmitter {
         this._db.run("VACUUM;", () => {
             this.emit('import-progress', 100);
         });
+    }
+
+    executeCommand(cmd: string) {
+        if (!cmd || cmd.length === 0) return;
+        this._db.run(cmd);
     }
 }
