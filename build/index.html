@@ -304,7 +304,6 @@
         });
         client.on('addLine', (data) => {
           var res;
-          console.log(data.fragment);
           if (_captures.length == 0) return;
           //custom capture to ignore who list
           res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.raw);

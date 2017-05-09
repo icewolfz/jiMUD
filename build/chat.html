@@ -26,7 +26,7 @@
             const fs = require('fs');
             const path = require('path');
             const { version } = require("../package.json");
-            var options, currentfile, _path, timeStamp;
+            var options, currentfile, _path, timeStamp, _name;
 
             $(document).ready(function () {
                 options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
