@@ -93,15 +93,11 @@ inputMenu = Menu.buildFromTemplate([
     { role: 'selectall' },
 ])
 
-function addInputContext(window) {
-    window.on('context-menu', (e, props) => {
-        const { selectionText, isEditable } = props;
-        if (isEditable) {
-            inputMenu.popup(remote.getCurrentWindow());
-        } else if (selectionText && selectionText.trim() !== '') {
-            selectionMenu.popup(remote.getCurrentWindow());
-        }
-    })
+function addInputContext() {
+    window.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
+        inputMenu.popup(remote.getCurrentWindow());
+    }, false)
 }
 
 function profileID(name) {
@@ -2188,8 +2184,6 @@ export function init() {
 
     ['cut', 'copy', 'paste'].forEach(function (event) {
         document.addEventListener(event, function (e) {
-            console.debug(e);
-            console.debug(document.activeElement);
             if (document.activeElement && (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA"))
                 return;
             if (event == "cut")
@@ -2262,7 +2256,7 @@ export function init() {
         updateCurrent();
         $(this).data('previous-value', this.checked);
     });
-    addInputContext(remote.getCurrentWindow());
+    addInputContext();
 }
 
 function undoKeydown(e) {

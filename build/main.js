@@ -552,7 +552,7 @@ const inputMenu = Menu.buildFromTemplate([
   { role: 'selectall' },
 ])
 
-function addInutContext(window) {
+function addInputContext(window) {
   window.webContents.on('context-menu', (e, props) => {
     const { selectionText, isEditable } = props;
     if (isEditable) {
@@ -613,7 +613,7 @@ function showHelpWindow(url, title) {
     winhelp.webContents.openDevTools()
 
   winhelp.once('ready-to-show', () => {
-    addInutContext(winhelp);
+    addInputContext(winhelp);
     if (url != null && url.length != 0) {
       if (s.maximized)
         winhelp.maximize();
@@ -752,7 +752,7 @@ function createWindow() {
   })
 
   win.once('ready-to-show', () => {
-    addInutContext(win);
+    addInputContext(win);
     if (fs.existsSync(path.join(app.getPath('userData'), "monsters.css"))) {
       fs.readFile(path.join(app.getPath('userData'), "monsters.css"), 'utf8', (err, data) => {
         win.webContents.insertCSS(parseTemplate(data));
@@ -1149,7 +1149,7 @@ function showPrefs() {
   pref.once('ready-to-show', () => {
     pref.show()
   })
-  //addInutContext(pref);
+  addInputContext(pref);
 }
 
 function createMapper(show) {
@@ -1200,7 +1200,7 @@ function createMapper(show) {
     winmap.webContents.openDevTools()
 
   winmap.once('ready-to-show', () => {
-    addInutContext(winmap);
+    addInputContext(winmap);
     if (show) {
       if (s.maximized)
         winmap.maximize();
@@ -1275,7 +1275,7 @@ function showProfiles() {
     slashes: true
   }))
   winprofiles.once('ready-to-show', () => {
-    addInutContext(winprofiles);
+    //addInputContext(winprofiles);
     if (s.maximized)
       winprofiles.maximize();
     else
@@ -1349,7 +1349,7 @@ function createEditor(show) {
     wineditor.webContents.openDevTools()
 
   wineditor.once('ready-to-show', () => {
-    addInutContext(wineditor);
+    addInputContext(wineditor);
     if (show) {
       if (s.maximized)
         wineditor.maximize();
@@ -1433,7 +1433,7 @@ function createChat(show) {
     winchat.webContents.openDevTools()
 
   winchat.once('ready-to-show', () => {
-    addInutContext(winchat);
+    addInputContext(winchat);
     if (show) {
       if (s.maximized)
         winchat.maximize();

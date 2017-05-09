@@ -16,6 +16,8 @@
   - A bug in auto copy not clearing when mouse leaves the window
   - A bug when using the cancel button on profile manager and warning about saving changes when nothing has been changed
   - Flashing when enabled should now correctly sync blocks in advanced editor, display, and chat window.
+  - Fixed profile manager context menus
+  - Fix preferance context menus
 ##### 0.1.6 - 2017-05-07
 - **New:**
   - Advanced editor 
