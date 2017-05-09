@@ -1835,5 +1835,13 @@ export class Mapper extends EventEmitter {
 
     cancelImport() {
         this._cancelImport = true;
+        this.emit('import-progress', 101);
+    }
+
+    compact() {
+        this.emit('import-progress', 0);
+        this._db.run("VACUUM;", () => {
+            this.emit('import-progress', 100);
+        });
     }
 }

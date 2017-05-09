@@ -166,31 +166,31 @@
           })
         }
       }));
-/*
-      function blob_to_buffer(blob, callback) {
-        // Create a file reader instance.
-        const file_reader = new FileReader()
-
-        // Listen to when reading is finished and 
-        // run the callback with a buffer.
-        file_reader.addEventListener("loadend", event => {
-          if (event.error) {
-            callback(event.error)
-          }
-          else {
-            callback(null, new Buffer(file_reader.result))
-          }
-
-          // Remove the listener.
-          file_reader.removeEventListener("loadend", blob_to_buffer, false)
-        }, false)
-
-        // Read the blob as a typed array.
-        file_reader.readAsArrayBuffer(blob)
-
-        return file_reader
-      }
-*/
+      /*
+            function blob_to_buffer(blob, callback) {
+              // Create a file reader instance.
+              const file_reader = new FileReader()
+      
+              // Listen to when reading is finished and 
+              // run the callback with a buffer.
+              file_reader.addEventListener("loadend", event => {
+                if (event.error) {
+                  callback(event.error)
+                }
+                else {
+                  callback(null, new Buffer(file_reader.result))
+                }
+      
+                // Remove the listener.
+                file_reader.removeEventListener("loadend", blob_to_buffer, false)
+              }, false)
+      
+              // Read the blob as a typed array.
+              file_reader.readAsArrayBuffer(blob)
+      
+              return file_reader
+            }
+      */
       const exportmenu = new Menu();
       exportmenu.append(new MenuItem({
         label: 'Export as image', click() {
@@ -707,8 +707,7 @@
         mapper.on('import-progress', (value) => {
           if (this._cancelImport)
             return;
-          if (value != -1)
-          {
+          if (value != -1) {
             $("#mapProgress progress").val(value);
             ipcRenderer.send('set-progress', { value: value / 100.0 });
           }
@@ -852,6 +851,13 @@
           }
         })
       }
+      function compact() {
+        $("#mapProgressbar").html('<progress max="100"></progress>');
+        $("#mapProgressTitle").html("Comapcting map data...");
+        $("#mapProgress")[0].showModal();
+        ipcRenderer.send('set-progress', { value: 0, options: { mode: 'indeterminate'} });
+        mapper.compact();
+      }
     </script>
   </head>
 
@@ -863,7 +869,10 @@
         <button id="btnLegend" type="button" class="btn btn-default btn-xs" title="Show legend" onclick="mapper.showLegend = !mapper.showLegend" data-toggle="button"><i class="fa fa-map-marker"></i></button>
         <button id="btnRoom" type="button" class="btn btn-default btn-xs" title="Show room properties" onclick="toggleRooms();" data-toggle="button"><i class="fa fa-list-alt"></i></button>
       </div>
-      <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh map" onclick="saveRoom();mapper.refresh();"><i class="fa fa-refresh"></i></button>
+      <div class="btn-group" role="group">
+        <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh map" onclick="saveRoom();mapper.refresh();"><i class="fa fa-refresh"></i></button>
+        <button id="bt-compact" type="button" class="btn btn-default btn-xs" title="Compact database" onclick="compact()"><i class="fa fa-compress"></i></button>
+      </div>
       <div class="btn-group" role="group">
         <button id="btnSplit" type="button" class="btn btn-default btn-xs" title="Split areas" onclick="mapper.splitArea = !mapper.splitArea" data-toggle="button"><i class="fa fa-object-ungroup"></i></button>
         <button id="btnFill" type="button" class="btn btn-default btn-xs" title="Fill walls" onclick="mapper.fillWalls = !mapper.fillWalls" data-toggle="button"><i class="fa fa-building-o"></i></button>
