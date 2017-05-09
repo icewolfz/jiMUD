@@ -77,12 +77,12 @@ inputMenu = Menu.buildFromTemplate([
 
     {
         label: 'Undo',
-        click: doUndo,
+        click: () => { doUndo() },
         accelerator: 'CmdOrCtrl+Z'
     },
     {
         label: 'Redo',
-        click: doRedo,
+        click: () => { doRedo() },
         accelerator: 'CmdOrCtrl+Y'
     },
     { type: 'separator' },
@@ -93,8 +93,8 @@ inputMenu = Menu.buildFromTemplate([
     { role: 'selectall' },
 ])
 
-function addInutContext(window) {
-    window.webContents.on('context-menu', (e, props) => {
+function addInputContext(window) {
+    window.on('context-menu', (e, props) => {
         const { selectionText, isEditable } = props;
         if (isEditable) {
             inputMenu.popup(remote.getCurrentWindow());
@@ -479,7 +479,7 @@ export function UpdateEditorMode(type) {
     }
 }
 
-function UpdateMacro(customundo?: boolean):UpdateState {
+function UpdateMacro(customundo?: boolean): UpdateState {
     var data: any = UpdateItem(currentProfile.macros[currentNode.dataAttr.index], 'macro', { key: true });
     if (currentProfile.macros[currentNode.dataAttr.index].key != parseInt($("#macro-key").data('key'), 10)) {
         if (!data) data = {};
@@ -501,7 +501,7 @@ function UpdateMacro(customundo?: boolean):UpdateState {
     return UpdateState.NoChange;
 }
 
-function UpdateAlias(customundo?: boolean):UpdateState {
+function UpdateAlias(customundo?: boolean): UpdateState {
     var data: any = UpdateItem(currentProfile.aliases[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.aliases[currentNode.dataAttr.index]);
@@ -513,7 +513,7 @@ function UpdateAlias(customundo?: boolean):UpdateState {
     return UpdateState.NoChange;
 }
 
-function UpdateTrigger(customundo?: boolean):UpdateState {
+function UpdateTrigger(customundo?: boolean): UpdateState {
     var data: any = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index]);
@@ -525,7 +525,7 @@ function UpdateTrigger(customundo?: boolean):UpdateState {
     return UpdateState.NoChange;
 }
 
-function UpdateButton(customundo?: boolean):UpdateState {
+function UpdateButton(customundo?: boolean): UpdateState {
     var data: any = UpdateItem(currentProfile.buttons[currentNode.dataAttr.index]);
     if (data) {
         UpdateButtonSample();
@@ -763,7 +763,7 @@ function cleanNode(node) {
     return node;
 }
 
-function UpdateProfile(customundo?: boolean):UpdateState {
+function UpdateProfile(customundo?: boolean): UpdateState {
     var data: any = {};
     var changed = 0;
     var val;
@@ -1586,7 +1586,7 @@ export function doDelete(node?) {
             break;
     }
 }
-function updateCurrent():UpdateState {
+function updateCurrent(): UpdateState {
     if (currentNode && _loading == 0) {
         //currentNode.state.selected = false;
         var t = "profile";
@@ -2262,7 +2262,7 @@ export function init() {
         updateCurrent();
         $(this).data('previous-value', this.checked);
     });
-    addInutContext(remote.getCurrentWindow());
+    addInputContext(remote.getCurrentWindow());
 }
 
 function undoKeydown(e) {
