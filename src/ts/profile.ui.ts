@@ -20,6 +20,12 @@ var _remove = [];
 var _never = true;
 var _close, _loading = 0;
 
+enum UpdateState {
+    NoChange,
+    Changed,
+    Error
+}
+
 const addmenu = new Menu();
 addmenu.append(new MenuItem({
     label: 'Add empty profile', click() {
@@ -473,7 +479,7 @@ export function UpdateEditorMode(type) {
     }
 }
 
-function UpdateMacro(customundo?: boolean) {
+function UpdateMacro(customundo?: boolean):UpdateState {
     var data: any = UpdateItem(currentProfile.macros[currentNode.dataAttr.index], 'macro', { key: true });
     if (currentProfile.macros[currentNode.dataAttr.index].key != parseInt($("#macro-key").data('key'), 10)) {
         if (!data) data = {};
@@ -490,36 +496,36 @@ function UpdateMacro(customundo?: boolean) {
         $("#editor-title").text("Macro: " + GetDisplay(currentProfile.macros[currentNode.dataAttr.index]));
         if (!customundo)
             pushUndo({ action: 'update', type: 'macro', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
-        return true;
+        return UpdateState.Changed;
     }
-    return false;
+    return UpdateState.NoChange;
 }
 
-function UpdateAlias(customundo?: boolean) {
+function UpdateAlias(customundo?: boolean):UpdateState {
     var data: any = UpdateItem(currentProfile.aliases[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.aliases[currentNode.dataAttr.index]);
         $("#editor-title").text("Alias: " + GetDisplay(currentProfile.aliases[currentNode.dataAttr.index]));
         if (!customundo)
             pushUndo({ action: 'update', type: 'alias', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
-        return true;
+        return UpdateState.Changed;
     }
-    return false;
+    return UpdateState.NoChange;
 }
 
-function UpdateTrigger(customundo?: boolean) {
+function UpdateTrigger(customundo?: boolean):UpdateState {
     var data: any = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index]);
         $("#editor-title").text("Trigger: " + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]))
         if (!customundo)
             pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
-        return true;
+        return UpdateState.Changed;
     }
-    return false;
+    return UpdateState.NoChange;
 }
 
-function UpdateButton(customundo?: boolean) {
+function UpdateButton(customundo?: boolean):UpdateState {
     var data: any = UpdateItem(currentProfile.buttons[currentNode.dataAttr.index]);
     if (data) {
         UpdateButtonSample();
@@ -527,9 +533,9 @@ function UpdateButton(customundo?: boolean) {
         $("#editor-title").text("Button: " + GetDisplay(currentProfile.buttons[currentNode.dataAttr.index]))
         if (!customundo)
             pushUndo({ action: 'update', type: 'button', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
-        return true;
+        return UpdateState.Changed;
     }
-    return false;
+    return UpdateState.NoChange;
 }
 
 function UpdateItem(item, type?, options?) {
@@ -744,8 +750,12 @@ function cloneNode(node) {
 
 function cleanNode(node) {
     delete node.$el;
+    /*
     if (node.state)
-        delete node.state.selected;
+    {
+        node.state.selected = false;
+    }
+    */
     if (!node.nodes)
         return node;
     for (var n = 0, nl = node.nodes.length; n < nl; n++)
@@ -753,7 +763,7 @@ function cleanNode(node) {
     return node;
 }
 
-function UpdateProfile(customundo?: boolean) {
+function UpdateProfile(customundo?: boolean):UpdateState {
     var data: any = {};
     var changed = 0;
     var val;
@@ -771,7 +781,7 @@ function UpdateProfile(customundo?: boolean) {
             });
             $("#profile-name").val(currentProfile.name);
             $("#profile-name").focus();
-            return false;
+            return UpdateState.Error;
         }
         profiles.remove(currentProfile);
         currentProfile.name = val;
@@ -855,9 +865,9 @@ function UpdateProfile(customundo?: boolean) {
 
     if (changed > 0 && !customundo) {
         pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: data });
-        return true;
+        return UpdateState.Changed;
     }
-    return false;
+    return UpdateState.NoChange;
 }
 
 export function updateProfileChecks() {
@@ -1576,7 +1586,7 @@ export function doDelete(node?) {
             break;
     }
 }
-function updateCurrent() {
+function updateCurrent():UpdateState {
     if (currentNode && _loading == 0) {
         //currentNode.state.selected = false;
         var t = "profile";
@@ -1601,7 +1611,7 @@ function updateCurrent() {
                 return UpdateButton();
         }
     }
-    return false;
+    return UpdateState.NoChange;
 }
 
 function buildTreeview(data) {
@@ -1624,7 +1634,7 @@ function buildTreeview(data) {
         onNodeChecked: nodeCheckChanged,
         onNodeSelected: function (event, node) {
             var t
-            if (!updateCurrent()) {
+            if (updateCurrent() == UpdateState.Error && currentNode) {
                 $('#profile-tree').treeview('selectNode', [currentNode, { silent: true }]);
                 return;
             }
@@ -1707,8 +1717,8 @@ function buildTreeview(data) {
         },
         data: data,
         onInitialized: function (event, nodes) {
-            var nodes = $('#profile-tree').treeview('findNodes', ['Default', 'text']);
             if (!currentNode) {
+                var nodes = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
                 $('#profile-tree').treeview('expandNode', [nodes]);
                 $('#profile-tree').treeview('selectNode', [nodes]);
             }
@@ -2199,8 +2209,8 @@ export function init() {
     initEditor("button-value");
 
     window.onbeforeunload = function () {
-        if (close || _never || (_undo.length == 0 && !updateCurrent()))
-            return
+        if (close || _never || (_undo.length == 0 && updateCurrent() == UpdateState.NoChange))
+            return;
         var choice = dialog.showMessageBox(
             remote.getCurrentWindow(),
             {
@@ -2476,7 +2486,7 @@ function trashProfiles(p) {
 }
 
 export function saveProfiles() {
-    if (!updateCurrent())
+    if (updateCurrent() != UpdateState.NoChange)
         return false;
     if (fchanged)
         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2644,8 +2654,6 @@ function pushUndo(data) {
 function updateUndoState() {
     $("#btn-undo").prop('disabled', _undo.length == 0);
     $("#btn-redo").prop('disabled', _redo.length == 0);
-    console.log(_undo);
-    console.log(_redo);
 }
 
 function DeleteProfileConfirm(profile) {
@@ -2742,7 +2750,7 @@ function DeleteItem(type: string, key: string, idx: number, profile?: Profile, c
 }
 
 export function doClose() {
-    if (_never || (_undo.length == 0 && !updateCurrent())) {
+    if (_never || (_undo.length == 0 && updateCurrent() == UpdateState.NoChange)) {
         _close = true;
         window.close();
     }
