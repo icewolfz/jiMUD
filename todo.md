@@ -45,4 +45,4 @@
   * Finish assets.md and list all build in assets and describe what each is, if a spite list all images in sprite
 * Code documentation - comment all classes/functions/enums for all typescript and javascript
 * Add MCP telnet support [MCP Standard](http://www.moo.mud.org/mcp/)
-* look into reducing memory, maybe keep windows tha tare persistent (chat, editor, mapper) to be fully closed and leave longer load times
+* look into reducing memory

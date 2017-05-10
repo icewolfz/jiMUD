@@ -786,9 +786,8 @@ function createWindow() {
     //createEditor();
     if (set.showChat)
       showChat();
-    //else
-    //createChat();
-
+    else if (set.chat.captureTells || set.chat.captureTalk || chat.captureLines)
+      createChat();
   })
 
   win.on('close', (e) => {
@@ -958,7 +957,11 @@ ipcMain.on('setting-changed', (event, data) => {
     winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
   }
   if (data.type == "mapper" && data.name == "enabled" && !winMap && data.value)
-      createMapper();
+    createMapper();
+  if (!winChat && data.type == "chat" && (data.name == 'captureTells' || data.name == 'captureTalk' || data.name == 'captureLines')) {
+    if (data.value)
+      createChat();
+  }
 })
 
 ipcMain.on('GMCP-received', (event, data) => {
@@ -1165,6 +1168,7 @@ function showPrefs() {
 }
 
 function createMapper(show) {
+  if (winMap) return;
   s = loadWindowState('mapper')
   winMap = new BrowserWindow({
     parent: set.mapper.alwaysOnTopClient ? win : null,
@@ -1315,6 +1319,7 @@ function showProfiles() {
 }
 
 function createEditor(show) {
+  if (winEditor) return;
   s = loadWindowState('editor')
   winEditor = new BrowserWindow({
     parent: win,
@@ -1399,6 +1404,7 @@ function showEditor() {
 }
 
 function createChat(show) {
+  if (winChat) return;
   s = loadWindowState('chat')
   winChat = new BrowserWindow({
     parent: set.chat.alwaysOnTopClient ? win : null,
@@ -1467,8 +1473,11 @@ function createChat(show) {
     set.showChat = false;
     set.windows['hat'] = getWindowState('chat', winChat);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
-    //e.preventDefault();
-    //winChat.hide();
+    if (set.chat.captureTells || set.chat.captureTalk || chat.captureLines) {
+      e.preventDefault();
+      winChat.hide();
+    }
+
   })
 }
 
