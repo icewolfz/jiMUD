@@ -1,4 +1,7 @@
 ## Changelog
+##### 0.1.8 - 2017-05-
+- **New:**
+  - Allow negative numbers for experience needed in status display
 ##### 0.1.7 - 2017-05-09
 - **New:**
   - Chat window 

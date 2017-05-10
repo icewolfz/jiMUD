@@ -857,7 +857,7 @@
       }
       function compact() {
         $("#mapProgressbar").html('<progress max="100"></progress>');
-        $("#mapProgressTitle").html("Comapcting map data...");
+        $("#mapProgressTitle").html("Compacting map data...");
         $("#mapProgress")[0].showModal();
         ipcRenderer.send('set-progress', { value: 0, options: { mode: 'indeterminate' } });
         mapper.compact();

@@ -147,7 +147,8 @@ export class Settings {
 	public showStatusPartyHealth: boolean = true;
 	public showStatusCombatHealth: boolean = true;
 	public showButtonBar: boolean = true;
-
+	public allowNegativeNumberNeeded = false;
+	
 	static load(file) {
 		if (!fs.existsSync(file))
 			return new Settings();

@@ -47,6 +47,12 @@ export class Status extends EventEmitter {
             if (data.raw == 'Connected...')
                 this.init();
         });
+        this.client.on('optionsLoaded', () => {
+            this.info["EXPERIENCE_NEED"] = this.info["EXPERIENCE_NEED_RAW"] - this.info["EXPERIENCE"];
+            if (this.info["EXPERIENCE_NEED"] < 0 && !client.options.allowNegativeNumberNeeded)
+                this.info["EXPERIENCE_NEED"] = 0;
+        });
+
         this.client.on('receivedGMCP', (mod, obj) => {
             switch (mod.toLowerCase()) {
                 case 'char.base':
@@ -68,8 +74,9 @@ export class Status extends EventEmitter {
                     break;
                 case 'char.experience':
                     this.info["EXPERIENCE"] = obj.current;
+                    this.info["EXPERIENCE_NEED_RAW"] = obj.need;
                     this.info["EXPERIENCE_NEED"] = obj.need - obj.current;
-                    if (this.info["EXPERIENCE_NEED"] < 0)
+                    if (this.info["EXPERIENCE_NEED"] < 0 && !client.options.allowNegativeNumberNeeded)
                         this.info["EXPERIENCE_NEED"] = 0;
 
                     this.info["EXPERIENCE_EARNED"] = obj.earned;
@@ -424,6 +431,7 @@ export class Status extends EventEmitter {
         this.info["WEATHER_INTENSITY"] = 0;
         this.info["EXPERIENCE"] = 0;
         this.info["EXPERIENCE_NEED"] = 0;
+        this.info["EXPERIENCE_NEED_RAW"] = 0;
         this.info["EXPERIENCE_EARNED"] = 0;
         this.info["EXPERIENCE_BANKED"] = 0;
 
