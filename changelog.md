@@ -1,7 +1,7 @@
 ## Changelog
 ##### 0.1.7 - 2017-05-09
 - **New:**
-  - New chat window 
+  - Chat window 
     - Capture lines/tells/room talk and related reviews, including related settings to control the window and what to capture into the new chat window.
     - Independent logging using logging settings to create a separate log.
   - Added log gagged lines option.
@@ -19,6 +19,7 @@
   - Fixed profile manager context menus
   - Fix preference context menus
   - Fixed bug with newline/prompt when executing triggers
+  - A bug in needed xp being -#
 ##### 0.1.6 - 2017-05-07
 - **New:**
   - Advanced editor 

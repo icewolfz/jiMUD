@@ -38,7 +38,7 @@ export class Status extends EventEmitter {
         this.client.telnet.on('latency-changed', (lag, avg) => {
             this.updateLagMeter(lag);
         });
-        this.client.on('closed', ()=>{
+        this.client.on('closed', () => {
             this.updateLagMeter(0, true);
         });
         this.client.telnet.GMCPSupports.push("oMUD 1");
@@ -69,6 +69,9 @@ export class Status extends EventEmitter {
                 case 'char.experience':
                     this.info["EXPERIENCE"] = obj.current;
                     this.info["EXPERIENCE_NEED"] = obj.need - obj.current;
+                    if (this.info["EXPERIENCE_NEED"] < 0)
+                        this.info["EXPERIENCE_NEED"] = 0;
+
                     this.info["EXPERIENCE_EARNED"] = obj.earned;
                     this.info["EXPERIENCE_BANKED"] = obj.banked;
                     this.updateXP();
@@ -239,7 +242,7 @@ export class Status extends EventEmitter {
             window.document.title = "jiMUD - " + title;
             $("#character-name").text(title);
         }
-        this.emit('set-title', title||"");
+        this.emit('set-title', title || "");
 
     }
 
@@ -537,30 +540,28 @@ export class Status extends EventEmitter {
         p = lag / 200 * 100;
         if (p > 100) p = 100;
 
-        this.lagMeter.find(".progressbar-value").css('width', (100 - p)+"%");
+        this.lagMeter.find(".progressbar-value").css('width', (100 - p) + "%");
         this.lagMeter.find(".progressbar-text").text((lag / 1000) + "s");
     }
 
     updateInterface() {
-        if(this.client.options.showStatus)
-        {
+        if (this.client.options.showStatus) {
             $("#status").css("visibility", "");
             $("#status").css("display", "");
             $("#status-border").css("visibility", "");
-            $("#status-border").css("display", "");            
+            $("#status-border").css("display", "");
 
             $("#display-container").css('right', '');
-            $("#display-border").css('right', '');    
+            $("#display-border").css('right', '');
             $("#command").css('right', '');
         }
-        else
-        {
+        else {
             $("#status").css("visibility", "hidden");
             $("#status").css("display", "none");
             $("#status-border").css("visibility", "hidden");
             $("#status-border").css("display", "none");
             $("#display-container").css('right', '7px');
-            $("#display-border").css('right', '0px');              
+            $("#display-border").css('right', '0px');
             $("#command").css('right', '0px');
         }
         if (this.lagMeter && this.lagMeter.length > 0) {
