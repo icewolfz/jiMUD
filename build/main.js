@@ -1,3 +1,4 @@
+//cSpell:ignore submenu, prefs, pasteandmatchstyle, statusvisible, lagmeter, taskbar, jimud
 const { app, BrowserWindow, shell } = require('electron')
 const { dialog, Menu, MenuItem } = require('electron')
 const ipcMain = require('electron').ipcMain
@@ -8,8 +9,9 @@ const settings = require('./js/settings');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winhelp, winwho, winmap, winprofiles, wineditor, winchat
-let set, mappermax = false, editormax = false, chatmax = false, debug = false;
+let win, winHelp, winWho, winMap, winProfiles, winEditor, winChat
+let set, mapperMax = false, editorMax = false, chatMax = false, debug = false;
+let chatReady = false;
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
@@ -152,33 +154,33 @@ var menutemp = [
       {
         label: '&Who is on?',
         click: () => {
-          if (winwho) {
-            winwho.show();
+          if (winWho) {
+            winWho.show();
             return;
           }
           shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
           /*
-          winwho = new BrowserWindow({
+          winWho = new BrowserWindow({
             parent: win,
             width: 600,
             height: 400,
             title: 'Who is on?',
             icon: '',
           })
-          winwho.setMenu(null);
-          winwho.on('closed', () => {
-            winwho = null
+          winWho.setMenu(null);
+          winWho.on('closed', () => {
+            winWho = null
           })
 
           // and load the index.html of the app.
-          winwho.loadURL("http://shadowmud.com/who.php?slim=1");
-          winwho.once('ready-to-show', () => {
-            winwho.webContents.insertCSS(".top { display: none !important; } div div { display : none !important; }");
-            winwho.show()
+          winWho.loadURL("http://shadowmud.com/who.php?slim=1");
+          winWho.once('ready-to-show', () => {
+            winWho.webContents.insertCSS(".top { display: none !important; } div div { display : none !important; }");
+            winWho.show()
           })
 
-          winwho.webContents.on('did-finish-load', function () {
-            winwho.webContents.insertCSS(".top { display: none !important; } div div { display : none !important; }");
+          winWho.webContents.on('did-finish-load', function () {
+            winWho.webContents.insertCSS(".top { display: none !important; } div div { display : none !important; }");
           });
           */
         }
@@ -214,7 +216,7 @@ var menutemp = [
           },
           {
             label: '&Health',
-            id: "heatlh",
+            id: "health",
             type: 'checkbox',
             checked: true
           },
@@ -564,16 +566,16 @@ function addInputContext(window) {
 }
 
 function showHelpWindow(url, title) {
-  if (winhelp != null) {
-    winhelp.title = title;
-    winhelp.loadURL(url);
-    winhelp.show();
+  if (winHelp != null) {
+    winHelp.title = title;
+    winHelp.loadURL(url);
+    winHelp.show();
     return;
   }
   s = loadWindowState('help')
   if (!title || title.length == 0)
     title = "Help";
-  winhelp = new BrowserWindow({
+  winHelp = new BrowserWindow({
     parent: win,
     title: title,
     x: s.x,
@@ -585,46 +587,46 @@ function showHelpWindow(url, title) {
   })
 
   if (s.fullscreen)
-    winhelp.setFullScreen(s.fullscreen);
+    winHelp.setFullScreen(s.fullscreen);
 
-  winhelp.setMenu(null);
-  winhelp.loadURL(url);
-  winhelp.on('closed', () => {
-    winhelp = null;
+  winHelp.setMenu(null);
+  winHelp.loadURL(url);
+  winHelp.on('closed', () => {
+    winHelp = null;
   });
 
-  winhelp.on('resize', () => {
-    if (!winhelp.isMaximized() && !winhelp.isFullScreen())
-      trackWindowState('help', winhelp);
+  winHelp.on('resize', () => {
+    if (!winHelp.isMaximized() && !winHelp.isFullScreen())
+      trackWindowState('help', winHelp);
   })
 
-  winhelp.on('move', () => {
-    trackWindowState('help', winhelp);
+  winHelp.on('move', () => {
+    trackWindowState('help', winHelp);
   })
 
 
-  winhelp.on('unmaximize', () => {
-    trackWindowState('help', winhelp);
+  winHelp.on('unmaximize', () => {
+    trackWindowState('help', winHelp);
   })
 
 
 
   if (s.devTools)
-    winhelp.webContents.openDevTools()
+    winHelp.webContents.openDevTools()
 
-  winhelp.once('ready-to-show', () => {
-    addInputContext(winhelp);
+  winHelp.once('ready-to-show', () => {
+    addInputContext(winHelp);
     if (url != null && url.length != 0) {
       if (s.maximized)
-        winhelp.maximize();
+        winHelp.maximize();
       else
-        winhelp.show()
+        winHelp.show()
     }
   })
 
-  winhelp.on('close', () => {
+  winHelp.on('close', () => {
     set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
-    set.windows['help'] = getWindowState('help', winhelp);
+    set.windows['help'] = getWindowState('help', winHelp);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
   })
 }
@@ -746,8 +748,8 @@ function createWindow() {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    if (winmap)
-      winmap.webContents.executeJavaScript('save();');
+    if (winMap)
+      winMap.webContents.executeJavaScript('save();');
     win = null;
   })
 
@@ -775,17 +777,17 @@ function createWindow() {
 
     if (set.showMapper)
       showMapper();
-    else
+    else if (set.mapper.enabled)
       createMapper();
 
     if (set.showEditor)
       showEditor();
-    else
-      createEditor();
+    //else
+    //createEditor();
     if (set.showChat)
       showChat();
-    else
-      createChat();
+    //else
+    //createChat();
 
   })
 
@@ -793,11 +795,11 @@ function createWindow() {
     set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
     set.windows['main'] = getWindowState('main', win);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
-    if (winmap)
-      winmap.webContents.executeJavaScript('save();');
-    if (winprofiles) {
+    if (winMap)
+      winMap.webContents.executeJavaScript('save();');
+    if (winProfiles) {
       e.preventDefault();
-      dialog.showMessageBox(winprofiles, {
+      dialog.showMessageBox(winProfiles, {
         type: 'warning',
         title: 'Close profile manager',
         message: 'You must close the profile manager before you can exit.'
@@ -835,59 +837,61 @@ app.on('activate', () => {
 ipcMain.on('reload-options', () => {
   win.webContents.send('reload-options');
   set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
-  if (winmap) {
-    winmap.webContents.send('reload-options');
-    if (winmap.setParentWindow)
-      winmap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
-    winmap.setAlwaysOnTop(set.mapper.alwaysOnTop);
-    winmap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
+  if (winMap) {
+    winMap.webContents.send('reload-options');
+    if (winMap.setParentWindow)
+      winMap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
+    winMap.setAlwaysOnTop(set.mapper.alwaysOnTop);
+    winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
   }
-  if (winchat) {
-    winchat.webContents.send('reload-options');
-    if (winchat.setParentWindow)
-      winchat.setParentWindow(set.chat.alwaysOnTopClient ? win : null);
-    winchat.setAlwaysOnTop(set.chat.alwaysOnTop);
-    winchat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
+  else if (set.mapper.enabled)
+    createMapper();
+  if (winChat) {
+    winChat.webContents.send('reload-options');
+    if (winChat.setParentWindow)
+      winChat.setParentWindow(set.chat.alwaysOnTopClient ? win : null);
+    winChat.setAlwaysOnTop(set.chat.alwaysOnTop);
+    winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
   }
 
-  if (winprofiles)
-    winprofiles.webContents.send('reload-options');
-  if (wineditor)
-    wineditor.webContents.send('reload-options');
+  if (winProfiles)
+    winProfiles.webContents.send('reload-options');
+  if (winEditor)
+    winEditor.webContents.send('reload-options');
 
 });
 
 ipcMain.on('set-title', (event, title) => {
-  if (winchat)
-    winchat.webContents.send('set-title', title);
-  if (winprofiles)
-    winprofiles.webContents.send('set-title', title);
-  if (wineditor)
-    wineditor.webContents.send('set-title', title);
-  if (winmap)
-    winmap.webContents.send('set-title', title);
+  if (winChat)
+    winChat.webContents.send('set-title', title);
+  if (winProfiles)
+    winProfiles.webContents.send('set-title', title);
+  if (winEditor)
+    winEditor.webContents.send('set-title', title);
+  if (winMap)
+    winMap.webContents.send('set-title', title);
 })
 
 ipcMain.on('closed', (event, title) => {
-  if (winchat)
-    winchat.webContents.send('closed', title);
-  if (winprofiles)
-    winprofiles.webContents.send('closed', title);
-  if (wineditor)
-    wineditor.webContents.send('closed', title);
-  if (winmap)
-    winmap.webContents.send('closed', title);
+  if (winChat)
+    winChat.webContents.send('closed', title);
+  if (winProfiles)
+    winProfiles.webContents.send('closed', title);
+  if (winEditor)
+    winEditor.webContents.send('closed', title);
+  if (winMap)
+    winMap.webContents.send('closed', title);
 })
 
 ipcMain.on('connected', (event, title) => {
-  if (winchat)
-    winchat.webContents.send('connected', title);
-  if (winprofiles)
-    winprofiles.webContents.send('connected', title);
-  if (wineditor)
-    wineditor.webContents.send('connected', title);
-  if (winmap)
-    winmap.webContents.send('connected', title);
+  if (winChat)
+    winChat.webContents.send('connected', title);
+  if (winProfiles)
+    winProfiles.webContents.send('connected', title);
+  if (winEditor)
+    winEditor.webContents.send('connected', title);
+  if (winMap)
+    winMap.webContents.send('connected', title);
 })
 
 
@@ -921,37 +925,45 @@ ipcMain.on('reload-profiles', (event) => {
 })
 
 ipcMain.on('chat', (event, text) => {
-  winchat.webContents.send('chat', text);
+  if (!winChat) {
+    createChat();
+    setTimeout(() => { winChat.webContents.send('chat', text); }, 100);
+  }
+  else if (!chatReady)
+    setTimeout(() => { winChat.webContents.send('chat', text); }, 100);
+  else
+    winChat.webContents.send('chat', text);
 })
 
 ipcMain.on('setting-changed', (event, data) => {
   if (data.type == "mapper" && data.name == "alwaysOnTopClient") {
-    winmap.setParentWindow(data.value ? win : null);
-    winmap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
+    winMap.setParentWindow(data.value ? win : null);
+    winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
   }
   if (data.type == "mapper" && data.name == "setAlwaysOnTop") {
-    winmap.setAlwaysOnTop(data.value);
-    winmap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
+    winMap.setAlwaysOnTop(data.value);
+    winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
   }
   if (event.sender != win.webContents)
     win.webContents.send('setting-changed', data);
-  if (winmap && event.sender != winmap.webContents)
-    winmap.webContents.send('setting-changed', data);
+  if (winMap && event.sender != winMap.webContents)
+    winMap.webContents.send('setting-changed', data);
 
   if (data.type == "chat" && data.name == "alwaysOnTopClient") {
-    winchat.setParentWindow(data.value ? win : null);
-    winchat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
+    winChat.setParentWindow(data.value ? win : null);
+    winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
   }
   if (data.type == "chat" && data.name == "setAlwaysOnTop") {
-    winchat.setAlwaysOnTop(data.value);
-    winchat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
+    winChat.setAlwaysOnTop(data.value);
+    winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
   }
-
+  if (data.type == "mapper" && data.name == "enabled" && !winMap && data.value)
+      createMapper();
 })
 
 ipcMain.on('GMCP-received', (event, data) => {
-  if (winmap)
-    winmap.webContents.send('GMCP-received', data);
+  if (winMap)
+    winMap.webContents.send('GMCP-received', data);
 });
 
 ipcMain.on('update-menuitem', (event, args) => {
@@ -990,30 +1002,30 @@ ipcMain.on('show-window', (event, window) => {
 });
 
 ipcMain.on('import-map', (event, data) => {
-  if (winmap)
-    winmap.webContents.send('import', data);
+  if (winMap)
+    winMap.webContents.send('import', data);
 });
 
 function updateMenuItem(args) {
   var item, i = 0, ic, items;
-  var titem, titems;
+  var tItem, tItems;
   if (!menubar || args == null || args.menu == null) return;
 
   if (!Array.isArray(args.menu))
     args.menu = args.menu.split('|');
 
   items = menubar.items;
-  titems = menutemp;
+  tItems = menutemp;
   for (i = 0; i < args.menu.length; i++) {
     if (!items || items.length == 0) break;
     for (m = 0; m < items.length; m++) {
       if (!items[m].id) continue;
       if (items[m].id == args.menu[i]) {
         item = items[m];
-        titem = titems[m];
+        tItem = tItems[m];
         if (item.submenu) {
           items = item.submenu.items;
-          titems = titem.submenu;
+          tItems = tItem.submenu;
         }
         else
           items = null;
@@ -1034,11 +1046,11 @@ function updateMenuItem(args) {
   if (args.position != null)
     item.position = args.position;
 
-  titem.enabled = item.enabled;
-  titem.checked = item.checked;
-  titem.icon = item.icon;
-  titem.visible = item.visible;
-  titem.position = item.position;
+  tItem.enabled = item.enabled;
+  tItem.checked = item.checked;
+  tItem.icon = item.icon;
+  tItem.visible = item.visible;
+  tItem.position = item.position;
 }
 
 function loadMenu() {
@@ -1154,7 +1166,7 @@ function showPrefs() {
 
 function createMapper(show) {
   s = loadWindowState('mapper')
-  winmap = new BrowserWindow({
+  winMap = new BrowserWindow({
     parent: set.mapper.alwaysOnTopClient ? win : null,
     alwaysOnTop: set.mapper.alwaysOnTop,
     title: 'Mapper',
@@ -1169,56 +1181,56 @@ function createMapper(show) {
   })
 
   if (s.fullscreen)
-    winmap.setFullScreen(s.fullscreen);
+    winMap.setFullScreen(s.fullscreen);
 
-  winmap.setMenu(null);
-  winmap.loadURL(url.format({
+  winMap.setMenu(null);
+  winMap.loadURL(url.format({
     pathname: path.join(__dirname, 'mapper.html'),
     protocol: 'file:',
     slashes: true
   }));
 
-  winmap.on('closed', () => {
-    winmap = null;
+  winMap.on('closed', () => {
+    winMap = null;
   });
 
-  winmap.on('resize', () => {
-    if (!winmap.isMaximized() && !winmap.isFullScreen())
-      trackWindowState('mapper', winmap);
+  winMap.on('resize', () => {
+    if (!winMap.isMaximized() && !winMap.isFullScreen())
+      trackWindowState('mapper', winMap);
   })
 
-  winmap.on('move', () => {
-    trackWindowState('mapper', winmap);
+  winMap.on('move', () => {
+    trackWindowState('mapper', winMap);
   })
 
-  winmap.on('unmaximize', () => {
-    trackWindowState('mapper', winmap);
+  winMap.on('unmaximize', () => {
+    trackWindowState('mapper', winMap);
   })
 
   //if (s.devTools)
   if (debug)
-    winmap.webContents.openDevTools()
+    winMap.webContents.openDevTools()
 
-  winmap.once('ready-to-show', () => {
-    addInputContext(winmap);
+  winMap.once('ready-to-show', () => {
+    addInputContext(winMap);
     if (show) {
       if (s.maximized)
-        winmap.maximize();
+        winMap.maximize();
       else
-        winmap.show()
+        winMap.show()
     }
     else
-      mappermax = s.maximized;
+      mapperMax = s.maximized;
   })
 
-  winmap.on('close', (e) => {
+  winMap.on('close', (e) => {
     set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
     set.showMapper = false;
-    set.windows['mapper'] = getWindowState('mapper', winmap);
+    set.windows['mapper'] = getWindowState('mapper', winMap);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
     e.preventDefault();
-    winmap.webContents.executeJavaScript('save();');
-    winmap.hide();
+    winMap.webContents.executeJavaScript('save();');
+    winMap.hide();
   })
 }
 
@@ -1226,24 +1238,24 @@ function showMapper() {
   set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
   set.showMapper = true;
   set.save(path.join(app.getPath('userData'), 'settings.json'));
-  if (winmap != null) {
-    if (mappermax)
-      winmap.maximize();
+  if (winMap != null) {
+    if (mapperMax)
+      winMap.maximize();
     else
-      winmap.show();
-    mappermax = false;
+      winMap.show();
+    mapperMax = false;
   }
   else
     createMapper(true);
 }
 
 function showProfiles() {
-  if (winprofiles != null) {
-    winprofiles.show();
+  if (winProfiles != null) {
+    winProfiles.show();
     return;
   }
   s = loadWindowState('profiles');
-  winprofiles = new BrowserWindow({
+  winProfiles = new BrowserWindow({
     parent: win,
     x: s.x,
     y: s.y,
@@ -1260,51 +1272,51 @@ function showProfiles() {
   })
 
   if (s.fullscreen)
-    winprofiles.setFullScreen(s.fullscreen);
+    winProfiles.setFullScreen(s.fullscreen);
   //if (s.devTools)
   if (debug)
-    winprofiles.webContents.openDevTools()
+    winProfiles.webContents.openDevTools()
 
-  winprofiles.setMenu(null);
-  winprofiles.on('closed', () => {
-    winprofiles = null
+  winProfiles.setMenu(null);
+  winProfiles.on('closed', () => {
+    winProfiles = null
   })
-  winprofiles.loadURL(url.format({
+  winProfiles.loadURL(url.format({
     pathname: path.join(__dirname, 'profiles.html'),
     protocol: 'file:',
     slashes: true
   }))
-  winprofiles.once('ready-to-show', () => {
-    //addInputContext(winprofiles);
+  winProfiles.once('ready-to-show', () => {
+    //addInputContext(winProfiles);
     if (s.maximized)
-      winprofiles.maximize();
+      winProfiles.maximize();
     else
-      winprofiles.show();
+      winProfiles.show();
   })
 
-  winprofiles.on('close', (e) => {
+  winProfiles.on('close', (e) => {
     set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
-    set.windows['profiles'] = getWindowState('profiles', winprofiles);
+    set.windows['profiles'] = getWindowState('profiles', winProfiles);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
   })
 
-  winprofiles.on('resize', () => {
-    if (!winprofiles.isMaximized() && !winprofiles.isFullScreen())
-      trackWindowState('profiles', winprofiles);
+  winProfiles.on('resize', () => {
+    if (!winProfiles.isMaximized() && !winProfiles.isFullScreen())
+      trackWindowState('profiles', winProfiles);
   })
 
-  winprofiles.on('move', () => {
-    trackWindowState('profiles', winprofiles);
+  winProfiles.on('move', () => {
+    trackWindowState('profiles', winProfiles);
   })
 
-  winprofiles.on('unmaximize', () => {
-    trackWindowState('profiles', winprofiles);
+  winProfiles.on('unmaximize', () => {
+    trackWindowState('profiles', winProfiles);
   })
 }
 
 function createEditor(show) {
   s = loadWindowState('editor')
-  wineditor = new BrowserWindow({
+  winEditor = new BrowserWindow({
     parent: win,
     title: 'Advanced Editor',
     x: s.x,
@@ -1318,56 +1330,56 @@ function createEditor(show) {
   })
 
   if (s.fullscreen)
-    wineditor.setFullScreen(s.fullscreen);
+    winEditor.setFullScreen(s.fullscreen);
 
-  wineditor.setMenu(null);
-  wineditor.loadURL(url.format({
+  winEditor.setMenu(null);
+  winEditor.loadURL(url.format({
     pathname: path.join(__dirname, 'editor.html'),
     protocol: 'file:',
     slashes: true
   }));
 
-  wineditor.on('closed', () => {
-    wineditor = null;
+  winEditor.on('closed', () => {
+    winEditor = null;
   });
 
-  wineditor.on('resize', () => {
-    if (!wineditor.isMaximized() && !wineditor.isFullScreen())
-      trackWindowState('editor', wineditor);
+  winEditor.on('resize', () => {
+    if (!winEditor.isMaximized() && !winEditor.isFullScreen())
+      trackWindowState('editor', winEditor);
   })
 
-  wineditor.on('move', () => {
-    trackWindowState('editor', wineditor);
+  winEditor.on('move', () => {
+    trackWindowState('editor', winEditor);
   })
 
-  wineditor.on('unmaximize', () => {
-    trackWindowState('editor', wineditor);
+  winEditor.on('unmaximize', () => {
+    trackWindowState('editor', winEditor);
   })
 
   //if (s.devTools)
   if (debug)
-    wineditor.webContents.openDevTools()
+    winEditor.webContents.openDevTools()
 
-  wineditor.once('ready-to-show', () => {
-    addInputContext(wineditor);
+  winEditor.once('ready-to-show', () => {
+    addInputContext(winEditor);
     if (show) {
       if (s.maximized)
-        wineditor.maximize();
+        winEditor.maximize();
       else
-        wineditor.show();
+        winEditor.show();
     }
     else
-      editormax = s.maximized;
+      editorMax = s.maximized;
   })
 
-  wineditor.on('close', (e) => {
+  winEditor.on('close', (e) => {
     set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
     set.showEditor = false;
-    set.windows['editor'] = getWindowState('editor', wineditor);
+    set.windows['editor'] = getWindowState('editor', winEditor);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
-    wineditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
+    winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
     e.preventDefault();
-    wineditor.hide();
+    winEditor.hide();
   })
 }
 
@@ -1375,12 +1387,12 @@ function showEditor() {
   set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
   set.showEditor = true;
   set.save(path.join(app.getPath('userData'), 'settings.json'));
-  if (wineditor != null) {
-    if (editormax)
-      wineditor.maximize();
+  if (winEditor != null) {
+    if (editorMax)
+      winEditor.maximize();
     else
-      wineditor.show();
-    editormax = false;
+      winEditor.show();
+    editorMax = false;
   }
   else
     createEditor(true);
@@ -1388,7 +1400,7 @@ function showEditor() {
 
 function createChat(show) {
   s = loadWindowState('chat')
-  winchat = new BrowserWindow({
+  winChat = new BrowserWindow({
     parent: set.chat.alwaysOnTopClient ? win : null,
     title: 'Chat',
     x: s.x,
@@ -1402,55 +1414,61 @@ function createChat(show) {
   })
 
   if (s.fullscreen)
-    winchat.setFullScreen(s.fullscreen);
+    winChat.setFullScreen(s.fullscreen);
 
-  winchat.setMenu(null);
-  winchat.loadURL(url.format({
+  winChat.setMenu(null);
+  winChat.loadURL(url.format({
     pathname: path.join(__dirname, 'chat.html'),
     protocol: 'file:',
     slashes: true
   }));
 
-  winchat.on('closed', () => {
-    winchat = null;
+  winChat.on('closed', () => {
+    winChat = null;
+    chatReady = false;
   });
 
-  winchat.on('resize', () => {
-    if (!winchat.isMaximized() && !winchat.isFullScreen())
-      trackWindowState('chat', winchat);
+  winChat.on('resize', () => {
+    if (!winChat.isMaximized() && !winChat.isFullScreen())
+      trackWindowState('chat', winChat);
   })
 
-  winchat.on('move', () => {
-    trackWindowState('chat', winchat);
+  winChat.on('move', () => {
+    trackWindowState('chat', winChat);
   })
 
-  winchat.on('unmaximize', () => {
-    trackWindowState('chat', winchat);
+  winChat.on('unmaximize', () => {
+    trackWindowState('chat', winChat);
   })
 
   //if (s.devTools)
   if (debug)
-    winchat.webContents.openDevTools()
+    winChat.webContents.openDevTools()
 
-  winchat.once('ready-to-show', () => {
-    addInputContext(winchat);
+  winChat.once('ready-to-show', () => {
+    addInputContext(winChat);
     if (show) {
       if (s.maximized)
-        winchat.maximize();
+        winChat.maximize();
       else
-        winchat.show();
+        winChat.show();
     }
     else
-      chatmax = s.maximized;
+      chatMax = s.maximized;
+    chatReady = true;
   })
 
-  winchat.on('close', (e) => {
+  winChat.on('closed', () => {
+    winChat = null;
+  })
+
+  winChat.on('close', (e) => {
     set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
     set.showChat = false;
-    set.windows['hat'] = getWindowState('chat', winchat);
+    set.windows['hat'] = getWindowState('chat', winChat);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
-    e.preventDefault();
-    winchat.hide();
+    //e.preventDefault();
+    //winChat.hide();
   })
 }
 
@@ -1458,12 +1476,12 @@ function showChat() {
   set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
   set.showChat = true;
   set.save(path.join(app.getPath('userData'), 'settings.json'));
-  if (winchat != null) {
-    if (chatmax)
-      winchat.maximize();
+  if (winChat != null) {
+    if (chatMax)
+      winChat.maximize();
     else
-      winchat.show();
-    chatmax = false;
+      winChat.show();
+    chatMax = false;
   }
   else
     createChat(true);
