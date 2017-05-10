@@ -27,6 +27,8 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
     - npm run build:linux-other64 - build x64 deb, rpm and appImage files
     - npm run build:linux-otherarm - build arm deb, rpm and appImage files
 
+Build and package files are all saved to dist folder
+
 ## FAQ
 Basic questions answered about jiMUD
 - [jiMUD FAQ](faq.md)
