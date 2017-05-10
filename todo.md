@@ -44,3 +44,4 @@
   * Create a local help file based on docs
   * Finish assets.md and list all build in assets and describe what each is, if a spite list all images in sprite
 * Code documentation - comment all classes/functions/enums for all typescript and javascript
+* Add MCP telnet support [MCP Standard](http://www.moo.mud.org/mcp/)

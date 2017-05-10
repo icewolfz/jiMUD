@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.1.7 - 2017-
+##### 0.1.7 - 2017-05-09
 - **New:**
   - New chat window 
     - Capture lines/tells/room talk and related reviews, including related settings to control the window and what to capture into the new chat window.
