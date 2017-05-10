@@ -17,7 +17,8 @@
   - A bug when using the cancel button on profile manager and warning about saving changes when nothing has been changed
   - Flashing when enabled should now correctly sync blocks in advanced editor, display, and chat window.
   - Fixed profile manager context menus
-  - Fix preferance context menus
+  - Fix preference context menus
+  - Fixed bug with newline/prompt when executing triggers
 ##### 0.1.6 - 2017-05-07
 - **New:**
   - Advanced editor 

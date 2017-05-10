@@ -1,3 +1,4 @@
+//cSpell:words vscroll, hscroll, Commandon, cmdfont, isdoor, isclosed, triggernewline, triggerprompt
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { parseTemplate } from "./library";

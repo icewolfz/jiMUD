@@ -143,14 +143,14 @@ html, body{
 	margin: 0;
 }
 
-#dragbar{
+#drag-bar{
   background-color:transparent;
   height:100%;
   float: right;
   width: 3px;
   cursor: col-resize;
 }
-#ghostbar{
+#ghost-bar{
   width:3px;
   background-color:#000;
   opacity:0.5;

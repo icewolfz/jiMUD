@@ -1,3 +1,7 @@
+// cSpell:word omud
+// cSpell:ignore hasmembers, hpbar, hpmax, spbar, spmax, mpmax, mpbar
+// cSpell:ignore righthoof, rightfoot, lefthoof, leftfoot, rightarm, leftarm, rightleg, leftleg, righthand, lefthand, leftwing, rightwing
+// cSpell:word 
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { naturalCompare } from "./library";
@@ -117,30 +121,30 @@ export class Status extends EventEmitter {
                     if (obj.action == 'leave')
                         $("#combat").empty();
                     else if (obj.action == 'add')
-                        this.createBar("#combat", this.sanatizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, "monster-"), obj.order);
+                        this.createBar("#combat", this.sanitizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, "monster-"), obj.order);
                     else if (obj.action == 'update') {
                         if (obj.hp == 0)
-                            this.removeBar("#" + this.sanatizeID(obj.name));
+                            this.removeBar("#" + this.sanitizeID(obj.name));
                         else
-                            this.createBar("#combat", this.sanatizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, "monster-"), obj.order);
+                            this.createBar("#combat", this.sanitizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, "monster-"), obj.order);
                     }
                     else if (obj.action == 'remove')
-                        this.removeBar("#" + this.sanatizeID(obj.name));
+                        this.removeBar("#" + this.sanitizeID(obj.name));
                     break;
                 case 'omud.party':
                     if (obj.action == 'leave')
                         $("#party").empty();
                     else if (obj.action == 'add') {
-                        this.createBar("#party", this.sanatizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, "party-"), obj.name.replace('"', ''));
+                        this.createBar("#party", this.sanitizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, "party-"), obj.name.replace('"', ''));
                     }
                     else if (obj.action == 'update') {
                         if (obj.hp == 0)
-                            this.removeBar("#" + this.sanatizeID(obj.name));
+                            this.removeBar("#" + this.sanitizeID(obj.name));
                         else
-                            this.createBar("#party", this.sanatizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, "party-"), obj.name.replace('"', ''));
+                            this.createBar("#party", this.sanitizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, "party-"), obj.name.replace('"', ''));
                     }
                     else if (obj.action == 'remove')
-                        this.removeBar("#" + this.sanatizeID(obj.name));
+                        this.removeBar("#" + this.sanitizeID(obj.name));
                     if ($('#party').children().length > 0)
                         $("#party").addClass('hasmembers');
                     else
@@ -164,7 +168,7 @@ export class Status extends EventEmitter {
         }
     }
 
-    private sanatizeID(id: string) {
+    private sanitizeID(id: string) {
         return id.replace(/[^a-zA-Z0-9_-]/gi, "");
     }
 
@@ -172,38 +176,38 @@ export class Status extends EventEmitter {
         var cls = [];
         if (!prefix) prefix = "";
         if (obj.class && obj.class.length > 0)
-            cls.push(prefix + this.sanatizeID(obj.class));
+            cls.push(prefix + this.sanitizeID(obj.class));
         if (obj.gender && obj.gender.length > 0)
-            cls.push(prefix + this.sanatizeID(obj.gender));
+            cls.push(prefix + this.sanitizeID(obj.gender));
         if (obj.race && obj.race.length > 0)
-            cls.push(prefix + this.sanatizeID(obj.race));
+            cls.push(prefix + this.sanitizeID(obj.race));
         if (obj.guild && obj.guild.length > 0)
-            cls.push(prefix + this.sanatizeID(obj.guild));
+            cls.push(prefix + this.sanitizeID(obj.guild));
         if (obj.name && obj.name.length > 0)
-            cls.push(prefix + this.sanatizeID(obj.name));
+            cls.push(prefix + this.sanitizeID(obj.name));
         return cls.join(" ");
     }
 
     setWeapon(limb, weapon) {
         limb = limb.replace(/\s/g, "");
         limb = limb.toLowerCase();
-        var elimb = $(document.getElementById(limb + "weapon"));
-        if (!elimb || elimb.length == 0)
+        var eLimb = $(document.getElementById(limb + "weapon"));
+        if (!eLimb || eLimb.length == 0)
             return;
-        elimb.removeClass(function (index, className) {
+        eLimb.removeClass(function (index, className) {
             return (className.match(/(^|\s)weapon-\S+/g) || []).join(' ');
         });
         if (!weapon) return;
         if (weapon.quality && weapon.quality.length > 0)
-            elimb.addClass('weapon-' + this.sanatizeID(weapon.quality));
+            eLimb.addClass('weapon-' + this.sanitizeID(weapon.quality));
         if (weapon.material && weapon.material.length > 0)
-            elimb.addClass('weapon-' + this.sanatizeID(weapon.material));
+            eLimb.addClass('weapon-' + this.sanitizeID(weapon.material));
         if (weapon.type && weapon.type.length > 0)
-            elimb.addClass('weapon-' + this.sanatizeID(weapon.type));
+            eLimb.addClass('weapon-' + this.sanitizeID(weapon.type));
         if (weapon.subtype && weapon.subtype.length > 0)
-            elimb.addClass('weapon-' + this.sanatizeID(weapon.subtype));
+            eLimb.addClass('weapon-' + this.sanitizeID(weapon.subtype));
         if (weapon.name && weapon.name.length > 0)
-            elimb.addClass('weapon-' + this.sanatizeID(weapon.name));
+            eLimb.addClass('weapon-' + this.sanitizeID(weapon.name));
     }
 
     setLimbAC(limb, ac) {
@@ -229,11 +233,11 @@ export class Status extends EventEmitter {
     setTitle(title: string) {
         if (!title || title.length == 0) {
             window.document.title = "jiMUD";
-            $("#charactername").html("&nbsp;");
+            $("#character-name").html("&nbsp;");
         }
         else {
             window.document.title = "jiMUD - " + title;
-            $("#charactername").text(title);
+            $("#character-name").text(title);
         }
         this.emit('set-title', title||"");
 
@@ -329,10 +333,10 @@ export class Status extends EventEmitter {
     }
 
     updateXP() {
-        $("#xpvalue").text(this.info["EXPERIENCE"]);
-        $("#xpbanked").text(this.info["EXPERIENCE_BANKED"]);
-        $("#needvalue").text(this.info["EXPERIENCE_NEED"]);
-        $("#earnvalue").text(this.info["EXPERIENCE_EARNED"]);
+        $("#xp-value").text(this.info["EXPERIENCE"]);
+        $("#xp-banked").text(this.info["EXPERIENCE_BANKED"]);
+        $("#need-value").text(this.info["EXPERIENCE_NEED"]);
+        $("#earn-value").text(this.info["EXPERIENCE_EARNED"]);
     }
 
     updateLimb(limb) {
@@ -346,55 +350,55 @@ export class Status extends EventEmitter {
             limb = "rightfoot";
         else if (limb == "lefthoof")
             limb = "leftfoot";
-        var elimb = $(document.getElementById(limb));
-        if (!elimb || elimb.length == 0)
+        var eLimb = $(document.getElementById(limb));
+        if (!eLimb || eLimb.length == 0)
             return;
-        elimb.removeClass(function (index, className) {
+        eLimb.removeClass(function (index, className) {
             return (className.match(/(^|\s)(health-|armor-)\S+/g) || []).join(' ');
         });
-        elimb.css('display', 'block');
-        elimb.css('visibility', "visible");
+        eLimb.css('display', 'block');
+        eLimb.css('visibility', "visible");
         if (this._ac) {
             if (this.infoAC[limb] == 6.5)
-                elimb.addClass('armor-extensively');
+                eLimb.addClass('armor-extensively');
             else if (this.infoAC[limb] == 6)
-                elimb.addClass('armor-completely');
+                eLimb.addClass('armor-completely');
             else if (this.infoAC[limb] == 5.5)
-                elimb.addClass('armor-significantly');
+                eLimb.addClass('armor-significantly');
             else if (this.infoAC[limb] == 5)
-                elimb.addClass('armor-considerably');
+                eLimb.addClass('armor-considerably');
             else if (this.infoAC[limb] == 4.5)
-                elimb.addClass('armor-well');
+                eLimb.addClass('armor-well');
             else if (this.infoAC[limb] == 4)
-                elimb.addClass('armor-adequately');
+                eLimb.addClass('armor-adequately');
             else if (this.infoAC[limb] == 3.5)
-                elimb.addClass('armor-fairly');
+                eLimb.addClass('armor-fairly');
             else if (this.infoAC[limb] == 3)
-                elimb.addClass('armor-moderately');
+                eLimb.addClass('armor-moderately');
             else if (this.infoAC[limb] == 2.5)
-                elimb.addClass('armor-somewhat');
+                eLimb.addClass('armor-somewhat');
             else if (this.infoAC[limb] == 2)
-                elimb.addClass('armor-slightly');
+                eLimb.addClass('armor-slightly');
             else if (this.infoAC[limb] == 1)
-                elimb.addClass('armor-barely');
+                eLimb.addClass('armor-barely');
             else
-                elimb.addClass('armor-unarmored');
+                eLimb.addClass('armor-unarmored');
         }
         else {
             if (this.infoLimb[limb] == 100)
-                elimb.addClass('health-100');
+                eLimb.addClass('health-100');
             else if (this.infoLimb[limb] >= 80)
-                elimb.addClass('health-80-99');
+                eLimb.addClass('health-80-99');
             else if (this.infoLimb[limb] >= 60)
-                elimb.addClass('health-60-79');
+                eLimb.addClass('health-60-79');
             else if (this.infoLimb[limb] >= 40)
-                elimb.addClass('health-40-59');
+                eLimb.addClass('health-40-59');
             else if (this.infoLimb[limb] >= 20)
-                elimb.addClass('health-20-39');
+                eLimb.addClass('health-20-39');
             else if (this.infoLimb[limb] >= 1)
-                elimb.addClass('health-1-19');
+                eLimb.addClass('health-1-19');
             else
-                elimb.addClass('health-full');
+                eLimb.addClass('health-full');
         }
     }
 
@@ -453,10 +457,10 @@ export class Status extends EventEmitter {
         this.updateBar("#spbar", 0, 0);
         this.updateBar("#mpbar", 0, 0);
         //this.ac = false;
-        $("#xpvalue").text("0");
-        $("#xpbanked").text("0");
-        $("#needvalue").text("0");
-        $("#earnvalue").text("0");
+        $("#xp-value").text("0");
+        $("#xp-banked").text("0");
+        $("#need-value").text("0");
+        $("#earn-value").text("0");
         $("#combat").empty();
         $("#party").empty();
         $("#party").removeClass('hasmembers');
@@ -487,9 +491,9 @@ export class Status extends EventEmitter {
         if (bar.length == 0) {
             if (!icon)
                 icon = label.replace(/\d+$/, "").trim().replace(' ', '-');
-            bar = '<div class="combatbar" id="' + id + '" data-value="' + ((100 - p) / 20 * 20) + '" data-order="' + order + '">';
-            bar += '<div class="combaticon ' + icon + '"></div>';
-            bar += '<div class="combatname"> ' + label + '</div>';
+            bar = '<div class="combat-bar" id="' + id + '" data-value="' + ((100 - p) / 20 * 20) + '" data-order="' + order + '">';
+            bar += '<div class="combat-icon ' + icon + '"></div>';
+            bar += '<div class="combat-name"> ' + label + '</div>';
             bar += '<div class="progressbar"><div class="progressbar-text">' + p + '%</div>';
             bar += '<div class="progressbar-value" style="width: ' + (100 - p) + '%"></div>';
             bar += '</div></div>';
@@ -502,7 +506,7 @@ export class Status extends EventEmitter {
                 this.sortBars($(parent));
             }
             bar.data('value', (100 - p) / 20 * 20);
-            bar.find('.combatname').text(label);
+            bar.find('.combat-name').text(label);
             bar.find('.progressbar-text').text(p + '%');
             bar.find('.progressbar-value').css('width', 100 - p);
         }
@@ -515,15 +519,15 @@ export class Status extends EventEmitter {
     }
 
     sortBars(p) {
-        var listitems = p.children('div').get();
-        listitems.sort(function (a, b) {
+        var listItems = p.children('div').get();
+        listItems.sort(function (a, b) {
             //var compA = $(a).text().toUpperCase();
             //var compB = $(b).text().toUpperCase();
             var compA = $(a).data('order');
             var compB = $(b).data('order');
             return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
         });
-        $.each(listitems, function (idx, itm) { p.append(itm); });
+        $.each(listItems, function (idx, itm) { p.append(itm); });
     }
 
     updateLagMeter(lag: number, force?: boolean) {
@@ -542,21 +546,21 @@ export class Status extends EventEmitter {
         {
             $("#status").css("visibility", "");
             $("#status").css("display", "");
-            $("#statusborder").css("visibility", "");
-            $("#statusborder").css("display", "");            
+            $("#status-border").css("visibility", "");
+            $("#status-border").css("display", "");            
 
-            $("#displaycontainer").css('right', '');
-            $("#displayborder").css('right', '');    
+            $("#display-container").css('right', '');
+            $("#display-border").css('right', '');    
             $("#command").css('right', '');
         }
         else
         {
             $("#status").css("visibility", "hidden");
             $("#status").css("display", "none");
-            $("#statusborder").css("visibility", "hidden");
-            $("#statusborder").css("display", "none");
-            $("#displaycontainer").css('right', '7px');
-            $("#displayborder").css('right', '0px');              
+            $("#status-border").css("visibility", "hidden");
+            $("#status-border").css("display", "none");
+            $("#display-container").css('right', '7px');
+            $("#display-border").css('right', '0px');              
             $("#command").css('right', '0px');
         }
         if (this.lagMeter && this.lagMeter.length > 0) {

@@ -1,3 +1,4 @@
+//cSpell:ignore Xred
 /**
  * 
  * 
@@ -25,19 +26,19 @@ export enum Ansi {
  * @enum {number}
  */
 export enum AnsiColorCode {
-	/** @desc  Custom color for error Infomation */
+	/** @desc  Custom color for error Information */
 	ErrorBackground = -12,
-	/** @desc  Custom background color for error Infomation */
+	/** @desc  Custom background color for error Information */
 	ErrorText = -11,
-	/** @desc  Custom background color for client Infomation */
+	/** @desc  Custom background color for client Information */
 	InfoBackground = -8,
-	/** @desc  Custom foreground color for client Infomation */
+	/** @desc  Custom foreground color for client Information */
 	InfoText = -7,
-	/** @desc  Custom tag for localecho */
+	/** @desc  Custom tag for local echo */
 	LocalEcho = -3,
-	/** @desc  Custom tag for localecho */
+	/** @desc  Custom tag for local echo */
 	LocalEchoBack = -4,
-	/** @desc All attibutes off */
+	/** @desc All attributes off */
 	Reset = 0,
 	/** @desc Bold ON */
 	Bold = 1,
@@ -55,9 +56,9 @@ export enum AnsiColorCode {
 	Reverse = 7,
 	/** @desc Concealed ON */
 	Hidden = 8,
-	/** @desc  strikethrough */
+	/** @desc  strike through */
 	StrikeThrough = 9,
-	/** @desc double udnerline on */
+	/** @desc double underline on */
 	DoubleUnderline = 21,
 	/** @desc bold off */
 	BoldOff = 22,
@@ -71,9 +72,9 @@ export enum AnsiColorCode {
 	BlinkRapidOff = 26,
 	/** @desc inverse off */
 	ReverseOff = 27,
-	/** @desc Visiable */
+	/** @desc Visible */
 	Visible = 28,
-	/** @desc strikethrough off */
+	/** @desc strike through off */
 	StrikeThroughOff = 29,
 	/** @desc Black Foreground */
 	Black = 30,
@@ -85,8 +86,8 @@ export enum AnsiColorCode {
 	Yellow = 33,
 	/** @desc Blue Foreground */
 	Blue = 34,
-	/** @desc Magneta Foreground */
-	Magneta = 35,
+	/** @desc Magenta Foreground */
+	Magenta = 35,
 	/** @desc Cyan Foreground */
 	Cyan = 36,
 	/** @desc White Foreground */
@@ -103,8 +104,8 @@ export enum AnsiColorCode {
 	YellowBackground = 43,
 	/** @desc Blue Background */
 	BlueBackground = 44,
-	/** @desc Magneta Background */
-	MagnetaBackground = 45,
+	/** @desc Magenta Background */
+	MagentaBackground = 45,
 	/** @desc Cyan Background */
 	CyanBackground = 46,
 	/** @desc White Background */

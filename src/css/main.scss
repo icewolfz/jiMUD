@@ -5,7 +5,7 @@ body {
     user-select: none;
 }
 
-#displaycontainer {
+#display-container {
     left: 37px;
     right: 187px;
     top: 7px;
@@ -51,7 +51,7 @@ body {
     user-select: auto;
 }
 
-#displayborder {
+#display-border {
     border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
     border-image-slice: 95 95;
     border-image-repeat: round;

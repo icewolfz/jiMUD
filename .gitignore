@@ -7,9 +7,9 @@ npm-debug.log
 typings/
 .idea/
 .vscode/
-src/js/
-out/
-dist/
+src/js/*
+out/*
+dist/*
 /build/js/logging.js
 /build/js/mapper.js
 /build/js/msp.js

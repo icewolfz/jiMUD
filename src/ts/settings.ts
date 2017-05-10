@@ -1,3 +1,5 @@
+//cSpell:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
+//cSpell:ignore emoteto, emotetos
 const path = require('path');
 const fs = require('fs');
 
@@ -49,7 +51,7 @@ export class Chat {
 	//chat lines
 	public captureLines: boolean = false;
 	public captureAllLines: boolean = false;
-	//reivews for lines, tell or talking
+	//reviews for lines, tell or talking
 	public captureReviews: boolean = false;
 	//tell and emotetos
 	public captureTells: boolean = false;

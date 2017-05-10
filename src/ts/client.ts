@@ -1,3 +1,6 @@
+// cSpell:words cmdfont
+// cSpell:ignore endof, Commandon
+
 import EventEmitter = require('events');
 import { Telnet, TelnetOption } from "./telnet";
 import { Parser, ParserLine } from "./parser";
@@ -22,7 +25,7 @@ export class Client extends EventEmitter {
     private _input: input;
     private _MSP: MSP;
     private _auto: NodeJS.Timer = null;
-    private _autoerror: boolean = false;
+    private _autoError: boolean = false;
 
     public version: string = version;
     public display = null;
@@ -103,7 +106,7 @@ export class Client extends EventEmitter {
 
         process.on('uncaughtException', (err) => {
             if (err.code == "ECONNREFUSED")
-                this._autoerror = true;
+                this._autoError = true;
             this.error(err);
         });
 
@@ -142,8 +145,8 @@ export class Client extends EventEmitter {
             this.error(err);
         });
         this._input = new input(this);
-        this._input.on('scrolllock', (lock) => {
-            this.emit('scrolllock', lock);
+        this._input.on('scroll-lock', (lock) => {
+            this.emit('scroll-lock', lock);
         });
         this.character = $("<div id='Character' class='ansi' style='border-bottom: 1px solid black'>W</div>");
         this.character.appendTo('body');
@@ -172,7 +175,7 @@ export class Client extends EventEmitter {
                     msg.push(err.reason);
 
                 if (err.code == "ECONNREFUSED")
-                    this._autoerror = true;
+                    this._autoError = true;
                 if (err.code)
                     this.error(err.code + " - " + msg.join(", "));
                 else
@@ -357,10 +360,10 @@ export class Client extends EventEmitter {
         this.parser.enableMSP = this.options.enableMSP;
 
         if (this.options.colors.length > 0) {
-            var clrs = this.options.colors;
-            for (var c = 0, cl = clrs.length; c < cl; c++) {
-                if (!clrs[c] || clrs[c].length === 0) continue;
-                this.parser.SetColor(c, clrs[c]);
+            var colors = this.options.colors;
+            for (var c = 0, cl = colors.length; c < cl; c++) {
+                if (!colors[c] || colors[c].length === 0) continue;
+                this.parser.SetColor(c, colors[c]);
             }
         }
 
@@ -429,23 +432,23 @@ export class Client extends EventEmitter {
             this.echo("Error: " + err.error.message + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
         else
             this.echo("Error: " + err.error + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
-        if (this.options.autoConnect && !this.telnet.connected && !this._autoerror) {
+        if (this.options.autoConnect && !this.telnet.connected && !this._autoError) {
             if (this._auto)
                 clearTimeout(this._auto);
             this._auto = setTimeout(() => { this.connect(); }, 600);
         }
     }
 
-    echo(str: string, fore?: number, back?: number, newline?: boolean, forceline?: boolean) {
+    echo(str: string, fore?: number, back?: number, newline?: boolean, forceLine?: boolean) {
         if (str == null) str = "";
         if (newline == null) newline = false;
-        if (forceline == null) forceline = false;
+        if (forceLine == null) forceLine = false;
         if (fore == null) fore = AnsiColorCode.LocalEcho;
         if (back == null) back = AnsiColorCode.LocalEchoBack;
         var codes = this.parser.CurrentAnsiCode() + "\n";
         if (str.endsWith("\n"))
             str = str.substr(0, str.length - 1);
-        if (this.telnet.prompt && forceline)
+        if (this.telnet.prompt && forceLine)
             this.print("\n\x1b[" + fore + ";" + back + "m" + str + codes, newline);
         else
             this.print("\x1b[" + fore + ";" + back + "m" + str + codes, newline);
@@ -583,7 +586,7 @@ export class Client extends EventEmitter {
     }
 
     connect() {
-        this._autoerror = false;
+        this._autoError = false;
         this.emit('connecting');
         this._MSP.reset();
         this.parser.ClearMXP();

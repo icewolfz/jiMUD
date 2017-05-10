@@ -1,6 +1,9 @@
+//cSpell:ignore triggerprompt, idletime, connecttime, soundinfo, musicinfo, playmusic, playm, playsound, stopmusic, stopm, stopsound
+//cSpell:ignore stopallsound, stopa, showprompt, showp, sayprompt, sayp, echoprompt, echop, unalias, setsetting, getsetting, profilelist
+//cSpell:ignore keycode
 import EventEmitter = require('events');
 import { MacroModifiers } from "./profile";
-import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPrioity } from "./library";
+import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority } from "./library";
 import { Client } from "./client";
 import { Tests } from "./test";
 import { Alias, Trigger, Macro, Profile } from "./profile";
@@ -10,7 +13,7 @@ export class input extends EventEmitter {
     private _commandHistory: string[]
     private _locked: number = 0;
     private _tests: Tests;
-    private _TriggerCache = null;
+    private _TriggerCache:Trigger[] = null;
     private _TriggerFunctionCache = {};
     private _scrollLock: boolean = false;
 
@@ -22,7 +25,7 @@ export class input extends EventEmitter {
     set scrollLock(locked: boolean) {
         if (locked != this._scrollLock) {
             this._scrollLock = locked;
-            this.emit('scrolllock', this.scrollLock);
+            this.emit('scroll-lock', this.scrollLock);
         }
     }
 
@@ -131,15 +134,14 @@ export class input extends EventEmitter {
     executeScript(txt: string) {
         if (txt == null)
             return txt;
-        var ttxt: string = txt.trim();
-        if (this._tests.TestFunctions[ttxt]) {
-            if (this._tests.TestFunctions[ttxt]) {
-                this._tests.TestFunctions[ttxt].apply(this._tests, []);
+        var tTxt: string = txt.trim();
+        if (this._tests.TestFunctions[tTxt]) {
+            if (this._tests.TestFunctions[tTxt]) {
+                this._tests.TestFunctions[tTxt].apply(this._tests, []);
                 return null;
             }
         }
 
-        var stackingchar: string = this.client.options.commandStackingChar;
         var state: number = 0;
         var idx: number = 0, c: string, r;
         var tl: number = txt.length;
@@ -439,7 +441,7 @@ export class input extends EventEmitter {
                     else {
                         this.client.echo("Alias '" + items[n].pattern + "' removed.", -7, -8, true, true);
                         items.splice(n, 1);
-                        //TODO update once profile manager is created to ensure interface is updateds
+                        //TODO update once profile manager is created to ensure interface is updated
                         //if (_dlgPro && !_dlgPro.dialog("options").closed)
                         //DeleteItem('Alias', 'aliases', n, this.client.activeProfile.name);
                         this.client.activeProfile.aliases = items;
@@ -709,7 +711,7 @@ export class input extends EventEmitter {
         var alias: string = "", AliasesCached;
         var state = 0;
         var aliases = this.client.aliases;
-        var stackingchar: string = this.client.options.commandStackingChar;
+        var stackingChar: string = this.client.options.commandStackingChar;
         var spChar: string = this.client.options.speedpathsChar;
         var ePaths: boolean = this.client.options.enableSpeedpaths;
         var args = [];
@@ -726,8 +728,8 @@ export class input extends EventEmitter {
         else
             eAlias = eAlias && aliases.length > 0;
 
-        //if no charcter set treat it as disabled
-        if (stackingchar.length === 0)
+        //if no character set treat it as disabled
+        if (stackingChar.length === 0)
             stacking = false;
         else if (stacking == null)
             stacking = this.client.options.commandStacking;
@@ -771,7 +773,7 @@ export class input extends EventEmitter {
                         start = false;
                     }
                     //end of alias at end of text, new line, or command stack if enabled
-                    else if (idx === tl - 1 || c === '\n' || (stacking && c === stackingchar)) {
+                    else if (idx === tl - 1 || c === '\n' || (stacking && c === stackingChar)) {
                         //save any arg that was found
                         if (arg.length > 0)
                             args.push(arg);
@@ -811,7 +813,7 @@ export class input extends EventEmitter {
                     start = false;
                     break;
                 case 6: //path found
-                    if (c === '\n' || (stacking && c === stackingchar)) {
+                    if (c === '\n' || (stacking && c === stackingChar)) {
                         state = 0;
                         str = this.ProcessPath(str);
                         if (str !== null) out += str;
@@ -871,7 +873,7 @@ export class input extends EventEmitter {
                         findAlias = false;
                         start = false;
                     }
-                    else if (c === '\n' || (stacking && c === stackingchar)) {
+                    else if (c === '\n' || (stacking && c === stackingChar)) {
                         if (eAlias && findAlias && alias.length > 0) {
                             AliasesCached = FilterArrayByKeyValue(aliases, "pattern", alias);
                             //are aliases enabled and does it match an alias?
@@ -1071,7 +1073,7 @@ export class input extends EventEmitter {
             if (arg < args.length)
                 str += args[arg];
         }
-        //igore args[0] as 0 should be the "oringal text"
+        //ignore args[0] as 0 should be the "original text"
         if (args.length - 1 > 0 && append && _used + 1 < args.length) {
             var r = false;
             if (str.endsWith("\n")) {
@@ -1142,7 +1144,7 @@ export class input extends EventEmitter {
         return ret + "\n";
     }
 
-    ProcessMacros(keycode, alt, ctrl, shft, meta) {
+    ProcessMacros(keycode, alt, ctrl, shift, meta) {
         //if(!this.client.options.enableMacros) return false;
         var macros = FilterArrayByKeyValue(this.client.macros, "key", keycode);
         var m = 0, ml = macros.length;
@@ -1150,7 +1152,7 @@ export class input extends EventEmitter {
             if (!macros[m].enabled) continue;
             if (alt === ((macros[m].modifiers & MacroModifiers.Alt) != MacroModifiers.Alt)) continue;
             if (ctrl === ((macros[m].modifiers & MacroModifiers.Ctrl) != MacroModifiers.Ctrl)) continue;
-            if (shft === ((macros[m].modifiers & MacroModifiers.Shift) != MacroModifiers.Shift)) continue;
+            if (shift === ((macros[m].modifiers & MacroModifiers.Shift) != MacroModifiers.Shift)) continue;
             if (meta === ((macros[m].modifiers & MacroModifiers.Meta) != MacroModifiers.Meta)) continue;
             if (this.ExecuteMacro(macros[m]))
                 return true;
@@ -1288,19 +1290,19 @@ export class input extends EventEmitter {
             this._TriggerCache = $.grep(this.client.triggers, function (a) {
                 return a.enabled;
             });
-            this._TriggerCache.sort(SortArrayByPrioity);
+            this._TriggerCache.sort(SortArrayByPriority);
         }
         var t = 0, tl = this._TriggerCache.length;
         for (; t < tl; t++) {
             if (typeof this._TriggerCache[t].type != "undefined" && this._TriggerCache[t].type != type) continue;
-            if (frag && !this._TriggerCache[t].triggerprompt) continue;
-            if (!frag && !this._TriggerCache[t].triggernewline && (typeof this._TriggerCache[t].triggernewline != "undefined"))
+            if (frag && !this._TriggerCache[t].triggerPrompt) continue;
+            if (!frag && !this._TriggerCache[t].triggerNewline && (typeof this._TriggerCache[t].triggerNewline != "undefined"))
                 continue;
-            if (this._TriggerCache[t].verbatim || (typeof this._TriggerCache[t].regex != "undefined" && !this._TriggerCache[t].regex)) {
+            if (this._TriggerCache[t].verbatim) {
                 if (raw != this._TriggerCache[t].pattern) continue;
                 if (ret)
-                    return this.ExcuteTrigger(this._TriggerCache[t], [raw], true, t);
-                this.ExcuteTrigger(this._TriggerCache[t], [raw], false, t);
+                    return this.ExecuteTrigger(this._TriggerCache[t], [raw], true, t);
+                this.ExecuteTrigger(this._TriggerCache[t], [raw], false, t);
             }
             else {
                 try {
@@ -1308,8 +1310,8 @@ export class input extends EventEmitter {
                     var res = re.exec(raw);
                     if (!res || !res.length) continue;
                     if (ret)
-                        return this.ExcuteTrigger(this._TriggerCache[t], res, true, t);
-                    this.ExcuteTrigger(this._TriggerCache[t], res, false, t);
+                        return this.ExecuteTrigger(this._TriggerCache[t], res, true, t);
+                    this.ExecuteTrigger(this._TriggerCache[t], res, false, t);
                 }
                 catch (e) {
                     if (this.client.options.showScriptErrors)
@@ -1322,7 +1324,7 @@ export class input extends EventEmitter {
         return raw;
     }
 
-    ExcuteTrigger(trigger, args, r: boolean, idx) {
+    ExecuteTrigger(trigger, args, r: boolean, idx) {
         if (r == null) r = false;
         if (!trigger.enabled) return "";
         var ret;// = "";

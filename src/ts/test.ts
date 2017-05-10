@@ -1,26 +1,31 @@
+//cSpell:ignore memberof, webdings, redbu, ismap, isdoor
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { AnsiColorCode, Ansi } from "./ansi";
 
 /**
+ * Client text functions
  * 
+ * Functions that can be executed from the command line to display information 
+ * or display formated text to ensure it looks or functions correctly
  * 
+ * @author Icewolfz
  * @export
  * @class Tests
  * @extends {EventEmitter}
+ * @property {object} TestFunction - A list of functions  
  */
 export class Tests extends EventEmitter {
     /**
-     * 
-     * 
-     * 
+     * Contains a list of functions
+     * @type {object}
      * @memberof Tests
      */
     public TestFunctions = {};
     /**
+     * The client the test functions are for
      * 
-     * 
-     * 
+     * @type {object}
      * @memberof Tests
      */
     public Client;
@@ -199,7 +204,7 @@ export class Tests extends EventEmitter {
             sample += "\t<FONT \"Times New Roman\" 24 RED GREEN>FONT \"Times New Roman\" 24 RED GREEN</FONT>\n";
             sample += "Line Spacing\n";
             sample += "\tNOBR<NOBR>\n";
-            sample += " Continured<NOBR>\n";
+            sample += " Continued<NOBR>\n";
             sample += " More\n";
             sample += "\t<P>P\n";
             sample += "\t1\n";
@@ -226,11 +231,11 @@ export class Tests extends EventEmitter {
             sample += "\t&lt;help&gt;test&lt;/help&gt; = <help>test</help>\n";
             sample += "\t<!ELEMENT redbu '<c red><b><u>'>&lt;!ELEMENT redbu '&lt;c red&gt;&lt;b&gt;&lt;u&gt;'&gt;\n";
             sample += "\t&lt;redbu&gt;test&lt;/redbu&gt; = <redbu>test</redbu>\n";
-            sample += "Etities\n";
+            sample += "Entities\n";
             sample += "\t&#243;&brvbar;&copy;&plusmn;&sup3;&para;&frac34;&infin;&Dagger;&dagger;&spades;&clubs;&hearts;&diams;\n";
             sample += "Custom Entity\n";
             sample += "\t<!ENTITY version \"" + this.Client.version + "\">&lt;!ENTITY version \"" + this.Client.version + "\"&gt;\n";
-            sample += "\t&amp;verison; = &version;\n";
+            sample += "\t&amp;version; = &version;\n";
             sample += "\t&lt;V Hp&gt;<V Hp>100</V>&lt;/VAR&gt; &amp;Hp; = &Hp; &amp;hp; = &hp;\n";
             sample += "\t&lt;VAR Sp&gt;<VAR Sp>200</VAR>&lt;/VAR&gt; &amp;Sp; = &Sp; &amp;sp; = &sp;\n";
             sample += "Image\n";
@@ -441,14 +446,14 @@ export class Tests extends EventEmitter {
             sample += "\thttp://www.google.com\x1B[44m\n";
             sample += "http://www.google.com\n";
             sample += "\ttry this http://www.google.com\n";
-            sample += "http://www.google.com trye this\n";
+            sample += "http://www.google.com try this\n";
             sample += "\ttry this http://www.google.com try this\n";
             sample += "\x1B[36mhttp://www.google.com\n";
             sample += "\t\x1B[0mhttp://www.google.com\n";
             sample += "http://www.google.com\x1B[44m\n";
             sample += "\thttp://www.google.com\n";
             sample += "try this http://www.google.com\n";
-            sample += "\thttp://www.google.com trye this\n";
+            sample += "\thttp://www.google.com try this\n";
             sample += "try this http://www.google.com try this\n";
             sample += "\t\x1B[36mhttp://www.google.com\n";
             sample += "\thttps://localhost telnet://localhost\n";

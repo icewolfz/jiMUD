@@ -1,3 +1,4 @@
+//cSpell:ignore rgbcolor, Endof, EndofLine, Fraktur, aixterm, FNAME, ismap, ATTLIST, windowname, cmds, apos
 /// <reference path="global.d.ts" />
 import EventEmitter = require('events');
 import RGBColor = require("rgbcolor");
@@ -42,7 +43,7 @@ enum lineType {
   LockOpen = 5,
   LockSecure = 6,
   LockLocked = 7,
-  RoonName = 10,
+  RoomName = 10,
   RoomDescription = 11,
   RoomExits = 12,
   WelcomeText = 19
@@ -95,14 +96,14 @@ enum ParserState {
 /**
    * Object to track current state of MXP
    *
-   * @property {Boolean}  [on=""]								- MXP on for current block of process, determined based on linemode sent
-   * @property {Number}   [lineType=0]					- Current linetype, 0 to 99 based on MXP spec
+   * @property {Boolean}  [on=""]								- MXP on for current block of process, determined based on line mode sent
+   * @property {Number}   [lineType=0]					- Current line type, 0 to 99 based on MXP spec
    * @property {Boolean}  [locked=false]				- is the current line mode locked based on lineType
    * @property {Boolean}  [paragraph=false]			- is current block in a paragraph to ignore \n
    * @property {Boolean}  [noBreak=false]				- Ignore the next \n
    * @property {Boolean}  [expanded=false]			- element expanded so it knows to insert the new text before continuing to parse
    * @property {Number}   [capture=0]						- Capture any text processed while capture is one, supports nesting
-   * @property {Strung[]} [captured=[]]					- Captured text buffers, an array of nested captures, as captures end the last one added is poped off, and capture is decreased by 1
+   * @property {Strung[]} [captured=[]]					- Captured text buffers, an array of nested captures, as captures end the last one added is popped off, and capture is decreased by 1
    * @property {Boolean}  [expanded=false]			- line tag expanded
    * @property {Boolean}  [gagged=false]				- current block of text gagged from being displayed
    */
@@ -126,7 +127,7 @@ class MXPState {
    * @property {String}  [value=""]					- The value of the entity
    * @property {String}  [description=""]		- the description of the entity
    * @property {Boolean} [publish=false]		- Is the entity published to the public for users to access value
-   * @property {Boolean} [remote=false]			- None standard, tells the parser where the entity is from for security reasons as local users should not beable to change server set entities
+   * @property {Boolean} [remote=false]			- None standard, tells the parser where the entity is from for security reasons as local users should not be able to change server set entities
    */
 class Entity {
   public name: string = "";
@@ -145,14 +146,14 @@ class Entity {
  * @property {String}  [name=""]							- The name of the element
  * @property {String}  [definition=""]				- The element definition to expand to
  * @property {String}  [closeDefinition=""]		- The close definition built from definition
- * @property {Object}  [attributes=""]				- Object to track attriutes list
- * @property {Array}   [attributeIndexes=[]]	- Array to link attriutes to argument index
+ * @property {Object}  [attributes=""]				- Object to track attributes list
+ * @property {Array}   [attributeIndexes=[]]	- Array to link attributes to argument index
  * @property {Number}  [tag=-1]								- Tag line, if set will present tagline codes to definition in format of <esc>[<tag>zDefinition
- * @property {String}  [flag=""]							- Elmental tag property, mostly client depentant, see MXP spec for full list of basic ones
+ * @property {String}  [flag=""]							- Element tag property, mostly client dependant, see MXP spec for full list of basic ones
  * @property {Boolean} [open=false]						- Is this an open element that can be used on an open line type
- * @property {Boolean} [empty=false]					- Is this an empty tag that doesnt have a CloseDefinition
- * @property {Boolean} [remote=false]					- None standard, tells the parser where the entity is from for security reasons as local users should not beable to change server set elements
- * @property {Boolean} [gagged=false]					- Is element gagged from display as a tag could cause a custom elment to be processed but hidden
+ * @property {Boolean} [empty=false]					- Is this an empty tag that doesn't have a CloseDefinition
+ * @property {Boolean} [remote=false]					- None standard, tells the parser where the entity is from for security reasons as local users should not be able to change server set elements
+ * @property {Boolean} [gagged=false]					- Is element gagged from display as a tag could cause a custom element to be processed but hidden
  */
 class Element {
   public name: string = "";
@@ -180,9 +181,9 @@ class Element {
  * @property {String}  [fore=""]						- The text foreground color.
  * @property {String}  [back=""]						- The background color of the text.
  * @property {Boolean} [enabled=true]				- Turn this tag on or off.
- * @property {Boolean} [remote=false]				- None standard, tells the parser where the tag is from for security reasons as local users should not beable to change server set tag
+ * @property {Boolean} [remote=false]				- None standard, tells the parser where the tag is from for security reasons as local users should not be able to change server set tag
  * @property {String}  [element=""]					- Was the tag created by an element, as it should use that elements def/closeDef
- * @property {String}  [definition=""]			- Was the tag supplied with its own colors, still link to element but these colors override anyset by element
+ * @property {String}  [definition=""]			- Was the tag supplied with its own colors, still link to element but these colors override any set by element
  * @property {String}  [closeDefinition=""]	- The close definition built from definition
  */
 class Tag {
@@ -205,7 +206,7 @@ class Tag {
 };
 
 /**
- * MXPStyle object, stores the current style for display block in a stack, new styles are build on prev and pushed on stack, as style are closed they are poped off
+ * MXPStyle object, stores the current style for display block in a stack, new styles are build on prev and pushed on stack, as style are closed they are popped off
   *
  * @property {MXPTag}    [tag=0]				- The tag that applied this style
  * @property {String}    [custom=""]		- If tag is custom store its name to know the exact tag
@@ -214,7 +215,7 @@ class Tag {
  * @property {FontStyle} [style=_style]	- The fontStyle enum state, see fontStyle
  * @property {String}    [fore=_fore]		- The foreground color, this overrides any ansi foreground set
  * @property {String}    [back=_back]		- The background color, this overrides aay ansi background set
- * @property {Boolean}   [high=_high]		- This will brigten what ever the current foreground color is by 50% even if it is an ansi set color
+ * @property {Boolean}   [high=_high]		- This will brighten what ever the current foreground color is by 50% even if it is an ansi set color
  * @property {Object}    [obj=null]			- Store misc data that a tag may need for later processing
  */
 class MXPStyle {
@@ -252,9 +253,9 @@ class MXPStyle {
  *
  * @param {Object}	options													- The options to start off with
  * @param {Boolean} [options.MXP=true]							- Enable/disable MXP parsing
- * @param {Object}	options.window									- The window viewsize, used for clearning screen and other ansi related systems
+ * @param {Object}	options.window									- The window view size, used for clearing screen and other ansi related systems
  * @param {Number}	[options.window.height=0]				- The window height in lines
- * @param {Number}	[options.window.width=0]				- The window width in charcters
+ * @param {Number}	[options.window.width=0]				- The window width in characters
  * @param {Boolean} [options.flashing=false]				- Enable/disable ansi blink
  *
  * @property {String}  [StyleVersion=""]						- The MXP cached version style set from the VERSION tag, used by a client to reply to a VERSION request
@@ -264,9 +265,9 @@ class MXPStyle {
  * @property {Number}  [TextLength=0]								- The current amount of text that has been parsed
  * @property {Boolean} [enableMXP=true]							- Enable/disable MXP parsing
  * @property {Boolean} [enableMSP=true]							- Enable/disable MSP parsing
- * @property {Boolean} window												- The window size, used for clearning screen and other ansi related systems
+ * @property {Boolean} window												- The window size, used for clearing screen and other ansi related systems
  * @property {Number}  [options.window.height=0]		- The window height in lines
- * @property {Number}  [options.window.width=0]			- The window width in charcters
+ * @property {Number}  [options.window.width=0]			- The window width in characters
  * @property {Boolean} [enableFlashing=false]				- Enable/disable ansi blink
  * @property {Boolean} [emulateTerminal=false]			- Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
  */
@@ -275,7 +276,7 @@ export class Parser extends EventEmitter {
   /** @private */
   private parsing = [];
   /** @private */
-  /* Web detction protocols that are just followed by a :*/
+  /* Web detection protocols that are just followed by a :*/
   private protocols = [["m", "a", "i", "l", "t", "o"], ["s", "k", "y", "p", "e"], ["a", "i", "m"], ["c", "a", "l", "l", "t", "o"], ["g", "t", "a", "l", "k"], ["i", "m"], ["i", "t", "m", "s"], ["m", "s", "n", "i", "m"], ["t", "e", "l"], ["y", "m", "s", "g", "r"]];
 
   /** @private */
@@ -407,8 +408,8 @@ export class Parser extends EventEmitter {
     }
 
     if ((this._CurrentAttributes & FontStyle.Inverse) == FontStyle.Inverse || (mxp.style & FontStyle.Inverse) == FontStyle.Inverse)
-      return { fore: b, back: f, fcode: bc, bcode: fc };
-    return { fore: f, back: b, fcode: fc, bcode: bc };
+      return { fore: b, back: f, foreCode: bc, backCode: fc };
+    return { fore: f, back: b, foreCode: fc, backCode: bc };
   }
 
   private StartDisplayBlock() {
@@ -449,7 +450,7 @@ export class Parser extends EventEmitter {
     }
     else
       strBuilder.push("border-bottom: 1px solid ", colors.back, ";");
-    strBuilder.push("\" class=\"ansi", cls, " ansifore", colors.fcode, " ansiback", colors.bcode, "\">");
+    strBuilder.push("\" class=\"ansi", cls, " ansi-fore", colors.foreCode, " ansi-back", colors.backCode, "\">");
     return strBuilder.join('');
   }
 
@@ -463,11 +464,11 @@ export class Parser extends EventEmitter {
     this._CurrentAttributes = FontStyle.None;
   }
 
-  private ProcessAnsiColorParams(parms: string[]) {
-    var p: number = 0, pl: number = parms.length, i: number;
+  private ProcessAnsiColorParams(params: string[]) {
+    var p: number = 0, pl: number = params.length, i: number;
     var rgb: string;
     for (; p < pl; p++) {
-      i = parseInt(parms[p], 10);
+      i = parseInt(params[p], 10);
       switch (i) {
         case 0: //Reset/None
           this.ResetColors();
@@ -501,15 +502,15 @@ export class Parser extends EventEmitter {
         case 8: //hidden / Concealed
           this._CurrentAttributes |= FontStyle.Hidden;
           break;
-        case 9: //strikethrough on
+        case 9: //strike through on
           this._CurrentAttributes |= FontStyle.Strikeout;
           break;
         /*
         10 primary(default) font
         11 first alternative font
         12 second alternative font
-        13 thirdalternative font
-        14 fourthalternative font
+        13 third alternative font
+        14 fourth alternative font
         15 fifth alternative font
         16 sixth alternative font
         17 seventh alternative font
@@ -541,10 +542,10 @@ export class Parser extends EventEmitter {
         case 27: //inverse off
           this._CurrentAttributes &= ~FontStyle.Inverse;
           break;
-        case 28: //visiable / concealed off
+        case 28: //visible / concealed off
           this._CurrentAttributes &= ~FontStyle.Hidden;
           break;
-        case 29: //strikethrough off
+        case 29: //strike through off
           this._CurrentAttributes &= ~FontStyle.Strikeout;
           break;
         case -11: //error color
@@ -561,8 +562,8 @@ export class Parser extends EventEmitter {
           this._CurrentForeColor = i;
           break;
         case 38:
-          if (p + 2 < pl && parms[p + 1] == "5") {
-            this._CurrentForeColor = parseInt(parms[p + 2], 10);
+          if (p + 2 < pl && params[p + 1] == "5") {
+            this._CurrentForeColor = parseInt(params[p + 2], 10);
             if (isNaN(this._CurrentForeColor))
               this._CurrentForeColor = 37;
             else {
@@ -571,16 +572,16 @@ export class Parser extends EventEmitter {
             }
             p += 2;
           }
-          else if (p + 4 < pl && parms[p + 1] == "2") {
-            i = parseInt(parms[p + 2], 10);
+          else if (p + 4 < pl && params[p + 1] == "2") {
+            i = parseInt(params[p + 2], 10);
             if (i < 0 || i > 255)
               continue;
             rgb = i + ";";
-            i = parseInt(parms[p + 3], 10);
+            i = parseInt(params[p + 3], 10);
             if (i < 0 || i > 255)
               continue;
             rgb += i + ";";
-            i = parseInt(parms[p + 4], 10);
+            i = parseInt(params[p + 4], 10);
             if (i < 0 || i > 255)
               continue;
             rgb += i;
@@ -605,26 +606,26 @@ export class Parser extends EventEmitter {
           this._CurrentBackColor = i;
           break;
         case 48:
-          if (p + 2 < pl && parms[p + 1] == "5") {
-            this._CurrentBackColor = parseInt(parms[p + 2], 10);
+          if (p + 2 < pl && params[p + 1] == "5") {
+            this._CurrentBackColor = parseInt(params[p + 2], 10);
             if (isNaN(this._CurrentBackColor))
               this._CurrentBackColor = 40;
             else {
               this._CurrentBackColor += 16;
-              this._CurrentBackColor *= -1; //prevent overlap of protcals in color grabbing code
+              this._CurrentBackColor *= -1; //prevent overlap of protocols in color grabbing code
             }
             p += 2;
           }
-          else if (p + 4 < pl && parms[p + 1] == "2") {
-            i = parseInt(parms[p + 2], 10);
+          else if (p + 4 < pl && params[p + 1] == "2") {
+            i = parseInt(params[p + 2], 10);
             if (i < 0 || i > 255)
               continue;
             rgb = i + ";";
-            i = parseInt(parms[p + 3], 10);
+            i = parseInt(params[p + 3], 10);
             if (i < 0 || i > 255)
               continue;
             rgb += i + ";";
-            i = parseInt(parms[p + 4], 10);
+            i = parseInt(params[p + 4], 10);
             if (i < 0 || i > 255)
               continue;
             rgb += i;
@@ -635,16 +636,16 @@ export class Parser extends EventEmitter {
         case 49:
           this._CurrentBackColor = -2;
           break;
-        //Zmud log colors, seems zmud uses the 50s for display info for bold colors, standards use it to control borders and other effects
-        //dont need zmud colors here as we never need to open fonts, replace wiht the frames/overlined/etc... if it can be done in css
-        case 53: //Overlined beleave this draws a line above text, oppiste of underline
+        //zMUD log colors, seems zMUD uses the 50s for display info for bold colors, standards use it to control borders and other effects
+        //dont need zMUD colors here as we never need to open fonts, replace with the frames/overlined/etc... if it can be done in css
+        case 53: //Overlined believe this draws a line above text, opposite of underline
           this._CurrentAttributes |= FontStyle.Overline;
           break;
         case 55: //Not overlined, turns off overlined
           this._CurrentAttributes &= ~FontStyle.Overline;
           break;
         case 50: //Reserved
-        case 51: //Framed beleave this adds a border all the way around block of text
+        case 51: //Framed believe this adds a border all the way around block of text
         case 52: //Encircled, not sure maybe draws a circle around text?
         case 54: //Not framed or encircled, turns off framed/encircled
         case 56: //Reserved
@@ -652,7 +653,7 @@ export class Parser extends EventEmitter {
         case 58: //Reserved
         case 59: //Reserved
           this._CurrentForeColor = i - 20;
-          this._CurrentAttributes |= FontStyle.Bold;//makebold
+          this._CurrentAttributes |= FontStyle.Bold;//make bold
           break;
         //xterm 16 but color
         //Assume that xterm?s resources are set so that the ISO color codes are the first 8 of a set of 16.
@@ -707,7 +708,7 @@ export class Parser extends EventEmitter {
         }
       }
     }
-    for (r = 232; r <= 255; r++)//greyscale
+    for (r = 232; r <= 255; r++)//grayscale
     {
       g = (r - 232) * 10 + 8;
       _ColorTable[r] = ["rgb(", g, ",", g, ",", g, ")"].join('');
@@ -954,7 +955,7 @@ export class Parser extends EventEmitter {
   }
 
   private ParseMXPTag(tag: string, args, remote) {
-    var tmp, arg, sarg, sargs, color, x, xl = args.length, e, sl, s;
+    var tmp, arg, sArg, sArgs, color, x, xl = args.length, e, sl, s;
     var href = "", hint = "", expire = "", prompt = false;
     tag = tag.toUpperCase();
     if (this.enableDebug) {
@@ -1025,11 +1026,11 @@ export class Parser extends EventEmitter {
                   tmp.fontSize = arg[1];
                 break;
               case "COLOR":
-                sargs = arg[1].split(',');
-                color = new RGBColor(stripQuotes(sargs[0]));
+                sArgs = arg[1].split(',');
+                color = new RGBColor(stripQuotes(sArgs[0]));
                 if (color.ok) tmp.fore = color.toRGB();
-                for (s = 1, sl = sargs.length; s < sl; s++) {
-                  switch (sargs[s].toLowerCase()) {
+                for (s = 1, sl = sArgs.length; s < sl; s++) {
+                  switch (sArgs[s].toLowerCase()) {
                     case "bold":
                       tmp.style |= FontStyle.Bold;
                       break;
@@ -1275,26 +1276,26 @@ export class Parser extends EventEmitter {
         case "!ATTLIST":
           if (args.length === 0) return null;
           e = args[0];
-          //not defined or if not from the same orien and not open cant change it
+          //not defined or if not from the same origin and not open cant change it
           if (!this.mxpElements[e] || (this.mxpEntities[e].remote != e.remote && !this.mxpEntities[e].open))
             return null;
           //clear out any old ones
           this.mxpElements[e].attributes = {};
           this.mxpElements[e].attributeIndexes = [];
           for (x = 1; x < xl; x++) {
-            sargs = args[x].split('=');
-            if (sargs.length > 1)
-              this.mxpElements[e].attributes[sargs[0].toLowerCase()] = sargs[1];
+            sArgs = args[x].split('=');
+            if (sArgs.length > 1)
+              this.mxpElements[e].attributes[sArgs[0].toLowerCase()] = sArgs[1];
             else
-              this.mxpElements[e].attributes[sargs[0].toLowerCase()] = "";
-            this.mxpElements[e].attributeIndexes.push(sargs[0].toLowerCase());
+              this.mxpElements[e].attributes[sArgs[0].toLowerCase()] = "";
+            this.mxpElements[e].attributeIndexes.push(sArgs[0].toLowerCase());
           }
           break;
         case "!TAG":
           e = new Tag();
           e.remote = remote;
           for (x = 0; x < xl; x++) {
-            //speical case, as attribute list has = in it so test for it
+            //special case, as attribute list has = in it so test for it
             arg = args[x].split('=');
             switch (arg[0].toUpperCase()) {
               case "WINDOWNAME":
@@ -1355,16 +1356,16 @@ export class Parser extends EventEmitter {
         case "!ELEMENT":
           e = new Element(remote);
           for (x = 0; x < xl; x++) {
-            //speical case, as attribute list has = in it so test for it
+            //special case, as attribute list has = in it so test for it
             if (args[x].toUpperCase().startsWith("ATT=")) {
               arg = stripQuotes(args[x]).substring(4).split(' ');
               for (s = 0, sl = arg.length; s < sl; s++) {
-                sargs = stripQuotes(arg[s]).split('=');
-                if (sargs.length > 1)
-                  e.attributes[sargs[0].toLowerCase()] = stripQuotes(sargs[1]);
+                sArgs = stripQuotes(arg[s]).split('=');
+                if (sArgs.length > 1)
+                  e.attributes[sArgs[0].toLowerCase()] = stripQuotes(sArgs[1]);
                 else
-                  e.attributes[sargs[0].toLowerCase()] = "";
-                e.attributeIndexes.push(sargs[0].toLowerCase());
+                  e.attributes[sArgs[0].toLowerCase()] = "";
+                e.attributeIndexes.push(sArgs[0].toLowerCase());
               }
               continue;
             }
@@ -1401,17 +1402,17 @@ export class Parser extends EventEmitter {
                 else if (x === 1) {
                   e.definition = stripQuotes(args[x]);
                   e.closeDefinition = this.GetCloseTags(e.definition);
-                  if (this.enableDebug) this.emit('debug', "MXP close defintion: " + e.closeDefinition);
+                  if (this.enableDebug) this.emit('debug', "MXP close definition: " + e.closeDefinition);
                 }
                 else if (x === 2) {
                   arg = args[x].substring(4).split(' ');
                   for (s = 0, sl = arg.length; s < sl; s++) {
-                    sargs = arg[s].split('=');
-                    if (sargs.length > 1)
-                      e.attributes[sargs[0]] = sargs[1];
+                    sArgs = arg[s].split('=');
+                    if (sArgs.length > 1)
+                      e.attributes[sArgs[0]] = sArgs[1];
                     else
-                      e.attributes[sargs[0]] = "";
-                    e.attributeIndexes.push(sargs[0]);
+                      e.attributes[sArgs[0]] = "";
+                    e.attributeIndexes.push(sArgs[0]);
                   }
                 }
                 else if (x === 3) {
@@ -1435,7 +1436,7 @@ export class Parser extends EventEmitter {
               this.mxpLines[tmp.index] = tmp;
           }
           if (this.mxpElements[e.name]) {
-            //can only override if from same orgine (eg from mud, or from local) or if an open tag
+            //can only override if from same origin (eg from mud, or from local) or if an open tag
             if (this.mxpElements[e.name].remote == e.remote || this.mxpEntities[e.name].open)
               this.mxpElements[e.name] = e;
           }
@@ -1474,13 +1475,13 @@ export class Parser extends EventEmitter {
               case "REMOVE":
                 if (this.mxpEntities[e.name] && this.mxpEntities[e.name].remote == e.remote) {
                   if (this.mxpEntities[e.name].value) {
-                    sargs = this.mxpEntities[e.name].value.split('|');
-                    sarg = [];
-                    for (s = 0, sl = sargs.length; s < sl; s++) {
-                      if (sargs[s] != e.value)
-                        sarg.push(sargs[s]);
+                    sArgs = this.mxpEntities[e.name].value.split('|');
+                    sArg = [];
+                    for (s = 0, sl = sArgs.length; s < sl; s++) {
+                      if (sArgs[s] != e.value)
+                        sArg.push(sArgs[s]);
                     }
-                    this.mxpEntities[e.name].value = sarg.join('|');
+                    this.mxpEntities[e.name].value = sArg.join('|');
                   }
                 }
                 return null;
@@ -1538,13 +1539,13 @@ export class Parser extends EventEmitter {
               case "REMOVE":
                 if (this.mxpEntities[e.name] && this.mxpEntities[e.name].remote == e.remote) {
                   if (this.mxpEntities[e.name].value) {
-                    sargs = this.mxpEntities[e.name].value.split('|');
-                    sarg = [];
-                    for (s = 0, sl = sargs.length; s < sl; s++) {
-                      if (sargs[s] != e.value)
-                        sarg.push(sargs[s]);
+                    sArgs = this.mxpEntities[e.name].value.split('|');
+                    sArg = [];
+                    for (s = 0, sl = sArgs.length; s < sl; s++) {
+                      if (sArgs[s] != e.value)
+                        sArg.push(sArgs[s]);
                     }
-                    this.mxpEntities[e.name].value = sarg.join('|');
+                    this.mxpEntities[e.name].value = sArg.join('|');
                   }
                 }
                 return null;
@@ -1666,7 +1667,7 @@ export class Parser extends EventEmitter {
           this.emit('stat', e);
           break;
         case "MUSIC":
-          e = { off: false, file: "", url: "", volume: 100, repeat: 1, prioirty: 50, type: "", continue: true };
+          e = { off: false, file: "", url: "", volume: 100, repeat: 1, priority: 50, type: "", continue: true };
           for (x = 0; x < xl; x++) {
             arg = args[x].split('=');
             if (arg.length > 1) {
@@ -1738,7 +1739,7 @@ export class Parser extends EventEmitter {
           this.emit('music', e);
           break;
         case "SOUND":
-          e = { off: false, file: "", url: "", volume: 100, repeat: 1, prioirty: 50, type: "", continue: true };
+          e = { off: false, file: "", url: "", volume: 100, repeat: 1, priority: 50, type: "", continue: true };
           for (x = 0; x < xl; x++) {
             arg = args[x].split('=');
             if (arg.length > 1) {
@@ -1766,7 +1767,7 @@ export class Parser extends EventEmitter {
                   tmp = parseInt(arg[x], 10);
                   if (isNaN(tmp))
                     tmp = 1;
-                  e.prioirty = tmp;
+                  e.priority = tmp;
                   break;
                 case "T"://type
                   if (arg[x].length > 0)
@@ -1802,7 +1803,7 @@ export class Parser extends EventEmitter {
               tmp = parseInt(args[x], 10);
               if (isNaN(tmp))
                 tmp = 1;
-              e.prioirty = tmp;
+              e.priority = tmp;
             }
             else if (x === 4) {
               if (args[x].length > 0)
@@ -1831,7 +1832,7 @@ export class Parser extends EventEmitter {
           this.emit('MXPTagReply', tag, args);
           break;
         case "SUPPORT":
-          sargs = [];
+          sArgs = [];
           if (xl > 0) {
             for (x = 0; x < xl; x++) {
               arg = stripQuotes(args[x]);
@@ -1879,10 +1880,10 @@ export class Parser extends EventEmitter {
                   case "RESET":
                   case "GAUGE":
                   case "STAT":
-                    sargs.push("+" + name);
+                    sArgs.push("+" + name);
                     break;
                   default:
-                    sargs.push("-" + name);
+                    sArgs.push("-" + name);
                     break;
                 }
               }
@@ -1892,114 +1893,114 @@ export class Parser extends EventEmitter {
                 switch (arg[0]) {
                   case "IMAGE":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+image.fname");
-                      sargs.push("+image.url");
-                      sargs.push("+image.t");
-                      sargs.push("+image.h");
-                      sargs.push("+image.w");
-                      sargs.push("+image.hspace");
-                      sargs.push("+image.vspace");
-                      sargs.push("+image.align");
-                      sargs.push("+image.ismap");
+                      sArgs.push("+image.fname");
+                      sArgs.push("+image.url");
+                      sArgs.push("+image.t");
+                      sArgs.push("+image.h");
+                      sArgs.push("+image.w");
+                      sArgs.push("+image.hspace");
+                      sArgs.push("+image.vspace");
+                      sArgs.push("+image.align");
+                      sArgs.push("+image.ismap");
                     }
                     break;
                   case "SOUND":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+sound.v");
-                      sargs.push("+sound.l");
-                      sargs.push("+sound.p");
-                      sargs.push("+sound.t");
-                      sargs.push("+sound.u");
+                      sArgs.push("+sound.v");
+                      sArgs.push("+sound.l");
+                      sArgs.push("+sound.p");
+                      sArgs.push("+sound.t");
+                      sArgs.push("+sound.u");
                     }
                     break;
                   case "MUSIC":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+music.v");
-                      sargs.push("+music.l");
-                      sargs.push("+music.c");
-                      sargs.push("+music.t");
-                      sargs.push("+music.u");
+                      sArgs.push("+music.v");
+                      sArgs.push("+music.l");
+                      sArgs.push("+music.c");
+                      sArgs.push("+music.t");
+                      sArgs.push("+music.u");
                     }
                     break;
                   case "A":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+a.href");
-                      sargs.push("+a.hint");
-                      sargs.push("+a.expire");
+                      sArgs.push("+a.href");
+                      sArgs.push("+a.hint");
+                      sArgs.push("+a.expire");
                     }
                     break;
                   case "SEND":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+send.href");
-                      sargs.push("+send.hint");
-                      sargs.push("+send.prompt");
-                      sargs.push("+send.expire");
+                      sArgs.push("+send.href");
+                      sArgs.push("+send.hint");
+                      sArgs.push("+send.prompt");
+                      sArgs.push("+send.expire");
                     }
                     break;
                   case "COLOR":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+color.fore");
-                      sargs.push("+color.back");
+                      sArgs.push("+color.fore");
+                      sArgs.push("+color.back");
                     }
                     break;
                   case "C":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+c.fore");
-                      sargs.push("+c.back");
+                      sArgs.push("+c.fore");
+                      sArgs.push("+c.back");
                     }
                     break;
                   case "FONT":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+font.face");
-                      sargs.push("+font.size");
-                      sargs.push("+font.color");
-                      sargs.push("+font.back");
+                      sArgs.push("+font.face");
+                      sArgs.push("+font.size");
+                      sArgs.push("+font.color");
+                      sArgs.push("+font.back");
                     }
                     break;
                   case "EXPIRE":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else
-                      sargs.push("+expire.Name");
+                      sArgs.push("+expire.Name");
                     break;
                   case "GAUGE":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+gauge.max");
-                      sargs.push("+gauge.caption");
-                      sargs.push("+gauge.color");
+                      sArgs.push("+gauge.max");
+                      sArgs.push("+gauge.caption");
+                      sArgs.push("+gauge.color");
                     }
                     break;
                   case "STAT":
                     if (arg[1] != "*")
-                      sargs.push("+" + arg[0] + "." + arg[1]);
+                      sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sargs.push("+stat.max");
-                      sargs.push("+stat.caption");
+                      sArgs.push("+stat.max");
+                      sArgs.push("+stat.caption");
                     }
                     break;
                   default:
                     if (arg[1] != "*")
-                      sargs.push("-" + arg[0] + "." + arg[1]);
+                      sArgs.push("-" + arg[0] + "." + arg[1]);
                     else
-                      sargs.push("-" + arg[0]);
+                      sArgs.push("-" + arg[0]);
                     break;
                 }
               }
@@ -2147,7 +2148,7 @@ export class Parser extends EventEmitter {
           return null;
         case "HR":
           var colors = this.getColors();
-          return "<div class=\"line ansiback" + colors.bcode + "\" style=\"position:relative;background-color:" + colors.back + "\"> <div style=\"position:absolute;top: 49%;height:4px;width:100%;background-color:" + colors.fore + "\" class=\" ansifore" + colors.fcode + "\"><hr/></div></div>";
+          return "<div class=\"line ansi-back" + colors.backCode + "\" style=\"position:relative;background-color:" + colors.back + "\"> <div style=\"position:absolute;top: 49%;height:4px;width:100%;background-color:" + colors.fore + "\" class=\" ansi-fore" + colors.foreCode + "\"><hr/></div></div>";
       }
     }
     if (this.mxpElements[tag]) {
@@ -2159,22 +2160,22 @@ export class Parser extends EventEmitter {
       tmp.tag = MXPTag.Custom;
       tmp.custom = e.name;
       arg = e.definition;
-      sargs = {};
+      sArgs = {};
       //setup default values
       for (s = 0, sl = e.attributeIndexes.length; s < sl; s++)
-        sargs[e.attributeIndexes[s]] = e.attributes[e.attributeIndexes[s]];
+        sArgs[e.attributeIndexes[s]] = e.attributes[e.attributeIndexes[s]];
       //change any based on passed argument
       for (x = 0; x < xl; x++) {
-        sarg = args[x].split('=');
-        sarg[0] = sarg[0].toLowerCase();
-        if (e.attributes[sarg[0]])
-          sargs[sarg[0]] = sarg[1];
+        sArg = args[x].split('=');
+        sArg[0] = sArg[0].toLowerCase();
+        if (e.attributes[sArg[0]])
+          sArgs[sArg[0]] = sArg[1];
         else if (x < e.attributeIndexes.length)
-          sargs[e.attributeIndexes[x]] = sarg[0];
+          sArgs[e.attributeIndexes[x]] = sArg[0];
       }
-      for (sarg in sargs) {
-        if (!sargs.hasOwnProperty(sarg)) continue;
-        arg = arg.replace("&" + sarg + ";", sargs[sarg]);
+      for (sArg in sArgs) {
+        if (!sArgs.hasOwnProperty(sArg)) continue;
+        arg = arg.replace("&" + sArg + ";", sArgs[sArg]);
       }
       if (!e.empty) {
         this.mxpState.captured.push([]);
@@ -2200,7 +2201,7 @@ export class Parser extends EventEmitter {
 
       //get captured text]
       if (!e.empty && this.mxpState.capture > 0) {
-        sarg = this.mxpState.captured.pop().join('');
+        sArg = this.mxpState.captured.pop().join('');
         this.mxpState.capture--;
       }
 
@@ -2211,8 +2212,8 @@ export class Parser extends EventEmitter {
 
       if (e.flag.length > 0) {
         if (e.flag.length > 4 && e.flag.toLowerCase().startsWith("set "))
-          this.emit('setVariable', e.flag.substring(4), sarg);
-        this.emit('MXPFlag', e.flag, sarg);
+          this.emit('setVariable', e.flag.substring(4), sArg);
+        this.emit('MXPFlag', e.flag, sArg);
       }
       if (e.tag > 19 && e.tag < 100 && this.mxpLines[e.tag].enabled && this.mxpLines[e.tag].closeDefinition.length > 0)
         arg += this.mxpLines[e.tag].closeDefinition;
@@ -2382,7 +2383,7 @@ export class Parser extends EventEmitter {
     var state: ParserState = ParserState.None;
     var pState: ParserState = ParserState.None;
     var lineLength = 0;
-    var itmp, _MXPTag, _MXPEntity, _MXPComment, _MXPArgs, skip = false;
+    var iTmp, _MXPTag, _MXPEntity, _MXPComment, _MXPArgs, skip = false;
 
     //query data in case already parsing
     if (this.parsing.length > 0 && !force) {
@@ -2391,7 +2392,7 @@ export class Parser extends EventEmitter {
     }
     this.parsing.unshift([text, remote]);
     //store remote state as mxp requires it
-    //not end of line but text, so fragment, reget and reparse to ensure proper triggering
+    //not end of line but text, so fragment, re-get and re-parse to ensure proper triggering
     if (!this.EndofLine && this.TextLength > 0) {
       var lines;
       if (this.display && this.display !== null)
@@ -2417,8 +2418,8 @@ export class Parser extends EventEmitter {
     var u: boolean = this.enableURLDetection;
     var s: boolean = this.enableMSP;
     var lnk = 0;
-    var llnk = 0;
-    var lnest = null;
+    var lLnk = 0;
+    var lNest = null;
     var p, pl = this.protocols.length;
     try {
       for (idx = 0; idx < tl; idx++) {
@@ -2427,7 +2428,7 @@ export class Parser extends EventEmitter {
         switch (state) {
           case ParserState.AnsiParams:
             if (
-              c === 'C' ||  //Move curosr # spaces
+              c === 'C' ||  //Move cursor # spaces
               c === 'K' || //Clear screen Left/Right
               c === 's' || //save cursor position: non-standard
               c === 'u' ||  //save cursor position: non-standard
@@ -2456,7 +2457,7 @@ export class Parser extends EventEmitter {
               //incase they put in a ; like e[1;z, e[1;7z or even e[;1z
               _MXPTag = _AnsiParams.split(';');
               //we only want the last valid #
-              //start as 0 incause invalid # or code
+              //start as 0 in cause invalid # or code
               _AnsiParams = 0;
               for (var mt = _MXPTag.length - 1; mt >= 0; mt--) {
                 if (_MXPTag[mt].length > 0) {
@@ -2464,14 +2465,14 @@ export class Parser extends EventEmitter {
                   break;
                 }
               }
-              itmp = parseInt(_AnsiParams, 10);
-              if (isNaN(itmp)) itmp = 0;
+              iTmp = parseInt(_AnsiParams, 10);
+              if (isNaN(iTmp)) iTmp = 0;
               this.mxpState.on = true;
               this.mxpState.noBreak = false;
               this.mxpState.paragraph = false;
               if (this.mxpState.lineType === lineType.Open)
                 this.ResetMXP();
-              switch (itmp) {
+              switch (iTmp) {
                 case 2:
                   this.mxpState.on = false;
                   this.mxpState.locked = false;
@@ -2510,22 +2511,22 @@ export class Parser extends EventEmitter {
                   break;
                 default:
                   //invalid line so reset
-                  if (itmp < 0 || itmp > 99)
+                  if (iTmp < 0 || iTmp > 99)
                     this.ResetMXP();
                   else {
-                    this.mxpState.lineType = itmp;
+                    this.mxpState.lineType = iTmp;
                     this.mxpState.locked = false;
-                    //custom element linked totag so epanded itinto the line
+                    //custom element linked to tag so expanded it into the line
                     if (this.mxpLines[this.mxpState.lineType] && this.mxpLines[this.mxpState.lineType].enabled) {
                       //strBuilder.push(EndDisplayBlock());
                       //strBuilder.push(StartDisplayBlock());
-                      itmp = "";
+                      iTmp = "";
                       if (this.mxpLines[this.mxpState.lineType].element.length > 0)
-                        itmp += "<" + this.mxpLines[this.mxpState.lineType].element + ">";
+                        iTmp += "<" + this.mxpLines[this.mxpState.lineType].element + ">";
                       if (this.mxpLines[this.mxpState.lineType].definition.length > 0)
-                        itmp += this.mxpLines[this.mxpState.lineType].definition;
-                      if (itmp.length > 0) {
-                        text = text.splice(idx + 1, itmp);
+                        iTmp += this.mxpLines[this.mxpState.lineType].definition;
+                      if (iTmp.length > 0) {
+                        text = text.splice(idx + 1, iTmp);
                         tl = text.length;
                       }
                     }
@@ -2542,15 +2543,15 @@ export class Parser extends EventEmitter {
               if (_AnsiParams.length > 0) {
                 if (parseInt(_AnsiParams, 10) == 2) {
                   lineLength = 0;
-                  itmp = this.window.height;
-                  for (var j = 0; j < itmp; j++) {
+                  iTmp = this.window.height;
+                  for (var j = 0; j < iTmp; j++) {
                     strBuilder.push("<br/>");
                     this.MXPCapture("\n");
                   }
                   strBuilder.push("</div>");
                   this.AddLine(strBuilder.join(''), false, false);
                   strBuilder = ["<div class=\"line\">"];
-                  this.TextLength += itmp;
+                  this.TextLength += iTmp;
                   this.mxpState.noBreak = false;
                 }
               }
@@ -2931,16 +2932,16 @@ export class Parser extends EventEmitter {
                 state = ParserState.URLFound;
                 //Found :// so valid url
                 lnk = strBuilder.length - 4;
-                llnk = strBuilder.length - 1;
+                lLnk = strBuilder.length - 1;
                 while (lnk > 0 && CharAllowedInURL(strBuilder[lnk], true))
                   lnk--;
                 if (!CharAllowedInURL(strBuilder[lnk], true))
                   lnk++;
-                lnest = [];
+                lNest = [];
                 if (lnk > 0 && strBuilder[lnk - 1] === "(")
-                  lnest.push(")");
+                  lNest.push(")");
                 if (lnk > 0 && strBuilder[lnk - 1] === "[")
-                  lnest.push("]");
+                  lNest.push("]");
               }
             }
             else if (idx > lnk + 1) {
@@ -2958,7 +2959,7 @@ export class Parser extends EventEmitter {
             break;
           case ParserState.URLFound:
             if (!CharAllowedInURL(c, false)) {
-              if (llnk != strBuilder.length - 1) {
+              if (lLnk != strBuilder.length - 1) {
                 _MXPComment += strBuilder.slice(lnk).join('');
                 if (this.enableDebug) this.emit('debug', "URL Found: " + _MXPComment);
                 if (this.enableLinks) {
@@ -2975,29 +2976,29 @@ export class Parser extends EventEmitter {
             }
             else {
               var si = strBuilder.length - 1;
-              if (lnest.length > 1 && lnest[lnest.length - 1] == c) {
-                lnest.pop();
+              if (lNest.length > 1 && lNest[lNest.length - 1] == c) {
+                lNest.pop();
                 strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
                 this.TextLength++;
               }
-              else if (lnest.length > 0 && c == '(') {
-                lnest.push(')');
+              else if (lNest.length > 0 && c == '(') {
+                lNest.push(')');
                 strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
                 this.TextLength++;
               }
-              else if (lnest.length > 0 && c == '[') {
-                lnest.push(']');
+              else if (lNest.length > 0 && c == '[') {
+                lNest.push(']');
                 strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
                 this.TextLength++;
               }
-              else if (lnest.length == 1 && lnest[lnest.length - 1] == c) {
-                if (llnk != strBuilder.length - 1) {
+              else if (lNest.length == 1 && lNest[lNest.length - 1] == c) {
+                if (lLnk != strBuilder.length - 1) {
                   _MXPComment += strBuilder.slice(lnk).join('');
                   if (this.enableDebug) this.emit('debug', "URL Found: " + _MXPComment);
                   if (this.enableLinks) {
@@ -3114,18 +3115,18 @@ export class Parser extends EventEmitter {
             else if (c === '\n') {
               if (this.mxpState.noBreak || this.mxpState.paragraph) continue;
               if (!this.mxpState.locked) {
-                //notify client that a tag is over, allow for tagging the 10,11,12,19 tag types for auto mapper tagging/welcome test/cutom tags
+                //notify client that a tag is over, allow for tagging the 10,11,12,19 tag types for auto mapper tagging/welcome test/custom tags
                 if (this.mxpState.lineType !== lineType.Open)
                   this.emit('MXPTagEnd', this.mxpState.lineType, strBuilder.join(''));
-                //custom element linked totag so epanded itinto the line
+                //custom element linked to tag so expanded it into the line
                 if (!this.mxpState.lineExpanded && this.mxpLines[this.mxpState.lineType] && this.mxpLines[this.mxpState.lineType].enabled) {
-                  itmp = "";
+                  iTmp = "";
                   if (this.mxpLines[this.mxpState.lineType].element.length > 0)
-                    itmp += "</" + this.mxpLines[this.mxpState.lineType].element + ">";
+                    iTmp += "</" + this.mxpLines[this.mxpState.lineType].element + ">";
                   if (this.mxpLines[this.mxpState.lineType].closeDefinition.length > 0)
-                    itmp += this.mxpLines[this.mxpState.lineType].closeDefinition;
-                  if (itmp.length > 0) {
-                    text = text.splice(idx, itmp);
+                    iTmp += this.mxpLines[this.mxpState.lineType].closeDefinition;
+                  if (iTmp.length > 0) {
+                    text = text.splice(idx, iTmp);
                     tl = text.length;
                     idx--;
                     this.mxpState.lineExpanded = true;
@@ -3313,7 +3314,7 @@ export class Parser extends EventEmitter {
               this.mxpState.noBreak = false;
               if (u) {
                 _MXPComment = "";
-                var psk, pfnd = false;
+                var psk, pFnd = false;
                 for (p = 0; p < pl; p++) {
                   if (idx - this.protocols[p].length < 0)
                     continue;
@@ -3330,20 +3331,20 @@ export class Parser extends EventEmitter {
                   lnk = strBuilder.length;
                   if (lnk > 1 + nl && strBuilder[lnk - (2 + nl)].length === 1 && /\S/.test(strBuilder[lnk - (2 + nl)]) && strBuilder[lnk - (2 + nl)] !== "(" && strBuilder[lnk - (2 + nl)] !== "[")
                     continue;
-                  lnest = [];
+                  lNest = [];
                   lnk = strBuilder.length - (1 + nl);
-                  llnk = strBuilder.length - 1;
+                  lLnk = strBuilder.length - 1;
                   if (lnk > 0 && strBuilder[lnk - 1] === "(")
-                    lnest.push(")");
+                    lNest.push(")");
                   if (lnk > 0 && strBuilder[lnk - 1] === "[")
-                    lnest.push("]");
+                    lNest.push("]");
                   state = ParserState.URLFound;
-                  pfnd = true;
+                  pFnd = true;
 
-                  if (pfnd)
+                  if (pFnd)
                     break;
                 }
-                if (!pfnd) {
+                if (!pFnd) {
                   state = ParserState.URL;
                   lnk = idx;
                 }
@@ -3364,13 +3365,13 @@ export class Parser extends EventEmitter {
                   lnk = strBuilder.length;
                   if (lnk > 4 && strBuilder[lnk - 5].length === 1 && /\S/.test(strBuilder[lnk - 5]) && strBuilder[lnk - 5] !== "(" && strBuilder[lnk - 5] !== "[")
                     continue;
-                  lnest = [];
+                  lNest = [];
                   lnk = strBuilder.length - 4;
-                  llnk = strBuilder.length - 1;
+                  lLnk = strBuilder.length - 1;
                   if (lnk > 0 && strBuilder[lnk - 1] === "(")
-                    lnest.push(")");
+                    lNest.push(")");
                   if (lnk > 0 && strBuilder[lnk - 1] === "[")
-                    lnest.push("]");
+                    lNest.push("]");
                   state = ParserState.URLFound;
                 }
               }
@@ -3669,9 +3670,9 @@ export class Parser extends EventEmitter {
   };
 
   private parseNext() {
-    var itmp = this.parsing.shift();
+    var iTmp = this.parsing.shift();
     var self = this;
-    return function () { self.parse(itmp[0], itmp[1], true); };
+    return function () { self.parse(iTmp[0], iTmp[1], true); };
   }
 
   updateWindow(width, height) {

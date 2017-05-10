@@ -1,3 +1,4 @@
+//cSpell:ignore fname
 const buzz = require('buzz');
 const path = require('path');
 const fs = require('fs');
@@ -130,8 +131,8 @@ class SoundState extends EventEmitter {
  * @copyright Icewolfz 2013
  * @version 1.1
  * MSP requires the modules {@link module:telnet}.
- * MSP requires the modules {@link module:src/lib/soundmanager2}.
- * @requires module:src/lib/soundmanager2
+ * MSP requires the modules {@link module:buzz}.
+ * @requires module:buzz
  * @requires module:telnet
  * @namespace MSP
  * @constructor

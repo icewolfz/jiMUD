@@ -1,3 +1,4 @@
+//cSpell:ignore displaytype, submenu, triggernewline, triggerprompt
 import { clone, keyCodeToChar } from "./library";
 const path = require('path');
 const fs = require('fs');
@@ -607,7 +608,7 @@ export class Profile {
 			}
 		}
 		if (data.contexts && data.contexts.length > 0) {
-			il = data.mencontextsus.length;
+			il = data.contexts.length;
 			for (i = 0; i < il; i++) {
 				profile.contexts.push(data.contexts[i].clone());
 			}
@@ -624,7 +625,7 @@ export class ProfileCollection {
 		this.add(defaultProfile == null ? Profile.Default : defaultProfile);
 	}
 
-	SortByPrioity() {
+	SortByPriority() {
 		this.keys.sort((a, b) => {
 			var ap = this.items[a].priority;
 			var bp = this.items[a].priority;
@@ -730,7 +731,7 @@ export class ProfileCollection {
 
 	update() {
 		this.keys = Object.keys(this.items);
-		this.SortByPrioity();
+		this.SortByPriority();
 	}
 
 	add(profile: Profile) {

@@ -1,3 +1,5 @@
+//cSpell:ignore pathfinding, vscroll, hscroll, AUTOINCREMENT, Arial, isdoor, isclosed, prevroom, islocked, cmds
+//cSpell:ignore watersource, dirtroad, sanddesert, icesheet, highmountain, pavedroad, rockdesert
 import EventEmitter = require('events');
 import { parseTemplate, Size, clone } from "./library";
 const fs = require("fs");
@@ -516,7 +518,7 @@ export class Mapper extends EventEmitter {
 
     setCurrent() {
         this.emit('path-cleared');
-        this.current = this.sanatizeRoom(clone(this.selected));
+        this.current = this.sanitizeRoom(clone(this.selected));
         this.markers = {};
         this.draw();
     }
@@ -524,7 +526,7 @@ export class Mapper extends EventEmitter {
     setArea(area: string) {
         this.active.area = area;
         if (this.current.ID !== null && this.current.area == this.active.area) {
-            this.active = this.sanatizeRoom(clone(this.current));
+            this.active = this.sanitizeRoom(clone(this.current));
             this.focusActiveRoom();
             this.emit('setting-changed', 'active', this.active);
         }
@@ -536,7 +538,7 @@ export class Mapper extends EventEmitter {
                     this.active.y = row.Y;
                     this.active.z = row.Z;
                     this.active.zone = row.Zone;
-                    this.active = this.sanatizeRoom(this.active);
+                    this.active = this.sanitizeRoom(this.active);
                     this.focusActiveRoom();
                     this.emit('setting-changed', 'active', this.active);
                 }
@@ -654,11 +656,11 @@ export class Mapper extends EventEmitter {
                             case "down":
                                 room.z--;
                                 break;
-                            //out menas you leave a zone
+                            //out means you leave a zone
                             case "out":
                                 room.zone = this.current.zone - 1;
                                 break;
-                            //enter or unkniown exits new zone
+                            //enter or unknown exits new zone
                             default:
                                 //if (val.area == currentRoom.area)
                                 room.zone = this.current.zone + 1;
@@ -728,7 +730,7 @@ export class Mapper extends EventEmitter {
                             break;
                     }
                 }
-                room = this.sanatizeRoom(room);
+                room = this.sanitizeRoom(room);
                 this.addOrUpdateRoom(room);
                 this.current.ID = room.ID;
                 this.current.area = room.area;
@@ -831,7 +833,7 @@ export class Mapper extends EventEmitter {
         }
     }
 
-    private sanatizeRoom(r): Room {
+    private sanitizeRoom(r): Room {
         r.x = parseInt(r.x, 10);
         r.y = parseInt(r.y, 10);
         r.z = parseInt(r.z, 10);

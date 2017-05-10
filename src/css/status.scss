@@ -21,7 +21,7 @@ body
     cursor: default;
 }
 
-#statusborder
+#status-border
 {
     position: absolute;
     right: -1px;
@@ -212,7 +212,7 @@ body
     z-index:100;
 }
 
-#charactername
+#character-name
 {
     color: wheat;
     padding: 0 22px;
@@ -221,7 +221,7 @@ body
     font-size: 1.2em;
 }
 
-#charactername::first-letter
+#character-name::first-letter
 {
     text-transform: uppercase;
 }
@@ -354,7 +354,7 @@ body
     overflow-x: hidden;
 }
 
-.combatbar
+.combat-bar
 {
     height: 34px;
     position: relative;
@@ -362,7 +362,7 @@ body
     margin-bottom: 2px;
 }
 
-.combatname
+.combat-name
 {
     position: absolute;
     right: 1px;
@@ -373,11 +373,11 @@ body
     overflow: hidden;    
 }
 
-.combatname:first-letter {
+.combat-name:first-letter {
     text-transform:capitalize;
 }
 
-.combaticon
+.combat-icon
 {
     height: 32px;
     width: 32px;
@@ -386,7 +386,7 @@ body
     border: 1px solid #908271;    
 }
 
-.combatbar .progressbar
+.combat-bar .progressbar
 {
     position: absolute;
     right: 1px;
@@ -396,7 +396,7 @@ body
     width: auto;
 }
 
-.combatbar .progressbar .progressbar-text
+.combat-bar .progressbar .progressbar-text
 {
     left: 0;
 }

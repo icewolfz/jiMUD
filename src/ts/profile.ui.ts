@@ -1,3 +1,4 @@
+//cSpell:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt
 import { shell, remote, ipcRenderer } from 'electron';
 const { dialog, Menu, MenuItem } = remote;
 import { FilterArrayByKeyValue, parseTemplate, keyCharToCode, keyCodeToChar, clone } from './library';
@@ -13,7 +14,7 @@ var profiles = new ProfileCollection();
 var currentProfile;
 var currentNode;
 var watcher;
-var fchanged = false;
+var filesChanged = false;
 var _clip, _pUndo;
 var _undo = [], _redo = [];
 var _remove = [];
@@ -26,41 +27,41 @@ enum UpdateState {
     Error
 }
 
-const addmenu = new Menu();
-addmenu.append(new MenuItem({
+const addMenu = new Menu();
+addMenu.append(new MenuItem({
     label: 'Add empty profile', click() {
-        clearButton("#addmenu");
+        clearButton("#btn-add-dropdown");
         AddNewProfile();
     }
 }));
-addmenu.append(new MenuItem({
+addMenu.append(new MenuItem({
     label: 'Add profile with defaults', click() {
-        clearButton("#addmenu");
+        clearButton("#btn-add-dropdown");
         AddNewProfile(true);
     }
 }));
-addmenu.append(new MenuItem({ type: 'separator' }));
-addmenu.append(new MenuItem({
+addMenu.append(new MenuItem({ type: 'separator' }));
+addMenu.append(new MenuItem({
     label: 'Add alias', click() {
-        clearButton("#addmenu");
+        clearButton("#btn-add-dropdown");
         addItem('Alias', 'aliases', new Alias());
     }
 }));
-addmenu.append(new MenuItem({
+addMenu.append(new MenuItem({
     label: 'Add macro', click() {
-        clearButton("#addmenu");
+        clearButton("#btn-add-dropdown");
         addItem('Macro', 'macros', new Macro());
     }
 }));
-addmenu.append(new MenuItem({
+addMenu.append(new MenuItem({
     label: 'Add trigger', click() {
-        clearButton("#addmenu");
+        clearButton("#btn-add-dropdown");
         addItem('Trigger', 'triggers', new Trigger());
     }
 }));
-addmenu.append(new MenuItem({
+addMenu.append(new MenuItem({
     label: 'Add button', click() {
-        clearButton("#addmenu");
+        clearButton("#btn-add-dropdown");
         addItem('Button', 'buttons', new Button())
     }
 }));
@@ -332,7 +333,7 @@ function GetDisplay(arr) {
     return arr[arr.display];
 }
 
-function addItem(type: string, key: string, item, idx?: number, profile?: Profile, customundo?: boolean) {
+function addItem(type: string, key: string, item, idx?: number, profile?: Profile, customUndo?: boolean) {
     if (!profile)
         profile = currentProfile;
     if (!idx && typeof idx !== "number")
@@ -344,7 +345,7 @@ function addItem(type: string, key: string, item, idx?: number, profile?: Profil
     var nodes = [newItemNode(item, idx, type, profile)];
     $('#profile-tree').treeview('addNode', [nodes, n, false, { silent: false }]);
     $('#profile-tree').treeview('selectNode', [nodes, { silent: false }]);
-    if (!customundo)
+    if (!customUndo)
         pushUndo({ action: 'add', type: type.toLowerCase(), item: item.clone(), data: { type: type, key: key, item: item, idx: idx, profile: profile.name.toLowerCase() } });
 }
 
@@ -424,28 +425,28 @@ export function UpdateEnabled() {
     }
 }
 
-function UpdateItemNode(item, unode?) {
-    if (!unode)
-        unode = currentNode;
-    else if (typeof unode == 'string')
-        unode = $('#profile-tree').treeview('findNodes', ['^' + unode + "$", 'id'])[0];
-    var selected = unode.state.selected || unode.id == currentNode.id;
+function UpdateItemNode(item, updateNode?) {
+    if (!updateNode)
+        updateNode = currentNode;
+    else if (typeof updateNode == 'string')
+        updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode + "$", 'id'])[0];
+    var selected = updateNode.state.selected || updateNode.id == currentNode.id;
     //clone node
-    var newNode = cloneNode(unode);
+    var newNode = cloneNode(updateNode);
     //only text or check state effect node
     newNode.text = GetDisplay(item);
     newNode.state.checked = item.enabled;
-    //refind node just in case
-    //var node = $('#profile-tree').treeview('findNodes', ['^' + unode.id + "$", 'id'])[0];
-    $('#profile-tree').treeview('updateNode', [unode, newNode]);
+    //re-find node just in case
+    //var node = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + "$", 'id'])[0];
+    $('#profile-tree').treeview('updateNode', [updateNode, newNode]);
     if (selected) {
-        unode = $('#profile-tree').treeview('findNodes', ['^' + unode.id + "$", 'id'])[0];
-        $('#profile-tree').treeview('selectNode', [unode, { silent: true }]);
-        if (unode.id == currentNode.id)
-            currentNode = unode;
+        updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + "$", 'id'])[0];
+        $('#profile-tree').treeview('selectNode', [updateNode, { silent: true }]);
+        if (updateNode.id == currentNode.id)
+            currentNode = updateNode;
     }
-    if (unode.id == currentNode.id)
-        $("#editor-title").text(unode.dataAttr.type + ": " + unode.text)
+    if (updateNode.id == currentNode.id)
+        $("#editor-title").text(updateNode.dataAttr.type + ": " + updateNode.text)
 }
 
 function getEditorValue(editor, style: ItemStyle) {
@@ -475,7 +476,7 @@ export function UpdateEditorMode(type) {
     }
 }
 
-function UpdateMacro(customundo?: boolean): UpdateState {
+function UpdateMacro(customUndo?: boolean): UpdateState {
     var data: any = UpdateItem(currentProfile.macros[currentNode.dataAttr.index], 'macro', { key: true });
     if (currentProfile.macros[currentNode.dataAttr.index].key != parseInt($("#macro-key").data('key'), 10)) {
         if (!data) data = {};
@@ -490,44 +491,44 @@ function UpdateMacro(customundo?: boolean): UpdateState {
     if (data) {
         UpdateItemNode(currentProfile.macros[currentNode.dataAttr.index]);
         $("#editor-title").text("Macro: " + GetDisplay(currentProfile.macros[currentNode.dataAttr.index]));
-        if (!customundo)
+        if (!customUndo)
             pushUndo({ action: 'update', type: 'macro', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
         return UpdateState.Changed;
     }
     return UpdateState.NoChange;
 }
 
-function UpdateAlias(customundo?: boolean): UpdateState {
+function UpdateAlias(customUndo?: boolean): UpdateState {
     var data: any = UpdateItem(currentProfile.aliases[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.aliases[currentNode.dataAttr.index]);
         $("#editor-title").text("Alias: " + GetDisplay(currentProfile.aliases[currentNode.dataAttr.index]));
-        if (!customundo)
+        if (!customUndo)
             pushUndo({ action: 'update', type: 'alias', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
         return UpdateState.Changed;
     }
     return UpdateState.NoChange;
 }
 
-function UpdateTrigger(customundo?: boolean): UpdateState {
+function UpdateTrigger(customUndo?: boolean): UpdateState {
     var data: any = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index]);
         $("#editor-title").text("Trigger: " + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]))
-        if (!customundo)
+        if (!customUndo)
             pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
         return UpdateState.Changed;
     }
     return UpdateState.NoChange;
 }
 
-function UpdateButton(customundo?: boolean): UpdateState {
+function UpdateButton(customUndo?: boolean): UpdateState {
     var data: any = UpdateItem(currentProfile.buttons[currentNode.dataAttr.index]);
     if (data) {
         UpdateButtonSample();
         UpdateItemNode(currentProfile.buttons[currentNode.dataAttr.index]);
         $("#editor-title").text("Button: " + GetDisplay(currentProfile.buttons[currentNode.dataAttr.index]))
-        if (!customundo)
+        if (!customUndo)
             pushUndo({ action: 'update', type: 'button', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
         return UpdateState.Changed;
     }
@@ -626,14 +627,14 @@ function UpdateProfileNode(profile?) {
         }
     }
     $('#profile-tree').treeview('updateNode', [node, newNode]);
-    //reselect node to get the new object for proper data
+    //re-select node to get the new object for proper data
     node = $('#profile-tree').treeview('findNodes', ['^' + newNode.id + "$", 'id'])[0];
-    //if was selected reselect
+    //if was selected re-select
     if (selected) {
         $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
         currentNode = node;
     }
-    //if expanded reexpand
+    //if expanded re-expand
     if (expanded)
         $('#profile-tree').treeview('expandNode', [node]);
 }
@@ -759,7 +760,7 @@ function cleanNode(node) {
     return node;
 }
 
-function UpdateProfile(customundo?: boolean): UpdateState {
+function UpdateProfile(customUndo?: boolean): UpdateState {
     var data: any = {};
     var changed = 0;
     var val;
@@ -859,7 +860,7 @@ function UpdateProfile(customundo?: boolean): UpdateState {
     else
         $("#profile-tree").treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "buttons$", 'id'])]);
 
-    if (changed > 0 && !customundo) {
+    if (changed > 0 && !customUndo) {
         pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: data });
         return UpdateState.Changed;
     }
@@ -1161,24 +1162,24 @@ export function doUndo() {
         case 'reset':
             var name = action.profile.name.toLowerCase();
             var id = profileID(action.profile.name);
-            var cprofile = profiles.items[name];
+            var oldProfile = profiles.items[name];
             profiles.items[name] = action.profile;
             var node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(id) + "$", 'id'])[0];
             var newNode = newProfileNode(action.profile);
             var selected = node.state.selected
             var expanded = node.state.expanded
             $('#profile-tree').treeview('updateNode', [node, newNode]);
-            //reselect node to get the new object for proper data
+            //re-select node to get the new object for proper data
             node = $('#profile-tree').treeview('findNodes', ['^' + newNode.id + "$", 'id'])[0];
-            //if was selected reselect
+            //if was selected re-select
             if (selected) {
                 $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
                 currentNode = node;
             }
-            //if expanded reexpand
+            //if expanded re-expand
             if (expanded)
                 $('#profile-tree').treeview('expandNode', [node]);
-            action.profile = cprofile;
+            action.profile = oldProfile;
             break;
     }
     _redo.push(action);
@@ -1344,24 +1345,24 @@ export function doRedo() {
         case 'reset':
             var name = action.profile.name.toLowerCase();
             var id = profileID(action.profile.name);
-            var cprofile = profiles.items[name];
+            var oldProfile = profiles.items[name];
             profiles.items[name] = action.profile;
             var node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(id) + "$", 'id'])[0];
             var newNode = newProfileNode(action.profile);
             var selected = node.state.selected
             var expanded = node.state.expanded
             $('#profile-tree').treeview('updateNode', [node, newNode]);
-            //reselect node to get the new object for proper data
+            //re-select node to get the new object for proper data
             node = $('#profile-tree').treeview('findNodes', ['^' + newNode.id + "$", 'id'])[0];
-            //if was selected reselect
+            //if was selected re-select
             if (selected) {
                 $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
                 currentNode = node;
             }
-            //if expanded reexpand
+            //if expanded re-expand
             if (expanded)
                 $('#profile-tree').treeview('expandNode', [node]);
-            action.profile = cprofile;
+            action.profile = oldProfile;
             break;
     }
     _undo.push(action);
@@ -1745,7 +1746,7 @@ export function init() {
         if (!profiles.contains('default'))
             profiles.add(Profile.Default);
         watcher = fs.watch(p, (type, file) => {
-            fchanged = true;
+            filesChanged = true;
             $('#btn-refresh').addClass('btn-warning');
         })
     }
@@ -2028,14 +2029,14 @@ export function init() {
         c.popup(remote.getCurrentWindow());
     });
 
-    $('#dragbar').mousedown(function (e) {
+    $('#drag-bar').mousedown(function (e) {
         e.preventDefault();
 
         dragging = true;
         var main = $('#content');
-        var ghostbar = $('<div>',
+        var ghostBar = $('<div>',
             {
-                id: 'ghostbar',
+                id: 'ghost-bar',
                 css: {
                     height: main.outerHeight(),
                     top: main.offset().top,
@@ -2045,11 +2046,11 @@ export function init() {
 
         $(document).mousemove(function (e) {
             if (e.pageX < 199)
-                ghostbar.css("left", 199);
+                ghostBar.css("left", 199);
             else if (e.pageX > document.body.clientWidth - 300)
-                ghostbar.css("left", document.body.clientWidth - 300);
+                ghostBar.css("left", document.body.clientWidth - 300);
             else
-                ghostbar.css("left", e.pageX);
+                ghostBar.css("left", e.pageX);
         });
 
     });
@@ -2080,7 +2081,7 @@ export function init() {
                 ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: e.pageX + 2 });
             }
 
-            $('#ghostbar').remove();
+            $('#ghost-bar').remove();
             $(document).unbind('mousemove');
             dragging = false;
         }
@@ -2096,7 +2097,7 @@ export function init() {
         var pos = $(this).offset();
         var x = Math.floor(pos.left);
         var y = Math.floor(pos.top + $(this).outerHeight() + 2);
-        addmenu.popup(remote.getCurrentWindow(), x, y);
+        addMenu.popup(remote.getCurrentWindow(), x, y);
     });
 
     $("#macro-key").keydown(function (e) {
@@ -2289,7 +2290,7 @@ function loadActions(p, root) {
         if (fs.lstatSync(path.join(p, files[f])).isDirectory())
             loadActions(path.join(p, files[f]), path.join(root, files[f]));
         else
-            $("#button-actions-dropdown").append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="profileui.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\')"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
+            $("#button-actions-dropdown").append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="profileUI.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\')"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
     }
 }
 
@@ -2308,7 +2309,7 @@ export function doRefresh() {
             defaultId: 1,
         }, (response) => {
             if (response == 0) {
-                fchanged = false;
+                filesChanged = false;
                 resetUndo();
                 profiles = new ProfileCollection();
                 $('#btn-refresh').removeClass('btn-warning');
@@ -2323,7 +2324,7 @@ export function doRefresh() {
                     if (watcher)
                         watcher.close();
                     watcher = fs.watch(p, (type, file) => {
-                        fchanged = true;
+                        filesChanged = true;
                         $('#btn-refresh').addClass('btn-warning');
                     });
                 }
@@ -2331,7 +2332,7 @@ export function doRefresh() {
             }
         });
     else {
-        fchanged = false;
+        filesChanged = false;
         resetUndo();
         profiles = new ProfileCollection();
         $('#btn-refresh').removeClass('btn-warning');
@@ -2346,7 +2347,7 @@ export function doRefresh() {
             if (watcher)
                 watcher.close();
             watcher = fs.watch(p, (type, file) => {
-                fchanged = true;
+                filesChanged = true;
                 $('#btn-refresh').addClass('btn-warning');
             });
         }
@@ -2482,7 +2483,7 @@ function trashProfiles(p) {
 export function saveProfiles() {
     if (updateCurrent() != UpdateState.NoChange)
         return false;
-    if (fchanged)
+    if (filesChanged)
         dialog.showMessageBox(remote.getCurrentWindow(), {
             type: 'question',
             title: 'Profiles updated',
@@ -2514,7 +2515,7 @@ export function saveProfiles() {
 
 function clearChanges() {
     resetUndo();
-    fchanged = false;
+    filesChanged = false;
     $('#btn-refresh').removeClass('btn-warning');
 }
 
@@ -2662,10 +2663,10 @@ function DeleteProfileConfirm(profile) {
     })
 }
 
-function DeleteProfile(profile, customundo?: boolean) {
+function DeleteProfile(profile, customUndo?: boolean) {
     if (!profile) profile = currentProfile;
     _remove.push(profile.name);
-    if (!customundo)
+    if (!customUndo)
         pushUndo({ action: 'delete', type: 'profile', item: profile });
     var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + '$', 'id']);
     if (profile.name == currentProfile.name)
@@ -2709,10 +2710,10 @@ function DeleteItemConfirm(type, key, idx, profile) {
     })
 }
 
-function DeleteItem(type: string, key: string, idx: number, profile?: Profile, customundo?: boolean) {
+function DeleteItem(type: string, key: string, idx: number, profile?: Profile, customUndo?: boolean) {
     var il, i, node, newNode, selected, item, name;
     if (!profile) profile = currentProfile;
-    if (!customundo)
+    if (!customUndo)
         pushUndo({ action: 'delete', type: type, data: { key: key, idx: idx, profile: profile.name.toLowerCase() }, item: profile[key][idx] });
     name = profileID(profile.name);
     node = $("#profile-tree").treeview('findNodes', ["Profile" + name + key + idx, 'id']);
@@ -2944,13 +2945,13 @@ function MacroValue(item, prop, el) {
     el.data('mod', item.modifiers);
 }
 
-function insertItem(type: string, key: string, item, idx: number, profile?: Profile, customundo?: boolean) {
+function insertItem(type: string, key: string, item, idx: number, profile?: Profile, customUndo?: boolean) {
     _loading++;
     if (!profile)
         profile = currentProfile;
     if (!idx)
         idx = profile[key].length;
-    //clera current node as no longer valid
+    //clear current node as no longer valid
     currentNode = null;
     type = type.toLowerCase();
     //fine parent node
@@ -2982,7 +2983,7 @@ function insertItem(type: string, key: string, item, idx: number, profile?: Prof
     $('#profile-tree').treeview('addNode', [nodes, n, idx, { silent: true }]);
     //select the newest node
     $('#profile-tree').treeview('selectNode', [[nodes[0]], { silent: false }]);
-    if (!customundo)
+    if (!customUndo)
         pushUndo({ action: 'add', type: type, item: item.clone(), data: { type: type, key: key, item: item, idx: idx, profile: profile.name.toLowerCase() } });
     _loading--;
 }

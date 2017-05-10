@@ -1,3 +1,4 @@
+// cSpell:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR
 import EventEmitter = require('events');
 import net = require("net");
 import util = require("util");
@@ -58,14 +59,14 @@ export interface TelnetOptionsServer {
  * @namespace Telnet
  * @constructor
  * @param {Object} options				- The options to start off with
- * @param {Object} options.host			- The host to connet to
- * @param {Object} options.port			- The port to connet to
+ * @param {Object} options.host			- The host to connect to
+ * @param {Object} options.port			- The port to connect to
  *
  * @todo add ZMP support
  * @todo add ENVIRON/NEWENVIRON exactly the same, but for var/value reversed, and there are rules to detect this so just treat ENVIRON as NEWENVIRON
  * @todo add ATCP support similar to GMCP
  * @todo add MSDP table/array support
- * @todo add MCP (Mud client protocol) - encodes protocal in text that is processed out and seperates into an in bound (normal text), and out of bound (protocol data) see  http://www.moo.mud.org/mcp/
+ * @todo add MCP (Mud client protocol) - encodes protocol in text that is processed out and separates into an in bound (normal text), and out of bound (protocol data) see http://www.moo.mud.org/mcp/
  *
  * @property {Object}  options						- The telnet options to enable or disable
  * @property {Boolean} [options.ECHO=1]				- Enable/disable Echo (1)
@@ -78,7 +79,7 @@ export interface TelnetOptionsServer {
  * @property {Boolean} [options.MCCP=1]				- Enable/disable MUD Compression Protocol (MCCP) (85/86)
  * @property {Boolean} [options.MXP=1]				- Enable/disable MUD eXtension Protocol  (MXP) (91)
  * @property {Boolean} [options.ZMP=0]				- Enable/disable Zenith MUD Protocol (ZMP) (93)
- * @property {Boolean} [options.GMCP=1]				- Enable/disable Generic Mud Commuication Protocol/ATCP2 protocal (GMCP) (201)
+ * @property {Boolean} [options.GMCP=1]				- Enable/disable Generic Mud Communication Protocol/ATCP2 protocol (GMCP) (201)
  * @property {Boolean} [options.ATCP=0]				- Enable/disable Achaea Telnet Client Protocol (ATCP) (200)
  * @property {Boolean} [options.CHARSET=1]		    - Enable/disable CHARSET enabled, and which type, 1 is UTF-8 
  * @property {Object}  server						- The telnet options the server has enabled or disabled
@@ -103,11 +104,11 @@ export interface TelnetOptionsServer {
  * @property {String}  version						- The version of the client to send for GMCP Core.Hello
  * @property {String}  [terminal=ansi]				- The terminal type to send the first time for TTYPE
  * @property {Boolean} [UTF8=true]					- Force process data after telnet options as UTF8 character
- * @property {Object}  [MSSP={}]					- MSSP object that contains all varibales and thier assigned values.
- * @property {Object}  [socket=null]				- The socket object, flash bride, future websockets
+ * @property {Object}  [MSSP={}]					- MSSP object that contains all variables and their assigned values.
+ * @property {Object}  [socket=null]				- The websocket object
  * @property {Number}  [latency=0]					- The milliseconds between the last send and the current received data
- * @property {Boolean} [enableLatency=false]	    - Attempt to calculate the latency between a send/receive, and if sent on receive send a GMCP ping back and atetmpt to get latency of a connection
- * @property {Number}  [latencyAvg=0]				- The averge milliseconds between the last send and the current received data 
+ * @property {Boolean} [enableLatency=false]	    - Attempt to calculate the latency between a send/receive, and if sent on receive send a GMCP ping back and attempt to get latency of a connection
+ * @property {Number}  [latencyAvg=0]				- The average milliseconds between the last send and the current received data 
  * @property {Number}  [enablePing=false]			- Enable GMCP ping back to better track latency 
  * @property {Array}   GMCPSupports					- An array of supported GMCP modules for mat of "Modulate 0|1", defaults are "Core 1", "Char 1", "Char.Vitals 1", "Char.Experience 1"
  */
@@ -115,7 +116,7 @@ export class Telnet extends EventEmitter {
     private _splitBuffer: number[] = [];
     private _connected: boolean = false;
     private _MTTS: number = 0;
-    private zstream: any = 0;
+    private zStream: any = 0;
     private _latencyTime: Date = null;
     private _doPing: boolean = false;
     private _closed: boolean = true;
@@ -181,7 +182,7 @@ export class Telnet extends EventEmitter {
 
     /**
          * @name Telnet#reset 
-         * @desc reset state in preperation for a connect
+         * @desc reset state in preparation for a connect
          */
     reset() {
         this._MTTS = 0;
@@ -216,7 +217,7 @@ export class Telnet extends EventEmitter {
 
     /**
      * @name Telnet#close 
-     * @desc close the connection ot host and reset state in preperation for next connection
+     * @desc close the connection ot host and reset state in preparation for next connection
      *
      * @fires Telnet#close
      */
@@ -257,13 +258,13 @@ export class Telnet extends EventEmitter {
             }
         }
         if (this.enableDebug)
-            this.emit('debug', "PreProccess:" + data, 1);
+            this.emit('debug', "PreProcess:" + data, 1);
         data = this.processData(data);
         if (this.enableDebug)
-            this.emit('debug', "PostProccess:" + data, 1);
+            this.emit('debug', "PostProcess:" + data, 1);
         this.emit('receivedData', data);
         if (this.enableLatency) {
-            //split packet more then likly so reset timer for next part
+            //split packet more then likely so reset timer for next part
             if (this._splitBuffer.length > 0) {
                 if (this.enablePing) this._doPing = true;
                 this._latencyTime = null;
@@ -310,7 +311,7 @@ export class Telnet extends EventEmitter {
      * @desc Send data to the host
      *
      * @param {String} data string to send
-     * @param {Boolean} raw send raw unescaped telnet data to host, other wise it will escate the IAC for proper telnet
+     * @param {Boolean} raw send raw unescaped telnet data to host, other wise it will escape the IAC for proper telnet
      * @fires Telnet#dataSent
      */
     sendData(data: any, raw?: boolean) {
@@ -370,7 +371,7 @@ export class Telnet extends EventEmitter {
             _sb = [];
             len = data.length;
         }
-        var state: number = 0, pstate: number = 0;
+        var state: number = 0, pState: number = 0;
         var processed: (Buffer | any[]) = [];
 
         var ga: boolean = this.prompt;
@@ -420,7 +421,7 @@ export class Telnet extends EventEmitter {
                             _sb = [];
                             state = 0;
                         }
-                        else if (i === 241 || i === 130) //no opertaion, just continue on
+                        else if (i === 241 || i === 130) //no operation, just continue on
                         {
                             if (this.enableDebug) {
                                 this.emit('debug', debugOp + "<NOP>");
@@ -438,7 +439,7 @@ export class Telnet extends EventEmitter {
                                     this.emit('debug', debugOp + "<GA>");
                                 debugOp = "";
                             }
-                            //more data to read, so ga means nothign but a new line
+                            //more data to read, so ga means nothing but a new line
                             if (idx + 1 < len && len - idx > 2) {
                                 processed.push(10);
                                 this.prompt = false;
@@ -463,7 +464,7 @@ export class Telnet extends EventEmitter {
                             verb = i;
                             state = 2;
                         }
-                        else if (i === 250) // Subnegotiation
+                        else if (i === 250) // Sub negotiation
                         {
                             if (this.enableDebug) debugOp += "<SB>";
                             _sb.push(i);
@@ -993,7 +994,7 @@ export class Telnet extends EventEmitter {
                             _sb = [];
                         }
                         break;
-                    case 3: // Subnegotiation
+                    case 3: // Sub negotiation
                         option = i;
                         if (i === 24) // TERMINALTYPE
                         {
@@ -1085,7 +1086,7 @@ export class Telnet extends EventEmitter {
                                 tmp = false;
                                 this._fireReceiveOption(option, 250, "");
                                 if (!tmp) {
-                                    this.sendTerminal();//sending it once doesnt seem to work, sending it a 2nd time seems to regisiter it correctly
+                                    this.sendTerminal();//sending it once doesn't seem to work, sending it a 2nd time seems to register it correctly
                                     this.sendTerminal();
                                     this._MTTS++;
                                 }
@@ -1149,7 +1150,7 @@ export class Telnet extends EventEmitter {
                             _sb.push(i);
                         }
                         break;
-                    case 7: // GMCP Sub Subnegotiation
+                    case 7: // GMCP Sub Sub negotiation
                         if (i === 255) {
                             if (this.enableDebug) debugOp += "<IAC>";
                             _sb.push(i);
@@ -1171,7 +1172,7 @@ export class Telnet extends EventEmitter {
                             _sb.push(i);
                         }
                         break;
-                    case 8: // MSSP Subnegotiation
+                    case 8: // MSSP Sub negotiation
                         if (i === 255) {
                             if (this.enableDebug) debugOp += "<IAC>";
                             _sb.push(i);
@@ -1250,7 +1251,7 @@ export class Telnet extends EventEmitter {
                             _sb.push(i);
                         }
                         break;
-                    case 11: // MCCP Subnegotiation
+                    case 11: // MCCP Sub negotiation
                         if (i === 255) {
                             if (this.enableDebug) debugOp += "<IAC>";
                             _sb.push(i);
@@ -1269,7 +1270,7 @@ export class Telnet extends EventEmitter {
                             idx = len;
                         }
                         break;
-                    case 12: // NEWEVIRON Sub Subnegotiation
+                    case 12: // NEWENVIRON Sub sub negotiation
                         if (i === 255) {
                             if (this.enableDebug) debugOp += "<IAC>";
                             _sb.push(i);
@@ -1347,7 +1348,7 @@ export class Telnet extends EventEmitter {
                                 debugOp = "";
                             }
                             tmp = this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
-                            this.emit('receiveNEWEVIRON', msdp_val);
+                            this.emit('receiveNEWENVIRON', msdp_val);
                             //custom handled so dont do defaults
                             if (!tmp) {
                                 if (this.enableDebug) this.emit('debug', "REPLY: <IAC><SB><NEWENVIRON><IS><IAC><SE>");
@@ -1369,7 +1370,7 @@ export class Telnet extends EventEmitter {
                             if (this.enableDebug) debugOp += this._formatByte(i);
                             _sb.push(i);
                             state = 15;
-                            pstate = 14;
+                            pState = 14;
                         }
                         else if (i == 255 || i <= 3) {
                             idx--;
@@ -1383,11 +1384,11 @@ export class Telnet extends EventEmitter {
                         break;
                     case 15:
                         if (this.enableDebug) debugOp += this._formatByte(i);
-                        if (pstate === 16)
+                        if (pState === 16)
                             msdp_val += String.fromCharCode(i);
                         else
                             msdp_var += String.fromCharCode(i);
-                        state = pstate;
+                        state = pState;
                         _sb.push(i);
                         break;
                     case 16:
@@ -1478,7 +1479,7 @@ export class Telnet extends EventEmitter {
         //if processed and was prev goAhead, it needs to starts a new line to correctly end goAhead
         if (ga && processed.length > 0)
             processed.unshift(10)
-        else if (ga)  //goahead wasnt effected and if prev true, so reset back to true
+        else if (ga)  //go ahead wasn't effected and if prev true, so reset back to true
             this.prompt = true;
         if (processed.length > 0)
             this.firstReceived = false;
@@ -1555,7 +1556,7 @@ export class Telnet extends EventEmitter {
 
     /**
      * @name Telnet#startGMCP 
-     * @desc Start GMCP and send Core.Hellow and Core.Support.Set
+     * @desc Start GMCP and send Core.Hello and Core.Support.Set
      */
     private _startGMCP() {
         if (this.server.GMCP) {
@@ -1597,7 +1598,7 @@ export class Telnet extends EventEmitter {
      */
     private _endMCCP() {
         this._zlib = false;
-        this.zstream = 0;
+        this.zStream = 0;
     }
 
     /**
@@ -1605,32 +1606,21 @@ export class Telnet extends EventEmitter {
      * @desc Decompresses a ZLIB stream if ZLIB is present and compress state is on
      *
      * @param {String} data The compressed data string
-     * @returns {String} The decompressed data or the oringal data i ZLIB is not found or compress state is off
+     * @returns {String} The decompressed data or the original data i ZLIB is not found or compress state is off
      */
     private _decompressData(data) {
         if (!this._zlib) return data;
-        if (!this.zstream)
-            this.zstream = new ZLIB.InflateStream();
+        if (!this.zStream)
+            this.zStream = new ZLIB.InflateStream();
         if (this.enableDebug) this.emit('debug', "Pre decompress:" + data.toString('binary'), 1);
-        data = this.zstream.decompress(data);
+        data = this.zStream.decompress(data);
         if (this.enableDebug) this.emit('debug', "Post decompress:" + data.toString('binary'), 1);
         return new Buffer(data, 'binary');
-        /*
-        if (this.enableDebug) this.emit('debug', "zlib enabled:" + this.zlib, 1);
-        if (!this.zlib) return data;        
-        if (this.enableDebug) this.emit('debug', "Pre decompress:" + data.toString('binary'), 1);
-        if (!this.zstream) this.zstream = new zlib.InflateStream();
-        if (this.enableDebug) this.emit('debug', "ZStream:" +  this.zstream, 1);        
-        data = this.zstream.decompress(data);        
-        if (this.enableDebug) this.emit('debug', "Post decompress:" + data.toString('binary'), 1);
-        if (this.enableDebug) this.emit('debug', "zlib enabled:" + this.zlib, 1);
-        return data;
-        */
     }
 
     /**
      * @name Telnet#escapeData 
-     * @desc Escape data for sending over telent, IAC should becomine IAC IAC and \r to \r\0 and \n to \r\n
+     * @desc Escape data for sending over telnet, IAC should become IAC IAC and \r to \r\0 and \n to \r\n
      *
      * @param {String} data the data to be escaped
      * @returns {String} the data after being escaped

@@ -1,7 +1,9 @@
+//cSpell:ignore Eisu, Junja, Hanja, Nonconvert, Modechange, printscreen, jisho, Masshou, Touroku, loya, roya
+//cSpell:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel,  Ereof
 const path = require('path');
 const { app } = require('electron').remote;
 
-export function SortArrayByPrioity(a, b) {
+export function SortArrayByPriority(a, b) {
 	if (a.priority > b.priority)
 		return -1;
 	if (a.priority < b.priority)
@@ -17,7 +19,7 @@ export function FilterArrayByKeyValue(array, k, v) {
 			res.push(array[i]);
 	}
 	if (res.length <= 1) return res;
-	return res.sort(SortArrayByPrioity);
+	return res.sort(SortArrayByPriority);
 }
 
 export function htmlEncode(value) {
