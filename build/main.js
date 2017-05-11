@@ -789,7 +789,7 @@ function createWindow() {
     //createEditor();
     if (set.showChat)
       showChat();
-    else if (set.chat.captureTells || set.chat.captureTalk || chat.captureLines)
+    else if (set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
       createChat();
   })
 
@@ -999,7 +999,7 @@ ipcMain.on('setting-changed', (event, data) => {
     if (!windows[r].hasOwnProperty(name) && windows[name].window)
       continue;
     windows[name].window.setSkipTaskbar((set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false);
-    if(windows[name].cache)
+    if (windows[name].cache)
       createNewWindow(name);
   }
 })
@@ -1047,16 +1047,23 @@ ipcMain.on('show-window', (event, window) => {
     showProfiles();
   else if (window == "chat")
     showChat();
-  for (var name in windows) {
-    if (!windows[r].hasOwnProperty(name) && windows[name].window)
-      continue;
-    showWindow(name, windows[name]);
-  }
+  if (windows[window] && windows[window].window)
+    showWindow(window, windows[window]);
 });
 
 ipcMain.on('import-map', (event, data) => {
   if (winMap)
     winMap.webContents.send('import', data);
+});
+
+ipcMain.on('flush', (event) => {
+  if (winMap)
+    winMap.webContents.send('flush');
+});
+
+ipcMain.on('flush-end', (event) => {
+  if (winMap)
+    win.webContents.send('flush-end');
 });
 
 function updateMenuItem(args) {

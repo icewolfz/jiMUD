@@ -20,6 +20,9 @@
 ## Mapper 
 * Add room exist and coords/zone check x/y/z/zone and if room found bump zone context menu, right click room list a remove room option, maybe exports
 * Add a file menu and add all the features from the toolbar?
+* Add a periodic saving of mapper while in memory mode
+  * maybe work it on some type of idle timer and onyl flush when idle 
+* a bug when 2 mappers open, seems thet receive ipc from all clients
 ## Profile manager
 * Add backup systems to allow easier backup/export of profiles with out the need to open file explorer
 * Maybe add a file menu ?

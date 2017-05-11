@@ -102,6 +102,7 @@ export class Mapper extends EventEmitter {
     private _context;
     private _redraw: boolean = false;
     private _db;
+    private _changed: boolean = false;
     private MousePrev: MouseData;
     private Mouse: MouseData;
     private MouseDown: MouseData;
@@ -196,6 +197,7 @@ export class Mapper extends EventEmitter {
         if (memory) {
             this._memory = memory;
             this._db = new sqlite3.Database(":memory:");
+            setInterval(this.save, 900000);
         }
         else
             this._db = new sqlite3.Database(path.join(parseTemplate("{data}"), "map.sqlite"));
@@ -568,6 +570,7 @@ export class Mapper extends EventEmitter {
                 this.emit('remove-done', room);
                 this.reset(1);
                 this.refresh();
+                this._changed = true;
             });
         });
 
@@ -587,6 +590,7 @@ export class Mapper extends EventEmitter {
                 this.emit('clear-area-done', this.active.area);
                 this.reset();
                 this.refresh();
+                this._changed = true;
             })
         });
     }
@@ -598,6 +602,7 @@ export class Mapper extends EventEmitter {
                 this.reset();
                 this.refresh();
                 this.focusActiveRoom();
+                this._changed = true;
             })
         })
     }
@@ -675,6 +680,7 @@ export class Mapper extends EventEmitter {
                     else
                         room.zone += this.getFreeZone(room.x, room.y, room.z, this.current.zone);
                     this._db.run("INSERT INTO Rooms (ID) values ('" + data.num + "')");
+                    this._changed = true;
                 }
                 else {
                     room = {
@@ -781,6 +787,7 @@ export class Mapper extends EventEmitter {
             ], (err) => {
                 if (err)
                     this.emit('error', err);
+                this._changed = true;
             });
         this._db.run("Delete From Exits WHERE ID = ?", [room.ID || room.num]);
         var stmt = this._db.prepare("INSERT INTO Exits VALUES (?, ?, ?, ?, ?)");
@@ -788,6 +795,7 @@ export class Mapper extends EventEmitter {
             stmt.run(room.ID, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
         stmt.finalize();
+        this._changed = true;
         //});
     }
 
@@ -810,6 +818,7 @@ export class Mapper extends EventEmitter {
                 if (err)
                     this.emit('error', err);
                 this.refresh();
+                this._changed = true;
             });
         //this._db.run("Delete From Exits WHERE ID = ?", [room.ID || room.num]);
         var stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
@@ -818,6 +827,7 @@ export class Mapper extends EventEmitter {
         }
         stmt.finalize();
         this.refresh();
+        this._changed = true;
     }
 
     processGMCP(mod: string, obj) {
@@ -1627,6 +1637,7 @@ export class Mapper extends EventEmitter {
                     //this.refresh();
                     //this.focusActiveRoom();
                     this.import(data, ImportType.Merge);
+                    this._changed = true;
                 })
             })
         }
@@ -1642,6 +1653,7 @@ export class Mapper extends EventEmitter {
                     for (r = 0; r < rl; r++) {
                         if (this._cancelImport) {
                             stmt2.finalize();
+                            this._changed = true;
                             return;
                         }
                         if (!data[r]) continue;
@@ -1663,6 +1675,7 @@ export class Mapper extends EventEmitter {
                                 if (this._cancelImport) {
                                     this.refresh();
                                     this.focusActiveRoom();
+                                    this._changed = true;
                                     return;
                                 }
                                 this.emit('import-progress', Math.floor(r / rl * 100));
@@ -1680,6 +1693,7 @@ export class Mapper extends EventEmitter {
                                     if (this._cancelImport) {
                                         this.refresh();
                                         this.focusActiveRoom();
+                                        this._changed = true;
                                         return;
                                     }
                                     this.emit('import-progress', Math.floor(idx / rl * 100));
@@ -1694,6 +1708,7 @@ export class Mapper extends EventEmitter {
                         stmt.finalize();
                     }
                     stmt2.finalize();
+                    this._changed = true;
                     //this.emit('import-progress', 100);
                 }
                 else {
@@ -1704,6 +1719,7 @@ export class Mapper extends EventEmitter {
                     for (r in data) {
                         if (this._cancelImport) {
                             stmt2.finalize();
+                            this._changed = true;
                             return;
                         }
                         if (!data.hasOwnProperty(r) || !data[r]) continue;
@@ -1730,6 +1746,7 @@ export class Mapper extends EventEmitter {
                                 if (this._cancelImport) {
                                     this.refresh();
                                     this.focusActiveRoom();
+                                    this._changed = true;
                                     return;
                                 }
                                 this.emit('import-progress', Math.floor(idx / rl * 100));
@@ -1748,6 +1765,7 @@ export class Mapper extends EventEmitter {
                                     if (this._cancelImport) {
                                         this.refresh();
                                         this.focusActiveRoom();
+                                        this._changed = true;
                                         return;
                                     }
                                     this.emit('import-progress', Math.floor(idx / rl * 100));
@@ -1762,6 +1780,7 @@ export class Mapper extends EventEmitter {
                         stmt.finalize();
                     }
                     stmt2.finalize();
+                    this._changed = true;
                     //this.emit('import-progress', 100);
                     //this.reset();
                     //this.refresh();
@@ -1874,8 +1893,12 @@ export class Mapper extends EventEmitter {
         this._db.run(cmd, callback);
     }
 
-    save() {
+    save(callback) {
         if (this._memory) {
+            if (!this._changed) {
+                callback();
+                return;
+            }
             this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
             this.createDatabase('Disk');
             this._db.run('DELETE FROM Disk.Rooms');
@@ -1883,7 +1906,10 @@ export class Mapper extends EventEmitter {
             this._db.run('INSERT INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms');
             this._db.run('INSERT INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits');
             this._db.run('VACUUM Disk');
-            this._db.run('DETACH DATABASE Disk');
+            this._db.run('DETACH DATABASE Disk', callback);
+            this._changed = false;
         }
+        else if (callback)
+            callback();
     }
 }

@@ -2,6 +2,7 @@
 ##### 0.1.8 - 2017-05-
 - **New:**
   - Allow negative numbers for experience needed in status display
+  - Mapper Load in memory will now flush to disk every 15 mins
 - **Changed:**
   - Changed how editor, chat, and mapper windows are cached to try and improve memory and speed by not loading in the background unless needed
 ##### 0.1.7 - 2017-05-09

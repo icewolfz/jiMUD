@@ -839,6 +839,12 @@
         mapper.import(data, ImportType.Replace);
       });
 
+      ipcRenderer.on('flush', (event) => {
+        save(() => {
+          ipcRenderer.send('flush-end');
+        });
+      });
+
       function updateAreas() {
         $("#SelectArea option").remove();
         $("#reArea option").remove();
