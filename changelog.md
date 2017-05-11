@@ -3,8 +3,12 @@
 - **New:**
   - Allow negative numbers for experience needed in status display
   - Mapper Load in memory will now flush to disk every 15 mins
+  - Mapper Save period can be set in milliseconds
 - **Changed:**
   - Changed how editor, chat, and mapper windows are cached to try and improve memory and speed by not loading in the background unless needed
+  - Mapper load in memory no longer requires restart to enable
+- **Fixed:**
+  - Mapper now properly reloads to take into account any setting changes from preference changes.
 ##### 0.1.7 - 2017-05-09
 - **New:**
   - Chat window 

@@ -26,6 +26,7 @@ export class Mapper {
 	public alwaysOnTop: boolean = false;
 	public alwaysOnTopClient: boolean = true;
 	public memory: boolean = false;
+	public memorySavePeriod: number = 900000;
 	public active =
 	{
 		ID: null,

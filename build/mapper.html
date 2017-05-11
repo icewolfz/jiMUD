@@ -568,7 +568,7 @@
         $("#mapper-room button").prop("disabled", true);
 
         var options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
-        mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory);
+        mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod);
         mapper.enabled = options.mapper.enabled;
         mapper.showLegend = options.mapper.legend;
         mapper.follow = options.mapper.follow;
@@ -831,6 +831,50 @@
         mapper.processGMCP(data.mod, data.obj);
       });
 
+      ipcRenderer.on('reload-options', (event) => {
+        remote.getCurrentWindow().reload();
+        //window.reload();
+        /*
+        var options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
+        mapper.memory = options.mapper.memory;
+        mapper.memorySavePeriod = options.mapper.memorySavePeriod;
+        mapper.enabled = options.mapper.enabled;
+        mapper.showLegend = options.mapper.legend;
+        mapper.follow = options.mapper.follow;
+        mapper.splitArea = options.mapper.split;
+        mapper.fillWalls = options.mapper.fill;
+        mapper.active = options.mapper.active;
+        mapper.commandDelay = options.commandDelay;
+        mapper.commandDelayCount = options.commandDelayCount;
+
+        $("#MapLevel").val(options.mapper.active.z);
+        $("#MapZone").val(options.mapper.active.zone);
+        if (options.mapper.room) {
+          $("#btnRoom").button('toggle');
+          toggleRooms();
+        }
+
+        if (mapper.enabled && !$("#btnEnable").hasClass('active'))
+          $("#btnEnable").button('toggle');
+        if (mapper.showLegend && !$("#btnLegend").hasClass('active'))
+          $("#btnLegend").button('toggle');
+        if (mapper.follow && !$("#btnFollow").hasClass('active'))
+          $("#btnFollow").button('toggle');
+        if (mapper.splitArea && !$("#btnSplit").hasClass('active'))
+          $("#btnSplit").button('toggle');
+        if (mapper.fillWalls && !$("#btnFill").hasClass('active'))
+          $("#btnFill").button('toggle');
+        if (mapper.follow && !$("#btn-focus").hasClass('active'))
+          mapper.focusCurrentRoom();
+
+
+        updateAreas();
+        mapper.scrollTo(options.mapper.vscroll, options.mapper.hscroll);
+        */
+      });
+
+
+
       ipcRenderer.on('import', (event, data) => {
         $("#mapProgressbar").html('<progress max="100"></progress>');
         $("#mapProgressTitle").html("Importing map data...");
@@ -887,7 +931,7 @@
         <button id="btnSplit" type="button" class="btn btn-default btn-xs" title="Split areas" onclick="mapper.splitArea = !mapper.splitArea" data-toggle="button"><i class="fa fa-object-ungroup"></i></button>
         <button id="btnFill" type="button" class="btn btn-default btn-xs" title="Fill walls" onclick="mapper.fillWalls = !mapper.fillWalls" data-toggle="button"><i class="fa fa-building-o"></i></button>
       </div>
-      <button type="button" class="btn btn-default btn-xs" title="Focus on current room" onclick="mapper.focusCurrentRoom()"><i class="fa fa-crosshairs"></i></button>
+      <button id="btn-focus" type="button" class="btn btn-default btn-xs" title="Focus on current room" onclick="mapper.focusCurrentRoom()"><i class="fa fa-crosshairs"></i></button>
       <select id="SelectArea" class="form-control" title="Select Area"></select>
       <div class="btn-group" style="float: left">
         <label for="MapLevel" style="float: left">Level:</label>

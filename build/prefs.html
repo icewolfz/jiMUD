@@ -126,6 +126,7 @@
 
         $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
         $('#mapper-memory').prop('checked', _settings.mapper.memory);
+        $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
         $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
 
         $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
@@ -232,7 +233,10 @@
           _settings[$(this).attr('id')] = $(this).val();
         });
         $('input[type="number"]').change(function () {
-          _settings[$(this).attr('id')] = $(this).val();
+          if ((this).attr('id') == 'mapper-memorySavePeriod')
+            _settings.mapper.memorySavePeriod = parseInt($(this).val(), 10);
+          else
+            _settings[$(this).attr('id')] = parseInt($(this).val(), 10);
         });
         $('input[type="color"]').change(function () {
           var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
@@ -976,7 +980,17 @@
           <label class="control-label">
           <input type="checkbox" id="mapper-memory" />
           Load in memory
-          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Requires restart</span>
+          <!--span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Requires restart</span-->
+          </label>
+        </div>
+        <div class="col-sm-4  form-group">
+          <label class="control-label">
+<!--span class="help-block" style="float:right;font-size: 0.8em;margin:0;padding:0">Requires restart</span-->
+          Save period
+          <div class="input-group">
+          <input type="number" id="mapper-memorySavePeriod" class="form-control" min="60000"/>
+           <div class="input-group-addon">ms</div>
+            </div>
           </label>
         </div>
       </div>

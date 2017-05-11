@@ -124,6 +124,8 @@ export class Mapper extends EventEmitter {
     public _memory: boolean = false;
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;
+    public _memorySavePeriod = 900000;
+    public _memoryPeriod;
 
     set enabled(value: boolean) {
         if (this._enabled != value) {
@@ -134,6 +136,40 @@ export class Mapper extends EventEmitter {
     get enabled(): boolean { return this._enabled; }
 
     get memory(): boolean { return this._memory; }
+    set memory(value: boolean) {
+        if (this._memory != value) {
+            this.save(() => {
+                this._db.close(() => {
+                    this._memory = value;
+                    if (this._memory) {
+                        this._db = new sqlite3.Database(":memory:");
+                        this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
+                    }
+                    else
+                        this._db = new sqlite3.Database(path.join(parseTemplate("{data}"), "map.sqlite"));
+                    this.createDatabase();
+                    this._db.serialize();
+                    if (this._memory) {
+                        this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
+                        this.createDatabase('Disk');
+                        this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
+                        this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
+                        this._db.run('DETACH DATABASE Disk');
+                    }
+                });
+            });
+        }
+    }
+
+    get memorySavePeriod(): number { return this._memorySavePeriod; }
+    set memorySavePeriod(value: number) {
+        if (value != this._memorySavePeriod) {
+            clearInterval(this._memoryPeriod);
+            if (this._memory)
+                this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
+            this._memorySavePeriod = value;
+        }
+    }
 
     set follow(value: boolean) {
         if (this._follow != value) {
@@ -188,8 +224,9 @@ export class Mapper extends EventEmitter {
         });
     }
 
-    constructor(canvas, memory?: boolean) {
+    constructor(canvas, memory?: boolean, memoryPeriod?: number) {
         super();
+        this._memorySavePeriod = memoryPeriod;
         this._canvas = canvas;
         this._context = canvas.getContext("2d");
         //rooms - ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors
@@ -197,7 +234,7 @@ export class Mapper extends EventEmitter {
         if (memory) {
             this._memory = memory;
             this._db = new sqlite3.Database(":memory:");
-            setInterval(this.save, 900000);
+            this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
         }
         else
             this._db = new sqlite3.Database(path.join(parseTemplate("{data}"), "map.sqlite"));
@@ -1893,10 +1930,11 @@ export class Mapper extends EventEmitter {
         this._db.run(cmd, callback);
     }
 
-    save(callback) {
+    save(callback?) {
         if (this._memory) {
             if (!this._changed) {
-                callback();
+                if (callback)
+                    callback();
                 return;
             }
             this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
