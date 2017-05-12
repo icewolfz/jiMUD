@@ -1,4 +1,4 @@
-//cSpell:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt
+//cSpell:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt, exportmenu
 import { shell, remote, ipcRenderer } from 'electron';
 const { dialog, Menu, MenuItem, nativeImage } = remote;
 import { FilterArrayByKeyValue, parseTemplate, keyCharToCode, keyCodeToChar, clone } from './library';
@@ -27,82 +27,27 @@ enum UpdateState {
     Error
 }
 
-const addMenu = new Menu();
-addMenu.append(new MenuItem({
-    label: 'Add empty profile', click() {
-        clearButton("#btn-add-dropdown");
-        AddNewProfile();
-    }
-}));
-addMenu.append(new MenuItem({
-    label: 'Add profile with defaults', click() {
-        clearButton("#btn-add-dropdown");
-        AddNewProfile(true);
-    }
-}));
-addMenu.append(new MenuItem({ type: 'separator' }));
-addMenu.append(new MenuItem({
-    label: 'Add alias', click() {
-        clearButton("#btn-add-dropdown");
-        addItem('Alias', 'aliases', new Alias());
-    }
-}));
-addMenu.append(new MenuItem({
-    label: 'Add macro', click() {
-        clearButton("#btn-add-dropdown");
-        addItem('Macro', 'macros', new Macro());
-    }
-}));
-addMenu.append(new MenuItem({
-    label: 'Add trigger', click() {
-        clearButton("#btn-add-dropdown");
-        addItem('Trigger', 'triggers', new Trigger());
-    }
-}));
-addMenu.append(new MenuItem({
-    label: 'Add button', click() {
-        clearButton("#btn-add-dropdown");
-        addItem('Button', 'buttons', new Button())
-    }
-}));
-addMenu.append(new MenuItem({
-    label: 'Add context', click() {
-        clearButton("#btn-add-dropdown");
-        addItem('Context', 'contexts', new Context())
-    }
-}));
-
-const selectionMenu = Menu.buildFromTemplate([
-    { role: 'copy' },
-    { type: 'separator' },
-    { role: 'selectall' },
-])
-
-var inputMenu;
-
-inputMenu = Menu.buildFromTemplate([
-
-    {
-        label: 'Undo',
-        click: () => { doUndo() },
-        accelerator: 'CmdOrCtrl+Z'
-    },
-    {
-        label: 'Redo',
-        click: () => { doRedo() },
-        accelerator: 'CmdOrCtrl+Y'
-    },
-    { type: 'separator' },
-    { role: 'cut' },
-    { role: 'copy' },
-    { role: 'paste' },
-    { type: 'separator' },
-    { role: 'selectall' },
-])
-
 function addInputContext() {
     window.addEventListener('contextmenu', (e) => {
         e.preventDefault()
+        var inputMenu = Menu.buildFromTemplate([
+            {
+                label: 'Undo',
+                click: () => { doUndo() },
+                accelerator: 'CmdOrCtrl+Z'
+            },
+            {
+                label: 'Redo',
+                click: () => { doRedo() },
+                accelerator: 'CmdOrCtrl+Y'
+            },
+            { type: 'separator' },
+            { role: 'cut' },
+            { role: 'copy' },
+            { role: 'paste' },
+            { type: 'separator' },
+            { role: 'selectall' },
+        ])
         inputMenu.popup(remote.getCurrentWindow());
     }, false)
 }
@@ -2290,6 +2235,50 @@ export function init() {
         var pos = $(this).offset();
         var x = Math.floor(pos.left);
         var y = Math.floor(pos.top + $(this).outerHeight() + 2);
+        const addMenu = new Menu();
+        addMenu.append(new MenuItem({
+            label: 'Add empty profile', click() {
+                clearButton("#btn-add-dropdown");
+                AddNewProfile();
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'Add profile with defaults', click() {
+                clearButton("#btn-add-dropdown");
+                AddNewProfile(true);
+            }
+        }));
+        addMenu.append(new MenuItem({ type: 'separator' }));
+        addMenu.append(new MenuItem({
+            label: 'Add alias', click() {
+                clearButton("#btn-add-dropdown");
+                addItem('Alias', 'aliases', new Alias());
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'Add macro', click() {
+                clearButton("#btn-add-dropdown");
+                addItem('Macro', 'macros', new Macro());
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'Add trigger', click() {
+                clearButton("#btn-add-dropdown");
+                addItem('Trigger', 'triggers', new Trigger());
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'Add button', click() {
+                clearButton("#btn-add-dropdown");
+                addItem('Button', 'buttons', new Button())
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'Add context', click() {
+                clearButton("#btn-add-dropdown");
+                addItem('Context', 'contexts', new Context())
+            }
+        }));
         addMenu.popup(remote.getCurrentWindow(), x, y);
     });
 
@@ -2454,6 +2443,75 @@ export function init() {
         $(this).data('previous-value', this.checked);
     });
     addInputContext();
+
+    $("#export").on("show.bs.dropdown", () => {
+        if ($(window).width() < 675 && $("#export").parent().position().left > 400)
+            $("#export .dropdown-menu").addClass("dropdown-menu-right");
+        else
+            $("#export .dropdown-menu").removeClass("dropdown-menu-right");
+    });
+
+    $("#export").click(function () {
+        $(this).addClass('open');
+        var pos = $(this).offset();
+        var x = Math.floor(pos.left);
+        var y = Math.floor(pos.top + $(this).outerHeight() + 2);
+        const exportmenu = new Menu();
+        exportmenu.append(new MenuItem({
+            label: 'Export current...', click() {
+                clearButton("#export");
+                dialog.showSaveDialog(remote.getCurrentWindow(), {
+                    title: 'Export profile',
+                    defaultPath: 'jiMUD.' + profileID(currentProfile.name) + '.txt',
+                    filters: [
+                        { name: 'Text files (*.txt)', extensions: ['txt'] }, ,
+                        { name: 'All files (*.*)', extensions: ['*'] },
+                    ]
+                },
+                    function (fileName) {
+                        if (fileName === undefined) {
+                            return;
+                        }
+                        var data = {
+                            version: 2,
+                            profiles: {}
+                        }
+                        data.profiles[currentProfile.name] = currentProfile.clone(2);
+                        fs.writeFileSync(fileName, JSON.stringify(data));
+                    });
+
+            }
+        }));
+        exportmenu.append(new MenuItem({
+            label: 'Export all...', click() {
+                clearButton("#export");
+                dialog.showSaveDialog(remote.getCurrentWindow(), {
+                    title: 'Export all profiles',
+                    defaultPath: 'jiMUD.profiles.txt',
+                    filters: [
+                        { name: 'Text files (*.txt)', extensions: ['txt'] }, ,
+                        { name: 'All files (*.*)', extensions: ['*'] },
+                    ]
+                },
+                    function (fileName) {
+                        if (fileName === undefined) {
+                            return;
+                        }
+                        var data = {
+                            version: 2,
+                            profiles: profiles.clone(2)
+                        }
+                        fs.writeFileSync(fileName, JSON.stringify(data));
+                    });
+
+            }
+        }));
+        exportmenu.append(new MenuItem({ type: 'separator' }));
+        exportmenu.append(new MenuItem({
+            label: 'Import...', click: importProfiles
+        }));
+        exportmenu.popup(remote.getCurrentWindow(), x, y);
+    })
 }
 
 function undoKeydown(e) {
@@ -2569,10 +2627,12 @@ function profileCopyName(name) {
 
 function importProfiles() {
     dialog.showOpenDialog({
+        title: 'Import profiles',
         filters: [
             { name: 'Text files (*.txt)', extensions: ['txt'] },
             { name: 'All files (*.*)', extensions: ['*'] },
-        ]
+        ],
+        properties: ["multiSelections"]
     },
         function (fileNames) {
             if (fileNames === undefined || fileNames.length == 0) {
@@ -2662,7 +2722,20 @@ function importProfiles() {
                                     }
                                 }
                             }
-                            profiles.add(p);
+                            if (profiles.contains(p)) {
+                                dialog.showMessageBox(remote.getCurrentWindow(), {
+                                    type: 'question',
+                                    title: 'Profiles already exists',
+                                    message: 'Profile named \'' + p.name + '\' exist, replace?',
+                                    buttons: ['Yes', 'No'],
+                                    defaultId: 1,
+                                }, (response) => {
+                                    if (response == 0)
+                                        profiles.add(p);
+                                })
+                            }
+                            else
+                                profiles.add(p);
                             $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                         }
                         pushUndo({ action: 'add', type: 'profile', item: names });

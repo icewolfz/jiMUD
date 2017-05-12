@@ -8,16 +8,23 @@
     - $selectedline/$selline - returns the current line text
     - $selectedurl/$selurl - returns the current url when right clicked
     - $copied - return clipboard text
-  - new parsed variables that work like the javascript ones in format of %{variable}, you may force upper, lower, or proper case by appending .lower, or .upper, for example %{selword.lower} will return lower cased version, or using the inline parse functions
+  - Parsed variables that work like the javascript ones in format of %{variable}, you may force upper, lower, or proper case by appending .lower, or .upper, for example %{selword.lower} will return lower cased version, or using the inline parse functions
   - %{copied} - replace with clipboard contents, for javascript use this.readClipboard() or client.readClipboard where needed
   - inline parse functions to manipulate parsable variables
     - `%{lower(TEXT)}` - convert TEXT to lower case
     - `%{upper(TEXT)}` - convert TEXT to upper case
     - `%{proper(TEXT)}` - convert TEXT to proper case
+  - Profile Manger: Added export current and export all that will allow easy export/import with web client
+  - **Changed:**
+    - Profile manager: Moved import button to a export/import drop down
+    - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
+    - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory
   - **Fixed:**
-  - A bug with chat window not saving window state on close
+  - Capture window: not saving window state on close
   - A bug when closing client and mapper is not set as always on top of main window
-  - A bug when mapper is not always on top of main window and not reopening next load
+  - Mapper: A bug when not always on top of main window and not reopening next load
+  - Profile manger: fixed import button by moving to drop down menu
+  - Profile manager: importing now ask to replace a profile if name exist
 ##### 0.1.8 - 2017-05-11
 - **New:**
   - Allow negative numbers for experience needed in status display

@@ -16,7 +16,6 @@
   * maybe work it on some type of idle timer and onyl flush when idle 
 * a bug when 2 mappers open, seems thet receive ipc from all clients
 ## Profile manager
-* Add backup systems to allow easier backup/export of profiles with out the need to open file explorer
 * Maybe add a file menu ?
 * Test more then when multiple client instances open
 * possible slow down due to file locks, loading profiles, converting from json, or loading icons for buttons

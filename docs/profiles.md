@@ -8,6 +8,10 @@
 - `Copy` copy selected item
 - `Paste` paste copy/cut items into current active profile
 - `Delete` delete selected item
+- `Import/Export` export or import profiles
+  - `Export current` export current profile
+  - `Export all` export all profiles as one file
+  - `Import` import profiles
 
 ## Profiles
 - `Enable Triggers` enable/disable triggers from being executed as text is received or sent to the mud for the selected profile

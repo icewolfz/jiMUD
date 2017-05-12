@@ -103,385 +103,6 @@
       ];
 
       //remote.getCurrentWindow().setMenu(Menu.buildFromTemplate(menu));
-
-      const removemenu = new Menu();
-      removemenu.append(new MenuItem({
-        label: 'Remove selected room', click() {
-          clearButton("#remove");
-          dialog.showMessageBox(remote.getCurrentWindow(), {
-            type: 'question',
-            title: 'Remove selected room',
-            message: 'Are you sure you want to remove selected room?',
-            buttons: ['Yes', 'No'],
-            defaultId: 1,
-          }, (response) => {
-            if (response == 0)
-              mapper.clearSelectedRoom()
-          })
-        }
-      }));
-      removemenu.append(new MenuItem({
-        label: 'Remove current room', click() {
-          clearButton("#remove");
-          dialog.showMessageBox(remote.getCurrentWindow(), {
-            type: 'question',
-            title: 'Remove current room',
-            message: 'Are you sure you want to remove current room?',
-            buttons: ['Yes', 'No'],
-            defaultId: 1,
-          }, (response) => {
-            if (response == 0)
-              mapper.clearRoom()
-          })
-        }
-      }));
-      removemenu.append(new MenuItem({ type: 'separator' }));
-      removemenu.append(new MenuItem({
-        label: 'Remove current area', click() {
-          clearButton("#remove");
-          dialog.showMessageBox(remote.getCurrentWindow(), {
-            type: 'question',
-            title: 'Remove ' + mapper.active.area,
-            message: 'Are you sure you want to remove all rooms from ' + mapper.active.area + '?',
-            buttons: ['Yes', 'No'],
-            defaultId: 1,
-          }, (response) => {
-            if (response == 0)
-              mapper.clearArea()
-          })
-        }
-      }));
-      removemenu.append(new MenuItem({
-        label: 'Remove all', click() {
-          clearButton("#remove");
-          dialog.showMessageBox(remote.getCurrentWindow(), {
-            type: 'question',
-            title: 'Remove all',
-            message: 'Are you sure you want to remove all rooms?',
-            buttons: ['Yes', 'No'],
-            defaultId: 1,
-          }, (response) => {
-            if (response == 0)
-              mapper.clearAll()
-          })
-        }
-      }));
-      /*
-            function blob_to_buffer(blob, callback) {
-              // Create a file reader instance.
-              const file_reader = new FileReader()
-      
-              // Listen to when reading is finished and 
-              // run the callback with a buffer.
-              file_reader.addEventListener("loadend", event => {
-                if (event.error) {
-                  callback(event.error)
-                }
-                else {
-                  callback(null, new Buffer(file_reader.result))
-                }
-      
-                // Remove the listener.
-                file_reader.removeEventListener("loadend", blob_to_buffer, false)
-              }, false)
-      
-              // Read the blob as a typed array.
-              file_reader.readAsArrayBuffer(blob)
-      
-              return file_reader
-            }
-      */
-      const exportmenu = new Menu();
-      exportmenu.append(new MenuItem({
-        label: 'Export as image', click() {
-          clearButton("#export");
-
-          dialog.showSaveDialog(remote.getCurrentWindow(), {
-            title: 'Export clipped view',
-            defaultPath: 'jiMUD' + (!mapper.SplitArea ? "" : "." + mapper.active.area) + '.png',
-            filters: [
-
-              { name: 'Images (*.png)', extensions: ['png'] },
-              { name: 'All files (*.*)', extensions: ['*'] },
-            ]
-          },
-            function (fileName) {
-              if (fileName === undefined) {
-                return;
-              }
-              mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
-                if (!rooms || rooms.length == 0) {
-                  dialog.showMessageBox(remote.getCurrentWindow(), {
-                    type: 'error',
-                    title: 'Error generating',
-                    message: 'Could not generate map'
-                  });
-                  return;
-                }
-                var x = null, y = 0, w = 0, h = 0, room, cx, cy;
-                var t = mapper.active.area === null ? "" : mapper.active.area;
-                if (!mapper.SplitArea)
-                  t = "";
-                for (var rms in rooms) {
-                  room = rooms[rms];
-                  if (room === null) continue;
-                  if (x === null) {
-                    x = room.X;
-                    w = room.X + 1;
-                    y = room.Y;
-                    h = room.Y + 1;
-                    continue;
-                  }
-                  if (room.X < x) x = room.X; else if (room.X > w) w = room.X;
-                  if (room.Y < y) y = room.Y; else if (room.Y > h) h = room.Y;
-                }
-                mapper._context.font = "italic bold 16pt Georgia"
-                var fx = mapper._context.measureText(t).width;
-                var rectWidth = Math.sqrt(Math.pow(w - x, 2)) * 32 + 60 + 32;
-                var rectHeight = Math.sqrt(Math.pow(y - h, 2)) * 32 + 60 + 32;
-                if (rectWidth < fx) rectWidth = fx + 60;
-                if (mapper.ShowLegend) {
-                  rectWidth += 155;
-                  if (rectHeight < 200) rectHeight = 200;
-                }
-                var canvas = document.createElement('canvas');
-                canvas.width = rectWidth;
-                canvas.height = rectHeight;
-
-
-                var ctx;
-                if (canvas && canvas.getContext)
-                  ctx = canvas.getContext("2d");
-                else {
-                  dialog.showMessageBox(remote.getCurrentWindow(), {
-                    type: 'error',
-                    title: 'Error generating',
-                    message: 'Could not generate map'
-                  });
-                  return;
-                }
-                ctx.strokeStyle = "black";
-
-                ctx.fillStyle = "#eae4d6";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.font = "8pt Arial";
-                for (var rms in rooms) {
-                  room = rooms[rms];
-                  //no room
-                  if (room === null) continue;
-                  cx = (room.X - x) * 32 + 30.5;
-                  cy = (room.Y - y) * 32 + 30.5;
-                  mapper.DrawRoom(ctx, cx, cy, room, true);
-                }
-                ctx.save();
-                ctx.strokeStyle = "black";
-                ctx.fillStyle = "black";
-                ctx.font = "italic bold 16pt Georgia";
-                fx = rectWidth / 2 - fx / 2;
-                ctx.fillText(t, fx, 20);
-                ctx.translate(rectWidth - 25, rectHeight - 25);
-                ctx.font = "italic bold 12pt Georgia";
-                ctx.fillText("N", 3, -5);
-                ctx.beginPath();
-                ctx.moveTo(10, 0);
-                ctx.lineTo(5, 15);
-                ctx.lineTo(10, 20);
-                ctx.lineTo(15, 15);
-                ctx.lineTo(10, 0);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-                ctx.restore();
-                mapper.DrawLegend(ctx, rectWidth - 185, -10, 1);
-
-                fs.writeFileSync(fileName, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG());
-                /*
-                                canvas.toBlob(function (blob) {
-                                  blob_to_buffer(blob, function (err, buff) {
-                                    if (err) {
-                                      dialog.showMessageBox(remote.getCurrentWindow(), {
-                                        type: 'error',
-                                        title: 'Error saving map',
-                                        message: err
-                                      });
-                                      return;
-                                    }
-                                    var img = nativeImage.createFromBuffer(buff);
-                                    fs.writeFileSync(fileName, img.toPNG());
-                
-                                  });
-                                });
-                                */
-              });
-            });
-
-        }
-      }));
-      exportmenu.append(new MenuItem({
-        label: 'Export current view as image', click() {
-          clearButton("#export");
-          dialog.showSaveDialog(remote.getCurrentWindow(), {
-            title: 'Export clipped view',
-            defaultPath: 'jiMUD.clipped.png',
-            filters: [
-
-              { name: 'Images (*.png)', extensions: ['png'] },
-              { name: 'All files (*.*)', extensions: ['*'] },
-            ]
-          },
-            function (fileName) {
-              if (fileName === undefined) {
-                return;
-              }
-              var oldCanvas = document.getElementById("MapperCanvas");
-              var newCanvas = document.createElement('canvas');
-              var context = newCanvas.getContext('2d');
-              newCanvas.width = oldCanvas.width;
-              newCanvas.height = oldCanvas.height;
-              mapper.draw(newCanvas, context, true, () => {
-                fs.writeFileSync(fileName, nativeImage.createFromDataURL(newCanvas.toDataURL('image/png')).toPNG());
-                /*
-                newCanvas.toBlob(function (blob) {
-                  blob_to_buffer(blob, function (err, buff) {
-                    if (err) {
-                      dialog.showMessageBox(remote.getCurrentWindow(), {
-                        type: 'error',
-                        title: 'Error saving map',
-                        message: err
-                      });
-                      return;
-                    }
-                    var img = nativeImage.createFromBuffer(buff);
-                    fs.writeFileSync(fileName, img.toPNG());
-
-                  });
-                });
-                */
-              });
-            });
-        }
-      }));
-      exportmenu.append(new MenuItem({ type: 'separator' }));
-      exportmenu.append(new MenuItem({
-        label: 'Export current area', click() {
-          clearButton("#export");
-          dialog.showSaveDialog(remote.getCurrentWindow(), {
-            title: 'Export current area',
-            defaultPath: 'jiMUD.' + mapper.active.area + '.txt',
-            filters: [
-
-              { name: 'Text files (*.txt)', extensions: ['txt'] },
-              { name: 'All files (*.*)', extensions: ['*'] },
-            ]
-          },
-            function (fileName) {
-              if (fileName === undefined) {
-                return;
-              }
-              ipcRenderer.send('set-progress', { value: 0 });
-              $("#mapProgressbar").html('<progress max="100"></progress>');
-              $("#mapProgressTitle").html("Exporting '" + mapper.active.area + "' map data...");
-              $("#mapProgress")[0].showModal();
-              mapper.exportArea(fileName);
-            });
-        }
-      }));
-      exportmenu.append(new MenuItem({
-        label: 'Export all', click() {
-          clearButton("#export");
-          dialog.showSaveDialog(remote.getCurrentWindow(), {
-            title: 'Export all',
-            defaultPath: 'jiMUD.txt',
-            filters: [
-
-              { name: 'Text files (*.txt)', extensions: ['txt'] },
-              { name: 'All files (*.*)', extensions: ['*'] },
-            ]
-          },
-            function (fileName) {
-              if (fileName === undefined) {
-                return;
-              }
-              $("#mapProgressbar").html('<progress max="100"></progress>');
-              $("#mapProgressTitle").html("Exporting map data...");
-              ipcRenderer.send('set-progress', { value: 0 });
-              $("#mapProgress")[0].showModal();
-              mapper.exportAll(fileName);
-            });
-        }
-      }));
-      exportmenu.append(new MenuItem({ type: 'separator' }));
-      exportmenu.append(new MenuItem({
-        label: 'Import and merge', click() {
-          clearButton("#export");
-          dialog.showOpenDialog(remote.getCurrentWindow(),
-            {
-              filters: [
-                { name: 'Text files (*.txt)', extensions: ['txt'] },
-                { name: 'All files (*.*)', extensions: ['*'] },
-              ]
-            },
-            function (fileNames) {
-              if (fileNames === undefined) {
-                return;
-              }
-              for (var f = 0, fl = fileNames.length; f < fl; f++)
-                fs.readFile(fileNames[f], (err, data) => {
-                  if (err) throw err;
-                  data = JSON.parse(data);
-                  if (!data) {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
-                      type: 'error',
-                      title: 'Invalid map data',
-                      message: 'Invalid map data unable to process.'
-                    });
-                    return;
-                  }
-                  ipcRenderer.send('set-progress', { value: 0 });
-                  $("#mapProgressbar").html('<progress max="100"></progress>');
-                  $("#mapProgressTitle").html("Importing map data...");
-                  $("#mapProgress")[0].showModal();
-                  mapper.import(data, ImportType.Merge);
-                });
-            });
-        }
-      }));
-      exportmenu.append(new MenuItem({
-        label: 'Import and replace', click() {
-          clearButton("#export");
-          dialog.showOpenDialog(remote.getCurrentWindow(),
-            {
-              filters: [
-                { name: 'Text files (*.txt)', extensions: ['txt'] },
-                { name: 'All files (*.*)', extensions: ['*'] },
-              ]
-            },
-            function (fileNames) {
-              if (fileNames === undefined) {
-                return;
-              }
-              for (var f = 0, fl = fileNames.length; f < fl; f++)
-                fs.readFile(fileNames[f], (err, data) => {
-                  if (err) throw err;
-                  data = JSON.parse(data);
-                  if (!data) {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
-                      type: 'error',
-                      title: 'Invalid map data',
-                      message: 'Invalid map data unable to process.'
-                    });
-                    return;
-                  }
-                  ipcRenderer.send('set-progress', { value: 0 });
-                  $("#mapProgressbar").html('<progress max="100"></progress>');
-                  $("#mapProgressTitle").html("Importing map data...");
-                  $("#mapProgress")[0].showModal();
-                  mapper.import(data, ImportType.Replace);
-                });
-            });
-        }
-      }));
-
       var mapper;
       var MapperNavDown = false;
       function MapperNavClicked(x, y) {
@@ -796,8 +417,71 @@
           var pos = $(this).offset();
           var x = Math.floor(pos.left);
           var y = Math.floor(pos.top + $(this).outerHeight() + 2);
-          removemenu.items[0].enabled = mapper.selected.ID != null;
-          removemenu.items[1].enabled = mapper.current.ID != null;
+          const removemenu = new Menu();
+          removemenu.append(new MenuItem({
+            label: 'Remove selected room', enabled: mapper.selected.ID != null, click() {
+              clearButton("#remove");
+              dialog.showMessageBox(remote.getCurrentWindow(), {
+                type: 'question',
+                title: 'Remove selected room',
+                message: 'Are you sure you want to remove selected room?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+              }, (response) => {
+                if (response == 0)
+                  mapper.clearSelectedRoom()
+              })
+            }
+          }));
+          removemenu.append(new MenuItem({
+            label: 'Remove current room', enabled: mapper.current.ID != null, click() {
+              clearButton("#remove");
+              dialog.showMessageBox(remote.getCurrentWindow(), {
+                type: 'question',
+                title: 'Remove current room',
+                message: 'Are you sure you want to remove current room?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+              }, (response) => {
+                if (response == 0)
+                  mapper.clearRoom()
+              })
+            }
+          }));
+          removemenu.append(new MenuItem({ type: 'separator' }));
+          removemenu.append(new MenuItem({
+            label: 'Remove current area', click() {
+              clearButton("#remove");
+              dialog.showMessageBox(remote.getCurrentWindow(), {
+                type: 'question',
+                title: 'Remove ' + mapper.active.area,
+                message: 'Are you sure you want to remove all rooms from ' + mapper.active.area + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+              }, (response) => {
+                if (response == 0)
+                  mapper.clearArea()
+              })
+            }
+          }));
+          removemenu.append(new MenuItem({
+            label: 'Remove all', click() {
+              clearButton("#remove");
+              dialog.showMessageBox(remote.getCurrentWindow(), {
+                type: 'question',
+                title: 'Remove all',
+                message: 'Are you sure you want to remove all rooms?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+              }, (response) => {
+                if (response == 0)
+                  mapper.clearAll()
+              })
+            }
+          }));
+
+          //removemenu.items[0].enabled = mapper.selected.ID != null;
+          //removemenu.items[1].enabled = mapper.current.ID != null;
           //removemenu.items[3].label = "Remove " +  mapper.active.area;
           removemenu.popup(remote.getCurrentWindow(), x, y);
         });
@@ -807,6 +491,297 @@
           var pos = $(this).offset();
           var x = Math.floor(pos.left);
           var y = Math.floor(pos.top + $(this).outerHeight() + 2);
+          const exportmenu = new Menu();
+          exportmenu.append(new MenuItem({
+            label: 'Export as image', click() {
+              clearButton("#export");
+
+              dialog.showSaveDialog(remote.getCurrentWindow(), {
+                title: 'Export clipped view',
+                defaultPath: 'jiMUD' + (!mapper.SplitArea ? "" : "." + mapper.active.area) + '.png',
+                filters: [
+
+                  { name: 'Images (*.png)', extensions: ['png'] },
+                  { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+              },
+                function (fileName) {
+                  if (fileName === undefined) {
+                    return;
+                  }
+                  mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
+                    if (!rooms || rooms.length == 0) {
+                      dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'error',
+                        title: 'Error generating',
+                        message: 'Could not generate map'
+                      });
+                      return;
+                    }
+                    var x = null, y = 0, w = 0, h = 0, room, cx, cy;
+                    var t = mapper.active.area === null ? "" : mapper.active.area;
+                    if (!mapper.SplitArea)
+                      t = "";
+                    for (var rms in rooms) {
+                      room = rooms[rms];
+                      if (room === null) continue;
+                      if (x === null) {
+                        x = room.X;
+                        w = room.X + 1;
+                        y = room.Y;
+                        h = room.Y + 1;
+                        continue;
+                      }
+                      if (room.X < x) x = room.X; else if (room.X > w) w = room.X;
+                      if (room.Y < y) y = room.Y; else if (room.Y > h) h = room.Y;
+                    }
+                    mapper._context.font = "italic bold 16pt Georgia"
+                    var fx = mapper._context.measureText(t).width;
+                    var rectWidth = Math.sqrt(Math.pow(w - x, 2)) * 32 + 60 + 32;
+                    var rectHeight = Math.sqrt(Math.pow(y - h, 2)) * 32 + 60 + 32;
+                    if (rectWidth < fx) rectWidth = fx + 60;
+                    if (mapper.ShowLegend) {
+                      rectWidth += 155;
+                      if (rectHeight < 200) rectHeight = 200;
+                    }
+                    var canvas = document.createElement('canvas');
+                    canvas.width = rectWidth;
+                    canvas.height = rectHeight;
+
+
+                    var ctx;
+                    if (canvas && canvas.getContext)
+                      ctx = canvas.getContext("2d");
+                    else {
+                      dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'error',
+                        title: 'Error generating',
+                        message: 'Could not generate map'
+                      });
+                      return;
+                    }
+                    ctx.strokeStyle = "black";
+
+                    ctx.fillStyle = "#eae4d6";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = "8pt Arial";
+                    for (var rms in rooms) {
+                      room = rooms[rms];
+                      //no room
+                      if (room === null) continue;
+                      cx = (room.X - x) * 32 + 30.5;
+                      cy = (room.Y - y) * 32 + 30.5;
+                      mapper.DrawRoom(ctx, cx, cy, room, true);
+                    }
+                    ctx.save();
+                    ctx.strokeStyle = "black";
+                    ctx.fillStyle = "black";
+                    ctx.font = "italic bold 16pt Georgia";
+                    fx = rectWidth / 2 - fx / 2;
+                    ctx.fillText(t, fx, 20);
+                    ctx.translate(rectWidth - 25, rectHeight - 25);
+                    ctx.font = "italic bold 12pt Georgia";
+                    ctx.fillText("N", 3, -5);
+                    ctx.beginPath();
+                    ctx.moveTo(10, 0);
+                    ctx.lineTo(5, 15);
+                    ctx.lineTo(10, 20);
+                    ctx.lineTo(15, 15);
+                    ctx.lineTo(10, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                    mapper.DrawLegend(ctx, rectWidth - 185, -10, 1);
+
+                    fs.writeFileSync(fileName, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG());
+                    /*
+                                    canvas.toBlob(function (blob) {
+                                      blob_to_buffer(blob, function (err, buff) {
+                                        if (err) {
+                                          dialog.showMessageBox(remote.getCurrentWindow(), {
+                                            type: 'error',
+                                            title: 'Error saving map',
+                                            message: err
+                                          });
+                                          return;
+                                        }
+                                        var img = nativeImage.createFromBuffer(buff);
+                                        fs.writeFileSync(fileName, img.toPNG());
+                    
+                                      });
+                                    });
+                                    */
+                  });
+                });
+
+            }
+          }));
+          exportmenu.append(new MenuItem({
+            label: 'Export current view as image', click() {
+              clearButton("#export");
+              dialog.showSaveDialog(remote.getCurrentWindow(), {
+                title: 'Export clipped view',
+                defaultPath: 'jiMUD.clipped.png',
+                filters: [
+
+                  { name: 'Images (*.png)', extensions: ['png'] },
+                  { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+              },
+                function (fileName) {
+                  if (fileName === undefined) {
+                    return;
+                  }
+                  var oldCanvas = document.getElementById("MapperCanvas");
+                  var newCanvas = document.createElement('canvas');
+                  var context = newCanvas.getContext('2d');
+                  newCanvas.width = oldCanvas.width;
+                  newCanvas.height = oldCanvas.height;
+                  mapper.draw(newCanvas, context, true, () => {
+                    fs.writeFileSync(fileName, nativeImage.createFromDataURL(newCanvas.toDataURL('image/png')).toPNG());
+                    /*
+                    newCanvas.toBlob(function (blob) {
+                      blob_to_buffer(blob, function (err, buff) {
+                        if (err) {
+                          dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Error saving map',
+                            message: err
+                          });
+                          return;
+                        }
+                        var img = nativeImage.createFromBuffer(buff);
+                        fs.writeFileSync(fileName, img.toPNG());
+    
+                      });
+                    });
+                    */
+                  });
+                });
+            }
+          }));
+          exportmenu.append(new MenuItem({ type: 'separator' }));
+          exportmenu.append(new MenuItem({
+            label: 'Export current area', click() {
+              clearButton("#export");
+              dialog.showSaveDialog(remote.getCurrentWindow(), {
+                title: 'Export current area',
+                defaultPath: 'jiMUD.' + mapper.active.area + '.txt',
+                filters: [
+
+                  { name: 'Text files (*.txt)', extensions: ['txt'] },
+                  { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+              },
+                function (fileName) {
+                  if (fileName === undefined) {
+                    return;
+                  }
+                  ipcRenderer.send('set-progress', { value: 0 });
+                  $("#mapProgressbar").html('<progress max="100"></progress>');
+                  $("#mapProgressTitle").html("Exporting '" + mapper.active.area + "' map data...");
+                  $("#mapProgress")[0].showModal();
+                  mapper.exportArea(fileName);
+                });
+            }
+          }));
+          exportmenu.append(new MenuItem({
+            label: 'Export all', click() {
+              clearButton("#export");
+              dialog.showSaveDialog(remote.getCurrentWindow(), {
+                title: 'Export all',
+                defaultPath: 'jiMUD.txt',
+                filters: [
+
+                  { name: 'Text files (*.txt)', extensions: ['txt'] },
+                  { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+              },
+                function (fileName) {
+                  if (fileName === undefined) {
+                    return;
+                  }
+                  $("#mapProgressbar").html('<progress max="100"></progress>');
+                  $("#mapProgressTitle").html("Exporting map data...");
+                  ipcRenderer.send('set-progress', { value: 0 });
+                  $("#mapProgress")[0].showModal();
+                  mapper.exportAll(fileName);
+                });
+            }
+          }));
+          exportmenu.append(new MenuItem({ type: 'separator' }));
+          exportmenu.append(new MenuItem({
+            label: 'Import and merge', click() {
+              clearButton("#export");
+              dialog.showOpenDialog(remote.getCurrentWindow(),
+                {
+                  filters: [
+                    { name: 'Text files (*.txt)', extensions: ['txt'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                  ]
+                },
+                function (fileNames) {
+                  if (fileNames === undefined) {
+                    return;
+                  }
+                  for (var f = 0, fl = fileNames.length; f < fl; f++)
+                    fs.readFile(fileNames[f], (err, data) => {
+                      if (err) throw err;
+                      data = JSON.parse(data);
+                      if (!data) {
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                          type: 'error',
+                          title: 'Invalid map data',
+                          message: 'Invalid map data unable to process.'
+                        });
+                        return;
+                      }
+                      ipcRenderer.send('set-progress', { value: 0 });
+                      $("#mapProgressbar").html('<progress max="100"></progress>');
+                      $("#mapProgressTitle").html("Importing map data...");
+                      $("#mapProgress")[0].showModal();
+                      mapper.import(data, ImportType.Merge);
+                    });
+                });
+            }
+          }));
+          exportmenu.append(new MenuItem({
+            label: 'Import and replace', click() {
+              clearButton("#export");
+              dialog.showOpenDialog(remote.getCurrentWindow(),
+                {
+                  filters: [
+                    { name: 'Text files (*.txt)', extensions: ['txt'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                  ]
+                },
+                function (fileNames) {
+                  if (fileNames === undefined) {
+                    return;
+                  }
+                  for (var f = 0, fl = fileNames.length; f < fl; f++)
+                    fs.readFile(fileNames[f], (err, data) => {
+                      if (err) throw err;
+                      data = JSON.parse(data);
+                      if (!data) {
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                          type: 'error',
+                          title: 'Invalid map data',
+                          message: 'Invalid map data unable to process.'
+                        });
+                        return;
+                      }
+                      ipcRenderer.send('set-progress', { value: 0 });
+                      $("#mapProgressbar").html('<progress max="100"></progress>');
+                      $("#mapProgressTitle").html("Importing map data...");
+                      $("#mapProgress")[0].showModal();
+                      mapper.import(data, ImportType.Replace);
+                    });
+                });
+            }
+          }));
+
           exportmenu.popup(remote.getCurrentWindow(), x, y);
         })
 

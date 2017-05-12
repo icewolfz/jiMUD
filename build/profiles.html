@@ -32,6 +32,9 @@
                 <button id="btn-paste" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Paste" onclick="profileUI.doPaste()"><i class="fa fa-paste"></i></button>
                 <button id="btn-delete" type="button" disabled="disabled" class="btn btn-danger btn-xs" title="Delete" onclick="profileUI.doDelete()"><i class="fa fa-times"></i></button>
             </div>
+            <button id="export" type="button" class="btn btn-default btn-xs" aria-haspopup="true" title="Import/Export">
+                <i class="fa fa-exchange"></i>&nbsp;<span class="caret"></span>
+            </button>
         </div>
         <div id="body">
             <div id="sidebar">
@@ -510,8 +513,6 @@
             </div>
         </div>
         <div class="dialog-footer">
-            <button style="float: left" type="button" class="btn btn-default" onclick="profileUI.importProfiles()">Import&hellip;</button>
-
             <button style="float: right" type="button" class="btn btn-primary" onclick="profileUI.doClose()">Cancel</button>
             <button style="float: right" type="button" class="btn btn-default" onclick="if(profileUI.saveProfiles()) window.close();">Save</button>
             <button style="float: right" type="button" class="btn btn-default" onclick="profileUI.saveProfiles()">Apply</button>

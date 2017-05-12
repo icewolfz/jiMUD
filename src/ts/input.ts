@@ -740,7 +740,7 @@ export class input extends EventEmitter {
             stacking = this.client.options.commandStacking;
         else
             stacking = stacking && this.client.options.commandStacking;
-        //recode someday to be part of the parser engine instead of simple regex
+        //@TODO recode someday to be part of the parser engine instead of simple regex
         var copied = clipboard.readText('selection') || '';
         text = text.replace(/\%\{copied\}/g, copied);
         text = text.replace(/\%\{copied.lower\}/g, copied);
