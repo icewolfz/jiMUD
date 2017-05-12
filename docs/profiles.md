@@ -81,3 +81,29 @@
 - `Append to Command` append value to the end of the command input
 - `Daisy Chain` this will append the value to the command line if it ends with a space then send the command line to the mud, if no space it will be handled as a standard macro and send the value.
 - `Stretch icon` this will cause the icon to be stretched and fill all space on a button
+
+## Context
+- `Preview` - a preview of how the icon will look
+- `Enable` enable/disable context item
+- `Caption` The context menu caption to display for tooltip
+- `Icon` A path to an icon to display, may pick from build in icons or from a file - [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
+- `Style` how the value is processed
+  - `Text` send value as is
+  - `Parse` do standard parsing
+  - `Script` the value is javascript, it will evaluate and any thing returned will be sent to the mud. the value is wrapped as a function and any matched patterns are passed as arguments, use standard arguments[#] to access.
+- `Value` the value to send to the mud
+- `Name` labels the menu to allow assigning of submenu items
+- `Parent` set the parent menu item, either Name or global menu item index
+- `Send to Mud` send the value to the mud
+- `Append to Command` append value to the end of the command input
+- `Daisy Chain` this will append the value to the command line if it ends with a space then send the command line to the mud, if no space it will be handled as a standard macro and send the value.
+
+### Parsed Predefined variables
+
+- `${selected}` - selected text
+- `${selectedword]` - word under mouse when right clicked
+- `${selectedline}` - line under mouse when right clicked
+- `${selectedurl}` - url under mouse when right clicked
+- `${selword}` same as $selectedword
+- `${selline}` sane as $selline
+- `${selurl}` same as $selected url

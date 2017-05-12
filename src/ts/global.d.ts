@@ -14,3 +14,11 @@ interface String {
 	paddingLeft(paddingvalue:(string|number)): string;
 	paddingRight(paddingvalue:(string|number)): string;
 }
+
+declare var $selected:string;
+declare var $selectedurl:string;
+declare var $selectedline:string;
+declare var $selectedword:string;
+declare var $selurl:string;
+declare var $selline:string;
+declare var $selword:string;

@@ -13,7 +13,7 @@ export class input extends EventEmitter {
     private _commandHistory: string[]
     private _locked: number = 0;
     private _tests: Tests;
-    private _TriggerCache:Trigger[] = null;
+    private _TriggerCache: Trigger[] = null;
     private _TriggerFunctionCache = {};
     private _scrollLock: boolean = false;
 
@@ -735,6 +735,16 @@ export class input extends EventEmitter {
             stacking = this.client.options.commandStacking;
         else
             stacking = stacking && this.client.options.commandStacking;
+
+        text = text.replace(/\%\{selected\}/g, $selected);
+        text = text.replace(/\%\{selectedurl\}/g, $selectedurl);
+        text = text.replace(/\%\{selectedline\}/g, $selectedline);
+        text = text.replace(/\%\{selectedword\}/g, $selectedword);
+        text = text.replace(/\%\{selurl\}/g, $selectedurl);
+        text = text.replace(/\%\{selline\}/g, $selectedline);
+        text = text.replace(/\%\{selword\}/g, $selectedword);        
+
+        tl = text.length;
 
         for (idx = 0; idx < tl; idx++) {
             c = text.charAt(idx);

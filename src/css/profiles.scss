@@ -278,7 +278,7 @@ table tr:last-child td
 	height: 32px;
 }
 
-#button-actions-dropdown
+#button-actions-dropdown, #context-actions-dropdown
 {
 	height: 200px;
 	width: 204px;
@@ -290,15 +290,16 @@ table tr:last-child td
 
 #btn-add-dropdown
 {
-	min-width:auto
+	min-width:auto !important;
 }
 
-#button-actions-dropdown li {
+#button-actions-dropdown li, #context-actions-dropdown li
+{
 	display: block;
 	float: left;
 }
 
-#button-actions-dropdown li a
+#button-actions-dropdown li a, #context-actions-dropdown li a
 {
 	padding-left:2px;
 	padding-right:2px;
@@ -320,7 +321,7 @@ table tr:last-child td
 	border-radius: 4px;
 }
 
-#button-actions-dropdown li a:hover .overlay
+#button-actions-dropdown li a:hover .overlay, #context-actions-dropdown li a:hover .overlay
 {
 	display:block;
 }
@@ -361,4 +362,38 @@ table tr:last-child td
 	height: 100%;
 	width: 100%;
 	display: none;
+}
+
+#context-sample 
+{
+	width: 16px;
+	height: 16px;
+}
+
+#context-sample
+{
+	width: 18px;
+	height: 18px;
+	border: 1px solid black;
+	display: inline-block;
+	vertical-align: baseline;
+}
+
+#context-sample .fa
+{
+    margin-top: 0px;
+    text-align: center;
+    width: 16px;
+    height: 16px;
+    font-size:16px;    
+	vertical-align: baseline;
+}
+
+#context-sample  img
+{
+    margin-top: 0px;
+    width: 16px;
+    height: 16px;
+    font-size:16px;
+	vertical-align: baseline;
 }

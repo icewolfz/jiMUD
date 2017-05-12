@@ -1,14 +1,5 @@
 # TODO list
 ## Context menus 
-* Display - expand besides basic select  
-  * Allow custom items based on profiles like buttons
-  * Figure out some way to capture word under mouse pt to allow setting a variable in script and some type of variable in parse like %selectedword% || %selword%
-  * Extra Variables:
-    * A variable for current selected text, %selected%
-    * A variable for current word under mouse, %selectedword% || %selword%
-    * A variable for current line text under mouse, %selectedline% || %selline%
-    * A variable for current url under mouse, %selectedurl% || %selurl%
-    * Maybe only support variables in javascript for ease of maintaining
 * Status - allow manual refresh as well as the visible toggles
 * Buttonbar - allow disable, maybe open in editor directly
 * Input - wait for native, or leave as custom 
@@ -29,10 +20,6 @@
 * Maybe add a file menu ?
 * Test more then when multiple client instances open
 * possible slow down due to file locks, loading profiles, converting from json, or loading icons for buttons
-* Context menu
-  * An editor to add/edit custom context menu items to appear when right click display
-  * Icon preview similar to button, but on a white/grey bg and limit to 16x16
-  * Support action image/fa/custom and generate a proper nativeImage format using canvas like image export or createIcon from Advanced editor
 ## MSP
 * Re-code to not stream but dl to local storage
 * Make local storage create proper folder structure based in {data}/sounds/.. using MSP protocol docs

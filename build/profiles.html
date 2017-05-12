@@ -71,6 +71,17 @@
                                 <input type="checkbox" id="profile-enableButtons" onchange="profileUI.updateProfileChecks()"/>Enable Buttons
                             </label>
                         </div>
+                        <div class="col-sm-3 form-group">
+                            <label class="control-label">
+                                <input type="checkbox" id="profile-enableContexts" onchange="profileUI.updateProfileChecks()"/>Enable Contexts
+                            </label>
+                        </div>
+                        <div class="col-sm-3 form-group">
+                            <label class="control-label">
+                                <input type="checkbox" id="profile-enableDefaultContext" onchange="profileUI.updateProfileChecks()"/>Enable Default Context
+                            </label>
+                        </div>
+
 
                         <div class="form-group">
                             <label class="control-label" style="width:100%">Priority
@@ -395,6 +406,102 @@
                                     <label class="col-sm-6" for="button-stretch">
                                     <input type="checkbox" id="button-stretch" style="border: 0px" onchange="profileUI.UpdateButtonSample();">
                                     Stretch icon</label>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="form-inline panel-body" id="context-editor" class="editor-panel" style="display:none">
+                        <table class="editor-body">
+                            <tr>
+                                <td style="text-align:center;">
+                                    <a style="float:none" href="javascript:void(0)" title="" id="context-sample" class="context"></a>
+                                </td>
+                                <td style="width: 60px">
+                                    <label class="control-label" for="context-caption">Caption</label>
+                                </td>
+                                <td colspan="2">
+                                    <input class="form-control" type="text" id="context-caption" onkeyup="profileUI.UpdateContextSample();" onchange="profileUI.UpdateContextSample();">
+                                </td>
+                                <td style="padding-left:5px;width: 45px">
+                                    <label class="control-label" for="context-icon" style="padding-right:4px;">Icon</label>
+                                </td>
+                                <td>
+                                    <div class="input-group" style="width:100%;">
+                                        <input class="form-control" style="width:100%" type="text" id="context-icon" onkeyup="profileUI.UpdateContextSample();" onchange="profileUI.UpdateContextSample();">
+                                        <span class="input-group-btn" style="width: 17px;">
+                                            <button id="context-actions" class="btn btn-default" style="width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                                <span class="caret"></span>
+                                        </button>
+                                        <div id="context-actions-dropdown" class="dropdown-menu" aria-labelledby="context-actions">
+                                        </div>
+                                        </span>
+                                        <span class="input-group-btn">
+                                            <button class = "btn btn-default" type="button" onclick="profileUI.openImage('#context-icon', profileUI.UpdateContextSample)">
+                                                &hellip;
+                                            </button>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td style="padding-left:5px;width: 45px">
+                                    <label class="control-label" for="context-style" style="padding-right:4px;">Style</label>
+                                </td>
+                                <td style="width: 100px;text-align: right">
+                                    <select class="form-control selectpicker" id="context-style" onchange="profileUI.UpdateEditorMode('context')">
+									<option value="0">Text</option>
+									<option value="1">Parse</option>
+									<option value="2">Script</option>
+								</select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: top;">
+                                    <label class="control-label" for="context-value">Value</label>
+                                </td>
+                                <td colspan="7" class="value-editor">
+                                    <textarea class="form-control" id="context-value" style="height:100%;width: 100%;" wrap="off"></textarea>
+                                    <pre id="context-value-editor" class="editor"></pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="8" class="panel-adv">
+                                    <button class="btn btn-default btn-xs btn-adv">
+                                        <i style="font-size: 8px;" class="fa fa-chevron-up"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="panel-adv-body first">
+                                <td>
+                                    <label class="control-label" for="context-name">Name</label>
+                                </td>
+                                <td colspan="7">
+                                    <input class="form-control" type="text" id="context-name">
+                                </td>
+                            </tr>
+                            <tr class="panel-adv-body">
+                                <td>
+                                    <label class="control-label" for="context-parent">Parent</label>
+                                </td>
+                                <td colspan="7">
+                                    <input class="form-control" type="text" id="context-parent">
+                                </td>
+                            </tr>
+                            <tr class="panel-adv-body">
+                                <td>
+                                    <label class="control-label" for="context-priority">Priority</label>
+                                </td>
+                                <td style="vertical-align:middle;padding: 0px; border: 0px;width: 60px">
+                                    <input type="number" class="form-control" id="context-priority" style="width: 100%">
+                                </td>
+                                <td colspan="6" style="padding-left:5px;vertical-align: bottom;">
+                                    <label class="col-sm-6" for="context-send">
+                                    <input type="checkbox" id="context-send" style="border: 0px;">
+                                    Send to MUD</label>
+                                    <label class="col-sm-6" for="context-append">
+                                    <input type="checkbox" id="context-append" style="border: 0px">
+                                    Append to command</label>
+                                    <label class="col-sm-6" for="context-chain">
+                                    <input type="checkbox" id="context-chain" style="border: 0px">
+                                    Daisy chain</label>
                                 </td>
                             </tr>
                         </table>

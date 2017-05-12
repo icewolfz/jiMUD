@@ -1,6 +1,6 @@
 //cSpell:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt
 import { shell, remote, ipcRenderer } from 'electron';
-const { dialog, Menu, MenuItem } = remote;
+const { dialog, Menu, MenuItem, nativeImage } = remote;
 import { FilterArrayByKeyValue, parseTemplate, keyCharToCode, keyCodeToChar, clone } from './library';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
 import { Settings } from './settings';
@@ -63,6 +63,12 @@ addMenu.append(new MenuItem({
     label: 'Add button', click() {
         clearButton("#btn-add-dropdown");
         addItem('Button', 'buttons', new Button())
+    }
+}));
+addMenu.append(new MenuItem({
+    label: 'Add context', click() {
+        clearButton("#btn-add-dropdown");
+        addItem('Context', 'contexts', new Context())
     }
 }));
 
@@ -134,6 +140,10 @@ export function AddNewItem() {
             case "button":
                 addItem('Button', 'buttons', new Button());
                 break;
+            case "contexts":
+            case "context":
+                addItem('Context', 'contexts', new Context());
+                break;
         }
     }
 }
@@ -204,6 +214,17 @@ function AddNewProfile(d?: Boolean) {
                 state: {
                     checked: profiles.items[n].enableButtons
                 }
+            },
+            {
+                text: 'Contexts',
+                id: 'Profile' + profileID(n) + 'contexts',
+                dataAttr: {
+                    profile: n
+                },
+                lazyLoad: profiles.items[n].contexts.length > 0,
+                state: {
+                    checked: profiles.items[n].enableContexts
+                }
             }
         ]
     }
@@ -271,10 +292,18 @@ export function UpdateButtonSample() {
         button.html('<i class="fa fa-question"></i>');
 }
 
-export function openImage() {
+export function UpdateContextSample() {
+    var button = $("#context-sample");
+    button.prop('title', $('#context-caption').val());
+    var icon = $('#context-icon').val();
+    if (icon.length > 0)
+        button.html('<img src="' + nativeImage.createFromPath(parseTemplate(icon)).toDataURL() + '" />');
+}
 
+export function openImage(field?, callback?) {
+    if (!field) field = '#button-icon';
     dialog.showOpenDialog(remote.getCurrentWindow(), {
-        defaultPath: path.dirname($('#button-icon').val()),
+        defaultPath: path.dirname($(field).val()),
         filters: [
 
             { name: 'Images (*.jpg, *.png, *.gif)', extensions: ['jpg', 'png', 'gif'] },
@@ -285,8 +314,9 @@ export function openImage() {
             if (fileNames === undefined) {
                 return;
             }
-            $('#button-icon').keyup().val(fileNames[0]).keydown();
+            $(field).keyup().val(fileNames[0]).keydown();
             UpdateButtonSample();
+            if (callback) callback();
         });
 }
 
@@ -362,6 +392,7 @@ export function UpdateEnabled() {
         case "macros":
         case "triggers":
         case "buttons":
+        case "contexts":
         case "profile":
             var parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(currentProfile.name) + "$", 'id']);
             if (!$("#editor-enabled").prop("checked")) {
@@ -422,6 +453,15 @@ export function UpdateEnabled() {
             pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.buttons[currentNode.dataAttr.index].enabled } });
             currentProfile.buttons[currentNode.dataAttr.index].enabled = $("#editor-enabled").prop("checked");
             break;
+        case "context":
+            if ($("#editor-enabled").prop("checked"))
+                $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + "$", 'id']), { silent: true }]);
+            else
+                $("#profile-tree").treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + "$", 'id']), { silent: true }]);
+            pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.contexts[currentNode.dataAttr.index].enabled } });
+            currentProfile.contexts[currentNode.dataAttr.index].enabled = $("#editor-enabled").prop("checked");
+            break;
+
     }
 }
 
@@ -530,6 +570,19 @@ function UpdateButton(customUndo?: boolean): UpdateState {
         $("#editor-title").text("Button: " + GetDisplay(currentProfile.buttons[currentNode.dataAttr.index]))
         if (!customUndo)
             pushUndo({ action: 'update', type: 'button', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
+        return UpdateState.Changed;
+    }
+    return UpdateState.NoChange;
+}
+
+function UpdateContext(customUndo?: boolean): UpdateState {
+    var data: any = UpdateItem(currentProfile.contexts[currentNode.dataAttr.index]);
+    if (data) {
+        UpdateContextSample();
+        UpdateItemNode(currentProfile.contexts[currentNode.dataAttr.index]);
+        $("#editor-title").text("Context: " + GetDisplay(currentProfile.contexts[currentNode.dataAttr.index]))
+        if (!customUndo)
+            pushUndo({ action: 'update', type: 'context', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
         return UpdateState.Changed;
     }
     return UpdateState.NoChange;
@@ -736,6 +789,19 @@ function newProfileNode(profile?) {
                     checked: profile.enableButtons
                 },
                 nodes: []
+            },
+            {
+                text: 'Contexts',
+                id: id + "contexts",
+                dataAttr: {
+                    profile: key,
+                    type: 'contexts'
+                },
+                lazyLoad: profile.contexts.length > 0,
+                state: {
+                    checked: profile.enableContexts
+                },
+                nodes: []
             }
         ]
     }
@@ -820,6 +886,17 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         changed++;
         currentProfile.enableButtons = $("#profile-enableButtons").prop("checked");
     }
+    if (currentProfile.enableContexts != $("#profile-enableContexts").prop("checked")) {
+        data.enableContexts = currentProfile.enableContexts;
+        changed++;
+        currentProfile.enableContexts = $("#profile-enableContexts").prop("checked");
+    }
+
+    if (currentProfile.enableDefaultContext != $("#profile-enableDefaultContext").prop("checked")) {
+        data.enableDefaultContext = currentProfile.enableDefaultContext;
+        changed++;
+        currentProfile.enableDefaultContext = $("#profile-enableDefaultContext").prop("checked");
+    }
 
     if (currentProfile.enabled != $("#editor-enabled").prop("checked")) {
         data.enabled = currentProfile.enabled;
@@ -860,6 +937,11 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
     else
         $("#profile-tree").treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "buttons$", 'id'])]);
 
+    if (currentProfile.enableContexts)
+        $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "contexts$", 'id'])]);
+    else
+        $("#profile-tree").treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "contexts$", 'id'])]);
+
     if (changed > 0 && !customUndo) {
         pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: data });
         return UpdateState.Changed;
@@ -887,6 +969,11 @@ export function updateProfileChecks() {
         $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "buttons$", 'id']), { silent: true }]);
     else
         $("#profile-tree").treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "buttons$", 'id']), { silent: true }]);
+    if ($("#profile-enableContexts").prop("checked"))
+        $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "contexts$", 'id']), { silent: true }]);
+    else
+        $("#profile-tree").treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "contexts$", 'id']), { silent: true }]);
+
     _pUndo = false;
 }
 
@@ -946,6 +1033,13 @@ function nodeCheckChanged(event, node) {
             if (profile == currentProfile)
                 $("#profile-enableButtons").prop("checked", node.state.checked);
             break;
+        case "contexts":
+            profile.enableContexts = node.state.checked;
+            t = 'profile';
+            data.enableContexts = node.state.checked;
+            if (profile == currentProfile)
+                $("#profile-enableContexts").prop("checked", node.state.checked);
+            break;
         case "alias":
             profile.aliases[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
@@ -966,6 +1060,12 @@ function nodeCheckChanged(event, node) {
             break;
         case "button":
             profile.buttons[node.dataAttr.index].enabled = node.state.checked;
+            data.enabled = node.state.checked;
+            if (node.id == currentNode.id)
+                $("#editor-enabled").prop("checked", node.state.checked);
+            break;
+        case "context":
+            profile.contexts[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
             if (node.id == currentNode.id)
                 $("#editor-enabled").prop("checked", node.state.checked);
@@ -1130,6 +1230,9 @@ export function doUndo() {
                             break;
                         case "button":
                             UpdateEditor('button', profiles.items[action.profile][key][action.item], { post: UpdateButtonSample });
+                            break;
+                        case "context":
+                            UpdateEditor('context', profiles.items[action.profile][key][action.item], { post: UpdateContextSample });
                             break;
                     }
                 }
@@ -1315,6 +1418,9 @@ export function doRedo() {
                         case "button":
                             UpdateEditor('button', profiles.items[action.profile][key][action.item], { post: UpdateButtonSample });
                             break;
+                        case "context":
+                            UpdateEditor('context', profiles.items[action.profile][key][action.item], { post: UpdateContextSample });
+                            break;
                     }
                 }
             }
@@ -1436,6 +1542,19 @@ export function doCut(node?) {
             _clip = { type: t, data: [node.dataAttr.index], key: "buttons", idx: node.dataAttr.index };
             node.$el.css('opacity', '0.5');
             break;
+        case "contexts":
+            data = [];
+            for (var i = 0, il = profile.contexts.length; i < il; i++)
+                data.push(i);
+            _clip = { type: "context", data: data, key: "contexts" };
+            nodes = $('#profile-tree').treeview('findNodes', ['^' + node.id + '[0-9]+', 'id']);
+            for (var n = 0, nl = nodes.length; n < nl; n++)
+                nodes[n].$el.css('opacity', '0.5');
+            break;
+        case "context":
+            _clip = { type: t, data: [node.dataAttr.index], key: "contexts", idx: node.dataAttr.index };
+            node.$el.css('opacity', '0.5');
+            break;
     }
     if (_clip) {
         _clip.profile = profile.name.toLowerCase();
@@ -1500,6 +1619,15 @@ export function doCopy(node?) {
             break;
         case "button":
             _clip = { type: t, data: [profile.buttons[node.dataAttr.index].clone()], key: "buttons", idx: node.dataAttr.index };
+            break;
+        case "contexts":
+            data = [];
+            for (var i = 0, il = profile.contexts.length; i < il; i++)
+                data.push(profile.contexts[i].clone());
+            _clip = { type: "context", data: data, key: "contexts" };
+            break;
+        case "context":
+            _clip = { type: t, data: [profile.contexts[node.dataAttr.index].clone()], key: "contexts", idx: node.dataAttr.index };
             break;
     }
     if (_clip) {
@@ -1581,6 +1709,12 @@ export function doDelete(node?) {
         case "button":
             DeleteItemConfirm("button", "buttons", node.dataAttr.index, profiles.items[node.dataAttr.profile]);
             break;
+        case "contexts":
+            DeleteItems("context", "contexts", profiles.items[node.dataAttr.profile]);
+            break;
+        case "context":
+            DeleteItemConfirm("context", "contexts", node.dataAttr.index, profiles.items[node.dataAttr.profile]);
+            break;
     }
 }
 function updateCurrent(): UpdateState {
@@ -1596,6 +1730,7 @@ function updateCurrent(): UpdateState {
             case "macros":
             case "triggers":
             case "buttons":
+            case "contexts":
             case "profile":
                 return UpdateProfile();
             case "alias":
@@ -1606,6 +1741,8 @@ function updateCurrent(): UpdateState {
                 return UpdateTrigger();
             case "button":
                 return UpdateButton();
+            case "context":
+                return UpdateContext();
         }
     }
     return UpdateState.NoChange;
@@ -1653,6 +1790,7 @@ function buildTreeview(data) {
                 case "macros":
                 case "triggers":
                 case "buttons":
+                case "contexts":
                 case "profile":
                     UpdateEditor("profile", currentProfile, {
                         post: () => {
@@ -1687,6 +1825,9 @@ function buildTreeview(data) {
                     break;
                 case "button":
                     UpdateEditor('button', currentProfile.buttons[node.dataAttr.index], { post: UpdateButtonSample });
+                    break;
+                case "context":
+                    UpdateEditor('context', currentProfile.contexts[node.dataAttr.index], { post: UpdateContextSample });
                     break;
             }
             _loading--;
@@ -2027,6 +2168,53 @@ export function init() {
                         }));
                     }
                     break;
+                case "contexts":
+                case "context":
+                    c.append(new MenuItem({
+                        label: 'Add context', click() {
+                            addItem('Context', 'contexts', new Context())
+                        }
+                    }));
+                    c.append(new MenuItem({ type: 'separator' }));
+                    c.append(new MenuItem({
+                        label: 'Undo', click() {
+                            doUndo();
+                        },
+                        enabled: _undo.length > 0
+                    }));
+                    c.append(new MenuItem({
+                        label: 'Redo', click() {
+                            doRedo();
+                        },
+                        enabled: _redo.length > 0
+                    }));
+
+                    if (profile.contexts.length > 0) {
+                        c.append(new MenuItem({ type: 'separator' }));
+                        c.append(new MenuItem({
+                            label: 'Cut', click() {
+                                doCut(nodes[0]);
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy', click() {
+                                doCopy(nodes[0]);
+                            }
+                        }));
+                        if (canPaste())
+                            c.append(new MenuItem({
+                                label: 'Paste', click() {
+                                    doPaste(nodes[0]);
+                                }
+                            }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                        c.append(new MenuItem({
+                            label: 'Delete', click() {
+                                doDelete(nodes[0]);
+                            }
+                        }));
+                    }
+                    break;
             }
         }
         c.popup(remote.getCurrentWindow());
@@ -2185,6 +2373,8 @@ export function init() {
         $("#button-editor .btn-adv").click();
     if (options.profiles.macrosAdvanced)
         $("#macro-editor .btn-adv").click();
+    if (options.profiles.contextsAdvanced)
+        $("#context-editor .btn-adv").click();
 
     ['cut', 'copy', 'paste'].forEach(function (event) {
         document.addEventListener(event, function (e) {
@@ -2205,6 +2395,7 @@ export function init() {
     initEditor("macro-value");
     initEditor("alias-value");
     initEditor("button-value");
+    initEditor("context-value");
 
     window.onbeforeunload = function () {
         if (close || _never || (_undo.length == 0 && updateCurrent() == UpdateState.NoChange))
@@ -2292,14 +2483,18 @@ function loadActions(p, root) {
     for (var f = 0, fl = files.length; f < fl; f++) {
         if (fs.lstatSync(path.join(p, files[f])).isDirectory())
             loadActions(path.join(p, files[f]), path.join(root, files[f]));
-        else
+        else {
             $("#button-actions-dropdown").append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="profileUI.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\')"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
+            $("#context-actions-dropdown").append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="profileUI.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\', \'context\', profileUI.UpdateContextSample)"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
+        }
     }
 }
 
-export function setIcon(icon) {
-    $('#button-icon').keydown().val(path.join("{assets}", "actions", icon)).keyup();
+export function setIcon(icon, field?, callback?) {
+    if (!field) field = "button"
+    $('#' + field + '-icon').keydown().val(path.join("{assets}", "actions", icon)).keyup();
     UpdateButtonSample();
+    if (callback) callback();
 }
 
 export function doRefresh() {
@@ -2456,11 +2651,11 @@ function importProfiles() {
                                     }
                                 }
                             }
-                            if (data.profiles[keys[k]].context) {
-                                l = data.profiles[keys[k]].context.length;
+                            if (data.profiles[keys[k]].contexts) {
+                                l = data.profiles[keys[k]].contexts.length;
                                 if (l > 0) {
                                     for (var m = 0; m < l; m++) {
-                                        item = new Context(data.profiles[keys[k]].context[m]);
+                                        item = new Context(data.profiles[keys[k]].contexts[m]);
                                         p.contexts.push(item);
                                     }
                                 }
@@ -2807,6 +3002,7 @@ export function doReset(node) {
             n = n.concat($("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + 'triggers[0-9]+', 'id']));
             n = n.concat($("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + 'buttons[0-9]+', 'id']));
             n = n.concat($("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + 'aliases[0-9]+', 'id']));
+            n = n.concat($("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + 'contexts[0-9]+', 'id']));
             $('#profile-tree').treeview('removeNode', [n, { silent: true }]);
             n = {
                 text: 'Aliases',
@@ -2866,6 +3062,21 @@ export function doReset(node) {
             var o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'buttons$', 'id']);
             $('#profile-tree').treeview('updateNode', [o[0], n]);
 
+            n = {
+                text: 'Contexts',
+                id: "Profile" + profileID(profile.name) + "contexts",
+                dataAttr: {
+                    profile: profile.name.toLowerCase(),
+                    type: 'contexts'
+                },
+                lazyLoad: 0,
+                state: {
+                    checked: profile.enableContexts
+                }
+            };
+            var o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'contexts$', 'id']);
+            $('#profile-tree').treeview('updateNode', [o[0], n]);
+
             profile.aliases = [];
             profile.macros = [];
             profile.triggers = [];
@@ -2874,6 +3085,8 @@ export function doReset(node) {
             profile.enableTriggers = true;
             profile.enableAliases = true;
             profile.enableButtons = true;
+            profile.enableContexts = true;
+            profile.enableDefaultContext = true;
             profile.priority = 0;
             profile.enabled = true;
 
@@ -2882,6 +3095,8 @@ export function doReset(node) {
                 $("#profile-enableMacros").prop("checked", currentProfile.enableMacros);
                 $("#profile-enableTriggers").prop("checked", currentProfile.enableTriggers);
                 $("#profile-enableButtons").prop("checked", currentProfile.enableButtons);
+                $("#profile-enableContexts").prop("checked", currentProfile.enableContexts);
+                $("#profile-enableDefaultContext").prop("checked", currentProfile.enableDefaultContext);
                 $("#editor-enabled").prop("checked", currentProfile.enabled)
                 $("#profile-priority").val(currentProfile.priority);
             }
@@ -2889,6 +3104,7 @@ export function doReset(node) {
             $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + "aliases$", 'id'])]);
             $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + "triggers$", 'id'])]);
             $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + "buttons$", 'id'])]);
+            $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + "contexts$", 'id'])]);
             $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + "$", 'id'])]);
 
         }

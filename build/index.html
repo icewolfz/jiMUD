@@ -23,7 +23,7 @@
       const Logger = require('./js/logging.js').Logger;
       const Backup = require('./js/backup.js').Backup;
       const { shell, clipboard, ipcRenderer, remote } = require('electron');
-      const { dialog, Menu, MenuItem, app } = remote;
+      const { dialog, Menu, MenuItem, app, nativeImage } = remote;
       const { parseTemplate, setSelectionRange } = require("./js/library.js");
       const fs = require('fs');
       const path = require('path');
@@ -222,31 +222,28 @@
       }
 
       function buildMenu(name, context) {
-        if (context.length == 0)
+        if (!name || context.length == 0)
           return [];
         var items = [];
         for (var x = 0, xl = context.length; x < xl; x++) {
-          if (context[x].parent != name) continue;
-          var sub = buildMenu(context[x].name || x, context);
+          if (!context[x].enabled || context[x].parent != name) continue;
+          var menu;
           if (context[x].caption == "-")
-            items.push(new MenuItem({ type: 'separator' }));
-          else if (sub.length > 0)
-            items.push(new MenuItem({
-              label: context[x].caption,
-              index: x,
-              submenu: sub,
-              click: (item, win) => {
-                console.log(item);
-              }
-            }));
-          else
-            items.push(new MenuItem({
-              label: context[x].caption,
-              index: x,
-              click: (item, win) => {
-                console.log(item);
-              }
-            }));
+            menu = { type: 'separator' };
+          else {
+            menu = {};
+            menu.label = context[x].caption;
+            menu.index = context[x];
+            menu.click = (item, win) => {
+              executeContext(item.item);
+            };
+            var sub = buildMenu(context[x].name || x, context);
+            if (sub.length > 0)
+              menu.submenu = sub;
+            if (context[x].icon && context[x].icon.length > 0)
+              menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
+          }
+          items.push(new MenuItem(menu));
         }
         return items;
       }
@@ -343,10 +340,9 @@
           else
             window.$selectedword = line.substring(sPos, ePos);
 
-          //console.log("Selected: " + window.$selected);
-          //console.log("Word: " + window.$selectedword);
-          //console.log("Line: " + window.$selectedline);
-          //console.log("Url: " + window.$selectedurl);
+          window.$selurl = window.$selectedurl;
+          window.$selline = window.$selectedline;
+          window.$selword = window.$selectedword;
 
           var c = new Menu();
 
@@ -367,27 +363,24 @@
           if (context.length > 0) {
             c.append(new MenuItem({ type: 'separator' }));
             for (var x = 0, xl = context.length; x < xl; x++) {
-              if (context[x].parent) continue;
-              var sub = buildMenu(context[x].name || x, context);
+              if (!context[x].enabled || context[x].parent) continue;
+              var menu;
               if (context[x].caption == "-")
-                items.push(new MenuItem({ type: 'separator' }));
-              else if (sub.length > 0)
-                c.append(new MenuItem({
-                  label: context[x].caption,
-                  index: x,
-                  submenu: sub,
-                  click: (item, win) => {
-                    console.log(item);
-                  }
-                }));
-              else
-                c.append(new MenuItem({
-                  label: context[x].caption,
-                  index: x,
-                  click: (item, win) => {
-                    console.log(item);
-                  }
-                }));
+                menu = { type: 'separator' };
+              else {
+                menu = {};
+                menu.label = context[x].caption;
+                menu.item = context[x];
+                menu.click = (item, win) => {
+                  executeContext(item.item);
+                };
+                var sub = buildMenu(context[x].name || x, context);
+                if (sub.length > 0)
+                  menu.submenu = sub;
+                if (context[x].icon && context[x].icon.length > 0)
+                  menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
+              }
+              c.append(new MenuItem(menu));
             }
           }
 
@@ -669,6 +662,43 @@
         }
 
       };
+
+      function executeContext(item) {
+        if (!item) return;
+        if (!item.enabled) return false;
+        var ret;// = "";
+        switch (item.style) {
+          case 1:
+            ret = client.parseOutgoing(item.value);
+            break;
+          case 2:
+            /*jslint evil: true */
+            var f = new Function("try { " + item.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
+            ret = f.apply(client);
+            break;
+          default:
+            ret = item.value;
+            break;
+        }
+        if (ret == null)
+          return true;
+        if (item.send) {
+          if (!ret.endsWith("\n"))
+            ret += "\n";
+          if (item.chain && this.client.commandInput.val().endsWith(" ")) {
+            this.client.commandInput.val(this.client.commandInput.val() + ret);
+            this.client.sendCommand();
+            return true;
+          }
+          if (this.client.connected)
+            this.client.send(ret);
+          if (this.client.telnet.echo && this.client.options.commandEcho)
+            this.client.echo(ret);
+        }
+        else if (item.append)
+          this.client.commandInput.val(this.client.commandInput.val() + ret);
+        return true;
+      }
 
       function executeButton(idx) {
         var button;

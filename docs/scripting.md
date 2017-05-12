@@ -1,5 +1,14 @@
 # Scripting
 
+# Predefined varibles:
+- `$selected` - selected text
+- `$selectedword` - word under mouse when right clicked
+- `$selectedline` - line under mouse when right clicked
+- `$selectedurl` - url under mouse when right clicked
+- `$selword` same as $selectedword
+- `$selline` sane as $selline
+- `$selurl` same as $selected url
+
 # Basic function list:
 - `this.send(text)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new lien as most muds require it to process any text.
 - `this.sendRaw(text)` sends raw text directly to the mud as is

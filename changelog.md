@@ -1,5 +1,13 @@
 ## Changelog
 ##### 0.1.9 - 2017-05-
+- **New:**
+  - User context menus, create custom items for the right click display menu
+  - 7 new variables in javascript
+    - $selectedword/$selword - returns the word under the mouse when right clicked
+    - $selected - returns the current selected text
+    - $selectedline/$selline - returns the current line text
+    - $selectedurl/$selurl - returns the current url when right clicked
+  - new parsed variables that work like the javascript ones in format of %{variable}
 - **Fixed:**
   - A bug with chat window not saving window state on close
   - A bug when closing client and mapper is not set as always on top of main window
