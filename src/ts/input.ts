@@ -8,6 +8,10 @@ import { Client } from "./client";
 import { Tests } from "./test";
 import { Alias, Trigger, Macro, Profile } from "./profile";
 
+function ProperCase(str) {
+    return str.replace(/\w*\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
+}
+
 export class input extends EventEmitter {
     private _historyIdx: number = -1;
     private _commandHistory: string[]
@@ -735,7 +739,7 @@ export class input extends EventEmitter {
             stacking = this.client.options.commandStacking;
         else
             stacking = stacking && this.client.options.commandStacking;
-
+        //recode someday to be part of the parser engine instead of simple regex
         text = text.replace(/\%\{selected\}/g, $selected);
         text = text.replace(/\%\{selectedurl\}/g, $selectedurl);
         text = text.replace(/\%\{selectedline\}/g, $selectedline);
@@ -760,8 +764,17 @@ export class input extends EventEmitter {
         text = text.replace(/\%\{selline.upper\}/g, $selectedline.toUpperCase());
         text = text.replace(/\%\{selword.upper\}/g, $selectedword.toUpperCase());
 
+        text = text.replace(/\%\{selected.proper\}/g, ProperCase($selected));
+        text = text.replace(/\%\{selectedurl.proper\}/g, ProperCase($selectedurl));
+        text = text.replace(/\%\{selectedline.proper\}/g, ProperCase($selectedline));
+        text = text.replace(/\%\{selectedword.proper\}/g, ProperCase($selectedword));
+        text = text.replace(/\%\{selurl.proper\}/g, ProperCase($selectedurl));
+        text = text.replace(/\%\{selline.proper\}/g, ProperCase($selectedline));
+        text = text.replace(/\%\{selword.proper\}/g, ProperCase($selectedword));
+
         text = text.replace(/\%\{lower\((.*)\)\}/g, function (v, e) { return e.toLowerCase(); });
         text = text.replace(/\%\{upper\((.*)\)\}/g, function (v, e) { return e.toUpperCase(); });
+        text = text.replace(/\%\{proper\((.*)\)\}/g, function (v, e) { return ProperCase(e); });
 
         tl = text.length;
 

@@ -18,6 +18,15 @@
     <script src="js/jquery.ext.js"></script>
     <script>
       if (window.module) module.module;
+      window.$selected = '';
+      window.$selectedurl = '';
+      window.$selectedline = '';
+      window.$selectedword = '';
+
+      window.$selurl = window.$selectedurl;
+      window.$selline = window.$selectedline;
+      window.$selword = window.$selectedword;
+
       const Client = require('./js/client.js').Client;
       const Status = require('./js/status.js').Status;
       const Logger = require('./js/logging.js').Logger;
@@ -347,23 +356,8 @@
           var c = new Menu();
 
 
-          if (client.defaultContext) {
-            if (window.$selected && window.$selected != "") {
-              c.append(new MenuItem({ role: 'copy' }));
-            }
-            c.append(new MenuItem({ role: 'selectall' }));
-            c.append(new MenuItem({ type: 'separator' }));
-            c.append(new MenuItem({
-              label: 'Clear', click: () => {
-                client.clear()
-              }
-            }));
-          }
           var context = client.contexts;
           if (context.length > 0) {
-            if (c.items.length > 0)
-              c.append(new MenuItem({ type: 'separator' }));
-
             for (var x = 0, xl = context.length; x < xl; x++) {
               if (!context[x].enabled || context[x].parent) continue;
               var menu;
@@ -384,6 +378,21 @@
               }
               c.append(new MenuItem(menu));
             }
+          }
+
+          if (client.defaultContext) {
+            if (c.items.length > 0)
+              c.append(new MenuItem({ type: 'separator' }));
+            if (window.$selected && window.$selected != "") {
+              c.append(new MenuItem({ role: 'copy' }));
+            }
+            c.append(new MenuItem({ role: 'selectall' }));
+            c.append(new MenuItem({ type: 'separator' }));
+            c.append(new MenuItem({
+              label: 'Clear', click: () => {
+                client.clear()
+              }
+            }));
           }
 
           if (c.items.length > 0)

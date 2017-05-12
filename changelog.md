@@ -7,9 +7,12 @@
     - $selected - returns the current selected text
     - $selectedline/$selline - returns the current line text
     - $selectedurl/$selurl - returns the current url when right clicked
-  - new parsed variables that work like the javascript ones in format of %{variable}, you may force upper or lower case by append .lower, or .upper, for example %{selword.lower} will return lower cased version
-  - inline parse function for parsed text %{lower(TEXT)} and %{upper(TEXT)}, allows you to lower case text, useful for using parsed variables, for example %{lower(%{selword})} would lower case the value in %{selword} as an alt to .lower/.upper
-- **Fixed:**
+  - new parsed variables that work like the javascript ones in format of %{variable}, you may force upper, lower, or proper case by appending .lower, or .upper, for example %{selword.lower} will return lower cased version, or using the inline parse functions
+  - inline parse functions to manipulate parsable variables
+    - `%{lower(TEXT)}` - convert TEXT to lower case
+    - `%{upper(TEXT)}` - convert TEXT to upper case
+    - `%{proper(TEXT)}` - convert TEXT to proper case
+  - **Fixed:**
   - A bug with chat window not saving window state on close
   - A bug when closing client and mapper is not set as always on top of main window
   - A bug when mapper is not always on top of main window and not reopening next load

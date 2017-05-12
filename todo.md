@@ -37,3 +37,4 @@
 * Code documentation - comment all classes/functions/enums for all typescript and javascript
 * Add MCP telnet support [MCP Standard](http://www.moo.mud.org/mcp/)
 * look into reducing memory
+* recode the inline varibles and functions parse of the parsing system instead of ismple js replace function calls, should improve speed as will not have to call all functions all the time
