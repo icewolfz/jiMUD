@@ -107,3 +107,7 @@
 - `${selword}` same as $selectedword
 - `${selline}` sane as $selline
 - `${selurl}` same as $selected url
+- `${variable.lower}` - force variable to all lower case by append .lower to
+- `${variable.upper}` - force variable to all upper case by append .lower to
+- `${lower(TEXT)}` - force TEXT into lower case, for example ${lower(${selword})} is the same as ${selword.lower}
+- `${upper(TEXT)}` - force TEXT into upper case
