@@ -1,9 +1,10 @@
 ## Changelog
-##### 0.1.8 - 2017-05-
+##### 0.1.8 - 2017-05-11
 - **New:**
   - Allow negative numbers for experience needed in status display
   - Mapper Load in memory will now save to disk every 15 mins
   - Mapper Save period can be set in milliseconds
+  - Basic context menu for main display (copy/select all/clear) with ground work for custom items later on.
 - **Changed:**
   - Changed how editor, chat, and mapper windows are cached to try and improve memory and speed by not loading in the background unless needed
   - Mapper load in memory no longer requires restart to enable

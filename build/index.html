@@ -335,7 +335,7 @@
           window.$selected = getDisplaySelectionText();
           window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
           window.$selectedline = $(e.srcElement).closest('.line').text();
-          
+
           var line = $(e.srcElement).closest('.line').text();
           var x = (e.pageX - client.display.offset().left) + client.display.scrollLeft();
           x = Math.floor(x / parseFloat(window.getComputedStyle(client.character[0]).width));
@@ -368,9 +368,16 @@
           if (client.defaultContext) {
             if (window.$selected && window.$selected != "") {
               c.append(new MenuItem({ role: 'copy' }));
-              c.append(new MenuItem({ type: 'separator' }));
             }
             c.append(new MenuItem({ role: 'selectall' }));
+            c.append(new MenuItem({ type: 'separator' }));
+            c.append(new MenuItem({
+              label: 'Clear', click: () => {
+                client.clear()
+              }
+            }));
+            
+
           }
           var context = client.contexts;
           if (context.length > 0) {
