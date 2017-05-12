@@ -2,6 +2,7 @@
 //cSpell:ignore stopallsound, stopa, showprompt, showp, sayprompt, sayp, echoprompt, echop, unalias, setsetting, getsetting, profilelist
 //cSpell:ignore keycode
 import EventEmitter = require('events');
+import { clipboard } from 'electron';
 import { MacroModifiers } from "./profile";
 import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority } from "./library";
 import { Client } from "./client";
@@ -740,6 +741,7 @@ export class input extends EventEmitter {
         else
             stacking = stacking && this.client.options.commandStacking;
         //recode someday to be part of the parser engine instead of simple regex
+        var copyed = clipboard.readText('selection') || '';
         text = text.replace(/\%\{selected\}/g, $selected);
         text = text.replace(/\%\{selectedurl\}/g, $selectedurl);
         text = text.replace(/\%\{selectedline\}/g, $selectedline);
@@ -747,6 +749,8 @@ export class input extends EventEmitter {
         text = text.replace(/\%\{selurl\}/g, $selectedurl);
         text = text.replace(/\%\{selline\}/g, $selectedline);
         text = text.replace(/\%\{selword\}/g, $selectedword);
+        text = text.replace(/\%\{copyed\}/g, copyed);
+
 
         text = text.replace(/\%\{selected.lower\}/g, $selected.toLowerCase());
         text = text.replace(/\%\{selectedurl.lower\}/g, $selectedurl.toLowerCase());
@@ -755,6 +759,7 @@ export class input extends EventEmitter {
         text = text.replace(/\%\{selurl.lower\}/g, $selectedurl.toLowerCase());
         text = text.replace(/\%\{selline.lower\}/g, $selectedline.toLowerCase());
         text = text.replace(/\%\{selword.lower\}/g, $selectedword.toLowerCase());
+        text = text.replace(/\%\{copyed.lower\}/g, copyed);
 
         text = text.replace(/\%\{selected.upper\}/g, $selected.toUpperCase());
         text = text.replace(/\%\{selectedurl.upper\}/g, $selectedurl.toUpperCase());
@@ -763,6 +768,7 @@ export class input extends EventEmitter {
         text = text.replace(/\%\{selurl.upper\}/g, $selectedurl.toUpperCase());
         text = text.replace(/\%\{selline.upper\}/g, $selectedline.toUpperCase());
         text = text.replace(/\%\{selword.upper\}/g, $selectedword.toUpperCase());
+        text = text.replace(/\%\{copyed.upper\}/g, copyed.toUpperCase());
 
         text = text.replace(/\%\{selected.proper\}/g, ProperCase($selected));
         text = text.replace(/\%\{selectedurl.proper\}/g, ProperCase($selectedurl));
@@ -771,6 +777,7 @@ export class input extends EventEmitter {
         text = text.replace(/\%\{selurl.proper\}/g, ProperCase($selectedurl));
         text = text.replace(/\%\{selline.proper\}/g, ProperCase($selectedline));
         text = text.replace(/\%\{selword.proper\}/g, ProperCase($selectedword));
+        text = text.replace(/\%\{copyed.proper\}/g, ProperCase(copyed));
 
         text = text.replace(/\%\{lower\((.*)\)\}/g, function (v, e) { return e.toLowerCase(); });
         text = text.replace(/\%\{upper\((.*)\)\}/g, function (v, e) { return e.toUpperCase(); });

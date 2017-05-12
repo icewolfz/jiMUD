@@ -325,6 +325,7 @@
         doc.addEventListener('contextmenu', (e) => {
           e.preventDefault()
           window.$selected = getDisplaySelectionText();
+          window.$copyed = clipboard.readText('selection');
           window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
           window.$selectedline = $(e.srcElement).closest('.line').text();
 
@@ -414,6 +415,12 @@
         OoMUD = client;
         window.client = client;
         window.OoMUD = client;
+        window.readClipboard = () => { return clipboard.readText('selection') || '' };
+        window.writeClipboard = (txt) => { clipboard.writeText(txt||'', 'selection') };
+        client.readClipboard = window.readClipboard;
+        client.writeClipboard = window.writeClipboard;
+
+
         client.version = version;
         client.host = "www.shadowmud.com";
         client.port = client.options.dev ? 1035 : 1030;
