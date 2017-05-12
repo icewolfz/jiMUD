@@ -7,9 +7,9 @@
     - $selected - returns the current selected text
     - $selectedline/$selline - returns the current line text
     - $selectedurl/$selurl - returns the current url when right clicked
-    - $copyed - return clipboard text
+    - $copied - return clipboard text
   - new parsed variables that work like the javascript ones in format of %{variable}, you may force upper, lower, or proper case by appending .lower, or .upper, for example %{selword.lower} will return lower cased version, or using the inline parse functions
-  - %{copyed} - replace with clipboard contents, for javascript use this.readClipboard() or client.readClipboard where needed
+  - %{copied} - replace with clipboard contents, for javascript use this.readClipboard() or client.readClipboard where needed
   - inline parse functions to manipulate parsable variables
     - `%{lower(TEXT)}` - convert TEXT to lower case
     - `%{upper(TEXT)}` - convert TEXT to upper case

@@ -325,7 +325,7 @@
         doc.addEventListener('contextmenu', (e) => {
           e.preventDefault()
           window.$selected = getDisplaySelectionText();
-          window.$copyed = clipboard.readText('selection');
+          window.$copied = clipboard.readText('selection');
           window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
           window.$selectedline = $(e.srcElement).closest('.line').text();
 

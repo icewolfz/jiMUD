@@ -741,11 +741,11 @@ export class input extends EventEmitter {
         else
             stacking = stacking && this.client.options.commandStacking;
         //recode someday to be part of the parser engine instead of simple regex
-        var copyed = clipboard.readText('selection') || '';
-        text = text.replace(/\%\{copyed\}/g, copyed);
-        text = text.replace(/\%\{copyed.lower\}/g, copyed);
-        text = text.replace(/\%\{copyed.upper\}/g, copyed.toUpperCase());
-        text = text.replace(/\%\{copyed.proper\}/g, ProperCase(copyed));
+        var copied = clipboard.readText('selection') || '';
+        text = text.replace(/\%\{copied\}/g, copied);
+        text = text.replace(/\%\{copied.lower\}/g, copied);
+        text = text.replace(/\%\{copied.upper\}/g, copied.toUpperCase());
+        text = text.replace(/\%\{copied.proper\}/g, ProperCase(copied));
 
         text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)}/g, function (v, e) { return window["$"+e]; });
         text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower}/g, function (v, e) { return window["$"+e].toLowerCase(); });
