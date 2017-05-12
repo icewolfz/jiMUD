@@ -742,42 +742,15 @@ export class input extends EventEmitter {
             stacking = stacking && this.client.options.commandStacking;
         //recode someday to be part of the parser engine instead of simple regex
         var copyed = clipboard.readText('selection') || '';
-        text = text.replace(/\%\{selected\}/g, $selected);
-        text = text.replace(/\%\{selectedurl\}/g, $selectedurl);
-        text = text.replace(/\%\{selectedline\}/g, $selectedline);
-        text = text.replace(/\%\{selectedword\}/g, $selectedword);
-        text = text.replace(/\%\{selurl\}/g, $selectedurl);
-        text = text.replace(/\%\{selline\}/g, $selectedline);
-        text = text.replace(/\%\{selword\}/g, $selectedword);
         text = text.replace(/\%\{copyed\}/g, copyed);
-
-
-        text = text.replace(/\%\{selected.lower\}/g, $selected.toLowerCase());
-        text = text.replace(/\%\{selectedurl.lower\}/g, $selectedurl.toLowerCase());
-        text = text.replace(/\%\{selectedline.lower\}/g, $selectedline.toLowerCase());
-        text = text.replace(/\%\{selectedword.lower\}/g, $selectedword.toLowerCase());
-        text = text.replace(/\%\{selurl.lower\}/g, $selectedurl.toLowerCase());
-        text = text.replace(/\%\{selline.lower\}/g, $selectedline.toLowerCase());
-        text = text.replace(/\%\{selword.lower\}/g, $selectedword.toLowerCase());
         text = text.replace(/\%\{copyed.lower\}/g, copyed);
-
-        text = text.replace(/\%\{selected.upper\}/g, $selected.toUpperCase());
-        text = text.replace(/\%\{selectedurl.upper\}/g, $selectedurl.toUpperCase());
-        text = text.replace(/\%\{selectedline.upper\}/g, $selectedline.toUpperCase());
-        text = text.replace(/\%\{selectedword.upper\}/g, $selectedword.toUpperCase());
-        text = text.replace(/\%\{selurl.upper\}/g, $selectedurl.toUpperCase());
-        text = text.replace(/\%\{selline.upper\}/g, $selectedline.toUpperCase());
-        text = text.replace(/\%\{selword.upper\}/g, $selectedword.toUpperCase());
         text = text.replace(/\%\{copyed.upper\}/g, copyed.toUpperCase());
-
-        text = text.replace(/\%\{selected.proper\}/g, ProperCase($selected));
-        text = text.replace(/\%\{selectedurl.proper\}/g, ProperCase($selectedurl));
-        text = text.replace(/\%\{selectedline.proper\}/g, ProperCase($selectedline));
-        text = text.replace(/\%\{selectedword.proper\}/g, ProperCase($selectedword));
-        text = text.replace(/\%\{selurl.proper\}/g, ProperCase($selectedurl));
-        text = text.replace(/\%\{selline.proper\}/g, ProperCase($selectedline));
-        text = text.replace(/\%\{selword.proper\}/g, ProperCase($selectedword));
         text = text.replace(/\%\{copyed.proper\}/g, ProperCase(copyed));
+
+        text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)}/g, function (v, e) { return window["$"+e]; });
+        text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower}/g, function (v, e) { return window["$"+e].toLowerCase(); });
+        text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).upper}/g, function (v, e) { return window["$"+e].toUpperCase(); });
+        text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).proper}/g, function (v, e) { return ProperCase(window["$"+e]); });
 
         text = text.replace(/\%\{lower\((.*)\)\}/g, function (v, e) { return e.toLowerCase(); });
         text = text.replace(/\%\{upper\((.*)\)\}/g, function (v, e) { return e.toUpperCase(); });
