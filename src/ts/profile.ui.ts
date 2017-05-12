@@ -298,6 +298,8 @@ export function UpdateContextSample() {
     var icon = $('#context-icon').val();
     if (icon.length > 0)
         button.html('<img src="' + nativeImage.createFromPath(parseTemplate(icon)).toDataURL() + '" />');
+    else
+        button.html('<span></span>');
 }
 
 export function openImage(field?, callback?) {

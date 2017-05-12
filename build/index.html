@@ -233,7 +233,7 @@
           else {
             menu = {};
             menu.label = context[x].caption;
-            menu.index = context[x];
+            menu.item = context[x];
             menu.click = (item, win) => {
               executeContext(item.item);
             };
@@ -361,7 +361,9 @@
           }
           var context = client.contexts;
           if (context.length > 0) {
-            c.append(new MenuItem({ type: 'separator' }));
+            if (c.items.length > 0)
+              c.append(new MenuItem({ type: 'separator' }));
+
             for (var x = 0, xl = context.length; x < xl; x++) {
               if (!context[x].enabled || context[x].parent) continue;
               var menu;

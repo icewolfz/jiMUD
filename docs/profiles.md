@@ -93,7 +93,7 @@
   - `Script` the value is javascript, it will evaluate and any thing returned will be sent to the mud. the value is wrapped as a function and any matched patterns are passed as arguments, use standard arguments[#] to access.
 - `Value` the value to send to the mud
 - `Name` labels the menu to allow assigning of submenu items
-- `Parent` set the parent menu item, either Name or global menu item index
+- `Parent` set the parent menu item, either Name or global menu item index, **Note: When set value can not be executed**
 - `Send to Mud` send the value to the mud
 - `Append to Command` append value to the end of the command input
 - `Daisy Chain` this will append the value to the command line if it ends with a space then send the command line to the mud, if no space it will be handled as a standard macro and send the value.
