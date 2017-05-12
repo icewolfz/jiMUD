@@ -221,49 +221,35 @@
         }
       }
 
-      function getHitWord(hit_elem, doc, e) {
-        var hit_word = '';
-        hit_elem = $(hit_elem);
-
-        //text contents of hit element
-        var text_nodes = hit_elem.contents();
-        /*.filter(function () {
-          return this.nodeType == Node.TEXT_NODE && this.nodeValue.match(/[a-zA-Z0-9_-]{2,}/)
-        });
-        */
-
-        //bunch of text under cursor? break it into words
-        if (text_nodes.length > 0) {
-          var original_content = hit_elem.clone();
-
-          //wrap every word in every node in a dom element
-          text_nodes.replaceWith(function (i) {
-            return $(this).text().replace(/([a-zA-Z0-9_-]*|[^a-zA-Z0-9_-])?/g, "<word>$1</word>")
-          });
-
-          //get the exact word under cursor
-          var hit_word_elem = doc.elementFromPoint(e.clientX, e.clientY);
-
-          if (hit_word_elem.nodeName != 'WORD') {
-          }
-          else {
-            hit_word = $(hit_word_elem).text();
-          }
-
-          hit_elem.replaceWith(original_content);
+      function buildMenu(name, context) {
+        if (context.length == 0)
+          return [];
+        var items = [];
+        for (var x = 0, xl = context.length; x < xl; x++) {
+          if (context[x].parent != name) continue;
+          var sub = buildMenu(context[x].name || x, context);
+          if (context[x].caption == "-")
+            items.push(new MenuItem({ type: 'separator' }));
+          else if (sub.length > 0)
+            items.push(new MenuItem({
+              label: context[x].caption,
+              index: x,
+              submenu: sub,
+              click: (item, win) => {
+                console.log(item);
+              }
+            }));
+          else
+            items.push(new MenuItem({
+              label: context[x].caption,
+              index: x,
+              click: (item, win) => {
+                console.log(item);
+              }
+            }));
         }
-        /*
-        if (savedRange) {
-          var s = $("#displayframe")[0].contentWindow.getSelection();
-          if (s.rangeCount > 0)
-            s.removeAllRanges();
-          s.addRange(savedRange.range);
-        }
-        */
-
-        return hit_word;
+        return items;
       }
-
 
       function init() {
         ipcRenderer.send('set-overlay', 0);
@@ -376,12 +362,33 @@
                 client.clear()
               }
             }));
-            
-
           }
           var context = client.contexts;
           if (context.length > 0) {
             c.append(new MenuItem({ type: 'separator' }));
+            for (var x = 0, xl = context.length; x < xl; x++) {
+              if (context[x].parent) continue;
+              var sub = buildMenu(context[x].name || x, context);
+              if (context[x].caption == "-")
+                items.push(new MenuItem({ type: 'separator' }));
+              else if (sub.length > 0)
+                c.append(new MenuItem({
+                  label: context[x].caption,
+                  index: x,
+                  submenu: sub,
+                  click: (item, win) => {
+                    console.log(item);
+                  }
+                }));
+              else
+                c.append(new MenuItem({
+                  label: context[x].caption,
+                  index: x,
+                  click: (item, win) => {
+                    console.log(item);
+                  }
+                }));
+            }
           }
 
           if (c.items.length > 0)

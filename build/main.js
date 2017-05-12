@@ -976,7 +976,7 @@ ipcMain.on('setting-changed', (event, data) => {
     winMap.setAlwaysOnTop(data.value);
     winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
   }
-  if (event.sender != win.webContents)
+  if (win && event.sender != win.webContents)
     win.webContents.send('setting-changed', data);
   if (winMap && event.sender != winMap.webContents)
     winMap.webContents.send('setting-changed', data);
@@ -1525,7 +1525,7 @@ function createChat(show) {
   winChat.on('close', (e) => {
     set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
     set.showChat = false;
-    set.windows['hat'] = getWindowState('chat', winChat);
+    set.windows['chat'] = getWindowState('chat', winChat);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
     if (set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines) {
       e.preventDefault();

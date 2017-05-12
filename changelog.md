@@ -1,8 +1,11 @@
 ## Changelog
+##### 0.1.9 - 2017-05-
+- **Fixed:**
+  - A bug with chat window not saving window state on close
 ##### 0.1.8 - 2017-05-11
 - **New:**
   - Allow negative numbers for experience needed in status display
-  - Mapper Load in memory will now save to disk every 15 mins
+  - Mapper Load in memory will now save to disk every 15 minutes
   - Mapper Save period can be set in milliseconds
   - Basic context menu for main display (copy/select all/clear) with ground work for custom items later on.
 - **Changed:**

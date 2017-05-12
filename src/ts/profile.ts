@@ -197,7 +197,7 @@ export class Context extends Item {
 	public append: boolean = false;
 	public send: boolean = true;
 	public chain: boolean = false;
-	public submenu: string = '';
+	public parent: string = '';
 	constructor(data?) {
 		super(data);
 		this.caption = "NewContext";
