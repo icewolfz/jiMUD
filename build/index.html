@@ -35,6 +35,7 @@
       var capture = 0, captureReview = 0;
       var _captures = [], _captureReviews = [];
       var _nocapture = false;
+      //var savedRange;
 
       function doLink(url) {
         if (confirm("Open '" + url + "'?") === true)
@@ -220,6 +221,50 @@
         }
       }
 
+      function getHitWord(hit_elem, doc, e) {
+        var hit_word = '';
+        hit_elem = $(hit_elem);
+
+        //text contents of hit element
+        var text_nodes = hit_elem.contents();
+        /*.filter(function () {
+          return this.nodeType == Node.TEXT_NODE && this.nodeValue.match(/[a-zA-Z0-9_-]{2,}/)
+        });
+        */
+
+        //bunch of text under cursor? break it into words
+        if (text_nodes.length > 0) {
+          var original_content = hit_elem.clone();
+
+          //wrap every word in every node in a dom element
+          text_nodes.replaceWith(function (i) {
+            return $(this).text().replace(/([a-zA-Z0-9_-]*|[^a-zA-Z0-9_-])?/g, "<word>$1</word>")
+          });
+
+          //get the exact word under cursor
+          var hit_word_elem = doc.elementFromPoint(e.clientX, e.clientY);
+
+          if (hit_word_elem.nodeName != 'WORD') {
+          }
+          else {
+            hit_word = $(hit_word_elem).text();
+          }
+
+          hit_elem.replaceWith(original_content);
+        }
+        /*
+        if (savedRange) {
+          var s = $("#displayframe")[0].contentWindow.getSelection();
+          if (s.rangeCount > 0)
+            s.removeAllRanges();
+          s.addRange(savedRange.range);
+        }
+        */
+
+        return hit_word;
+      }
+
+
       function init() {
         ipcRenderer.send('set-overlay', 0);
         $(window).blur(function () {
@@ -247,12 +292,12 @@
 
         var mdown = false;
         var sel = false;
-        doc.addEventListener("mousedown", function () {
-          mdown = true;
+        doc.addEventListener("mousedown", function (e) {
+          mdown = e.button == 0;
           sel = false;
         });
 
-        doc.addEventListener("mouseleave", function () {
+        doc.addEventListener("mouseleave", function (e) {
           if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
             clipboard.writeText(getDisplaySelectionText(), 'selection');
             clearDisplaySelection()
@@ -261,10 +306,21 @@
           sel = false;
         });
 
-        doc.addEventListener("mouseup", function () {
+        doc.addEventListener("mouseup", function (e) {
           if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
             clipboard.writeText(getDisplaySelectionText(), 'selection');
             clearDisplaySelection()
+          }
+          else if (mdown) {
+            window.$selected = getDisplaySelectionText();
+            /*
+            if ($("#displayframe")[0].contentWindow.getSelection) {
+              savedRange = { range: $("#displayframe")[0].contentWindow.getSelection().getRangeAt(0) };
+              savedRange.start = savedRange.range.startOffset;
+              savedRange.end = savedRange.range.endOffset;
+              savedRange.node = $("#displayframe")[0].contentWindow.getSelection().anchorNode
+            }
+            */
           }
           mdown = false;
           sel = false;
@@ -273,6 +329,20 @@
         doc.addEventListener("selectionchange", function () {
           sel = true;
         });
+
+        doc.addEventListener('contextmenu', (e) => {
+          e.preventDefault()
+
+          window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
+          window.$selectedline = $(e.srcElement).closest('.line').text();
+          window.$selectedword = getHitWord(doc.elementFromPoint(e.clientX, e.clientY), doc, e);
+
+          console.log("Selected: " + window.$selected);
+          console.log("Word: " + window.$selectedword);
+          console.log("Line: " + window.$selectedline);
+          console.log("Url: " + window.$selectedurl);
+
+        }, false);
 
         ['cut', 'copy', 'paste'].forEach(function (event) {
           document.addEventListener(event, function (e) {
@@ -441,7 +511,7 @@
           ipcRenderer.send('flush');
           $("#Progressbar").html('<progress max="100"></progress>');
           $("#ProgressTitle").html(title || "Importing data...");
-          $("#Progress")[0].showModal();          
+          $("#Progress")[0].showModal();
         });
 
         _backup.on('error', (err) => {
@@ -645,7 +715,7 @@
         ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
 
       }
-      
+
       /**
        * Build capture array
        *

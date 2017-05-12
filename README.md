@@ -34,6 +34,9 @@ Build and package files are all saved to dist folder
 Basic questions answered about jiMUD
 - [jiMUD FAQ](docs/faq.md)
 
+## Command line arguments
+- `--debug/-d` enable dev tools for all windows
+
 ## References
 - [Speedpaths](docs/speedpaths.md)
 - [Commands](docs/commands.md)

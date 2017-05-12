@@ -188,7 +188,7 @@ export class Client extends EventEmitter {
         });
         this.telnet.on('connecting', () => {
             this.connecting = true;
-            this.echo("Trying to connect to " + this.host + ":" + this.port + ".", AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
+            this.echo("Trying to connect to " + this.host + ":" + this.port, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
         });
         this.telnet.on('connect', () => {
             this.connecting = false;
@@ -206,7 +206,7 @@ export class Client extends EventEmitter {
         });
         this.telnet.on('close', () => {
             this.connecting = false;
-            this.echo("Connection closed to " + this.host + ":" + this.port + ".", AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
+            this.echo("Connection closed to " + this.host + ":" + this.port, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
             this.connectTime = 0;
             this.lastSendTime = 0;
             this._MSP.reset();
