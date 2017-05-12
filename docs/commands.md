@@ -1,4 +1,5 @@
 # Commands
+- `#beep` play standard system beep
 - `#version` or `#ver`
 show version information
 - `#show text` or `#sh`

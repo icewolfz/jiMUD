@@ -12,11 +12,9 @@
 ## Mapper 
 * Add room exist and coords/zone check x/y/z/zone and if room found bump zone context menu, right click room list a remove room option, maybe exports
 * Add a file menu and add all the features from the toolbar?
-* Add a periodic saving of mapper while in memory mode
-  * maybe work it on some type of idle timer and onyl flush when idle 
-* a bug when 2 mappers open, seems thet receive ipc from all clients
+* a bug when 2 mappers open, seems thet receive ipc from all clients?
 ## Profile manager
-* Maybe add a file menu ?
+* Maybe add a file menu?
 * Test more then when multiple client instances open
 * possible slow down due to file locks, loading profiles, converting from json, or loading icons for buttons
 ## MSP
@@ -27,7 +25,6 @@
 * Finish monster css icons
 * Finish party css icons, do generic ones for each player race and gender if good enough icons, possible a silhouette bust of just each races head?
 * Add advanced color pref systems to allow customizing the 256 xterm colors
-* maybe convert from using a bell sound file in ansi parer to using electron shell.beep() [https://github.com/electron/electron/blob/master/docs/api/shell.md](https://github.com/electron/electron/blob/master/docs/api/shell.md), do this by capturing the bell event in parer or from index.html as client.parser.on('bell', ()  => { shell.beep() });
 * ***Mac - needs a mac, can't build or test***
 * Help files
   * Sections for mapper
@@ -36,4 +33,4 @@
 * Code documentation - comment all classes/functions/enums for all typescript and javascript
 * Add MCP telnet support [MCP Standard](http://www.moo.mud.org/mcp/)
 * look into reducing memory
-* recode the inline varibles and functions parse of the parsing system instead of ismple js replace function calls, should improve speed as will not have to call all functions all the time
+* Re-code the inline varibles and functions for parse om the parsing system instead of simple js replace function calls, should improve speed as will not have to call all functions all the time

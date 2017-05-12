@@ -276,6 +276,11 @@
 
         //client = new Client($("#display"), $("#commandinput"));
         client = new Client($("#displayframe").contents().find("#display"), $("#commandinput"));
+        client.parser.enableBell = false;
+        client.parser.on('bell', () => {
+          shell.beep();
+        });
+
         client.parser.linkFunction = "parent.doLink";
         client.parser.mxpLinkFunction = "parent.doMXPLink";
         client.parser.mxpSendFunction = "parent.doMXPSend";
@@ -416,7 +421,7 @@
         window.client = client;
         window.OoMUD = client;
         window.readClipboard = () => { return clipboard.readText('selection') || '' };
-        window.writeClipboard = (txt) => { clipboard.writeText(txt||'', 'selection') };
+        window.writeClipboard = (txt) => { clipboard.writeText(txt || '', 'selection') };
         client.readClipboard = window.readClipboard;
         client.writeClipboard = window.writeClipboard;
 

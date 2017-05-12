@@ -274,6 +274,9 @@ export class input extends EventEmitter {
                 else
                     this.client.echo("You have been connected: " + getTimeSpan(Date.now() - this.client.connectTime), -7, -8, true, true);
                 return null;
+            case "beep":
+                this.client.beep();
+                return null;
             case "version":
             case "ve":
                 this.client.echo(this.client.telnet.terminal + " v" + this.client.version, -7, -8, true, true);
@@ -740,7 +743,7 @@ export class input extends EventEmitter {
             stacking = this.client.options.commandStacking;
         else
             stacking = stacking && this.client.options.commandStacking;
-        //@TODO recode someday to be part of the parser engine instead of simple regex
+        //@TODO re-code someday to be part of the parser engine instead of simple regex
         var copied = clipboard.readText('selection') || '';
         text = text.replace(/\%\{copied\}/g, copied);
         text = text.replace(/\%\{copied.lower\}/g, copied);

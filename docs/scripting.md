@@ -10,6 +10,7 @@
 - `$selurl` same as $selected url
 
 # Basic function list:
+- `this.beep()` play system beep sound
 - `this.readClipboard()` read text from clipboard, can also access from window.readClipboard()
 - `this.writeClipboard(text)` write text to clipboard, can also access from window.writeClipboard(text)
 - `this.send(text)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new lien as most muds require it to process any text.

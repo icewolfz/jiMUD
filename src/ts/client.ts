@@ -624,4 +624,9 @@ export class Client extends EventEmitter {
     clearTriggerCache() {
         this._input.clearTriggerCache();
     }
+
+
+    beep() {
+        require('electron').shell.beep();
+    };
 }

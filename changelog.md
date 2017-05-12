@@ -14,11 +14,14 @@
     - `%{lower(TEXT)}` - convert TEXT to lower case
     - `%{upper(TEXT)}` - convert TEXT to upper case
     - `%{proper(TEXT)}` - convert TEXT to proper case
+  - Added beep function for scripting
+  - Added #beep command for playing system beep
   - Profile Manger: Added export current and export all that will allow easy export/import with web client
   - **Changed:**
     - Profile manager: Moved import button to a export/import drop down
     - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
     - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory
+    - Converted from custom bell to system bell sound
   - **Fixed:**
   - Capture window: not saving window state on close
   - A bug when closing client and mapper is not set as always on top of main window
