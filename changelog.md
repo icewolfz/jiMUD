@@ -9,6 +9,9 @@
   - Mapper load in memory no longer requires restart to enable
 - **Fixed:**
   - Mapper now properly reloads to take into account any setting changes from preference changes.
+  - Profile manger
+    - An issue with treeview context menu
+    - A bug with the add new item button
 ##### 0.1.7 - 2017-05-09
 - **New:**
   - Chat window 

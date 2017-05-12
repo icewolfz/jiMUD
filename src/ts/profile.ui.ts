@@ -105,7 +105,7 @@ function profileID(name) {
     return name.toLowerCase().replace(/^[^a-z]+|[^\w:.-]+/gi, "-");
 }
 
-function AddNewItem() {
+export function AddNewItem() {
     var t
     if (currentNode) {
         currentNode.state.selected = false;
@@ -1753,6 +1753,9 @@ export function init() {
 
     buildTreeview(getProfileData());
     $("#profile-tree").contextmenu((event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.cancelBubble = true;
         var nodeId = $(event.target).closest('li.list-group-item').attr('data-nodeId');
         var nodes = $('#profile-tree').treeview('findNodes', ['^' + nodeId + '$', 'nodeId']);
         var c = new Menu();
