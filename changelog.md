@@ -2,6 +2,8 @@
 ##### 0.1.9 - 2017-05-
 - **Fixed:**
   - A bug with chat window not saving window state on close
+  - A bug when closing client and mapper is not set as always on top of main window
+  - A bug when mapper is not always on top of main window and not reopening next load
 ##### 0.1.8 - 2017-05-11
 - **New:**
   - Allow negative numbers for experience needed in status display

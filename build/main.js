@@ -162,30 +162,6 @@ var menuTemp = [
             return;
           }
           shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
-          /*
-          winWho = new BrowserWindow({
-            parent: win,
-            width: 600,
-            height: 400,
-            title: 'Who is on?',
-            icon: '',
-          })
-          winWho.setMenu(null);
-          winWho.on('closed', () => {
-            winWho = null
-          })
-
-          // and load the index.html of the app.
-          winWho.loadURL("http://shadowmud.com/who.php?slim=1");
-          winWho.once('ready-to-show', () => {
-            winWho.webContents.insertCSS(".top { display: none !important; } div div { display : none !important; }");
-            winWho.show()
-          })
-
-          winWho.webContents.on('did-finish-load', function () {
-            winWho.webContents.insertCSS(".top { display: none !important; } div div { display : none !important; }");
-          });
-          */
         }
       },
       {
@@ -446,15 +422,6 @@ var menuTemp = [
           about.once('ready-to-show', () => {
             about.show()
           })
-
-          /*
-          dialog.showMessageBox(win, {
-            type:'info',
-            message:'About jiMud',
-            detail: 'jiMUD v'+app.getVersion(),
-            buttons: ["OK"],
-          });
-          */
         }
       }
     ]
@@ -1285,7 +1252,8 @@ function createMapper(show) {
 
   winMap.on('close', (e) => {
     set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
-    set.showMapper = false;
+    if (win != null)
+      set.showMapper = false;
     set.windows['mapper'] = getWindowState('mapper', winMap);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
     e.preventDefault();
