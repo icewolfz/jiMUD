@@ -63,6 +63,10 @@ export class Client extends EventEmitter {
         return this.profiles.contexts;
     }
 
+    get defaultContext(): boolean {
+        return this.profiles.defaultContext;
+    }
+
     get activeProfile(): Profile {
         return this.profiles.active;
     }

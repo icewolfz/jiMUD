@@ -312,7 +312,7 @@
             clearDisplaySelection()
           }
           else if (mdown) {
-            window.$selected = getDisplaySelectionText();
+            //window.$selected = getDisplaySelectionText();
             /*
             if ($("#displayframe")[0].contentWindow.getSelection) {
               savedRange = { range: $("#displayframe")[0].contentWindow.getSelection().getRangeAt(0) };
@@ -332,16 +332,53 @@
 
         doc.addEventListener('contextmenu', (e) => {
           e.preventDefault()
-
+          window.$selected = getDisplaySelectionText();
           window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
           window.$selectedline = $(e.srcElement).closest('.line').text();
-          window.$selectedword = getHitWord(doc.elementFromPoint(e.clientX, e.clientY), doc, e);
+          
+          var line = $(e.srcElement).closest('.line').text();
+          var x = (e.pageX - client.display.offset().left) + client.display.scrollLeft();
+          x = Math.floor(x / parseFloat(window.getComputedStyle(client.character[0]).width));
 
-          console.log("Selected: " + window.$selected);
-          console.log("Word: " + window.$selectedword);
-          console.log("Line: " + window.$selectedline);
-          console.log("Url: " + window.$selectedurl);
+          var sPos = x, ePos = x;
+          while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+            sPos--;
+            if (sPos < 0)
+              break;
+          }
+          sPos++;
+          var ll = line.length;
+          while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < ll) {
+            ePos++;
+          }
 
+          if (sPos + ePos - sPos > ll)
+            window.$selectedword = '';
+          else
+            window.$selectedword = line.substring(sPos, ePos);
+
+          //console.log("Selected: " + window.$selected);
+          //console.log("Word: " + window.$selectedword);
+          //console.log("Line: " + window.$selectedline);
+          //console.log("Url: " + window.$selectedurl);
+
+          var c = new Menu();
+
+
+          if (client.defaultContext) {
+            if (window.$selected && window.$selected != "") {
+              c.append(new MenuItem({ role: 'copy' }));
+              c.append(new MenuItem({ type: 'separator' }));
+            }
+            c.append(new MenuItem({ role: 'selectall' }));
+          }
+          var context = client.contexts;
+          if (context.length > 0) {
+            c.append(new MenuItem({ type: 'separator' }));
+          }
+
+          if (c.items.length > 0)
+            c.popup(remote.getCurrentWindow());
         }, false);
 
         ['cut', 'copy', 'paste'].forEach(function (event) {

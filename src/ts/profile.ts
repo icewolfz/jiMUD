@@ -925,4 +925,22 @@ export class ProfileCollection {
 		}
 		return tmp;
 	}
+
+	get defaultContext(): boolean {
+		var keys = this.keys;
+		var k = 0, kl = keys.length;
+		if (kl === 0) return true;
+		if (kl === 1) {
+			if (!this.items[keys[0]].enabled)
+				return true;
+			return this.items[keys[0]].enableDefaultContext;
+		}
+		for (; k < kl; k++) {
+			if (!this.items[keys[k]].enabled)
+				continue;
+			if (!this.items[keys[k]].enableDefaultContext)
+				return false;
+		}
+		return true;
+	}
 }

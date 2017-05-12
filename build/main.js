@@ -1527,7 +1527,7 @@ function createChat(show) {
     set.showChat = false;
     set.windows['hat'] = getWindowState('chat', winChat);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
-    if (set.chat.captureTells || set.chat.captureTalk || chat.captureLines) {
+    if (set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines) {
       e.preventDefault();
       winChat.hide();
     }
