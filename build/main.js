@@ -1125,7 +1125,7 @@ function updateMenuItem(args) {
 
 function loadMenu() {
   set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
-  updateMenuItem({ menu: ['view', 'status', 'visible'], checked: set.showStatus });
+  updateMenuItem({ menu: ['view', 'status', 'statusvisible'], checked: set.showStatus });
   updateMenuItem({ menu: ['view', 'status', 'weather'], checked: set.showStatusWeather });
   updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: set.showStatusLimbs });
   updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !set.showArmor });

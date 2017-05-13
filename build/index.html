@@ -470,9 +470,6 @@
         client.version = version;
         client.host = "www.shadowmud.com";
         client.port = client.options.dev ? 1035 : 1030;
-
-
-
         client.telnet.GMCPSupports.push("Room 1");
         client.on('profile-updated', (profile) => {
           ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.profiles.items[profile].enabled });
@@ -726,6 +723,111 @@
           }
           return;
         }
+
+        $("#status").on('contextmenu', (e) => {
+          e.preventDefault()
+          var c = new Menu();
+          c.append(new MenuItem({
+            label: '&Visible',
+            type: 'checkbox',
+            checked: client.options.showStatus,
+            click: () => {
+              toggleView("status");
+            }
+          }));
+          c.append(new MenuItem({ type: 'separator' }));
+          c.append(new MenuItem({
+            label: '&Weather',
+            id: "weather",
+            type: 'checkbox',
+            checked: client.options.showStatusWeather,
+            click: () => {
+              toggleView("weather");
+            }
+          }));
+
+          c.append(new MenuItem({
+            label: '&Limbs',
+            id: "limbsmenu",
+            submenu: [
+              {
+                label: '&Visible',
+                id: "limbs",
+                type: 'checkbox',
+                checked: client.options.showStatusLimbs,
+                click: () => {
+                  toggleView("limbs");
+                }
+              },
+              { type: 'separator' },
+              {
+                label: '&Health',
+                id: "limbhealth",
+                type: 'checkbox',
+                checked: !client.options.showArmor,
+                click: () => {
+                  toggleView("limbhealth");
+                }
+              },
+              {
+                label: '&Armor',
+                id: "limbarmor",
+                type: 'checkbox',
+                checked: client.options.showArmor,
+                click: () => {
+                  toggleView("limbarmor");
+                }
+              },
+            ]
+          }));
+          c.append(new MenuItem({
+            label: '&Health',
+            id: "health",
+            type: 'checkbox',
+            checked: client.options.showStatusHealth,
+            click: () => {
+              toggleView("health");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&Experience',
+            id: "experience",
+            type: 'checkbox',
+            checked: client.options.showStatusExperience,
+            click: () => {
+              toggleView("experience");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&Party Health',
+            id: "partyhealth",
+            type: 'checkbox',
+            checked: client.options.showStatusPartyHealth,
+            click: () => {
+              toggleView("partyhealth");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&Combat Health',
+            id: "combathealth",
+            type: 'checkbox',
+            checked: client.options.showStatusCombatHealth,
+            click: () => {
+              toggleView("combathealth");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&Lagmeter',
+            id: "lagmeter",
+            type: 'checkbox',
+            checked: client.options.lagMeter,
+            click: () => {
+              toggleView("lagmeter");
+            }
+          }));
+
+          c.popup(remote.getCurrentWindow());
+        });
 
       };
 

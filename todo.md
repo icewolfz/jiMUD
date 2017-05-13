@@ -1,6 +1,6 @@
 # TODO list
 ## Context menus 
-* Status - allow manual refresh as well as the visible toggles
+* Status - add some type of refresh item to have mud resend info
 * Buttonbar - allow disable, maybe open in editor directly
 * Input - wait for native, or leave as custom 
 ## Advanced editor

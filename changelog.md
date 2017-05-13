@@ -17,13 +17,14 @@
   - Added beep function for scripting
   - Added #beep command for playing system beep
   - Profile Manger: Added export current and export all that will allow easy export/import with web client
-  - **Changed:**
-    - Profile manager: Moved import button to a export/import drop down
-    - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
-    - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory
-    - Converted from custom bell to system bell sound
-    - View > Status > Limbs was expanded to a new submenu for visible, health and armor toggling
-  - **Fixed:**
+  - Added context menu to status display area, allows toggling of what is visible
+- **Changed:**
+  - Profile manager: Moved import button to a export/import drop down
+  - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
+  - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory
+  - Converted from custom bell to system bell sound
+  - View > Status > Limbs was expanded to a new submenu for visible, health and armor toggling
+- **Fixed:**
   - Capture window: not saving window state on close
   - A bug when closing client and mapper is not set as always on top of main window
   - Mapper: A bug when not always on top of main window and not reopening next load
