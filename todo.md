@@ -1,7 +1,6 @@
 # TODO list
 ## Context menus 
-* Status - add some type of refresh item to have mud resend info
-* Buttonbar - allow disable, maybe open in editor directly
+* Buttonbar - add an edit option that opens directly to profile manager
 * Input - wait for native, or leave as custom 
 ## Advanced editor
 * Expand color tooltips/display names to have proper names base on xterm / color list from ShadowMUD + color code  

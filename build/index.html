@@ -835,6 +835,85 @@
           c.popup(remote.getCurrentWindow());
         });
 
+        $("#buttonbar").on('contextmenu', (e) => {
+          e.preventDefault()
+          var c = new Menu();
+          c.append(new MenuItem({
+            label: '&Visible',
+            id: "buttonsvisible",
+            type: 'checkbox',
+            checked: client.options.showButtonBar,
+            click: () => {
+              toggleView("buttons");
+            }
+          }));
+          c.append(new MenuItem({ type: 'separator' }));
+          c.append(new MenuItem({
+            label: '&Connect',
+            id: "connectbutton",
+            type: 'checkbox',
+            checked: client.options.buttons.connect,
+            click: () => {
+              toggleView("button.connect");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&Preferences',
+            id: "preferencesbutton",
+            type: 'checkbox',
+            checked: client.options.buttons.preferences,
+            click: () => {
+              toggleView("button.preferences");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&Log',
+            id: "logbutton",
+            type: 'checkbox',
+            checked: client.options.buttons.log,
+            click: () => {
+              toggleView("button.log");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&Clear',
+            id: "clearbutton",
+            type: 'checkbox',
+            checked: client.options.buttons.clear,
+            click: () => {
+              toggleView("button.clear");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&Lock',
+            id: "lockbutton",
+            type: 'checkbox',
+            checked: client.options.buttons.lock,
+            click: () => {
+              toggleView("button.lock");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&Map',
+            id: "mapbutton",
+            type: 'checkbox',
+            checked: client.options.buttons.map,
+            click: () => {
+              toggleView("button.map");
+            }
+          }));
+          c.append(new MenuItem({
+            label: '&User buttons',
+            id: "userbutton",
+            type: 'checkbox',
+            checked: client.options.buttons.user,
+            click: () => {
+              toggleView("button.user");
+            }
+          }));
+
+          c.popup(remote.getCurrentWindow());
+        });
       };
 
       function executeContext(item) {

@@ -18,6 +18,7 @@
   - Added #beep command for playing system beep
   - Profile Manger: Added export current and export all that will allow easy export/import with web client
   - Added context menu to status display area, allows toggling of what is visible
+  - Added context menu to button bar to toggle buttons/visible
 - **Changed:**
   - Profile manager: Moved import button to a export/import drop down
   - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
