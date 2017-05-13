@@ -1,67 +1,82 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <meta charset="UTF-8">
-  <title>jiMUD</title>
-  <style type="text/css">
-  body {text-align: center;}
-  #logo {
-      width:400px; 
-      height:140px;
-      border: 0px solid silver;
-      background-image: url(./../assets/logo@3x.png);
-    }
+  <head>
+    <meta charset="UTF-8">
+    <title>jiMUD</title>
+    <style type="text/css">
+      body {
+        text-align: center;
+        padding: 0px;
+        margin: 0px;
+      }
 
-    #logoversion {
-      position: absolute;
-      right: 30px;
-      top: 120px;
-      z-index: 1;
-      color: white;
-      font-weight: bold;
-    }  
+      #logo {
+        width: 400px;
+        height: 140px;
+        border: 0px solid silver;
+        background-image: url(./../assets/logo@3x.png);
+      }
 
-    .info {
-      text-align: left;
-      border: 1px black solid;
-      padding: 2px;
-      width: 400px;
-      margin: 4px;
-    }
-  </style>
-  <script>
-    if (typeof module === 'object') { window.module = module; module = undefined; }
-  </script>
-  <script src="../lib/jquery.min.js"></script>
-  <script>
-    if (window.module) module.module;
-  </script>  
-  <script>
-    const { version } = require("../package.json");
+      #logo-version {
+        position: absolute;
+        right: 30px;
+        top: 120px;
+        z-index: 1;
+        color: white;
+        font-weight: bold;
+      }
 
-    $(document).ready(() => {
-      $("#ev").text(process.versions.electron);
-      $("#nv").text(process.versions.node);
-      $("#cv").text(process.versions.chrome);
-      $("#jv").text(version);
-      $("#logoversion").text("v"+version);
-      
-    });
-  </script>
-</head>
-<body>
-    <img id="logo" src="./../assets/logo@3x.png"/>
-    <div id="logoversion"></div>
-    <div class="info">Version: <span id="jv"></span> </div>
-    <div class="info">      
-      Electron: <span id="ev"></span> - http://electron.atom.io<br/>
-      Node: <span id="nv"></span> - http://www.nodejs.org/<br/>
-      Chromium: <span id="cv"></span> - https://www.chromium.org/Home<br/>
-      Buzz: 1.2.0 - http://buzz.jaysalvat.com<br/>
-      jQuery: 3.1.1 - http://www.jquery.com<br/>
-      Icons - http://opengameart.org/<br/>
+      .box {
+        border-radius: 4px;
+        text-align: left;
+        border: 1px #333 solid;
+        padding: 4px;        
+        position: absolute;
+      }
+
+      .info {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        top: 176px;
+      }
+
+      .info-version
+      {
+        left: 10px;
+        right: 10px;
+        top: 145px;
+      }
+    </style>
+    <script>
+      if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script>
+      if (window.module) module.module;
+    </script>
+    <script>
+      const { version } = require("../package.json");
+
+      $(document).ready(() => {
+        $("#ev").text(process.versions.electron);
+        $("#nv").text(process.versions.node);
+        $("#cv").text(process.versions.chrome);
+        $("#jv").text(version);
+        $("#logo-version").text("v" + version);
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <img id="logo" src="./../assets/logo@3x.png" />
+    <div id="logo-version"></div>
+    <div class="box info-version">Version: <span id="jv"></span> </div>
+    <div class="box info">
+      Electron: <span id="ev"></span> - http://electron.atom.io<br/> Node: <span id="nv"></span> - http://www.nodejs.org/<br/> Chromium: <span id="cv"></span> - https://www.chromium.org/Home<br/> Buzz: 1.2.0 - http://buzz.jaysalvat.com<br/> jQuery: 3.1.1 - http://www.jquery.com<br/> Icons - http://opengameart.org/<br/>
       <br/>&copy; 2017
     </div>
-</body>
-</div>
+  </body>
+  </div>
