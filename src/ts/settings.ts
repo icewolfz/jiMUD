@@ -171,7 +171,7 @@ export class Settings {
 			if (!data.hasOwnProperty(prop)) {
 				continue;
 			}
-			if (prop == 'mapper' || prop == 'profiles' || prop == 'buttons') {
+			if (prop == 'mapper' || prop == 'profiles' || prop == 'buttons' || prop == 'chat') {
 				for (var prop2 in data[prop]) {
 					if (!data[prop].hasOwnProperty(prop2)) {
 						continue;
