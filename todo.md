@@ -3,7 +3,6 @@
 * Buttonbar - add an edit option that opens directly to profile manager
 * Input - wait for native, or leave as custom 
 ## Advanced editor
-* Expand color tooltips/display names to have proper names base on xterm / color list from ShadowMUD + color code  
 * Figure out how to enable spell checker
 * Test pasted html from more sources and continue to adjust paste processing to fix issues
 * Maybe create a new textcolor plugin with different color selectors to fix being cut off when using small window size, maybe a real window to display grid

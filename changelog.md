@@ -20,6 +20,7 @@
   - Added context menu to status display area, allows toggling of what is visible
   - Added context menu to button bar to toggle buttons/visible
 - **Changed:**
+  - Advanced Editor: tooltips/color menus now display color code and display name based on XTerm 256 color names and ShadowMUD color database
   - Profile manager: Moved import button to a export/import drop down
   - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
   - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory
