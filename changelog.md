@@ -19,6 +19,7 @@
   - Profile Manger: Added export current and export all that will allow easy export/import with web client
   - Added context menu to status display area, allows toggling of what is visible
   - Added context menu to button bar to toggle buttons/visible
+  - Add how mapper, chat, and editor windows are unloaded, either persistent or reloaded each time. if reloaded it will save memory but cause the windows to load a little slower
 - **Changed:**
   - Advanced Editor: tooltips/color menus now display color code and display name based on XTerm 256 color names and ShadowMUD color database
   - Profile manager: Moved import button to a export/import drop down

@@ -629,8 +629,6 @@ function showHelpWindow(url, title) {
     trackWindowState('help', winHelp);
   })
 
-
-
   if (s.devTools)
     winHelp.webContents.openDevTools()
 
@@ -1016,7 +1014,7 @@ ipcMain.on('setting-changed', (event, data) => {
     if (!windows[r].hasOwnProperty(name) && windows[name].window)
       continue;
     windows[name].window.setSkipTaskbar((set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false);
-    if (windows[name].cache)
+    if (windows[name].persistent)
       createNewWindow(name);
   }
 })
@@ -1309,9 +1307,11 @@ function createMapper(show) {
       set.showMapper = false;
     set.windows['mapper'] = getWindowState('mapper', winMap);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
-    e.preventDefault();
     winMap.webContents.executeJavaScript('save();');
-    winMap.hide();
+    if (set.mapper.enabled || set.mapper.persistent) {
+      e.preventDefault();
+      winMap.hide();
+    }
   })
 }
 
@@ -1459,8 +1459,10 @@ function createEditor(show) {
     set.windows['editor'] = getWindowState('editor', winEditor);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
     winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
-    e.preventDefault();
-    winEditor.hide();
+    if (set.editorPersistent) {
+      e.preventDefault();
+      winEditor.hide();
+    }
   })
 }
 
@@ -1548,11 +1550,10 @@ function createChat(show) {
     set.showChat = false;
     set.windows['chat'] = getWindowState('chat', winChat);
     set.save(path.join(app.getPath('userData'), 'settings.json'));
-    if (set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines) {
+    if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines) {
       e.preventDefault();
       winChat.hide();
     }
-
   })
 }
 
@@ -1646,7 +1647,7 @@ function createNewWindow(name, options) {
     set.windows[name] = getWindowState(name, windows[name].window);
     set.windows[name].show = false;
     set.save(path.join(app.getPath('userData'), 'settings.json'));
-    if (windows[name].cache) {
+    if (windows[name].persistent) {
       e.preventDefault();
       windows[name].window.hide();
     }

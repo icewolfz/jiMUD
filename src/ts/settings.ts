@@ -35,7 +35,8 @@ export class Mapper {
 		z: 0,
 		area: null,
 		zone: 0
-	}
+	};
+	public persistent: boolean = true;
 }
 
 export class Profiles {
@@ -63,9 +64,11 @@ export class Chat {
 	public alwaysOnTop: boolean = false;
 	public alwaysOnTopClient: boolean = true;
 	public log: boolean = false;
+	public persistent: boolean = true;
 }
 
 export class Settings {
+	public editorPersistent: boolean = true;
 	public AutoCopySelectedToClipboard: boolean = false;
 	public askonclose: boolean = true;
 	public dev: boolean = false;
@@ -149,7 +152,7 @@ export class Settings {
 	public showStatusCombatHealth: boolean = true;
 	public showButtonBar: boolean = true;
 	public allowNegativeNumberNeeded = false;
-	
+
 	static load(file) {
 		if (!fs.existsSync(file))
 			return new Settings();

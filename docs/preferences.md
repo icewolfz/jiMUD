@@ -6,6 +6,8 @@
 - `Show Lagmeter` Weather to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Enable Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
 - `Enable debug` Will display debug data to the dev tool console
+- `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
+- `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
 
 ## Display
 
@@ -68,6 +70,7 @@
 - `Directions to send` the # of directions to send between delays
 - `Load in Memory` load mapper in to memory and only access disk on load and window/client close, try if slow or have large amounts of memory. **Requires restart on windows**, **WARNING _if the client or OS crash all in memory data will be lost and not saved to disk_**
 - `Save period` how often to flush to disk when using load in memory option
+- `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if mapper is not enabled
 
 ## Chat
 Controls what is captured into the chat window
@@ -81,6 +84,7 @@ Controls what is captured into the chat window
   - `All` capture all chat lines
   - `Selective` capture only those provided in the selective lines list
 - `Selective lines` A comma delimited list of lines to selectively capture, For example: Chat,Rp,Mudinfo will capture Chat, Rp, and Mudinfo lines.
+- `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
 
 **Note:** line names are case sensitive.
 

@@ -117,6 +117,7 @@
         $('#logUniqueOnConnect').prop('checked', _settings.logUniqueOnConnect);
         $('#logPath').val(_settings.logPath);
 
+        $("#editorPersistent").prop('checked', _settings.editorPersistent);
 
         $('#MapperSplitArea').prop('checked', _settings.mapper.split);
         $('#mapFollow').prop('checked', _settings.mapper.follow);
@@ -128,6 +129,9 @@
         $('#mapper-memory').prop('checked', _settings.mapper.memory);
         $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
         $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
+
+        $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
+        $('#chat-persistent').prop('checked', _settings.chat.persistent);
 
         $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
         $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
@@ -178,6 +182,12 @@
               break;
             case 'chat-captureTalk':
               _settings.chat.captureTalk = this.checked;
+              break;
+            case "chat-persistent":
+              _settings.chat.persistent = this.checked;
+              break;
+            case "mapper-persistent":
+              _settings.mapper.persistent = this.checked;
               break;
             case 'mapper-alwaysOnTop':
               _settings.mapper.alwaysOnTop = this.checked;
@@ -611,6 +621,12 @@
           experience needed 
           </label>
           </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="editorPersistent" />
+         Persistent advanced editor
+          </label>
+          </div>
         </div>
         <div role="tabpanel" class="tab-pane fade" id="display">
           <div class="col-sm-6">
@@ -993,6 +1009,12 @@
             </div>
           </label>
         </div>
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="mapper-persistent" />
+          Persistent
+          </label>
+        </div>
       </div>
 
       <div class="col-sm-12 form-group" style="margin:0;padding:0">
@@ -1070,9 +1092,13 @@
           <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Captures based on enabled captures</span>
           </label>
         </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="chat-persistent" />
+          Persistent
+          </label>
+        </div>
       </div>
-
-
 
       <div class="col-sm-12 form-group" style="margin:0;padding:0">
         <div class="col-sm-3 form-group">
