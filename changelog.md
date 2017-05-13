@@ -30,6 +30,7 @@
   - Profile manger: fixed import button by moving to drop down menu
   - Profile manager: importing now ask to replace a profile if name exist
   - View > Status menu items now work to toggle what is displayed
+  - Fixed a bug in display being in a frame and parser capturing previous line fragments
 ##### 0.1.8 - 2017-05-11
 - **New:**
   - Allow negative numbers for experience needed in status display

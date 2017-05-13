@@ -255,7 +255,7 @@ export class Client extends EventEmitter {
 
         this.telnet.on('windowSize', () => { this.UpdateWindow(); });
 
-        this.parser = new Parser();
+        this.parser = new Parser({display: this.display});
         this.parser.on('debug', (msg) => { this.debug(msg) });
         this.parser.on('addLine', (data: Line) => {
             data.raw = stripHTML(data.line);
