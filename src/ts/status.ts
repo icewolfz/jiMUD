@@ -572,6 +572,61 @@ export class Status extends EventEmitter {
             $("#display-border").css('right', '0px');
             $("#command").css('right', '0px');
         }
+        var bodyTop = 60;
+        var experienceTop = 350;
+        var barsTop = 418;
+        //288 - 243
+        if (this.client.options.showStatusWeather)
+            $("#environment").css("display", '');
+        else {
+            $("#environment").css("display", 'none');
+            bodyTop -= 55;
+            experienceTop -= 55;
+            barsTop -= 55;
+        }
+        if (!this.client.options.showStatusLimbs && !this.client.options.showStatusHealth) {
+            $("#body").css("display", 'none');
+            experienceTop -= 290;
+            barsTop -= 290;
+        }
+        else {
+            $("#body").css("display", '');
+            if (this.client.options.showStatusLimbs)
+                $("#limbs").css("display", '');
+            else {
+                $("#limbs").css("display", 'none');
+                experienceTop -= 237;
+                barsTop -= 237;
+            }
+            if (this.client.options.showStatusHealth)
+                $("#hpstatus").css("display", '');
+            else {
+                $("#hpstatus").css("display", 'none');
+                experienceTop -= 45;
+                barsTop -= 45;
+            }
+        }
+        if (this.client.options.showStatusExperience)
+            $("#experience").css("display", '');
+        else {
+            $("#experience").css("display", 'none');
+            barsTop -= 68;
+        }
+
+        if (this.client.options.showStatusPartyHealth)
+            $("#party").css("display", '');
+        else
+            $("#party").css("display", 'none');
+
+        if (this.client.options.showStatusCombatHealth)
+            $("#combat").css("display", '');
+        else
+            $("#combat").css("display", 'none');
+
+        $("#body").css('top', bodyTop + "px");
+        $("#experience").css('top', experienceTop + "px");
+        $("#bars").css('top', barsTop + "px");
+
         if (this.lagMeter && this.lagMeter.length > 0) {
             if (this.client.options.lagMeter) {
                 this.lagMeter.css("visibility", "");

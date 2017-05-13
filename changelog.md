@@ -22,12 +22,14 @@
     - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
     - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory
     - Converted from custom bell to system bell sound
+    - View > Status > Limbs was expanded to a new submenu for visible, health and armor toggling
   - **Fixed:**
   - Capture window: not saving window state on close
   - A bug when closing client and mapper is not set as always on top of main window
   - Mapper: A bug when not always on top of main window and not reopening next load
   - Profile manger: fixed import button by moving to drop down menu
   - Profile manager: importing now ask to replace a profile if name exist
+  - View > Status menu items now work to toggle what is displayed
 ##### 0.1.8 - 2017-05-11
 - **New:**
   - Allow negative numbers for experience needed in status display

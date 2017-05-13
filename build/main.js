@@ -185,37 +185,80 @@ var menuTemp = [
             label: '&Weather',
             id: "weather",
             type: 'checkbox',
-            checked: true
+            checked: true,
+            click: () => {
+              win.webContents.executeJavaScript('toggleView("weather")');
+            }
           },
           {
             label: '&Limbs',
-            id: "limbs",
-            type: 'checkbox',
-            checked: true
+            id: "limbsmenu",
+            submenu: [
+              {
+                label: '&Visible',
+                id: "limbs",
+                type: 'checkbox',
+                checked: true,
+                click: () => {
+                  win.webContents.executeJavaScript('toggleView("limbs")');
+                }
+              },
+              { type: 'separator' },
+              {
+                label: '&Health',
+                id: "limbhealth",
+                type: 'checkbox',
+                checked: true,
+                click: () => {
+                  win.webContents.executeJavaScript('toggleView("limbhealth")');
+                }
+              },
+              {
+                label: '&Armor',
+                id: "limbarmor",
+                type: 'checkbox',
+                checked: true,
+                click: () => {
+                  win.webContents.executeJavaScript('toggleView("limbarmor")');
+                }
+              },
+            ]
           },
           {
             label: '&Health',
             id: "health",
             type: 'checkbox',
-            checked: true
+            checked: true,
+            click: () => {
+              win.webContents.executeJavaScript('toggleView("health")');
+            }
           },
           {
             label: '&Experience',
             id: "experience",
             type: 'checkbox',
-            checked: true
+            checked: true,
+            click: () => {
+              win.webContents.executeJavaScript('toggleView("experience")');
+            }
           },
           {
             label: '&Party Health',
             id: "partyhealth",
             type: 'checkbox',
-            checked: true
+            checked: true,
+            click: () => {
+              win.webContents.executeJavaScript('toggleView("partyhealth")');
+            }
           },
           {
             label: '&Combat Health',
             id: "combathealth",
             type: 'checkbox',
-            checked: true
+            checked: true,
+            click: () => {
+              win.webContents.executeJavaScript('toggleView("combathealth")');
+            }
           },
           {
             label: '&Lagmeter',
@@ -1084,7 +1127,10 @@ function loadMenu() {
   set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
   updateMenuItem({ menu: ['view', 'status', 'visible'], checked: set.showStatus });
   updateMenuItem({ menu: ['view', 'status', 'weather'], checked: set.showStatusWeather });
-  updateMenuItem({ menu: ['view', 'status', 'limbs'], checked: set.showStatusLimbs });
+  updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: set.showStatusLimbs });
+  updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !set.showArmor });
+  updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: set.showArmor });
+  
   updateMenuItem({ menu: ['view', 'status', 'health'], checked: set.showStatusHealth });
   updateMenuItem({ menu: ['view', 'status', 'experience'], checked: set.showStatusExperience });
   updateMenuItem({ menu: ['view', 'status', 'partyhealth'], checked: set.showStatusPartyHealth });
