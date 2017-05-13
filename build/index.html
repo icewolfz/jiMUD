@@ -31,7 +31,7 @@
       const Status = require('./js/status.js').Status;
       const Logger = require('./js/logging.js').Logger;
       const Backup = require('./js/backup.js').Backup;
-      const { shell, clipboard, ipcRenderer, remote } = require('electron');
+      const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
       const { dialog, Menu, MenuItem, app, nativeImage } = remote;
       const { parseTemplate, setSelectionRange } = require("./js/library.js");
       const fs = require('fs');
@@ -45,6 +45,12 @@
       var _captures = [], _captureReviews = [];
       var _nocapture = false;
       //var savedRange;
+
+      webFrame.setSpellCheckProvider("en-US", true, {
+        spellCheck: function (text) {
+          return !(require('spellchecker').isMisspelled(text));
+        }
+      });
 
       function doLink(url) {
         if (confirm("Open '" + url + "'?") === true)
@@ -1160,7 +1166,7 @@
       <div id="commandleft"></div>
       <div id="commandright"></div>
       <div id="commandbox">
-        <input type="text" id="commandinput" />
+        <input type="text" id="commandinput" spellcheck="true" />
       </div>
       <a href="javascript:void(0)" title="Show advanced editor" class="icon" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
         <span class="icon fa fa-edit"></span>
@@ -1174,9 +1180,7 @@
       <a href="javascript:void(0)" title="Clear display" id="clear" class="button" onclick="client.clear()"><img src="../assets/icons/png/clear.png" /></a>
       <a href="javascript:void(0)" title="Lock display" id="lock" class="button" onclick="client.toggleScrollLock()"><img src="../assets/icons/png/lock.png" /></a>
       <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');"><img src="../assets/icons/png/map.png" /></a>
-      <div id="userbuttons">
-
-      </div>
+      <div id="userbuttons"></div>
     </div>
     <div id="status-border"></div>
     <div id="status">

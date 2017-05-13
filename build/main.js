@@ -795,16 +795,16 @@ function createWindow() {
 
     if (set.showMapper)
       showMapper();
-    else if (set.mapper.enabled)
+    else if (set.chat.persistent || set.mapper.enabled)
       createMapper();
 
     if (set.showEditor)
       showEditor();
-    //else
-    //createEditor();
+    else if (set.editorPersistent)
+      createEditor();
     if (set.showChat)
       showChat();
-    else if (set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
+    else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
       createChat();
   })
 
@@ -1405,7 +1405,7 @@ function createEditor(show) {
     y: s.y,
     width: s.width,
     height: s.height,
-    backgroundColor: '#eae4d6',
+    backgroundColor: '#000',
     show: false,
     skipTaskbar: false,
     icon: path.join(__dirname, '../assets/icons/png/edit.png')

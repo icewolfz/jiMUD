@@ -20,7 +20,7 @@
         <script>
             const { remote, ipcRenderer, webFrame } = require('electron');
             const { nativeImage, dialog, Menu, MenuItem } = remote;
-            const { htmlEncode, parseTemplate } = require('./js/library');
+            const { stripHTML, htmlEncode, parseTemplate } = require('./js/library');
             const { Settings } = require('./js/settings');
             const rgbcolor = require("rgbcolor");
             const fs = require('fs');
@@ -440,14 +440,12 @@
                     });
             }
 
-            /*
-                        webFrame.setSpellCheckProvider("en-US", true, {
-                            spellCheck: function (text) {
-                                return !(require('spellchecker').isMisspelled(text));
-                            }
-                        });
-                        //https://www.npmjs.com/package/electron-spell-check-provider
-                        */
+            webFrame.setSpellCheckProvider("en-US", true, {
+                spellCheck: function (text) {
+                    return !(require('spellchecker').isMisspelled(text));
+                }
+            });
+            //https://www.npmjs.com/package/electron-spell-check-provider
 
             function buildHTMLStack(els) {
                 var tag, $el;
@@ -1055,6 +1053,22 @@
 
                 tinymce.activeEditor.on('contextmenu', function (e) {
                     e.preventDefault();
+                    /*
+                    var selRng = tinymce.activeEditor.selection.getRng();
+                    selRng.expand("word"); //expands the DOM range to the current word
+                    tinymce.activeEditor.selection.setRng(selRng);
+                    var word = stripHTML(tinymce.activeEditor.selection.getContent());
+                    cMenu = tinymce.activeEditor.plugins["shadowmud"].buildMenu()
+                    if(require('spellchecker').isMisspelled(word))
+                    {
+                        console.log(word);
+                        var words = require('spellchecker').getCorrectionsForMisspelling(word);
+                        if(words.length > 0)
+                        cMenu.insert(0, new MenuItem({ type: 'separator' }));
+                        for(var w = 0, wl = words.length;w < wl;w++)
+                            cMenu.insert(0, new MenuItem({label: words[w]}));
+                    }
+                    */
                     cMenu.popup(remote.getCurrentWindow());
                 });
                 loadOptions();
@@ -1184,7 +1198,7 @@
                 _ColorTable2 = [];
                 for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
                     _ColorTable2[c] = _ColorTable[c];
-                    _ColorTable2[c + 1] = _ColorTable[c+1]  +", " +colorNames[_ColorTable[c+1]];                    
+                    _ColorTable2[c + 1] = _ColorTable[c + 1] + ", " + colorNames[_ColorTable[c + 1]];
                 }
 
                 tinymce.activeEditor.settings.textcolor_map = _ColorTable2;

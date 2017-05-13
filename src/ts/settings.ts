@@ -64,11 +64,11 @@ export class Chat {
 	public alwaysOnTop: boolean = false;
 	public alwaysOnTopClient: boolean = true;
 	public log: boolean = false;
-	public persistent: boolean = true;
+	public persistent: boolean = false;
 }
 
 export class Settings {
-	public editorPersistent: boolean = true;
+	public editorPersistent: boolean = false;
 	public AutoCopySelectedToClipboard: boolean = false;
 	public askonclose: boolean = true;
 	public dev: boolean = false;
