@@ -180,6 +180,13 @@ var menuTemp = [
               win.webContents.executeJavaScript('toggleView("status")');
             }
           },
+          {
+            label: '&Refresh',
+            id: "refresh",
+            click: () => {
+              win.webContents.executeJavaScript('client.sendGMCP(\'Core.Hello { "client\": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');');
+            }
+          },
           { type: 'separator' },
           {
             label: '&Weather',
@@ -1130,7 +1137,7 @@ function loadMenu() {
   updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: set.showStatusLimbs });
   updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !set.showArmor });
   updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: set.showArmor });
-  
+
   updateMenuItem({ menu: ['view', 'status', 'health'], checked: set.showStatusHealth });
   updateMenuItem({ menu: ['view', 'status', 'experience'], checked: set.showStatusExperience });
   updateMenuItem({ menu: ['view', 'status', 'partyhealth'], checked: set.showStatusPartyHealth });

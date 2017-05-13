@@ -735,6 +735,12 @@
               toggleView("status");
             }
           }));
+          c.append(new MenuItem({
+            label: '&Refresh',
+            click: () => {
+              client.sendGMCP('Core.Hello { "client\": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
+            }
+          }));
           c.append(new MenuItem({ type: 'separator' }));
           c.append(new MenuItem({
             label: '&Weather',
