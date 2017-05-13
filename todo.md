@@ -25,10 +25,9 @@
 * Add advanced color pref systems to allow customizing the 256 xterm colors
 * ***Mac - needs a mac, can't build or test***
 * Help files
-  * Sections for mapper
   * Create a local help file based on docs
   * Finish assets.md and list all build in assets and describe what each is, if a spite list all images in sprite
 * Code documentation - comment all classes/functions/enums for all typescript and javascript
 * Add MCP telnet support [MCP Standard](http://www.moo.mud.org/mcp/)
 * look into reducing memory
-* Re-code the inline varibles and functions for parse om the parsing system instead of simple js replace function calls, should improve speed as will not have to call all functions all the time
+* Re-code the inline variables and functions for parse om the parsing system instead of simple js replace function calls, should improve speed as will not have to call all functions all the time

@@ -37,13 +37,14 @@ Basic questions answered about jiMUD
 - `--debug/-d` enable dev tools for all windows
 
 ## References
+- [Profiles](profiles.md)
 - [Speedpaths](speedpaths.md)
 - [Commands](commands.md)
 - [Preferences](preferences.md)
 - [Scripting](scripting.md)
-- [Profiles](profiles.md)
 - [Customizing](customizing.md)
 - [Assets](assets.md)
+- [Mapper](mapper.md)
 
 ## Known Issues
 - Advanced editor 
@@ -52,3 +53,4 @@ Basic questions answered about jiMUD
   - Some styles will not flash when flashing is enabled depending on order of styles applied
   - Toolbar text/background color picker may be cut off in small window sizes
   - Reverse style has wierd results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
+- [Mapper](mapper.md#know-issues)
