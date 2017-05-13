@@ -25,6 +25,7 @@
   - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory
   - Converted from custom bell to system bell sound
   - View > Status > Limbs was expanded to a new submenu for visible, health and armor toggling
+  - Upgrade electron to 1.7.0
 - **Fixed:**
   - Capture window: not saving window state on close
   - A bug when closing client and mapper is not set as always on top of main window

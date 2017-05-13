@@ -447,8 +447,8 @@ var menuTemp = [
           let about = new BrowserWindow({
             parent: win,
             modal: true,
-            width: 440,
-            height: 390,
+            width: 450,
+            height: 400,
             movable: false,
             minimizable: false,
             maximizable: false,
