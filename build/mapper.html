@@ -256,6 +256,8 @@
           if ($("#reDTrainer")[0].checked)
             data.Details |= RoomDetails.Trainer;
           mapper.getRoom(room.ID || room.num, (room) => {
+            if (room.X != data.X && room.Y != data.Y && room.Z != data.Z && room.Zone != data.Zone && room.Area != data.Area && room.Background != data.Background && room.Env != data.Env && room.Indoors != data.Indoors && room.Details != data.Details && room.Notes != data.Notes)
+              return;
             room.X = data.X;
             room.Y = data.Y;
             room.Z = data.Z;
@@ -355,7 +357,7 @@
         });
 
         mapper.on('remove-done', (room) => {
-           updateAreas();
+          updateAreas();
         });
 
         mapper.on('clear-area-done', (area) => {

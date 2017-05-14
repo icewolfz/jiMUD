@@ -1972,4 +1972,41 @@ export class Mapper extends EventEmitter {
         else if (callback)
             callback();
     }
+    /*
+    clientToMapper(x, y?: number) {
+        if (x instanceof Point) {
+            y = x.y;
+            x = x.x;
+        }
+        else if (typeof x == "object") {
+            y = x.y;
+            x = x.x;
+        }
+        var ox = this._canvas.width % 2 !== 0 ? 15 : 15.5;
+        var oy = this._canvas.height % 2 !== 0 ? 15 : 15.5;
+        x = this.vscroll - (this._canvas.width / 32 / 2) + (x - ox) / 32;
+        y = this.hscroll - (this._canvas.height / 32 / 2) + (y - oy) / 32;
+        x = Math.floor(x);
+        y = Math.floor(y);
+        return new Point(x, y);
+    }
+    mapperToClient(x, y?: number) {
+        if (x instanceof Point) {
+            y = x.y;
+            x = x.x;
+        }
+        else if (typeof x == "object") {
+            y = x.y;
+            x = x.x;
+        }
+        var ox = this._canvas.width % 2 !== 0 ? 15 : 15.5;
+        var oy = this._canvas.height % 2 !== 0 ? 15 : 15.5;
+
+        x = (x - this.vscroll) + (this._canvas.width / 32 / 2);
+        y = (y - this.hscroll) + (this._canvas.height / 32 / 2);
+        x = Math.floor(x * 32 + ox);
+        y = Math.floor(y * 32 + oy);        
+        return new Point(x, y);        
+    }
+    */
 }
