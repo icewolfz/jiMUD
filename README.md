@@ -48,6 +48,9 @@ Basic questions answered about jiMUD
 - [Mapper](docs/mapper.md)
 
 ## Known Issues
+- Command input spell checking
+  - When you pick a correction it loses all other spelling checks this is a bug in chrome, simply highlight the word you want and right click.
+  - Spell checking will not check for errors until a space or newline is enterd, or when the command box is refocused.
 - Advanced editor 
   - Paste may lose some colors/background colors on pasted, this is a bug in TinyMCE editor
   - When apply styles to all text some styles may get stuck  

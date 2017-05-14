@@ -21,7 +21,7 @@
   - Added context menu to button bar to toggle buttons/visible
   - Add how mapper, chat, and editor windows are unloaded, either persistent or reloaded each time. if reloaded it will save memory but cause the windows to load a little slower
   - Advanced Editor now supports spell checking with a context menu replacement, warning all styles are lost when replaced.
-  - Command input now supports spell checking
+  - Command input now supports spell checking with proper context menu suggestion replacements
 - **Changed:**
   - Advanced Editor: tooltips/color menus now display color code and display name based on XTerm 256 color names and ShadowMUD color database
   - Advanced Editor: color selection has been trimed to the basic 16 colors + no color, with an option to open a more advanced color selection dialog, this should reduce load times.

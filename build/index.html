@@ -920,6 +920,50 @@
 
           c.popup(remote.getCurrentWindow());
         });
+
+        $("#commandinput").on('contextmenu', (e) => {
+          e.preventDefault();
+          var inputMenu = Menu.buildFromTemplate([
+            { role: 'undo' },
+            { role: 'redo' },
+            { type: 'separator' },
+            { role: 'cut' },
+            { role: 'copy' },
+            { role: 'paste' },
+            { type: 'separator' },
+            { role: 'selectall' },
+          ])
+          var word = e.currentTarget.value.substring(e.currentTarget.selectionStart, e.currentTarget.selectionEnd);
+          var ol = word.length;
+          word = word.trimRight();
+          var ll = ol - word.length;
+          if(ll > 0)
+            e.currentTarget.selectionEnd = e.currentTarget.selectionEnd - ll;
+
+          if (require('spellchecker').isMisspelled(word)) {
+            var words = require('spellchecker').getCorrectionsForMisspelling(word);
+            if (words.length > 0)
+              inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+            var start = e.currentTarget.selectionStart;
+            var end = e.currentTarget.selectionEnd
+            for (var w = words.length - 1; w >= 0; w--) {
+              inputMenu.insert(0, new MenuItem({
+                label: words[w],
+                start: start,
+                end: end,
+                click: function (item) {
+                  var value = $("#commandinput").val();
+                  value = value.substring(0, item.start) + item.label + value.substring(item.end);
+                  $("#commandinput").val(value);
+                  $("#commandinput")[0].selectionStart = value.length;
+                  $("#commandinput")[0].selectionEnd = value.length;
+                }
+              }));
+            }
+          }
+          inputMenu.popup(remote.getCurrentWindow());
+
+        });
       };
 
       function executeContext(item) {

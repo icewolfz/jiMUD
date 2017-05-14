@@ -1678,8 +1678,6 @@ function showWindow(name, options) {
 }
 
 function showColor(args) {
-  console.log("--showColor");
-  console.log(args);
   let cp = new BrowserWindow({
     parent: args.window || winEditor || win,
     modal: true,
@@ -1708,10 +1706,7 @@ function showColor(args) {
     cp.webContents.openDevTools();
 
   cp.once('ready-to-show', () => {
-    console.log("--aaa");
-    console.log(args);
     cp.show();
-    console.log(args);
     cp.webContents.executeJavaScript('setType("' + (args.type||'forecolor') + '");setColor("'+(args.color||'')+'");');
   })
 }
