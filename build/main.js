@@ -765,8 +765,14 @@ function createWindow() {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    if (winMap)
+    if (winMap) {
       winMap.webContents.executeJavaScript('save();');
+      winMap.destroy();
+    }
+    if (winEditor)
+      winEditor.destroy();
+    if (winChat)
+      winChat.destroy();
     win = null;
   })
 
@@ -1707,6 +1713,6 @@ function showColor(args) {
 
   cp.once('ready-to-show', () => {
     cp.show();
-    cp.webContents.executeJavaScript('setType("' + (args.type||'forecolor') + '");setColor("'+(args.color||'')+'");');
+    cp.webContents.executeJavaScript('setType("' + (args.type || 'forecolor') + '");setColor("' + (args.color || '') + '");');
   })
 }

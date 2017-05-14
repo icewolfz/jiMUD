@@ -53,6 +53,7 @@
    - importing now ask to replace a profile if name exist
   - View > Status menu items now work to toggle what is displayed
   - Fixed a bug in display being in a frame and parser capturing previous line fragments
+  - Fixed a bug that when always on top was turned off for chat, mapper, advanced editor windows would stay open after main client was closed, now all windows are closed when main client window is closed.
 ##### 0.1.8 - 2017-05-11
 - **New:**
   - Allow negative numbers for experience needed in status display
