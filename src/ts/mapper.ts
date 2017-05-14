@@ -135,6 +135,9 @@ export class Mapper extends EventEmitter {
     }
     get enabled(): boolean { return this._enabled; }
 
+    get isDirty(): boolean { return this._changed; }
+    set isDirty(value: boolean) { this._changed; }
+
     get memory(): boolean { return this._memory; }
     set memory(value: boolean) {
         if (this._memory != value) {
@@ -308,6 +311,11 @@ export class Mapper extends EventEmitter {
             }
         });
         $(this._canvas).bind("contextmenu", (event) => {
+            event.preventDefault();
+            var m = this.getMapMousePos(event);
+            this.findActiveRoomByCoords(m.x, m.y, (room) => {
+                this.emit('context-menu', clone(room))
+            });
             return false;
         });
         $(this._canvas).click((event) => {
@@ -555,9 +563,10 @@ export class Mapper extends EventEmitter {
         this.scrollTo(this.active.x + 2, this.active.y + 2);
     }
 
-    setCurrent() {
+    setCurrent(room?: Room) {
         this.emit('path-cleared');
-        this.current = this.sanitizeRoom(clone(this.selected));
+        if (!room || !room.ID) room = this.selected;
+        this.current = this.sanitizeRoom(clone(room));
         this.markers = {};
         this.draw();
     }
@@ -605,7 +614,16 @@ export class Mapper extends EventEmitter {
         this._db.run("DELETE FROM Rooms WHERE ID = ?", [room.ID], () => {
             this._db.run("Delete From Exits WHERE ID = ?", [room.ID], () => {
                 this.emit('remove-done', room);
-                this.reset(1);
+                if (room.ID == this.current.ID) {
+                    this.current = new Room();
+                    this.clearPath();
+                }
+                else if (this.markers[room.ID])
+                    this.clearPath();
+                if (room.ID == this.active.ID)
+                    this.active = new Room();
+                if (room.ID == this.selected.ID)
+                    this.selected = new Room();
                 this.refresh();
                 this._changed = true;
             });
@@ -1444,15 +1462,17 @@ export class Mapper extends EventEmitter {
         }
     }
 
-    showPath() {
-        if (this.current.ID == null || this.selected.ID == null)
+    showPath(destRoom?: Room) {
+        if (!destRoom || !destRoom.ID)
+            destRoom = this.selected;
+        if (this.current.ID == null || destRoom.ID == null)
             return;
-        if (this._splitArea && this.current.area != this.selected.area)
+        if (this._splitArea && this.current.area != destRoom.area)
             return;
-        if (this.current.zone != this.selected.zone)
+        if (this.current.zone != destRoom.zone)
             return;
         //add 3d later
-        if (this.current.z != this.selected.z)
+        if (this.current.z != destRoom.z)
             return;
         this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
             var room, id;
@@ -1518,8 +1538,8 @@ export class Mapper extends EventEmitter {
             var finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
             x = (this.current.x - ox);
             y = (this.current.y - oy);
-            cx = (this.selected.x - ox);
-            cy = (this.selected.y - oy);
+            cx = (destRoom.x - ox);
+            cy = (destRoom.y - oy);
             var path = finder.findPath(x, y, cx, cy, grid);
             rl = path.length;
             this.markers = {};
@@ -1529,7 +1549,7 @@ export class Mapper extends EventEmitter {
                 if (roomsC[y] && roomsC[y][x]) {
                     if (roomsC[y][x].ID == this.current.ID)
                         this.markers[roomsC[y][x].ID] = 2;
-                    else if (roomsC[y][x].ID == this.selected.ID)
+                    else if (roomsC[y][x].ID == destRoom.ID)
                         this.markers[roomsC[y][x].ID] = 3;
                     else
                         this.markers[roomsC[y][x].ID] = 1;
@@ -1546,15 +1566,17 @@ export class Mapper extends EventEmitter {
         this.draw();
     }
 
-    walkPath() {
-        if (this.current.ID == null || this.selected.ID == null)
+    walkPath(destRoom?: Room) {
+        if (!destRoom || !destRoom.ID)
+            destRoom = this.selected;
+        if (this.current.ID == null || destRoom.ID == null)
             return;
-        if (this._splitArea && this.current.area != this.selected.area)
+        if (this._splitArea && this.current.area != destRoom.area)
             return;
-        if (this.current.zone != this.selected.zone)
+        if (this.current.zone != destRoom.zone)
             return;
         //add 3d later
-        if (this.current.z != this.selected.z)
+        if (this.current.z != destRoom.z)
             return;
         this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
             var room, id;
@@ -1620,8 +1642,8 @@ export class Mapper extends EventEmitter {
             var finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
             x = (this.current.x - ox);
             y = (this.current.y - oy);
-            cx = (this.selected.x - ox);
-            cy = (this.selected.y - oy);
+            cx = (destRoom.x - ox);
+            cy = (destRoom.y - oy);
             var path = finder.findPath(x, y, cx, cy, grid);
             rl = path.length;
             var walk = [];
@@ -1939,8 +1961,8 @@ export class Mapper extends EventEmitter {
             }
             this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
             this.createDatabase('Disk');
-            //this._db.run('DELETE FROM Disk.Rooms');
-            //this._db.run('DELETE FROM Disk.Exits');
+            this._db.run('DELETE FROM Disk.Rooms');
+            this._db.run('DELETE FROM Disk.Exits');
             this._db.run('INSERT OR REPLACE INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms');
             this._db.run('INSERT OR REPLACE INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits');
             this._db.run('VACUUM Disk');

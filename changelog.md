@@ -22,22 +22,35 @@
   - Add how mapper, chat, and editor windows are unloaded, either persistent or reloaded each time. if reloaded it will save memory but cause the windows to load a little slower
   - Advanced Editor now supports spell checking with a context menu replacement, warning all styles are lost when replaced.
   - Command input now supports spell checking with proper context menu suggestion replacements
+  - Mapper: Added context menu, if over a room you can mark as current, remove, highlight path to room, walk to room if not over room can clear path, refresh, or compact
 - **Changed:**
-  - Advanced Editor: tooltips/color menus now display color code and display name based on XTerm 256 color names and ShadowMUD color database
-  - Advanced Editor: color selection has been trimed to the basic 16 colors + no color, with an option to open a more advanced color selection dialog, this should reduce load times.
-  - Profile manager: Moved import button to a export/import drop down
-  - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
-  - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory
-  - Mapper: changed how in memory changes are flushed to disk, should be a little faster
+  - Advanced Editor
+    - Tooltips/color menus now display color code and display name based on XTerm 256 color names and ShadowMUD color database
+    - Color selection has been trimmed to the basic 16 colors + no color, with an option to open a more advanced color selection dialog, this should reduce load times.
+  - Profile manager
+    - Moved import button to a export/import drop down
+    - drop down menus and context menus are now created on demand in stead of made when loaded
+  - Mapper
+    - Changed how drop down menus where created, now creates on demand instead of staying loaded in memory
+    - Area navigator is now  fixed with in the toolbar, should keep it from jumping around or being cut off with long area names
   - Converted from custom bell to system bell sound
   - View > Status > Limbs was expanded to a new submenu for visible, health and armor toggling
   - Upgrade electron to 1.7.0
 - **Fixed:**
-  - Capture window: not saving window state on close
+  - Capture window
+    - not saving window state on close
+    - logging button was not toggled on when logging enabled
   - A bug when closing client and mapper is not set as always on top of main window
-  - Mapper: A bug when not always on top of main window and not reopening next load
-  - Profile manger: fixed import button by moving to drop down menu
-  - Profile manager: importing now ask to replace a profile if name exist
+  - Mapper
+    - When not always on top of main window and not reopening next load
+    - When a room was removed it would clear current, selected, and active rooms even if room was not one of those
+    - When a room removed it would not clear path if the room was in the path
+    - When changing mapper options from the preferences dialog it would not save current room/mapper data before reloading
+    - When clear all was done it would not remove areas from area navigator
+    - When a room was removed it would not updated the area navigator if it was the only room in the area
+  - Profile manager
+   - Fixed import button by moving to drop down menu
+   - importing now ask to replace a profile if name exist
   - View > Status menu items now work to toggle what is displayed
   - Fixed a bug in display being in a frame and parser capturing previous line fragments
 ##### 0.1.8 - 2017-05-11

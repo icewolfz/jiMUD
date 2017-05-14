@@ -202,7 +202,7 @@
         $("#MapLevel").val(options.mapper.active.z);
         $("#MapZone").val(options.mapper.active.zone);
         if (options.mapper.room) {
-          $("#btnRoom").button('toggle');
+          $("#btn-room").button('toggle');
           toggleRooms();
         }
         /*
@@ -214,12 +214,12 @@
 
         mapper.on('path-shown', () => {
           $("#btn-clear").prop('disabled', false);
-          $("#btnWalk").prop('disabled', false);
+          $("#btn-walk").prop('disabled', false);
         });
 
         mapper.on('path-cleared', () => {
           $("#btn-clear").prop('disabled', true);
-          $("#btnWalk").prop('disabled', true);
+          $("#btn-walk").prop('disabled', true);
         });
 
         mapper.on('room-before-selected', (room) => {
@@ -346,7 +346,7 @@
 
         mapper.on('setting-changed', (setting, value) => {
           if (setting == 'active') {
-            $("#SelectArea").val(mapper.active.area);
+            $("#select-area").val(mapper.active.area);
             $("#MapLevel").val(mapper.active.z);
             $("#MapZone").val(mapper.active.zone);
           }
@@ -354,21 +354,75 @@
         });
 
         mapper.on('remove-done', (room) => {
-          $("#maparea").find("option").remove().end();
+           updateAreas();
         });
 
         mapper.on('clear-area-done', (area) => {
-          $('#SelectArea option[value="' + area + '"]').remove();
-          $("#SelectArea").change();
+          $('#select-area option[value="' + area + '"]').remove();
+          $("#select-area").change();
         });
 
         mapper.on('clear-done', () => {
-          $("#maparea").find("option").remove().end();
+          $("#select-area").find("option").remove().end();
           updateAreas();
         });
 
         mapper.on('send-commands', (commands) => {
           ipcRenderer.send('send-raw', commands);
+        });
+
+        mapper.on('context-menu', (room) => {
+          var menu = [];
+          if (room && room.ID) {
+            menu = menu.concat([
+              {
+                label: 'Set as current', Room: room, click: (item) => {
+                  mapper.setCurrent(item.Room);
+                }
+              },
+              {
+                label: 'Remove', Room: room, click: (item) => {
+                  mapper.removeRoom(item.Room);
+                }
+              },
+              { type: 'separator' },
+              {
+                label: 'Highlight path to here', Room: room, click: (item) => {
+                  mapper.showPath(item.Room);
+                }
+              }
+            ]);
+            if (!$("#btn-walk").prop('disabled'))
+              menu.push({
+                label: 'Walk to here', Room: room, click: (item) => {
+                  mapper.walkPath(item.Room);
+                }
+              });
+          }
+          if (!$("#btn-clear").prop('disabled'))
+            menu.push({
+              label: 'Clear path', Room: room, click: (item) => {
+                mapper.clearPath()
+              }
+            });
+          if (menu.length > 0)
+            menu.push({ type: 'separator' });
+          menu = menu.concat([
+            {
+              label: 'Refresh', Room: room, click: (item) => {
+                saveRoom();
+                mapper.refresh();
+              }
+            },
+            {
+              label: 'Compact', Room: room, click: (item) => {
+                compact();
+              }
+            }
+          ]);
+
+          var inputMenu = Menu.buildFromTemplate(menu)
+          inputMenu.popup(remote.getCurrentWindow());
         });
 
         $(window).on('resize', () => {
@@ -400,15 +454,15 @@
         });
 
         if (mapper.enabled)
-          $("#btnEnable").button('toggle');
+          $("#btn-enable").button('toggle');
         if (mapper.showLegend)
-          $("#btnLegend").button('toggle');
+          $("#btn-legend").button('toggle');
         if (mapper.follow)
-          $("#btnFollow").button('toggle');
+          $("#btn-follow").button('toggle');
         if (mapper.splitArea)
-          $("#btnSplit").button('toggle');
+          $("#btn-split").button('toggle');
         if (mapper.fillWalls)
-          $("#btnFill").button('toggle');
+          $("#btn-fill").button('toggle');
         if (mapper.follow)
           mapper.focusCurrentRoom();
 
@@ -417,8 +471,8 @@
           var pos = $(this).offset();
           var x = Math.floor(pos.left);
           var y = Math.floor(pos.top + $(this).outerHeight() + 2);
-          const removemenu = new Menu();
-          removemenu.append(new MenuItem({
+          var removeMenu = new Menu();
+          removeMenu.append(new MenuItem({
             label: 'Remove selected room', enabled: mapper.selected.ID != null, click() {
               clearButton("#remove");
               dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -433,7 +487,7 @@
               })
             }
           }));
-          removemenu.append(new MenuItem({
+          removeMenu.append(new MenuItem({
             label: 'Remove current room', enabled: mapper.current.ID != null, click() {
               clearButton("#remove");
               dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -448,8 +502,8 @@
               })
             }
           }));
-          removemenu.append(new MenuItem({ type: 'separator' }));
-          removemenu.append(new MenuItem({
+          removeMenu.append(new MenuItem({ type: 'separator' }));
+          removeMenu.append(new MenuItem({
             label: 'Remove current area', click() {
               clearButton("#remove");
               dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -464,7 +518,7 @@
               })
             }
           }));
-          removemenu.append(new MenuItem({
+          removeMenu.append(new MenuItem({
             label: 'Remove all', click() {
               clearButton("#remove");
               dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -479,11 +533,7 @@
               })
             }
           }));
-
-          //removemenu.items[0].enabled = mapper.selected.ID != null;
-          //removemenu.items[1].enabled = mapper.current.ID != null;
-          //removemenu.items[3].label = "Remove " +  mapper.active.area;
-          removemenu.popup(remote.getCurrentWindow(), x, y);
+          removeMenu.popup(remote.getCurrentWindow(), x, y);
         });
 
         $("#export").click(function () {
@@ -491,8 +541,8 @@
           var pos = $(this).offset();
           var x = Math.floor(pos.left);
           var y = Math.floor(pos.top + $(this).outerHeight() + 2);
-          const exportmenu = new Menu();
-          exportmenu.append(new MenuItem({
+          var exportMenu = new Menu();
+          exportMenu.append(new MenuItem({
             label: 'Export as image', click() {
               clearButton("#export");
 
@@ -617,7 +667,7 @@
 
             }
           }));
-          exportmenu.append(new MenuItem({
+          exportMenu.append(new MenuItem({
             label: 'Export current view as image', click() {
               clearButton("#export");
               dialog.showSaveDialog(remote.getCurrentWindow(), {
@@ -661,8 +711,8 @@
                 });
             }
           }));
-          exportmenu.append(new MenuItem({ type: 'separator' }));
-          exportmenu.append(new MenuItem({
+          exportMenu.append(new MenuItem({ type: 'separator' }));
+          exportMenu.append(new MenuItem({
             label: 'Export current area', click() {
               clearButton("#export");
               dialog.showSaveDialog(remote.getCurrentWindow(), {
@@ -686,7 +736,7 @@
                 });
             }
           }));
-          exportmenu.append(new MenuItem({
+          exportMenu.append(new MenuItem({
             label: 'Export all', click() {
               clearButton("#export");
               dialog.showSaveDialog(remote.getCurrentWindow(), {
@@ -710,8 +760,8 @@
                 });
             }
           }));
-          exportmenu.append(new MenuItem({ type: 'separator' }));
-          exportmenu.append(new MenuItem({
+          exportMenu.append(new MenuItem({ type: 'separator' }));
+          exportMenu.append(new MenuItem({
             label: 'Import and merge', click() {
               clearButton("#export");
               dialog.showOpenDialog(remote.getCurrentWindow(),
@@ -746,7 +796,7 @@
                 });
             }
           }));
-          exportmenu.append(new MenuItem({
+          exportMenu.append(new MenuItem({
             label: 'Import and replace', click() {
               clearButton("#export");
               dialog.showOpenDialog(remote.getCurrentWindow(),
@@ -782,11 +832,11 @@
             }
           }));
 
-          exportmenu.popup(remote.getCurrentWindow(), x, y);
+          exportMenu.popup(remote.getCurrentWindow(), x, y);
         })
 
-        $("#SelectArea").change(() => {
-          mapper.setArea($("#SelectArea").find(":selected").text());
+        $("#select-area").change(() => {
+          mapper.setArea($("#select-area").find(":selected").text());
         });
 
         $("#MapLevel").change(() => {
@@ -807,48 +857,9 @@
       });
 
       ipcRenderer.on('reload-options', (event) => {
+        save();
         remote.getCurrentWindow().reload();
-        //window.reload();
-        /*
-        var options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
-        mapper.memory = options.mapper.memory;
-        mapper.memorySavePeriod = options.mapper.memorySavePeriod;
-        mapper.enabled = options.mapper.enabled;
-        mapper.showLegend = options.mapper.legend;
-        mapper.follow = options.mapper.follow;
-        mapper.splitArea = options.mapper.split;
-        mapper.fillWalls = options.mapper.fill;
-        mapper.active = options.mapper.active;
-        mapper.commandDelay = options.commandDelay;
-        mapper.commandDelayCount = options.commandDelayCount;
-
-        $("#MapLevel").val(options.mapper.active.z);
-        $("#MapZone").val(options.mapper.active.zone);
-        if (options.mapper.room) {
-          $("#btnRoom").button('toggle');
-          toggleRooms();
-        }
-
-        if (mapper.enabled && !$("#btnEnable").hasClass('active'))
-          $("#btnEnable").button('toggle');
-        if (mapper.showLegend && !$("#btnLegend").hasClass('active'))
-          $("#btnLegend").button('toggle');
-        if (mapper.follow && !$("#btnFollow").hasClass('active'))
-          $("#btnFollow").button('toggle');
-        if (mapper.splitArea && !$("#btnSplit").hasClass('active'))
-          $("#btnSplit").button('toggle');
-        if (mapper.fillWalls && !$("#btnFill").hasClass('active'))
-          $("#btnFill").button('toggle');
-        if (mapper.follow && !$("#btn-focus").hasClass('active'))
-          mapper.focusCurrentRoom();
-
-
-        updateAreas();
-        mapper.scrollTo(options.mapper.vscroll, options.mapper.hscroll);
-        */
       });
-
-
 
       ipcRenderer.on('import', (event, data) => {
         $("#mapProgressbar").html('<progress max="100"></progress>');
@@ -865,18 +876,18 @@
       });
 
       function updateAreas() {
-        $("#SelectArea option").remove();
+        $("#select-area option").remove();
         $("#reArea option").remove();
         mapper._db.all("SELECT DISTINCT Area from Rooms", (err, rows) => {
           if (rows && rows.length > 0) {
             for (var a = 0; a < rows.length; a++) {
-              $("#SelectArea").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
+              $("#select-area").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
               $("#reArea").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
             }
             if (mapper.active.area)
-              $("#SelectArea").val(mapper.active.area);
+              $("#select-area").val(mapper.active.area);
             else
-              mapper.active.area = $("#SelectArea option:first").val();
+              mapper.active.area = $("#select-area option:first").val();
           }
         })
       }
@@ -893,21 +904,21 @@
   <body>
     <div id="mapper-toolbar" class="btn-toolbar" role="toolbar">
       <div class="btn-group" role="group">
-        <button id="btnEnable" type="button" class="btn btn-default btn-xs" title="Enabled" onclick="mapper.enabled = !mapper.enabled" data-toggle="button"><i class="fa fa-map-o"></i></button>
-        <button id="btnFollow" type="button" class="btn btn-default btn-xs" title="Follow" onclick="mapper.follow = !mapper.follow" data-toggle="button"><i class="fa fa-paw"></i></button>
-        <button id="btnLegend" type="button" class="btn btn-default btn-xs" title="Show legend" onclick="mapper.showLegend = !mapper.showLegend" data-toggle="button"><i class="fa fa-map-marker"></i></button>
-        <button id="btnRoom" type="button" class="btn btn-default btn-xs" title="Show room properties" onclick="toggleRooms();" data-toggle="button"><i class="fa fa-list-alt"></i></button>
+        <button id="btn-enable" type="button" class="btn btn-default btn-xs" title="Enabled" onclick="mapper.enabled = !mapper.enabled" data-toggle="button"><i class="fa fa-map-o"></i></button>
+        <button id="btn-follow" type="button" class="btn btn-default btn-xs" title="Follow" onclick="mapper.follow = !mapper.follow" data-toggle="button"><i class="fa fa-paw"></i></button>
+        <button id="btn-legend" type="button" class="btn btn-default btn-xs" title="Show legend" onclick="mapper.showLegend = !mapper.showLegend" data-toggle="button"><i class="fa fa-map-marker"></i></button>
+        <button id="btn-room" type="button" class="btn btn-default btn-xs" title="Show room properties" onclick="toggleRooms();" data-toggle="button"><i class="fa fa-list-alt"></i></button>
       </div>
       <div class="btn-group" role="group">
         <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh map" onclick="saveRoom();mapper.refresh();"><i class="fa fa-refresh"></i></button>
-        <button id="bt-compact" type="button" class="btn btn-default btn-xs" title="Compact map" onclick="compact()"><i class="fa fa-compress"></i></button>
+        <button id="btn-compact" type="button" class="btn btn-default btn-xs" title="Compact map" onclick="compact()"><i class="fa fa-compress"></i></button>
       </div>
       <div class="btn-group" role="group">
-        <button id="btnSplit" type="button" class="btn btn-default btn-xs" title="Split areas" onclick="mapper.splitArea = !mapper.splitArea" data-toggle="button"><i class="fa fa-object-ungroup"></i></button>
-        <button id="btnFill" type="button" class="btn btn-default btn-xs" title="Fill walls" onclick="mapper.fillWalls = !mapper.fillWalls" data-toggle="button"><i class="fa fa-building-o"></i></button>
+        <button id="btn-split" type="button" class="btn btn-default btn-xs" title="Split areas" onclick="mapper.splitArea = !mapper.splitArea" data-toggle="button"><i class="fa fa-object-ungroup"></i></button>
+        <button id="btn-fill" type="button" class="btn btn-default btn-xs" title="Fill walls" onclick="mapper.fillWalls = !mapper.fillWalls" data-toggle="button"><i class="fa fa-building-o"></i></button>
       </div>
       <button id="btn-focus" type="button" class="btn btn-default btn-xs" title="Focus on current room" onclick="mapper.focusCurrentRoom()"><i class="fa fa-crosshairs"></i></button>
-      <select id="SelectArea" class="form-control" title="Select Area"></select>
+      <select id="select-area" class="form-control" title="Select Area"></select>
       <div class="btn-group" style="float: left">
         <label for="MapLevel" style="float: left">Level:</label>
         <input id="MapLevel" class="form-control" type="number" title="Map Level">
@@ -929,7 +940,7 @@
         <button type="button" class="btn btn-default btn-xs" title="Set selected as current" onclick="mapper.setCurrent()"><i class="fa fa-circle"></i></button>
         <button type="button" class="btn btn-default btn-xs" title="Highlight path" onclick="mapper.showPath()"><i class="fa fa-paint-brush"></i></button>
         <button id="btn-clear" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Clear path" onclick="mapper.clearPath()"><i class="fa fa-times"></i></button>
-        <button id="btnWalk" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Walk path" onclick="mapper.walkPath()"><i class="fa fa-blind"></i></button>
+        <button id="btn-walk" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Walk path" onclick="mapper.walkPath()"><i class="fa fa-blind"></i></button>
       </div>
     </div>
     <div id="mapper-body">

@@ -140,7 +140,7 @@
 
             function start() {
                 options.chat.log = true;
-                $("#btnEnable").button('toggle');
+                $("#btn-enable").button('toggle');
                 ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: true });
                 if (!timeStamp)
                     timeStamp = new Date().getTime();
