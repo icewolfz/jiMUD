@@ -4,10 +4,6 @@
 * Input - wait for native, or leave as custom 
 ## Advanced editor
 * Test pasted html from more sources and continue to adjust paste processing to fix issues
-* Maybe create a new textcolor plugin with different color selectors to fix being cut off when using small window size, maybe a real window to display grid
-  * [Textcolor plugin source - https://github.com/tinymce/tinymce/blob/master/src/plugins/textcolor/src/main/js/Plugin.js](https://github.com/tinymce/tinymce/blob/master/src/plugins/textcolor/src/main/js/Plugin.js)
-* Redo the color selection menus, maybe limit ot the basic 16 colors for context menu/color picker to increase performance with an option to open a color dialog with a full selecton of colors
-* add spelling correction suggestions to context menu, at this time can not be done due to color menus as the menus have ot be rebuilt each time due to how electron creates menus, or if / when electron supports a remove/clear menu api then add
 ## Mapper 
 * Add room exist and coords/zone check x/y/z/zone and if room found bump zone context menu, right click room list a remove room option, maybe exports
 * Add a file menu and add all the features from the toolbar?

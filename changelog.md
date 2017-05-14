@@ -24,6 +24,7 @@
   - Command input now supports spell checking
 - **Changed:**
   - Advanced Editor: tooltips/color menus now display color code and display name based on XTerm 256 color names and ShadowMUD color database
+  - Advanced Editor: color selection has been trimed to the basic 16 colors + no color, with an option to open a more advanced color selection dialog, this should reduce load times.
   - Profile manager: Moved import button to a export/import drop down
   - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
   - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory

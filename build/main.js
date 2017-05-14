@@ -624,7 +624,6 @@ function showHelpWindow(url, title) {
     trackWindowState('help', winHelp);
   })
 
-
   winHelp.on('unmaximize', () => {
     trackWindowState('help', winHelp);
   })
@@ -931,6 +930,10 @@ ipcMain.on('connected', (event) => {
   }
 })
 
+ipcMain.on('set-color', (event, type, color) => {
+  if (winEditor)
+    winEditor.webContents.send('set-color', type, color);
+});
 
 ipcMain.on('send-background', (event, command) => {
   win.webContents.send('send-background', command);
@@ -1051,7 +1054,7 @@ ipcMain.on('set-progress', (event, args) => {
   win.setProgressBar(args.value, args.options);
 });
 
-ipcMain.on('show-window', (event, window) => {
+ipcMain.on('show-window', (event, window, args) => {
   if (window == "prefs")
     showPrefs();
   else if (window == "mapper")
@@ -1062,7 +1065,9 @@ ipcMain.on('show-window', (event, window) => {
     showProfiles();
   else if (window == "chat")
     showChat();
-  if (windows[window] && windows[window].window)
+  else if (window == "color")
+    showColor(args);
+  else if (windows[window] && windows[window].window)
     showWindow(window, windows[window]);
 });
 
@@ -1670,4 +1675,43 @@ function showWindow(name, options) {
   }
   else
     createNewWindow(name, options);
+}
+
+function showColor(args) {
+  console.log("--showColor");
+  console.log(args);
+  let cp = new BrowserWindow({
+    parent: args.window || winEditor || win,
+    modal: true,
+    width: 326,
+    height: 296,
+    movable: true,
+    minimizable: false,
+    maximizable: false,
+    skipTaskbar: true,
+    resizable: false,
+    title: 'Pick color',
+    icon: path.join(__dirname, '../assets/icons/png/color.png'),
+    show: false,
+  })
+  cp.setMenu(null);
+  cp.on('closed', () => {
+    cp = null
+  })
+  cp.loadURL(url.format({
+    pathname: path.join(__dirname, 'colorpicker.html'),
+    protocol: 'file:',
+    slashes: true
+  }))
+
+  if (debug)
+    cp.webContents.openDevTools();
+
+  cp.once('ready-to-show', () => {
+    console.log("--aaa");
+    console.log(args);
+    cp.show();
+    console.log(args);
+    cp.webContents.executeJavaScript('setType("' + (args.type||'forecolor') + '");setColor("'+(args.color||'')+'");');
+  })
 }
