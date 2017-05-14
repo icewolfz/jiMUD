@@ -834,21 +834,66 @@
                 tinymce.activeEditor.on('contextmenu', function (e) {
                     e.preventDefault();
                     cMenu = tinymce.activeEditor.plugins["shadowmud"].buildMenu()
+
                     /*
+                                        sel = tinymce.activeEditor.selection.getSel();
+                                        if (!sel.isCollapsed) {
+                    
+                                            // Detect if selection is backwards
+                                            var range = document.createRange();
+                                            range.setStart(sel.anchorNode, sel.anchorOffset);
+                                            range.setEnd(sel.focusNode, sel.focusOffset);
+                                            var backwards = range.collapsed;
+                                            range.detach();
+                    
+                                            // modify() works on the focus of the selection
+                                            var endNode = sel.focusNode, endOffset = sel.focusOffset;
+                                            sel.collapse(sel.anchorNode, sel.anchorOffset);
+                    
+                                            var direction = [];
+                                            if (backwards) {
+                                                direction = ['backward', 'forward'];
+                                            } else {
+                                                direction = ['forward', 'backward'];
+                                            }
+                    
+                                            sel.modify("move", direction[0], "character");
+                                            sel.modify("move", direction[1], "word");
+                                            sel.extend(endNode, endOffset);
+                                            sel.modify("extend", direction[1], "character");
+                                            sel.modify("extend", direction[0], "word");
+                                        }
+                                        */
                     var selRng = tinymce.activeEditor.selection.getRng();
                     selRng.expand("word"); //expands the DOM range to the current word
-                    tinymce.activeEditor.selection.setRng(selRng);
-                    var word = stripHTML(tinymce.activeEditor.selection.getContent());                    
-                    if(require('spellchecker').isMisspelled(word))
-                    {
-                        console.log(word);
+                    //tinymce.activeEditor.selection.setRng(selRng);
+                    var word = stripHTML(tinymce.activeEditor.selection.getContent());
+                    var ol = word.length;
+                    word = word.trimRight();
+                    var l = ol - word.length;
+                    ol = word.length;
+                    if (l > 0)
+                        selRng.setEnd(selRng.endContainer, selRng.endOffset - l);
+                    word = word.trimLeft();
+                    l = ol - word.length;
+                    if (l > 0)
+                        selRng.setStart(selRng.startContainer, selRng.startOffset - l);
+
+                    if (require('spellchecker').isMisspelled(word)) {
                         var words = require('spellchecker').getCorrectionsForMisspelling(word);
-                        if(words.length > 0)
-                        cMenu.insert(0, new MenuItem({ type: 'separator' }));
-                        for(var w = 0, wl = words.length;w < wl;w++)
-                            cMenu.insert(0, new MenuItem({label: words[w]}));
+                        if (words.length > 0)
+                            cMenu.insert(0, new MenuItem({ type: 'separator' }));
+                        for (var w = 0, wl = words.length; w < wl; w++)
+                            cMenu.insert(0, new MenuItem({
+                                label: words[w],
+                                click: function (item) {
+                                    console.log(tinymce.activeEditor.selection.getContent());
+                                    tinymce.activeEditor.undoManager.transact(function () {
+                                        tinymce.activeEditor.selection.setContent(item.label);
+                                    })
+                                }
+                            }));
                     }
-                    */
                     cMenu.popup(remote.getCurrentWindow());
                 });
                 loadOptions();
@@ -998,7 +1043,7 @@
                 if (color == 'transparent')
                     tinymce.activeEditor.plugins["shadowmud"].removeFormat(type);
                 else
-                    tinymce.activeEditor.plugins["shadowmud"].applyFormat(type, "#"+color);
+                    tinymce.activeEditor.plugins["shadowmud"].applyFormat(type, "#" + color);
             });
         </script>
     </head>
