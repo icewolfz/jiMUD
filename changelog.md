@@ -28,6 +28,7 @@
   - Profile manager: Moved import button to a export/import drop down
   - Profile manager: drop down menus and context menus are now created on demand in stead of made when loaded
   - Mapper: changed how drop down menus where created, now creates on demand instead of staying loaded in memory
+  - Mapper: changed how in memory changes are flushed to disk, should be a little faster
   - Converted from custom bell to system bell sound
   - View > Status > Limbs was expanded to a new submenu for visible, health and armor toggling
   - Upgrade electron to 1.7.0

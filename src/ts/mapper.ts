@@ -1939,10 +1939,10 @@ export class Mapper extends EventEmitter {
             }
             this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
             this.createDatabase('Disk');
-            this._db.run('DELETE FROM Disk.Rooms');
-            this._db.run('DELETE FROM Disk.Exits');
-            this._db.run('INSERT INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms');
-            this._db.run('INSERT INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits');
+            //this._db.run('DELETE FROM Disk.Rooms');
+            //this._db.run('DELETE FROM Disk.Exits');
+            this._db.run('INSERT OR REPLACE INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms');
+            this._db.run('INSERT OR REPLACE INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits');
             this._db.run('VACUUM Disk');
             this._db.run('DETACH DATABASE Disk', callback);
             this._changed = false;
