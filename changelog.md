@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.1.9 - 2017-05-
+##### 0.1.9 - 2017-05-14
 - **New:**
   - User context menus, create custom items for the right click display menu
   - new variables in javascript
