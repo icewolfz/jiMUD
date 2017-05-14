@@ -30,6 +30,7 @@
 - Re-code the inline variables and functions for parse om the parsing system instead of simple js replace function calls, should improve speed as will not have to call all functions all the time
 - Add a search to main client ot allow searching client
 - Cleanup and optimize code as much as possible
+- Expand about dialog to have a memory tab to display data about memory/cpu/progress data using new electron 1.6.9 api, [app.getAppMemoryInfo()](https://github.com/electron/electron/blob/master/docs/api/app.md#appgetappmemoryinfo), [getProcessMemoryInfo, getSystemMemoryInfo, getCPUUsage](https://github.com/electron/electron/blob/master/docs/api/process.md#processgetprocessmemoryinfo)
 ## Immortal tools
 - Add an interface to allow uploading/downloading of files with context menus to manipulate remote/local files
 - Use 2 syncable listviews, one local (left), other remote (right) with optional drag and drop, each list view will contain the file/folder name long with basic file data
