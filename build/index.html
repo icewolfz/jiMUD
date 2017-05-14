@@ -940,6 +940,8 @@
                   $("#commandinput").val(value);
                   $("#commandinput")[0].selectionStart = value.length;
                   $("#commandinput")[0].selectionEnd = value.length;
+                  $("#commandinput").blur();
+                  $("#commandinput").focus();
                 }
               }));
             }

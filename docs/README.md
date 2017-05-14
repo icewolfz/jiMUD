@@ -48,13 +48,12 @@ Basic questions answered about jiMUD
 
 ## Known Issues
 - Command input spell checking
-  - When you pick a correction it loses all other spelling checks this is a bug in chrome, simply highlight the word you want and right click.
-  - Spell checking will not check for errors until a space or newline is enterd, or when the command box is refocused.
+  - Spell checking will not check for errors until a space or newline is entered, or when the command box is refocused, you may right click any word at any point to get a forced list of suggested corrections.
 - Advanced editor 
   - Paste may lose some colors/background colors on pasted, this is a bug in TinyMCE editor
   - When apply styles to all text some styles may get stuck  
   - Some styles will not flash when flashing is enabled depending on order of styles applied
   - Toolbar text/background color picker may be cut off in small window sizes
   - Reverse style has wierd results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
-  - Correction from context menu may remove applyed styles depending on if they are just that word
+  - Correction from context menu may remove applied styles depending on if they are just that word
 - [Mapper](mapper.md#know-issues)
