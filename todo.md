@@ -38,3 +38,7 @@
   - http://maxazan.github.io/jquery-treegrid/ 
   - https://github.com/drvic10k/bootstrap-sortable
   - http://bootstrap-table.wenzhixin.net.cn/ 
+## Themes
+- Add theme support maybe by a folder named themes/themename/files? theme.css, theme.js and related?
+- Adding theme support requires re-coding of the status display to be re-coded to assign the locations of each part dynamicly instead of fixed #s based on the status box container would need some way to factor padding from theme css
+- Display/command input widths would have ot be recoded to factor in status display with dyanmicly instead of fixed with

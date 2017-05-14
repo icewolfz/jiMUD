@@ -1,5 +1,5 @@
 // cSpell:word omud
-// cSpell:ignore hasmembers, hpbar, hpmax, spbar, spmax, mpmax, mpbar
+// cSpell:ignore hasmembers, hpmax, spmax, mpmax,
 // cSpell:ignore righthoof, rightfoot, lefthoof, leftfoot, rightarm, leftarm, rightleg, leftleg, righthand, lefthand, leftwing, rightwing
 // cSpell:word 
 import EventEmitter = require('events');
@@ -61,9 +61,9 @@ export class Status extends EventEmitter {
                     this.setTitle(obj.name);
                     break;
                 case 'char.vitals':
-                    this.updateBar("#hpbar", obj.hp, obj.hpmax);
-                    this.updateBar("#spbar", obj.sp, obj.spmax);
-                    this.updateBar("#mpbar", obj.mp, obj.mpmax);
+                    this.updateBar("#hp-bar", obj.hp, obj.hpmax);
+                    this.updateBar("#sp-bar", obj.sp, obj.spmax);
+                    this.updateBar("#mp-bar", obj.mp, obj.mpmax);
                     this.info["hp"] = obj.hp;
                     this.info["hpmax"] = obj.hpmax;
                     this.info["sp"] = obj.sp;
@@ -464,9 +464,9 @@ export class Status extends EventEmitter {
         $("#rightwing").css('display', 'none');
         $("#tail").css('display', 'none');
 
-        this.updateBar("#hpbar", 0, 0);
-        this.updateBar("#spbar", 0, 0);
-        this.updateBar("#mpbar", 0, 0);
+        this.updateBar("#hp-bar", 0, 0);
+        this.updateBar("#sp-bar", 0, 0);
+        this.updateBar("#mp-bar", 0, 0);
         //this.ac = false;
         $("#xp-value").text("0");
         $("#xp-banked").text("0");
@@ -599,9 +599,9 @@ export class Status extends EventEmitter {
                 barsTop -= 237;
             }
             if (this.client.options.showStatusHealth)
-                $("#hpstatus").css("display", '');
+                $("#hp-status").css("display", '');
             else {
-                $("#hpstatus").css("display", 'none');
+                $("#hp-status").css("display", 'none');
                 experienceTop -= 45;
                 barsTop -= 45;
             }

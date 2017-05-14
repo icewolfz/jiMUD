@@ -17,6 +17,7 @@
     <script src="../lib/jquery.min.js"></script>
     <script src="js/jquery.ext.js"></script>
     <script>
+      //cSpell:ignore ismap hellip selectall lagmeter
       if (window.module) module.module;
       window.$selected = '';
       window.$selectedurl = '';
@@ -43,7 +44,7 @@
       var active = false;
       var capture = 0, captureReview = 0;
       var _captures = [], _captureReviews = [];
-      var _nocapture = false;
+      var _noCapture = false;
       //var savedRange;
 
       webFrame.setSpellCheckProvider("en-US", true, {
@@ -130,7 +131,7 @@
       }
 
       function selectAll() {
-        $("#displayframe")[0].contentWindow.selectAll();
+        $("#display-frame")[0].contentWindow.selectAll();
       }
 
       function toggleView(view) {
@@ -257,23 +258,23 @@
 
       function getDisplaySelectionText() {
         var text = "";
-        if ($("#displayframe")[0].contentWindow.getSelection) {
-          text = $("#displayframe")[0].contentWindow.getSelection().toString();
-        } else if ($("#displayframe")[0].contentWindow.document.selection && document.selection.type != "Control") {
-          text = $("#displayframe")[0].contentWindow.document.selection.createRange().text;
+        if ($("#display-frame")[0].contentWindow.getSelection) {
+          text = $("#display-frame")[0].contentWindow.getSelection().toString();
+        } else if ($("#display-frame")[0].contentWindow.document.selection && document.selection.type != "Control") {
+          text = $("#display-frame")[0].contentWindow.document.selection.createRange().text;
         }
         return text;
       }
 
       function clearDisplaySelection() {
-        if ($("#displayframe")[0].contentWindow.getSelection) {
-          if ($("#displayframe")[0].contentWindow.getSelection().empty) {  // Chrome
-            $("#displayframe")[0].contentWindow.getSelection().empty();
-          } else if ($("#displayframe")[0].contentWindow.getSelection().removeAllRanges) {  // Firefox
-            $("#displayframe")[0].contentWindow.getSelection().removeAllRanges();
+        if ($("#display-frame")[0].contentWindow.getSelection) {
+          if ($("#display-frame")[0].contentWindow.getSelection().empty) {  // Chrome
+            $("#display-frame")[0].contentWindow.getSelection().empty();
+          } else if ($("#display-frame")[0].contentWindow.getSelection().removeAllRanges) {  // Firefox
+            $("#display-frame")[0].contentWindow.getSelection().removeAllRanges();
           }
-        } else if ($("#displayframe")[0].contentWindow.document.selection) {  // IE?
-          $("#displayframe")[0].contentWindow.document.selection.empty();
+        } else if ($("#display-frame")[0].contentWindow.document.selection) {  // IE?
+          $("#display-frame")[0].contentWindow.document.selection.empty();
         }
       }
 
@@ -322,7 +323,7 @@
         });
 
         //client = new Client($("#display"), $("#commandinput"));
-        client = new Client($("#displayframe").contents().find("#display"), $("#commandinput"));
+        client = new Client($("#display-frame").contents().find("#display"), $("#commandinput"));
         client.parser.enableBell = false;
         client.parser.on('bell', () => {
           shell.beep();
@@ -332,7 +333,7 @@
         client.parser.mxpLinkFunction = "parent.doMXPLink";
         client.parser.mxpSendFunction = "parent.doMXPSend";
         client.parser.mxpTooltipFunction = "parent.doMXPTooltip";
-        var doc = $("#displayframe")[0].contentDocument || $("#displayframe")[0].contentWindow.document;
+        var doc = $("#display-frame")[0].contentDocument || $("#display-frame")[0].contentWindow.document;
 
         var mdown = false;
         var sel = false;
@@ -358,11 +359,11 @@
           else if (mdown) {
             //window.$selected = getDisplaySelectionText();
             /*
-            if ($("#displayframe")[0].contentWindow.getSelection) {
-              savedRange = { range: $("#displayframe")[0].contentWindow.getSelection().getRangeAt(0) };
+            if ($("#display-frame")[0].contentWindow.getSelection) {
+              savedRange = { range: $("#display-frame")[0].contentWindow.getSelection().getRangeAt(0) };
               savedRange.start = savedRange.range.startOffset;
               savedRange.end = savedRange.range.endOffset;
-              savedRange.node = $("#displayframe")[0].contentWindow.getSelection().anchorNode
+              savedRange.node = $("#display-frame")[0].contentWindow.getSelection().anchorNode
             }
             */
           }
@@ -490,17 +491,17 @@
           res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.raw);
           if (res && res.length > 0) {
             capture = 0;
-            _nocapture = true;
+            _noCapture = true;
             return;
           }
           //end capture blocking for who list
           res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.raw);
           if (res && res.length > 0) {
             capture = 0;
-            _nocapture = false;
+            _noCapture = false;
             return;
           }
-          if (_nocapture) return;
+          if (_noCapture) return;
           //capture indented text
           if (capture > 0 && data.raw.startsWith("    ")) {
             ipcRenderer.send('chat', data.line);
@@ -621,7 +622,7 @@
           ipcRenderer.send('set-progress', { value: 0 });
           ipcRenderer.send('flush');
           $("#Progressbar").html('<progress max="100"></progress>');
-          $("#ProgressTitle").html(title || "Importing data...");
+          $("#ProgressTitle").html(title || "Importing data&hellip;");
           $("#Progress")[0].showModal();
         });
 
@@ -750,7 +751,6 @@
           c.append(new MenuItem({ type: 'separator' }));
           c.append(new MenuItem({
             label: '&Weather',
-            id: "weather",
             type: 'checkbox',
             checked: client.options.showStatusWeather,
             click: () => {
@@ -760,11 +760,9 @@
 
           c.append(new MenuItem({
             label: '&Limbs',
-            id: "limbsmenu",
             submenu: [
               {
                 label: '&Visible',
-                id: "limbs",
                 type: 'checkbox',
                 checked: client.options.showStatusLimbs,
                 click: () => {
@@ -774,7 +772,6 @@
               { type: 'separator' },
               {
                 label: '&Health',
-                id: "limbhealth",
                 type: 'checkbox',
                 checked: !client.options.showArmor,
                 click: () => {
@@ -783,7 +780,6 @@
               },
               {
                 label: '&Armor',
-                id: "limbarmor",
                 type: 'checkbox',
                 checked: client.options.showArmor,
                 click: () => {
@@ -794,7 +790,6 @@
           }));
           c.append(new MenuItem({
             label: '&Health',
-            id: "health",
             type: 'checkbox',
             checked: client.options.showStatusHealth,
             click: () => {
@@ -803,7 +798,6 @@
           }));
           c.append(new MenuItem({
             label: '&Experience',
-            id: "experience",
             type: 'checkbox',
             checked: client.options.showStatusExperience,
             click: () => {
@@ -812,7 +806,6 @@
           }));
           c.append(new MenuItem({
             label: '&Party Health',
-            id: "partyhealth",
             type: 'checkbox',
             checked: client.options.showStatusPartyHealth,
             click: () => {
@@ -821,7 +814,6 @@
           }));
           c.append(new MenuItem({
             label: '&Combat Health',
-            id: "combathealth",
             type: 'checkbox',
             checked: client.options.showStatusCombatHealth,
             click: () => {
@@ -830,7 +822,6 @@
           }));
           c.append(new MenuItem({
             label: '&Lagmeter',
-            id: "lagmeter",
             type: 'checkbox',
             checked: client.options.lagMeter,
             click: () => {
@@ -846,7 +837,6 @@
           var c = new Menu();
           c.append(new MenuItem({
             label: '&Visible',
-            id: "buttonsvisible",
             type: 'checkbox',
             checked: client.options.showButtonBar,
             click: () => {
@@ -856,7 +846,6 @@
           c.append(new MenuItem({ type: 'separator' }));
           c.append(new MenuItem({
             label: '&Connect',
-            id: "connectbutton",
             type: 'checkbox',
             checked: client.options.buttons.connect,
             click: () => {
@@ -865,7 +854,6 @@
           }));
           c.append(new MenuItem({
             label: '&Preferences',
-            id: "preferencesbutton",
             type: 'checkbox',
             checked: client.options.buttons.preferences,
             click: () => {
@@ -874,7 +862,6 @@
           }));
           c.append(new MenuItem({
             label: '&Log',
-            id: "logbutton",
             type: 'checkbox',
             checked: client.options.buttons.log,
             click: () => {
@@ -883,7 +870,6 @@
           }));
           c.append(new MenuItem({
             label: '&Clear',
-            id: "clearbutton",
             type: 'checkbox',
             checked: client.options.buttons.clear,
             click: () => {
@@ -892,7 +878,6 @@
           }));
           c.append(new MenuItem({
             label: '&Lock',
-            id: "lockbutton",
             type: 'checkbox',
             checked: client.options.buttons.lock,
             click: () => {
@@ -901,7 +886,6 @@
           }));
           c.append(new MenuItem({
             label: '&Map',
-            id: "mapbutton",
             type: 'checkbox',
             checked: client.options.buttons.map,
             click: () => {
@@ -910,7 +894,6 @@
           }));
           c.append(new MenuItem({
             label: '&User buttons',
-            id: "userbutton",
             type: 'checkbox',
             checked: client.options.buttons.user,
             click: () => {
@@ -1043,7 +1026,7 @@
       }
 
       function buildButtons() {
-        var buttons = $("#userbuttons");
+        var buttons = $("#user-buttons");
         buttons.empty();
         if (!client.options.buttons.user)
           return;
@@ -1203,7 +1186,7 @@
 
   <body>
     <div id="display-container">
-      <iframe id="displayframe" src="display.html" style="border: 0; padding:0; margin: 0;width: 100%; height: 100%" /></iframe>
+      <iframe id="display-frame" src="display.html" style="border: 0; padding:0; margin: 0;width: 100%; height: 100%" /></iframe>
     </div>
     <div id="display-border"></div>
     <div id="command">
@@ -1224,7 +1207,7 @@
       <a href="javascript:void(0)" title="Clear display" id="clear" class="button" onclick="client.clear()"><img src="../assets/icons/png/clear.png" /></a>
       <a href="javascript:void(0)" title="Lock display" id="lock" class="button" onclick="client.toggleScrollLock()"><img src="../assets/icons/png/lock.png" /></a>
       <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');"><img src="../assets/icons/png/map.png" /></a>
-      <div id="userbuttons"></div>
+      <div id="user-buttons"></div>
     </div>
     <div id="status-border"></div>
     <div id="status">
@@ -1258,21 +1241,21 @@
           <div id="righthandweapon"></div>
           <div id="overall" class="health-full">Top Shape</div>
         </div>
-        <div id="hpstatus">
+        <div id="hp-status">
           <div><span>HP:</span>
-            <div class="progressbar" id="hpbar">
+            <div class="progressbar" id="hp-bar">
               <div class="progressbar-text">0/0</div>
               <div class="progressbar-value"></div>
             </div>
           </div>
           <div><span>SP:</span>
-            <div class="progressbar" id="spbar">
+            <div class="progressbar" id="sp-bar">
               <div class="progressbar-text">0/0</div>
               <div class="progressbar-value"></div>
             </div>
           </div>
           <div><span>MP:</span>
-            <div class="progressbar" id="mpbar">
+            <div class="progressbar" id="mp-bar">
               <div class="progressbar-text">0/0</div>
               <div class="progressbar-value"></div>
             </div>

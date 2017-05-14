@@ -1235,48 +1235,6 @@ export function doUndo() {
     _redo.push(action);
     updateUndoState();
     _pUndo = false;
-    /*
-    action: 'add', type: 'profile', item: string[]
-    action: 'add', type: type.toLowerCase(), item: item.clone(), data: { type: type, key: key, item: item, idx: idx, profile: profile.name.toLowerCase() } 
-
-    action: 'delete', type: 'profile', item: profile
-    action: 'delete', type: type, data: { key: key, idx: idx, profile: profile.name.toLowerCase() }, item: profile[key][idx]
-
-    action: 'update', type: 'profile', profile: currentProfile.name, data: { enabled: currentProfile.enabled }
-    action: 'update', type: 'profile', profile: currentProfile.name, data: { enabled: currentProfile.enabled } 
-    action: 'update', type: 'profile', profile: currentProfile.name, data: data
-
-    action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name, data: { enabled: currentProfile.aliases[currentNode.dataAttr.index].enabled }
-    action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name, data: { enabled: currentProfile.macros[currentNode.dataAttr.index].enabled }
-    action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name, data: { enabled: currentProfile.triggers[currentNode.dataAttr.index].enabled }
-    action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name, data: { enabled: currentProfile.buttons[currentNode.dataAttr.index].enabled }
-    action: 'update', type: t, item: node.dataAttr.index, profile: profile.name, data: data
-    
-    action: 'update', type: 'macro', item: currentNode.dataAttr.index, profile: currentProfile.name, data: data
-    action: 'update', type: 'alias', item: currentNode.dataAttr.index, profile: currentProfile.name, data: data
-    action: 'update', type: 'trigger', item: currentNode.dataAttr.index, profile: currentProfile.name, data: data
-    action: 'update', type: 'button', item: currentNode.dataAttr.index, profile: currentProfile.name, data: data
-    
-    
-    
-    action: 'group', add: [
-        { type: _clip.type, item: item.clone(), data: { type: _clip.type, key: _clip.key, item: item, idx: profile[_clip.key].length, profile: profile.name.toLowerCase() } },
-        ...
-    ], delete: [
-        { type: _clip.type, item: item.clone(), data: { type: _clip.type, key: _clip.key, item: item, idx: _clip.data[i], profile: source.name.toLowerCase() } }, 
-        ...        
-    ]
-    action: 'group', add: [], delete: [
-        { type: type, item: profile[key][i].clone(), data: { type: type, key: key, item: profile[key][i].clone(), idx: i, profile: profile.name.toLowerCase() } }
-        ...
-    ]
-    action: 'group', add: [
-        { type: "macro", item: m[i].clone(), data: { type: "macro", key: "macros", item: m[i].clone(), idx: profile["macros"].length, profile: profile.name.toLowerCase() } },
-        ...
-    ], delete: []
-    
-    action: 'reset', type: "profile", profile: profile.clone()
-    */
 }
 
 export function doRedo() {

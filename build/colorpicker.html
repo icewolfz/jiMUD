@@ -33,6 +33,7 @@
         <script src="../lib/bootstrap.min.js"></script>
         <script src="../lib/bootstrap-select.min.js"></script>
         <script>
+            //cSpell:ignore tinymce, rgbcolor, forecolor, colorbtn, colorbutton
             const { remote, ipcRenderer } = require('electron');
             const { Settings } = require('./js/settings');
             const { stripHTML, htmlEncode, parseTemplate } = require('./js/library');
@@ -331,42 +332,42 @@
             }
 
             function loadColors() {
-                var _dcolors = Settings.getColors();
+                var _dColors = Settings.getColors();
                 var c, color, r, g, b, idx;
                 $('body').empty();
                 var _ColorTable = [];
 
-                color = new rgbcolor(options.colors[0] || _dcolors[0]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[0] || _dColors[0]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "BLACK");
-                color = new rgbcolor(options.colors[1] || _dcolors[1]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[1] || _dColors[1]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "RED");
-                color = new rgbcolor(options.colors[2] || _dcolors[2]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[2] || _dColors[2]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "GREEN");
-                color = new rgbcolor(options.colors[3] || _dcolors[3]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[3] || _dColors[3]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "ORANGE");
-                color = new rgbcolor(options.colors[4] || _dcolors[4]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[4] || _dColors[4]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "BLUE");
-                color = new rgbcolor(options.colors[5] || _dcolors[5]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[5] || _dColors[5]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "MAGENTA");
-                color = new rgbcolor(options.colors[6] || _dcolors[6]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[6] || _dColors[6]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "CYAN");
-                color = new rgbcolor(options.colors[7] || _dcolors[7]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[7] || _dColors[7]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "WHITE");
-                color = new rgbcolor(options.colors[8] || _dcolors[8]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[8] || _dColors[8]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "BOLD BLACK");
-                color = new rgbcolor(options.colors[9] || _dcolors[9]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[9] || _dColors[9]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "BOLD RED");
-                color = new rgbcolor(options.colors[10] || _dcolors[10]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[10] || _dColors[10]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "BOLD GREEN");
-                color = new rgbcolor(options.colors[11] || _dcolors[11]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[11] || _dColors[11]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "YELLOW");
-                color = new rgbcolor(options.colors[12] || _dcolors[12]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[12] || _dColors[12]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "BOLD BLUE");
-                color = new rgbcolor(options.colors[13] || _dcolors[13]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[13] || _dColors[13]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "BOLD MAGENTA");
-                color = new rgbcolor(options.colors[14] || _dcolors[14]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[14] || _dColors[14]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "BOLD CYAN");
-                color = new rgbcolor(options.colors[15] || _dcolors[15]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[15] || _dColors[15]).toHex().substr(1).toUpperCase();
                 _ColorTable.push(color, "BOLD WHITE");
 
 
@@ -428,7 +429,7 @@
                 }
                 html += html2;
                 html += "<tr><td></td></tr><tr>"
-                for (r = 232; r <= 255; r++)//greyscale
+                for (r = 232; r <= 255; r++)//grayscale
                 {
                     g = (r - 232) * 10 + 8;
                     if (g < 16)

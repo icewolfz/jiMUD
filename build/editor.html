@@ -19,6 +19,9 @@
         <script src="../lib/tinymce/tinymce.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/smtextcolor.tinymce.js" type="text/javascript" charset="utf-8"></script>
         <script>
+            //cSpell:words tinymce
+            //cSpell:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
+            //cSpell:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime, 
             const { remote, ipcRenderer, webFrame } = require('electron');
             const { nativeImage, dialog, Menu, MenuItem } = remote;
             const { stripHTML, htmlEncode, parseTemplate } = require('./js/library');
@@ -774,7 +777,7 @@
                         "paste shadowmud insertdatetime smtextcolor nonbreaking"
                     ],
                     color_picker_callback: function (editor, color, format) { ipcRenderer.send('show-window', 'color', { type: format, color: color || '' }); },
-                    color_picker_caption: 'More...',
+                    color_picker_caption: 'More&hellip;',
                     //contextmenu: "shadowfore shadowback | bold italic underline strikethrough overline dblunderline flash reverse",
                     nonbreaking_force_tab: true,
                     //textcolor_map: _ColorTable,
@@ -899,69 +902,69 @@
             });
 
             function loadColors() {
-                var _dcolors = Settings.getColors();
+                var _dColors = Settings.getColors();
                 var c, color, r, g, b, idx, _bold = [];
                 _ColorTable = [];
                 _colors = {};
 
-                color = new rgbcolor(options.colors[0] || _dcolors[0]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[0] || _dColors[0]).toHex().substr(1).toUpperCase();
                 _colors[color] = "BLACK";
                 _ColorTable.push(color, "BLACK");
 
-                color = new rgbcolor(options.colors[1] || _dcolors[1]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[1] || _dColors[1]).toHex().substr(1).toUpperCase();
                 _colors[color] = "RED";
                 _ColorTable.push(color, "RED");
 
-                color = new rgbcolor(options.colors[2] || _dcolors[2]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[2] || _dColors[2]).toHex().substr(1).toUpperCase();
                 _colors[color] = "GREEN";
                 _ColorTable.push(color, "GREEN");
 
-                color = new rgbcolor(options.colors[3] || _dcolors[3]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[3] || _dColors[3]).toHex().substr(1).toUpperCase();
                 _colors[color] = "ORANGE";
                 _ColorTable.push(color, "ORANGE");
 
-                color = new rgbcolor(options.colors[4] || _dcolors[4]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[4] || _dColors[4]).toHex().substr(1).toUpperCase();
                 _colors[color] = "BLUE";
                 _ColorTable.push(color, "BLUE");
-                color = new rgbcolor(options.colors[5] || _dcolors[5]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[5] || _dColors[5]).toHex().substr(1).toUpperCase();
                 _colors[color] = "MAGENTA";
                 _ColorTable.push(color, "MAGENTA");
-                color = new rgbcolor(options.colors[6] || _dcolors[6]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[6] || _dColors[6]).toHex().substr(1).toUpperCase();
                 _colors[color] = "CYAN";
                 _ColorTable.push(color, "CYAN");
-                color = new rgbcolor(options.colors[7] || _dcolors[7]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[7] || _dColors[7]).toHex().substr(1).toUpperCase();
                 _colors[color] = "WHITE";
                 _ColorTable.push(color, "WHITE");
 
-                color = new rgbcolor(options.colors[8] || _dcolors[8]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[8] || _dColors[8]).toHex().substr(1).toUpperCase();
                 _colors[color] = "BOLD%^%^BLACK";
                 _ColorTable.push(color, "BOLD BLACK");
                 _bold.push(color);
-                color = new rgbcolor(options.colors[9] || _dcolors[9]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[9] || _dColors[9]).toHex().substr(1).toUpperCase();
                 _colors[color] = "BOLD%^%^RED";
                 _ColorTable.push(color, "BOLD RED");
                 _bold.push(color);
-                color = new rgbcolor(options.colors[10] || _dcolors[10]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[10] || _dColors[10]).toHex().substr(1).toUpperCase();
                 _colors[color] = "BOLD%^%^GREEN";
                 _ColorTable.push(color, "BOLD GREEN");
                 _bold.push(color);
-                color = new rgbcolor(options.colors[11] || _dcolors[11]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[11] || _dColors[11]).toHex().substr(1).toUpperCase();
                 _colors[color] = "YELLOW";
                 _ColorTable.push(color, "YELLOW");
                 _bold.push(color);
-                color = new rgbcolor(options.colors[12] || _dcolors[12]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[12] || _dColors[12]).toHex().substr(1).toUpperCase();
                 _colors[color] = "BOLD%^%^BLUE";
                 _ColorTable.push(color, "BOLD BLUE");
                 _bold.push(color);
-                color = new rgbcolor(options.colors[13] || _dcolors[13]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[13] || _dColors[13]).toHex().substr(1).toUpperCase();
                 _colors[color] = "BOLD%^%^MAGENTA";
                 _ColorTable.push(color, "BOLD MAGENTA");
                 _bold.push(color);
-                color = new rgbcolor(options.colors[14] || _dcolors[14]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[14] || _dColors[14]).toHex().substr(1).toUpperCase();
                 _colors[color] = "BOLD%^%^CYAN";
                 _ColorTable.push(color, "BOLD CYAN");
                 _bold.push(color);
-                color = new rgbcolor(options.colors[15] || _dcolors[15]).toHex().substr(1).toUpperCase();
+                color = new rgbcolor(options.colors[15] || _dColors[15]).toHex().substr(1).toUpperCase();
                 _colors[color] = "BOLD%^%^WHITE";
                 _ColorTable.push(color, "BOLD WHITE");
                 _bold.push(color);
@@ -996,7 +999,7 @@
                     }
                 }
 
-                for (r = 232; r <= 255; r++)//greyscale
+                for (r = 232; r <= 255; r++)
                 {
                     g = (r - 232) * 10 + 8;
                     if (g < 16)

@@ -17,6 +17,7 @@
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
     <script>
+      //cSpell:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
       const { RoomDetails, Mapper, ImportType } = require('./js/mapper');
       const { remote, ipcRenderer } = require('electron');
       const { nativeImage, dialog, Menu, MenuItem } = remote;
@@ -730,7 +731,7 @@
                   }
                   ipcRenderer.send('set-progress', { value: 0 });
                   $("#mapProgressbar").html('<progress max="100"></progress>');
-                  $("#mapProgressTitle").html("Exporting '" + mapper.active.area + "' map data...");
+                  $("#mapProgressTitle").html("Exporting '" + mapper.active.area + "' map data&hellip;");
                   $("#mapProgress")[0].showModal();
                   mapper.exportArea(fileName);
                 });
@@ -753,7 +754,7 @@
                     return;
                   }
                   $("#mapProgressbar").html('<progress max="100"></progress>');
-                  $("#mapProgressTitle").html("Exporting map data...");
+                  $("#mapProgressTitle").html("Exporting map data&hellip;");
                   ipcRenderer.send('set-progress', { value: 0 });
                   $("#mapProgress")[0].showModal();
                   mapper.exportAll(fileName);
@@ -789,7 +790,7 @@
                       }
                       ipcRenderer.send('set-progress', { value: 0 });
                       $("#mapProgressbar").html('<progress max="100"></progress>');
-                      $("#mapProgressTitle").html("Importing map data...");
+                      $("#mapProgressTitle").html("Importing map data&hellip;");
                       $("#mapProgress")[0].showModal();
                       mapper.import(data, ImportType.Merge);
                     });
@@ -824,7 +825,7 @@
                       }
                       ipcRenderer.send('set-progress', { value: 0 });
                       $("#mapProgressbar").html('<progress max="100"></progress>');
-                      $("#mapProgressTitle").html("Importing map data...");
+                      $("#mapProgressTitle").html("Importing map data&hellip;");
                       $("#mapProgress")[0].showModal();
                       mapper.import(data, ImportType.Replace);
                     });
@@ -863,7 +864,7 @@
 
       ipcRenderer.on('import', (event, data) => {
         $("#mapProgressbar").html('<progress max="100"></progress>');
-        $("#mapProgressTitle").html("Importing map data...");
+        $("#mapProgressTitle").html("Importing map data&hellip;");
         $("#mapProgress")[0].showModal();
         ipcRenderer.send('set-progress', { value: 0 });
         mapper.import(data, ImportType.Replace);
@@ -893,7 +894,7 @@
       }
       function compact() {
         $("#mapProgressbar").html('<progress max="100"></progress>');
-        $("#mapProgressTitle").html("Compacting map data...");
+        $("#mapProgressTitle").html("Compacting map data&hellip;");
         $("#mapProgress")[0].showModal();
         ipcRenderer.send('set-progress', { value: 0, options: { mode: 'indeterminate' } });
         mapper.compact();
@@ -1123,7 +1124,7 @@
       </div>
     </div>
     <dialog id="mapProgress" style="z-index:1000;text-align:center">
-      <div id="mapProgressTitle">Importing data...</div>
+      <div id="mapProgressTitle">Importing data&hellip;</div>
       <div id="mapProgressbar">
         <progress max="100"></progress>
       </div>
