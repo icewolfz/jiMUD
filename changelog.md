@@ -3,13 +3,13 @@
 - **New:**
   - User context menus, create custom items for the right click display menu
   - new variables in javascript
-    - $selectedword/$selword - returns the word under the mouse when right clicked
-    - $selected - returns the current selected text
-    - $selectedline/$selline - returns the current line text
-    - $selectedurl/$selurl - returns the current url when right clicked
-    - $copied - return clipboard text
+    - `$selectedword/$selword` - returns the word under the mouse when right clicked
+    - `$selected` - returns the current selected text
+    - `$selectedline/$selline` - returns the current line text
+    - `$selectedurl/$selurl` - returns the current url when right clicked
+    - `$copied` - return clipboard text
   - Parsed variables that work like the javascript ones in format of %{variable}, you may force upper, lower, or proper case by appending .lower, or .upper, for example %{selword.lower} will return lower cased version, or using the inline parse functions
-  - %{copied} - replace with clipboard contents, for javascript use this.readClipboard() or client.readClipboard where needed
+  - `%{copied}` - replace with clipboard contents, for javascript use this.readClipboard() or client.readClipboard where needed
   - inline parse functions to manipulate parsable variables
     - `%{lower(TEXT)}` - convert TEXT to lower case
     - `%{upper(TEXT)}` - convert TEXT to upper case
@@ -49,8 +49,8 @@
     - When clear all was done it would not remove areas from area navigator
     - When a room was removed it would not updated the area navigator if it was the only room in the area
   - Profile manager
-   - Fixed import button by moving to drop down menu
-   - importing now ask to replace a profile if name exist
+    - Fixed import button by moving to drop down menu
+    - importing now ask to replace a profile if name exist
   - View > Status menu items now work to toggle what is displayed
   - Fixed a bug in display being in a frame and parser capturing previous line fragments
   - Fixed a bug that when always on top was turned off for chat, mapper, advanced editor windows would stay open after main client was closed, now all windows are closed when main client window is closed.
