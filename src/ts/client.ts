@@ -258,6 +258,7 @@ export class Client extends EventEmitter {
         this.parser = new Parser({display: this.display});
         this.parser.on('debug', (msg) => { this.debug(msg) });
         this.parser.on('addLine', (data: Line) => {
+            var t;
             data.raw = stripHTML(data.line);
             this.emit('addLine', data);
             if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined" || data.line.length === 0)
@@ -265,7 +266,9 @@ export class Client extends EventEmitter {
             this.emit('addLineDone', data);
             if (data.gagged)
                 return;
-            this.lineCache.push(data.line);
+            t = $(data.line);
+            $("span:empty", t).remove();
+            this.lineCache.push(t[0].outerHTML);
         });
         this.parser.on('MXPTagReply', (tag, args) => {
 

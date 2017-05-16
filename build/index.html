@@ -35,6 +35,7 @@
       const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
       const { dialog, Menu, MenuItem, app, nativeImage } = remote;
       const { parseTemplate, setSelectionRange } = require("./js/library.js");
+      const { Finder } = require('./js/finder.js');
       const fs = require('fs');
       const path = require('path');
       const { version } = require("../package.json");
@@ -45,7 +46,7 @@
       var capture = 0, captureReview = 0;
       var _captures = [], _captureReviews = [];
       var _noCapture = false;
-      //var savedRange;
+      var _finder;
 
       webFrame.setSpellCheckProvider("en-US", true, {
         spellCheck: function (text) {
@@ -355,17 +356,6 @@
           if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
             clipboard.writeText(getDisplaySelectionText(), 'selection');
             clearDisplaySelection()
-          }
-          else if (mdown) {
-            //window.$selected = getDisplaySelectionText();
-            /*
-            if ($("#display-frame")[0].contentWindow.getSelection) {
-              savedRange = { range: $("#display-frame")[0].contentWindow.getSelection().getRangeAt(0) };
-              savedRange.start = savedRange.range.startOffset;
-              savedRange.end = savedRange.range.endOffset;
-              savedRange.node = $("#display-frame")[0].contentWindow.getSelection().anchorNode
-            }
-            */
           }
           mdown = false;
           sel = false;
@@ -920,7 +910,7 @@
           var ol = word.length;
           word = word.trimRight();
           var ll = ol - word.length;
-          if(ll > 0)
+          if (ll > 0)
             e.currentTarget.selectionEnd = e.currentTarget.selectionEnd - ll;
 
           if (require('spellchecker').isMisspelled(word)) {
@@ -949,6 +939,8 @@
           inputMenu.popup(remote.getCurrentWindow());
 
         });
+
+        _finder = new Finder(client.display);
       };
 
       function executeContext(item) {

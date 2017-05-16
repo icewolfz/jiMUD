@@ -1,4 +1,14 @@
 ## Changelog
+##### 0.2.0
+- **New:**
+  - Add ${varibale.FUNCTION} format support to allow simlar format to javascript.
+  - Add find text system to main client
+    - Match case - ignore case or not
+    - Match word - match exact word
+    - Result list - show you how many results found and current one at
+    - High light - will highlight all matches
+- **Fixed:**
+  - Ansi parser would return empty elements due to changing styles and colors, the empty blocks are now removed when the lines have been added, should reduce memory
 ##### 0.1.9 - 2017-05-14
 - **New:**
   - User context menus, create custom items for the right click display menu

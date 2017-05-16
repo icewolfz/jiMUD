@@ -745,19 +745,19 @@ export class input extends EventEmitter {
             stacking = stacking && this.client.options.commandStacking;
         //@TODO re-code someday to be part of the parser engine instead of simple regex
         var copied = clipboard.readText('selection') || '';
-        text = text.replace(/\%\{copied\}/g, copied);
-        text = text.replace(/\%\{copied.lower\}/g, copied);
-        text = text.replace(/\%\{copied.upper\}/g, copied.toUpperCase());
-        text = text.replace(/\%\{copied.proper\}/g, ProperCase(copied));
+        text = text.replace(/(\%|\$)\{copied\}/g, copied);
+        text = text.replace(/(\%|\$)\{copied.lower\}/g, copied);
+        text = text.replace(/(\%|\$)\{copied.upper\}/g, copied.toUpperCase());
+        text = text.replace(/(\%|\$)\{copied.proper\}/g, ProperCase(copied));
 
-        text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)}/g, function (v, e) { return window["$"+e]; });
-        text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower}/g, function (v, e) { return window["$"+e].toLowerCase(); });
-        text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).upper}/g, function (v, e) { return window["$"+e].toUpperCase(); });
-        text = text.replace(/\%\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).proper}/g, function (v, e) { return ProperCase(window["$"+e]); });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)\}/g, function (v, e, w) { return window["$"+w]; });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower\}/g, function (v, e, w) { return window["$"+w].toLowerCase(); });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).upper\}/g, function (v, e, w) { return window["$"+w].toUpperCase(); });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).proper\}/g, function (v, e, w) { return ProperCase(window["$"+w]); });
 
-        text = text.replace(/\%\{lower\((.*)\)\}/g, function (v, e) { return e.toLowerCase(); });
-        text = text.replace(/\%\{upper\((.*)\)\}/g, function (v, e) { return e.toUpperCase(); });
-        text = text.replace(/\%\{proper\((.*)\)\}/g, function (v, e) { return ProperCase(e); });
+        text = text.replace(/(\%|\$)\{lower\((.*)\)\}/g, function (v, e, w) { return w.toLowerCase(); });
+        text = text.replace(/(\%|\$)\{upper\((.*)\)\}/g, function (v, e, w) { return w.toUpperCase(); });
+        text = text.replace(/(\%|\$)\{proper\((.*)\)\}/g, function (v, e, w) { return ProperCase(w); });
 
         tl = text.length;
 

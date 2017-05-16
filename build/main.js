@@ -131,7 +131,15 @@ var menuTemp = [
         click: () => {
           win.webContents.executeJavaScript('client.clear()');
         }
-      }
+      },
+      {type: 'separator'},
+      {
+        label: 'Find',
+        accelerator: 'CmdOrCtrl+F',
+        click: () => {
+          win.webContents.executeJavaScript('_finder.show()');
+        }
+      },      
     ]
   },
   //Profiles
