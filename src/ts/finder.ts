@@ -55,6 +55,7 @@ export class Finder extends EventEmitter {
             else
                 $("#find-case", this._control).removeClass("active");
             this.find(true);
+            this.emit('case');
         }
     }
 
@@ -70,6 +71,7 @@ export class Finder extends EventEmitter {
             else
                 $("#find-word", this._control).removeClass("active");
             this.find(true);
+            this.emit('word');
         }
     }
 
@@ -80,16 +82,26 @@ export class Finder extends EventEmitter {
     set Reverse(value: boolean) {
         if (value != this._reverse) {
             this._reverse = value;
-            if (this._reverse)
+            if (this._reverse) {
                 $("#find-reverse", this._control).addClass("active");
-            else
+                $("#find-prev", this._control).html('<i class="fa fa-arrow-up"></i>');
+                $("#find-next", this._control).html('<i class="fa fa-arrow-down"></i>');
+            }
+            else {
                 $("#find-reverse", this._control).removeClass("active");
+                $("#find-prev", this._control).html('<i class="fa fa-arrow-down"></i>');
+                $("#find-next", this._control).html('<i class="fa fa-arrow-up"></i>');
+            }
+            //this._position = this._results.length - this._position - 1;
+            //this.updateButtons();
+            //this.updateCount();
             this.find(true);
+            this.emit('reverse');
         }
     }
 
     private createControl() {
-        this._control = $('<div id="find"><input placeholder="Find" /><button id="find-case" title="Match Case">Aa</button><button id="find-word" title="Match Whole Word">Aa|</button><button id="find-regex" title="Use Regular Expression">.*</button><div id="find-count"></div><button id="find-prev" title="Previous Match" disabled="disabled"><i class="fa fa-arrow-left"></i></button><button id="find-next" title="Next Match" disabled="disabled"><i class="fa fa-arrow-right"></i></button><button id="find-selection" title="Find in selection" disabled="disabled"><i class="fa fa-align-left"></i></button><button id="find-reverse" title="Search Down"><i class="fa fa-caret-down"></i></button><button id="find-close" title="Close"><i class="fa fa-close"></i></button></div>');
+        this._control = $('<div id="find"><input placeholder="Find" /><button id="find-case" title="Match Case">Aa</button><button id="find-word" title="Match Whole Word">Aa|</button><button id="find-regex" title="Use Regular Expression">.*</button><div id="find-count"></div><button id="find-prev" title="Previous Match" disabled="disabled"><i class="fa fa-arrow-down"></i></button><button id="find-next" title="Next Match" disabled="disabled"><i class="fa fa-arrow-up"></i></button><button id="find-selection" title="Find in selection" disabled="disabled"><i class="fa fa-align-left"></i></button><button id="find-reverse" title="Search Down"><i class="fa fa-caret-down"></i></button><button id="find-close" title="Close"><i class="fa fa-close"></i></button></div>');
         $("#find-close", this._control).on('click', () => {
             this.hide();
         });
@@ -108,7 +120,7 @@ export class Finder extends EventEmitter {
         $("#find-reverse", this._control).on('click', () => {
             this.Reverse = !this.Reverse;
         });
-        this._document.body.append(this._control[0]);
+        this._window.document.body.append(this._control[0]);
     }
 
     private getDisplaySelectionText() {
@@ -131,16 +143,15 @@ export class Finder extends EventEmitter {
     }
 
     hide() {
-        this._control.slideUp(function () {
+        this._control.slideUp(() => {
             $("input", this._control).val('');
+            this.clear();
         });
     }
 
     find(focus?: boolean) {
         var val = $("input", this._control).val();
-        $(".find-highlight", this._display).each(function () {
-            $(this).replaceWith(this.textContent);
-        });
+        this.clear();
         if (val.length === 0) {
             $("#find-count", this._control).html("No Results")
             return;
@@ -156,8 +167,6 @@ export class Finder extends EventEmitter {
             re = new RegExp(pattern, 'gi');
         var lines = this._display[0].children;
         var m, id = 0, items;
-        this._results = [];
-        this._position = 0;
         for (var l = lines.length - 1; l >= 0; l--) {
             items = [];
             while ((m = re.exec(lines[l].textContent)) !== null) {
@@ -222,6 +231,15 @@ export class Finder extends EventEmitter {
         }
 
 
+        this.updateButtons();
+    }
+
+    clear() {
+        this._results = [];
+        this._position = 0;
+        $(".find-highlight", this._display).each(function () {
+            $(this).replaceWith(this.textContent);
+        });
         this.updateButtons();
     }
 

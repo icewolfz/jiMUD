@@ -138,6 +138,14 @@ export class Settings {
 		user: true
 	};
 
+	public find = {
+		case: false,
+		word: false,
+		reverse: false,
+		regex: false,
+		selection: false
+	}
+
 	public scrollLocked: boolean = false;
 	public showStatus: boolean = true;
 	public showMapper: boolean = false;
@@ -171,7 +179,7 @@ export class Settings {
 			if (!data.hasOwnProperty(prop)) {
 				continue;
 			}
-			if (prop == 'mapper' || prop == 'profiles' || prop == 'buttons' || prop == 'chat') {
+			if (prop == 'mapper' || prop == 'profiles' || prop == 'buttons' || prop == 'chat' || prop == 'find') {
 				for (var prop2 in data[prop]) {
 					if (!data[prop].hasOwnProperty(prop2)) {
 						continue;

@@ -941,6 +941,22 @@
         });
 
         _finder = new Finder(client.display);
+        _finder.on('word', () => {
+          client.options.find.word = _finder.MatchWord;
+          client.saveOptions();
+        })
+        _finder.on('case', () => {
+          client.options.find.case = _finder.MatchCase;
+          client.saveOptions();
+
+        })
+        _finder.on('reverse', () => {
+          client.options.find.reverse = _finder.Reverse;
+          client.saveOptions();
+        })
+        _finder.MatchCase = client.options.find.case;
+        _finder.MatchWord = client.options.find.word;
+        _finder.Reverse = client.options.find.reverse;
       };
 
       function executeContext(item) {
