@@ -21,7 +21,7 @@
     "start": "electron .",
     "debug": "electron . -d",
     "clean:dist": "rm -rf ./dist",
-    "compile": "npm run sass && tsc -p . --listEmittedFiles && npm run min && echo Compile Done",
+    "compile": "npm run sass && npm run compile:themes && tsc -p . --listEmittedFiles && npm run min && echo Compile Done",
     "build": "npm run build:win && npm run build:linux",
     "build:osx": "electron-packager . %npm_package_productName% --out=dist --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --overwrite --prune --asar --arch=all --platform=darwin --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/mac/app.icns",
     "build:win": "electron-packager . %npm_package_productName% --out=dist --arch=all --platform=win32 --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/win/app.ico",
@@ -47,7 +47,8 @@
     "min": "./node_modules/.bin/babili --minified out -d build/js",
     "rebuild:win": "./node_modules/.bin/electron-rebuild -w sqlite3 -p",
     "rebuild:linux": "./node_modules/.bin/electron-rebuild",
-    "sass": "node-sass src/css/ -o build/css/ --output-style compressed"
+    "sass": "node-sass src/css/ -o build/css/ --output-style compressed",
+    "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed"
   },
   "devDependencies": {
     "@types/electron": "^1.4.37",
@@ -83,7 +84,6 @@
     "buzz": "^1.2.0",
     "jquery": "^3.1.1",
     "lz-string": "^1.4.4",
-    "menubar": "^5.2.0",
     "rgbcolor": "^1.0.0",
     "spellchecker": "^3.3.1",
     "sqlite3": "^3.1.8"

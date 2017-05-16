@@ -141,7 +141,7 @@ export class Client extends EventEmitter {
 
         this._MSP = new MSP();
         this._MSP.on('playing', (data) => {
-            if (this.enableDebug) this.emit('MSP ' + (data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration);
+            if (this.enableDebug) this.debug('MSP ' + (data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration);
             if (!this.options.notifyMSPPlay) return;
             this.echo((data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
         });
@@ -204,9 +204,9 @@ export class Client extends EventEmitter {
         this.telnet.on('debug', (msg) => {
             this.debug(msg);
         });
-        this.telnet.on('receiveOption', (data: TelnetOption) => {
+        this.telnet.on('receive-option', (data: TelnetOption) => {
             this._MSP.processOption(data);
-            this.emit('receivedOption', data);
+            this.emit('received-option', data);
         });
         this.telnet.on('close', () => {
             this.connecting = false;
@@ -216,9 +216,9 @@ export class Client extends EventEmitter {
             this._MSP.reset();
             this.emit('closed');
         });
-        this.telnet.on('receivedData', (data) => {
+        this.telnet.on('received-data', (data) => {
             data = { value: data };
-            this.emit('receivedData', data);
+            this.emit('received-data', data);
             if (data === null || typeof data == "undefined" || data.value === null || typeof data.value == "undefined")
                 return;
             this.printInternal(data.value, false, true);
@@ -226,11 +226,11 @@ export class Client extends EventEmitter {
             this.debug("Latency: " + (this.telnet.latency / 1000) + "s");
         });
 
-        this.telnet.on('receivedMSDP', (data) => {
-            this.emit('receivedMSDP', data);
+        this.telnet.on('received-MSDP', (data) => {
+            this.emit('received-MSDP', data);
         });
 
-        this.telnet.on('receivedGMCP', (data) => {
+        this.telnet.on('received-GMCP', (data) => {
             var val: string = data.value;
             var mod: string, idx: number = 0, dl: number = val.length, c;
             if (dl === 0) return;
@@ -250,30 +250,30 @@ export class Client extends EventEmitter {
             }
             catch (e) {
             }
-            this.emit('receivedGMCP', mod, obj);
+            this.emit('received-GMCP', mod, obj);
         });
 
         this.telnet.on('windowSize', () => { this.UpdateWindow(); });
 
         this.parser = new Parser({display: this.display});
         this.parser.on('debug', (msg) => { this.debug(msg) });
-        this.parser.on('addLine', (data: Line) => {
+        this.parser.on('add-line', (data: Line) => {
             var t;
             data.raw = stripHTML(data.line);
-            this.emit('addLine', data);
+            this.emit('add-line', data);
             if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined" || data.line.length === 0)
                 return;
-            this.emit('addLineDone', data);
+            this.emit('add-line-done', data);
             if (data.gagged)
                 return;
             t = $(data.line);
             $("span:empty", t).remove();
             this.lineCache.push(t[0].outerHTML);
         });
-        this.parser.on('MXPTagReply', (tag, args) => {
+        this.parser.on('MXP-tag-reply', (tag, args) => {
 
         });
-        this.parser.on('expireLinks', (args) => {
+        this.parser.on('expire-links', (args) => {
             var expire;
             if (args.length > 0)
                 expire = this.display.find("a[expire='" + args[0] + "']");
@@ -287,10 +287,10 @@ export class Client extends EventEmitter {
             expire.unwrap();
         });
 
-        this.parser.on("parseDone", () => {
+        this.parser.on("parse-done", () => {
             this.display.removeClass("animate");
             if (this.lineCache.length > 0) {
-                this.emit('parseDone', this.lineCache);
+                this.emit('parse-done', this.lineCache);
                 var bar = this.display.hasHorizontalScrollBar();
                 this.display.append(this.lineCache.join(''));
                 if (bar != this.display.hasHorizontalScrollBar())
@@ -307,7 +307,7 @@ export class Client extends EventEmitter {
             lines = null;
             this.display.addClass("animate");
         });
-        this.parser.on('setTitle', (title, type) => {
+        this.parser.on('set-title', (title, type) => {
 
             if (typeof title == "undefined" || title === null || title.length === 0)
                 window.document.title = this.defaultTitle;
@@ -388,7 +388,7 @@ export class Client extends EventEmitter {
 
         this.UpdateFonts();
         this.scrollDisplay();
-        this.emit('optionsLoaded');
+        this.emit('options-loaded');
     }
 
     saveOptions() {
@@ -508,7 +508,7 @@ export class Client extends EventEmitter {
         if (!txt.endsWith("\n"))
             txt = txt + "\n";
         var data = { value: txt, handled: false };
-        this.emit('parseCommand', data);
+        this.emit('parse-command', data);
         if (data === null || typeof data == "undefined") return;
         if (data.handled || data.value === null || typeof data.value == "undefined") return;
         if (data.value.length > 0) {
@@ -536,7 +536,7 @@ export class Client extends EventEmitter {
         if (!txt.endsWith("\n"))
             txt = txt + "\n";
         var data = { value: txt, handled: false };
-        this.emit('parseCommand', data);
+        this.emit('parse-command', data);
         if (data === null || typeof data == "undefined") return;
         if (data.value === null || typeof data.value == "undefined") return;
         if (!data.handled && data.value.length > 0) {

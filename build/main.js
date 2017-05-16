@@ -132,14 +132,14 @@ var menuTemp = [
           win.webContents.executeJavaScript('client.clear()');
         }
       },
-      {type: 'separator'},
+      { type: 'separator' },
       {
         label: 'Find',
         accelerator: 'CmdOrCtrl+F',
         click: () => {
           win.webContents.executeJavaScript('_finder.show()');
         }
-      },      
+      },
     ]
   },
   //Profiles
@@ -1216,7 +1216,8 @@ function parseTemplate(str, data) {
   str = str.replace(/{music}/g, "file://" + app.getPath('music').replace(/\\/g, "/"));
   str = str.replace(/{pictures}/g, "file://" + app.getPath('pictures').replace(/\\/g, "/"));
   str = str.replace(/{videos}/g, "file://" + app.getPath('videos').replace(/\\/g, "/"));
-  str = str.replace(/{assets}/g, "./../assets/");
+  str = str.replace(/{themes}/g, path.join(".", "themes"));
+  str = str.replace(/{assets}/g, path.join(".", "..", "assets"));
   if (data) {
     var keys = Object.keys(data);
     for (var key in keys) {

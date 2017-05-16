@@ -1779,10 +1779,34 @@ function getProfileData() {
     return data;
 }
 
-export function init() {
+function loadOptions() {
     var options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
     _never = options.profiles.askoncancel;
 
+    var theme = parseTemplate(options.theme) + ".css";
+    if (!fs.existsSync(theme))
+        theme = parseTemplate(path.join("{themes}", "default")) + ".css";
+    if ($("#theme").attr('href') != theme)
+        $("#theme").attr('href', theme);
+
+    if (options.profiles.split > 200) {
+        $('#sidebar').css("width", options.profiles.split);
+        $('#content').css("left", options.profiles.split);
+    }
+    setAdvancedPanel("trigger", options.profiles.triggersAdvanced);
+    setAdvancedPanel("alias", options.profiles.aliasesAdvanced);
+    setAdvancedPanel("button", options.profiles.buttonsAdvanced);
+    setAdvancedPanel("macro", options.profiles.macrosAdvanced);
+    setAdvancedPanel("context", options.profiles.contextsAdvanced);
+}
+
+function setAdvancedPanel(id, state) {
+    var cState = $("#" + id + "-editor .btn-adv").data("open");
+    if (cState != state)
+        $("#context-editor .btn-adv").click();
+}
+
+export function init() {
     var p = path.join(parseTemplate("{data}"), "profiles");
     if (!fs.existsSync(p)) {
         profiles.add(Profile.Default);
@@ -2183,11 +2207,6 @@ export function init() {
         }
     });
 
-    if (options.profiles.split > 200) {
-        $('#sidebar').css("width", options.profiles.split);
-        $('#content').css("left", options.profiles.split);
-    }
-
     $("#btn-add-dropdown").click(function () {
         $(this).addClass('open');
         var pos = $(this).offset();
@@ -2313,17 +2332,6 @@ export function init() {
             ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: false });
         }
     });
-
-    if (options.profiles.triggersAdvanced)
-        $("#trigger-editor .btn-adv").click();
-    if (options.profiles.aliasesAdvanced)
-        $("#alias-editor .btn-adv").click();
-    if (options.profiles.buttonsAdvanced)
-        $("#button-editor .btn-adv").click();
-    if (options.profiles.macrosAdvanced)
-        $("#macro-editor .btn-adv").click();
-    if (options.profiles.contextsAdvanced)
-        $("#context-editor .btn-adv").click();
 
     ['cut', 'copy', 'paste'].forEach(function (event) {
         document.addEventListener(event, function (e) {
@@ -2470,6 +2478,8 @@ export function init() {
         }));
         exportmenu.popup(remote.getCurrentWindow(), x, y);
     })
+
+    loadOptions();
 }
 
 function undoKeydown(e) {
@@ -3239,3 +3249,7 @@ function insertItem(type: string, key: string, item, idx: number, profile?: Prof
         pushUndo({ action: 'add', type: type, item: item.clone(), data: { type: type, key: key, item: item, idx: idx, profile: profile.name.toLowerCase() } });
     _loading--;
 }
+
+ipcRenderer.on('reload-options', (event) => {
+    loadOptions()
+});

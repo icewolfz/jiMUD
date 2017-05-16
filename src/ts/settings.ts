@@ -126,6 +126,7 @@ export class Settings {
 
 	public soundPath = path.join("{data}", "sounds");
 	public logPath = path.join("{data}", "logs");
+	public theme = path.join("{themes}", "default");
 
 	public windows = {};
 	public buttons = {

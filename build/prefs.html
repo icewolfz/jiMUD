@@ -24,7 +24,7 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script>
       //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-      const library = require('./js/library');
+      const { parseTemplate } = require('./js/library');
       const Settings = require('./js/settings').Settings;
       const { remote, ipcRenderer } = require('electron');
       const { dialog } = remote;
@@ -64,15 +64,47 @@
           $("#cmd-font-sample").css("font-size", $("#cmdfontSize").val());
         });
 
-        _settings = Settings.load(path.join(library.parseTemplate("{data}"), 'settings.json'));
+        _settings = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
+        loadThemes();
         loadSettings();
 
         $("#colorScheme").parent().find('.dropdown-menu.inner li').click(() => {
           $("#colorScheme").change();
         });
-
-
       });
+
+      function sortFiles(a, b) {
+        return a.name.localeCompare(b.name);
+      }
+
+      function getThemes(p) {
+        p2 = parseTemplate(p);
+        if (!fs.existsSync(p2))
+          return [];
+        var themes = [];
+        var files = fs.readdirSync(p2);
+        for (var f = 0, fl = files.length; f < fl; f++) {
+          if (path.extname(files[f]).toLowerCase() != ".css") continue;
+          themes.push({
+            name: path.basename(files[f], path.extname(files[f])),
+            path: p
+          })
+        }
+        return themes;
+      }
+
+      function loadThemes() {
+        var themes = getThemes("{themes}");
+        themes = themes.concat(getThemes(path.join("{data}", "themes")));
+        themes = themes.concat(getThemes(path.join("{documents}", "jiMUD", "themes")));
+        themes.sort(sortFiles);
+        $("#theme").append($('<option></option>').val(path.join("{themes}", "default")).html("Default"));
+        for (var t = 0, tl = themes.length; t < tl; t++) {
+          if (themes[t].path == "{themes}" && themes[t].name == "default") continue;
+          $("#theme").append($('<option></option>').val(path.join(themes[t].path, themes[t].name)).html(themes[t].name[0].toUpperCase() + themes[t].name.substr(1)));
+        }
+        $("#theme").selectpicker('refresh')
+      }
 
       function loadSettings() {
         $('#autoConnect').prop('checked', _settings.autoConnect);
@@ -160,6 +192,9 @@
         $('#enableMSP').prop('checked', _settings.enableMSP);
         $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
 
+        $('#theme').val(_settings.theme);
+        $('#theme').selectpicker('render');
+
         $('input[type="checkbox"]').change(function () {
           switch ($(this).attr('id')) {
             case 'chat-alwaysOnTop':
@@ -244,7 +279,7 @@
           _settings[$(this).attr('id')] = $(this).val();
         });
         $('input[type="number"]').change(function () {
-          if ((this).attr('id') == 'mapper-memorySavePeriod')
+          if ($(this).attr('id') == 'mapper-memorySavePeriod')
             _settings.mapper.memorySavePeriod = parseInt($(this).val(), 10);
           else
             _settings[$(this).attr('id')] = parseInt($(this).val(), 10);
@@ -254,6 +289,12 @@
           var color = new RGBColor($(this).val());
           if (color.ok)
             _settings.colors[idx] = color.toRGB();;
+        });
+
+        $('.selectpicker').change(function () {
+          if ($(this).attr('id') == 'colorScheme')
+            return;
+          _settings[$(this).attr('id')] = $(this).val();
         });
       }
 
@@ -554,7 +595,7 @@
 
       function saveSettings() {
         _settings.chat.lines = $("#chat-lines").val().split(',');
-        _settings.save(path.join(library.parseTemplate("{data}"), 'settings.json'));
+        _settings.save(path.join(parseTemplate("{data}"), 'settings.json'));
         ipcRenderer.send('reload-options');
         window.close()
       }
@@ -628,6 +669,12 @@
          Persistent advanced editor
           </label>
           </div>
+          <div class="col-sm-21 form-group">
+            <label class="control-label">Theme<br>
+              <select id="theme" class="form-control selectpicker" data-width="250px"></select>
+            </label>
+          </div>
+
         </div>
         <div role="tabpanel" class="tab-pane fade" id="display">
           <div class="col-sm-6">

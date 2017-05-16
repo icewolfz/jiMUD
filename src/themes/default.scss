@@ -1,0 +1,814 @@
+$images: "./../../assets";
+
+#display-container {
+    left: 37px;
+    right: 187px;
+    top: 7px;
+    bottom: 31px;
+    color: #BBBBBB;
+    font-family: "Courier New", monospace;
+    text-align: left;
+    font-size: 1em;
+    background-color: black;
+    text-shadow: none;
+    border: 1px solid #908271;
+    padding: 0px;
+}
+
+#display {
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    color: #BBBBBB;
+    border: 0px solid silver;
+    font-family: "Courier New", monospace;
+    text-align: left;
+    font-size: 1em;
+    background-color: black;
+    text-shadow: none;
+    padding: 2px;
+}
+
+#display-border {
+    border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
+    border-image-slice: 95 95;
+    border-image-repeat: round;
+    background-color: transparent;
+    border-width: 95px;
+    left: 30px;
+    right: 180px;
+    top: -1px;
+    bottom: 24px;
+    border-style: solid;
+}
+
+#command {
+    height: 26px;
+    bottom: 0px;
+    left: 33px;
+    right: 183px;
+    background-color: transparent;
+    background-image: url(#{$images}/input.png);
+}
+
+#commandbox {
+    left: 8px;
+    right: 24px;
+    height: 18px;
+    bottom: 6px;
+}
+
+#commandleft {
+    background-image: url(#{$images}/input.left.png);
+    height: 26px;
+    width: 5px;
+}
+
+#commandright {
+    background-image: url(#{$images}/input.right.png);
+    height: 26px;
+    width: 5px;
+}
+
+#commandinput {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    border: 0px;
+    background-color: transparent;
+    color: wheat;
+}
+
+#buttonbar {
+    top: 0;
+    left: 0;
+    bottom: 0;
+}
+
+#advedit {
+    top: 5px;
+    right: 6px;
+    text-align: center;
+    height: 16px;
+    width: 16px;
+    font-size: 14px;
+    border-radius: 4px;
+    color: wheat;
+}
+
+#advedit .icon {
+    margin-top: 2px;
+    margin-left: 1px;
+}
+
+#advedit:hover {
+    background-color: #d70000;
+}
+
+#advedit:active {
+    background-color: #790000;
+}
+
+/* Let's get this party started */
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+/* Track */
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background-color: #191814;
+    border: 1px solid #494238;
+}
+
+/* Handle */
+
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #33302b;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    border: 1px solid #908271;
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+    background: rgba(51, 48, 43, 0.4);
+}
+
+::-webkit-scrollbar-corner {
+    background-color: black;
+}
+
+#find {
+    top: 5px;
+    right: 20px;
+    color: #BBBBBB;
+    padding: 2px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1em;
+    border-radius: 4px;
+    border: 1px solid #908271;
+    background-color: rgb(40, 0, 0);
+}
+
+#find input, #find input:focus {
+    border: 1px solid #908271;
+    width: 100px;
+    background-color: inherit;
+    color: silver;
+    padding: 2px 2px;
+    height: 16px;
+    top: -1px;
+    border-radius: 2px;
+}
+
+#find input:focus {
+    border: 1px solid maroon;
+    color: wheat;
+    background: rgba(128, 0, 0, 0.5);
+}
+
+#find button .fa {
+    margin-top: 3px;
+}
+
+#find button {
+    width: 22px;
+    height: 22px;
+    border: 1px solid transparent;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    vertical-align: top;
+    line-height: 16px;
+    color: inherit;
+    background-color: inherit;
+    padding: 0px;
+    margin-left: 2px;
+    margin-right: 2px;
+    border-radius: 2px;
+}
+
+#find button:hover, #find button.active:hover {
+    border: 1px solid wheat;
+    background-color: #d70000;
+    color: wheat;
+}
+
+#find button:active {
+    border: 1px solid #0052A4;
+}
+
+#find button:disabled, #find button:disabled:hover {
+    border: 1px solid transparent;
+    color: #555;
+    background-color: inherit;
+}
+
+#find button.active {
+    border: 1px solid maroon;
+    background: rgba(128, 0, 0, 0.5);
+    color: wheat;
+}
+
+#find-count {
+    width: 75px;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 4px;
+    text-align: center;
+}
+
+#find-case {
+    font-size: 10px;
+}
+
+#find-word {
+    text-decoration: overline underline;
+    font-size: 10px;
+}
+
+.find-highlight {
+    border-radius: 4px;
+    background: rgba(51, 153, 255, 0.6);
+    border-bottom: 1px solid #3399ff;
+    border-top: 1px solid #3399ff;
+}
+
+.find-highlight.start, .find-highlight.current.start {
+    border-radius: 4px 0px 0px 4px;
+}
+
+.find-highlight.middle, .find-highlight.current.middle {
+    border-radius: 0px;
+}
+
+.find-highlight.end, .find-highlight.current.end {
+    border-radius: 0px 4px 4px 0px;
+}
+
+.find-no-results {
+    color: #F08080;
+}
+
+.find-highlight.current {
+    border-radius: 4px;
+    background: rgba(116, 192, 114, 0.6);
+    border-bottom: 1px solid #74C072;
+    border-top: 1px solid #74C072;
+}
+
+/* begin status */
+
+#status {
+    width: 164px;
+    text-align: center;
+    right: 7px;
+    top: 7px;
+    bottom: 7px;
+    background-color: rgb(40, 0, 0);
+    border: 1px solid #908271;
+    padding: 2px;
+}
+
+#status-border {
+    right: -1px;
+    top: -1px;
+    bottom: -2px;
+    z-index: 2;
+    width: 7px;
+    border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
+    border-image-slice: 95 95;
+    border-image-repeat: round;
+    border-width: 90px;
+    border-style: solid;
+}
+
+.day {
+    background-image: url("#{$images}/status/daybg.png");
+}
+
+.day #environmentcenter {
+    background-image: url("#{$images}/status/sun.png");
+}
+
+.night {
+    background-image: url("#{$images}/status/nightbg.png");
+}
+
+.twilight {
+    background-image: url("#{$images}/status/sunsetbg.png");
+}
+
+.dawn {
+    background-image: url("#{$images}/status/sunrisebg.png");
+}
+
+.twilight #environmentcenter, .dawn #environmentcenter {
+    background-image: url("#{$images}/status/sunset.png");
+}
+
+.moon1-full #environmentleft {
+    background-image: url("#{$images}/status/redmoonfull.png");
+}
+
+.moon1-waning #environmentleft {
+    background-image: url("#{$images}/status/redmoonwaning.png");
+}
+
+.moon1-waxing #environmentleft {
+    background-image: url("#{$images}/status/redmoonwaxing.png");
+}
+
+.moon2-full #environmentcenter {
+    background-image: url("#{$images}/status/bluemoonfull.png");
+}
+
+.moon2-waning #environmentcenter {
+    background-image: url("#{$images}/status/bluemoonwaning.png");
+}
+
+.moon2-waxing #environmentcenter {
+    background-image: url("#{$images}/status/bluemoonwaxing.png");
+}
+
+.moon3-full #environmentright {
+    background-image: url("#{$images}/status/greenmoonfull.png");
+}
+
+.moon3-waning #environmentright {
+    background-image: url("#{$images}/status/greenmoonwaning.png");
+}
+
+.moon3-waxing #environmentright {
+    background-image: url("#{$images}/status/greenmoonwaxing.png");
+}
+
+.weather-snow #environmentweather {
+    background-image: url("#{$images}/status/weathersnow.png");
+}
+
+.weather-snow.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weathersnowhard.png");
+}
+
+.weather-hail #environmentweather {
+    background-image: url("#{$images}/status/weatherhail.png");
+}
+
+.weather-hail.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weatherhailhard.png");
+}
+
+.weather-rain #environmentweather {
+    background-image: url("#{$images}/status/weatherrain.png");
+}
+
+.weather-rain.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weatherrainhard.png");
+}
+
+.weather-sand #environmentweather {
+    background-image: url("#{$images}/status/weathersand.png");
+}
+
+.weather-sand.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weathersandhard.png");
+}
+
+.weather-sleet #environmentweather {
+    background-image: url("#{$images}/status/weatherssleet.png");
+}
+
+.weather-sleet.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weathersleethard.png");
+}
+
+#environment {
+    height: 50px;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    background-color: black;
+    border: 1px solid #908271;
+}
+
+#character-name {
+    color: wheat;
+    padding: 0 22px;
+    font-size: 1.2em;
+}
+
+#character-name::first-letter {
+    text-transform: uppercase;
+}
+
+.weapon-large-sword {
+    background-image: url(#{$images}/status/icon_sword_long2.png);
+}
+
+.weapon-shield {
+    background-image: url(#{$images}/status/icon_shield.png);
+}
+
+.weapon-melee {
+    background-image: url(#{$images}/status/icon_melee.png);
+}
+
+.weapon-miscellaneous {
+    background-image: url(#{$images}/status/icon_misc.png);
+}
+
+.weapon-polearm {
+    background-image: url(#{$images}/status/icon_halberd2.png);
+}
+
+.weapon-small-sword {
+    background-image: url(#{$images}/status/icon_sword_short3.png);
+}
+
+.weapon-spear {
+    background-image: url(#{$images}/status/icon_spear2.png);
+}
+
+.weapon-axe {
+    background-image: url(#{$images}/status/icon_axe1.png);
+}
+
+.weapon-blunt {
+    background-image: url(#{$images}/status/icon_bigclub1.png);
+}
+
+.weapon-knife {
+    background-image: url(#{$images}/status/icon_dagger1.png);
+}
+
+.weapon-bow {
+    background-image: url(#{$images}/status/icon_Bow3.png);
+}
+
+.weapon-crossbow {
+    background-image: url(#{$images}/status/icon_XBow2.png);
+}
+
+.weapon-flail {
+    background-image: url(#{$images}/status/icon_bullwhip.png);
+}
+
+.weapon-staff {
+    background-image: url(#{$images}/status/icon_staff2.png);
+}
+
+#lefthandweapon {
+    top: 85px;
+    background-color: black;
+    border: 1px solid #908271;
+    width: 32px;
+    height: 32px;
+    left: 5px;
+}
+
+#righthandweapon {
+    top: 85px;
+    background-color: black;
+    border: 1px solid #908271;
+    width: 32px;
+    height: 32px;
+    right: 5px;
+}
+
+#experience {
+    top: 350px;
+    right: 5px;
+    left: 5px;
+    background-color: black;
+    border: 1px solid #908271;
+    padding: 2px;
+    color: wheat;
+    text-align: left;
+}
+
+#experience div span:first-child {
+    width: 74px;
+}
+
+#experience div span:nth-child(2) {
+    text-align: right;
+    padding-right: 2px;
+}
+
+#bars {
+    top: 418px;
+    right: 5px;
+    left: 3px;
+    bottom: 22px;
+    padding: 2px;
+    color: wheat;
+    text-align: left;
+}
+
+.combat-bar {
+    height: 34px;
+    width: 100%;
+    margin-bottom: 2px;
+}
+
+.combat-name {
+    right: 1px;
+    left: 38px;
+    font-size: 0.75em;
+}
+
+.combat-name:first-letter {
+    text-transform: capitalize;
+}
+
+.combat-icon {
+    height: 32px;
+    width: 32px;
+    float: left;
+    background-color: black;
+    border: 1px solid #908271;
+}
+
+.combat-bar .progressbar {
+    right: 1px;
+    left: 38px;
+    font-size: 0.75em;
+    bottom: 2px;
+}
+
+.combat-bar .progressbar .progressbar-text {
+    left: 0;
+}
+
+#body {
+    top: 60px;
+    right: 5px;
+    left: 5px;
+    background-color: black;
+    border: 1px solid #908271;
+    padding: 2px;
+}
+
+#health {
+    left: 2px;
+}
+
+#armor {
+    right: 2px;
+}
+
+#armor, #health, #health.on:hover, #armor.on:hover {
+    top: 2px;
+    background-color: black;
+    border: 1px solid #908271;
+    padding: 0px;
+    height: 18px;
+    width: 18px;
+    background-color: maroon;
+}
+
+#armor img, #health img {
+    height: 16px;
+    width: 16px;
+    margin: 1px;
+}
+
+#armor:hover, #health:hover, #health.on, #armor.on {
+    background-color: #d70000;
+    color: black;
+}
+
+#armor:active, #health:active {
+    background-color: #a50000;
+}
+
+.health-100 {
+    fill: rgb(255, 0, 0);
+    color: rgb(255, 0, 0);
+    stroke: rgb(255, 0, 0);
+}
+
+.health-80-99 {
+    fill: rgb(252, 71, 29);
+    color: rgb(252, 71, 29);
+    stroke: rgb(252, 71, 29);
+}
+
+.health-60-79 {
+    fill: rgb(252, 165, 40);
+    color: rgb(252, 165, 40);
+    stroke: rgb(252, 165, 40);
+}
+
+.health-40-59 {
+    fill: rgb(251, 217, 48);
+    color: rgb(251, 217, 48);
+    stroke: rgb(251, 217, 48);
+}
+
+.health-20-39 {
+    fill: rgb(251, 255, 55);
+    color: rgb(251, 255, 55);
+    stroke: rgb(251, 255, 55);
+}
+
+.health-1-19 {
+    fill: rgb(167, 255, 69);
+    color: rgb(167, 255, 69);
+    stroke: rgb(167, 255, 69);
+}
+
+.health-full {
+    fill: rgb(0, 255, 31);
+    color: rgb(0, 255, 31);
+    stroke: rgb(0, 255, 31);
+}
+
+.armor-unarmored {
+    fill: rgb(128, 0, 0);
+    color: rgb(128, 0, 0);
+    stroke: rgb(128, 0, 0);
+}
+
+.armor-barely {
+    fill: rgb(255, 0, 0);
+    color: rgb(255, 0, 0);
+    stroke: rgb(255, 0, 0);
+}
+
+.armor-slightly {
+    fill: rgb(128, 128, 0);
+    color: rgb(128, 128, 0);
+    stroke: rgb(128, 128, 0);
+}
+
+.armor-somewhat {
+    fill: rgb(255, 255, 0);
+    color: rgb(255, 255, 0);
+    stroke: rgb(255, 255, 0);
+}
+
+.armor-moderately {
+    fill: rgb(0, 128, 128);
+    color: rgb(0, 128, 128);
+    stroke: rgb(0, 128, 128);
+}
+
+.armor-fairly {
+    fill: rgb(0, 255, 255);
+    color: rgb(0, 255, 255);
+    stroke: rgb(0, 255, 255);
+}
+
+.armor-adequately {
+    fill: rgb(0, 128, 0);
+    color: rgb(0, 128, 0);
+    stroke: rgb(0, 128, 0);
+}
+
+.armor-well {
+    fill: rgb(0, 255, 0);
+    color: rgb(0, 255, 0);
+    stroke: rgb(0, 255, 0);
+}
+
+.armor-considerably {
+    fill: rgb(0, 0, 128);
+    color: rgb(0, 0, 128);
+    stroke: rgb(0, 0, 128);
+}
+
+.armor-significantly {
+    fill: rgb(0, 0, 255);
+    color: rgb(0, 0, 255);
+    stroke: rgb(0, 0, 255);
+}
+
+.armor-completely {
+    fill: rgb(128, 128, 110);
+    color: rgb(128, 128, 110);
+    stroke: rgb(128, 128, 110);
+}
+
+.armor-extensively {
+    fill: rgb(255, 255, 255);
+    color: rgb(255, 255, 255);
+    stroke: rgb(255, 255, 255);
+}
+
+.progressbar {
+    height: 12px;
+    font-size: 0.75em;
+    border: 1px solid #908271;
+    height: 12px;
+    width: 118px;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+
+    /* future proofing */
+    background: -webkit-linear-gradient(left, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
+    background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
+}
+
+#hp-status {
+    text-align: left;
+    color: wheat;
+}
+
+.progressbar .progressbar-text {
+    left: 20px;
+    right: 0px;
+    text-align: center;
+    background-color: transparent;
+    color: black;
+}
+
+.progressbar .progressbar-value {
+    height: 100%;
+    width: 0%;
+    background-color: wheat;
+}
+
+#lagMeter {
+    bottom: 5px;
+    right: 5px;
+    left: 5px;
+}
+
+#lagmeter.progressbar .progressbar-text {
+    left: 0;
+}
+
+#party.hasmembers {
+    border-bottom: 1px solid #908271;
+    padding-bottom: 4px;
+}
+
+/** end stats **/
+/** button stats */
+
+.button {
+    text-decoration: none;
+    background-image: url(#{$images}/button.png);
+    color: wheat;
+    width: 34px;
+    height: 34px;
+    background-color: maroon;
+    display: inline-block;
+    text-align: center;
+}
+
+.button.on {
+    background-color: #d70000;
+    color: wheat;
+}
+
+.button.on:hover {
+    background-color: #790000;
+    color: wheat;
+}
+
+.button.on:active {
+    background-color: maroon;
+    color: wheat;
+}
+
+.button:hover {
+    background-color: #d70000;
+    color: wheat;
+}
+
+.button:active {
+    background-color: #790000;
+    color: wheat;
+}
+
+.button:focus {
+    color: wheat;
+}
+
+.button .fa, .button-icon {
+    margin-top: 7px;
+    text-align: center;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+}
+
+.button img, .button-icon {
+    /*margin-left: 7px;*/
+    margin-top: 7px;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+}
+
+/** button end */

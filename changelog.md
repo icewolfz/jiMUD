@@ -9,6 +9,7 @@
     - High light - will highlight all matches
 - **Fixed:**
   - Ansi parser would return empty elements due to changing styles and colors, the empty blocks are now removed when the lines have been added, should reduce memory
+  - Preferences was not saving display/command font setting
 ##### 0.1.9 - 2017-05-14
 - **New:**
   - User context menus, create custom items for the right click display menu

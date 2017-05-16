@@ -35,7 +35,7 @@ export class Backup extends EventEmitter {
             this.reset();
         });
 
-        this.client.on('receivedGMCP', (mod, obj) => {
+        this.client.on('received-GMCP', (mod, obj) => {
             if (mod.toLowerCase() != "client") return;
             switch (obj.action) {
                 case "save":

@@ -21,7 +21,7 @@ export class Logger extends EventEmitter {
         this._path = parseTemplate(this.client.options.logPath);
         if (!fs.existsSync(this._path))
             fs.mkdirSync(this._path);
-        this.client.on('optionsLoaded', () => {
+        this.client.on('options-loaded', () => {
             var p = parseTemplate(this.client.options.logPath);
             if (p != this._path) {
                 this._path = p;
@@ -38,11 +38,11 @@ export class Logger extends EventEmitter {
         this.client.on('connected', () => {
             this.start();
         });
-        this.client.on('addLineDone', (data) => {
+        this.client.on('add-line-done', (data) => {
             if (!data.gagged || (this.client.options.logGagged && data.gagged))
                 this.write(data.line);
         })
-        this.client.on('parseDone', (lines) => {
+        this.client.on('parse-done', (lines) => {
             //this.writeLines(lines);
         })
         if (this.client.options.logOffline)

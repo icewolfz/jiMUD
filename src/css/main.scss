@@ -1,67 +1,32 @@
 $images: './../../assets';
+
 body {
     -webkit-user-select: none;
     user-select: none;
+    overflow: hidden;
+    font-size: 0.8em;    
 }
 
 #display-container {
-    left: 37px;
-    right: 187px;
-    top: 7px;
-    bottom: 31px;
     position: absolute;
-    color: #BBBBBB;
-    font-family: "Courier New", monospace;
-    font-size: 1em;
-    text-align: left;
-    font-size: 1em;
-    background-color: black;
-    text-shadow: none;
-    z-index: 5;
+    z-index: 2;
     overflow: hidden;
-    border: 1px solid #908271;
     -webkit-user-select: auto;
     user-select: auto;
-    padding: 0px;
 }
 
 #display {
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
     position: absolute;
-    color: #BBBBBB;
-    border: 0px solid silver;
-    font-family: "Courier New", monospace;
-    font-size: 1em;
     overflow-y: scroll;
-    text-align: left;
-    font-size: 1em;
-    /*white-space: pre;*/
-    background-color: black;
-    text-shadow: none;
-    z-index: 5;
+    z-index: 3;
     overflow-y: scroll;
-    /*border: 1px solid #908271;*/
-    padding: 2px;
     -webkit-user-select: auto;
     user-select: auto;
 }
 
 #display-border {
-    border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
-    border-image-slice: 95 95;
-    border-image-repeat: round;
-    background-color: transparent;
-    border-width: 95px;
-    left: 30px;
-    right: 180px;
-    top: -1px;
-    bottom: 24px;
     position: absolute;
     z-index: 1;
-    border-style: solid;
 }
 
 #Character, #CmdCharacter {
@@ -79,55 +44,23 @@ body {
 }
 
 #command {
-    height: 26px;
     position: absolute;
-    bottom: 0px;
-    left: 33px;
-    right: 183px;
-    background-color: transparent;
     z-index: 4;
-    background-image: url(#{$images}/input.png);
-    /*#1b1002*/
 }
 
 #commandbox {
-    left: 8px;
     position: absolute;
-    right: 24px;
-    height: 18px;
-    bottom: 6px;
-}
-
-#commandeditor {
-    top: 6px;
-    left: 8px;
-    position: absolute;
-    right: 8px;
-    min-height: 18px;
-    bottom: 6px;
 }
 
 #commandleft {
     float: left;
-    background-image: url(#{$images}/input.left.png);
-    height: 26px;
-    width: 5px;
 }
 
 #commandright {
     float: right;
-    background-image: url(#{$images}/input.right.png);
-    height: 26px;
-    width: 5px;
 }
 
-#commandinput, #commandeditorinput {
-    width: 100%;
-    height: 100%;
-    margin: 0px;
-    border: 0px;
-    background-color: transparent;
-    color: wheat;
+#commandinput {
     outline: none;
     resize: none;
 }
@@ -136,47 +69,14 @@ body {
     outline: none;
 }
 
-#commandsend {
-    position: absolute;
-    width: 36px;
-    height: 27px;
-    background-image: url(#{$images}/button.png);
-    background-color: maroon;
-    right: 1px;
-    bottom: 0px;
-    border: 0px;
-    text-align: center;
-    z-index: 5;
-    padding-top: 2px;
-}
-
 #buttonbar {
-    z-index: 15;
+    z-index: 5;
     width: 34px;
-    /*
-    border-left: 1px solid #ebe1c5;
-    border-top: 1px solid #ebe1c5;
-    border-bottom: 1px solid #ebe1c5;
-    */
     position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-}
-
-.icon {
-    color: wheat;
 }
 
 #advedit {
     position: absolute;
-    top: 5px;
-    right: 6px;
-    text-align: center;
-    height: 16px;
-    width: 16px;
-    font-size: 14px;
-    border-radius: 4px;
 }
 
 #advedit .icon {
@@ -184,192 +84,205 @@ body {
     margin-left: 1px;
 }
 
-a.icon:hover {
-    background-color: #d70000;
-}
-
-a.icon:active {
-    background-color: #790000;
-}
-
-
-/* Let's get this party started */
-
-::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-}
-
-
-/* Track */
-
-::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background-color: #191814;
-    border: 1px solid #494238;
-}
-
-
-/* Handle */
-
-::-webkit-scrollbar-thumb {
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background: #33302b;
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    border: 1px solid #908271;
-}
-
-::-webkit-scrollbar-thumb:window-inactive {
-    background: rgba(51, 48, 43, 0.4);
-}
-
-::-webkit-scrollbar-corner {
-    background-color: black;
-}
-
 #find {
     position: absolute;
-    top: 5px;
-    right: 20px;
-    color: #BBBBBB;
-    padding: 2px;
     display: none;
     z-index: 100;    
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 1em;
-    border-radius: 4px;
-    border: 1px solid #908271;
-    background-color: rgb(40, 0, 0);
 }
 
 #find input, #find input:focus {
-    border: 1px solid #908271;
-    width: 100px;
-    background-color: inherit;
-    color: silver;
-    padding: 2px 2px;
     outline: none;
-    height: 16px;
     position: relative;
-    top: -1px;    
-    border-radius: 2px;
-}
-
-#find input:focus {
-    border: 1px solid maroon;
-    color: wheat;
-    background: rgba(128, 0, 0, 0.5);
-}
-
-#find button .fa {
-    margin-top: 3px;
 }
 
 #find button {
-    width: 22px;
-    height: 22px;
     display: inline-block;
-    border: 1px solid transparent;
-    text-align: center;
-    font-family: Arial, Helvetica, sans-serif;
-    vertical-align: top;
-    line-height: 16px;
-    color: inherit;
-    background-color: inherit;
-    padding: 0px;
     outline: none;
-    margin-left: 2px;
-    margin-right: 2px;
-    border-radius: 2px;
 }
 
 #find button:hover, #find button.active:hover {
     cursor: default;
-    border: 1px solid wheat;    
-    background-color: #d70000;
-    color: wheat;    
 }
 
 #find button:active {
     cursor: default;
-    border: 1px solid #0052A4;    
-}
-
-#find button:disabled, #find button:disabled:hover {
-    border: 1px solid transparent;
-    color: #555;
-    background-color: inherit;
 }
 
 #find button.active
 {
     cursor: default;
-    border: 1px solid maroon;   
-    background: rgba(128, 0, 0, 0.5);
-    color: wheat;
 }
 
 #find-count {
-    width: 75px;
     display: inline-block;
-    font-family: Arial, Helvetica, sans-serif;
-    padding: 4px;
-    text-align:center;
-}
-
-#find-case {
-    font-size: 10px;
-}
-
-#find-word {
-    text-decoration: overline underline;
-    font-size: 10px;
 }
 
 #find-regex, #find-selection {
     display: none !important;
 }
 
-
-.find-highlight{
-    /*
-    background: rgba(128,128,128, 0.5);
-    border-bottom: 1px solid silver;
-    border-top: 1px solid silver;
-    */
-    border-radius: 4px;
-    background: rgba(51,153,255,0.60);
-    border-bottom: 1px solid #3399ff;
-    border-top: 1px solid #3399ff;
-}
-
-.find-highlight.start, .find-highlight.current.start {
-    border-radius: 4px 0px 0px 4px;
-}
-
-.find-highlight.middle, .find-highlight.current.middle {
-    border-radius: 0px;
-}
-
-.find-highlight.end, .find-highlight.current.end, {
-    border-radius: 0px 4px 4px 0px;
-}
-
-.find-no-results {
-    color: #F08080
-}
-
-.find-highlight.current
+.button-stretch img, .button-stretch .button-icon
 {
-    border-radius: 4px;
-    background: rgba(116, 192, 114,0.60);
-    border-bottom: 1px solid #74C072;
-    border-top: 1px solid #74C072;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-size: 100% !important;
+}
+
+/** status */
+#status
+{
+    z-index: 100;
+    position: absolute;
+    cursor: default;
+}
+
+#status-border
+{
+    position: absolute;
+}
+
+#environment {
+    position: absolute;
+    overflow:hidden; 
+}
+
+#environmentleft
+{
+    position: relative;
+    top:15px;
+    left:0px;
+    float:left;
+    width:50px;
+    height:100%;
+}
+
+#environmentcenter
+{
+    position: relative;
+    top:5px;
+    left:0px;
+    float:left;
+    width:50px;
+    height:100%;
+    
+}
+
+#environmentright
+{
+    position: relative;
+    top:15px;
+    left:0px;
+    float:left;
+    width:50px;
+    height:100%;
+}
+
+#environmentweather
+{
+    position: relative;
+    top:0px;
+    left:0px;
+    width:150px;
+    height:50px;
+    z-index:100;
+}
+
+#character-name
+{
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 
+#lefthandweapon{
+    position: absolute;
+}
+
+#righthandweapon {
+    position: absolute;
+}
+
+#experience {
+    position: absolute;
+}
+
+#experience div span:first-child {
+    display: inline-block;
+}
+
+#experience div span:nth-child(2) {
+    float: right;
+}
+
+#bars
+{
+    position: absolute;
+    overflow: auto;
+    overflow-x: hidden;
+}
+
+.combat-bar
+{
+    position: relative;
+}
+
+.combat-name
+{
+    position: absolute;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;    
+}
+
+
+.combat-bar .progressbar
+{
+    position: absolute;
+    width: auto;
+}
+
+#body
+{
+    position: absolute;
+}
+
+#body svg
+{
+    image-rendering: crisp-edges;
+}
+
+#armor, #health, #health.on:hover, #armor.on:hover
+{
+    position: absolute;
+}
+
+#tail, #leftwing, #rightwing
+{
+    display:none;
+}
+
+.progressbar
+{
+    float: right;
+    overflow: hidden;
+}
+
+.progressbar .progressbar-text
+{
+    position: absolute;
+    z-index: 1;
+}
+
+.progressbar .progressbar-value 
+{
+    float: right;
+}
+
+#lagMeter
+{
+    position: absolute;
+    width: auto;
+}
+
+/*end status*/

@@ -51,12 +51,12 @@ export class input extends EventEmitter {
                 this.toggleScrollLock();
         });
 
-        this.client.on('parseCommand', (data) => {
+        this.client.on('parse-command', (data) => {
             if (this.client.options.parseCommands)
                 data.value = this.parseOutgoing(data.value);
         });
 
-        this.client.on('addLine', (data) => {
+        this.client.on('add-line', (data) => {
             this.ExecuteTriggers(0, data.raw, data.fragment, false);
         });
 

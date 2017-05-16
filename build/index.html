@@ -5,12 +5,10 @@
     <meta charset="UTF-8">
     <title>jiMUD</title>
     <link href="css/main.css" rel="stylesheet" type="text/css" />
-    <link href="css/button.css" rel="stylesheet" type="text/css" />
     <link href="css/ansi.css" rel="stylesheet" type="text/css" />
-    <link href="css/status.css" rel="stylesheet" type="text/css" />
     <link href="css/monsters.css" rel="stylesheet" type="text/css" />
     <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
-
+    <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css">
     <script>
       if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
@@ -213,7 +211,18 @@
         }
       }
 
+      function loadTheme() {
+        var theme = parseTemplate(client.options.theme) + ".css";
+        if (!fs.existsSync(theme))
+          theme = parseTemplate(path.join("{themes}", "default")) + ".css";
+        if ($("#theme").attr('href') != theme) {
+          $("#theme").attr('href', theme);
+          $("#theme", $("#display-frame").contents().find("head")).attr('href', theme);
+        }
+      }
+
       function updateInterface() {
+        loadTheme();
         if (!client.options.showButtonBar) {
           $("#buttonbar").css('display', 'none');
           $("#display-container").css('left', '4px');
@@ -463,18 +472,17 @@
         client.readClipboard = window.readClipboard;
         client.writeClipboard = window.writeClipboard;
 
-
         client.version = version;
         client.host = "www.shadowmud.com";
         client.port = client.options.dev ? 1035 : 1030;
         client.telnet.GMCPSupports.push("Room 1");
-        client.on('profile-updated', (profile) => {
+        ('profile-updated', (profile) => {
           ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.profiles.items[profile].enabled });
         });
         client.on('profiles-updated', () => {
           updateMenu();
         });
-        client.on('addLine', (data) => {
+        client.on('add-line', (data) => {
           var res;
           if (_captures.length == 0) return;
           //custom capture to ignore who list
@@ -552,7 +560,7 @@
             client.emit('notify-clicked', title);
           };
         });
-        client.on('optionsLoaded', () => {
+        client.on('options-loaded', () => {
           updateInterface();
           buildCaptures();
           client.port = client.options.dev ? 1035 : 1030;
@@ -595,12 +603,12 @@
           ipcRenderer.send('connected');
         });
 
-        client.on('receivedData', (data) => {
+        client.on('received-data', (data) => {
           if (!active && client.connected)
             ipcRenderer.send('set-overlay', 2);
         });
 
-        this.client.on('receivedGMCP', (mod, obj) => {
+        this.client.on('received-GMCP', (mod, obj) => {
           ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
         });
 

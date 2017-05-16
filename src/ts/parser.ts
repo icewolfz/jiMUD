@@ -921,7 +921,7 @@ export class Parser extends EventEmitter {
 
   private AddLine(line: string, fragment: boolean, skip: boolean) {
     var data: ParserLine = { line: line, fragment: fragment, gagged: skip };
-    this.emit('addLine', data)
+    this.emit('add-line', data)
     this.EndofLine = !fragment;
   }
 
@@ -1820,18 +1820,17 @@ export class Parser extends EventEmitter {
           this.emit('sound', e);
           break;
         case "EXPIRE":
-          var self = this;
-          setTimeout(function () { self.emit('expireLinks', args); }, 1);
+          setTimeout(() => { this.emit('expire-links', args); }, 1);
           break;
         case "VERSION":
           if (xl > 0)
             this.StyleVersion = args[0];
           else
-            this.emit('MXPTagReply', tag, []);
+            this.emit('MXP-tag-reply', tag, []);
           break;
         case "USER":
         case "PASSWORD":
-          this.emit('MXPTagReply', tag, args);
+          this.emit('MXP-tag-reply', tag, args);
           break;
         case "SUPPORT":
           sArgs = [];
@@ -2009,7 +2008,7 @@ export class Parser extends EventEmitter {
             }
           }
           else
-            this.emit('MXPTagReply', tag, ["+A", "+SEND", "+B", "+I", "+COLOR", "+C", "+EM", "+ITALIC", "+STRONG", "+BOLD", "+UNDERLINE", "+U", "+S", "+STRIKEOUT", "+H", "+HIGH", "+FONT", "+EXPIRE", "+VERSION", "+SUPPORT", "+NOBR", "+P", "+BR", "+SBR", "+VAR", "+SOUND", "+MUSIC", "+USER", "+PASSWORD", "+RESET", "+STRIKE", "+H1", "+H2", "+H3", "+H4", "+H5", "+H6", "+IMAGE", "+STAT", "+GAUGE"]);
+            this.emit('MXP-tag-reply', tag, ["+A", "+SEND", "+B", "+I", "+COLOR", "+C", "+EM", "+ITALIC", "+STRONG", "+BOLD", "+UNDERLINE", "+U", "+S", "+STRIKEOUT", "+H", "+HIGH", "+FONT", "+EXPIRE", "+VERSION", "+SUPPORT", "+NOBR", "+P", "+BR", "+SBR", "+VAR", "+SOUND", "+MUSIC", "+USER", "+PASSWORD", "+RESET", "+STRIKE", "+H1", "+H2", "+H3", "+H4", "+H5", "+H6", "+IMAGE", "+STAT", "+GAUGE"]);
           break;
         case "A":
           tmp = this.GetCurrentStyle();
@@ -2214,8 +2213,8 @@ export class Parser extends EventEmitter {
 
       if (e.flag.length > 0) {
         if (e.flag.length > 4 && e.flag.toLowerCase().startsWith("set "))
-          this.emit('setVariable', e.flag.substring(4), sArg);
-        this.emit('MXPFlag', e.flag, sArg);
+          this.emit('set-variable', e.flag.substring(4), sArg);
+        this.emit('MXP-flag', e.flag, sArg);
       }
       if (e.tag > 19 && e.tag < 100 && this.mxpLines[e.tag].enabled && this.mxpLines[e.tag].closeDefinition.length > 0)
         arg += this.mxpLines[e.tag].closeDefinition;
@@ -2577,7 +2576,7 @@ export class Parser extends EventEmitter {
           case ParserState.XTermTitle:
             if (i == 7) {
               this._SplitBuffer = "";
-              this.emit('setTitle', _TermTitle, _TermTitleType === null ? 0 : _TermTitleType);
+              this.emit('set-title', _TermTitle, _TermTitleType === null ? 0 : _TermTitleType);
               _TermTitle = "";
               _TermTitleType = null;
               state = ParserState.None;
@@ -3119,7 +3118,7 @@ export class Parser extends EventEmitter {
               if (!this.mxpState.locked) {
                 //notify client that a tag is over, allow for tagging the 10,11,12,19 tag types for auto mapper tagging/welcome test/custom tags
                 if (this.mxpState.lineType !== lineType.Open)
-                  this.emit('MXPTagEnd', this.mxpState.lineType, strBuilder.join(''));
+                  this.emit('MXP-tag-end', this.mxpState.lineType, strBuilder.join(''));
                 //custom element linked to tag so expanded it into the line
                 if (!this.mxpState.lineExpanded && this.mxpLines[this.mxpState.lineType] && this.mxpLines[this.mxpState.lineType].enabled) {
                   iTmp = "";
@@ -3665,7 +3664,7 @@ export class Parser extends EventEmitter {
     catch (ex) {
       if (this.enableDebug) this.emit('debug', ex);
     }
-    this.emit('parseDone');
+    this.emit('parse-done');
     this.parsing.shift();
     if (this.parsing.length > 0)
       setTimeout(this.parseNext(), 0);

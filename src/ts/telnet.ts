@@ -236,7 +236,7 @@ export class Telnet extends EventEmitter {
      * @desc data that is received from the host to be processed
      *
      * @param {String} data string received from host
-     * @fires Telnet#receivedData
+     * @fires Telnet#received-data
      */
     receivedData(data) {
         if (this.enableLatency) {
@@ -262,7 +262,7 @@ export class Telnet extends EventEmitter {
         data = this.processData(data);
         if (this.enableDebug)
             this.emit('debug', "PostProcess:" + data, 1);
-        this.emit('receivedData', data);
+        this.emit('received-data', data);
         if (this.enableLatency) {
             //split packet more then likely so reset timer for next part
             if (this._splitBuffer.length > 0) {
@@ -312,7 +312,7 @@ export class Telnet extends EventEmitter {
      *
      * @param {String} data string to send
      * @param {Boolean} raw send raw unescaped telnet data to host, other wise it will escape the IAC for proper telnet
-     * @fires Telnet#dataSent
+     * @fires Telnet#data-sent
      */
     sendData(data: any, raw?: boolean) {
         if (data === null || typeof data == "undefined" || data.length === 0)
@@ -340,7 +340,7 @@ export class Telnet extends EventEmitter {
         }
         else if (this.enableLatency)
             this._latencyTime = null;
-        this.emit('dataSent', data);
+        this.emit('data-sent', data);
     };
 
     /**
@@ -349,10 +349,12 @@ export class Telnet extends EventEmitter {
      *
      * @param {string} data The data to process
      * @returns {string} The results of the processed data
-     * @fires Telnet#receiveOption
-     * @fires Telnet#receiveMSDP
-     * @fires Telnet#receiveGMCP
-     * @fires Telnet#receiveMSSP
+     * @fires Telnet#receive-option
+     * @fires Telnet#receive-MSDP
+     * @fires Telnet#receive-GMCP
+     * @fires Telnet#receive-MSSP
+     * @fires Telnet#receive-NEWENVIRON
+     * @fires Telnet#receive-CHARSET
      */
     //this.processData = function(data) { return data; };
     processData(data) {
@@ -1184,7 +1186,7 @@ export class Telnet extends EventEmitter {
                                 debugOp = "";
                             }
                             this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
-                            this.emit('receiveMSSP', _MSSP);
+                            this.emit('receive-MSSP', _MSSP);
                             msdp_val = "";
                             msdp_var = "";
                             _MSSP = 0;
@@ -1348,7 +1350,7 @@ export class Telnet extends EventEmitter {
                                 debugOp = "";
                             }
                             tmp = this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
-                            this.emit('receiveNEWENVIRON', msdp_val);
+                            this.emit('receive-NEWENVIRON', msdp_val);
                             //custom handled so dont do defaults
                             if (!tmp) {
                                 if (this.enableDebug) this.emit('debug', "REPLY: <IAC><SB><NEWENVIRON><IS><IAC><SE>");
@@ -1412,7 +1414,7 @@ export class Telnet extends EventEmitter {
                                 debugOp = "";
                             }
                             tmp = this._fireReceiveOption(option, 250, msdp_val);
-                            this.emit('receiveCHARSET', msdp_val);
+                            this.emit('receive-CHARSET', msdp_val);
                             if (!tmp) {
                                 if (this.enableDebug) this.emit('debug', "REPLY: <IAC><SB><CHARSET><REJECTED><IAC><SE>");
                                 this.sendData([255, 250, 42, 3, 255, 240], true);
@@ -1438,7 +1440,7 @@ export class Telnet extends EventEmitter {
                                 debugOp = "";
                             }
                             tmp = this._fireReceiveOption(option, 250, msdp_val);
-                            this.emit('receiveCHARSET', msdp_val.slice(1));
+                            this.emit('receive-CHARSET', msdp_val.slice(1));
                             if (!tmp) {
                                 if (this.options.CHARSET && msdp_val.slice(1).toLowerCase() == "utf-8") {
                                     this.server.CHARSET = true;
@@ -1501,7 +1503,7 @@ export class Telnet extends EventEmitter {
      * @param {Number} reply The telnet verb your reply from
      * @param {String|undefined} val The value if the option has one
      * @return boolean returns if the reply was handled or not
-     * @fires Telnet#receiveOption
+     * @fires Telnet#receive-option
      */
     replyToOption(op: number, verb: number, reply: number, val?: string): boolean {
         if (typeof val == "undefined") val = "";
@@ -1715,19 +1717,19 @@ export class Telnet extends EventEmitter {
     */
     private _fireReceiveOption(option, verb, val) {
         var data: TelnetOption = { telnet: this, option: option, verb: 250, value: val, handled: false };
-        this.emit('receivedOption', data);
+        this.emit('received-option', data);
         return data.handled;
     }
 
     private _fireReceiveMSDP(msdp_var, msdp_val) {
         var data = { telnet: this, variable: msdp_var, value: msdp_val, handled: false };
-        this.emit('receivedMSDP', data);
+        this.emit('received-MSDP', data);
         return data.handled;
     }
 
     private _fireReceiveGMCP(val) {
         var data = { telnet: this, value: val, handled: false };
-        this.emit('receivedGMCP', data);
+        this.emit('received-GMCP', data);
         return data.handled;
     }
 

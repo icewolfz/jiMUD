@@ -43,17 +43,17 @@ export class Status extends EventEmitter {
         });
         this.client.telnet.GMCPSupports.push("oMUD 1");
         this.client.telnet.GMCPSupports.push("Char.Skills 1");
-        this.client.on('addLine', (data) => {
+        this.client.on('add-line', (data) => {
             if (data.raw == 'Connected...')
                 this.init();
         });
-        this.client.on('optionsLoaded', () => {
+        this.client.on('options-loaded', () => {
             this.info["EXPERIENCE_NEED"] = this.info["EXPERIENCE_NEED_RAW"] - this.info["EXPERIENCE"];
             if (this.info["EXPERIENCE_NEED"] < 0 && !client.options.allowNegativeNumberNeeded)
                 this.info["EXPERIENCE_NEED"] = 0;
         });
 
-        this.client.on('receivedGMCP', (mod, obj) => {
+        this.client.on('received-GMCP', (mod, obj) => {
             switch (mod.toLowerCase()) {
                 case 'char.base':
                     this.init();
