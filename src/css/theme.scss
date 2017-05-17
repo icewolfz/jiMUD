@@ -1,0 +1,66 @@
+.button {
+    text-decoration: none;
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    overflow: hidden;
+    font-size: 30px;
+}
+
+.button-stretch img, .button-stretch .button-icon {
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-size: 100% !important;
+}
+
+.button .fa, .button-icon {
+    margin-top: 6px;
+    text-align: center;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    vertical-align: top;
+}
+
+.button img, .button-icon {
+    display: block;
+    margin-top: 6px;
+    margin-left: 6px;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+}
+
+.button svg {
+    top: -3px;
+    position: relative;
+}
+
+.button-sm .fa, .button-sm.on .fa {
+    margin-top: 1px;
+    margin-left: 0;
+    width: 16px;
+    height: 16px;
+    font-size: 14px;
+}
+
+.button-sm, .button-sm.on {
+    width: 18px;
+    height: 18px;
+    font-size: 16px;
+}
+
+.button-sm img, .button-sm.on img {
+    height: 16px;
+    width: 16px;
+    margin: 1px;
+}
+
+.button-sm svg, .button-sm.on svg {
+    top: 0px;
+    position: relative;
+}

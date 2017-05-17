@@ -1,17 +1,12 @@
 $images: "./../../assets";
 $borderColor: "#908271";
+$color: "wheat";
 
 #display-container {
     left: 36px;
     right: 170px;
     top: 2px;
     bottom: 29px;
-    color: #BBBBBB;
-    font-family: "Courier New", monospace;
-    text-align: left;
-    font-size: 1em;
-    background-color: black;
-    text-shadow: none;
     border: 1px solid #{$borderColor};
     padding: 0px;
 }
@@ -71,30 +66,6 @@ $borderColor: "#908271";
     top: 2px;
     left: 2px;
     bottom: 2px;
-}
-
-#advedit {
-    top: 3px;
-    right: 2px;
-    text-align: center;
-    height: 16px;
-    width: 16px;
-    font-size: 14px;
-    border-radius: 4px;
-    color: wheat;
-}
-
-#advedit .icon {
-    margin-top: 2px;
-    margin-left: 1px;
-}
-
-#advedit:hover {
-    background-color: #d70000;
-}
-
-#advedit:active {
-    background-color: #790000;
 }
 
 /* Let's get this party started */
@@ -544,31 +515,6 @@ $borderColor: "#908271";
     right: 2px;
 }
 
-#armor, #health, #health.on:hover, #armor.on:hover {
-    top: 2px;
-    background-color: black;
-    border: 1px solid #{$borderColor};
-    padding: 0px;
-    height: 18px;
-    width: 18px;
-    background-color: maroon;
-}
-
-#armor img, #health img {
-    height: 16px;
-    width: 16px;
-    margin: 1px;
-}
-
-#armor:hover, #health:hover, #health.on, #armor.on {
-    background-color: #d70000;
-    color: black;
-}
-
-#armor:active, #health:active {
-    background-color: #a50000;
-}
-
 .health-100 {
     fill: rgb(255, 0, 0);
     color: rgb(255, 0, 0);
@@ -734,16 +680,43 @@ $borderColor: "#908271";
 /** end stats **/
 /** button stats */
 
-.button {
-    text-decoration: none;
-    color: wheat;
-    width: 32px;
-    height: 32px;
-    background-color: maroon;
-    display: inline-block;
+#advedit {
+    top: 5px;
+    right: 6px;
     text-align: center;
+    border-radius: 4px;
+    border: 0px;
+    background-color: transparent;
+    height: 16px;
+    width: 16px;    
+}
+
+#advedit .fa {
+    margin-top: 1px;
+}
+
+#advedit:hover {
+    background-color: #d70000;
+}
+
+#advedit:active {
+    background-color: #790000;
+}
+
+.button {
+    color: wheat;
+    background-color: maroon;
     border: 1px solid #{$borderColor};
     margin-bottom: 2px;
+}
+
+.button svg {
+    fill: #{$color};
+}
+
+.button img, .button-icon {
+    margin-top: 5px;
+    margin-left: 5px;
 }
 
 .button.on {

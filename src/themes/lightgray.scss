@@ -1,13 +1,19 @@
 $images: "./../../assets";
-$borderColor: "#908271";
-$color: "wheat";
+$borderColor: "rgb(204, 204, 204)";
+$color: "#333";
+$panelBackground: "rgb(240, 240, 240)";
+$panelInsetBackground: "rgb(240, 240, 240)";
+
+#client {
+    background-color: #{$panelBackground};
+}
 
 #display-container {
-    left: 35px;
-    right: 181px;
-    top: 3px;
+    left: 34px;
+    right: 165px;
+    top: 2px;
     bottom: 29px;
-    border: 1px solid #{$borderColor}#{$borderColor};
+    border: 1px solid #{$borderColor};
     padding: 0px;
 }
 
@@ -27,61 +33,48 @@ $color: "wheat";
 }
 
 #display-border {
-    border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
-    border-image-slice: 95 95;
-    border-image-repeat: round;
-    background-color: transparent;
-    border-width: 95px;
-    left: 32px;
-    top: 0px;
-    right: 178px;
-    bottom: 26px;
-    border-style: solid;
+    display: none;
+    right: 168px;
 }
 
 #command {
-    height: 26px;
-    bottom: 0px;
-    left: 32px;
-    right: 178px;
+    height: 24px;
+    bottom: 2px;
+    left: 34px;
+    right: 165px;
     background-color: transparent;
-    background-image: url(#{$images}/input.png);
+    border: 0px;
 }
 
 #commandbox {
-    left: 5px;
-    right: 24px;
-    height: 18px;
-    bottom: 5px;
+    left: 0px;
+    top: 0px;
+    right: 26px;
+    bottom: 0px;
+    background-color: white;
 }
 
-#commandleft {
-    background-image: url(#{$images}/input.left.png);
-    height: 26px;
-    width: 5px;
-}
-
-#commandright {
-    background-image: url(#{$images}/input.right.png);
-    height: 26px;
-    width: 5px;
+#commandleft, #commandright {
+    display: none;
 }
 
 #commandinput {
     width: 100%;
     height: 100%;
     margin: 0px;
-    border: 0px;
-    background-color: transparent;
     color: #{$color};
     box-sizing: border-box;
     padding: 0;
+    border: 1px solid #{$borderColor};
+    padding: 2px;
 }
 
 #buttonbar {
-    top: 0;
-    left: 0;
-    bottom: 0;
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    background-color: #{$panelBackground};
+    padding: 1px;
 }
 
 /* Let's get this party started */
@@ -243,25 +236,16 @@ $color: "wheat";
 #status {
     width: 164px;
     text-align: center;
-    right: 7px;
-    top: 7px;
-    bottom: 7px;
-    background-color: rgb(40, 0, 0);
-    border: 1px solid #{$borderColor};
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background-color: #{$panelBackground};
     padding: 2px;
 }
 
 #status-border {
-    right: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 2;
-    width: 178px;
-    border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
-    border-image-slice: 95 95;
-    border-image-repeat: round;
-    border-width: 89px;
-    border-style: solid;
+    width: 168px;
+    display: none;
 }
 
 .day {
@@ -369,7 +353,7 @@ $color: "wheat";
     top: 3px;
     left: 3px;
     right: 3px;
-    background-color: black;
+    background-color: #{$panelInsetBackground};
     border: 1px solid #{$borderColor};
 }
 
@@ -441,7 +425,7 @@ $color: "wheat";
 
 #lefthandweapon {
     top: 85px;
-    background-color: black;
+    background-color: #{$panelInsetBackground};
     border: 1px solid #{$borderColor};
     width: 32px;
     height: 32px;
@@ -450,7 +434,7 @@ $color: "wheat";
 
 #righthandweapon {
     top: 85px;
-    background-color: black;
+    background-color: #{$panelInsetBackground};
     border: 1px solid #{$borderColor};
     width: 32px;
     height: 32px;
@@ -461,7 +445,7 @@ $color: "wheat";
     top: 3px;
     right: 3px;
     left: 3px;
-    background-color: black;
+    background-color: #{$panelInsetBackground};
     border: 1px solid #{$borderColor};
     padding: 2px;
     color: #{$color};
@@ -526,7 +510,7 @@ $color: "wheat";
     top: 3px;
     right: 3px;
     left: 3px;
-    background-color: black;
+    background-color: #{$panelInsetBackground};
     border: 1px solid #{$borderColor};
     padding: 2px;
 }
@@ -683,7 +667,7 @@ $color: "wheat";
 .progressbar .progressbar-value {
     height: 100%;
     width: 0%;
-    background-color: #{$color};
+    background-color: white;
 }
 
 #lagMeter {
@@ -705,28 +689,36 @@ $color: "wheat";
 /** button stats */
 
 #advedit {
-    top: 5px;
-    right: 6px;
-    text-align: center;
-    border-radius: 4px;
-    border: 0px;
-    background-color: transparent;
-    height: 16px;
-    width: 16px;    
+    right: 0px;
+    top: 0px;
+    height: 24px;
+    width: 24px;
+    font-size: 22px;
+    line-height: 22px;    
 }
 
-#advedit:hover {
-    background-color: #d70000;
-}
-
-#advedit:active {
-    background-color: #790000;
+#advedit .fa {
+    margin-top: 3px;
+    font-size: 18px;
 }
 
 .button {
-    background-image: url(#{$images}/button.png);
     color: #{$color};
-    background-color: maroon;
+    border: 1px solid #{$borderColor};
+    margin-bottom: 2px;
+    text-shadow: 0 1px 0 #fff;
+    background-image: linear-gradient(to bottom, #fff 0, #e0e0e0 100%);
+    background-repeat: repeat-x;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 1px rgba(0, 0, 0, 0.075);
+    border-radius: 3px;
+    font-weight: 400;
+    white-space: nowrap;
+    border: 1px solid #ccc;
+}
+
+.button img, .button-icon {
+    margin-top: 5px;
+    margin-left: 5px;
 }
 
 .button svg {
@@ -759,12 +751,55 @@ $color: "wheat";
 }
 
 .button:focus {
-    color: whe#{$color}at;
+    color: #{$color};
 }
 
-.button-sm {
-    background-image: none;
-    border: 1px solid #{$color};
+#connect img {
+    background: url(#{$images}/icons/png/connect.black.png) no-repeat;
+    padding-left: 50px;
+    background-position: 5px -1px;
+}
+
+#disconnect img {
+    padding-left: 50px;
+    background: url(#{$images}/icons/png/disconnect.black.png) no-repeat;
+    background-position: 3px -3px;
+}
+
+#preferences img {
+    padding-left: 50px;
+    background: url(#{$images}/icons/png/preferences.black.png) no-repeat;
+    background-position: 5px -1px;
+}
+
+#log img {
+    padding-left: 50px;
+    background: url(#{$images}/icons/png/log.black.png) no-repeat;
+    background-position: 5px -1px;
+}
+
+#clear img {
+    padding-left: 50px;
+    background: url(#{$images}/icons/png/clear.black.png) no-repeat;
+    background-position: 5px -1px;
+}
+
+#lock[title="Unlock display"] img {
+    padding-left: 50px;
+    background: url(#{$images}/icons/png/unlock.black.png) no-repeat;
+    background-position: 5px -1px;
+}
+
+#lock[title="Lock display"] img {
+    padding-left: 50px;
+    background: url(#{$images}/icons/png/lock.black.png) no-repeat;
+    background-position: 5px -1px;
+}
+
+#map img {
+    padding-left: 50px;
+    background: url(#{$images}/icons/png/map.black.png) no-repeat;
+    background-position: 5px -1px;
 }
 
 /** button end */
