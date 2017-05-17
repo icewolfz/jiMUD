@@ -17,6 +17,7 @@
     <script>
       //cSpell:ignore ismap hellip selectall lagmeter
       if (window.module) module.module;
+
       window.$selected = '';
       window.$selectedurl = '';
       window.$selectedline = '';
@@ -30,6 +31,7 @@
       const Status = require('./js/status.js').Status;
       const Logger = require('./js/logging.js').Logger;
       const Backup = require('./js/backup.js').Backup;
+      const { Settings } = require('./js/settings');
       const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
       const { dialog, Menu, MenuItem, app, nativeImage } = remote;
       const { parseTemplate, setSelectionRange } = require("./js/library.js");
@@ -37,6 +39,10 @@
       const fs = require('fs');
       const path = require('path');
       const { version } = require("../package.json");
+
+      var set = Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+      loadTheme(set.theme);
+      delete set;
 
       var client, _status, _logger, _backup;
       var OoMUD;
@@ -211,8 +217,8 @@
         }
       }
 
-      function loadTheme() {
-        var theme = parseTemplate(client.options.theme) + ".css";
+      function loadTheme(theme) {
+        theme = parseTemplate(theme) + ".css";
         if (!fs.existsSync(theme))
           theme = parseTemplate(path.join("{themes}", "default")) + ".css";
         if ($("#theme").attr('href') != theme) {
@@ -221,19 +227,23 @@
         }
       }
 
-      function updateInterface() {
-        loadTheme();
+      function updateInterface(options) {
+        loadTheme(client.options.theme);
+        $("#display-container").css('left', '');
+        $("#display-border").css('left', '');
+        $("#command").css('left', '');
         if (!client.options.showButtonBar) {
           $("#buttonbar").css('display', 'none');
-          $("#display-container").css('left', $("#display-container").offset().left -$("#buttonbar").outerWidth());
-          $("#display-border").css('left', $("#display-border").offset().left -$("#buttonbar").outerWidth());
-          $("#command").css('left', $("#command").offset().left -$("#buttonbar").outerWidth());
+          var w = parseInt($("#buttonbar").css('left'), 10);
+          if(isNaN(w)) w = 0;
+          w += $("#buttonbar").outerWidth();
+
+          $("#display-container").css('left', $("#display-container").offset().left - w);
+          $("#display-border").css('left', $("#display-border").offset().left - w);
+          $("#command").css('left', $("#command").offset().left - w);
         }
         else {
           $("#buttonbar").css('display', '');
-          $("#display-container").css('left', '');
-          $("#display-border").css('left', '');
-          $("#command").css('left', '');
         }
         if (client.options.scrollLocked) {
           $("#lock").prop("title", "Unlock display");
@@ -332,7 +342,6 @@
           client.UpdateWindow();
         });
 
-        //client = new Client($("#display"), $("#commandinput"));
         client = new Client($("#display-frame").contents().find("#display"), $("#commandinput"));
         client.parser.enableBell = false;
         client.parser.on('bell', () => {
@@ -1084,7 +1093,7 @@
           ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.profiles.items[profile].enabled });
 
         ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.lagMeter });
+        ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
         ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
         ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: client.options.scrollLocked });
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: !client.connected });

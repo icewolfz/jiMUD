@@ -553,14 +553,14 @@ export class Status extends EventEmitter {
     }
 
     updateInterface() {
+        $("#display-container").css('right', '');
+        $("#display-border").css('right', '');
+        $("#command").css('right', '');
         if (this.client.options.showStatus) {
             $("#status").css("visibility", "");
             $("#status").css("display", "");
             $("#status-border").css("visibility", "");
             $("#status-border").css("display", "");
-            $("#display-container").css('right', '');
-            $("#display-border").css('right', '');
-            $("#command").css('right', '');
         }
         else {
             var w = $("#status-border").outerWidth()
@@ -571,6 +571,7 @@ export class Status extends EventEmitter {
             $("#display-container").css('right', (parseInt($("#display-container").css('right'), 10) - w) + "px");
             $("#display-border").css('right', (parseInt($("#display-border").css('right'), 10) - w) + "px");
             $("#command").css('right', (parseInt($("#command").css('right'), 10) - w) + "px");
+            return;
         }
 
         var top = 0, eTop;
@@ -629,7 +630,7 @@ export class Status extends EventEmitter {
             if (this.client.options.lagMeter) {
                 this.lagMeter.css("visibility", "");
                 this.lagMeter.css("display", "");
-                $("#bars").css('bottom', this.lagMeter.outerHeight() + parseInt(this.lagMeter.css("bottom"), 10) + parseInt($("#bars").css("bottom"), 10) + 'px');                
+                $("#bars").css('bottom', this.lagMeter.outerHeight() + parseInt(this.lagMeter.css("bottom"), 10) + parseInt($("#bars").css("bottom"), 10) + 'px');
                 this.updateLagMeter(0, true);
             }
             else {

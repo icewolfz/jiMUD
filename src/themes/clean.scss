@@ -1,17 +1,18 @@
 $images: "./../../assets";
+$borderColor: "#908271";
 
 #display-container {
-    left: 37px;
-    right: 187px;
-    top: 7px;
-    bottom: 31px;
+    left: 36px;
+    right: 170px;
+    top: 2px;
+    bottom: 29px;
     color: #BBBBBB;
     font-family: "Courier New", monospace;
     text-align: left;
     font-size: 1em;
     background-color: black;
     text-shadow: none;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     padding: 0px;
 }
 
@@ -31,38 +32,28 @@ $images: "./../../assets";
 }
 
 #display-border {
-    background-color: transparent;
-    border-width: 95px;
-    left: 30px;
-    right: 180px;
-    top: -1px;
-    bottom: 24px;
-    border-style: solid;
+    display:none;
+    right: 168px;
 }
 
 #command {
-    height: 26px;
-    bottom: 0px;
-    left: 33px;
-    right: 183px;
+    height: 24px;
+    bottom: 2px;
+    left: 36px;
+    right: 170px;
     background-color: transparent;
+    border: 1px solid #{$borderColor};
 }
 
 #commandbox {
-    left: 8px;
-    right: 24px;
+    left: 2px;
+    right: 20px;
     height: 18px;
-    bottom: 6px;
+    bottom: 2px;
 }
 
-#commandleft {
-    height: 26px;
-    width: 5px;
-}
-
-#commandright {
-    height: 26px;
-    width: 5px;
+#commandleft, #commandright {
+    display:none;
 }
 
 #commandinput {
@@ -72,17 +63,19 @@ $images: "./../../assets";
     border: 0px;
     background-color: transparent;
     color: wheat;
+    box-sizing: border-box;
+    padding: 0;
 }
 
 #buttonbar {
-    top: 0;
-    left: 0;
-    bottom: 0;
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
 }
 
 #advedit {
-    top: 5px;
-    right: 6px;
+    top: 3px;
+    right: 2px;
     text-align: center;
     height: 16px;
     width: 16px;
@@ -106,14 +99,14 @@ $images: "./../../assets";
 
 /* Let's get this party started */
 
-::-webkit-scrollbar {
+#display::-webkit-scrollbar, #bars::-webkit-scrollbar {
     width: 12px;
     height: 12px;
 }
 
 /* Track */
 
-::-webkit-scrollbar-track {
+#display::-webkit-scrollbar-track, #bars::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     -webkit-border-radius: 10px;
@@ -124,20 +117,20 @@ $images: "./../../assets";
 
 /* Handle */
 
-::-webkit-scrollbar-thumb {
+#display::-webkit-scrollbar-thumb, #bars::-webkit-scrollbar-thumb {
     -webkit-border-radius: 10px;
     border-radius: 10px;
     background: #33302b;
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
 }
 
-::-webkit-scrollbar-thumb:window-inactive {
+#display::-webkit-scrollbar-thumb:window-inactive, #bars::-webkit-scrollbar-thumb:window-inactive {
     background: rgba(51, 48, 43, 0.4);
 }
 
-::-webkit-scrollbar-corner {
+#display::-webkit-scrollbar-corner, #bars::-webkit-scrollbar-corner {
     background-color: black;
 }
 
@@ -149,12 +142,12 @@ $images: "./../../assets";
     font-family: Arial, Helvetica, sans-serif;
     font-size: 1em;
     border-radius: 4px;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     background-color: rgb(40, 0, 0);
 }
 
 #find input, #find input:focus {
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     width: 100px;
     background-color: inherit;
     color: silver;
@@ -263,20 +256,17 @@ $images: "./../../assets";
 #status {
     width: 164px;
     text-align: center;
-    right: 7px;
-    top: 7px;
-    bottom: 7px;
+    right: 2px;
+    top: 2px;
+    bottom: 2px;
     background-color: rgb(40, 0, 0);
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     padding: 2px;
 }
 
 #status-border {
-    right: -1px;
-    top: -1px;
-    bottom: -2px;
-    z-index: 2;
-        width: 178px;
+    width: 168px;
+    display: none;
 }
 
 .day {
@@ -381,11 +371,11 @@ $images: "./../../assets";
 
 #environment {
     height: 50px;
-    top: 5px;
-    left: 5px;
-    right: 5px;
+    top: 3px;
+    left: 3px;
+    right: 3px;
     background-color: black;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
 }
 
 #character-name {
@@ -457,7 +447,7 @@ $images: "./../../assets";
 #lefthandweapon {
     top: 85px;
     background-color: black;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     width: 32px;
     height: 32px;
     left: 5px;
@@ -466,18 +456,18 @@ $images: "./../../assets";
 #righthandweapon {
     top: 85px;
     background-color: black;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     width: 32px;
     height: 32px;
     right: 5px;
 }
 
 #experience {
-    top: 350px;
-    right: 5px;
-    left: 5px;
+    top: 3px;
+    right: 3px;
+    left: 3px;
     background-color: black;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     padding: 2px;
     color: wheat;
     text-align: left;
@@ -493,10 +483,10 @@ $images: "./../../assets";
 }
 
 #bars {
-    top: 418px;
-    right: 5px;
+    top: 3px;
+    right: 3px;
     left: 3px;
-    bottom: 22px;
+    bottom: 3px;
     padding: 2px;
     color: wheat;
     text-align: left;
@@ -523,7 +513,7 @@ $images: "./../../assets";
     width: 32px;
     float: left;
     background-color: black;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
 }
 
 .combat-bar .progressbar {
@@ -538,11 +528,11 @@ $images: "./../../assets";
 }
 
 #body {
-    top: 60px;
-    right: 5px;
-    left: 5px;
+    top: 3px;
+    right: 3px;
+    left: 3px;
     background-color: black;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     padding: 2px;
 }
 
@@ -557,7 +547,7 @@ $images: "./../../assets";
 #armor, #health, #health.on:hover, #armor.on:hover {
     top: 2px;
     background-color: black;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     padding: 0px;
     height: 18px;
     width: 18px;
@@ -696,7 +686,7 @@ $images: "./../../assets";
 .progressbar {
     height: 12px;
     font-size: 0.75em;
-    border: 1px solid #908271;
+    border: 1px solid #{$borderColor};
     height: 12px;
     width: 118px;
     -webkit-border-radius: 6px;
@@ -727,9 +717,9 @@ $images: "./../../assets";
 }
 
 #lagMeter {
-    bottom: 5px;
-    right: 5px;
-    left: 5px;
+    bottom: 3px;
+    right: 3px;
+    left: 3px;
 }
 
 #lagmeter.progressbar .progressbar-text {
@@ -737,7 +727,7 @@ $images: "./../../assets";
 }
 
 #party.hasmembers {
-    border-bottom: 1px solid #908271;
+    border-bottom: 1px solid #{$borderColor};
     padding-bottom: 4px;
 }
 
@@ -747,11 +737,13 @@ $images: "./../../assets";
 .button {
     text-decoration: none;
     color: wheat;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     background-color: maroon;
     display: inline-block;
     text-align: center;
+    border: 1px solid #{$borderColor};
+    margin-bottom: 2px;
 }
 
 .button.on {
@@ -781,22 +773,6 @@ $images: "./../../assets";
 
 .button:focus {
     color: wheat;
-}
-
-.button .fa, .button-icon {
-    margin-top: 7px;
-    text-align: center;
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
-}
-
-.button img, .button-icon {
-    /*margin-left: 7px;*/
-    margin-top: 7px;
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
 }
 
 /** button end */
