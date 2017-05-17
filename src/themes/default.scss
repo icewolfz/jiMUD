@@ -1,10 +1,10 @@
 $images: "./../../assets";
 
 #display-container {
-    left: 37px;
-    right: 187px;
-    top: 7px;
-    bottom: 31px;
+    left: 35px;
+    right: 181px;
+    top: 3px;
+    bottom: 29px;
     color: #BBBBBB;
     font-family: "Courier New", monospace;
     text-align: left;
@@ -36,27 +36,27 @@ $images: "./../../assets";
     border-image-repeat: round;
     background-color: transparent;
     border-width: 95px;
-    left: 30px;
-    right: 180px;
-    top: -1px;
-    bottom: 24px;
+    left: 32px;
+    top: 0px;
+    right: 178px;
+    bottom: 26px;
     border-style: solid;
 }
 
 #command {
     height: 26px;
     bottom: 0px;
-    left: 33px;
-    right: 183px;
+    left: 32px;
+    right: 178px;
     background-color: transparent;
     background-image: url(#{$images}/input.png);
 }
 
 #commandbox {
-    left: 8px;
+    left: 5px;
     right: 24px;
     height: 18px;
-    bottom: 6px;
+    bottom: 5px;
 }
 
 #commandleft {
@@ -78,6 +78,8 @@ $images: "./../../assets";
     border: 0px;
     background-color: transparent;
     color: wheat;
+    box-sizing: border-box;
+    padding: 0;
 }
 
 #buttonbar {
@@ -112,14 +114,14 @@ $images: "./../../assets";
 
 /* Let's get this party started */
 
-::-webkit-scrollbar {
+#display::-webkit-scrollbar, #bars::-webkit-scrollbar {
     width: 12px;
     height: 12px;
 }
 
 /* Track */
 
-::-webkit-scrollbar-track {
+#display::-webkit-scrollbar-track, #bars::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     -webkit-border-radius: 10px;
@@ -130,7 +132,7 @@ $images: "./../../assets";
 
 /* Handle */
 
-::-webkit-scrollbar-thumb {
+#display::-webkit-scrollbar-thumb, #bars::-webkit-scrollbar-thumb {
     -webkit-border-radius: 10px;
     border-radius: 10px;
     background: #33302b;
@@ -139,11 +141,11 @@ $images: "./../../assets";
     border: 1px solid #908271;
 }
 
-::-webkit-scrollbar-thumb:window-inactive {
+#display::-webkit-scrollbar-thumb:window-inactive, #bars::-webkit-scrollbar-thumb:window-inactive {
     background: rgba(51, 48, 43, 0.4);
 }
 
-::-webkit-scrollbar-corner {
+#display::-webkit-scrollbar-corner, #bars::-webkit-scrollbar-corner {
     background-color: black;
 }
 
@@ -278,15 +280,15 @@ $images: "./../../assets";
 }
 
 #status-border {
-    right: -1px;
-    top: -1px;
-    bottom: -2px;
+    right: 0;
+    top: 0;
+    bottom: 0;
     z-index: 2;
-    width: 7px;
+    width: 178px;
     border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
     border-image-slice: 95 95;
     border-image-repeat: round;
-    border-width: 90px;
+    border-width: 89px;
     border-style: solid;
 }
 
@@ -392,9 +394,9 @@ $images: "./../../assets";
 
 #environment {
     height: 50px;
-    top: 5px;
-    left: 5px;
-    right: 5px;
+    top: 3px;
+    left: 3px;
+    right: 3px;
     background-color: black;
     border: 1px solid #908271;
 }
@@ -484,9 +486,9 @@ $images: "./../../assets";
 }
 
 #experience {
-    top: 350px;
-    right: 5px;
-    left: 5px;
+    top: 3px;
+    right: 3px;
+    left: 3px;
     background-color: black;
     border: 1px solid #908271;
     padding: 2px;
@@ -504,10 +506,10 @@ $images: "./../../assets";
 }
 
 #bars {
-    top: 418px;
-    right: 5px;
+    top: 3px;
+    right: 3px;
     left: 3px;
-    bottom: 22px;
+    bottom: 3px;
     padding: 2px;
     color: wheat;
     text-align: left;
@@ -549,9 +551,9 @@ $images: "./../../assets";
 }
 
 #body {
-    top: 60px;
-    right: 5px;
-    left: 5px;
+    top: 3px;
+    right: 3px;
+    left: 3px;
     background-color: black;
     border: 1px solid #908271;
     padding: 2px;
@@ -738,9 +740,9 @@ $images: "./../../assets";
 }
 
 #lagMeter {
-    bottom: 5px;
-    right: 5px;
-    left: 5px;
+    bottom: 3px;
+    right: 3px;
+    left: 3px;
 }
 
 #lagmeter.progressbar .progressbar-text {
@@ -759,8 +761,8 @@ $images: "./../../assets";
     text-decoration: none;
     background-image: url(#{$images}/button.png);
     color: wheat;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     background-color: maroon;
     display: inline-block;
     text-align: center;
@@ -793,22 +795,6 @@ $images: "./../../assets";
 
 .button:focus {
     color: wheat;
-}
-
-.button .fa, .button-icon {
-    margin-top: 7px;
-    text-align: center;
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
-}
-
-.button img, .button-icon {
-    /*margin-left: 7px;*/
-    margin-top: 7px;
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
 }
 
 /** button end */

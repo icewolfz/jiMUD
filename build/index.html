@@ -225,9 +225,9 @@
         loadTheme();
         if (!client.options.showButtonBar) {
           $("#buttonbar").css('display', 'none');
-          $("#display-container").css('left', '4px');
-          $("#display-border").css('left', '-3px');
-          $("#command").css('left', '0');
+          $("#display-container").css('left', $("#display-container").offset().left -$("#buttonbar").outerWidth());
+          $("#display-border").css('left', $("#display-border").offset().left -$("#buttonbar").outerWidth());
+          $("#command").css('left', $("#command").offset().left -$("#buttonbar").outerWidth());
         }
         else {
           $("#buttonbar").css('display', '');

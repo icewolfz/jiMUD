@@ -558,60 +558,59 @@ export class Status extends EventEmitter {
             $("#status").css("display", "");
             $("#status-border").css("visibility", "");
             $("#status-border").css("display", "");
-
             $("#display-container").css('right', '');
             $("#display-border").css('right', '');
             $("#command").css('right', '');
         }
         else {
+            var w = $("#status-border").outerWidth()
             $("#status").css("visibility", "hidden");
             $("#status").css("display", "none");
             $("#status-border").css("visibility", "hidden");
             $("#status-border").css("display", "none");
-            $("#display-container").css('right', '7px');
-            $("#display-border").css('right', '0px');
-            $("#command").css('right', '0px');
+            $("#display-container").css('right', (parseInt($("#display-container").css('right'), 10) - w) + "px");
+            $("#display-border").css('right', (parseInt($("#display-border").css('right'), 10) - w) + "px");
+            $("#command").css('right', (parseInt($("#command").css('right'), 10) - w) + "px");
         }
-        var bodyTop = 60;
-        var experienceTop = 350;
-        var barsTop = 418;
-        //288 - 243
-        if (this.client.options.showStatusWeather)
+
+        var top = 0, eTop;
+        $("#body").css('top', '');
+        $("#experience").css('top', '');
+        $("#bars").css('top', '');
+
+        if (this.client.options.showStatusWeather) {
             $("#environment").css("display", '');
-        else {
+            top += $("#environment").outerHeight() + parseInt($("#environment").css("top"), 10);
+        }
+        else
             $("#environment").css("display", 'none');
-            bodyTop -= 55;
-            experienceTop -= 55;
-            barsTop -= 55;
-        }
-        if (!this.client.options.showStatusLimbs && !this.client.options.showStatusHealth) {
+
+        if (!this.client.options.showStatusLimbs && !this.client.options.showStatusHealth)
             $("#body").css("display", 'none');
-            experienceTop -= 290;
-            barsTop -= 290;
-        }
         else {
             $("#body").css("display", '');
+            eTop = parseInt($("#body").css('top'), 10);
             if (this.client.options.showStatusLimbs)
                 $("#limbs").css("display", '');
-            else {
+            else
                 $("#limbs").css("display", 'none');
-                experienceTop -= 237;
-                barsTop -= 237;
-            }
             if (this.client.options.showStatusHealth)
                 $("#hp-status").css("display", '');
-            else {
+            else
                 $("#hp-status").css("display", 'none');
-                experienceTop -= 45;
-                barsTop -= 45;
-            }
+            $("#body").css('top', eTop + top);
+            top += $("#body").outerHeight() + eTop;
         }
-        if (this.client.options.showStatusExperience)
+
+        if (this.client.options.showStatusExperience) {
             $("#experience").css("display", '');
-        else {
-            $("#experience").css("display", 'none');
-            barsTop -= 68;
+            eTop = parseInt($("#experience").css('top'), 10);
+            $("#experience").css('top', eTop + top);
+            top += $("#experience").outerHeight() + eTop;
         }
+        else
+            $("#experience").css("display", 'none');
+
 
         if (this.client.options.showStatusPartyHealth)
             $("#party").css("display", '');
@@ -623,24 +622,20 @@ export class Status extends EventEmitter {
         else
             $("#combat").css("display", 'none');
 
-        $("#body").css('top', bodyTop + "px");
-        $("#experience").css('top', experienceTop + "px");
-        $("#bars").css('top', barsTop + "px");
+        $("#bars").css('top', parseInt($("#bars").css('top'), 10) + top);
 
+        $("#bars").css('bottom', '');
         if (this.lagMeter && this.lagMeter.length > 0) {
             if (this.client.options.lagMeter) {
                 this.lagMeter.css("visibility", "");
                 this.lagMeter.css("display", "");
-                $("#bars").css('bottom', '22px');
+                $("#bars").css('bottom', this.lagMeter.outerHeight() + parseInt(this.lagMeter.css("bottom"), 10) + parseInt($("#bars").css("bottom"), 10) + 'px');                
                 this.updateLagMeter(0, true);
             }
             else {
                 this.lagMeter.css("visibility", "hidden");
                 this.lagMeter.css("display", "none");
-                $("#bars").css('bottom', '5px');
             }
         }
-        else
-            $("#bars").css('bottom', '5px');
     }
 }

@@ -22,11 +22,13 @@ body {
     overflow-y: scroll;
     -webkit-user-select: auto;
     user-select: auto;
+    box-sizing: border-box;
 }
 
 #display-border {
     position: absolute;
     z-index: 1;
+    box-sizing: border-box;
 }
 
 #Character, #CmdCharacter {
@@ -46,18 +48,22 @@ body {
 #command {
     position: absolute;
     z-index: 4;
+    box-sizing: border-box;
 }
 
 #commandbox {
     position: absolute;
+    box-sizing: border-box;
 }
 
 #commandleft {
     float: left;
+    box-sizing: border-box;
 }
 
 #commandright {
     float: right;
+    box-sizing: border-box;
 }
 
 #commandinput {
@@ -71,7 +77,7 @@ body {
 
 #buttonbar {
     z-index: 5;
-    width: 34px;
+    width: 32px;
     position: absolute;
 }
 
@@ -135,16 +141,19 @@ body {
     z-index: 100;
     position: absolute;
     cursor: default;
+    box-sizing: border-box;
 }
 
 #status-border
 {
     position: absolute;
+    box-sizing: border-box;
 }
 
 #environment {
     position: absolute;
     overflow:hidden; 
+    box-sizing: border-box;
 }
 
 #environmentleft
@@ -154,7 +163,7 @@ body {
     left:0px;
     float:left;
     width:50px;
-    height:100%;
+    height:50px;
 }
 
 #environmentcenter
@@ -164,8 +173,7 @@ body {
     left:0px;
     float:left;
     width:50px;
-    height:100%;
-    
+    height:50px;
 }
 
 #environmentright
@@ -175,7 +183,7 @@ body {
     left:0px;
     float:left;
     width:50px;
-    height:100%;
+    height:50px;
 }
 
 #environmentweather
@@ -220,6 +228,7 @@ body {
     position: absolute;
     overflow: auto;
     overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .combat-bar
@@ -245,6 +254,7 @@ body {
 #body
 {
     position: absolute;
+    box-sizing: border-box;
 }
 
 #body svg
@@ -283,6 +293,27 @@ body {
 {
     position: absolute;
     width: auto;
+    box-sizing: border-box;
 }
 
 /*end status*/
+
+.button {
+    box-sizing: border-box;
+}
+
+.button .fa, .button-icon {
+    margin-top: 6px;
+    text-align: center;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+}
+
+.button img, .button-icon {
+    /*margin-left: 7px;*/
+    margin-top: 6px;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+}
