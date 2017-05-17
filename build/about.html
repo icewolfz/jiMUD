@@ -4,6 +4,9 @@
   <head>
     <meta charset="UTF-8">
     <title>jiMUD</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
     <style type="text/css">
       body {
         text-align: center;
@@ -31,7 +34,7 @@
         border-radius: 4px;
         text-align: left;
         border: 1px #333 solid;
-        padding: 4px;        
+        padding: 4px;
         position: absolute;
       }
 
@@ -42,30 +45,58 @@
         top: 176px;
       }
 
-      .info-version
-      {
+      .info-version {
         left: 10px;
         right: 10px;
         top: 145px;
+      }
+
+      #memory td {
+        text-align: center;
+      }
+
+      #memory td {
+        text-align: right;
+      }
+
+      #memory td:first-child {
+        text-align: left;
       }
     </style>
     <script>
       if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
     <script>
       if (window.module) module.module;
     </script>
     <script>
       const { version } = require("../package.json");
+      const { remote } = require('electron');
 
       $(document).ready(() => {
         $("#ev").text(process.versions.electron);
         $("#nv").text(process.versions.node);
         $("#cv").text(process.versions.chrome);
-        $("#jv").text(version);
         $("#logo-version").text("v" + version);
 
+        var mi = remote.app.getAppMemoryInfo();
+
+        var total = [0, 0, 0, 0];
+        for (var i = 0; i < mi.length; i++) {
+          $("#memory tbody").append("<tr><td>" + mi[i].pid + "</td><td>" + mi[i].memory.peakWorkingSetSize + "</td><td>" + mi[i].memory.privateBytes + "</td><td>" + mi[i].memory.sharedBytes + "</td><td>" + mi[i].memory.workingSetSize + "</td></tr>");
+          total[0] += mi[i].memory.peakWorkingSetSize;
+          total[1] += mi[i].memory.privateBytes;
+          total[2] += mi[i].memory.sharedBytes;
+          total[3] += mi[i].memory.workingSetSize;
+        }
+        $("#memory tbody").append("<tr><td>Total:</td><td>" + total[0] + "</td><td>" + total[1] + "</td><td>" + total[2] + "</td><td>" + total[3] + "</td></tr>");
+      });
+
+      $(window).keydown((event) => {
+        if (event.which == 27)
+          window.close();
       });
     </script>
   </head>
@@ -73,10 +104,32 @@
   <body>
     <img id="logo" src="./../assets/logo@3x.png" />
     <div id="logo-version"></div>
-    <div class="box info-version">Version: <span id="jv"></span> </div>
-    <div class="box info">
-      Electron: <span id="ev"></span> - http://electron.atom.io<br/> Node: <span id="nv"></span> - http://www.nodejs.org/<br/> Chromium: <span id="cv"></span> - https://www.chromium.org/Home<br/> Buzz: 1.2.0 - http://buzz.jaysalvat.com<br/> jQuery: 3.1.1 - http://www.jquery.com<br/> Icons - http://opengameart.org/<br/>
-      <br/>&copy; 2017
+    <div style="margin:2px;text-align:left;">
+      <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a></li>
+        <li role="presentation"><a href="#memory" aria-controls="memory" role="tab" data-toggle="tab">Memory</a></li>
+      </ul>
+      <div class="tab-content">
+        <div role="tabpanel" class="container tab-pane fade in active" id="general">
+          Electron: <span id="ev"></span> - http://electron.atom.io<br/> Node: <span id="nv"></span> - http://www.nodejs.org/<br/> Chromium: <span id="cv"></span> - https://www.chromium.org/Home<br/> Buzz: 1.2.0 - http://buzz.jaysalvat.com<br/> jQuery: 3.1.1 - http://www.jquery.com<br/> Icons: http://opengameart.org/<br/> Font Awesome: v4.7.0 - http://http://fontawesome.io/
+          <br/><br/>&copy; 2017
+        </div>
+        <div role="tabpanel" class="tab-pane fade" id="memory" style="height: 185px;overflow: auto;text-align: right">
+          <table id="memory" style="width: 100%;" class="table table-striped table-hover table-condensed">
+            <thead>
+              <tr style="text-align: center">
+                <th>PID</th>
+                <th>Peak Working Set</th>
+                <th>Private</th>
+                <th>Shared</th>
+                <th>Working Set</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </body>
   </div>

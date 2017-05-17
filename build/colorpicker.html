@@ -308,6 +308,11 @@
             function setType(t) { type = t; }
             function setColor(c) { color = c; }
 
+            $(window).keydown((event) => {
+                if (event.which == 27)
+                    window.close();
+            });
+
             $(document).ready(() => {
                 options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
                 loadColors();
@@ -451,7 +456,7 @@
                 html += '</tr></tbody></table>';
                 $('body').append(html);
 
-                $("div").on('click', function() {
+                $("div").on('click', function () {
                     console.log($(this));
                     console.log($(this).data('mce-color'))
                     ipcRenderer.send('set-color', type, $(this).data('mce-color'));

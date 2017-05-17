@@ -10,6 +10,7 @@
   - Theme support, you can now created a css theme file and place it in %appdata%/themes/name.css
     - Default - the default theme
     - Clean - a version of the Default theme with more simple borders and no images.
+  - About dialog now includes memory information.
 - **Changed:**
   - Default button icons have been converted to font-awesome or svg icons for easy themeing and crisper look
 - **Fixed:**

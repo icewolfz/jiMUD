@@ -29,7 +29,6 @@
 - look into reducing memory
 - Re-code the inline variables and functions for parse om the parsing system instead of simple js replace function calls, should improve speed as will not have to call all functions all the time
 - Cleanup and optimize code as much as possible
-- Expand about dialog to have a memory tab to display data about memory/cpu/progress data using new electron 1.6.9 api, [app.getAppMemoryInfo()](https://github.com/electron/electron/blob/master/docs/api/app.md#appgetappmemoryinfo), [getProcessMemoryInfo, getSystemMemoryInfo, getCPUUsage](https://github.com/electron/electron/blob/master/docs/api/process.md#processgetprocessmemoryinfo)
 - See about making an xp needed progress bar based on xp required to level
 ## Immortal tools
 - Add an interface to allow uploading/downloading of files with context menus to manipulate remote/local files
