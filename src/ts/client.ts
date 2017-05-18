@@ -107,12 +107,6 @@ export class Client extends EventEmitter {
 
     constructor(display, command) {
         super();
-        process.on('uncaughtException', (err) => {
-            if (err.code == "ECONNREFUSED")
-                this._autoError = true;
-            this.error(err);
-        });
-
         if (command === null || typeof command == 'undefined') {
             throw "Missing command input";
         }

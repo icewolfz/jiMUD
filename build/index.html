@@ -19,6 +19,15 @@
       //cSpell:ignore ismap hellip selectall lagmeter
       if (window.module) module.module;
 
+      process.on('uncaughtException', (err) => {
+        if (err.code == "ECONNREFUSED")
+          this._autoError = true;
+        if (client)
+          client.error(err);
+        else
+          console.log(err);
+      });
+
       window.$selected = '';
       window.$selectedurl = '';
       window.$selectedline = '';
