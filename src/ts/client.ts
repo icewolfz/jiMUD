@@ -107,7 +107,6 @@ export class Client extends EventEmitter {
 
     constructor(display, command) {
         super();
-
         process.on('uncaughtException', (err) => {
             if (err.code == "ECONNREFUSED")
                 this._autoError = true;
@@ -307,7 +306,7 @@ export class Client extends EventEmitter {
             lines = null;
             this.display.addClass("animate");
         });
-        this.parser.on('set-title', (title, type) => {
+        this.parser.on('set-title', (title, type) => { 
 
             if (typeof title == "undefined" || title === null || title.length === 0)
                 window.document.title = this.defaultTitle;

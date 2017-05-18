@@ -2256,7 +2256,7 @@ export function init() {
                 addItem('Context', 'contexts', new Context())
             }
         }));
-        addMenu.popup(remote.getCurrentWindow(), x, y);
+        addMenu.popup(remote.getCurrentWindow(), {x:x, y:y});
     });
 
     $("#macro-key").keydown(function (e) {
@@ -2476,7 +2476,7 @@ export function init() {
         exportmenu.append(new MenuItem({
             label: 'Import...', click: importProfiles
         }));
-        exportmenu.popup(remote.getCurrentWindow(), x, y);
+        exportmenu.popup(remote.getCurrentWindow(), {x:x, y:y});
     })
 
     loadOptions();
