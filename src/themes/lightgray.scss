@@ -418,7 +418,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 #lefthandweapon {
     top: 85px;
-    background-color: #{$panelInsetBackground};
+    background-color: #666;
     border: 1px solid #{$borderColor};
     width: 32px;
     height: 32px;
@@ -427,7 +427,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 #righthandweapon {
     top: 85px;
-    background-color: #{$panelInsetBackground};
+    background-color: #666;
     border: 1px solid #{$borderColor};
     width: 32px;
     height: 32px;
@@ -514,6 +514,12 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 #armor {
     right: 2px;
+}
+
+#overall {
+    background: #aaa;
+    border-radius: 4px;
+    margin-bottom: 2px;
 }
 
 .health-100 {
@@ -678,6 +684,10 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     padding-bottom: 4px;
 }
 
+#fullbody {
+    filter: drop-shadow(0px 0px 0px black);
+}
+
 /** end stats **/
 /** button stats */
 
@@ -697,7 +707,6 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 .button {
     color: #{$color};
-    border: 1px solid #{$borderColor};
     margin-bottom: 2px;
     text-shadow: 0 1px 0 #fff;
     background-image: linear-gradient(to bottom, #fff 0, #e0e0e0 100%);
@@ -716,35 +725,51 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 .button svg {
     fill: #{$color};
-}
-
-.button.on {
-    background-color: #d70000;
-    color: #{$color};
-}
-
-.button.on:hover {
-    background-color: #790000;
-    color: #{$color};
-}
-
-.button.on:active {
-    background-color: maroon;
-    color: #{$color};
-}
-
-.button:hover {
-    background-color: #d70000;
-    color: #{$color};
+    filter: drop-shadow(1px 1px 0px #fff);
 }
 
 .button:active {
-    background-color: #790000;
-    color: #{$color};
+    background-color: #e0e0e0;
+    border-color: #dbdbdb;
+    background-image: none;
+    box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
 }
 
-.button:focus {
+.button.on {
+    background-color: #666;
+    border-color: #ccc;
+    background-image: none;
+    text-shadow: 0 1px 0 #{$color};
+    color: #fff;
+}
+
+.button.on svg
+{
+    fill: #fff;
+    filter: drop-shadow(1px 1px 0px #{$color});
+}
+
+.button.on:hover svg
+{
+    fill: #{$color};
+    filter: drop-shadow(1px 1px 0px #fff);
+}
+
+.button.on:active, .button.on:focus {
+    background-color: #666;
+    border-color: #fff;
+    background-image: none;
+    text-shadow: 0 1px 0 #{$color};
+    color: #fff;
+}
+
+.button:hover, .button:focus, .button.on:hover {
     color: #{$color};
+    background-color: #e0e0e0;
+    background-position: 0 -15px;
+    color: #333;
+    border-color: #adadad;    
+    text-decoration: none;
 }
 
 #connect img {
