@@ -1,73 +1,75 @@
 /* --- Start CSS for ansi display --- */
 
 @-webkit-keyframes blinker {
-	0% {
-		opacity: 1.0;
-	}
-	50% {
-		opacity: 0.0;
-	}
-	100% {
-		opacity: 1.0;
-	}
+    0% {
+        opacity: 1.0;
+    }
+    50% {
+        opacity: 0.0;
+    }
+    100% {
+        opacity: 1.0;
+    }
 }
 
 @keyframes blinker {
-	0% {
-		opacity: 1.0;
-	}
-	50% {
-		opacity: 0.0;
-	}
-	100% {
-		opacity: 1.0;
-	}
+    0% {
+        opacity: 1.0;
+    }
+    50% {
+        opacity: 0.0;
+    }
+    100% {
+        opacity: 1.0;
+    }
 }
 
 .animate .ansi-blink {
-	text-decoration: blink;
-	animation-name: blinker;
-	animation-iteration-count: infinite;
-	animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
-	animation-duration: 1s;
-	-webkit-animation-name: blinker;
-	-webkit-animation-iteration-count: infinite;
-	-webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
-	-webkit-animation-duration: 1s;
+    text-decoration: blink;
+    animation-name: blinker;
+    animation-iteration-count: infinite;
+    animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+    animation-duration: 1s;
+    -webkit-animation-name: blinker;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+    -webkit-animation-duration: 1s;
 }
 
 .ansi {
-	padding: 0px;
-	margin: 0px;
-	display: inline-block;
-	padding-top: 1px;
+    padding: 0px;
+    margin: 0px;
+    display: inline-block;
+    padding-top: 1px;
 }
 
 .line {
-	word-wrap: break-word;
-	word-break: break-all;
-	width: 100%;
-	/*display: block;*/
-	padding-bottom: 1px;
-	clear: both;
-	line-height: normal;
-	white-space: pre;
+    word-wrap: break-word;
+    word-break: break-all;
+    width: 100%;
+    /*display: block;*/
+    padding-bottom: 1px;
+    clear: both;
+    line-height: normal;
+    white-space: pre;
 }
 
 .line hr {
-	border: 0px;
+    border: 0px;
 }
 
 
 /* --- End CSS for ansi display --- */
 
-.line a, .line a:link {
-	color: inherit;
-	font-weight: inherit;
-	text-decoration: underline;
+.line a,
+.line a:link {
+    color: inherit;
+    font-weight: inherit;
+    text-decoration: underline;
 }
 
-.URLLink, .URLLink:link {
-	text-decoration: underline;
-	cursor: pointer;
+.URLLink,
+.URLLink:link {
+    text-decoration: underline;
+    cursor: pointer;
 }

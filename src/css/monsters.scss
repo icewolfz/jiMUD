@@ -1,5 +1,4 @@
 $monsters :'./../../assets/monsters';
-
 .monster-black-dragon {
     background-image: url(#{$monsters}/BlackDragon90.png);
     background-size: 32px 32px;
@@ -42,6 +41,8 @@ $monsters :'./../../assets/monsters';
     background-image: url(#{$monsters}/32x32-5.PNG);
     background-position: -352px -800px;
 }
+
+
 /*
 .monster-amphibian {
     background-image: url(#{$monsters}/32x32-2.PNG);
@@ -188,6 +189,7 @@ $monsters :'./../../assets/monsters';
     background-position: -640px -32px;
 }
 */
+
 .monster-dragon {
     background-image: url(#{$monsters}/32x32-6.png);
     background-position: -808px -184px;
@@ -199,6 +201,8 @@ $monsters :'./../../assets/monsters';
         background-position: -808px -280px;
     }
 }
+
+
 /*
 .monster-drake {
     background-image: url(#{$monsters}/32x32-2.PNG);
@@ -475,10 +479,13 @@ $monsters :'./../../assets/monsters';
     background-position: -640px -32px;
 }
 */
+
 .monster-rodent {
     background-image: url(#{$monsters}/32x32-2.PNG);
     background-position: -640px -32px;
 }
+
+
 /*
 .monster-satyr {
     background-image: url(#{$monsters}/32x32-2.PNG);

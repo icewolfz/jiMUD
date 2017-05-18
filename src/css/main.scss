@@ -1,5 +1,4 @@
 $images: "./../../assets";
-
 body {
     -webkit-user-select: none;
     user-select: none;
@@ -37,7 +36,8 @@ body {
     box-sizing: border-box;
 }
 
-#Character, #CmdCharacter {
+#Character,
+#CmdCharacter {
     position: absolute;
     visibility: hidden;
     height: auto;
@@ -97,7 +97,8 @@ body {
     z-index: 100;
 }
 
-#find input, #find input:focus {
+#find input,
+#find input:focus {
     outline: none;
     position: relative;
 }
@@ -107,7 +108,8 @@ body {
     outline: none;
 }
 
-#find button:hover, #find button.active:hover {
+#find button:hover,
+#find button.active:hover {
     cursor: default;
 }
 
@@ -123,11 +125,14 @@ body {
     display: inline-block;
 }
 
-#find-regex, #find-selection {
+#find-regex,
+#find-selection {
     display: none !important;
 }
 
+
 /** status */
+
 #status {
     z-index: 100;
     position: absolute;
@@ -239,11 +244,16 @@ body {
     image-rendering: crisp-edges;
 }
 
-#armor, #health, #health.on:hover, #armor.on:hover {
+#armor,
+#health,
+#health.on:hover,
+#armor.on:hover {
     position: absolute;
 }
 
-#tail, #leftwing, #rightwing {
+#tail,
+#leftwing,
+#rightwing {
     display: none;
 }
 
@@ -266,5 +276,6 @@ body {
     width: auto;
     box-sizing: border-box;
 }
+
 
 /*end status*/

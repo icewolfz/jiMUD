@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
     height: 100%;
     width: 100%;
     overflow: hidden;
@@ -12,7 +13,9 @@ textarea {
 
 /*Container, container body, iframe*/
 
-.mce-tinymce, .mce-container-body, #code_ifr {
+.mce-tinymce,
+.mce-container-body,
+#code_ifr {
     min-height: 100% !important;
 }
 
@@ -121,10 +124,9 @@ i.mce-i-fa-open:before {
     left: 19px;
 }
 
-.mce-i-flash
-{
-	background-image: url(../../assets/icons/png/flash.png) !important;
-	border: 1px dashed #333333 !important;
+.mce-i-flash {
+    background-image: url(../../assets/icons/png/flash.png) !important;
+    border: 1px dashed #333333 !important;
     /*
     animation-name: blinker;
 	animation-iteration-count: infinite;
@@ -138,32 +140,33 @@ i.mce-i-fa-open:before {
 }
 
 @-webkit-keyframes blinker {
-	0% {
-		opacity: 1.0;
-	}
-	50% {
-		opacity: 0.0;
-	}
-	100% {
-		opacity: 1.0;
-	}
+    0% {
+        opacity: 1.0;
+    }
+    50% {
+        opacity: 0.0;
+    }
+    100% {
+        opacity: 1.0;
+    }
 }
 
 @keyframes blinker {
-	0% {
-		opacity: 1.0;
-	}
-	50% {
-		opacity: 0.0;
-	}
-	100% {
-		opacity: 1.0;
-	}
+    0% {
+        opacity: 1.0;
+    }
+    50% {
+        opacity: 0.0;
+    }
+    100% {
+        opacity: 1.0;
+    }
 }
 
 .mce-custom-color-btn div {
     text-align: center;
 }
+
 
 /**color icon start**/
 

@@ -1,7 +1,6 @@
 $images: "./../../assets";
 $borderColor: "#908271";
 $color: "wheat";
-
 #display-container {
     left: 35px;
     right: 181px;
@@ -84,16 +83,20 @@ $color: "wheat";
     bottom: 0;
 }
 
+
 /* Let's get this party started */
 
-#display::-webkit-scrollbar, #bars::-webkit-scrollbar {
+#display::-webkit-scrollbar,
+#bars::-webkit-scrollbar {
     width: 12px;
     height: 12px;
 }
 
+
 /* Track */
 
-#display::-webkit-scrollbar-track, #bars::-webkit-scrollbar-track {
+#display::-webkit-scrollbar-track,
+#bars::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     -webkit-border-radius: 10px;
@@ -102,9 +105,11 @@ $color: "wheat";
     border: 1px solid #494238;
 }
 
+
 /* Handle */
 
-#display::-webkit-scrollbar-thumb, #bars::-webkit-scrollbar-thumb {
+#display::-webkit-scrollbar-thumb,
+#bars::-webkit-scrollbar-thumb {
     -webkit-border-radius: 10px;
     border-radius: 10px;
     background: #33302b;
@@ -113,11 +118,13 @@ $color: "wheat";
     border: 1px solid #{$borderColor};
 }
 
-#display::-webkit-scrollbar-thumb:window-inactive, #bars::-webkit-scrollbar-thumb:window-inactive {
+#display::-webkit-scrollbar-thumb:window-inactive,
+#bars::-webkit-scrollbar-thumb:window-inactive {
     background: rgba(51, 48, 43, 0.4);
 }
 
-#display::-webkit-scrollbar-corner, #bars::-webkit-scrollbar-corner {
+#display::-webkit-scrollbar-corner,
+#bars::-webkit-scrollbar-corner {
     background-color: black;
 }
 
@@ -133,7 +140,8 @@ $color: "wheat";
     background-color: rgb(40, 0, 0);
 }
 
-#find input, #find input:focus {
+#find input,
+#find input:focus {
     border: 1px solid #{$borderColor};
     width: 100px;
     background-color: inherit;
@@ -170,7 +178,8 @@ $color: "wheat";
     border-radius: 2px;
 }
 
-#find button:hover, #find button.active:hover {
+#find button:hover,
+#find button.active:hover {
     border: 1px solid #{$color};
     background-color: #d70000;
     color: #{$color};
@@ -180,7 +189,8 @@ $color: "wheat";
     border: 1px solid #0052A4;
 }
 
-#find button:disabled, #find button:disabled:hover {
+#find button:disabled,
+#find button:disabled:hover {
     border: 1px solid transparent;
     color: #555;
     background-color: inherit;
@@ -215,15 +225,18 @@ $color: "wheat";
     border-top: 1px solid #3399ff;
 }
 
-.find-highlight.start, .find-highlight.current.start {
+.find-highlight.start,
+.find-highlight.current.start {
     border-radius: 4px 0px 0px 4px;
 }
 
-.find-highlight.middle, .find-highlight.current.middle {
+.find-highlight.middle,
+.find-highlight.current.middle {
     border-radius: 0px;
 }
 
-.find-highlight.end, .find-highlight.current.end {
+.find-highlight.end,
+.find-highlight.current.end {
     border-radius: 0px 4px 4px 0px;
 }
 
@@ -237,6 +250,7 @@ $color: "wheat";
     border-bottom: 1px solid #74C072;
     border-top: 1px solid #74C072;
 }
+
 
 /* begin status */
 
@@ -284,7 +298,8 @@ $color: "wheat";
     background-image: url("#{$images}/status/sunrisebg.png");
 }
 
-.twilight #environmentcenter, .dawn #environmentcenter {
+.twilight #environmentcenter,
+.dawn #environmentcenter {
     background-image: url("#{$images}/status/sunset.png");
 }
 
@@ -661,7 +676,6 @@ $color: "wheat";
     width: 118px;
     -webkit-border-radius: 6px;
     border-radius: 6px;
-
     /* future proofing */
     background: -webkit-linear-gradient(left, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
     background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
@@ -701,7 +715,10 @@ $color: "wheat";
     padding-bottom: 4px;
 }
 
+
 /** end stats **/
+
+
 /** button stats */
 
 #advedit {
@@ -712,7 +729,7 @@ $color: "wheat";
     border: 0px;
     background-color: transparent;
     height: 16px;
-    width: 16px;    
+    width: 16px;
 }
 
 #advedit:hover {
@@ -766,5 +783,6 @@ $color: "wheat";
     background-image: none;
     border: 1px solid #{$color};
 }
+
 
 /** button end */

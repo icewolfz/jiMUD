@@ -3,7 +3,6 @@ $borderColor: "rgb(204, 204, 204)";
 $color: "#333";
 $panelBackground: "rgb(240, 240, 240)";
 $panelInsetBackground: "rgb(240, 240, 240)";
-
 #client {
     background-color: #{$panelBackground};
 }
@@ -54,7 +53,8 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background-color: white;
 }
 
-#commandleft, #commandright {
+#commandleft,
+#commandright {
     display: none;
 }
 
@@ -77,32 +77,41 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     padding: 1px;
 }
 
+
 /* Let's get this party started */
 
-#display::-webkit-scrollbar, #bars::-webkit-scrollbar {
+#display::-webkit-scrollbar,
+#bars::-webkit-scrollbar {
     width: 12px;
     height: 12px;
 }
 
+
 /* Track */
 
-#display::-webkit-scrollbar-track, #bars::-webkit-scrollbar-track {
+#display::-webkit-scrollbar-track,
+#bars::-webkit-scrollbar-track {
     background-color: #{$panelBackground};
 }
 
+
 /* Handle */
 
-#display::-webkit-scrollbar-thumb, #bars::-webkit-scrollbar-thumb {
+#display::-webkit-scrollbar-thumb,
+#bars::-webkit-scrollbar-thumb {
     background: #aaa;
     border: 1px solid #{$borderColor};
 }
 
-#display::-webkit-scrollbar-thumb:window-inactive, #bars::-webkit-scrollbar-thumb:window-inactive {
+#display::-webkit-scrollbar-thumb:window-inactive,
+#bars::-webkit-scrollbar-thumb:window-inactive {
     background: #888;
 }
 
-#display::-webkit-scrollbar-corner, #bars::-webkit-scrollbar-corner {
-    background-color: #{$panelBackground};;
+#display::-webkit-scrollbar-corner,
+#bars::-webkit-scrollbar-corner {
+    background-color: #{$panelBackground};
+    ;
     border-top:1px solid #{$borderColor};
     border-left:1px solid #{$borderColor};
 }
@@ -119,7 +128,8 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background-color: rgb(40, 0, 0);
 }
 
-#find input, #find input:focus {
+#find input,
+#find input:focus {
     border: 1px solid #{$borderColor};
     width: 100px;
     background-color: inherit;
@@ -156,7 +166,8 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     border-radius: 2px;
 }
 
-#find button:hover, #find button.active:hover {
+#find button:hover,
+#find button.active:hover {
     border: 1px solid #{$color};
     background-color: #d70000;
     color: #{$color};
@@ -166,7 +177,8 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     border: 1px solid #0052A4;
 }
 
-#find button:disabled, #find button:disabled:hover {
+#find button:disabled,
+#find button:disabled:hover {
     border: 1px solid transparent;
     color: #555;
     background-color: inherit;
@@ -201,15 +213,18 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     border-top: 1px solid #3399ff;
 }
 
-.find-highlight.start, .find-highlight.current.start {
+.find-highlight.start,
+.find-highlight.current.start {
     border-radius: 4px 0px 0px 4px;
 }
 
-.find-highlight.middle, .find-highlight.current.middle {
+.find-highlight.middle,
+.find-highlight.current.middle {
     border-radius: 0px;
 }
 
-.find-highlight.end, .find-highlight.current.end {
+.find-highlight.end,
+.find-highlight.current.end {
     border-radius: 0px 4px 4px 0px;
 }
 
@@ -223,6 +238,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     border-bottom: 1px solid #74C072;
     border-top: 1px solid #74C072;
 }
+
 
 /* begin status */
 
@@ -261,7 +277,8 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background-image: url("#{$images}/status/sunrisebg.png");
 }
 
-.twilight #environmentcenter, .dawn #environmentcenter {
+.twilight #environmentcenter,
+.dawn #environmentcenter {
     background-image: url("#{$images}/status/sunset.png");
 }
 
@@ -644,7 +661,6 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     width: 118px;
     -webkit-border-radius: 6px;
     border-radius: 6px;
-
     /* future proofing */
     background: -webkit-linear-gradient(left, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
     background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
@@ -688,7 +704,10 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     filter: drop-shadow(0px 0px 0px black);
 }
 
+
 /** end stats **/
+
+
 /** button stats */
 
 #advedit {
@@ -697,7 +716,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     height: 24px;
     width: 24px;
     font-size: 22px;
-    line-height: 22px;    
+    line-height: 22px;
 }
 
 #advedit .fa {
@@ -718,7 +737,8 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     border: 1px solid #ccc;
 }
 
-.button img, .button-icon {
+.button img,
+.button-icon {
     margin-top: 5px;
     margin-left: 5px;
 }
@@ -732,7 +752,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background-color: #e0e0e0;
     border-color: #dbdbdb;
     background-image: none;
-    box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
 }
 
 .button.on {
@@ -743,19 +763,18 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     color: #fff;
 }
 
-.button.on svg
-{
+.button.on svg {
     fill: #fff;
     filter: drop-shadow(1px 1px 0px #{$color});
 }
 
-.button.on:hover svg
-{
+.button.on:hover svg {
     fill: #{$color};
     filter: drop-shadow(1px 1px 0px #fff);
 }
 
-.button.on:active, .button.on:focus {
+.button.on:active,
+.button.on:focus {
     background-color: #666;
     border-color: #fff;
     background-image: none;
@@ -763,12 +782,14 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     color: #fff;
 }
 
-.button:hover, .button:focus, .button.on:hover {
+.button:hover,
+.button:focus,
+.button.on:hover {
     color: #{$color};
     background-color: #e0e0e0;
     background-position: 0 -15px;
     color: #333;
-    border-color: #adadad;    
+    border-color: #adadad;
     text-decoration: none;
 }
 
@@ -819,5 +840,6 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background: url(#{$images}/icons/png/map.black.png) no-repeat;
     background-position: 5px -1px;
 }
+
 
 /** button end */
