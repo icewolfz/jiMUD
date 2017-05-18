@@ -222,13 +222,15 @@
         theme = parseTemplate(theme) + ".css";
         if (!fs.existsSync(theme))
           theme = parseTemplate(path.join("{themes}", "default")) + ".css";
-        if ($("#theme").attr('href') != theme) {
-          $("#theme").attr('href', theme);
-          $("#theme", $("#display-frame").contents().find("head")).attr('href', theme);
-        }
+        var el = $("#theme");
+        if (el.attr('href') != theme)
+          el.attr('href', theme);
+        el = $("#theme", $("#display-frame").contents().find("head"));
+        if (el.attr('href') != theme)
+          el.attr('href', theme);
       }
 
-      function updateInterface(options) {
+      function updateInterface() {
         loadTheme(client.options.theme);
         $("#display-container").css('left', '');
         $("#display-border").css('left', '');

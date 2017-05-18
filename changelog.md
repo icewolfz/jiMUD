@@ -13,6 +13,7 @@
   - About dialog now includes memory information.
 - **Changed:**
   - Default button icons have been converted to font-awesome or svg icons for easy themeing and crisper look
+  - Upgrade electron to 1.7.1, fixes a few crashers with --debug
 - **Fixed:**
   - Ansi parser would return empty elements due to changing styles and colors, the empty blocks are now removed when the lines have been added, should reduce memory
   - Preferences was not saving display/command font setting

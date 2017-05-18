@@ -87,31 +87,24 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 /* Track */
 
 #display::-webkit-scrollbar-track, #bars::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background-color: #191814;
-    border: 1px solid #494238;
+    background-color: #{$panelBackground};
 }
 
 /* Handle */
 
 #display::-webkit-scrollbar-thumb, #bars::-webkit-scrollbar-thumb {
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background: #33302b;
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    background: #aaa;
     border: 1px solid #{$borderColor};
 }
 
 #display::-webkit-scrollbar-thumb:window-inactive, #bars::-webkit-scrollbar-thumb:window-inactive {
-    background: rgba(51, 48, 43, 0.4);
+    background: #888;
 }
 
 #display::-webkit-scrollbar-corner, #bars::-webkit-scrollbar-corner {
-    background-color: black;
+    background-color: #{$panelBackground};;
+    border-top:1px solid #{$borderColor};
+    border-left:1px solid #{$borderColor};
 }
 
 #find {
