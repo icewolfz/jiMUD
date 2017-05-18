@@ -144,7 +144,8 @@ export class Settings {
 		word: false,
 		reverse: false,
 		regex: false,
-		selection: false
+		selection: false,
+		show: false
 	}
 
 	public scrollLocked: boolean = false;

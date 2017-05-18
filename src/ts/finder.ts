@@ -140,12 +140,14 @@ export class Finder extends EventEmitter {
             $("input", this._control).val(sel);
         $("input", this._control).focus().select();
         this.find();
+        this.emit('shown');
     }
 
     hide() {
         this._control.slideUp(() => {
             $("input", this._control).val('');
             this.clear();
+            this.emit('closed');
         });
     }
 

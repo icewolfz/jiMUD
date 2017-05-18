@@ -987,9 +987,20 @@
           client.options.find.reverse = _finder.Reverse;
           client.saveOptions();
         })
+        _finder.on('shown', () => {
+          client.options.find.show = true;
+          client.saveOptions();
+        })
+        _finder.on('closed', () => {
+          client.options.find.show = false;
+          client.saveOptions();
+        })
+
         _finder.MatchCase = client.options.find.case;
         _finder.MatchWord = client.options.find.word;
         _finder.Reverse = client.options.find.reverse;
+        if (client.options.find.show)
+          _finder.show();
       };
 
       function executeContext(item) {

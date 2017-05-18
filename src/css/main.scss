@@ -108,6 +108,11 @@ body {
     outline: none;
 }
 
+#find button:disabled,
+#find button:disabled:hover {
+    cursor: not-allowed;
+}
+
 #find button:hover,
 #find button.active:hover {
     cursor: default;
