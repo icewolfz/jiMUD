@@ -1,13 +1,14 @@
 ## Changelog
-##### 0.2.0
+##### 0.2.0 - 2017-05-19
 - **New:**
-  - Add ${varibale.FUNCTION} format support to allow simlar format to javascript.
+  - Add ${variable.FUNCTION} format support to allow similar format to javascript.
   - Add find text system to main client
     - Match case - ignore case or not
     - Match word - match exact word
+    - Regular Expression - allow use of regular expressions to match text
     - Result list - show you how many results found and current one at
     - High light - will highlight all matches
-  - Theme support, you can now created a css theme file and place it in %appdata%/themes/name.css
+  - Theme support, you can now created a css theme file and place it in %appdata%/themes/name.css or mydocumnts/jiMUD/themes/name.css
     - Default - the default theme
     - Clean - a version of the Default theme with more simple borders and no images.
   - About dialog now includes memory information.
