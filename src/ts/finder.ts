@@ -156,6 +156,7 @@ export class Finder extends EventEmitter {
         this.clear();
         if (val.length === 0) {
             $("#find-count", this._control).html("No Results")
+            this.emit('found-results', this._results);
             return;
         }
         var hs = this._display.text();
@@ -203,6 +204,7 @@ export class Finder extends EventEmitter {
         if (this.Reverse)
             this._results.reverse();
         this.gotoResult(0, !focus);
+        this.emit('found-results', this._results);
     }
 
     gotoNext() {
@@ -223,6 +225,7 @@ export class Finder extends EventEmitter {
         if (idx < 0) idx = 0;
         if (idx >= this._results.length)
             idx = this._results.length - 1;
+        this.emit('moved', this._position, idx);
         this._position = idx;
         this.updateCount();
         $(".current", this._display).removeClass("current");
@@ -231,8 +234,6 @@ export class Finder extends EventEmitter {
             if (focus)
                 this._results[this._position].els[0].scrollIntoView(false);
         }
-
-
         this.updateButtons();
     }
 
@@ -243,6 +244,7 @@ export class Finder extends EventEmitter {
             $(this).replaceWith(this.textContent);
         });
         this.updateButtons();
+        this.emit('reset');
     }
 
     private updateButtons() {

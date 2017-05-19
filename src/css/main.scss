@@ -28,6 +28,19 @@ body {
     -webkit-user-select: auto;
     user-select: auto;
     box-sizing: border-box;
+
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    color: #BBBBBB;
+    border: 0px solid silver;
+    font-family: "Courier New", monospace;
+    text-align: left;
+    font-size: 1em;
+    background-color: black;
+    text-shadow: none;
+    padding: 2px;
 }
 
 #display-border {

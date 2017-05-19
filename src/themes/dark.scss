@@ -1,6 +1,12 @@
 $images: "./../../assets";
-$borderColor: "#908271";
-$color: "wheat";
+$borderColor: "#414141";
+$color: "#d4d4d4";
+$panelBackground: "#1e1e1e";
+$panelInsetBackground: "#252526";
+#client {
+    background-color: #{$panelBackground};
+}
+
 #display-container {
     left: 36px;
     right: 170px;
@@ -42,7 +48,7 @@ $color: "wheat";
     margin: 0px;
     border: 0px;
     background-color: transparent;
-    color: wheat;
+    color: #{$color};
     box-sizing: border-box;
     padding: 0;
 }
@@ -51,6 +57,7 @@ $color: "wheat";
     top: 2px;
     left: 2px;
     bottom: 2px;
+    background-color: #{$panelBackground};
 }
 
 
@@ -67,12 +74,12 @@ $color: "wheat";
 
 #display::-webkit-scrollbar-track,
 #bars::-webkit-scrollbar-track {
+    background-color: #{$panelBackground};
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     -webkit-border-radius: 10px;
     border-radius: 10px;
-    background-color: #191814;
-    border: 1px solid #494238;
+    border: 1px solid #{$borderColor};
 }
 
 
@@ -95,19 +102,21 @@ $color: "wheat";
 
 #display::-webkit-scrollbar-corner,
 #bars::-webkit-scrollbar-corner {
-    background-color: black;
+    background-color: #{$panelBackground};
+    border-top:1px solid #{$borderColor};
+    border-left:1px solid #{$borderColor};
 }
 
 #find {
     top: 5px;
     right: 20px;
-    color: #BBBBBB;
+    color: #{$color};
     padding: 2px;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 1em;
     border-radius: 4px;
     border: 1px solid #{$borderColor};
-    background-color: rgb(40, 0, 0);
+    background-color : #{$panelBackground};
 }
 
 #find input,
@@ -123,9 +132,9 @@ $color: "wheat";
 }
 
 #find input:focus {
-    border: 1px solid maroon;
-    color: wheat;
-    background: rgba(128, 0, 0, 0.5);
+    border: 1px solid #{$borderColor};
+    color: #{$color};
+    background: #{$panelBackground};
 }
 
 #find button .fa {
@@ -148,15 +157,20 @@ $color: "wheat";
     border-radius: 2px;
 }
 
-#find button:hover,
+#find button:hover {
+    border: 1px solid #{$color};
+    background-color: #2a2d2e;
+    color: #{$color};
+}
+
 #find button.active:hover {
-    border: 1px solid wheat;
-    background-color: #d70000;
-    color: wheat;
+    border: 1px solid #{$color};
+    color: #2a2d2e;
+    background-color: #{$color};
 }
 
 #find button:active {
-    border: 1px solid #0052A4;
+    border: 1px solid #fff;
 }
 
 #find button:disabled,
@@ -167,9 +181,9 @@ $color: "wheat";
 }
 
 #find button.active {
-    border: 1px solid maroon;
-    background: rgba(128, 0, 0, 0.5);
-    color: wheat;
+    border: 1px solid #3f3f46;
+    background: rgba(63, 63, 70, 0.5);
+    color: #{$color};
 }
 
 #find-count {
@@ -230,7 +244,7 @@ $color: "wheat";
     right: 2px;
     top: 2px;
     bottom: 2px;
-    background-color: rgb(40, 0, 0);
+    background-color: #{$panelInsetBackground};
     border: 1px solid #{$borderColor};
     padding: 2px;
 }
@@ -351,7 +365,7 @@ $color: "wheat";
 }
 
 #character-name {
-    color: wheat;
+    color: #{$color};
     padding: 0 22px;
     font-size: 1.2em;
 }
@@ -441,7 +455,7 @@ $color: "wheat";
     background-color: black;
     border: 1px solid #{$borderColor};
     padding: 2px;
-    color: wheat;
+    color: #{$color};
     text-align: left;
 }
 
@@ -460,7 +474,7 @@ $color: "wheat";
     left: 3px;
     bottom: 3px;
     padding: 2px;
-    color: wheat;
+    color: #{$color};
     text-align: left;
 }
 
@@ -645,7 +659,7 @@ $color: "wheat";
 
 #hp-status {
     text-align: left;
-    color: wheat;
+    color: #{$color};
 }
 
 .progressbar .progressbar-text {
@@ -659,7 +673,7 @@ $color: "wheat";
 .progressbar .progressbar-value {
     height: 100%;
     width: 0%;
-    background-color: wheat;
+    background-color: #{$color};
 }
 
 #lagMeter {
@@ -699,16 +713,16 @@ $color: "wheat";
 }
 
 #advedit:hover {
-    background-color: #d70000;
+    background-color: #3f3f46;
 }
 
 #advedit:active {
-    background-color: #790000;
+    background-color: #2a2d2e;
 }
 
 .button {
-    color: wheat;
-    background-color: maroon;
+    color: #{$color};
+    background-color: #252526;
     border: 1px solid #{$borderColor};
     margin-bottom: 2px;
 }
@@ -723,34 +737,47 @@ $color: "wheat";
     margin-left: 5px;
 }
 
-.button.on {
-    background-color: #d70000;
-    color: wheat;
-}
-
-.button.on:hover {
-    background-color: #790000;
-    color: wheat;
-}
-
-.button.on:active {
-    background-color: maroon;
-    color: wheat;
-}
-
 .button:hover {
-    background-color: #d70000;
-    color: wheat;
+    background-color: #2a2d2e;
+    color: #{$color};
 }
 
 .button:active {
-    background-color: #790000;
-    color: wheat;
+    color: #3f3f46;
+    background-color: #{$color};
 }
 
-.button:focus {
-    color: wheat;
+.button:active svg {
+    fill: #3f3f46;
 }
+
+.button.on {
+    background-color: #3f3f46;
+    color: #{$color};
+}
+
+.button.on:hover {
+    color: #2a2d2e;
+    background-color: #{$color};
+}
+
+.button.on:hover svg {
+    fill: #2a2d2e;
+}
+
+.button.on svg {
+    fill: #{$color};
+}
+
+.button.on:active {
+    background-color: #3f3f46;
+    color: #{$color};
+}
+
+.button.on:active svg {
+    fill: #{$color};
+}
+
 
 
 /** button end */

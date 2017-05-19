@@ -632,6 +632,9 @@
           if (!active && client.connected)
             ipcRenderer.send('set-overlay', 2);
         });
+        client.on('parse-done', (lines) => {
+          _finder.find(false);
+        });
 
         this.client.on('received-GMCP', (mod, obj) => {
           ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });

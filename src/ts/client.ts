@@ -283,12 +283,12 @@ export class Client extends EventEmitter {
         this.parser.on("parse-done", () => {
             this.display.removeClass("animate");
             if (this.lineCache.length > 0) {
-                this.emit('parse-done', this.lineCache);
                 var bar = this.display.hasHorizontalScrollBar();
                 this.display.append(this.lineCache.join(''));
                 if (bar != this.display.hasHorizontalScrollBar())
                     this.UpdateWindow();
                 this.scrollDisplay();
+                this.emit('parse-done', this.lineCache);
                 this.lineCache = [];
             }
             var lines = $(this.lineID);

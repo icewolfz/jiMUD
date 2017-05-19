@@ -16,21 +16,6 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     padding: 0px;
 }
 
-#display {
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
-    color: #BBBBBB;
-    border: 0px solid silver;
-    font-family: "Courier New", monospace;
-    text-align: left;
-    font-size: 1em;
-    background-color: black;
-    text-shadow: none;
-    padding: 2px;
-}
-
 #display-border {
     display: none;
     right: 168px;
@@ -114,7 +99,6 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 #display::-webkit-scrollbar-corner,
 #bars::-webkit-scrollbar-corner {
     background-color: #{$panelBackground};
-    ;
     border-top:1px solid #{$borderColor};
     border-left:1px solid #{$borderColor};
 }
