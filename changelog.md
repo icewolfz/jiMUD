@@ -18,6 +18,7 @@
   - Ansi parser would return empty elements due to changing styles and colors, the empty blocks are now removed when the lines have been added, should reduce memory
   - Preferences was not saving display/command font setting
   - View > Status > Visible was showing wrong check state
+  - Fixed lines not being trimmed to buffer size, was introduced when display was converted to an iframe to fix the selection bugs.
 ##### 0.1.9 - 2017-05-14
 - **New:**
   - User context menus, create custom items for the right click display menu

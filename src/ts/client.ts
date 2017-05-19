@@ -19,7 +19,7 @@ interface Line extends ParserLine {
 }
 
 export class Client extends EventEmitter {
-    private lineID;
+    private lineID = ".line";
     private lineCache: string[] = [];
     private _enableDebug: boolean = false;
     private _input: input;
@@ -113,14 +113,10 @@ export class Client extends EventEmitter {
         if (display === null || typeof display == 'undefined')
             throw "Missing display";
 
-        if (typeof display === 'string') {
+        if (typeof display === 'string')
             this.display = $(display);
-            this.lineID = display + " .line";
-        }
-        else {
+        else
             this.display = display;
-            this.lineID = "#" + this.display.attr("id") + " .line";
-        }
 
         this.display.click((event) => {
             if (this.options.CommandonClick)
@@ -291,7 +287,7 @@ export class Client extends EventEmitter {
                 this.emit('parse-done', this.lineCache);
                 this.lineCache = [];
             }
-            var lines = $(this.lineID);
+            var lines = $(this.lineID, this.display);
             if (lines.length > this.options.bufferSize) {
                 var l = 0, c = lines.length - this.options.bufferSize;
                 for (; l < c; l++)
