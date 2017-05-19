@@ -990,6 +990,11 @@
           client.options.find.reverse = _finder.Reverse;
           client.saveOptions();
         })
+        _finder.on('regex', () => {
+          client.options.find.regex = _finder.RegularExpression;
+          client.saveOptions();
+        })
+
         _finder.on('shown', () => {
           client.options.find.show = true;
           client.saveOptions();
@@ -1002,6 +1007,7 @@
         _finder.MatchCase = client.options.find.case;
         _finder.MatchWord = client.options.find.word;
         _finder.Reverse = client.options.find.reverse;
+        _finder.RegularExpression = client.options.find.regex;
         if (client.options.find.show)
           _finder.show();
       };

@@ -14,6 +14,7 @@ export class Finder extends EventEmitter {
     private _case;
     private _word;
     private _reverse;
+    private _regex;
 
     constructor(display) {
         super();
@@ -32,12 +33,14 @@ export class Finder extends EventEmitter {
         this._control.on("keydown", (e) => {
             if (e.keyCode != 8) return;
             clearTimeout(this._timer);
-            this._timer = setTimeout(() => { this.find() }, 250);
+            //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
+            this._timer = setTimeout(() => { this.find() }, this._regex ? 500 : 250);
         });
 
         this._control.on("keypress", () => {
             clearTimeout(this._timer);
-            this._timer = setTimeout(() => { this.find() }, 250);
+            //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
+            this._timer = setTimeout(() => { this.find() }, this._regex ? 500 : 250);
         });
 
         //create box
@@ -56,6 +59,22 @@ export class Finder extends EventEmitter {
                 $("#find-case", this._control).removeClass("active");
             this.find(true);
             this.emit('case');
+        }
+    }
+
+    get RegularExpression(): boolean {
+        return this._regex;
+    }
+
+    set RegularExpression(value: boolean) {
+        if (value != this._regex) {
+            this._regex = value;
+            if (this._case)
+                $("#find-regex", this._control).addClass("active");
+            else
+                $("#find-regex", this._control).removeClass("active");
+            this.find(true);
+            this.emit('regex');
         }
     }
 
@@ -120,6 +139,9 @@ export class Finder extends EventEmitter {
         $("#find-reverse", this._control).on('click', () => {
             this.Reverse = !this.Reverse;
         });
+        $("#find-regex", this._control).on('click', () => {
+            this.RegularExpression = !this.RegularExpression;
+        });
         this._window.document.body.append(this._control[0]);
     }
 
@@ -160,7 +182,11 @@ export class Finder extends EventEmitter {
             return;
         }
         var hs = this._display.text();
-        var pattern = val.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        var pattern;
+        if (this._regex)
+            pattern = val;
+        else
+            pattern = val.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
         var re;
         if (this._word)
             pattern = "\\b" + pattern + "\\b";
@@ -182,9 +208,9 @@ export class Finder extends EventEmitter {
                     lineNo: l,
                     line: lines[l],
                     index: m.index,
-                    length: val.length
+                    length: m[0].length
                 });
-                this.addAnnotationElement(this.getTextSelection(lines[l], m.index, m.index + val.length), lines[l], "find-" + id);
+                this.addAnnotationElement(this.getTextSelection(lines[l], m.index, m.index + m[0].length), lines[l], "find-" + id);
                 var t = $('.find-' + id + '-child', lines[l]);
                 if (t.length > 1) {
                     t.each(function (idx) {
@@ -231,7 +257,7 @@ export class Finder extends EventEmitter {
         $(".current", this._display).removeClass("current");
         if (this._results.length > 0) {
             this._results[this._position].els.addClass('current');
-            if (focus)
+            if (focus && this._results[this._position].els.length > 0)
                 this._results[this._position].els[0].scrollIntoView(false);
         }
         this.updateButtons();
