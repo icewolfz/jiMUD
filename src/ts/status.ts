@@ -76,6 +76,7 @@ export class Status extends EventEmitter {
                     this.info["EXPERIENCE"] = obj.current;
                     this.info["EXPERIENCE_NEED_RAW"] = obj.need;
                     this.info["EXPERIENCE_NEED"] = obj.need - obj.current;
+                    this.info["EXPERIENCE_NEED_P"] = obj.needPercent;
                     if (this.info["EXPERIENCE_NEED"] < 0 && !client.options.allowNegativeNumberNeeded)
                         this.info["EXPERIENCE_NEED"] = 0;
 
@@ -346,6 +347,7 @@ export class Status extends EventEmitter {
         $("#xp-value").text(this.info["EXPERIENCE"]);
         $("#xp-banked").text(this.info["EXPERIENCE_BANKED"]);
         $("#need-value").text(this.info["EXPERIENCE_NEED"]);
+        //this.updateBar("#need-percent", this.info["EXPERIENCE_NEED_P"], 100, this.info["EXPERIENCE_NEED"].toString());
         $("#earn-value").text(this.info["EXPERIENCE_EARNED"]);
     }
 
@@ -431,6 +433,7 @@ export class Status extends EventEmitter {
         this.info["WEATHER_INTENSITY"] = 0;
         this.info["EXPERIENCE"] = 0;
         this.info["EXPERIENCE_NEED"] = 0;
+        this.info["EXPERIENCE_NEED_P"] = 0;
         this.info["EXPERIENCE_NEED_RAW"] = 0;
         this.info["EXPERIENCE_EARNED"] = 0;
         this.info["EXPERIENCE_BANKED"] = 0;
@@ -471,6 +474,7 @@ export class Status extends EventEmitter {
         $("#xp-value").text("0");
         $("#xp-banked").text("0");
         $("#need-value").text("0");
+        //this.updateBar("#need-percent", 0, 0, "0");
         $("#earn-value").text("0");
         $("#combat").empty();
         $("#party").empty();
@@ -479,7 +483,7 @@ export class Status extends EventEmitter {
         this.updateStatus();
     }
 
-    updateBar(id: string, value: number, max?: number) {
+    updateBar(id: string, value: number, max?: number, text?: string) {
         var bar = $(id);
         if (bar.length == 0)
             return;
@@ -488,7 +492,7 @@ export class Status extends EventEmitter {
             if (max !== 0)
                 p = value / max * 100;
             $(id + " .progressbar-value").css('width', (100 - p));
-            $(id + " .progressbar-text").text(value + '/' + max);
+            $(id + " .progressbar-text").text(text || (value + '/' + max));
         }
     }
 
