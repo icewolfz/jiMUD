@@ -644,6 +644,9 @@
           setTimeout(function () { client.connect(); }, 600);
 
         _backup = new Backup(client);
+        _backup.loadSelection = client.options.backupLoad;
+        _backup.saveSelection = client.options.backupSave;
+
         _backup.on('progress-start', (title) => {
           ipcRenderer.send('set-progress', { value: 0 });
           ipcRenderer.send('flush');

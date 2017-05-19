@@ -8,6 +8,14 @@ const sqlite3 = require("sqlite3");
 const LZString = require("lz-string");
 const { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle } = require('./profile');
 
+export enum BackupSelection {
+    None = 0,
+    Map = 2,
+    Profiles = 4,
+    Settings = 8,
+    All = Map | Profiles | Settings
+}
+
 export class Backup extends EventEmitter {
     private client: Client = null;
     private _url: string = "http://shadowmud.com:"
@@ -15,6 +23,9 @@ export class Backup extends EventEmitter {
     private _user;
     private _action;
     private _save;
+
+    public loadSelection: BackupSelection = BackupSelection.All;
+    public saveSelection: BackupSelection = BackupSelection.All;
 
     constructor(client: Client) {
         super();
@@ -158,7 +169,12 @@ export class Backup extends EventEmitter {
                 }
             }
             data.map = rooms;
-
+            if ((this.saveSelection & BackupSelection.Map) != BackupSelection.Map)
+                delete data.map;
+            if ((this.saveSelection & BackupSelection.Profiles) != BackupSelection.Profiles)
+                delete data.profiles;
+            if ((this.saveSelection & BackupSelection.Settings) != BackupSelection.Settings)
+                delete data.settings;
             var jData = JSON.stringify(data);
             jData = LZString.compressToEncodedURIComponent(jData);
             this._save = [jData.match(/((\S|\s|.){1,20000})/g), 0, 0];
@@ -274,9 +290,10 @@ export class Backup extends EventEmitter {
         var data = LZString.decompressFromEncodedURIComponent(this._save[3]);
         data = JSON.parse(data);
         if (data.version == 2) {
-            this.emit('import-map', data.map);
+            if (data.map && (this.loadSelection & BackupSelection.Map) == BackupSelection.Map)
+                this.emit('import-map', data.map);
 
-            if (data.profiles) {
+            if (data.profiles && (this.loadSelection & BackupSelection.Profiles) == BackupSelection.Profiles) {
                 var profiles = new ProfileCollection();
                 var keys = Object.keys(data.profiles);
                 var n, k = 0, kl = keys.length;
@@ -366,74 +383,77 @@ export class Backup extends EventEmitter {
                 //this.client.loadProfiles();
                 this.emit('imported-profiles');
             }
-            this.client.options.mapper.enabled = data.settings.mapEnabled;
-            this.client.options.mapper.follow = data.settings.mapFollow;
-            this.client.options.mapper.legend = data.settings.legend;
-            this.client.options.mapper.split = data.settings.MapperSplitArea;
-            this.client.options.mapper.fill = data.settings.MapperFillWalls;
-            this.client.options.mapper.vscroll = data.settings.vscroll;
-            this.client.options.mapper.hscroll = data.settings.hscroll;
-            this.client.options.mapper.memory = data.settings.mapperMemory;
-            this.client.options.showScriptErrors = data.settings.showScriptErrors;
-            if (data.settings.title)
-                this.client.options.title = data.settings.title;
-            this.client.options.flashing = data.settings.flashing;
-            this.client.options.lagMeter = data.settings.lagMeter;
-            this.client.options.enablePing = data.settings.enablePing;
-            this.client.options.parseSingleQuotes = data.settings.parseSingleQuotes;
-            this.client.options.logEnabled = data.settings.logEnabled;
-            this.client.options.logOffline = data.settings.logOffline;
-            this.client.options.logPrepend = data.settings.logPrepend;
-            this.client.options.notifyMSPPlay = data.settings.notifyMSPPlay;
-            this.client.options.bufferSize = data.settings.bufferSize;
-            this.client.options.commandHistorySize = data.settings.commandHistorySize;
-            this.client.options.enableEcho = data.settings.enableEcho;
-            this.client.options.autoConnect = data.settings.autoConnect;
-            this.client.options.commandEcho = data.settings.commandEcho;
-            this.client.options.enableAliases = data.settings.enableAliases;
-            this.client.options.enableTriggers = data.settings.enableTriggers;
-            this.client.options.enableMacros = data.settings.enableMacros;
-            this.client.options.commandStacking = data.settings.commandStacking;
-            this.client.options.htmlLog = data.settings.htmlLog;
-            this.client.options.keepLastCommand = data.settings.keepLastCommand;
-            this.client.options.enableMXP = data.settings.enableMXP;
-            this.client.options.enableMSP = data.settings.enableMSP;
-            this.client.options.enableMCCP = data.settings.enableMCCP;
-            this.client.options.enableUTF8 = data.settings.enableUTF8;
-            this.client.options.enableDebug = data.settings.enableDebug;
-            this.client.options.parseCommands = data.settings.parseCommands;
-            this.client.options.enableSpeedpaths = data.settings.enableSpeedpaths;
-            this.client.options.parseSpeedpaths = data.settings.parseSpeedpaths;
+
+            if ((this.loadSelection & BackupSelection.Settings) != BackupSelection.Settings) {
+                this.client.options.mapper.enabled = data.settings.mapEnabled;
+                this.client.options.mapper.follow = data.settings.mapFollow;
+                this.client.options.mapper.legend = data.settings.legend;
+                this.client.options.mapper.split = data.settings.MapperSplitArea;
+                this.client.options.mapper.fill = data.settings.MapperFillWalls;
+                this.client.options.mapper.vscroll = data.settings.vscroll;
+                this.client.options.mapper.hscroll = data.settings.hscroll;
+                this.client.options.mapper.memory = data.settings.mapperMemory;
+                this.client.options.showScriptErrors = data.settings.showScriptErrors;
+                if (data.settings.title)
+                    this.client.options.title = data.settings.title;
+                this.client.options.flashing = data.settings.flashing;
+                this.client.options.lagMeter = data.settings.lagMeter;
+                this.client.options.enablePing = data.settings.enablePing;
+                this.client.options.parseSingleQuotes = data.settings.parseSingleQuotes;
+                this.client.options.logEnabled = data.settings.logEnabled;
+                this.client.options.logOffline = data.settings.logOffline;
+                this.client.options.logPrepend = data.settings.logPrepend;
+                this.client.options.notifyMSPPlay = data.settings.notifyMSPPlay;
+                this.client.options.bufferSize = data.settings.bufferSize;
+                this.client.options.commandHistorySize = data.settings.commandHistorySize;
+                this.client.options.enableEcho = data.settings.enableEcho;
+                this.client.options.autoConnect = data.settings.autoConnect;
+                this.client.options.commandEcho = data.settings.commandEcho;
+                this.client.options.enableAliases = data.settings.enableAliases;
+                this.client.options.enableTriggers = data.settings.enableTriggers;
+                this.client.options.enableMacros = data.settings.enableMacros;
+                this.client.options.commandStacking = data.settings.commandStacking;
+                this.client.options.htmlLog = data.settings.htmlLog;
+                this.client.options.keepLastCommand = data.settings.keepLastCommand;
+                this.client.options.enableMXP = data.settings.enableMXP;
+                this.client.options.enableMSP = data.settings.enableMSP;
+                this.client.options.enableMCCP = data.settings.enableMCCP;
+                this.client.options.enableUTF8 = data.settings.enableUTF8;
+                this.client.options.enableDebug = data.settings.enableDebug;
+                this.client.options.parseCommands = data.settings.parseCommands;
+                this.client.options.enableSpeedpaths = data.settings.enableSpeedpaths;
+                this.client.options.parseSpeedpaths = data.settings.parseSpeedpaths;
 
 
-            this.client.options.parseDoubleQuotes = data.settings.parseDoubleQuotes;
-            this.client.options.logUniqueOnConnect = data.settings.logUniqueOnConnect;
-            this.client.options.enableURLDetection = data.settings.enableURLDetection
-            this.client.options.CommandonClick = data.settings.CommandonClick;
-            this.client.options.cmdfontSize = data.settings.cmdfontSize;
-            this.client.options.fontSize = data.settings.fontSize;
-            this.client.options.cmdfont = data.settings.cmdfont;
-            this.client.options.font = data.settings.font;
+                this.client.options.parseDoubleQuotes = data.settings.parseDoubleQuotes;
+                this.client.options.logUniqueOnConnect = data.settings.logUniqueOnConnect;
+                this.client.options.enableURLDetection = data.settings.enableURLDetection
+                this.client.options.CommandonClick = data.settings.CommandonClick;
+                this.client.options.cmdfontSize = data.settings.cmdfontSize;
+                this.client.options.fontSize = data.settings.fontSize;
+                this.client.options.cmdfont = data.settings.cmdfont;
+                this.client.options.font = data.settings.font;
 
-            this.client.options.commandStackingChar = data.settings.commandStackingChar;
-            this.client.options.speedpathsChar = data.settings.speedpathsChar;
-            this.client.options.commandDelay = data.settings.commandDelay;
-            this.client.options.commandDelayCount = data.settings.commandDelayCount;
+                this.client.options.commandStackingChar = data.settings.commandStackingChar;
+                this.client.options.speedpathsChar = data.settings.speedpathsChar;
+                this.client.options.commandDelay = data.settings.commandDelay;
+                this.client.options.commandDelayCount = data.settings.commandDelayCount;
 
-            //this.client.options.colors = data.settings.;
-            if (data.settings.soundPath)
-                this.client.options.soundPath = data.settings.soundPath;
-            if (data.settings.logPath)
-                this.client.options.logPath = data.settings.logPath;
+                //this.client.options.colors = data.settings.;
+                if (data.settings.soundPath)
+                    this.client.options.soundPath = data.settings.soundPath;
+                if (data.settings.logPath)
+                    this.client.options.logPath = data.settings.logPath;
 
-            this.client.options.scrollLocked = data.settings.scrollLocked;
-            this.client.options.showStatus = data.settings.showStatus;
-            this.client.options.showMapper = data.settings.MapperOpen;
+                this.client.options.scrollLocked = data.settings.scrollLocked;
+                this.client.options.showStatus = data.settings.showStatus;
+                this.client.options.showMapper = data.settings.MapperOpen;
 
-            this.client.clearTriggerCache();
-            this.client.saveOptions();
-            this.client.loadOptions();
-            this.emit('imported-settings');
+                this.client.clearTriggerCache();
+                this.client.saveOptions();
+                this.client.loadOptions();
+                this.emit('imported-settings');
+            }
         }
         this.emit('finish-load');
         this.close();

@@ -11,9 +11,13 @@
     - Default - the default theme
     - Clean - a version of the Default theme with more simple borders and no images.
   - About dialog now includes memory information.
+  - Preferences
+    - Mapper: default import type, allows you to determine how map data will be imported when using default import systems
+    - Backup load/save selections, determine what is saved or loaded when using the remote client backup system
 - **Changed:**
   - Default button icons have been converted to font-awesome or svg icons for easy themeing and crisper look
   - Upgrade electron to 1.7.1, fixes a few crashers with --debug
+  - New application icons, should be cleaner and support linux, windows and mac
 - **Fixed:**
   - Ansi parser would return empty elements due to changing styles and colors, the empty blocks are now removed when the lines have been added, should reduce memory
   - Preferences was not saving display/command font setting

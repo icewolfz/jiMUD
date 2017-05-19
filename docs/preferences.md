@@ -8,6 +8,9 @@
 - `Enable debug` Will display debug data to the dev tool console
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
+- `Backup save` what to save when using remote backup systems
+- `Backup load` what to load when using remote backup systems
+- `Theme` the theme for the main client window
 
 ## Display
 
@@ -71,6 +74,7 @@
 - `Load in Memory` load mapper in to memory and only access disk on load and window/client close, try if slow or have large amounts of memory. **Requires restart on windows**, **WARNING _if the client or OS crash all in memory data will be lost and not saved to disk_**
 - `Save period` how often to flush to disk when using load in memory option
 - `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if mapper is not enabled
+- `Default import type` determines how default import system imports new map data
 
 ## Chat
 Controls what is captured into the chat window

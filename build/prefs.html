@@ -163,6 +163,9 @@
         $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
         $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
 
+        $('#mapper-importTypeReplace').prop('checked', _settings.mapper.importType == 1);
+        $('#mapper-importTypeMerge').prop('checked', _settings.mapper.importType == 0);
+
         $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
         $('#chat-persistent').prop('checked', _settings.chat.persistent);
 
@@ -191,6 +194,17 @@
         $('#enableEcho').prop('checked', _settings.enableEcho);
         $('#enableMSP').prop('checked', _settings.enableMSP);
         $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
+
+        $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) == 2);
+        $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) == 4);
+        $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) == 8);
+
+        $('#backup-save-map').prop('checked', (_settings.backupSave & 2) == 2);
+        $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) == 4);
+        $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) == 8);
+
+        $('.btn-group input').parent().removeClass('active');
+        $('.btn-group input:checked').parent().addClass('active');
 
         $('#theme').val(_settings.theme);
         $('#theme').selectpicker('render');
@@ -231,6 +245,12 @@
             case 'mapper-alwaysOnTopClient':
               _settings.mapper.alwaysOnTopClient = this.checked;
               break;
+            case 'mapper-importTypeReplace':
+              _settings.mapper.importType = 1;
+              break;
+            case 'mapper-importTypMerge':
+              _settings.mapper.importType = 0;
+              break;
             case 'MapperSplitArea':
               _settings.mapper.split = this.checked;
               break;
@@ -255,6 +275,28 @@
                   message: 'If client or OS crash, all in memory data will be lost and not saved to disk'
                 });
               }
+              break;
+            case 'backup-save-settings':
+            case 'backup-save-profiles':
+            case 'backup-save-map':
+              _settings.backupSave = 0;
+              if ($('#backup-save-map').prop('checked'))
+                _settings.backupSave |= 2;
+              if ($('#backup-save-profiles').prop('checked'))
+                _settings.backupSave |= 4;
+              if ($('#backup-save-settings').prop('checked'))
+                _settings.backupSave |= 8;
+              break;
+            case 'backup-load-settings':
+            case 'backup-load-profiles':
+            case 'backup-load-map':
+              _settings.backupLoad = 0;
+              if ($('#backup-load-map').prop('checked'))
+                _settings.backupLoad |= 2;
+              if ($('#backup-load-profiles').prop('checked'))
+                _settings.backupLoad |= 4;
+              if ($('#backup-load-settings').prop('checked'))
+                _settings.backupLoad |= 8;
               break;
             default:
               _settings[$(this).attr('id')] = this.checked;
@@ -669,7 +711,36 @@
          Persistent advanced editor
           </label>
           </div>
-          <div class="col-sm-21 form-group">
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">Backup save</label>
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-default">
+              <input type="checkbox" id="backup-save-settings"> Settings
+            </label>
+              <label class="btn btn-default active">
+              <input type="checkbox" id="backup-save-profiles"> Profiles
+            </label>
+              <label class="btn btn-default active">
+              <input type="checkbox" id="backup-save-map"> Map
+            </label>
+            </div>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">Backup load</label>
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-default">
+              <input type="checkbox" id="backup-load-settings"> Settings
+            </label>
+              <label class="btn btn-default active">
+              <input type="checkbox" id="backup-load-profiles"> Profiles
+            </label>
+              <label class="btn btn-default active">
+              <input type="checkbox" id="backup-load-map"> Map
+            </label>
+            </div>
+          </div>
+          <div class="col-sm-12 form-group">
             <label class="control-label">Theme<br>
               <select id="theme" class="form-control selectpicker" data-width="250px"></select>
             </label>
@@ -1081,7 +1152,18 @@
         </div>
       </div>
       <div class="col-sm-12 form-group">
-        <div class="col-sm-6 form-group">
+        <div class="col-sm-4 form-group">
+          <label class="control-label">Default Import Type</label>
+          <div class="btn-group" data-toggle="buttons">
+            <label class="btn btn-default">
+              <input type="radio" name="mapper-importType" id="mapper-importTypeMerge"> Merge
+            </label>
+            <label class="btn btn-default active">
+              <input type="radio" name="mapper-importType" id="mapper-importTypeReplace" checked> Replace
+            </label>
+          </div>
+        </div>
+        <div class="col-sm-4 form-group">
           <label class="control-label">
             Delay between directions
             <div class="input-group">
@@ -1092,7 +1174,7 @@
         </div>
 
         <div class="form-group">
-          <label class="col-sm-6 control-label">
+          <label class="col-sm-4 control-label">
             Directions to send
             <input type="number" id="commandDelayCount" class="form-control"/>
             </label>

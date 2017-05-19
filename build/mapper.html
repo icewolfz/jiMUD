@@ -27,6 +27,7 @@
       const path = require('path');
 
       var roomEditor = false;
+      var importType = ImportType.Replace;
 
       var menu = [
         {
@@ -199,6 +200,7 @@
         mapper.active = options.mapper.active;
         mapper.commandDelay = options.commandDelay;
         mapper.commandDelayCount = options.commandDelayCount;
+        importType = options.mapper.importType;
 
         $("#MapLevel").val(options.mapper.active.z);
         $("#MapZone").val(options.mapper.active.zone);
@@ -869,7 +871,7 @@
         $("#mapProgressTitle").html("Importing map data&hellip;");
         $("#mapProgress")[0].showModal();
         ipcRenderer.send('set-progress', { value: 0 });
-        mapper.import(data, ImportType.Replace);
+        mapper.import(data, importType);
       });
 
       ipcRenderer.on('flush', (event) => {

@@ -13,6 +13,14 @@ export interface WindowState {
 	devTools: boolean;
 }
 
+export enum BackupSelection {
+	None = 0,
+	Map = 2,
+	Profiles = 4,
+	Settings = 8,
+	All = Map | Profiles | Settings
+}
+
 
 export class Mapper {
 	public enabled: boolean = true;
@@ -21,6 +29,7 @@ export class Mapper {
 	public split: boolean = false;
 	public fill: boolean = false;
 	public room: boolean = false;
+	public importType = 1;
 	public vscroll: number = 0;
 	public hscroll: number = 0;
 	public alwaysOnTop: boolean = false;
@@ -147,6 +156,8 @@ export class Settings {
 		selection: false,
 		show: false
 	}
+	public backupLoad:BackupSelection = BackupSelection.All;
+	public backupSave:BackupSelection = BackupSelection.All;
 
 	public scrollLocked: boolean = false;
 	public showStatus: boolean = true;
