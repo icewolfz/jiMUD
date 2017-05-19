@@ -76,7 +76,8 @@
       "installerIcon": "./assets/icons/win/app.ico"
     },
     "linux": {
-      "maintainer": "icewolfz"
+      "maintainer": "icewolfz",
+      "icon":"./assets/icons/png/"
     }
   },
   "dependencies": {
