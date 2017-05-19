@@ -463,7 +463,7 @@ var menuTemp = [
             skipTaskbar: true,
             resizable: false,
             title: 'About jiMUD',
-            icon: path.join(__dirname, '../assets/icons/png/app.png')
+            icon: path.join(__dirname, '../assets/icons/png/64x64.png')
           })
           about.setMenu(null);
           about.on('closed', () => {
@@ -735,7 +735,7 @@ function createWindow() {
     height: s.height,
     backgroundColor: '#000',
     show: false,
-    icon: path.join(__dirname, '../assets/icons/png/app.png')
+    icon: path.join(__dirname, '../assets/icons/png/64x64.png')
   })
   if (s.fullscreen)
     win.setFullScreen(s.fullscreen);
