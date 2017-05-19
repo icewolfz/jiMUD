@@ -1767,6 +1767,8 @@ export class Mapper extends EventEmitter {
                         stmt.finalize();
                     }
                     stmt2.finalize();
+                    if(rl == 0)
+                        this.emit('import-progress', 100);
                     this._changed = true;
                     //this.emit('import-progress', 100);
                 }
@@ -1839,6 +1841,8 @@ export class Mapper extends EventEmitter {
                         stmt.finalize();
                     }
                     stmt2.finalize();
+                    if(rl == 0)
+                        this.emit('import-progress', 100);                    
                     this._changed = true;
                     //this.emit('import-progress', 100);
                     //this.reset();
