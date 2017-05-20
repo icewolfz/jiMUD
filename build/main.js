@@ -1128,8 +1128,6 @@ function updateMenuItem(args) {
       }
     }
   }
-  if(args.menu && args.menu[0] == "profiles")
-    console.log(item.checked ? true : false);
   if (!item)
     return;
   if (args.enabled != null)
@@ -1142,9 +1140,6 @@ function updateMenuItem(args) {
     item.visible = args.visible ? true : false;
   if (args.position != null)
     item.position = args.position;
-
-  if(args.menu && args.menu[0] == "profiles")
-    console.log(item.checked ? true : false);
 
   tItem.enabled = item.enabled;
   tItem.checked = item.checked;
