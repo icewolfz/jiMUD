@@ -585,6 +585,8 @@
           };
         });
         client.on('options-loaded', () => {
+          _backup.loadSelection = client.options.backupLoad;
+          _backup.saveSelection = client.options.backupSave;
           updateInterface();
           buildCaptures();
           client.port = client.options.dev ? 1035 : 1030;

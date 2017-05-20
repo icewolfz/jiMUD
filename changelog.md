@@ -7,7 +7,9 @@
   - Fix issues with closing client and still being connected and saying no to close
   - Sound/Music commands work
   - setsetting/getsetting commands work
-  - Fix a bug in backup when ajax error happens and not being able to abort load/save
+  - A bug in backup when ajax error happens and not being able to abort load/save
+  - A bug when importing lagacy profiles and settings not correctly converting to boolean datatype
+  - Backup settings where not being applied until a restart
 ##### 0.2.0 - 2017-05-19
 - **New:**
   - Add ${variable.FUNCTION} format support to allow similar format to javascript.
@@ -17,7 +19,7 @@
     - Regular Expression - allow use of regular expressions to match text
     - Result list - show you how many results found and current one at
     - High light - will highlight all matches
-  - Theme support, you can now created a css theme file and place it in %appdata%/themes/name.css or mydocumnts/jiMUD/themes/name.css
+  - Theme support, you can now created a css theme file and place it in %appdata%/themes/name.css or my documents/jiMUD/themes/name.css
     - Default - the default theme
     - Clean - a version of the Default theme with more simple borders and no images.
     - Dark - a dark theme with dark grays and blacks with silver highlights
