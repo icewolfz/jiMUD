@@ -702,7 +702,7 @@ function createMenu() {
         label: "Default",
         type: 'checkbox',
         checked: false,
-        id: "default.json",
+        id: "default",
         click: (menuItem, browserWindow, event) => {
           win.webContents.executeJavaScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")');
         }
@@ -1128,18 +1128,23 @@ function updateMenuItem(args) {
       }
     }
   }
+  if(args.menu && args.menu[0] == "profiles")
+    console.log(item.checked ? true : false);
   if (!item)
     return;
   if (args.enabled != null)
-    item.enabled = args.enabled;
+    item.enabled = args.enabled ? true : false;
   if (args.checked != null)
-    item.checked = args.checked;
+    item.checked = args.checked ? true : false;
   if (args.icon != null)
     item.icon = args.icon;
   if (args.visible != null)
-    item.visible = args.visible;
+    item.visible = args.visible ? true : false;
   if (args.position != null)
     item.position = args.position;
+
+  if(args.menu && args.menu[0] == "profiles")
+    console.log(item.checked ? true : false);
 
   tItem.enabled = item.enabled;
   tItem.checked = item.checked;

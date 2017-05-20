@@ -298,10 +298,10 @@ export class Backup extends EventEmitter {
                     n = keys[k];
                     var p = new Profile(n);
                     p.priority = data.profiles[keys[k]].priority;
-                    p.enabled = data.profiles[keys[k]].enabled;
-                    p.enableMacros = data.profiles[keys[k]].enableMacros;
-                    p.enableTriggers = data.profiles[keys[k]].enableTriggers;
-                    p.enableAliases = data.profiles[keys[k]].enableAliases;
+                    p.enabled = data.profiles[keys[k]].enabled ? true : false;
+                    p.enableMacros = data.profiles[keys[k]].enableMacros ? true : false;
+                    p.enableTriggers = data.profiles[keys[k]].enableTriggers ? true : false;
+                    p.enableAliases = data.profiles[keys[k]].enableAliases ? true : false;
                     p.macros = [];
                     var l = data.profiles[keys[k]].macros.length;
                     if (l > 0) {
@@ -310,13 +310,13 @@ export class Backup extends EventEmitter {
                             item.key = data.profiles[keys[k]].macros[m].key;
                             item.value = data.profiles[keys[k]].macros[m].value;
                             item.style = data.profiles[keys[k]].macros[m].style;
-                            item.append = data.profiles[keys[k]].macros[m].append;
-                            item.send = data.profiles[keys[k]].macros[m].send;
+                            item.append = data.profiles[keys[k]].macros[m].append ? true : false;
+                            item.send = data.profiles[keys[k]].macros[m].send ? true : false;
                             item.name = data.profiles[keys[k]].macros[m].name;
                             item.group = data.profiles[keys[k]].macros[m].group;
-                            item.enabled = data.profiles[keys[k]].macros[m].enabled;
+                            item.enabled = data.profiles[keys[k]].macros[m].enabled ? true : false;
                             item.modifiers = data.profiles[keys[k]].macros[m].modifiers;
-                            item.chain = data.profiles[keys[k]].macros[m].chain;
+                            item.chain = data.profiles[keys[k]].macros[m].chain ? true : false;
                             item.notes = data.profiles[keys[k]].macros[m].notes || '';
                             p.macros.push(item);
                         }
@@ -329,13 +329,12 @@ export class Backup extends EventEmitter {
                             item.pattern = data.profiles[keys[k]].aliases[m].pattern;
                             item.value = data.profiles[keys[k]].aliases[m].value;
                             item.style = data.profiles[keys[k]].aliases[m].style;
-                            item.multi = data.profiles[keys[k]].aliases[m].multi;
-                            item.append = data.profiles[keys[k]].aliases[m].append;
+                            item.multi = data.profiles[keys[k]].aliases[m].multi ? true : false;
+                            item.append = data.profiles[keys[k]].aliases[m].append ? true : false;
                             item.name = data.profiles[keys[k]].aliases[m].name;
                             item.group = data.profiles[keys[k]].aliases[m].group;
-                            item.enabled = data.profiles[keys[k]].aliases[m].enabled;
+                            item.enabled = data.profiles[keys[k]].aliases[m].enabled ? true : false;
                             item.params = data.profiles[keys[k]].aliases[m].params;
-                            item.regexp = data.profiles[keys[k]].aliases[m].regexp;
                             item.priority = data.profiles[keys[k]].aliases[m].priority;
                             item.notes = data.profiles[keys[k]].aliases[m].notes || '';
                             p.aliases.push(item);
@@ -349,13 +348,13 @@ export class Backup extends EventEmitter {
                             item.pattern = data.profiles[keys[k]].triggers[m].pattern;
                             item.value = data.profiles[keys[k]].triggers[m].value;
                             item.style = data.profiles[keys[k]].triggers[m].style;
-                            item.verbatim = data.profiles[keys[k]].triggers[m].verbatim;
+                            item.verbatim = data.profiles[keys[k]].triggers[m].verbatim ? true : false;
                             item.name = data.profiles[keys[k]].triggers[m].name;
                             item.group = data.profiles[keys[k]].triggers[m].group;
-                            item.enabled = data.profiles[keys[k]].triggers[m].enabled;
+                            item.enabled = data.profiles[keys[k]].triggers[m].enabled ? true : false;
                             item.priority = data.profiles[keys[k]].triggers[m].priority;
-                            item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline;
-                            item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt;
+                            item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline ? true : false;
+                            item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt ? true : false;
                             item.type = data.profiles[keys[k]].triggers[m].type;
                             item.notes = data.profiles[keys[k]].triggers[m].notes || '';
                             p.triggers.push(item);
@@ -382,47 +381,47 @@ export class Backup extends EventEmitter {
             }
 
             if ((this.loadSelection & BackupSelection.Settings) != BackupSelection.Settings) {
-                this.client.options.mapper.enabled = data.settings.mapEnabled;
-                this.client.options.mapper.follow = data.settings.mapFollow;
-                this.client.options.mapper.legend = data.settings.legend;
-                this.client.options.mapper.split = data.settings.MapperSplitArea;
-                this.client.options.mapper.fill = data.settings.MapperFillWalls;
+                this.client.options.mapper.enabled = data.settings.mapEnabled ? true : false;
+                this.client.options.mapper.follow = data.settings.mapFollow ? true : false;
+                this.client.options.mapper.legend = data.settings.legend ? true : false;
+                this.client.options.mapper.split = data.settings.MapperSplitArea ? true : false;
+                this.client.options.mapper.fill = data.settings.MapperFillWalls ? true : false;
                 this.client.options.mapper.vscroll = data.settings.vscroll;
                 this.client.options.mapper.hscroll = data.settings.hscroll;
-                this.client.options.mapper.memory = data.settings.mapperMemory;
-                this.client.options.showScriptErrors = data.settings.showScriptErrors;
+                this.client.options.mapper.memory = data.settings.mapperMemory ? true : false;
+                this.client.options.showScriptErrors = data.settings.showScriptErrors ? true : false;
                 if (data.settings.title)
                     this.client.options.title = data.settings.title;
-                this.client.options.flashing = data.settings.flashing;
-                this.client.options.lagMeter = data.settings.lagMeter;
-                this.client.options.enablePing = data.settings.enablePing;
-                this.client.options.parseSingleQuotes = data.settings.parseSingleQuotes;
-                this.client.options.logEnabled = data.settings.logEnabled;
-                this.client.options.logOffline = data.settings.logOffline;
-                this.client.options.logPrepend = data.settings.logPrepend;
-                this.client.options.notifyMSPPlay = data.settings.notifyMSPPlay;
+                this.client.options.flashing = data.settings.flashing ? true : false;
+                this.client.options.lagMeter = data.settings.lagMeter ? true : false;
+                this.client.options.enablePing = data.settings.enablePing ? true : false;
+                this.client.options.parseSingleQuotes = data.settings.parseSingleQuotes ? true : false;
+                this.client.options.logEnabled = data.settings.logEnabled ? true : false;
+                this.client.options.logOffline = data.settings.logOffline ? true : false;
+                this.client.options.logPrepend = data.settings.logPrepend ? true : false;
+                this.client.options.notifyMSPPlay = data.settings.notifyMSPPlay ? true : false;
                 this.client.options.bufferSize = data.settings.bufferSize;
                 this.client.options.commandHistorySize = data.settings.commandHistorySize;
-                this.client.options.enableEcho = data.settings.enableEcho;
-                this.client.options.autoConnect = data.settings.autoConnect;
-                this.client.options.commandEcho = data.settings.commandEcho;
-                this.client.options.commandStacking = data.settings.commandStacking;
-                this.client.options.htmlLog = data.settings.htmlLog;
-                this.client.options.keepLastCommand = data.settings.keepLastCommand;
-                this.client.options.enableMXP = data.settings.enableMXP;
-                this.client.options.enableMSP = data.settings.enableMSP;
-                this.client.options.enableMCCP = data.settings.enableMCCP;
-                this.client.options.enableUTF8 = data.settings.enableUTF8;
-                this.client.options.enableDebug = data.settings.enableDebug;
-                this.client.options.parseCommands = data.settings.parseCommands;
-                this.client.options.enableSpeedpaths = data.settings.enableSpeedpaths;
-                this.client.options.parseSpeedpaths = data.settings.parseSpeedpaths;
+                this.client.options.enableEcho = data.settings.enableEcho ? true : false;
+                this.client.options.autoConnect = data.settings.autoConnect ? true : false;
+                this.client.options.commandEcho = data.settings.commandEcho ? true : false;
+                this.client.options.commandStacking = data.settings.commandStacking ? true : false;
+                this.client.options.htmlLog = data.settings.htmlLog ? true : false;
+                this.client.options.keepLastCommand = data.settings.keepLastCommand ? true : false;
+                this.client.options.enableMXP = data.settings.enableMXP ? true : false;
+                this.client.options.enableMSP = data.settings.enableMSP ? true : false;
+                this.client.options.enableMCCP = data.settings.enableMCCP ? true : false;
+                this.client.options.enableUTF8 = data.settings.enableUTF8 ? true : false;
+                this.client.options.enableDebug = data.settings.enableDebug ? true : false;
+                this.client.options.parseCommands = data.settings.parseCommands ? true : false;
+                this.client.options.enableSpeedpaths = data.settings.enableSpeedpaths ? true : false;
+                this.client.options.parseSpeedpaths = data.settings.parseSpeedpaths ? true : false;
 
 
-                this.client.options.parseDoubleQuotes = data.settings.parseDoubleQuotes;
-                this.client.options.logUniqueOnConnect = data.settings.logUniqueOnConnect;
-                this.client.options.enableURLDetection = data.settings.enableURLDetection
-                this.client.options.CommandonClick = data.settings.CommandonClick;
+                this.client.options.parseDoubleQuotes = data.settings.parseDoubleQuotes ? true : false;
+                this.client.options.logUniqueOnConnect = data.settings.logUniqueOnConnect ? true : false;
+                this.client.options.enableURLDetection = data.settings.enableURLDetection  ? true : false;
+                this.client.options.CommandonClick = data.settings.CommandonClick ? true : false;
                 this.client.options.cmdfontSize = data.settings.cmdfontSize;
                 this.client.options.fontSize = data.settings.fontSize;
                 this.client.options.cmdfont = data.settings.cmdfont;
@@ -439,9 +438,9 @@ export class Backup extends EventEmitter {
                 if (data.settings.logPath)
                     this.client.options.logPath = data.settings.logPath;
 
-                this.client.options.scrollLocked = data.settings.scrollLocked;
-                this.client.options.showStatus = data.settings.showStatus;
-                this.client.options.showMapper = data.settings.MapperOpen;
+                this.client.options.scrollLocked = data.settings.scrollLocked ? true : false;
+                this.client.options.showStatus = data.settings.showStatus ? true : false;
+                this.client.options.showMapper = data.settings.MapperOpen ? true : false;
 
                 this.client.clearTriggerCache();
                 this.client.saveOptions();
