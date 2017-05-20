@@ -1,4 +1,7 @@
 ## Changelog
+##### 0.2.1
+- **Changed:**
+  - Adjusted dark mouse over colors to be more visible
 ##### 0.2.0 - 2017-05-19
 - **New:**
   - Add ${variable.FUNCTION} format support to allow similar format to javascript.
