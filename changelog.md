@@ -11,6 +11,8 @@
   - Theme support, you can now created a css theme file and place it in %appdata%/themes/name.css or mydocumnts/jiMUD/themes/name.css
     - Default - the default theme
     - Clean - a version of the Default theme with more simple borders and no images.
+    - Dark - a dark theme with dark grays and blacks with silver highlights
+    - Lightgray - a light gray theme
   - About dialog now includes memory information.
   - Preferences
     - Mapper: default import type, allows you to determine how map data will be imported when using default import systems
