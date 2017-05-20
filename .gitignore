@@ -37,3 +37,4 @@ dist/*
 /build/css/ansi.css
 /build/css/button.css
 /build/css/chat.css
+/build/css/theme.css
