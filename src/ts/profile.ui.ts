@@ -2372,7 +2372,7 @@ export function init() {
         }
         if (choice === 0)
             return;
-        return '';
+        return 'no';
     }
 
     document.onkeydown = undoKeydown;
