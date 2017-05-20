@@ -15,6 +15,7 @@
 - Re-code to not stream but dl to local storage
 - Make local storage create proper folder structure based in {data}/sounds/.. using MSP protocol docs
 ## Miscellaneous
+- Add new settings to setsetting/getsetting commands along with the faq doc table
 - Add log viewer, logs are just html files so a viewer just needs to load them in an iframe or something to sandbox them in
 - Finish monster css icons
 - Finish party css icons, do generic ones for each player race and gender if good enough icons, possible a silhouette bust of just each races head?
@@ -38,3 +39,20 @@
   - http://maxazan.github.io/jquery-treegrid/ 
   - https://github.com/drvic10k/bootstrap-sortable
   - http://bootstrap-table.wenzhixin.net.cn/ 
+## Extension system
+- Create an extension system extending the client easier
+- Min info for a plugin is unquie id/name
+- Location of plugins allow {data}/plugins and {documents}/plugins
+- convert mapper, backup, status, chat capture into plugins
+- plugins are a subfolder with a package.json and maybe allow a theme.css for plugins as well?
+  - chat - {data}/plugins/chat/package.json
+  - mapper - {data}/plugins/mapper/package.json
+  - backup - {data}/plugins/status/package.json
+  - status - {data}/plugins/status/package.json
+- package.json min requires: { "name":"shortname", "productName":"Long name", "description":"describe", "main":"path to main js"}
+- basic extentsion: 
+  - import { Client } from "./client"; export function create(client: Client) { }
+  - export function menu { return [] }; return an array of menu items to be set for plugins > extension name > menu items
+  - add an event to context menu that is emitted by client so extensions cna hook and modify context menu
+  - add execute evens to allow extensions to execute custom commands?
+  - client.on('function', (event)=> {}), for custom fnctions

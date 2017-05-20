@@ -76,6 +76,71 @@ export class Chat {
 	public persistent: boolean = false;
 }
 
+
+/*
+format: setting, key, type, default value, max length
+types:
+	0 string
+	1 boolean
+	2 number
+	3 raw setting
+	4 custom
+	5 combobox
+*/
+export var SettingList:any[] = [
+	["bufferSize", 0, 2, 5000],
+	["commandDelay", 0, 2, 500],
+	["commandDelayCount", 0, 2, 5],
+	["commandHistorySize", 0, 2, 20],
+	["fontSize", 0, 0, "1em", 0],
+	["cmdfontSize", 0, 0, "1em", 0],
+	["commandEcho", 0, 1, true],
+	["flashing", 0, 1, false],
+	["autoConnect", 0, 1, true],
+	["enableAliases", -1, 1, true],
+	["enableTriggers", -1, 1, true],
+	["enableMacros", -1, 1, true],
+	["showScriptErrors", 0, 1, false],
+	["commandStacking", 0, 1, true],
+	["commandStackingChar", 0, 0, ";", 1],
+	["htmlLog", 0, 1, true],
+	["keepLastCommand", 0, 1, true],
+	["enableMCCP", 0, 1, true],
+	["enableUTF8", 0, 1, true],
+	["font", 0, 5, "'Courier New', Courier, monospace", 0],
+	["cmdfont", 0, 5, "'Courier New', Courier, monospace", 0],
+	["aliases", -1, 4],
+	["macros", -1, 4],
+	["triggers", -1, 4],	
+	["mapFollow", "mapper.follow", 1, true],
+	["mapEnabled", "mapper.enabled", 1, true],
+	["MapperSplitArea", "mapper.split", 1, false],
+	["MapperFillWalls", "mapper.fill", 1, false],
+	["MapperOpen", "showMapper", 1, false],	
+	["fullScreen", -1, 3, false],
+	["enableMXP", 0, 1, true],
+	["enableMSP", 0, 1, true],
+	["parseCommands", 0, 3, true],
+	["lagMeter", 0, 1, false],
+	["enablePing", 0, 1, false],
+	["enableEcho", 0, 1, true],
+	["enableSpeedpaths", 0, 1, true],
+	["speedpathsChar", 0, 0, "!", 1],
+	["parseSpeedpaths", 0, 1, true],
+	["profile", -1, 0, "Default", 1],	
+	["parseSingleQuotes", 0, 1, false],
+	["parseDoubleQuotes", 0, 1, true],
+	["logEnabled", 0, 1, false],
+	["logPrepend", 0, 1, false],
+	["logOffline", 0, 1, false],
+	["logUniqueOnConnect", 0, 1, true],
+	["enableURLDetection", 0, 1, true],
+	["colors", 0, 4],
+	["notifyMSPPlay", 0, 1, false],
+	["CommandonClick", 0, 1, true],	
+	["AutoCopySelectedToClipboard", 0, 1, false]
+];
+
 export class Settings {
 	public editorPersistent: boolean = false;
 	public AutoCopySelectedToClipboard: boolean = false;
@@ -100,11 +165,6 @@ export class Settings {
 	public enableEcho: boolean = true;
 	public autoConnect: boolean = true;
 	public commandEcho: boolean = true;
-	public enableAliases: boolean = true;
-	public enableTriggers: boolean = true;
-	public enableButtons: boolean = true;
-	public enableMacros: boolean = true;
-	public enableContexts: boolean = true;
 	public commandStacking: boolean = true;
 	public htmlLog: boolean = true;
 	public keepLastCommand: boolean = true;

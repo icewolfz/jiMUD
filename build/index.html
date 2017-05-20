@@ -502,6 +502,7 @@
         ('profile-updated', (profile) => {
           ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.profiles.items[profile].enabled });
         });
+
         client.on('profiles-updated', () => {
           updateMenu();
         });

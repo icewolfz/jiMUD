@@ -8,6 +8,9 @@ import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority } from "./libra
 import { Client } from "./client";
 import { Tests } from "./test";
 import { Alias, Trigger, Macro, Profile } from "./profile";
+import { SettingList } from "./settings";
+
+const buzz = require('buzz');
 
 function ProperCase(str) {
     return str.replace(/\w*\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
@@ -282,25 +285,20 @@ export class input extends EventEmitter {
                 this.client.echo(this.client.telnet.terminal + " v" + this.client.version, -7, -8, true, true);
                 return null;
             case "soundinfo":
-                /*
-                    if (MSP.SoundState.playing) {
-                        this.client.echo("Playing Sound - " + MSP.SoundState.file + " - " + buzz.toTimer(MSP.SoundState.sound.getTime()) + "/" + buzz.toTimer(MSP.SoundState.sound.getDuration()), -7, -8, true, true);
-                    }
-                    else
-                        this.client.echo("No sound currently playing.", -7, -8, true, true);
-                        */
+                if (this.client.MSP.SoundState.playing) {
+                    this.client.echo("Playing Sound - " + this.client.MSP.SoundState.file + " - " + buzz.toTimer(this.client.MSP.SoundState.sound.getTime()) + "/" + buzz.toTimer(this.client.MSP.SoundState.sound.getDuration()), -7, -8, true, true);
+                }
+                else
+                    this.client.echo("No sound currently playing.", -7, -8, true, true);
                 return null;
             case "musicinfo":
-                /*
-                if (MSP.MusicState.playing)
-                    this.client.echo("Playing Music - " + MSP.MusicState.file + " -  " + buzz.toTimer(MSP.MusicState.sound.getTime()) + "/" + buzz.toTimer(MSP.MusicState.sound.getDuration()), -7, -8, true, true);
+                if (this.client.MSP.MusicState.playing)
+                    this.client.echo("Playing Music - " + this.client.MSP.MusicState.file + " -  " + buzz.toTimer(this.client.MSP.MusicState.sound.getTime()) + "/" + buzz.toTimer(this.client.MSP.MusicState.sound.getDuration()), -7, -8, true, true);
                 else
                     this.client.echo("No music currently playing.", -7, -8, true, true);
-                */
                 return null;
             case "playmusic":
             case "playm":
-                /*
                 args = args.join(' ');
                 tmp = { off: false, file: "", url: "", volume: 100, repeat: 1, priority: 50, type: "", continue: true };
                 i = args.lastIndexOf('/');
@@ -310,12 +308,10 @@ export class input extends EventEmitter {
                     tmp.file = args.substring(i + 1);
                     tmp.url = args.substring(0, i + 1);
                 }
-                MSP.Music(tmp);
-                */
+                this.client.MSP.music(tmp);
                 return null;
             case "playsound":
             case "plays":
-                /*
                 args = args.join(' ');
                 tmp = { off: false, file: "", url: "", volume: 100, repeat: 1, priority: 50, type: "", continue: true };
                 i = args.lastIndexOf('/');
@@ -325,21 +321,20 @@ export class input extends EventEmitter {
                     tmp.file = args.substring(i + 1);
                     tmp.url = args.substring(0, i + 1);
                 }
-                MSP.Sound(tmp);
-                */
+                this.client.MSP.sound(tmp);
                 return null;
             case "stopmusic":
             case "stopm":
-                //MSP.MusicState.close();
+                this.client.MSP.MusicState.close();
                 return null;
             case "stopsound":
             case "stops":
-                //MSP.SoundState.close();
+                this.client.MSP.SoundState.close();
                 return null;
             case "stopallsound":
             case "stopa":
-                //MSP.MusicState.close();
-                //MSP.SoundState.close();
+                this.client.MSP.MusicState.close();
+                this.client.MSP.SoundState.close();
                 return null;
             case "showprompt":
             case "showp":
@@ -459,7 +454,6 @@ export class input extends EventEmitter {
                 return null;
             case "setsetting":
             case "sets":
-                /*
                     if (args.length === 0)
                         this.client.error("Invalid syntax use #setsetting name value");
                     else if (args.length === 1)
@@ -472,16 +466,16 @@ export class input extends EventEmitter {
                         if (/^\d+$/.exec(n)) {
                             tmp = n;
                             n = parseInt(n, 10);
-                            if (n < 0 || n >= _SettingList.length)
-                                this.client.error("Setting index must be >= 0 and < " + _SettingList.length);
+                            if (n < 0 || n >= SettingList.length)
+                                this.client.error("Setting index must be >= 0 and < " + SettingList.length);
                             f = true;
                         }
                         else {
                             if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
                                 n = n.substring(1, n.length - 1);
                             n = n.toLowerCase();
-                            for (i = 0, al = _SettingList.length; i < al; i++) {
-                                if (_SettingList[i][0].toLowerCase() == n) {
+                            for (i = 0, al = SettingList.length; i < al; i++) {
+                                if (SettingList[i][0].toLowerCase() == n) {
                                     n = i;
                                     f = true;
                                     break;
@@ -491,13 +485,13 @@ export class input extends EventEmitter {
                         if (!f)
                             this.client.error("Unknown setting '" + tmp + "'");
                         else {
-                            switch (_SettingList[n][2]) {
+                            switch (SettingList[n][2]) {
                                 case 0:
-                                    if (_SettingList[n][4] > 0 && args.length > _SettingList[n][4])
-                                        this.client.error("String can not be longer then " + _SettingList[n][4] + " characters");
+                                    if (SettingList[n][4] > 0 && args.length > SettingList[n][4])
+                                        this.client.error("String can not be longer then " + SettingList[n][4] + " characters");
                                     else {
-                                        setSetting(_SettingList[n][0], args);
-                                        this.client.echo("Setting '" + _SettingList[n][0] + "' set to '" + args + "'.", -7, -8, true, true);
+                                        this.client.setOption(SettingList[n][1]||SettingList[n][0], args);
+                                        this.client.echo("Setting '" + SettingList[n][0] + "' set to '" + args + "'.", -7, -8, true, true);
                                         this.client.loadOptions();
                                     }
                                     break;
@@ -507,21 +501,21 @@ export class input extends EventEmitter {
                                         case "true":
                                         case "1":
                                         case "yes":
-                                            setSetting(_SettingList[n][0], true);
-                                            this.client.echo("Setting '" + _SettingList[n][0] + "' set to true.", -7, -8, true, true);
+                                            this.client.setOption(SettingList[n][1]||SettingList[n][0], true);
+                                            this.client.echo("Setting '" + SettingList[n][0] + "' set to true.", -7, -8, true, true);
                                             this.client.loadOptions();
                                             break;
                                         case "no":
                                         case "false":
                                         case "0":
-                                            setSetting(_SettingList[n][0], false);
-                                            this.client.echo("Setting '" + _SettingList[n][0] + "' set to false.", -7, -8, true, true);
+                                            this.client.setOption(SettingList[n][1]||SettingList[n][0], false);
+                                            this.client.echo("Setting '" + SettingList[n][0] + "' set to false.", -7, -8, true, true);
                                             this.client.loadOptions();
                                             break;
                                         case "toggle":
-                                            args = getSetting(_SettingList[n][0]) ? false : true;
-                                            setSetting(_SettingList[n][0], args);
-                                            this.client.echo("Setting '" + _SettingList[n][0] + "' set to " + args + ".", -7, -8, true, true);
+                                            args = this.client.getOption(SettingList[n][1]||SettingList[n][0]) ? false : true;
+                                            this.client.setOption(SettingList[n][1]||SettingList[n][0], args);
+                                            this.client.echo("Setting '" + SettingList[n][0] + "' set to " + args + ".", -7, -8, true, true);
                                             this.client.loadOptions();
                                             break;
                                         default:
@@ -530,12 +524,12 @@ export class input extends EventEmitter {
                                     }
                                     break;
                                 case 2:
-                                    i = parseInt(arg, 10);
+                                    i = parseInt(args, 10);
                                     if (isNaN(i))
-                                        this.client.error("Invalid number '" + arg + "'");
+                                        this.client.error("Invalid number '" + args + "'");
                                     else {
-                                        setSetting(_SettingList[n][0], arg);
-                                        this.client.echo("Setting '" + _SettingList[n][0] + "' set to '" + i + "'.", -7, -8, true, true);
+                                        this.client.setOption(SettingList[n][1]||SettingList[n][0], i);
+                                        this.client.echo("Setting '" + SettingList[n][0] + "' set to '" + i + "'.", -7, -8, true, true);
                                         this.client.loadOptions();
                                     }
                                     break;
@@ -546,19 +540,17 @@ export class input extends EventEmitter {
                             }
                         }
                     }
-                    */
                 return null;
             case "getsetting":
             case "gets":
-                /*
                     if (args.length === 0)
                         this.client.error("Invalid syntax use #getsetting name");
                     else {
                         n = args.join(' ');
                         if (/^\d+$/.exec(n)) {
                             n = parseInt(n, 10);
-                            if (n < 0 || n >= _SettingList.length)
-                                this.client.error("Setting index must be >= 0 and < " + _SettingList.length);
+                            if (n < 0 || n >= SettingList.length)
+                                this.client.error("Setting index must be >= 0 and < " + SettingList.length);
                             else
                                 f = true;
                         }
@@ -568,8 +560,8 @@ export class input extends EventEmitter {
                             tmp = n;
                             n = n.toLowerCase();
                             if (n != "all") {
-                                for (i = 0, al = _SettingList.length; i < al; i++) {
-                                    if (_SettingList[i][0].toLowerCase() == n) {
+                                for (i = 0, al = SettingList.length; i < al; i++) {
+                                    if (SettingList[i][0].toLowerCase() == n) {
                                         n = i;
                                         f = true;
                                         break;
@@ -579,20 +571,20 @@ export class input extends EventEmitter {
                             if (n == "all") {
                                 tmp = "Current settings:\n";
                                 //this.client.echo("Current settings:", -7, -8, true, true);
-                                for (i = 0, al = _SettingList.length; i < al; i++) {
-                                    switch (_SettingList[i][2]) {
+                                for (i = 0, al = SettingList.length; i < al; i++) {
+                                    switch (SettingList[i][2]) {
                                         case 0:
                                         case 2:
                                             //this.client.echo("    "+_SettingList[i][0]+": "+getSetting(_SettingList[i][0]), -7, -8, true, true);
-                                            tmp += "    " + _SettingList[i][0] + ": " + getSetting(_SettingList[i][0]) + "\n";
+                                            tmp += "    " + SettingList[i][0] + ": " + this.client.getOption(SettingList[n][1]||SettingList[n][0]) + "\n";
                                             break;
                                         case 1:
                                         case 3:
-                                            if (getSetting(_SettingList[i][0]))
-                                                tmp += "    " + _SettingList[i][0] + ": true\n";
+                                            if (this.client.getOption(SettingList[n][1]||SettingList[n][0]))
+                                                tmp += "    " + SettingList[i][0] + ": true\n";
                                             //this.client.echo("    "+_SettingList[i][0]+": true", -7, -8, true, true);
                                             else
-                                                tmp += "    " + _SettingList[i][0] + ": false\n";
+                                                tmp += "    " + SettingList[i][0] + ": false\n";
                                             //this.client.echo("    "+_SettingList[i][0]+": false", -7, -8, true, true);
                                             break;
                                     }
@@ -602,23 +594,22 @@ export class input extends EventEmitter {
                             else if (!f)
                                 this.client.error("Unknown setting '" + n + "'");
                             else {
-                                switch (_SettingList[n][2]) {
+                                switch (SettingList[n][2]) {
                                     case 0:
                                     case 2:
-                                        this.client.echo("Setting '" + _SettingList[n][0] + "' is '" + getSetting(_SettingList[n][0]) + "'", -7, -8, true, true);
+                                        this.client.echo("Setting '" + SettingList[n][0] + "' is '" + this.client.getOption(SettingList[n][1]||SettingList[n][0]) + "'", -7, -8, true, true);
                                         break;
                                     case 1:
                                     case 3:
-                                        if (getSetting(_SettingList[n][0]))
-                                            this.client.echo("Setting '" + _SettingList[n][0] + "' is true", -7, -8, true, true);
+                                        if (this.client.getOption(SettingList[n][1]||SettingList[n][0]))
+                                            this.client.echo("Setting '" + SettingList[n][0] + "' is true", -7, -8, true, true);
                                         else
-                                            this.client.echo("Setting '" + _SettingList[n][0] + "' is false", -7, -8, true, true);
+                                            this.client.echo("Setting '" + SettingList[n][0] + "' is false", -7, -8, true, true);
                                         break;
                                 }
                             }
                         }
                     }
-                    */
                 return null;
             case "profilelist":
                 i = 0;
@@ -708,7 +699,11 @@ export class input extends EventEmitter {
                 this.client.telnet.prompt = false;
                 return null;
         }
-        return raw;
+        var data = { name: fun, args: args, raw: raw, handled: false };
+        this.client.emit('function', data);
+        if (data.handled)
+            return null;
+        return data.raw;
     }
 
     parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
@@ -750,10 +745,10 @@ export class input extends EventEmitter {
         text = text.replace(/(\%|\$)\{copied.upper\}/g, copied.toUpperCase());
         text = text.replace(/(\%|\$)\{copied.proper\}/g, ProperCase(copied));
 
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)\}/g, function (v, e, w) { return window["$"+w]; });
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower\}/g, function (v, e, w) { return window["$"+w].toLowerCase(); });
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).upper\}/g, function (v, e, w) { return window["$"+w].toUpperCase(); });
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).proper\}/g, function (v, e, w) { return ProperCase(window["$"+w]); });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)\}/g, function (v, e, w) { return window["$" + w]; });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower\}/g, function (v, e, w) { return window["$" + w].toLowerCase(); });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).upper\}/g, function (v, e, w) { return window["$" + w].toUpperCase(); });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).proper\}/g, function (v, e, w) { return ProperCase(window["$" + w]); });
 
         text = text.replace(/(\%|\$)\{lower\((.*)\)\}/g, function (v, e, w) { return w.toLowerCase(); });
         text = text.replace(/(\%|\$)\{upper\((.*)\)\}/g, function (v, e, w) { return w.toUpperCase(); });

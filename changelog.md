@@ -2,8 +2,12 @@
 ##### 0.2.1
 - **Changed:**
   - Adjusted dark mouse over colors to be more visible
+  - Mapper window will now show when a backup import triggers to show mapper progress
 - **Fixed:**
   - Fix issues with closing client and still being connected and saying no to close
+  - Sound/Music commands work
+  - setsetting/getsetting commands work
+  - Fix a bug in backup when ajax error happens and not being able to abort load/save
 ##### 0.2.0 - 2017-05-19
 - **New:**
   - Add ${variable.FUNCTION} format support to allow similar format to javascript.

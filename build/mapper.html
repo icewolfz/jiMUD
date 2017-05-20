@@ -867,6 +867,7 @@
       });
 
       ipcRenderer.on('import', (event, data) => {
+        ipcRenderer.send('show-window', 'mapper');
         $("#mapProgressbar").html('<progress max="100"></progress>');
         $("#mapProgressTitle").html("Importing map data&hellip;");
         $("#mapProgress")[0].showModal();

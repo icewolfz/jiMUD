@@ -23,9 +23,10 @@ export class Client extends EventEmitter {
     private lineCache: string[] = [];
     private _enableDebug: boolean = false;
     private _input: input;
-    private _MSP: MSP;
     private _auto: NodeJS.Timer = null;
     private _autoError: boolean = false;
+
+    public MSP: MSP;
 
     public version: string = version;
     public display = null;
@@ -128,13 +129,13 @@ export class Client extends EventEmitter {
         else
             this.commandInput = command;
 
-        this._MSP = new MSP();
-        this._MSP.on('playing', (data) => {
+        this.MSP = new MSP();
+        this.MSP.on('playing', (data) => {
             if (this.enableDebug) this.debug('MSP ' + (data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration);
             if (!this.options.notifyMSPPlay) return;
             this.echo((data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
         });
-        this._MSP.on('error', (err) => {
+        this.MSP.on('error', (err) => {
             this.error(err);
         });
         this._input = new input(this);
@@ -194,7 +195,7 @@ export class Client extends EventEmitter {
             this.debug(msg);
         });
         this.telnet.on('receive-option', (data: TelnetOption) => {
-            this._MSP.processOption(data);
+            this.MSP.processOption(data);
             this.emit('received-option', data);
         });
         this.telnet.on('close', () => {
@@ -202,7 +203,7 @@ export class Client extends EventEmitter {
             this.echo("Connection closed to " + this.host + ":" + this.port, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
             this.connectTime = 0;
             this.lastSendTime = 0;
-            this._MSP.reset();
+            this.MSP.reset();
             this.emit('closed');
         });
         this.telnet.on('received-data', (data) => {
@@ -244,7 +245,7 @@ export class Client extends EventEmitter {
 
         this.telnet.on('windowSize', () => { this.UpdateWindow(); });
 
-        this.parser = new Parser({display: this.display});
+        this.parser = new Parser({ display: this.display });
         this.parser.on('debug', (msg) => { this.debug(msg) });
         this.parser.on('add-line', (data: Line) => {
             var t;
@@ -296,7 +297,7 @@ export class Client extends EventEmitter {
             lines = null;
             this.display.addClass("animate");
         });
-        this.parser.on('set-title', (title, type) => { 
+        this.parser.on('set-title', (title, type) => {
 
             if (typeof title == "undefined" || title === null || title.length === 0)
                 window.document.title = this.defaultTitle;
@@ -305,11 +306,11 @@ export class Client extends EventEmitter {
 
         });
         this.parser.on('music', (data) => {
-            this._MSP.music(data);
+            this.MSP.music(data);
             this.emit('music', data);
         });
         this.parser.on('sound', (data) => {
-            this._MSP.sound(data);
+            this.MSP.sound(data);
             this.emit('sound', data);
         });
         this.loadOptions();
@@ -325,7 +326,7 @@ export class Client extends EventEmitter {
         this._enableDebug = enable;
         this.telnet.enableDebug = enable;
         this.parser.enableDebug = enable;
-        this._MSP.enableDebug = enable;
+        this.MSP.enableDebug = enable;
     }
 
     get host(): string {
@@ -370,8 +371,8 @@ export class Client extends EventEmitter {
         this.telnet.enableLatency = this.options.lagMeter;
         this.telnet.enablePing = this.options.enablePing;
 
-        this._MSP.enabled = this.options.enableMSP;
-        this._MSP.savePath = parseTemplate(this.options.soundPath);
+        this.MSP.enabled = this.options.enableMSP;
+        this.MSP.savePath = parseTemplate(this.options.soundPath);
 
         this._input.scrollLock = this.options.scrollLocked;
 
@@ -382,6 +383,23 @@ export class Client extends EventEmitter {
 
     saveOptions() {
         this.options.save(path.join(parseTemplate("{data}"), 'settings.json'));
+    }
+
+    setOption(name, value) {
+        var opt = this.options;
+        name = name.split(".");
+        for(var o = 0, ol = name.length-1; o < ol; o++)
+            opt = opt[name[o]];
+        opt[name[name.length-1]] = value;
+        this.saveOptions();
+    }
+
+    getOption(name) {
+        var opt = this.options;
+        name = name.split(".");
+        for(var o = 0, ol = name.length; o < ol; o++)
+            opt = opt[name[o]];
+        return opt;
     }
 
     UpdateFonts() {
@@ -584,7 +602,7 @@ export class Client extends EventEmitter {
     connect() {
         this._autoError = false;
         this.emit('connecting');
-        this._MSP.reset();
+        this.MSP.reset();
         this.parser.ClearMXP();
         this.parser.ResetMXPLine();
         this.telnet.connect();

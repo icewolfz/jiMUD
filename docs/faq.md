@@ -24,42 +24,39 @@ Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using 
 * `{videos}` Directory for a user's videos.
 * `{assets}` Directory for accessing client assets, ***Read only***
 ## Setting keys, value type and default value
-Setting             | Type    | Default
---------------------|---------|-------------
-bufferSize          | integer | 200
-commandDelay        | integer | 500
-commandDelayCount   | integer | 5
-commandHistorySize  | integer | 20
-fontSize            | string  | 1em
-cmdfontSize         | string  | 1em
-commandEcho         | boolean | true
-flashing            | boolean | false
-autoConnect         | boolean | true
-enableAliases       | boolean | true
-enableTriggers      | boolean | true
-enableMacros        | boolean | true
-showScriptErrors    | boolean | false
-commandStacking     | boolean | true
-commandStackingChar | string  | ;
-htmlLog             | boolean | true
-keepLastCommand     | boolean | true
-enableMCCP          | boolean | true
-enableUTF8          | boolean | true
-font                | string  | Courier New
-cmdfont             | string  | Courier New
-mapFollow           | boolean | true
-mapEnabled          | boolean | true
-fullScreen          | boolean | false
-enableMXP           | boolean | true
-enableMSP           | boolean | true
-notifyMSPPlay       | boolean | false
-parseCommands       | boolean | true
-lagMeter            | boolean | false
-enablePing          | boolean | false
-enableEcho          | boolean | true
-enableSpeedpaths    | boolean | true
-speedpathsChar      | string  | !
-parseSpeedpaths     | boolean | true
-parseSingleQuotes   | boolean | false
-parseDoubleQuotes   | boolean | true
-CommandonClick      | boolean | true
+Setting                     | Type    | Default
+----------------------------|---------|-------------
+bufferSize                  | integer | 5000
+commandDelay                | integer | 500
+commandDelayCount           | integer | 5
+commandHistorySize          | integer | 20
+fontSize                    | string  | 1em
+cmdfontSize                 | string  | 1em
+commandEcho                 | boolean | true
+flashing                    | boolean | false
+autoConnect                 | boolean | true
+showScriptErrors            | boolean | false
+commandStacking             | boolean | true
+commandStackingChar         | string  | ;
+keepLastCommand             | boolean | true
+enableMCCP                  | boolean | true
+enableUTF8                  | boolean | true
+font                        | string  | Courier New
+cmdfont                     | string  | Courier New
+mapFollow                   | boolean | true
+mapEnabled                  | boolean | true
+fullScreen                  | boolean | false
+enableMXP                   | boolean | true
+enableMSP                   | boolean | true
+notifyMSPPlay               | boolean | false
+parseCommands               | boolean | true
+lagMeter                    | boolean | false
+enablePing                  | boolean | false
+enableEcho                  | boolean | true
+enableSpeedpaths            | boolean | true
+speedpathsChar              | string  | !
+parseSpeedpaths             | boolean | true
+parseSingleQuotes           | boolean | false
+parseDoubleQuotes           | boolean | true
+CommandonClick              | boolean | true
+AutoCopySelectedToClipboard | boolean | false

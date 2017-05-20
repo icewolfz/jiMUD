@@ -103,9 +103,6 @@ export class Backup extends EventEmitter {
                     enableEcho: this.client.options.enableEcho,
                     autoConnect: this.client.options.autoConnect,
                     commandEcho: this.client.options.commandEcho,
-                    enableAliases: this.client.options.enableAliases,
-                    enableTriggers: this.client.options.enableTriggers,
-                    enableMacros: this.client.options.enableMacros,
                     commandStacking: this.client.options.commandStacking,
                     htmlLog: this.client.options.htmlLog,
                     keepLastCommand: this.client.options.keepLastCommand,
@@ -233,8 +230,8 @@ export class Backup extends EventEmitter {
                     else if (data.error)
                         this.abort(data.error);
                     else {
-                        this._save[1] = data.chunk;
-                        this._save[3] += data.data;
+                        this._save[1] = data.chunk||0;
+                        this._save[3] += data.data||0;
                         this.emit('progress', (this._save[1] + 1) / this._save[0] * 100)
                         if (this._save[1] >= this._save[0] - 1)
                             this.finishLoad();
@@ -242,7 +239,7 @@ export class Backup extends EventEmitter {
                             this.getChunk();
                     }
                 },
-                error: function (data, error, errorThrown) {
+                error: (data, error, errorThrown) =>    {
                     this.abort(error);
                 }
             });
@@ -276,7 +273,7 @@ export class Backup extends EventEmitter {
                         this.close();
                     }
                 },
-                error: function (data, error, errorThrown) {
+                error: (data, error, errorThrown) => {
                     this.abort(error);
                 }
             });
@@ -409,9 +406,6 @@ export class Backup extends EventEmitter {
                 this.client.options.enableEcho = data.settings.enableEcho;
                 this.client.options.autoConnect = data.settings.autoConnect;
                 this.client.options.commandEcho = data.settings.commandEcho;
-                this.client.options.enableAliases = data.settings.enableAliases;
-                this.client.options.enableTriggers = data.settings.enableTriggers;
-                this.client.options.enableMacros = data.settings.enableMacros;
                 this.client.options.commandStacking = data.settings.commandStacking;
                 this.client.options.htmlLog = data.settings.htmlLog;
                 this.client.options.keepLastCommand = data.settings.keepLastCommand;
