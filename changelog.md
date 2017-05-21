@@ -1,5 +1,7 @@
 ## Changelog
 ##### 0.2.3 - 2017-05-21
+- **New:**
+  - Add some of the newer settings to set/getsetting commands
 - **Changed:**
   - Adjusted dark theme scrollbars
   - Lock button now sets style to "on" when scroll lock enabled
