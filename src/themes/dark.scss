@@ -722,7 +722,7 @@ $panelInsetBackground: "#252526";
 .button {
     color: #{$color};
     background-color: #252526;
-    border: 1px solid #{$borderColor};
+    border: 1px solid transparent;
     margin-bottom: 2px;
 }
 
@@ -737,12 +737,13 @@ $panelInsetBackground: "#252526";
 }
 
 .button:hover, .button.on:hover {
+    border: 1px solid #{$borderColor};
     background-color: #5a5d5e;
-    color: #{$color};
+    color: #fff;
 }
 
-.button:hover, .button.on:hover svg {
-    fill: #{$color};
+.button:hover svg, .button.on:hover svg {
+    fill: #fff
 }
 
 .button:active {
@@ -757,6 +758,7 @@ $panelInsetBackground: "#252526";
 .button.on {
     color: #5a5d5e;
     background-color: #{$color};
+    border: 1px solid transparent;
 }
 
 .button.on svg {
