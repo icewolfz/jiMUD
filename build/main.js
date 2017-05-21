@@ -696,18 +696,6 @@ function createMenu() {
       }
     }
   }
-  else {
-    profiles.submenu.push(
-      {
-        label: "Default",
-        type: 'checkbox',
-        checked: false,
-        id: "default",
-        click: (menuItem, browserWindow, event) => {
-          win.webContents.executeJavaScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")');
-        }
-      })
-  }
   profiles.submenu.push(
     {
       type: 'separator'

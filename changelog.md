@@ -1,4 +1,7 @@
 ## Changelog
+##### 0.2.2
+- **Fixed:**
+  - Default profile appearing twice in menu on first load
 ##### 0.2.1
 - **Changed:**
   - Adjusted dark mouse over colors to be more visible
@@ -8,7 +11,7 @@
   - Sound/Music commands work
   - setsetting/getsetting commands work
   - A bug in backup when ajax error happens and not being able to abort load/save
-  - A bug when importing lagacy profiles and settings not correctly converting to boolean datatype
+  - A bug when importing legacy profiles and settings not correctly converting to boolean datatype
   - Backup settings where not being applied until a restart
 ##### 0.2.0 - 2017-05-19
 - **New:**
