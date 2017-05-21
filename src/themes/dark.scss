@@ -75,11 +75,10 @@ $panelInsetBackground: "#252526";
 #display::-webkit-scrollbar-track,
 #bars::-webkit-scrollbar-track {
     background-color: #{$panelBackground};
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    border: 1px solid #{$borderColor};
+    /*border-radius: 10px;*/
+    border-top: 1px solid #{$borderColor};
+    border-left: 1px solid #{$borderColor};
 }
 
 
@@ -87,10 +86,8 @@ $panelInsetBackground: "#252526";
 
 #display::-webkit-scrollbar-thumb,
 #bars::-webkit-scrollbar-thumb {
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
+    /*border-radius: 10px;*/
     background: #33302b;
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     border: 1px solid #{$borderColor};
 }
@@ -103,8 +100,10 @@ $panelInsetBackground: "#252526";
 #display::-webkit-scrollbar-corner,
 #bars::-webkit-scrollbar-corner {
     background-color: #{$panelBackground};
+    /*
     border-top:1px solid #{$borderColor};
     border-left:1px solid #{$borderColor};
+    */
 }
 
 #find {
@@ -737,9 +736,13 @@ $panelInsetBackground: "#252526";
     margin-left: 5px;
 }
 
-.button:hover {
+.button:hover, .button.on:hover {
     background-color: #5a5d5e;
     color: #{$color};
+}
+
+.button:hover, .button.on:hover svg {
+    fill: #{$color};
 }
 
 .button:active {
@@ -752,21 +755,12 @@ $panelInsetBackground: "#252526";
 }
 
 .button.on {
-    background-color: #3f3f46;
-    color: #{$color};
-}
-
-.button.on:hover {
     color: #5a5d5e;
     background-color: #{$color};
 }
 
-.button.on:hover svg {
-    fill: #5a5d5e;
-}
-
 .button.on svg {
-    fill: #{$color};
+    fill: #5a5d5e;
 }
 
 .button.on:active {

@@ -1,8 +1,11 @@
 ## Changelog
 ##### 0.2.3 
+- **Changed:**
+  - Adjusted dark theme scrollbars
+  - Lock button now sets style to "on" when scroll lock enabled
 - **Fixed:**
   - Mapper: 
-    - Area nagivation was not updating
+    - Area navigation was not updating
     - Walk button/context item should be enabled as long as current and selected room are set now just when path highlighted
     - Highlight button/context item are only enabled if current room/selected room and are not the same
 ##### 0.2.2 - 2017-05-20

@@ -261,8 +261,10 @@
           $("#lock").prop("title", "Unlock display");
           $("#lock i").removeClass("fa-lock");
           $("#lock i").addClass("fa-unlock");
+          $("#lock").addClass("on");
         }
         else {
+          $("#lock").removeClass("on");
           $("#lock").prop("title", "Lock display");
           $("#lock i").addClass("fa-lock");
           $("#lock i").removeClass("fa-unlock");
@@ -595,10 +597,12 @@
           ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: lock });
           if (lock) {
             $("#lock").prop("title", "Unlock display");
+            $("#lock").addClass("on");
             $("#lock i").removeClass("fa-lock");
             $("#lock i").addClass("fa-unlock");
           }
           else {
+            $("#lock").removeClass("on");
             $("#lock").prop("title", "Lock display");
             $("#lock i").addClass("fa-lock");
             $("#lock i").removeClass("fa-unlock");
