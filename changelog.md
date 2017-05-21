@@ -1,11 +1,11 @@
 ## Changelog
-##### 0.2.2
+##### 0.2.2 - 2017-05-20
 - **Fixed:**
   - Default profile appearing twice in menu on first load
   - Backup:
     - loading wrong url when using development setting
     - corrupted load data due to a previous bug fix with data type
-##### 0.2.1
+##### 0.2.1 - 2017-05-20
 - **Changed:**
   - Adjusted dark mouse over colors to be more visible
   - Mapper window will now show when a backup import triggers to show mapper progress
