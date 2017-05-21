@@ -46,7 +46,7 @@
     "package:linux-otherarm": "build --pd=dist/jiMUD-linux-armv7l/ --l deb AppImage rpm --armv7l",
     "min": "./node_modules/.bin/babili --minified out -d build/js",
     "rebuild:win": "./node_modules/.bin/electron-rebuild -w sqlite3 -p && ./node_modules/.bin/electron-rebuild -w sqlite3 -p -a=ia32",
-    "rebuild:linux": "./node_modules/.bin/electron-rebuild",
+    "rebuild:linux": "./node_modules/.bin/electron-rebuild -l sqlite3 -p && ./node_modules/.bin/electron-rebuild -l sqlite3 -p -a=ia32 && ./node_modules/.bin/electron-rebuild -l sqlite3 -p -a=arm",
     "sass": "node-sass src/css/ -o build/css/ --output-style compressed",
     "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed"
   },
