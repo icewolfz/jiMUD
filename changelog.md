@@ -1,4 +1,10 @@
 ## Changelog
+##### 0.2.3 
+- **Fixed:**
+  - Mapper: 
+    - Area nagivation was not updating
+    - Walk button/context item should be enabled as long as current and selected room are set now just when path highlighted
+    - Highlight button/context item are only enabled if current room/selected room and are not the same
 ##### 0.2.2 - 2017-05-20
 - **Fixed:**
   - Default profile appearing twice in menu on first load

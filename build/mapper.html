@@ -217,12 +217,12 @@
 
         mapper.on('path-shown', () => {
           $("#btn-clear").prop('disabled', false);
-          $("#btn-walk").prop('disabled', false);
+          //$("#btn-walk").prop('disabled', false);
         });
 
         mapper.on('path-cleared', () => {
           $("#btn-clear").prop('disabled', true);
-          $("#btn-walk").prop('disabled', true);
+          //$("#btn-walk").prop('disabled', true);
         });
 
         mapper.on('room-before-selected', (room) => {
@@ -274,9 +274,20 @@
           });
         });
 
+        mapper.on('active-room-changed', (room) => {
+          $("#select-area").val(mapper.active.area);
+        });
+
+        mapper.on('current-room-changed', (room) => {
+          $("#btn-walk").prop('disabled', !(mapper.current.ID && room.ID && mapper.current.ID != room.ID));
+          $("#btn-highlight").prop('disabled', !(mapper.current.ID && room.ID && mapper.current.ID != room.ID));
+        })
+
         mapper.on('room-selected', (room) => {
           $("#reDNone").prop('checked', true);
           if (!room || room.ID === null) {
+            $("#btn-walk").prop('disabled', true);
+            $("#btn-highlight").prop('disabled', true);
             $("#mapper-room input").prop("disabled", true);
             $("#mapper-room select").prop("disabled", true);
             $("#mapper-room button").prop("disabled", true);
@@ -306,6 +317,8 @@
 
           }
           else {
+            $("#btn-walk").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
+            $("#btn-highlight").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
             $("#reName").text(room.Name || room.name || "");
             $("#mapper-room input").prop("disabled", false);
             $("#mapper-room select").prop("disabled", false);
@@ -390,19 +403,21 @@
                   mapper.removeRoom(item.Room);
                 }
               },
-              { type: 'separator' },
-              {
+            ]);
+            if (!$("#btn-clear").prop('disabled') || (mapper.current.ID && room.ID && mapper.current.ID != room.ID))
+              menu.push({ type: 'separator' });
+            if (mapper.current.ID && room.ID && mapper.current.ID != room.ID) {
+              menu.push({
                 label: 'Highlight path to here', Room: room, click: (item) => {
                   mapper.showPath(item.Room);
                 }
-              }
-            ]);
-            if (!$("#btn-walk").prop('disabled'))
+              });
               menu.push({
                 label: 'Walk to here', Room: room, click: (item) => {
                   mapper.walkPath(item.Room);
                 }
               });
+            }
           }
           if (!$("#btn-clear").prop('disabled'))
             menu.push({
@@ -944,7 +959,7 @@
 
       <div class="btn-group" role="group">
         <button type="button" class="btn btn-default btn-xs" title="Set selected as current" onclick="mapper.setCurrent()"><i class="fa fa-circle"></i></button>
-        <button type="button" class="btn btn-default btn-xs" title="Highlight path" onclick="mapper.showPath()"><i class="fa fa-paint-brush"></i></button>
+        <button id="btn-highlight" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Highlight path" onclick="mapper.showPath()"><i class="fa fa-paint-brush"></i></button>
         <button id="btn-clear" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Clear path" onclick="mapper.clearPath()"><i class="fa fa-times"></i></button>
         <button id="btn-walk" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Walk path" onclick="mapper.walkPath()"><i class="fa fa-blind"></i></button>
       </div>

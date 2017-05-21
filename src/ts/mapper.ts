@@ -539,9 +539,12 @@ export class Mapper extends EventEmitter {
 
     reset(type?) {
         if (!type || type == 1)
+        {
             this.current = new Room();
+            this.emit('current-room-changed', this.current);
+        }
         if (!type) {
-            this.active = new Room();
+            this.setActive(new Room());
             this.selected = new Room();
         }
     }
@@ -554,7 +557,10 @@ export class Mapper extends EventEmitter {
 
     focusCurrentRoom() {
         if (this.current.ID)
-            this.active = clone(this.current);
+        {
+            this.setActive(clone(this.current));
+            this.emit('active-room-changed', clone(this.active));
+        }
         this.focusActiveRoom();
     }
 
@@ -563,18 +569,25 @@ export class Mapper extends EventEmitter {
         this.scrollTo(this.active.x + 2, this.active.y + 2);
     }
 
+
+    setActive(room) {
+        this.active = room;
+        this.emit('active-room-changed', clone(this.active));
+    }
+
     setCurrent(room?: Room) {
         this.emit('path-cleared');
         if (!room || !room.ID) room = this.selected;
         this.current = this.sanitizeRoom(clone(room));
         this.markers = {};
         this.draw();
+        this.emit('current-room-changed', this.current);
     }
 
     setArea(area: string) {
         this.active.area = area;
         if (this.current.ID !== null && this.current.area == this.active.area) {
-            this.active = this.sanitizeRoom(clone(this.current));
+            this.setActive( this.sanitizeRoom(clone(this.current)));
             this.focusActiveRoom();
             this.emit('setting-changed', 'active', this.active);
         }
@@ -586,7 +599,7 @@ export class Mapper extends EventEmitter {
                     this.active.y = row.Y;
                     this.active.z = row.Z;
                     this.active.zone = row.Zone;
-                    this.active = this.sanitizeRoom(this.active);
+                    this.setActive(this.sanitizeRoom(this.active));
                     this.focusActiveRoom();
                     this.emit('setting-changed', 'active', this.active);
                 }
@@ -616,12 +629,13 @@ export class Mapper extends EventEmitter {
                 this.emit('remove-done', room);
                 if (room.ID == this.current.ID) {
                     this.current = new Room();
+                    this.emit('current-room-changed', this.current);
                     this.clearPath();
                 }
                 else if (this.markers[room.ID])
                     this.clearPath();
                 if (room.ID == this.active.ID)
-                    this.active = new Room();
+                    this.setActive(new Room());
                 if (room.ID == this.selected.ID)
                     this.selected = new Room();
                 this.refresh();
@@ -798,13 +812,14 @@ export class Mapper extends EventEmitter {
                 this.current.x = room.x;
                 this.current.y = room.y;
                 this.current.z = room.z;
+                this.emit('current-room-changed', this.current);
                 this.current.zone = room.zone;
                 if (this.selected && this.selected.ID == room.ID)
                     this.emit('room-selected', clone(room));
                 if (this.follow)
                     this.focusCurrentRoom();
                 else
-                    this.active = clone(this.current);
+                    this.setActive(clone(this.current));
                 this.refresh();
             })
             //});
