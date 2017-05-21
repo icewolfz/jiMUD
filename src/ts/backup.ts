@@ -18,7 +18,6 @@ export enum BackupSelection {
 
 export class Backup extends EventEmitter {
     private client: Client = null;
-    private _url: string = "http://shadowmud.com:"
     private _abort: boolean = false;
     private _user;
     private _action;
@@ -27,15 +26,17 @@ export class Backup extends EventEmitter {
     public loadSelection: BackupSelection = BackupSelection.All;
     public saveSelection: BackupSelection = BackupSelection.All;
 
+    get URL():string {
+        if (this.client.port == 1035)
+            return "http://shadowmud.com:1132/client";
+        return "http://shadowmud.com:1130/client";
+    }
+
     constructor(client: Client) {
         super();
         if (!client)
             throw "Invalid client!";
         this.client = client;
-        if (this.client.port == 1035)
-            this._url += "1132/client";
-        else
-            this._url += "1130/client";
         this.client.telnet.GMCPSupports.push("Client 1");
 
         this.client.on('connected', () => {
@@ -71,6 +72,7 @@ export class Backup extends EventEmitter {
                     break;
             }
         });
+
     }
 
     save(version?: number) {
@@ -187,7 +189,7 @@ export class Backup extends EventEmitter {
         this._abort = true;
         $.ajax({
             type: 'POST',
-            url: this._url,
+            url: this.URL,
             data:
             {
                 'user': this._user,
@@ -202,7 +204,7 @@ export class Backup extends EventEmitter {
         this._abort = false;
         $.ajax({
             type: 'POST',
-            url: this._url,
+            url: this.URL,
             data:
             {
                 'user': this._user,
@@ -215,7 +217,7 @@ export class Backup extends EventEmitter {
         $.ajax(
             {
                 type: 'POST',
-                url: this._url,
+                url: this.URL,
                 data:
                 {
                     'user': this._user,
@@ -231,7 +233,7 @@ export class Backup extends EventEmitter {
                         this.abort(data.error);
                     else {
                         this._save[1] = data.chunk||0;
-                        this._save[3] += data.data||0;
+                        this._save[3] += data.data||"";
                         this.emit('progress', (this._save[1] + 1) / this._save[0] * 100)
                         if (this._save[1] >= this._save[0] - 1)
                             this.finishLoad();
@@ -249,7 +251,7 @@ export class Backup extends EventEmitter {
         $.ajax(
             {
                 type: 'POST',
-                url: this._url,
+                url: this.URL,
                 data:
                 {
                     'user': this._user,

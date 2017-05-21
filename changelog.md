@@ -2,6 +2,9 @@
 ##### 0.2.2
 - **Fixed:**
   - Default profile appearing twice in menu on first load
+  - Backup:
+    - loading wrong url when using development setting
+    - corrupted load data due to a previous bug fix with data type
 ##### 0.2.1
 - **Changed:**
   - Adjusted dark mouse over colors to be more visible
