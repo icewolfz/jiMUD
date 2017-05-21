@@ -87,7 +87,7 @@ types:
 	4 custom
 	5 combobox
 */
-export var SettingList:any[] = [
+export var SettingList: any[] = [
 	["bufferSize", 0, 2, 5000],
 	["commandDelay", 0, 2, 500],
 	["commandDelayCount", 0, 2, 5],
@@ -111,12 +111,12 @@ export var SettingList:any[] = [
 	["cmdfont", 0, 5, "'Courier New', Courier, monospace", 0],
 	["aliases", -1, 4],
 	["macros", -1, 4],
-	["triggers", -1, 4],	
+	["triggers", -1, 4],
 	["mapFollow", "mapper.follow", 1, true],
 	["mapEnabled", "mapper.enabled", 1, true],
 	["MapperSplitArea", "mapper.split", 1, false],
 	["MapperFillWalls", "mapper.fill", 1, false],
-	["MapperOpen", "showMapper", 1, false],	
+	["MapperOpen", "showMapper", 1, false],
 	["fullScreen", -1, 3, false],
 	["enableMXP", 0, 1, true],
 	["enableMSP", 0, 1, true],
@@ -127,7 +127,7 @@ export var SettingList:any[] = [
 	["enableSpeedpaths", 0, 1, true],
 	["speedpathsChar", 0, 0, "!", 1],
 	["parseSpeedpaths", 0, 1, true],
-	["profile", -1, 0, "Default", 1],	
+	["profile", -1, 0, "Default", 1],
 	["parseSingleQuotes", 0, 1, false],
 	["parseDoubleQuotes", 0, 1, true],
 	["logEnabled", 0, 1, false],
@@ -137,8 +137,12 @@ export var SettingList:any[] = [
 	["enableURLDetection", 0, 1, true],
 	["colors", 0, 4],
 	["notifyMSPPlay", 0, 1, false],
-	["CommandonClick", 0, 1, true],	
-	["AutoCopySelectedToClipboard", 0, 1, false]
+	["CommandonClick", 0, 1, true],
+	["AutoCopySelectedToClipboard", 0, 1, false],
+	["enableDebug", 0, 1, false],
+	["editorPersistent", 0, 1, false],
+	["askonclose", 0, 1, true],
+	["dev", 0, 1, false],
 ];
 
 export class Settings {
@@ -216,8 +220,8 @@ export class Settings {
 		selection: false,
 		show: false
 	}
-	public backupLoad:BackupSelection = BackupSelection.All;
-	public backupSave:BackupSelection = BackupSelection.All;
+	public backupLoad: BackupSelection = BackupSelection.All;
+	public backupSave: BackupSelection = BackupSelection.All;
 
 	public scrollLocked: boolean = false;
 	public showStatus: boolean = true;

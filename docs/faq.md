@@ -60,3 +60,7 @@ parseSingleQuotes           | boolean | false
 parseDoubleQuotes           | boolean | true
 CommandonClick              | boolean | true
 AutoCopySelectedToClipboard | boolean | false
+enableDebug                 | boolean | false
+editorPersistent            | boolean | false
+askonclose                  | boolean | true
+dev                         | boolean | false

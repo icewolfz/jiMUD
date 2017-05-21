@@ -386,18 +386,22 @@ export class Client extends EventEmitter {
     }
 
     setOption(name, value) {
+        if (name == -1 || name == "-1")
+            return;
         var opt = this.options;
         name = name.split(".");
-        for(var o = 0, ol = name.length-1; o < ol; o++)
+        for (var o = 0, ol = name.length - 1; o < ol; o++)
             opt = opt[name[o]];
-        opt[name[name.length-1]] = value;
+        opt[name[name.length - 1]] = value;
         this.saveOptions();
     }
 
     getOption(name) {
+        if (name == -1 || name == "-1")
+            return null;
         var opt = this.options;
         name = name.split(".");
-        for(var o = 0, ol = name.length; o < ol; o++)
+        for (var o = 0, ol = name.length; o < ol; o++)
             opt = opt[name[o]];
         return opt;
     }
