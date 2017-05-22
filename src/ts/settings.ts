@@ -56,6 +56,7 @@ export class Profiles {
 	public buttonsAdvanced: boolean = false;
 	public macrosAdvanced: boolean = false;
 	public contextsAdvanced: boolean = false;
+	public enabled: string[] = [];
 }
 
 export class Chat {

@@ -18,6 +18,8 @@ let windows = {};
 
 global.settingsFile = parseTemplate(path.join("{data}", "settings.json"));
 global.mapFile = parseTemplate(path.join("{data}", "map.sqlite"));
+global.profiles = null;
+global.character = null;
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
@@ -28,6 +30,44 @@ let states = {
   'chat': { x: 0, y: 0, width: 300, height: 225 },
 };
 
+if (!fs.existsSync(path.join(app.getPath('userData'), "characters")))
+  fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
+
+var characters;
+
+function loadCharacter(char) {
+  if (isNaN(char)) {
+    if (!characters)
+      characters = { load: -1, keys: [], characters: {} };
+    if (!characters.characters[char]) {
+      characters.keys.push(char);
+      characters.characters[char] = { settings: path.join("{characters}", char + ".json"), map: path.join("{characters}", char + ".map") };
+      fs.writeFileSync(path.join(app.getPath('userData'), "characters.json"), JSON.stringify(characters));
+    }
+  }
+  else {
+    char = parseInt(char, 10);
+    if (!characters || characters.characters.length == 0 || char < 0 || char >= characters.characters.length)
+      return;
+    char = characters.keys[char];
+  }
+  global.settingsFile = parseTemplate(characters.characters[char].settings);
+  global.mapFile = parseTemplate(characters.characters[char].map);
+}
+
+if (fs.existsSync(path.join(app.getPath('userData'), "characters.json"))) {
+  characters = fs.readFileSync(file, 'utf-8');
+  if (characters.length > 0) {
+    try {
+      characters = JSON.parse(data);
+    }
+    catch (e) {
+      win.webContents.send('debug', 'Could not load: \'characters.json\'');
+    }
+    loadCharacter(characters.load);
+  }
+}
+
 process.argv.forEach((val, index) => {
   switch (val) {
     case "-debug":
@@ -37,12 +77,24 @@ process.argv.forEach((val, index) => {
       debug = true;
       break;
   }
+
+  if (val.startsWith("--character=") || val.startsWith("--character:")) {
+    global.character = val.substring(12);
+    loadCharacter(global.character);
+  }
+  if (val.startsWith("-c=") || val.startsWith("-c:")) {
+    global.character = val.substring(3);
+    loadCharacter(global.character);
+  }
+
   if (val.startsWith("--settings=") || val.startsWith("--settings:"))
     global.settingsFile = parseTemplate(val.substring(11));
   if (val.startsWith("-settings=") || val.startsWith("-settings:"))
     global.settingsFile = parseTemplate(val.substring(10));
   if (val.startsWith("-s=") || val.startsWith("-s:"))
     global.settingsFile = parseTemplate(val.substring(3));
+  if (val.startsWith("-sf=") || val.startsWith("-sf:"))
+    global.settingsFile = parseTemplate(val.substring(4));
 
   if (val.startsWith("--map=") || val.startsWith("--map:"))
     global.mapFile = parseTemplate(val.substring(6));
@@ -52,6 +104,11 @@ process.argv.forEach((val, index) => {
     global.mapFile = parseTemplate(val.substring(3));
   if (val.startsWith("-mf=") || val.startsWith("-mf:"))
     global.mapFile = parseTemplate(val.substring(4));
+
+  if (val.startsWith("--profiles=") || val.startsWith("--profiles:"))
+    global.profiles = parseTemplate(val.substring(11)).split(',');
+  if (val.startsWith("-pf=") || val.startsWith("-pf:"))
+    global.profiles = parseTemplate(val.substring(4)).split(',');
 });
 
 var menuTemp = [
@@ -989,7 +1046,7 @@ ipcMain.on('log', (event, raw) => {
 })
 
 ipcMain.on('debug', (event, msg) => {
-  win.webContents.send('send', msg);
+  win.webContents.send('debug', msg);
 })
 
 ipcMain.on('reload-profiles', (event) => {
@@ -1226,19 +1283,20 @@ function trackWindowState(id, window) {
 }
 
 function parseTemplate(str, data) {
-  str = str.replace(/{home}/g, app.getPath('home').replace(/\\/g, "/"));
-  str = str.replace(/{path}/g, app.getAppPath().replace(/\\/g, "/"));
-  str = str.replace(/{appData}/g, app.getPath('appData').replace(/\\/g, "/"));
-  str = str.replace(/{data}/g, app.getPath('userData').replace(/\\/g, "/"));
-  str = str.replace(/{temp}/g, app.getPath('temp').replace(/\\/g, "/"));
-  str = str.replace(/{desktop}/g, app.getPath('desktop').replace(/\\/g, "/"));
-  str = str.replace(/{documents}/g, app.getPath('documents').replace(/\\/g, "/"));
-  str = str.replace(/{downloads}/g, app.getPath('downloads').replace(/\\/g, "/"));
-  str = str.replace(/{music}/g, app.getPath('music').replace(/\\/g, "/"));
-  str = str.replace(/{pictures}/g, app.getPath('pictures').replace(/\\/g, "/"));
-  str = str.replace(/{videos}/g, app.getPath('videos').replace(/\\/g, "/"));
-	str = str.replace(/{themes}/g, path.join(__dirname, "..", "build", "themes"));
-	str = str.replace(/{assets}/g, path.join(__dirname, "..", "assets"));
+  str = str.replace(/{home}/g, app.getPath('home'));
+  str = str.replace(/{path}/g, app.getAppPath());
+  str = str.replace(/{appData}/g, app.getPath('appData'));
+  str = str.replace(/{data}/g, app.getPath('userData'));
+  str = str.replace(/{temp}/g, app.getPath('temp'));
+  str = str.replace(/{desktop}/g, app.getPath('desktop'));
+  str = str.replace(/{documents}/g, app.getPath('documents'));
+  str = str.replace(/{downloads}/g, app.getPath('downloads'));
+  str = str.replace(/{music}/g, app.getPath('music'));
+  str = str.replace(/{pictures}/g, app.getPath('pictures'));
+  str = str.replace(/{videos}/g, app.getPath('videos'));
+  str = str.replace(/{characters}/g, path.join(app.getPath('userData'), "characters"));
+  str = str.replace(/{themes}/g, path.join(__dirname, "..", "build", "themes"));
+  str = str.replace(/{assets}/g, path.join(__dirname, "..", "assets"));
 
   if (data) {
     var keys = Object.keys(data);

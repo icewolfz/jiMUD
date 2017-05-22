@@ -18,7 +18,7 @@
 - redesign to be more multi instance friendly
   - maybe code a connection/character manger to allow grouping files simlar ot iceMud
     - maybe format using %appdata%/jiMUD/character/files?
-  - possibly allow cli arguments to set mapper/profiles?  
+  - `-profiles=name,name2,...,nameN` list of profiles to enable
 - Add new settings to setsetting/getsetting commands along with the faq doc table
 - Add log viewer, logs are just html files so a viewer just needs to load them in an iframe or something to sandbox them in
 - Finish monster css icons

@@ -564,6 +564,7 @@ export function parseTemplate(str: string, data?) {
 	str = str.replace(/{music}/g, app.getPath('music'));
 	str = str.replace(/{pictures}/g, app.getPath('pictures'));
 	str = str.replace(/{videos}/g, app.getPath('videos'));
+	str = str.replace(/{characters}/g, path.join(app.getPath('userData'), "characters"));
 	str = str.replace(/{themes}/g, path.join(__dirname, "..", "themes"));
 	str = str.replace(/{assets}/g, path.join(__dirname, "..", "..", "assets"));
 	if (data) {
