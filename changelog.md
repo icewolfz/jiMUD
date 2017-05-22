@@ -1,5 +1,7 @@
 ## Changelog
 ##### 0.2.4 - 2017-05-21
+- **Changed:**
+  - Profile manager: treeview should now sort by profile name, with default always being first
 - **Fixed:**
   - Profile manger: 
     - importing from file was broken, now will ask to replace, do nothing, or copy if name exist instead of defaulting to copy

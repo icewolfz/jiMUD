@@ -760,12 +760,6 @@ function cloneNode(node) {
 
 function cleanNode(node) {
     delete node.$el;
-    /*
-    if (node.state)
-    {
-        node.state.selected = false;
-    }
-    */
     if (!node.nodes)
         return node;
     for (var n = 0, nl = node.nodes.length; n < nl; n++)
@@ -810,6 +804,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         }
         if (expanded)
             $('#profile-tree').treeview('expandNode', [node]);
+        sortTree();
     }
 
 
@@ -1084,12 +1079,14 @@ function getKey(type: string) {
     }
 }
 
-function addProfile(profile: Profile) {
+function addProfile(profile: Profile, noSort?: boolean) {
     profiles.add(profile);
     var n = profile.name;
     var ln = n.toLowerCase();
     _remove = _remove.filter(function (a) { return a !== n });
     $('#profile-tree').treeview('addNode', [newProfileNode(profile), false, false]);
+    if (!noSort)
+        sortTree();
 }
 
 export function doUndo() {
@@ -1111,8 +1108,9 @@ export function doUndo() {
                 }
                 if (action.replaced && action.replaced.length > 0) {
                     for (var p = 0, pl = action.replaced.length; p < pl; p++)
-                        addProfile(action.replaced[p]);
+                        addProfile(action.replaced[p], true);
                 }
+                sortTree();
             }
             else
                 DeleteItem(action.type, action.data.key, action.data.idx, profiles.items[action.data.profile], true);
@@ -1261,8 +1259,9 @@ export function doRedo() {
                         DeleteProfile(action.replaced[p], true);
                 }
                 for (var p = 0, pl = action.item.length; p < pl; p++) {
-                    addProfile(action.item[p]);
+                    addProfile(action.item[p], true);
                 }
+                sortTree();
             }
             else
                 insertItem(action.type, action.data.key, action.item, action.data.idx, profiles.items[action.data.profile], true);
@@ -1780,12 +1779,15 @@ function buildTreeview(data) {
 }
 
 function getProfileData() {
-    var data = [newProfileNode('default')];
+    var data = [];
 
     for (var profile in profiles.items) {
         if (profile == 'default') continue;
         data.push(newProfileNode(profile));
     }
+
+    data.sort(function (a, b) { return a.text.localeCompare(b.text); });
+    data.unshift(newProfileNode('default'));
     return data;
 }
 
@@ -2515,6 +2517,21 @@ function sortFiles(a, b, p) {
     return a.localeCompare(b);
 }
 
+function sortTree() {
+    var data = [];
+
+    for (var profile in profiles.items) {
+        if (profile == 'default') continue;
+        var n = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile) + "$", 'id']);
+        data.push(cleanNode(n[0]));
+    }
+    data.sort(function (a, b) { return a.text.localeCompare(b.text); });
+    var n = $("#profile-tree").treeview('findNodes', ["^Profiledefault$", 'id']);
+    if (n.length > 0)
+        data.unshift(cleanNode(n[0]));
+    buildTreeview(data);
+}
+
 function loadActions(p, root) {
     var files = fs.readdirSync(p);
     files.sort(function (a, b) { return sortFiles(a, b, p) });
@@ -2752,7 +2769,10 @@ function importProfiles() {
                             }
                         }
                         if (names.length > 0)
+                        {
+                            sortTree();
                             pushUndo({ action: 'add', type: 'profile', item: names, replaced: _replace });
+                        }
                     }
                     ipcRenderer.send('set-progress', { value: -1, options: { mode: 'normal' } });
                 });
@@ -2957,8 +2977,17 @@ function DeleteProfile(profile, customUndo?: boolean) {
         pushUndo({ action: 'delete', type: 'profile', item: profile });
     var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + '$', 'id']);
     $('#profile-tree').treeview('removeNode', [nodes, { silent: false }]);
-    if (profile.name == currentProfile.name)
-        $('#profile-tree').treeview('selectNode', [$("#profile-tree").treeview('findNodes', ["^Profiledefault$", 'id'])]);
+    if (profile.name == currentProfile.name) {
+        if (profile.name.toLowerCase() == "default") {
+            for (var l = 0, ll = profiles.keys.length; l < ll; l++) {
+                if (profiles.keys[l] == "default") continue;
+                $('#profile-tree').treeview('selectNode', [$("#profile-tree").treeview('findNodes', ["^Profile" + profiles.keys[l] + "$", 'id'])]);
+                break;
+            }
+        }
+        else
+            $('#profile-tree').treeview('selectNode', [$("#profile-tree").treeview('findNodes', ["^Profiledefault$", 'id'])]);
+    }
     profiles.remove(profile);
 }
 
