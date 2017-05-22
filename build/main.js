@@ -52,7 +52,6 @@ process.argv.forEach((val, index) => {
     global.mapFile = parseTemplate(val.substring(3));
   if (val.startsWith("-mf=") || val.startsWith("-mf:"))
     global.mapFile = parseTemplate(val.substring(4));
-
 });
 
 var menuTemp = [
@@ -1227,19 +1226,20 @@ function trackWindowState(id, window) {
 }
 
 function parseTemplate(str, data) {
-  str = str.replace(/{home}/g, "file://" + app.getPath('home').replace(/\\/g, "/"));
-  str = str.replace(/{path}/g, "file://" + app.getAppPath().replace(/\\/g, "/"));
-  str = str.replace(/{appData}/g, "file://" + app.getPath('appData').replace(/\\/g, "/"));
-  str = str.replace(/{data}/g, "file://" + app.getPath('userData').replace(/\\/g, "/"));
-  str = str.replace(/{temp}/g, "file://" + app.getPath('temp').replace(/\\/g, "/"));
-  str = str.replace(/{desktop}/g, "file://" + app.getPath('desktop').replace(/\\/g, "/"));
-  str = str.replace(/{documents}/g, "file://" + app.getPath('documents').replace(/\\/g, "/"));
-  str = str.replace(/{downloads}/g, "file://" + app.getPath('downloads').replace(/\\/g, "/"));
-  str = str.replace(/{music}/g, "file://" + app.getPath('music').replace(/\\/g, "/"));
-  str = str.replace(/{pictures}/g, "file://" + app.getPath('pictures').replace(/\\/g, "/"));
-  str = str.replace(/{videos}/g, "file://" + app.getPath('videos').replace(/\\/g, "/"));
-  str = str.replace(/{themes}/g, path.join(".", "themes"));
-  str = str.replace(/{assets}/g, path.join(".", "..", "assets"));
+  str = str.replace(/{home}/g, app.getPath('home').replace(/\\/g, "/"));
+  str = str.replace(/{path}/g, app.getAppPath().replace(/\\/g, "/"));
+  str = str.replace(/{appData}/g, app.getPath('appData').replace(/\\/g, "/"));
+  str = str.replace(/{data}/g, app.getPath('userData').replace(/\\/g, "/"));
+  str = str.replace(/{temp}/g, app.getPath('temp').replace(/\\/g, "/"));
+  str = str.replace(/{desktop}/g, app.getPath('desktop').replace(/\\/g, "/"));
+  str = str.replace(/{documents}/g, app.getPath('documents').replace(/\\/g, "/"));
+  str = str.replace(/{downloads}/g, app.getPath('downloads').replace(/\\/g, "/"));
+  str = str.replace(/{music}/g, app.getPath('music').replace(/\\/g, "/"));
+  str = str.replace(/{pictures}/g, app.getPath('pictures').replace(/\\/g, "/"));
+  str = str.replace(/{videos}/g, app.getPath('videos').replace(/\\/g, "/"));
+	str = str.replace(/{themes}/g, path.join(__dirname, "..", "build", "themes"));
+	str = str.replace(/{assets}/g, path.join(__dirname, "..", "assets"));
+
   if (data) {
     var keys = Object.keys(data);
     for (var key in keys) {

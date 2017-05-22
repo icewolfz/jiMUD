@@ -1,4 +1,9 @@
 ## Changelog
+##### 0.2.5
+- **New:**
+  - Command line arguments:
+    - `-s=[file] \ --setting=[file]` override default setting file
+    - `-mf=[file] \ --map=[file]` override default map file
 ##### 0.2.4 - 2017-05-22
 - **Changed:**
   - Profile manager: treeview should now sort by profile name, with default always being first

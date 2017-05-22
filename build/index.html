@@ -50,7 +50,10 @@
       const path = require('path');
       const { version } = require("../package.json");
 
-      var set = Settings.load(path.join(app.getPath('userData'), remote.getGlobal('settingsFile')));
+console.log(parseTemplate("{themes}"));
+console.log(parseTemplate("{assets}"));
+
+      var set = Settings.load(remote.getGlobal('settingsFile'));
       loadTheme(set.theme);
       delete set;
 
