@@ -4,6 +4,7 @@
   - Profile manger: 
     - importing from file was broken, now will ask to replace, do nothing, or copy if name exist instead of defaulting to copy
     - Undo/redo of adding profiles was broken when you undo an add then redid it would break and lose profile
+  - Trigger cache was not clearing when profiles enabled/disabled
 ##### 0.2.3 - 2017-05-21
 - **New:**
   - Add some of the newer settings to set/getsetting commands

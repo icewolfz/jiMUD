@@ -78,10 +78,10 @@ export class Client extends EventEmitter {
             this.profiles.add(Profile.Default);
             return;
         }
-
         this.profiles.load(p);
         if (!this.profiles.contains('Default'))
             this.profiles.add(Profile.Default);
+        this.clearTriggerCache();
         this.emit('profiles-loaded');
     }
 
@@ -90,6 +90,7 @@ export class Client extends EventEmitter {
         if (!fs.existsSync(p))
             fs.mkdirSync(p);
         this.profiles.save(p);
+        this.clearTriggerCache();
         this.emit('profiles-updated');
     }
 
@@ -98,12 +99,14 @@ export class Client extends EventEmitter {
         if (!fs.existsSync(p))
             fs.mkdirSync(p);
         this.profiles.items[profile].save(p);
+        this.clearTriggerCache();
         this.emit('profile-updated', profile);
     }
 
     toggleProfile(profile: string) {
         this.profiles.toggle(profile);
         this.saveProfile(profile);
+        this.clearTriggerCache();
     }
 
     constructor(display, command) {
