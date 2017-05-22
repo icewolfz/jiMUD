@@ -13,6 +13,7 @@ const settings = require('./js/settings');
 let win, winHelp, winWho, winMap, winProfiles, winEditor, winChat
 let set, mapperMax = false, editorMax = false, chatMax = false, debug = false;
 let chatReady = false;
+let reload = null;
 
 let windows = {};
 
@@ -851,7 +852,6 @@ function createWindow() {
       windows[name].window.webContents.executeJavaScript('closed();');
       windows[name].window.destroy();
     }
-
     win = null;
   })
 
@@ -925,6 +925,13 @@ app.on('ready', createWindow)
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
+  //asked to reload with a different character
+  if (reload) {
+    loadCharacter(reload);
+    createWindow();
+    reload = null;
+    return;
+  }
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
@@ -938,6 +945,11 @@ app.on('activate', () => {
   if (win === null) {
     createWindow()
   }
+})
+
+ipcMain.on('reload', (event, char) => {
+  reload = char;
+  win.close();
 })
 
 ipcMain.on('reload-options', () => {
