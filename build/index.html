@@ -50,9 +50,6 @@
       const path = require('path');
       const { version } = require("../package.json");
 
-console.log(parseTemplate("{themes}"));
-console.log(parseTemplate("{assets}"));
-
       var set = Settings.load(remote.getGlobal('settingsFile'));
       loadTheme(set.theme);
       delete set;
@@ -653,7 +650,7 @@ console.log(parseTemplate("{assets}"));
         if (client.options.autoConnect)
           setTimeout(function () { client.connect(); }, 600);
 
-        _backup = new Backup(client);
+        _backup = new Backup(client, remote.getGlobal('mapFile'));
         _backup.loadSelection = client.options.backupLoad;
         _backup.saveSelection = client.options.backupSave;
 

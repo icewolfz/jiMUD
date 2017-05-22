@@ -112,6 +112,7 @@ export class Mapper extends EventEmitter {
     private hscroll: number = 0;
     private markers = {};
     private _cancelImport: boolean = false;
+    private _mapFile = path.join(parseTemplate("{data}"), "map.sqlite");
 
     public current: Room;
     public active: Room;
@@ -138,6 +139,32 @@ export class Mapper extends EventEmitter {
     get isDirty(): boolean { return this._changed; }
     set isDirty(value: boolean) { this._changed; }
 
+    set mapFile(value: string) {
+        if (value != this._mapFile) {
+            this.save(() => {
+                this._db.close(() => {
+                    this._mapFile = value;
+                    if (this._memory) {
+                        this._db = new sqlite3.Database(":memory:");
+                        this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
+                    }
+                    else
+                        this._db = new sqlite3.Database(this._mapFile);
+                    this.createDatabase();
+                    this._db.serialize();
+                    if (this._memory) {
+                        this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
+                        this.createDatabase('Disk');
+                        this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
+                        this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
+                        this._db.run('DETACH DATABASE Disk');
+                    }
+                });
+            });
+        }
+    }
+    get mapFile(): string { return this._mapFile }
+
     get memory(): boolean { return this._memory; }
     set memory(value: boolean) {
         if (this._memory != value) {
@@ -149,11 +176,11 @@ export class Mapper extends EventEmitter {
                         this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
                     }
                     else
-                        this._db = new sqlite3.Database(path.join(parseTemplate("{data}"), "map.sqlite"));
+                        this._db = new sqlite3.Database(this._mapFile);
                     this.createDatabase();
                     this._db.serialize();
                     if (this._memory) {
-                        this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
+                        this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
                         this.createDatabase('Disk');
                         this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
                         this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
@@ -227,9 +254,17 @@ export class Mapper extends EventEmitter {
         });
     }
 
-    constructor(canvas, memory?: boolean, memoryPeriod?: number) {
+    constructor(canvas, memory?: boolean, memoryPeriod?: (number | string), map?: string) {
         super();
-        this._memorySavePeriod = memoryPeriod;
+        if (typeof memoryPeriod == "string") {
+            if (memoryPeriod.length > 0)
+                this._mapFile = memoryPeriod;
+        }
+        else {
+            this._memorySavePeriod = memoryPeriod;
+            if (map && map.length > 0)
+                this._mapFile = map;
+        }
         this._canvas = canvas;
         this._context = canvas.getContext("2d");
         //rooms - ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors
@@ -240,11 +275,11 @@ export class Mapper extends EventEmitter {
             this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
         }
         else
-            this._db = new sqlite3.Database(path.join(parseTemplate("{data}"), "map.sqlite"));
+            this._db = new sqlite3.Database(this._mapFile);
         this.createDatabase();
         this._db.serialize();
         if (this._memory) {
-            this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
+            this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
             this.createDatabase('Disk');
             this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
             this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
@@ -538,8 +573,7 @@ export class Mapper extends EventEmitter {
     }
 
     reset(type?) {
-        if (!type || type == 1)
-        {
+        if (!type || type == 1) {
             this.current = new Room();
             this.emit('current-room-changed', this.current);
         }
@@ -556,8 +590,7 @@ export class Mapper extends EventEmitter {
     }
 
     focusCurrentRoom() {
-        if (this.current.ID)
-        {
+        if (this.current.ID) {
             this.setActive(clone(this.current));
             this.emit('active-room-changed', clone(this.active));
         }
@@ -587,7 +620,7 @@ export class Mapper extends EventEmitter {
     setArea(area: string) {
         this.active.area = area;
         if (this.current.ID !== null && this.current.area == this.active.area) {
-            this.setActive( this.sanitizeRoom(clone(this.current)));
+            this.setActive(this.sanitizeRoom(clone(this.current)));
             this.focusActiveRoom();
             this.emit('setting-changed', 'active', this.active);
         }
@@ -1782,7 +1815,7 @@ export class Mapper extends EventEmitter {
                         stmt.finalize();
                     }
                     stmt2.finalize();
-                    if(rl == 0)
+                    if (rl == 0)
                         this.emit('import-progress', 100);
                     this._changed = true;
                     //this.emit('import-progress', 100);
@@ -1856,8 +1889,8 @@ export class Mapper extends EventEmitter {
                         stmt.finalize();
                     }
                     stmt2.finalize();
-                    if(rl == 0)
-                        this.emit('import-progress', 100);                    
+                    if (rl == 0)
+                        this.emit('import-progress', 100);
                     this._changed = true;
                     //this.emit('import-progress', 100);
                     //this.reset();
@@ -1978,7 +2011,7 @@ export class Mapper extends EventEmitter {
                     callback();
                 return;
             }
-            this._db.run('ATTACH DATABASE \'' + path.join(parseTemplate("{data}"), "map.sqlite") + '\' as Disk');
+            this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
             this.createDatabase('Disk');
             this._db.run('DELETE FROM Disk.Rooms');
             this._db.run('DELETE FROM Disk.Exits');

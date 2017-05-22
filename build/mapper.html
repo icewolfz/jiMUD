@@ -191,7 +191,7 @@
         $("#mapper-room button").prop("disabled", true);
 
         var options = Settings.load(remote.getGlobal('settingsFile'));
-        mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod);
+        mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
         mapper.enabled = options.mapper.enabled;
         mapper.showLegend = options.mapper.legend;
         mapper.follow = options.mapper.follow;
