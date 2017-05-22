@@ -64,7 +64,7 @@
           $("#cmd-font-sample").css("font-size", $("#cmdfontSize").val());
         });
 
-        _settings = Settings.load(path.join(parseTemplate("{data}"), remote.getGlobal('settingsFile')));
+        _settings = Settings.load(remote.getGlobal('settingsFile'));
         loadThemes();
         loadSettings();
 
@@ -637,7 +637,7 @@
 
       function saveSettings() {
         _settings.chat.lines = $("#chat-lines").val().split(',');
-        _settings.save(path.join(parseTemplate("{data}"), remote.getGlobal('settingsFile')));
+        _settings.save(remote.getGlobal('settingsFile'));
         ipcRenderer.send('reload-options');
         window.close()
       }

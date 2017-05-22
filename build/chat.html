@@ -29,7 +29,7 @@
             var options, currentFile, _path, timeStamp = new Date().getTime(), _name;
 
             function loadOptions() {
-                options = Settings.load(path.join(parseTemplate("{data}"), remote.getGlobal('settingsFile')));
+                options = Settings.load(remote.getGlobal('settingsFile'));
                 _path = parseTemplate(options.logPath);
             }
 

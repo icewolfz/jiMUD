@@ -16,7 +16,8 @@ let chatReady = false;
 
 let windows = {};
 
-global.settingsFile = "settings.json";
+global.settingsFile = parseTemplate(path.join("{data}", "settings.json"));
+global.mapFile = parseTemplate(path.join("{data}", "map.sqlite"));
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
@@ -37,9 +38,21 @@ process.argv.forEach((val, index) => {
       break;
   }
   if (val.startsWith("--settings=") || val.startsWith("--settings:"))
-    global.settingsFile = val.substring(11);
+    global.settingsFile = parseTemplate(val.substring(11));
+  if (val.startsWith("-settings=") || val.startsWith("-settings:"))
+    global.settingsFile = parseTemplate(val.substring(10));
   if (val.startsWith("-s=") || val.startsWith("-s:"))
-    global.settingsFile = val.substring(3);
+    global.settingsFile = parseTemplate(val.substring(3));
+
+  if (val.startsWith("--map=") || val.startsWith("--map:"))
+    global.mapFile = parseTemplate(val.substring(6));
+  if (val.startsWith("-map=") || val.startsWith("-map:"))
+    global.mapFile = parseTemplate(val.substring(5));
+  if (val.startsWith("-m=") || val.startsWith("-m:"))
+    global.mapFile = parseTemplate(val.substring(3));
+  if (val.startsWith("-mf=") || val.startsWith("-mf:"))
+    global.mapFile = parseTemplate(val.substring(4));
+
 });
 
 var menuTemp = [
@@ -656,9 +669,9 @@ function showHelpWindow(url, title) {
   })
 
   winHelp.on('close', () => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+    set = settings.Settings.load(global.settingsFile);
     set.windows['help'] = getWindowState('help', winHelp);
-    set.save(path.join(app.getPath('userData'), global.settingsFile));
+    set.save(global.settingsFile);
   })
 }
 
@@ -824,9 +837,9 @@ function createWindow() {
   })
 
   win.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+    set = settings.Settings.load(global.settingsFile);
     set.windows['main'] = getWindowState('main', win);
-    set.save(path.join(app.getPath('userData'), global.settingsFile));
+    set.save(global.settingsFile);
     if (winMap)
       winMap.webContents.executeJavaScript('save();');
     for (var name in windows) {
@@ -845,7 +858,7 @@ function createWindow() {
   })
 
   if (!set)
-    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+    set = settings.Settings.load(global.settingsFile);
 }
 
 
@@ -873,7 +886,7 @@ app.on('activate', () => {
 
 ipcMain.on('reload-options', () => {
   win.webContents.send('reload-options');
-  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+  set = settings.Settings.load(global.settingsFile);
   if (winMap) {
     winMap.webContents.send('reload-options');
     if (winMap.setParentWindow)
@@ -1157,7 +1170,7 @@ function updateMenuItem(args) {
 }
 
 function loadMenu() {
-  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+  set = settings.Settings.load(global.settingsFile);
   updateMenuItem({ menu: ['view', 'status', 'statusvisible'], checked: set.showStatus });
   updateMenuItem({ menu: ['view', 'status', 'weather'], checked: set.showStatusWeather });
   updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: set.showStatusLimbs });
@@ -1186,7 +1199,7 @@ function getWindowState(id, window) {
 }
 
 function loadWindowState(window) {
-  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+  set = settings.Settings.load(global.settingsFile);
   if (!set.windows || !set.windows[window])
     return {
       x: 0,
@@ -1331,11 +1344,11 @@ function createMapper(show) {
   })
 
   winMap.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+    set = settings.Settings.load(global.settingsFile);
     if (win != null)
       set.showMapper = false;
     set.windows['mapper'] = getWindowState('mapper', winMap);
-    set.save(path.join(app.getPath('userData'), global.settingsFile));
+    set.save(global.settingsFile);
     winMap.webContents.executeJavaScript('save();');
     if (set.mapper.enabled || set.mapper.persistent) {
       e.preventDefault();
@@ -1345,9 +1358,9 @@ function createMapper(show) {
 }
 
 function showMapper() {
-  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+  set = settings.Settings.load(global.settingsFile);
   set.showMapper = true;
-  set.save(path.join(app.getPath('userData'), global.settingsFile));
+  set.save(global.settingsFile);
   if (winMap != null) {
     if (mapperMax)
       winMap.maximize();
@@ -1405,9 +1418,9 @@ function showProfiles() {
   })
 
   winProfiles.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+    set = settings.Settings.load(global.settingsFile);
     set.windows['profiles'] = getWindowState('profiles', winProfiles);
-    set.save(path.join(app.getPath('userData'), global.settingsFile));
+    set.save(global.settingsFile);
   })
 
   winProfiles.on('resize', () => {
@@ -1483,10 +1496,10 @@ function createEditor(show) {
   })
 
   winEditor.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+    set = settings.Settings.load(global.settingsFile);
     set.showEditor = false;
     set.windows['editor'] = getWindowState('editor', winEditor);
-    set.save(path.join(app.getPath('userData'), global.settingsFile));
+    set.save(global.settingsFile);
     winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
     if (set.editorPersistent) {
       e.preventDefault();
@@ -1496,9 +1509,9 @@ function createEditor(show) {
 }
 
 function showEditor() {
-  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+  set = settings.Settings.load(global.settingsFile);
   set.showEditor = true;
-  set.save(path.join(app.getPath('userData'), global.settingsFile));
+  set.save(global.settingsFile);
   if (winEditor != null) {
     if (editorMax)
       winEditor.maximize();
@@ -1575,10 +1588,10 @@ function createChat(show) {
   })
 
   winChat.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+    set = settings.Settings.load(global.settingsFile);
     set.showChat = false;
     set.windows['chat'] = getWindowState('chat', winChat);
-    set.save(path.join(app.getPath('userData'), global.settingsFile));
+    set.save(global.settingsFile);
     if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines) {
       e.preventDefault();
       winChat.hide();
@@ -1587,9 +1600,9 @@ function createChat(show) {
 }
 
 function showChat() {
-  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+  set = settings.Settings.load(global.settingsFile);
   set.showChat = true;
-  set.save(path.join(app.getPath('userData'), global.settingsFile));
+  set.save(global.settingsFile);
   if (winChat != null) {
     if (chatMax)
       winChat.maximize();
@@ -1672,10 +1685,10 @@ function createNewWindow(name, options) {
   })
 
   windows[name].window.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+    set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, windows[name].window);
     set.windows[name].show = false;
-    set.save(path.join(app.getPath('userData'), global.settingsFile));
+    set.save(global.settingsFile);
     if (windows[name].persistent) {
       e.preventDefault();
       windows[name].window.hide();
@@ -1684,11 +1697,11 @@ function createNewWindow(name, options) {
 }
 
 function showWindow(name, options) {
-  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
+  set = settings.Settings.load(global.settingsFile);
   if (!set.windows[name])
     set.windows[name] = {};
   set.windows[name].show = true;
-  set.save(path.join(app.getPath('userData'), global.settingsFile));
+  set.save(global.settingsFile);
   if (!options) options = { show: true };
   if (windows[name] && windows[name].window) {
     if (windows[name].max)

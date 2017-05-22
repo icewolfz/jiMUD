@@ -23,6 +23,8 @@ export class Backup extends EventEmitter {
     private _action;
     private _save;
 
+    public mapFile = path.join(parseTemplate("{data}"), "map.sqlite");
+
     public loadSelection: BackupSelection = BackupSelection.All;
     public saveSelection: BackupSelection = BackupSelection.All;
 
@@ -32,7 +34,7 @@ export class Backup extends EventEmitter {
         return "http://shadowmud.com:1130/client";
     }
 
-    constructor(client: Client) {
+    constructor(client: Client, map?:string) {
         super();
         if (!client)
             throw "Invalid client!";
@@ -72,11 +74,12 @@ export class Backup extends EventEmitter {
                     break;
             }
         });
-
+        if(map && map.length > 0)
+            this.mapFile = map;
     }
 
     save(version?: number) {
-        var _db = new sqlite3.Database(path.join(parseTemplate("{data}"), "map.sqlite"));
+        var _db = new sqlite3.Database(this.mapFile);
         _db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID", (err, rows) => {
             var data = {
                 version: version,

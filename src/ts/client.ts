@@ -25,7 +25,7 @@ export class Client extends EventEmitter {
     private _input: input;
     private _auto: NodeJS.Timer = null;
     private _autoError: boolean = false;
-    private _settingsFile: string = 'settings.json'
+    private _settingsFile: string = parseTemplate(path.join('{data}', 'settings.json'));
 
     public MSP: MSP;
 
@@ -363,7 +363,7 @@ export class Client extends EventEmitter {
     }
 
     loadOptions() {
-        this.options = Settings.load(path.join(parseTemplate("{data}"), this._settingsFile));
+        this.options = Settings.load(this._settingsFile);
 
         this.enableDebug = this.options.enableDebug;
         this.parser.enableFlashing = this.options.flashing;
@@ -397,7 +397,7 @@ export class Client extends EventEmitter {
     }
 
     saveOptions() {
-        this.options.save(path.join(parseTemplate("{data}"), this._settingsFile));
+        this.options.save(this._settingsFile);
     }
 
     setOption(name, value) {

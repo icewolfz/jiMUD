@@ -314,11 +314,11 @@
             });
 
             $(document).ready(() => {
-                options = Settings.load(path.join(parseTemplate("{data}"), remote.getGlobal('settingsFile')));
+                options = Settings.load(remote.getGlobal('settingsFile'));
                 loadColors();
             });
             ipcRenderer.on('reload-options', (event) => {
-                options = Settings.load(path.join(parseTemplate("{data}"), remote.getGlobal('settingsFile')));
+                options = Settings.load(remote.getGlobal('settingsFile'));
                 loadColors();
             });
 
