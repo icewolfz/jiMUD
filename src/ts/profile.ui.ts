@@ -17,7 +17,7 @@ var watcher;
 var filesChanged = false;
 var _clip, _pUndo;
 var _undo = [], _redo = [];
-var _remove = [];
+var _remove = [], _enabled = [];
 var _never = true;
 var _close, _loading = 0;
 
@@ -109,7 +109,7 @@ function AddNewProfile(d?: Boolean) {
         text: txt,
         id: 'Profile' + profileID(n),
         state: {
-            checked: profiles.items[n].enabled
+            checked: _enabled.indexOf(n) != -1
         },
         dataAttr: {
             type: 'profile',
@@ -175,6 +175,7 @@ function AddNewProfile(d?: Boolean) {
     }
     $('#profile-tree').treeview('addNode', [node, false, false]);
     pushUndo({ action: 'add', type: 'profile', item: [p.clone()] });
+    _enabled.push(p.name.toLowerCase());
 }
 
 export function RunTester() {
@@ -342,32 +343,24 @@ export function UpdateEnabled() {
         case "contexts":
         case "profile":
             var parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(currentProfile.name) + "$", 'id']);
-            if (!$("#editor-enabled").prop("checked")) {
-                if (profiles.canDisable(currentProfile)) {
-                    if ($("#editor-enabled").prop("checked"))
-                        $('#profile-tree').treeview('checkNode', [parent, { silent: true }]);
-                    else
-                        $('#profile-tree').treeview('uncheckNode', [parent, { silent: true }]);
-                    pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.enabled } });
-                    currentProfile.enabled = $("#editor-enabled").prop("checked");
-                }
-                else {
+            if (!$("#editor-enabled").prop("checked") && _enabled.indexOf(currentProfile.name.toLowerCase()) != -1) {
+                _enabled = _enabled.filter(function (a) { return a !== currentProfile.name.toLowerCase() });
+                if (_enabled.length == 0) {
+                    _enabled.push(currentProfile.name.toLowerCase());
                     $("#editor-enabled").prop("checked", true);
                     $("#profile-tree").treeview('checkNode', [parent, { silent: true }]);
                 }
-            }
-            else if (currentProfile.enabled != $("#editor-enabled").prop("checked")) {
-                if ($("#editor-enabled").prop("checked"))
-                    $('#profile-tree').treeview('checkNode', [parent, { silent: true }]);
-                else
+                else {
                     $('#profile-tree').treeview('uncheckNode', [parent, { silent: true }]);
-                pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.enabled } });
-                currentProfile.enabled = $("#editor-enabled").prop("checked");
+                    pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: { enabled: true } });
+                }
             }
-
-
+            else if ($("#editor-enabled").prop("checked") && _enabled.indexOf(currentProfile.name.toLowerCase()) == -1) {
+                $('#profile-tree').treeview('checkNode', [parent, { silent: true }]);
+                pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: { enabled: false } });
+                _enabled.push(currentProfile.name.toLowerCase());
+            }
             break;
-
         case "alias":
             if ($("#editor-enabled").prop("checked"))
                 $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + "$", 'id']), { silent: true }]);
@@ -682,7 +675,7 @@ function newProfileNode(profile?) {
             profile: key
         },
         state: {
-            checked: profile.enabled
+            checked: _enabled.indexOf(key) != -1
         },
         nodes: [
             {
@@ -773,10 +766,11 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
     var val;
 
     var val = $("#profile-name").val();
+    var e = _enabled.indexOf(currentProfile.name.toLowerCase()) != -1;
+
     if (val != currentProfile.name) {
         data.name = val;
         changed++;
-
         if (profiles.contains(val)) {
             dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'error',
@@ -788,6 +782,10 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
             return UpdateState.Error;
         }
         profiles.remove(currentProfile);
+        if (e) {
+            _enabled = _enabled.filter(function (a) { return a !== currentProfile.name.toLowerCase() });
+            _enabled.push(val.toLowerCase());
+        }
         currentProfile.name = val;
         profiles.add(currentProfile);
         $("#editor-title").text("Profile: " + currentProfile.name);
@@ -840,19 +838,26 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         currentProfile.enableDefaultContext = $("#profile-enableDefaultContext").prop("checked");
     }
 
-    if (currentProfile.enabled != $("#editor-enabled").prop("checked")) {
-        data.enabled = currentProfile.enabled;
-        changed++;
-        if (!$("#editor-enabled").prop("checked")) {
-            if (profiles.canDisable(currentProfile))
-                currentProfile.enabled = false;
-            else {
+    if (e != $("#editor-enabled").prop("checked")) {
+        if ($("#editor-enabled").prop("checked")) {
+            data.enabled = e;
+            _enabled.push(currentProfile.name.toLowerCase());
+            changed++;
+            $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + "$", 'id'])]);
+        }
+        else {
+            _enabled = _enabled.filter(function (a) { return a !== currentProfile.name.toLowerCase() });
+            if (_enabled.length == 0) {
+                _enabled.push(currentProfile.name.toLowerCase());
                 $("#editor-enabled").prop("checked", true);
                 $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + "$", 'id'])]);
             }
+            else {
+                data.enabled = e;
+                $("#profile-tree").treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + "$", 'id'])]);
+                changed++;
+            }
         }
-        else
-            currentProfile.enabled = true;
     }
 
     if (currentProfile.priority != parseInt($("#profile-priority").val(), 10)) {
@@ -931,21 +936,26 @@ function nodeCheckChanged(event, node) {
     var profile = profiles.items[node.dataAttr.profile];
     switch (t) {
         case "profile":
-            if (!node.state.checked) {
-                if (profiles.canDisable(profile))
-                    profile.enabled = node.state.checked;
-                else {
+            var e = _enabled.indexOf(node.dataAttr.profile) != -1;
+            if (!node.state.checked && e) {
+                _enabled = _enabled.filter(function (a) { return a !== node.dataAttr.profile });
+                if (_enabled.length == 0) {
+                    _enabled.push(node.dataAttr.profile);
                     $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + node.id + "$", 'id']), { silent: true }]);
                     changed = 0;
                 }
+                else {
+                    data.enabled = false;
+                }
             }
-            else if (profile.enabled != node.state.checked)
-                profile.enabled = node.state.checked;
+            else if (!e && node.state.checked) {
+                _enabled.push(node.dataAttr.profile);
+                data.enabled = true;
+            }
             else
                 changed = 0;
-            data.enabled = profile.enabled;
             if (profile == currentProfile)
-                $("#editor-enabled").prop("checked", profile.enabled);
+                $("#editor-enabled").prop("checked", _enabled.indexOf(node.dataAttr.profile) != -1);
             break;
         case "aliases":
             profile.enableAliases = node.state.checked;
@@ -1084,6 +1094,7 @@ function addProfile(profile: Profile, noSort?: boolean) {
     var n = profile.name;
     var ln = n.toLowerCase();
     _remove = _remove.filter(function (a) { return a !== n });
+    _enabled = _enabled.filter(function (a) { return a !== n });
     $('#profile-tree').treeview('addNode', [newProfileNode(profile), false, false]);
     if (!noSort)
         sortTree();
@@ -1126,6 +1137,12 @@ export function doUndo() {
             if (action.type == "profile") {
                 for (var prop in action.data) {
                     if (!action.data.hasOwnProperty(prop)) {
+                        continue;
+                    }
+                    if (prop == "enabled") {
+                        _enabled = _enabled.filter(function (a) { return a !== action.profile });
+                        if (action.data.enabled)
+                            _enabled.push(action.profile);
                         continue;
                     }
                     current[prop] = profiles.items[action.profile][prop];
@@ -1277,6 +1294,12 @@ export function doRedo() {
             if (action.type == "profile") {
                 for (var prop in action.data) {
                     if (!action.data.hasOwnProperty(prop)) {
+                        continue;
+                    }
+                    if (prop == "enabled") {
+                        _enabled = _enabled.filter(function (a) { return a !== action.profile });
+                        if (action.data.enabled)
+                            _enabled.push(action.profile);
                         continue;
                     }
                     current[prop] = profiles.items[action.profile][prop];
@@ -1782,7 +1805,7 @@ function getProfileData() {
     var data = [];
 
     for (var profile in profiles.items) {
-        if (profile == 'default') continue;
+        if (!profiles.items.hasOwnProperty(profile) || profile == 'default') continue;
         data.push(newProfileNode(profile));
     }
 
@@ -1794,6 +1817,7 @@ function getProfileData() {
 function loadOptions() {
     var options = Settings.load(remote.getGlobal('settingsFile'));
     _never = options.profiles.askoncancel;
+    _enabled = options.profiles.enabled;
 
     var theme = parseTemplate(options.theme) + ".css";
     if (!fs.existsSync(theme))
@@ -1832,6 +1856,7 @@ export function init() {
             $('#btn-refresh').addClass('btn-warning');
         })
     }
+    loadOptions();
 
     buildTreeview(getProfileData());
     $("#profile-tree").contextmenu((event) => {
@@ -2490,8 +2515,6 @@ export function init() {
         }));
         exportmenu.popup(remote.getCurrentWindow(), { x: x, y: y });
     })
-
-    loadOptions();
 }
 
 function undoKeydown(e) {
@@ -2521,7 +2544,7 @@ function sortTree() {
     var data = [];
 
     for (var profile in profiles.items) {
-        if (profile == 'default') continue;
+        if (!profiles.items.hasOwnProperty(profile) || profile == 'default') continue;
         var n = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile) + "$", 'id']);
         data.push(cleanNode(n[0]));
     }
@@ -2656,7 +2679,7 @@ function importProfiles() {
                         for (; k < kl; k++) {
                             var p = new Profile(keys[k]);
                             p.priority = data.profiles[keys[k]].priority;
-                            p.enabled = data.profiles[keys[k]].enabled;
+                            //p.enabled = data.profiles[keys[k]].enabled;
                             p.enableMacros = data.profiles[keys[k]].enableMacros;
                             p.enableTriggers = data.profiles[keys[k]].enableTriggers;
                             p.enableAliases = data.profiles[keys[k]].enableAliases;
@@ -2721,6 +2744,9 @@ function importProfiles() {
                                 if (all == 3) {
                                     _replace.push(profiles.items[p.name.toLowerCase()].clone());
                                     profiles.add(p);
+                                    _enabled = _enabled.filter(function (a) { return a !== p.name.toLowerCase() });
+                                    if (p.enabled)
+                                        _enabled.push(p.name.toLowerCase());
                                     names.push(p.clone());
                                     var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(p.name) + '$', 'id']);
                                     $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
@@ -2730,6 +2756,8 @@ function importProfiles() {
                                     n = profileCopyName(p.name);
                                     p.name = n;
                                     p.file = n.toLowerCase();
+                                    if (p.enabled)
+                                        _enabled.push(p.name.toLowerCase());
                                     profiles.add(p);
                                     names.push(p.clone());
                                     $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
@@ -2745,6 +2773,10 @@ function importProfiles() {
                                     if (response == 0) {
                                         _replace.push(profiles.items[p.name.toLowerCase()].clone());
                                         profiles.add(p);
+                                        _enabled = _enabled.filter(function (a) { return a !== p.name.toLowerCase() });
+                                        if (p.enabled)
+                                            _enabled.push(p.name.toLowerCase());
+
                                         names.push(p.clone());
                                         var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(p.name) + '$', 'id']);
                                         $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
@@ -2755,6 +2787,8 @@ function importProfiles() {
                                         p.name = n;
                                         p.file = n.toLowerCase();
                                         profiles.add(p);
+                                        if (p.enabled)
+                                            _enabled.push(p.name.toLowerCase());
                                         names.push(p.clone());
                                         $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                     }
@@ -2768,8 +2802,7 @@ function importProfiles() {
                                 $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                             }
                         }
-                        if (names.length > 0)
-                        {
+                        if (names.length > 0) {
                             sortTree();
                             pushUndo({ action: 'add', type: 'profile', item: names, replaced: _replace });
                         }
@@ -2803,7 +2836,10 @@ export function saveProfiles() {
                 if (!fs.existsSync(p))
                     fs.mkdirSync(p);
                 profiles.save(p);
-                trashProfiles(p)
+                trashProfiles(p);
+                var options = Settings.load(remote.getGlobal('settingsFile'));
+                options.profiles.enabled = _enabled;
+                options.save(remote.getGlobal('settingsFile'));
                 ipcRenderer.send('reload-profiles');
                 setTimeout(clearChanges, 500);
             }
@@ -2813,7 +2849,14 @@ export function saveProfiles() {
         if (!fs.existsSync(p))
             fs.mkdirSync(p);
         profiles.save(p);
-        trashProfiles(p)
+        trashProfiles(p);
+
+        var options = Settings.load(remote.getGlobal('settingsFile'));
+        options.profiles.enabled = _enabled;
+        options.save(remote.getGlobal('settingsFile'));
+
+
+
         ipcRenderer.send('reload-profiles');
         setTimeout(clearChanges, 500);
     }
@@ -2989,6 +3032,7 @@ function DeleteProfile(profile, customUndo?: boolean) {
             $('#profile-tree').treeview('selectNode', [$("#profile-tree").treeview('findNodes', ["^Profiledefault$", 'id'])]);
     }
     profiles.remove(profile);
+    _enabled = _enabled.filter(function (a) { return a !== profile.name.toLowerCase() });
 }
 
 function DeleteItems(type, key, profile) {
@@ -3206,7 +3250,9 @@ export function doReset(node) {
             profile.enableContexts = true;
             profile.enableDefaultContext = true;
             profile.priority = 0;
-            profile.enabled = true;
+
+            _enabled = _enabled.filter(function (a) { return a !== profile.name.toLowerCase() });
+            _enabled.push(profile.name.toLowerCase());
 
             if (profile.name == currentProfile.name) {
                 $("#profile-enableAliases").prop("checked", currentProfile.enableAliases);
@@ -3215,7 +3261,7 @@ export function doReset(node) {
                 $("#profile-enableButtons").prop("checked", currentProfile.enableButtons);
                 $("#profile-enableContexts").prop("checked", currentProfile.enableContexts);
                 $("#profile-enableDefaultContext").prop("checked", currentProfile.enableDefaultContext);
-                $("#editor-enabled").prop("checked", currentProfile.enabled)
+                $("#editor-enabled").prop("checked", true)
                 $("#profile-priority").val(currentProfile.priority);
             }
             $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + "macros$", 'id'])]);

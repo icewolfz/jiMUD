@@ -45,6 +45,36 @@ export class Client extends EventEmitter {
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
 
+
+    set enabledProfiles(value: string[]) {
+        var a = [];
+        //can only enable profiles that exist, so scan the array for valid profiles
+        for (var v = 0, vl = value.length; v < vl; v++) {
+            if (this.profiles.contains(value[v]))
+                a.push(value[v]);
+        }
+        if (a.length == 0)
+            a.push("default");
+        this.options.profiles.enabled = a;
+        this.saveOptions();
+    }
+
+    get enabledProfiles(): string[] {
+        if (this.options.profiles.enabled.length == 0) {
+            var a = [];
+            for (var profile in this.profiles.items) {
+                if (!this.profiles.items.hasOwnProperty(profile)) continue;
+                if (this.profiles.items[profile].enabled)
+                    a.push(profile);
+            }
+            if (a.length == 0)
+                a.push("default");
+            this.options.profiles.enabled = a;
+            this.saveOptions();
+        }
+        return this.options.profiles.enabled;
+    }
+
     set settingsFile(val: string) {
         if (this._settingsFile != val) {
             this._settingsFile = val;
@@ -55,23 +85,88 @@ export class Client extends EventEmitter {
     get settingsFile(): string { return this._settingsFile; }
 
     get aliases(): Alias[] {
-        return this.profiles.aliases;
+        var keys = this.profiles.keys;
+        var tmp = [], k = 0, kl = keys.length;
+        if (kl === 0) return [];
+        if (kl === 1) {
+            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableAliases)
+                return [];
+            return this.profiles.items[keys[0]].aliases;
+        }
+        for (; k < kl; k++) {
+            if (this.enabledProfiles.indexOf(keys[k]) == -1 || !this.profiles.items[keys[k]].enableAliases || this.profiles.items[keys[k]].aliases.length === 0)
+                continue;
+            tmp = tmp.concat(this.profiles.items[keys[k]].aliases);
+        }
+        return tmp;
     }
 
     get macros(): Macro[] {
-        return this.profiles.macros;
+        var keys = this.profiles.keys;
+        var tmp = [], k = 0, kl = keys.length;
+        if (kl === 0) return [];
+        if (kl === 1) {
+            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableMacros)
+                return [];
+            return this.profiles.items[keys[0]].macros;
+        }
+        for (; k < kl; k++) {
+            if (this.enabledProfiles.indexOf(keys[k]) == -1 || !this.profiles.items[keys[k]].enableMacros || this.profiles.items[keys[k]].macros.length === 0)
+                continue;
+            tmp = tmp.concat(this.profiles.items[keys[k]].macros);
+        }
+        return tmp;
     }
 
     get triggers(): Trigger[] {
-        return this.profiles.triggers;
+        var keys = this.profiles.keys;
+        var tmp = [], k = 0, kl = keys.length;
+        if (kl === 0) return [];
+        if (kl === 1) {
+            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableTriggers)
+                return [];
+            return this.profiles.items[keys[0]].triggers;
+        }
+        for (; k < kl; k++) {
+            if (this.enabledProfiles.indexOf(keys[k]) == -1 || !this.profiles.items[keys[k]].enableTriggers || this.profiles.items[keys[k]].triggers.length === 0)
+                continue;
+            tmp = tmp.concat(this.profiles.items[keys[k]].triggers);
+        }
+        return tmp;
     }
 
     get buttons(): Button[] {
-        return this.profiles.buttons;
+        var keys = this.profiles.keys;
+        var tmp = [], k = 0, kl = keys.length;
+        if (kl === 0) return [];
+        if (kl === 1) {
+            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableButtons)
+                return [];
+            return this.profiles.items[keys[0]].buttons;
+        }
+        for (; k < kl; k++) {
+            if (this.enabledProfiles.indexOf(keys[k]) == -1 || !this.profiles.items[keys[k]].enableButtons || this.profiles.items[keys[k]].buttons.length === 0)
+                continue;
+            tmp = tmp.concat(this.profiles.items[keys[k]].buttons);
+        }
+        return tmp;
     }
 
     get contexts(): Context[] {
-        return this.profiles.contexts;
+        var keys = this.profiles.keys;
+        var tmp = [], k = 0, kl = keys.length;
+        if (kl === 0) return [];
+        if (kl === 1) {
+            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableContexts)
+                return [];
+            return this.profiles.items[keys[0]].contexts;
+        }
+        for (; k < kl; k++) {
+            if (this.enabledProfiles.indexOf(keys[k]) == -1 || !this.profiles.items[keys[k]].enableContexts || this.profiles.items[keys[k]].contexts.length === 0)
+                continue;
+            tmp = tmp.concat(this.profiles.items[keys[k]].contexts);
+        }
+        return tmp;
     }
 
     get defaultContext(): boolean {
@@ -114,8 +209,22 @@ export class Client extends EventEmitter {
     }
 
     toggleProfile(profile: string) {
-        this.profiles.toggle(profile);
-        this.saveProfile(profile);
+        //this.profiles.toggle(profile);
+        //this.saveProfile(profile);
+        profile = profile.toLowerCase();
+        var p = this.enabledProfiles;
+        if (p.indexOf(profile) == -1) {
+            p.push(profile);
+        }
+        else {
+            //remove profile
+            p = p.filter(function (a) { return a !== profile });
+            //cant disable if only profile
+            if (p.length == 0)
+                p = [profile];
+        }
+        this.enabledProfiles = p;
+        this.saveOptions();
         this.clearTriggerCache();
     }
 

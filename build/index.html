@@ -359,6 +359,8 @@
         });
 
         client = new Client($("#display-frame").contents().find("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
+        if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
+          client.enableProfiles = remote.getGlobal('profiles');
         client.parser.enableBell = false;
         client.parser.on('bell', () => {
           shell.beep();
@@ -501,8 +503,9 @@
         client.host = "www.shadowmud.com";
         client.port = client.options.dev ? 1035 : 1030;
         client.telnet.GMCPSupports.push("Room 1");
-        ('profile-updated', (profile) => {
-          ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.profiles.items[profile].enabled });
+
+        client.on('profile-updated', (profile) => {
+          ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.enabledProfiles.indexOf(profile) != -1 });
         });
 
         client.on('profiles-updated', () => {
@@ -1136,7 +1139,7 @@
 
       function updateMenu() {
         for (var profile in client.profiles.items)
-          ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.profiles.items[profile].enabled });
+          ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.enabledProfiles.indexOf(profile) != -1 });
 
         ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
         ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
@@ -1212,6 +1215,8 @@
         }
         else if (data.type == "profiles") {
           client.options.profiles[data.name] = data.value;
+          if (data.name == "enabled")
+            updateMenu();
           client.saveOptions();
         }
         else if (data.type == "chat") {
@@ -1243,7 +1248,9 @@
 
       ipcRenderer.on('reload-profiles', (event) => {
         client.loadProfiles();
+        client.loadOptions();
         buildButtons();
+        updateMenu();
       });
 
       ipcRenderer.on('reload-options', (event) => {

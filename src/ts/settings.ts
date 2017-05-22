@@ -86,7 +86,7 @@ types:
 	2 number
 	3 raw setting
 	4 custom
-	5 combobox
+	5 combo-box
 */
 export var SettingList: any[] = [
 	["bufferSize", 0, 2, 5000],
