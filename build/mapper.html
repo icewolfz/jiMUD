@@ -190,7 +190,7 @@
         $("#mapper-room select").prop("disabled", true);
         $("#mapper-room button").prop("disabled", true);
 
-        var options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
+        var options = Settings.load(path.join(parseTemplate("{data}"), remote.getGlobal('settingsFile')));
         mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod);
         mapper.enabled = options.mapper.enabled;
         mapper.showLegend = options.mapper.legend;

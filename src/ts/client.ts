@@ -25,6 +25,7 @@ export class Client extends EventEmitter {
     private _input: input;
     private _auto: NodeJS.Timer = null;
     private _autoError: boolean = false;
+    private _settingsFile: string = 'settings.json'
 
     public MSP: MSP;
 
@@ -43,6 +44,15 @@ export class Client extends EventEmitter {
     public connectTime: number = 0;
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
+
+    set settingsFile(val: string) {
+        if (this._settingsFile != val) {
+            this._settingsFile = val;
+            this.loadOptions();
+        }
+    }
+
+    get settingsFile(): string { return this._settingsFile; }
 
     get aliases(): Alias[] {
         return this.profiles.aliases;
@@ -109,7 +119,7 @@ export class Client extends EventEmitter {
         this.clearTriggerCache();
     }
 
-    constructor(display, command) {
+    constructor(display, command, settings?: string) {
         super();
         if (command === null || typeof command == 'undefined') {
             throw "Missing command input";
@@ -316,6 +326,8 @@ export class Client extends EventEmitter {
             this.MSP.sound(data);
             this.emit('sound', data);
         });
+        if (settings && settings.length > 0)
+            this._settingsFile = settings;
         this.loadOptions();
         this.loadProfiles();
         this.emit('initialized');
@@ -351,7 +363,7 @@ export class Client extends EventEmitter {
     }
 
     loadOptions() {
-        this.options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
+        this.options = Settings.load(path.join(parseTemplate("{data}"), this._settingsFile));
 
         this.enableDebug = this.options.enableDebug;
         this.parser.enableFlashing = this.options.flashing;
@@ -385,7 +397,7 @@ export class Client extends EventEmitter {
     }
 
     saveOptions() {
-        this.options.save(path.join(parseTemplate("{data}"), 'settings.json'));
+        this.options.save(path.join(parseTemplate("{data}"), this._settingsFile));
     }
 
     setOption(name, value) {

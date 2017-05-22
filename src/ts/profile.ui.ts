@@ -1792,7 +1792,7 @@ function getProfileData() {
 }
 
 function loadOptions() {
-    var options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
+    var options = Settings.load(path.join(parseTemplate("{data}"), remote.getGlobal('settingsFile')));
     _never = options.profiles.askoncancel;
 
     var theme = parseTemplate(options.theme) + ".css";

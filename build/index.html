@@ -50,7 +50,7 @@
       const path = require('path');
       const { version } = require("../package.json");
 
-      var set = Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+      var set = Settings.load(path.join(app.getPath('userData'), remote.getGlobal('settingsFile')));
       loadTheme(set.theme);
       delete set;
 
@@ -358,7 +358,7 @@
           client.UpdateWindow();
         });
 
-        client = new Client($("#display-frame").contents().find("#display"), $("#commandinput"));
+        client = new Client($("#display-frame").contents().find("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
         client.parser.enableBell = false;
         client.parser.on('bell', () => {
           shell.beep();

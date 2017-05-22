@@ -16,6 +16,8 @@ let chatReady = false;
 
 let windows = {};
 
+global.settingsFile = "settings.json";
+
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
   'help': { x: 0, y: 0, width: 800, height: 600 },
@@ -34,6 +36,10 @@ process.argv.forEach((val, index) => {
       debug = true;
       break;
   }
+  if (val.startsWith("--settings=") || val.startsWith("--settings:"))
+    global.settingsFile = val.substring(11);
+  if (val.startsWith("-s=") || val.startsWith("-s:"))
+    global.settingsFile = val.substring(3);
 });
 
 var menuTemp = [
@@ -650,9 +656,9 @@ function showHelpWindow(url, title) {
   })
 
   winHelp.on('close', () => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
     set.windows['help'] = getWindowState('help', winHelp);
-    set.save(path.join(app.getPath('userData'), 'settings.json'));
+    set.save(path.join(app.getPath('userData'), global.settingsFile));
   })
 }
 
@@ -769,6 +775,14 @@ function createWindow() {
       winEditor.destroy();
     if (winChat)
       winChat.destroy();
+
+    for (var name in windows) {
+      if (!windows.hasOwnProperty(name) || !windows[name].window)
+        continue;
+      windows[name].window.webContents.executeJavaScript('closed();');
+      windows[name].window.destroy();
+    }
+
     win = null;
   })
 
@@ -810,11 +824,16 @@ function createWindow() {
   })
 
   win.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
     set.windows['main'] = getWindowState('main', win);
-    set.save(path.join(app.getPath('userData'), 'settings.json'));
+    set.save(path.join(app.getPath('userData'), global.settingsFile));
     if (winMap)
       winMap.webContents.executeJavaScript('save();');
+    for (var name in windows) {
+      if (!windows.hasOwnProperty(name) || !windows[name].window)
+        continue;
+      windows[name].window.webContents.executeJavaScript('closing();');
+    }
     if (winProfiles) {
       e.preventDefault();
       dialog.showMessageBox(winProfiles, {
@@ -826,7 +845,7 @@ function createWindow() {
   })
 
   if (!set)
-    set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
 }
 
 
@@ -854,7 +873,7 @@ app.on('activate', () => {
 
 ipcMain.on('reload-options', () => {
   win.webContents.send('reload-options');
-  set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
   if (winMap) {
     winMap.webContents.send('reload-options');
     if (winMap.setParentWindow)
@@ -878,7 +897,7 @@ ipcMain.on('reload-options', () => {
     winEditor.webContents.send('reload-options');
 
   for (var name in windows) {
-    if (!windows[r].hasOwnProperty(name) && windows[name].window)
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.send('reload-options');
   }
@@ -894,7 +913,7 @@ ipcMain.on('set-title', (event, title) => {
   if (winMap)
     winMap.webContents.send('set-title', title);
   for (var name in windows) {
-    if (!windows[r].hasOwnProperty(name) && windows[name].window)
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.send('set-title', title);
   }
@@ -910,7 +929,7 @@ ipcMain.on('closed', (event) => {
   if (winMap)
     winMap.webContents.send('closed');
   for (var name in windows) {
-    if (!windows[r].hasOwnProperty(name) && windows[name].window)
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.send('closed');
   }
@@ -926,7 +945,7 @@ ipcMain.on('connected', (event) => {
   if (winMap)
     winMap.webContents.send('connected');
   for (var name in windows) {
-    if (!windows[r].hasOwnProperty(name) && windows[name].window)
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.send('connected');
   }
@@ -965,7 +984,7 @@ ipcMain.on('reload-profiles', (event) => {
   createMenu();
   win.webContents.send('reload-profiles');
   for (var name in windows) {
-    if (!windows[r].hasOwnProperty(name) && windows[name].window)
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.send('reload-profiles');
   }
@@ -981,7 +1000,7 @@ ipcMain.on('chat', (event, text) => {
   else
     winChat.webContents.send('chat', text);
   for (var name in windows) {
-    if (!windows[r].hasOwnProperty(name) && windows[name].window)
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.send('chat', titexttle);
   }
@@ -1016,8 +1035,9 @@ ipcMain.on('setting-changed', (event, data) => {
       createChat();
   }
   for (var name in windows) {
-    if (!windows[r].hasOwnProperty(name) && windows[name].window)
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
+    windows[name].window.setParentWindow(set.windows[name].alwaysOnTopClient ? win : null);
     windows[name].window.setSkipTaskbar((set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false);
     if (windows[name].persistent)
       createNewWindow(name);
@@ -1028,7 +1048,7 @@ ipcMain.on('GMCP-received', (event, data) => {
   if (winMap)
     winMap.webContents.send('GMCP-received', data);
   for (var name in windows) {
-    if (!windows[r].hasOwnProperty(name) && windows[name].window)
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.send('GMCP-received', data);
   }
@@ -1053,7 +1073,7 @@ ipcMain.on('set-overlay', (event, args) => {
 });
 
 ipcMain.on('set-progress', (event, args) => {
-  if(win)
+  if (win)
     win.setProgressBar(args.value, args.options);
 });
 
@@ -1137,7 +1157,7 @@ function updateMenuItem(args) {
 }
 
 function loadMenu() {
-  set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
   updateMenuItem({ menu: ['view', 'status', 'statusvisible'], checked: set.showStatus });
   updateMenuItem({ menu: ['view', 'status', 'weather'], checked: set.showStatusWeather });
   updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: set.showStatusLimbs });
@@ -1166,7 +1186,7 @@ function getWindowState(id, window) {
 }
 
 function loadWindowState(window) {
-  set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
   if (!set.windows || !set.windows[window])
     return {
       x: 0,
@@ -1311,11 +1331,11 @@ function createMapper(show) {
   })
 
   winMap.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
     if (win != null)
       set.showMapper = false;
     set.windows['mapper'] = getWindowState('mapper', winMap);
-    set.save(path.join(app.getPath('userData'), 'settings.json'));
+    set.save(path.join(app.getPath('userData'), global.settingsFile));
     winMap.webContents.executeJavaScript('save();');
     if (set.mapper.enabled || set.mapper.persistent) {
       e.preventDefault();
@@ -1325,9 +1345,9 @@ function createMapper(show) {
 }
 
 function showMapper() {
-  set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
   set.showMapper = true;
-  set.save(path.join(app.getPath('userData'), 'settings.json'));
+  set.save(path.join(app.getPath('userData'), global.settingsFile));
   if (winMap != null) {
     if (mapperMax)
       winMap.maximize();
@@ -1385,9 +1405,9 @@ function showProfiles() {
   })
 
   winProfiles.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
     set.windows['profiles'] = getWindowState('profiles', winProfiles);
-    set.save(path.join(app.getPath('userData'), 'settings.json'));
+    set.save(path.join(app.getPath('userData'), global.settingsFile));
   })
 
   winProfiles.on('resize', () => {
@@ -1463,10 +1483,10 @@ function createEditor(show) {
   })
 
   winEditor.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
     set.showEditor = false;
     set.windows['editor'] = getWindowState('editor', winEditor);
-    set.save(path.join(app.getPath('userData'), 'settings.json'));
+    set.save(path.join(app.getPath('userData'), global.settingsFile));
     winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
     if (set.editorPersistent) {
       e.preventDefault();
@@ -1476,9 +1496,9 @@ function createEditor(show) {
 }
 
 function showEditor() {
-  set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
   set.showEditor = true;
-  set.save(path.join(app.getPath('userData'), 'settings.json'));
+  set.save(path.join(app.getPath('userData'), global.settingsFile));
   if (winEditor != null) {
     if (editorMax)
       winEditor.maximize();
@@ -1555,10 +1575,10 @@ function createChat(show) {
   })
 
   winChat.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
     set.showChat = false;
     set.windows['chat'] = getWindowState('chat', winChat);
-    set.save(path.join(app.getPath('userData'), 'settings.json'));
+    set.save(path.join(app.getPath('userData'), global.settingsFile));
     if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines) {
       e.preventDefault();
       winChat.hide();
@@ -1567,9 +1587,9 @@ function createChat(show) {
 }
 
 function showChat() {
-  set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
   set.showChat = true;
-  set.save(path.join(app.getPath('userData'), 'settings.json'));
+  set.save(path.join(app.getPath('userData'), global.settingsFile));
   if (winChat != null) {
     if (chatMax)
       winChat.maximize();
@@ -1652,10 +1672,10 @@ function createNewWindow(name, options) {
   })
 
   windows[name].window.on('close', (e) => {
-    set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+    set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
     set.windows[name] = getWindowState(name, windows[name].window);
     set.windows[name].show = false;
-    set.save(path.join(app.getPath('userData'), 'settings.json'));
+    set.save(path.join(app.getPath('userData'), global.settingsFile));
     if (windows[name].persistent) {
       e.preventDefault();
       windows[name].window.hide();
@@ -1664,11 +1684,11 @@ function createNewWindow(name, options) {
 }
 
 function showWindow(name, options) {
-  set = settings.Settings.load(path.join(app.getPath('userData'), 'settings.json'));
+  set = settings.Settings.load(path.join(app.getPath('userData'), global.settingsFile));
   if (!set.windows[name])
     set.windows[name] = {};
   set.windows[name].show = true;
-  set.save(path.join(app.getPath('userData'), 'settings.json'));
+  set.save(path.join(app.getPath('userData'), global.settingsFile));
   if (!options) options = { show: true };
   if (windows[name] && windows[name].window) {
     if (windows[name].max)

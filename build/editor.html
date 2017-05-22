@@ -1026,7 +1026,7 @@
             }
 
             function loadOptions() {
-                options = Settings.load(path.join(parseTemplate("{data}"), 'settings.json'));
+                options = Settings.load(path.join(parseTemplate("{data}"), remote.getGlobal('settingsFile')));
 
                 $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-size", options.cmdfontSize);
                 $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-family", options.cmdfont + ", monospace");
