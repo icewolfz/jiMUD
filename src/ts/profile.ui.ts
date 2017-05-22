@@ -174,7 +174,7 @@ function AddNewProfile(d?: Boolean) {
         ]
     }
     $('#profile-tree').treeview('addNode', [node, false, false]);
-    pushUndo({ action: 'add', type: 'profile', item: [p.name.toLowerCase()] });
+    pushUndo({ action: 'add', type: 'profile', item: [p.clone()] });
 }
 
 export function RunTester() {
@@ -1106,8 +1106,13 @@ export function doUndo() {
     switch (action.action) {
         case 'add':
             if (action.type == "profile") {
-                for (var p = 0, pl = action.item.length; p < pl; p++)
-                    DeleteProfile(profiles.items[action.item[p]], true);
+                for (var p = 0, pl = action.item.length; p < pl; p++) {
+                    DeleteProfile(action.item[p], true);
+                }
+                if (action.replaced && action.replaced.length > 0) {
+                    for (var p = 0, pl = action.replaced.length; p < pl; p++)
+                        addProfile(action.replaced[p]);
+                }
             }
             else
                 DeleteItem(action.type, action.data.key, action.data.idx, profiles.items[action.data.profile], true);
@@ -1251,8 +1256,13 @@ export function doRedo() {
     switch (action.action) {
         case 'add':
             if (action.type == "profile") {
-                for (var p = 0, pl = action.item.length; p < pl; p++)
-                    addProfile(profiles.items[action.item[p]]);
+                if (action.replaced && action.replaced.length > 0) {
+                    for (var p = 0, pl = action.replaced.length; p < pl; p++)
+                        DeleteProfile(action.replaced[p], true);
+                }
+                for (var p = 0, pl = action.item.length; p < pl; p++) {
+                    addProfile(action.item[p]);
+                }
             }
             else
                 insertItem(action.type, action.data.key, action.item, action.data.idx, profiles.items[action.data.profile], true);
@@ -1487,7 +1497,7 @@ export function doCopy(node?) {
             profile.name = profileCopyName(profile.name);
             profiles.add(profile);
             $('#profile-tree').treeview('addNode', [newProfileNode(profile), false, false]);
-            pushUndo({ action: 'add', type: 'profile', item: [profile.name.toLowerCase()] });
+            pushUndo({ action: 'add', type: 'profile', item: [profile.clone()] });
             break;
         case "aliases":
             data = [];
@@ -2256,7 +2266,7 @@ export function init() {
                 addItem('Context', 'contexts', new Context())
             }
         }));
-        addMenu.popup(remote.getCurrentWindow(), {x:x, y:y});
+        addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
     });
 
     $("#macro-key").keydown(function (e) {
@@ -2476,7 +2486,7 @@ export function init() {
         exportmenu.append(new MenuItem({
             label: 'Import...', click: importProfiles
         }));
-        exportmenu.popup(remote.getCurrentWindow(), {x:x, y:y});
+        exportmenu.popup(remote.getCurrentWindow(), { x: x, y: y });
     })
 
     loadOptions();
@@ -2619,15 +2629,15 @@ function importProfiles() {
                         return;
                     }
                     ipcRenderer.send('set-progress', { value: 0.5, options: { mode: 'indeterminate' } });
+                    var all = 0;
                     if (data.profiles) {
                         var names = [];
+                        var _replace = [];
                         var keys = Object.keys(data.profiles);
                         var n, k = 0, kl = keys.length;
                         var item: (Alias | Button | Macro | Trigger | Context);
                         for (; k < kl; k++) {
-                            n = profileCopyName(keys[k]);
-                            names.push(n);
-                            var p = new Profile(n.true);
+                            var p = new Profile(keys[k]);
                             p.priority = data.profiles[keys[k]].priority;
                             p.enabled = data.profiles[keys[k]].enabled;
                             p.enableMacros = data.profiles[keys[k]].enableMacros;
@@ -2691,22 +2701,58 @@ function importProfiles() {
                                 }
                             }
                             if (profiles.contains(p)) {
-                                dialog.showMessageBox(remote.getCurrentWindow(), {
-                                    type: 'question',
-                                    title: 'Profiles already exists',
-                                    message: 'Profile named \'' + p.name + '\' exist, replace?',
-                                    buttons: ['Yes', 'No'],
-                                    defaultId: 1,
-                                }, (response) => {
-                                    if (response == 0)
+                                if (all == 3) {
+                                    _replace.push(profiles.items[p.name.toLowerCase()].clone());
+                                    profiles.add(p);
+                                    names.push(p.clone());
+                                    var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(p.name) + '$', 'id']);
+                                    $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
+                                    $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                }
+                                else if (all == 5) {
+                                    n = profileCopyName(p.name);
+                                    p.name = n;
+                                    p.file = n.toLowerCase();
+                                    profiles.add(p);
+                                    names.push(p.clone());
+                                    $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                }
+                                else if (all != 4) {
+                                    var response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                                        type: 'question',
+                                        title: 'Profiles already exists',
+                                        message: 'Profile named \'' + p.name + '\' exist, replace?',
+                                        buttons: ['Yes', 'No', 'Copy', 'Replace All', 'No All', 'Copy All'],
+                                        defaultId: 1,
+                                    });
+                                    if (response == 0) {
+                                        _replace.push(profiles.items[p.name.toLowerCase()].clone());
                                         profiles.add(p);
-                                })
+                                        names.push(p.clone());
+                                        var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(p.name) + '$', 'id']);
+                                        $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
+                                        $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                    }
+                                    else if (response == 2) {
+                                        n = profileCopyName(p.name);
+                                        p.name = n;
+                                        p.file = n.toLowerCase();
+                                        profiles.add(p);
+                                        names.push(p.clone());
+                                        $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                    }
+                                    else if (response > 2)
+                                        all = response;
+                                }
                             }
-                            else
+                            else {
+                                names.push(p.clone());
                                 profiles.add(p);
-                            $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                            }
                         }
-                        pushUndo({ action: 'add', type: 'profile', item: names });
+                        if (names.length > 0)
+                            pushUndo({ action: 'add', type: 'profile', item: names, replaced: _replace });
                     }
                     ipcRenderer.send('set-progress', { value: -1, options: { mode: 'normal' } });
                 });
@@ -2910,9 +2956,9 @@ function DeleteProfile(profile, customUndo?: boolean) {
     if (!customUndo)
         pushUndo({ action: 'delete', type: 'profile', item: profile });
     var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + '$', 'id']);
+    $('#profile-tree').treeview('removeNode', [nodes, { silent: false }]);
     if (profile.name == currentProfile.name)
         $('#profile-tree').treeview('selectNode', [$("#profile-tree").treeview('findNodes', ["^Profiledefault$", 'id'])]);
-    $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
     profiles.remove(profile);
 }
 
