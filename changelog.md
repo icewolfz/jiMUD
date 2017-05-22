@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.2.4 - 2017-05-21
+##### 0.2.4 - 2017-05-22
 - **Changed:**
   - Profile manager: treeview should now sort by profile name, with default always being first
 - **Fixed:**
