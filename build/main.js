@@ -43,7 +43,12 @@ function loadCharacter(char) {
     if (!characters.characters[char]) {
       characters.keys.push(char);
       characters.characters[char] = { settings: path.join("{characters}", char + ".json"), map: path.join("{characters}", char + ".map") };
+      var d = settings.Settings.load(parseTemplate(path.join("{data}", "settings.json")));
+      d.save(parseTemplate(characters.characters[char].settings));
       fs.writeFileSync(path.join(app.getPath('userData'), "characters.json"), JSON.stringify(characters));
+      if (fs.existsSync(parseTemplate(path.join("{data}", "map.sqlite")))) {
+        copyFile(parseTemplate(path.join("{data}", "map.sqlite")), parseTemplate(characters.characters[char].map));
+      }
     }
   }
   else {
@@ -1882,4 +1887,17 @@ function showColor(args) {
     cp.show();
     cp.webContents.executeJavaScript('setType("' + (args.type || 'forecolor') + '");setColor("' + (args.color || '') + '");');
   })
+}
+
+function copyFile(src, dest) {
+
+  let readStream = fs.createReadStream(src);
+
+  readStream.once('error', (err) => {
+    console.log(err);
+  });
+
+  readStream.once('end', () => { });
+
+  readStream.pipe(fs.createWriteStream(dest));
 }
