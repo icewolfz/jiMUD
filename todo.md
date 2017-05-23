@@ -17,7 +17,8 @@
 ## Miscellaneous
 - redesign to be more multi instance friendly
   - maybe code a connection/character manger to allow grouping files similar ot iceMud
-  - see about chanig setting/map file based on post login character
+  - see about changing setting/map file based on post login character
+  - add a auto change setting to character on login
 - Add new settings to setsetting/getsetting commands along with the faq doc table
 - Add log viewer, logs are just html files so a viewer just needs to load them in an iframe or something to sandbox them in
 - Finish monster css icons
