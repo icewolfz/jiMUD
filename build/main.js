@@ -856,7 +856,6 @@ function createWindow() {
       options.y += b.height / 2 - options.height / 2;
     }
     options.show = false;
-    console.log(options);
     const w = new BrowserWindow(options)
     w.setMenu(null);
     w.once('ready-to-show', () => w.show());
