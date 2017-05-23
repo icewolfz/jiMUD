@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>Character manager</title>
+        <link rel="shortcut icon" href="../assets/icons/png/32x32.png" />
+        <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/form.css" rel="stylesheet" type="text/css" />
+        <link href="css/characters.css" rel="stylesheet" type="text/css" />
+        <style>
+            body {
+                -webkit-user-select: none;
+                user-select: none;
+            }
+        </style>
+        <script>
+            if (typeof module === 'object') { window.module = module; module = undefined; }
+        </script>
+        <script src="../lib/jquery.min.js"></script>
+        <script src="../lib/bootstrap.min.js"></script>
+        <script src="../lib/bootstrap-select.min.js"></script>
+        <script>
+            //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+            const { parseTemplate } = require('./js/library');
+            const Settings = require('./js/settings').Settings;
+            const { remote, ipcRenderer } = require('electron');
+            const { dialog } = remote;
+            const RGBColor = require('rgbcolor');
+            const path = require('path')
+            const fs = require('fs');
+
+            $(window).keydown((event) => {
+                if (event.which == 27)
+                    window.close();
+            });
+
+            $(document).ready(() => {
+
+            });
+        </script>
+    </head>
+
+    <body>
+        <div id="toolbar" class="btn-toolbar" role="toolbar">
+            <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick=""><i class="fa fa-refresh"></i></button>
+            <button type="button" class="btn btn-default btn-xs" title="Add" onclick=""><i class="fa fa-plus"></i></button>
+            <div class="btn-group" role="group">
+                <button id="btn-rename" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Rename" onclick=""><i class="fa fa-i-cursor"></i></button>
+                <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick=""><i class="fa fa-copy"></i></button>
+                <button id="btn-delete" type="button" disabled="disabled" class="btn btn-danger btn-xs" title="Delete" onclick=""><i class="fa fa-times"></i></button>
+            </div>
+            <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick=""><i class="fa fa-play"></i></button>
+        </div>
+        <div id="main">
+        </div>
+    </body>
+
+</html>

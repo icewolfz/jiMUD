@@ -1,0 +1,53 @@
+html,
+body {
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+#toolbar {
+    background-color: menu;
+    margin-left: 2px;
+    margin-right: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+#toolbar .btn {
+    outline: none !important;
+}
+
+#toolbar button {
+    min-width: 26px;
+}
+
+#toolbar input {
+    padding: 0px 2px;
+    margin: 0px;
+    width: 60px;
+    float: left;
+    height: 22px;
+    margin-left: 5px;
+}
+
+#toolbar select {
+    float: left;
+    min-width: 100px;
+    width: auto;
+    padding: 0px 2px;
+    margin: 0px;
+    height: 22px;
+    margin-left: 5px;
+}
+
+#toolbar label {
+    margin-bottom: 0 !important;
+}
+
+#main {
+    top: 26px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+}

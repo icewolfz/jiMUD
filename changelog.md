@@ -8,6 +8,8 @@
     - `-c=[name|idx] \ -- character=[name|idx]` allows you to load/create a character from character database
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
+- **Fixed:**
+  - Preferences: font and command font not being correctly set
 ##### 0.2.4 - 2017-05-22
 - **Changed:**
   - Profile manager: treeview should now sort by profile name, with default always being first

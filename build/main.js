@@ -124,9 +124,18 @@ var menuTemp = [
     id: 'file',
     submenu: [
       {
+        label: "Ch&aracters...",
+        id: "characters",
+        accelerator: "CmdOrCtrl+A",
+        click: () => {
+          win.webContents.executeJavaScript('showCharacters()');
+        }
+      },
+      { type: 'separator' },
+      {
         label: "&Connect",
         id: "connect",
-        accelerator: "Ctrl+N",
+        accelerator: "CmdOrCtrl+N",
         click: () => {
           win.webContents.executeJavaScript('client.connect()');
         }
@@ -134,7 +143,7 @@ var menuTemp = [
       {
         label: "&Disconnect",
         id: "disconnect",
-        accelerator: "Ctrl+D",
+        accelerator: "CmdOrCtrl+D",
         enabled: false,
         click: () => {
           win.webContents.executeJavaScript('client.close()');
@@ -488,7 +497,7 @@ var menuTemp = [
         label: '&Advanced editor...',
         id: 'editor',
         click: showEditor,
-        accelerator: 'CmdOrCtrl+A'
+        accelerator: 'CmdOrCtrl+E'
       },
       {
         label: '&Chat...',
@@ -852,11 +861,13 @@ function createWindow() {
       })
 
       var b = win.getBounds();
-      options.x += b.width / 2 - options.width  / 2;
+      options.x += b.width / 2 - options.width / 2;
       options.y += b.height / 2 - options.height / 2;
     }
     options.show = false;
     const w = new BrowserWindow(options)
+    if (debug)
+      w.webContents.openDevTools();
     w.setMenu(null);
     w.once('ready-to-show', () => w.show());
     w.loadURL(url)
