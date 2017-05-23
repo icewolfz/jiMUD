@@ -2604,6 +2604,8 @@ export function doRefresh() {
                         $('#btn-refresh').addClass('btn-warning');
                     });
                 }
+                var options = Settings.load(remote.getGlobal('settingsFile'));
+                _enabled = options.profiles.enabled;
                 buildTreeview(getProfileData());
             }
         });
@@ -2627,6 +2629,8 @@ export function doRefresh() {
                 $('#btn-refresh').addClass('btn-warning');
             });
         }
+        var options = Settings.load(remote.getGlobal('settingsFile'));
+        _enabled = options.profiles.enabled;
         buildTreeview(getProfileData());
     }
 }
@@ -3373,4 +3377,10 @@ function insertItem(type: string, key: string, item, idx: number, profile?: Prof
 
 ipcRenderer.on('reload-options', (event) => {
     loadOptions()
+});
+
+ipcRenderer.on('change-options', (event, file) => {
+    loadOptions();
+    filesChanged = true;
+    $('#btn-refresh').addClass('btn-warning');
 });

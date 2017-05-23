@@ -1208,6 +1208,10 @@
         }
       }
 
+      ipcRenderer.on('change-options', (event, file) => {
+        client.settingsFile = remote.getGlobal('settingsFile');
+      });
+
       ipcRenderer.on('setting-changed', (event, data) => {
         if (data.type == "mapper") {
           client.options.mapper[data.name] = data.value;

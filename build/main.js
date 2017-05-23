@@ -981,6 +981,43 @@ ipcMain.on('reload', (event, char) => {
   win.close();
 })
 
+ipcMain.on('change-char', (event, char) => {
+  loadCharacter(char);
+  set = settings.Settings.load(global.settingsFile);
+
+  if (winMap) {
+    winMap.webContents.executeJavaScript('save();');
+    winMap.destroy();
+  }
+
+  if (winEditor)
+    winEditor.destroy();
+  if (winChat)
+    winChat.destroy();
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.executeJavaScript('closed();');
+    windows[name].window.destroy();
+  }
+  win.webContents.send('change-options', global.settingsFile);
+
+  if (set.showMapper)
+    showMapper();
+  else if (set.chat.persistent || set.mapper.enabled)
+    createMapper();
+
+  if (set.showEditor)
+    showEditor();
+  else if (set.editorPersistent)
+    createEditor();
+  if (set.showChat)
+    showChat();
+  else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
+    createChat();
+
+})
+
 ipcMain.on('reload-options', () => {
   win.webContents.send('reload-options');
   set = settings.Settings.load(global.settingsFile);
