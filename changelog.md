@@ -1,6 +1,7 @@
 ## Changelog
 ##### 0.3.0
 - **New:**
+  - Auto create character, will auto create a new settings file/map file based on GMCP character name
   - Command line arguments:
     - `-s=[file] \ --setting=[file]` override default setting file
     - `-mf=[file] \ --map=[file]` override default map file

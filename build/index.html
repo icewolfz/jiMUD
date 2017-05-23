@@ -741,6 +741,8 @@
         });
         _status.ac = client.options.showArmor;
         _status.on('set-title', (title) => {
+          if (this.client.options.autoCreateCharacter)
+            ipcRenderer.send('change-char', title);
           _logger.name = title;
           ipcRenderer.send('set-title', title);
         });

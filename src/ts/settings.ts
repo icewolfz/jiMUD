@@ -149,6 +149,7 @@ export var SettingList: any[] = [
 export class Settings {
 	public editorPersistent: boolean = false;
 	public AutoCopySelectedToClipboard: boolean = false;
+	public autoCreateCharacter: boolean = false;
 	public askonclose: boolean = true;
 	public dev: boolean = false;
 	public mapper: Mapper = new Mapper();

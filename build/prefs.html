@@ -108,6 +108,7 @@
 
       function loadSettings() {
         $('#autoConnect').prop('checked', _settings.autoConnect);
+        $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
         $('#dev').prop('checked', _settings.dev);
         $('#lagMeter').prop('checked', _settings.lagMeter);
         $('#enablePing').prop('checked', _settings.enablePing);
@@ -171,7 +172,6 @@
 
         $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
         $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
-
         $('#chat-captureLines').prop('checked', _settings.chat.captureLines);
         $('#chat-captureReviews').prop('checked', _settings.chat.captureReviews);
         $('#chat-captureTells').prop('checked', _settings.chat.captureTells);
@@ -676,6 +676,12 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
+          <input type="checkbox" id="autoCreateCharacter" />
+          Auto create character
+          </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
           <input type="checkbox" id="lagMeter" />
           Show lagmeter
           </label>
@@ -706,45 +712,48 @@
           </label>
           </div>
           <div class="col-sm-6 form-group">
+            <label class="control-label">Theme
+              <select id="theme" class="form-control selectpicker" data-width="150px"></select>
+            </label>
+          </div> 
+          <div class="col-sm-6 form-group">
             <label class="control-label">
           <input type="checkbox" id="editorPersistent" />
          Persistent advanced editor
           </label>
           </div>
-
-          <div class="col-sm-6 form-group">
-            <label class="control-label">Backup save</label>
-            <div class="btn-group" data-toggle="buttons">
-              <label class="btn btn-default">
+        
+          <div class="col-sm-12 form-group">
+            <div class="col-sm-6 form-group">
+              <label class="control-label">Backup save</label>
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default">
               <input type="checkbox" id="backup-save-settings"> Settings
             </label>
-              <label class="btn btn-default active">
+                <label class="btn btn-default active">
               <input type="checkbox" id="backup-save-profiles"> Profiles
             </label>
-              <label class="btn btn-default active">
+                <label class="btn btn-default active">
               <input type="checkbox" id="backup-save-map"> Map
             </label>
+              </div>
             </div>
-          </div>
-          <div class="col-sm-6 form-group">
-            <label class="control-label">Backup load</label>
-            <div class="btn-group" data-toggle="buttons">
-              <label class="btn btn-default">
+            <div class="col-sm-6 form-group">
+              <label class="control-label">Backup load</label>
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default">
               <input type="checkbox" id="backup-load-settings"> Settings
             </label>
-              <label class="btn btn-default active">
+                <label class="btn btn-default active">
               <input type="checkbox" id="backup-load-profiles"> Profiles
             </label>
-              <label class="btn btn-default active">
+                <label class="btn btn-default active">
               <input type="checkbox" id="backup-load-map"> Map
             </label>
+              </div>
             </div>
           </div>
-          <div class="col-sm-12 form-group">
-            <label class="control-label">Theme<br>
-              <select id="theme" class="form-control selectpicker" data-width="250px"></select>
-            </label>
-          </div>
+
 
         </div>
         <div role="tabpanel" class="tab-pane fade" id="display">

@@ -62,13 +62,13 @@ function loadCharacter(char) {
 }
 
 if (fs.existsSync(path.join(app.getPath('userData'), "characters.json"))) {
-  characters = fs.readFileSync(file, 'utf-8');
+  characters = fs.readFileSync(path.join(app.getPath('userData'), "characters.json"), 'utf-8');
   if (characters.length > 0) {
     try {
-      characters = JSON.parse(data);
+      characters = JSON.parse(characters);
     }
     catch (e) {
-      win.webContents.send('debug', 'Could not load: \'characters.json\'');
+      console.log('Could not load: \'characters.json\'');
     }
     loadCharacter(characters.load);
   }
@@ -982,11 +982,17 @@ app.on('activate', () => {
 })
 
 ipcMain.on('reload', (event, char) => {
+  //already loaded so no need to reload
+  if (char == global.character)
+    return;
   reload = char;
   win.close();
 })
 
 ipcMain.on('change-char', (event, char) => {
+  //already loaded so no need to switch
+  if (char == global.character)
+    return;
   loadCharacter(char);
   set = settings.Settings.load(global.settingsFile);
 
