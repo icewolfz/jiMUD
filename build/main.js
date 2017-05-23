@@ -879,21 +879,28 @@ function createWindow() {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
+    set = settings.Settings.load(global.settingsFile);
     if (winMap) {
+      set.windows['mapper'] = getWindowState('mapper', winMap);
       winMap.webContents.executeJavaScript('save();');
       winMap.destroy();
     }
-    if (winEditor)
+    if (winEditor) {
+      set.windows['editor'] = getWindowState('editor', winEditor);
       winEditor.destroy();
-    if (winChat)
+    }
+    if (winChat) {
+      set.windows['chat'] = getWindowState('chat', winChat);
       winChat.destroy();
-
+    }
     for (var name in windows) {
       if (!windows.hasOwnProperty(name) || !windows[name].window)
         continue;
       windows[name].window.webContents.executeJavaScript('closed();');
+      set.windows[name] = getWindowState(name, windows[name].window);
       windows[name].window.destroy();
     }
+    set.save(global.settingsFile);
     win = null;
   })
 
