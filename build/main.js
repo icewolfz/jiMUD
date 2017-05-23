@@ -836,34 +836,32 @@ function createWindow() {
     trackWindowState('main', win);
   })
 
-  win.webContents.on('new-window', (event, url) => {
-    event.preventDefault()
-    const w = new BrowserWindow({ show: false })
-    w.once('ready-to-show', () => w.show())
-    w.loadURL(url)
-    event.newGuest = w
-  })
-
-
   win.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
-    /*
     if (frameName === 'modal') {
+
       // open window as modal
-      event.preventDefault()
+      //event.preventDefault()
       Object.assign(options, {
         modal: true,
         parent: win,
-        width: 100,
-        height: 100
+        movable: false,
+        minimizable: false,
+        maximizable: false,
+        skipTaskbar: true,
+        resizable: false
       })
+
+      var b = win.getBounds();
+      options.x += b.width / 2 - options.width  / 2;
+      options.y += b.height / 2 - options.height / 2;
     }
     options.show = false;
     console.log(options);
     const w = new BrowserWindow(options)
-    w.once('ready-to-show', () => w.show())
+    w.setMenu(null);
+    w.once('ready-to-show', () => w.show());
     w.loadURL(url)
-    event.newGuest = w
-  */
+    event.newGuest = w;
   })
 
   // Emitted when the window is closed.
