@@ -206,6 +206,7 @@ export class Settings {
 	public windows = {};
 	public buttons = {
 		connect: true,
+		characters: true,
 		preferences: true,
 		log: true,
 		clear: true,

@@ -25,38 +25,589 @@
         <script src="../lib/bootstrap-select.min.js"></script>
         <script>
             //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-            const { parseTemplate } = require('./js/library');
+            const { parseTemplate, templatePath } = require('./js/library');
             const Settings = require('./js/settings').Settings;
-            const { remote, ipcRenderer } = require('electron');
-            const { dialog } = remote;
+            const { shell, remote, ipcRenderer } = require('electron');
+            const { dialog, Menu, MenuItem } = remote;
             const RGBColor = require('rgbcolor');
             const path = require('path')
             const fs = require('fs');
 
+            var characters, current = '';
+            var charactersFile = parseTemplate(path.join("{data}", "characters.json"));
+            var changed = 0;
+
             $(window).keydown((event) => {
-                if (event.which == 27)
-                    window.close();
+                if (event.which == 27) {
+                    if ($("#get-name")[0].open)
+                        $("#get-name")[0].close();
+                    else
+                        window.close();
+                }
             });
+            $(window).on('unload', () => {
+                saveCharacters();
+            })
 
             $(document).ready(() => {
+                $("#characters-list").contextmenu((event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.cancelBubble = true;
+                    var c = new Menu();
+                    var item = $(event.target).data('name');
+                    c.append(new MenuItem({
+                        label: 'Add default', click: add
+                    }));
+                    c.append(new MenuItem({
+                        label: 'Add empty', click: addEmpty
+                    }));
+                    if (item !== undefined) {
+                        c.append(new MenuItem({ type: 'separator' }));
+                        c.append(new MenuItem({
+                            label: 'Rename', click: () => {
+                                rename(item);
+                            }
+                        }));
 
+                        c.append(new MenuItem({
+                            label: 'Copy', click: () => {
+                                copy(item);
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Delete', click: () => {
+                                remove(item);
+                            }
+                        }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                        c.append(new MenuItem({
+                            label: 'Load', click: () => {
+                                load(item);
+                            }
+                        }));
+                    }
+                    c.popup(remote.getCurrentWindow());
+                });
+                loadCharacters();
+
+                $("#btn-add-dropdown").click(function () {
+                    $(this).addClass('open');
+                    var pos = $(this).offset();
+                    var x = Math.floor(pos.left);
+                    var y = Math.floor(pos.top + $(this).outerHeight() + 2);
+                    const addMenu = new Menu();
+                    addMenu.append(new MenuItem({
+                        label: 'Add default', click() {
+                            clearButton("#btn-add-dropdown");
+                            add();
+                        }
+                    }));
+                    addMenu.append(new MenuItem({
+                        label: 'Add empty', click() {
+                            clearButton("#btn-add-dropdown");
+                            addEmpty();
+                        }
+                    }));
+                    addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+                });
+
+                $("#get-name-ok").click(function () {
+                    var p = $("#get-name-value").parent();
+                    if (!validName($('#get-name-value').val())) {
+                        p.addClass("has-error");
+                        p.addClass("has-feedback");
+                        p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid, can only contain letters and numbers</small>");
+                        $('#get-name-value').focus();
+                        return;
+                    }
+                    if ($('#get-name').data('type') == 1 && $('#get-name-value').val().toLowerCase() == $('#get-name').data('name')) {
+                        p.addClass("has-error");
+                        p.addClass("has-feedback");
+                        p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Current name</small>");
+                        $('#get-name-value').focus();
+                        return;
+                    }
+                    if (characters.characters[$('#get-name-value').val().toLowerCase()]) {
+                        p.addClass("has-error");
+                        p.addClass("has-feedback");
+                        p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Name exists</small>");
+                        $('#get-name-value').focus();
+                        return;
+                    }
+
+                    $("#get-name").trigger('get-name-ok', [$('#get-name-value').val().toLowerCase()]);
+                    $("#get-name").off('get-name-ok');
+                    $('#get-name')[0].close();
+                })
+
+                $("#get-name-value").keypress(function (event) {
+                    if (event.which == 13)
+                        $("#get-name-ok").click();
+                })
             });
+
+            function updateCurrent() {
+                if (!current) return;
+                var v = templatePath($("#settings").val());
+                if (v != characters.characters[current].settings) {
+                    characters.characters[current].settings = v;
+                    changed++;
+                }
+                var v = templatePath($("#map").val());
+                if (v != characters.characters[current].map) {
+                    characters.characters[current].map = v;
+                    changed++;
+                }
+                if (current == characters.load) {
+                    if (!$("#auto-load").prop('checked')) {
+                        characters.load = 0;
+                        changed++;
+                    }
+                }
+                else if ($("#auto-load").prop('checked')) {
+                    changed++;
+                    characters.load = current;
+                }
+            }
+
+            function saveCharacters() {
+                updateCurrent();
+                if (changed == 0) return;
+                changed = 0;
+                fs.writeFileSync(charactersFile, JSON.stringify(characters));
+                ipcRenderer.send('reload-characters');
+            }
+
+            function refresh() {
+                if (changed > 0) {
+                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'warning',
+                        title: 'Refresh characters',
+                        message: 'All changes will be lost, refresh?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                    }, (response) => {
+                        if (response == 0)
+                            loadCharacters();
+                    });
+                }
+                else
+                    loadCharacters();
+            }
+
+            function loadCharacters() {
+                characters = fs.readFileSync(charactersFile, 'utf-8');
+                if (characters.length > 0) {
+                    try {
+                        characters = JSON.parse(characters);
+                        if (!characters)
+                            characters = { load: 0, characters: {} };
+                        if (!characters.characters)
+                            characters.characters = {};
+                    }
+                    catch (e) {
+                        console.log('Could not load: \'characters.json\'');
+                        characters = { load: 0, characters: {} };
+                    }
+                }
+                else
+                    characters = { load: 0, characters: {} };
+                var list = $("#characters-list");
+                list.empty();
+                clearEditor();
+                var keys = Object.keys(characters.characters).sort();
+                for (key in keys)
+                    createItem(keys[key], list)
+            }
+
+            function createItem(name, list) {
+                if (!list) list = $("#characters-list");
+                item = $('<li></li>', {
+                    id: 'character-' + name,
+                    class: 'list-group-item'
+                }).text(name);
+                item.data('name', name);
+                item.on('click', function () {
+                    if (current == $(this).data('name')) return;
+                    updateCurrent();
+                    $('.list-group-item').removeClass('selected');
+                    $(this).addClass('selected');
+                    current = $(this).data('name');
+                    $("#btn-rename").prop('disabled', false);
+                    $("#btn-copy").prop('disabled', false);
+                    $("#btn-delete").prop('disabled', false);
+                    $("#btn-load").prop('disabled', false);
+                    $("#character-editor input").prop('disabled', false);
+                    $("#character-editor button").prop('disabled', false);
+                    $("#settings").val(characters.characters[current].settings);
+                    $("#map").val(characters.characters[current].map);
+                    $("#auto-load").prop('checked', current == characters.load);
+                });
+                item.on('dblclick', function() {
+                    $(this).click();
+                    load();                    
+                });
+                list.append(item);
+            }
+
+
+            function clearButton(id) {
+                $(id).removeClass('open');
+                $(id).blur();
+            }
+
+            function clearEditor() {
+                current = 0;
+                $("#btn-rename").prop('disabled', true);
+                $("#btn-copy").prop('disabled', true);
+                $("#btn-delete").prop('disabled', true);
+                $("#btn-load").prop('disabled', true);
+                $("#character-editor input").prop('disabled', true);
+                $("#character-editor input[type=text]").val('');
+                $("#character-editor input[type=checkbox]").prop('checked', false)
+                $("#character-editor button").prop('disabled', true);
+            }
+
+            function validName(name) {
+                if (!name || name.length == 0)
+                    return false;
+                if (!name.match(/^[a-zA-Z0-9]+$/g))
+                    return false;
+                return true;
+            }
+
+            function openFile(field, ext, callback) {
+                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                    defaultPath: path.dirname(parseTemplate($(field).val())),
+                    filters: [
+                        { name: ext[0].substr(0, 1).toUpperCase() + ext[0].substr(1) + ' (*.' + ext.join(', *.') + ')', extensions: ext },
+                        { name: 'All files (*.*)', extensions: ['*'] },
+                    ],
+                    properties: ['promptToCreate']
+                },
+                    function (fileNames) {
+                        if (fileNames === undefined) {
+                            return;
+                        }
+                        $(field).val(templatePath(fileNames[0]));
+                        if (callback) callback();
+                    });
+            }
+
+            function add() {
+                showGetName(function (event, name) {
+                    characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                    sf = parseTemplate(characters.characters[name].settings);
+                    if (fs.existsSync(sf)) {
+                        response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Setting file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response == 0) {
+                            var d = Settings.load(parseTemplate(path.join("{data}", "settings.json")));
+                            d.save(sf);
+                        }
+                    }
+                    else {
+                        var d = Settings.load(parseTemplate(path.join("{data}", "settings.json")));
+                        d.save(sf);
+                    }
+                    sf = parseTemplate(characters.characters[name].map);
+                    if (fs.existsSync(sf)) {
+                        response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Map file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response == 0) {
+                            if (fs.existsSync(parseTemplate(path.join("{data}", "map.sqlite"))))
+                                copyFile(parseTemplate(path.join("{data}", "map.sqlite")), sf);
+                            else
+                                fs.closeSync(fs.openSync(sf, 'w'));
+                        }
+                    }
+                    else if (fs.existsSync(parseTemplate(path.join("{data}", "map.sqlite"))))
+                        copyFile(parseTemplate(path.join("{data}", "map.sqlite")), sf);
+                    else
+                        fs.closeSync(fs.openSync(sf, 'w'));
+                    changed++;
+                    createItem(name);
+                    saveCharacters();
+                });
+            }
+
+            function addEmpty() {
+                showGetName(function (event, name) {
+                    characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                    sf = parseTemplate(characters.characters[name].settings);
+                    if (fs.existsSync(sf)) {
+                        response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Setting file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response == 0) {
+                            var d = new Settings();
+                            d.save(sf);
+                        }
+                    }
+                    else {
+                        var d = new Settings();
+                        d.save(sf);
+                    }
+                    sf = parseTemplate(characters.characters[name].map);
+                    if (fs.existsSync(sf)) {
+                        response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Map file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response == 0) {
+                            fs.closeSync(fs.openSync(sf, 'w'));
+                        }
+                    }
+                    else
+                        fs.closeSync(fs.openSync(sf, 'w'));
+                    changed++;
+                    createItem(name);
+                    saveCharacters();
+                });
+            }
+
+            function rename(name) {
+                if (name === undefined)
+                    name = current;
+                showGetName(name, 0, 1, function (event, name) {
+                    saveCharacters();
+                });
+            }
+
+            function copyName(name) {
+                var i = 0, n = name;
+                while (characters.characters[n]) {
+                    if (i === 0)
+                        n = name;
+                    else
+                        n = name + i;
+                    i++;
+                }
+                return n;
+            }
+
+            function copy(name) {
+                if (name === undefined)
+                    name = current;
+                showGetName(0, copyName(name), function (event, name) {
+                    console.log(name);
+                    saveCharacters();
+                });
+            }
+
+            function remove(name) {
+                if (name === undefined)
+                    name = current;
+                response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'warning',
+                    title: 'Remove character',
+                    message: 'Remove ' + name + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1,
+                });
+
+                if (response == 0) {
+                    sf = parseTemplate(characters.characters[name].settings);
+                    if (fs.existsSync(sf))
+                        shell.moveItemToTrash(sf);
+                    sf = parseTemplate(characters.characters[name].map);
+                    if (fs.existsSync(sf))
+                        shell.moveItemToTrash(sf);
+                    if (characters.load == name)
+                        characters.load = 0;
+                    delete characters.characters[name];
+                    $('#character-' + name).remove();
+                    if (current == name)
+                        clearEditor();
+                    changed++;
+                    saveCharacters();
+                }
+
+            }
+
+            function load(name) {
+                if (name === undefined)
+                    name = current;
+                response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'warning',
+                    title: 'Load character',
+                    message: 'Load ' + name + "?",
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1,
+                });
+                if (response == 0)
+                    ipcRenderer.send('load-char', name);
+            }
+
+            function loadDefault() {
+                 response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'warning',
+                    title: 'Load defaults',
+                    message: 'Load defaults?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1,
+                });
+                if (response == 0)
+                    ipcRenderer.send('load-default', name);
+            }
+
+            function showGetName(name, val, type, callback) {
+                if (typeof name == "function") {
+                    callback = name;
+                    name = undefined;
+                }
+                else if (typeof val == "function") {
+                    callback = val;
+                    val = undefined;
+                }
+                else if (typeof type == "function") {
+                    callback = type;
+                    type = undefined;
+                }
+
+                var p = $("#get-name-value").parent();
+                p.removeClass("has-error");
+                p.removeClass("has-feedback");
+
+                $("#get-name")[0].showModal();
+                if (callback)
+                    $("#get-name").on('get-name-ok', callback);
+                $('#get-name-value').val(val || '');
+                $("#get-name").data('type', type);
+                $("#get-name").data("name", name || current);
+            }
+
+            function copyFile(src, dest) {
+
+                let readStream = fs.createReadStream(src);
+
+                readStream.once('error', (err) => {
+                    console.log(err);
+                });
+
+                readStream.once('end', () => { });
+
+                readStream.pipe(fs.createWriteStream(dest));
+            }
         </script>
+        <style>
+            .form-control-feedback,
+            .form-error {
+                display: none;
+            }
+
+            .has-error .form-control-feedback {
+                display: inline;
+                top: 20px;
+            }
+
+            .has-error .form-error {
+                display: block;
+            }
+
+            .aura-error,
+            .form-error,
+            .has-error a {
+                color: #A94442;
+            }
+        </style>
     </head>
 
     <body>
         <div id="toolbar" class="btn-toolbar" role="toolbar">
-            <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick=""><i class="fa fa-refresh"></i></button>
-            <button type="button" class="btn btn-default btn-xs" title="Add" onclick=""><i class="fa fa-plus"></i></button>
             <div class="btn-group" role="group">
-                <button id="btn-rename" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Rename" onclick=""><i class="fa fa-i-cursor"></i></button>
-                <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick=""><i class="fa fa-copy"></i></button>
-                <button id="btn-delete" type="button" disabled="disabled" class="btn btn-danger btn-xs" title="Delete" onclick=""><i class="fa fa-times"></i></button>
+                <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="refresh()"><i class="fa fa-refresh"></i></button>
+                <button id="btn-save" type="button" class="btn btn-default btn-xs" title="Save" onclick="saveCharacters()"><i class="fa fa-save"></i></button>
             </div>
-            <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick=""><i class="fa fa-play"></i></button>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-default btn-xs" title="Add" onclick="add()"><i class="fa fa-plus"></i></button>
+                <button id="btn-add-dropdown" type="button" class="btn btn-default btn-xs" title="Add" onclick=""><span class="caret"></span></button>
+            </div>
+            <div class="btn-group" role="group">
+                <button id="btn-rename" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Rename" onclick="rename()"><i class="fa fa-i-cursor"></i></button>
+                <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick="copy()"><i class="fa fa-copy"></i></button>
+                <button id="btn-delete" type="button" disabled="disabled" class="btn btn-danger btn-xs" title="Delete" onclick="remove()"><i class="fa fa-times"></i></button>
+            </div>
+            <div class="btn-group" role="group">
+                <button id="btn-load-default" type="button" class="btn btn-warning btn-xs" title="Load default" onclick="loadDefault()"><i class="fa fa-step-backward"></i></button>
+                <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick="load()"><i class="fa fa-play"></i></button>
+            </div>
         </div>
         <div id="main">
+            <div id="characters-container" class="panel panel-default" style="position: absolute;left: 2px;top: 2px;bottom:2px;width:200px;overflow: auto;margin:0">
+                <ul id="characters-list" class="list-group">
+
+                </ul>
+            </div>
+            <div id="content" class="panel panel-default" style="position: absolute;left:206px;right: 2px;top: 2px;bottom:2px;margin:0">
+                <div class="panel-heading">
+                    <span id="title">Character: None</span>
+                </div>
+                <div class="panel-body" id="character-editor">
+                    <label class="control-label"> Settings
+                    <div class="input-group" style="width:100%;">
+                        <input disabled="disabled" class="form-control" style="width:100%" type="text" id="settings">
+                        <span class="input-group-btn">
+                            <button disabled="disabled" class = "btn btn-default" type="button" onclick="openFile('#settings', ['json'])">
+                                &hellip;
+                            </button>
+                        </span>
+                    </div>
+                    </label>
+                    <label class="control-label"> Map
+                    <div class="input-group" style="width:100%;">
+                        <input disabled="disabled" class="form-control" style="width:100%" type="text" id="map">
+                        <span class="input-group-btn">
+                            <button disabled="disabled" class = "btn btn-default" type="button" onclick="openFile('#map', ['map', 'sqlite'])">
+                                &hellip;
+                            </button>
+                        </span>
+                    </div>
+                    </label>
+                    <label class="control-label">
+                                <input disabled="disabled" type="checkbox" id="auto-load"/> Auto load
+                                <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
+                            </label>
+                </div>
+            </div>
         </div>
+
+        <dialog id="get-name" style="z-index:1000;">
+            <div class="form-group">
+                <label class="control-label">
+                    <span id="title">New character name</span>
+                    <input class="form-control" style="width:100%" type="text" id="get-name-value">
+                    <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>   
+      				<div class="form-error"></div> 
+                </label>
+            </div>
+            <div style="text-align:right">
+                <button id="get-name-ok">
+                    Ok        
+                </button>
+                <button onclick="$('#get-name')[0].close()">        
+                    Cancel        
+                </button>
+            </div>
+        </dialog>
     </body>
 
 </html>

@@ -2,10 +2,15 @@
 ##### 0.3.0
 - **New:**
   - Auto create character, will auto create a new settings file/map file based on GMCP character name
+  - Character manager:
+    - Add, edit, rename, delete character settings/map files
+    - Select character to auto load
+    - Load character on demand
+    - Access from menu or new button on button bar
   - Command line arguments:
     - `-s=[file] \ --setting=[file]` override default setting file
     - `-mf=[file] \ --map=[file]` override default map file
-    - `-c=[name|idx] \ -- character=[name|idx]` allows you to load/create a character from character database
+    - `-c=[name] \ -- character=[name]` allows you to load/create a character from character database
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
 - **Fixed:**

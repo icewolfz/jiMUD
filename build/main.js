@@ -37,42 +37,22 @@ if (!fs.existsSync(path.join(app.getPath('userData'), "characters")))
 var characters;
 
 function loadCharacter(char) {
-  if (isNaN(char)) {
-    if (!characters)
-      characters = { load: -1, keys: [], characters: {} };
-    if (!characters.characters[char]) {
-      characters.keys.push(char);
-      characters.characters[char] = { settings: path.join("{characters}", char + ".json"), map: path.join("{characters}", char + ".map") };
-      var d = settings.Settings.load(parseTemplate(path.join("{data}", "settings.json")));
-      d.save(parseTemplate(characters.characters[char].settings));
-      fs.writeFileSync(path.join(app.getPath('userData'), "characters.json"), JSON.stringify(characters));
-      if (fs.existsSync(parseTemplate(path.join("{data}", "map.sqlite")))) {
-        copyFile(parseTemplate(path.join("{data}", "map.sqlite")), parseTemplate(characters.characters[char].map));
-      }
+  if (!characters)
+    characters = { load: 0, characters: {} };
+  if (!characters.characters[char]) {
+    characters.characters[char] = { settings: path.join("{characters}", char + ".json"), map: path.join("{characters}", char + ".map") };
+    var d = settings.Settings.load(parseTemplate(path.join("{data}", "settings.json")));
+    d.save(parseTemplate(characters.characters[char].settings));
+    fs.writeFileSync(path.join(app.getPath('userData'), "characters.json"), JSON.stringify(characters));
+    if (fs.existsSync(parseTemplate(path.join("{data}", "map.sqlite")))) {
+      copyFile(parseTemplate(path.join("{data}", "map.sqlite")), parseTemplate(characters.characters[char].map));
     }
-  }
-  else {
-    char = parseInt(char, 10);
-    if (!characters || characters.characters.length == 0 || char < 0 || char >= characters.characters.length)
-      return;
-    char = characters.keys[char];
   }
   global.settingsFile = parseTemplate(characters.characters[char].settings);
   global.mapFile = parseTemplate(characters.characters[char].map);
 }
 
-if (fs.existsSync(path.join(app.getPath('userData'), "characters.json"))) {
-  characters = fs.readFileSync(path.join(app.getPath('userData'), "characters.json"), 'utf-8');
-  if (characters.length > 0) {
-    try {
-      characters = JSON.parse(characters);
-    }
-    catch (e) {
-      console.log('Could not load: \'characters.json\'');
-    }
-    loadCharacter(characters.load);
-  }
-}
+loadCharacters();
 
 process.argv.forEach((val, index) => {
   switch (val) {
@@ -124,15 +104,6 @@ var menuTemp = [
     id: 'file',
     submenu: [
       {
-        label: "Ch&aracters...",
-        id: "characters",
-        accelerator: "CmdOrCtrl+A",
-        click: () => {
-          win.webContents.executeJavaScript('showCharacters()');
-        }
-      },
-      { type: 'separator' },
-      {
         label: "&Connect",
         id: "connect",
         accelerator: "CmdOrCtrl+N",
@@ -152,6 +123,15 @@ var menuTemp = [
       {
         type: 'separator'
       },
+      {
+        label: "Ch&aracters...",
+        id: "characters",
+        accelerator: "CmdOrCtrl+A",
+        click: () => {
+          win.webContents.executeJavaScript('showCharacters()');
+        }
+      },
+      { type: 'separator' },
       {
         label: '&Log',
         id: "log",
@@ -406,6 +386,15 @@ var menuTemp = [
               win.webContents.executeJavaScript('toggleView("button.connect")');
             }
           },
+          {
+            label: '&Characters',
+            id: "charactersbutton",
+            type: 'checkbox',
+            checked: true,
+            click: () => {
+              win.webContents.executeJavaScript('toggleView("button.characters")');
+            }
+          },          
           {
             label: '&Preferences',
             id: "preferencesbutton",
@@ -846,10 +835,9 @@ function createWindow() {
   })
 
   win.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+    event.preventDefault()
     if (frameName === 'modal') {
-
       // open window as modal
-      //event.preventDefault()
       Object.assign(options, {
         modal: true,
         parent: win,
@@ -869,7 +857,10 @@ function createWindow() {
     if (debug)
       w.webContents.openDevTools();
     w.setMenu(null);
-    w.once('ready-to-show', () => w.show());
+    w.once('ready-to-show', () => {
+      addInputContext(w);
+      w.show();
+    });
     w.loadURL(url)
     event.newGuest = w;
   })
@@ -1004,7 +995,51 @@ ipcMain.on('reload', (event, char) => {
   win.close();
 })
 
-ipcMain.on('change-char', (event, char) => {
+ipcMain.on('load-default', (event) => {
+  //already loaded so no need to switch
+  sf = parseTemplate(path.join("{data}", "settings.json"));
+  mf = parseTemplate(path.join("{data}", "map.sqlite"));
+  if (sf == global.settingsFile && mf == global.mapFile)
+    return;
+
+  global.settingsFile = sf;
+  global.mapFile = mf;
+
+  set = settings.Settings.load(global.settingsFile);
+
+  if (winMap) {
+    winMap.webContents.executeJavaScript('save();');
+    winMap.destroy();
+  }
+
+  if (winEditor)
+    winEditor.destroy();
+  if (winChat)
+    winChat.destroy();
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.executeJavaScript('closed();');
+    windows[name].window.destroy();
+  }
+  win.webContents.send('change-options', global.settingsFile);
+
+  if (set.showMapper)
+    showMapper();
+  else if (set.chat.persistent || set.mapper.enabled)
+    createMapper();
+
+  if (set.showEditor)
+    showEditor();
+  else if (set.editorPersistent)
+    createEditor();
+  if (set.showChat)
+    showChat();
+  else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
+    createChat();
+})
+
+ipcMain.on('load-char', (event, char) => {
   //already loaded so no need to switch
   if (char == global.character)
     return;
@@ -1281,6 +1316,11 @@ ipcMain.on('flush-end', (event) => {
   if (winMap)
     win.webContents.send('flush-end');
 });
+
+ipcMain.on('reload-characters', (event) => {
+  loadCharacters(true);
+});
+
 
 function updateMenuItem(args) {
   var item, i = 0, ic, items;
@@ -1921,4 +1961,20 @@ function copyFile(src, dest) {
   readStream.once('end', () => { });
 
   readStream.pipe(fs.createWriteStream(dest));
+}
+
+function loadCharacters(noLoad) {
+  if (fs.existsSync(path.join(app.getPath('userData'), "characters.json"))) {
+    characters = fs.readFileSync(path.join(app.getPath('userData'), "characters.json"), 'utf-8');
+    if (characters.length > 0) {
+      try {
+        characters = JSON.parse(characters);
+      }
+      catch (e) {
+        console.log('Could not load: \'characters.json\'');
+      }
+      if (!noLoad && characters.load)
+        loadCharacter(characters.load);
+    }
+  }
 }

@@ -577,6 +577,32 @@ export function parseTemplate(str: string, data?) {
 	return str;
 }
 
+export function templatePath(p: string) {
+	var paths = [
+		'{characters}',
+		'{themes}',
+		'{assets}',
+		'{data}',
+		'{home}',
+		'{path}}',
+		'{appData}',
+		'{temp}',
+		'{desktop}',
+		'{documents}',
+		'{downloads}',
+		'{music}',
+		'{pictures}',
+		'{videos}'
+	]
+	for(var s = 0, sl = paths.length;s < sl;s++)
+	{
+		var t = parseTemplate(paths[s]);
+		if (p.startsWith(t))
+			return paths[s] + p.substr(t.length);
+	}		
+	return p;
+}
+
 export function naturalCompare(a, b) {
 	var ax = [], bx = [];
 

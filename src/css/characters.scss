@@ -51,3 +51,35 @@ body {
     right: 0;
     position: absolute;
 }
+
+#characters-list {
+    height: 100%;
+    width: 100%;
+}
+
+.list-group-item {
+    border: 0px;
+    cursor: pointer;
+}
+
+.list-group-item.selected {
+    color: #FFFFFF;
+    background-color: #428bca;
+}
+
+.list-group-item:hover {
+    background-color: #F5F5F5;
+}
+
+.list-group-item.selected:hover {
+    color: #FFFFFF;
+    background-color: #428bca;
+}
+
+.list-group-item::first-letter {
+    text-transform: uppercase;
+}
+
+#btn-add-dropdown {
+    min-width: auto !important;
+}
