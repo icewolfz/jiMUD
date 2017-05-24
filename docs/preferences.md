@@ -6,16 +6,9 @@ Reset - Resetting will revert all settings back to default values
 
 - `Auto connect onload` This will cause the client to try and connect as soon as the client has finished loading.
 - `Auto create character` When connecting to mud and if it returns a character name, create/load character
-- `Connect to development` Connect to the developement mud.
-- `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
 - `Show Lagmeter` Weather to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Show character manager onload` open the character manager when the client first loads.
-- `Enable Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
-- `Enable debug` Will display debug data to the dev tool console
-- `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
-- `Backup save` what to save when using remote backup systems
-- `Backup load` what to load when using remote backup systems
 - `Theme` the theme for the main client window
 
 ## Display
@@ -64,6 +57,17 @@ Reset - Resetting will revert all settings back to default values
 - `Save path` The location to save log files to, **note** path must exist supports
 [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
 
+## Telnet
+
+Settings to control how to handle telnet options and emulation
+
+- `MUD Compression Protocol (MCCP)` Disables or enables MUD Client Compression Protocol, this allows the mud to send all data as compressed to save bandwidth, only disable if you seem to have issues or need to try and save some local resources.
+- `UTF-8` Disables or enables UTF8 processing, disabling it may gain you some cpu or speed but you cuold get garbled or incorrectly displayed text.
+- `MUD eXtension Protocol (MXP)` Disables or enables MUD eXtension Protocol parsing and telnet option
+- `Echo` Disable or enables Echo option to display/hide text when server requests
+- `MUD Sound Protocol (MSP)` Disable or enable MSP
+- `Display Notification on MSP Play` Display a message when a file has started to play
+
 ## Mapper
 
 - `Open on load` Open the mapper when you load the client
@@ -98,13 +102,12 @@ Controls what is captured into the chat window
 
 **Note:** line names are case sensitive.
 
-## Telnet
+## Advanced
 
-Settings to control how to handle telnet options and emulation
-
-- `MUD Compression Protocol (MCCP)` Disables or enables MUD Client Compression Protocol, this allows the mud to send all data as compressed to save bandwidth, only disable if you seem to have issues or need to try and save some local resources.
-- `UTF-8` Disables or enables UTF8 processing, disabling it may gain you some cpu or speed but you cuold get garbled or incorrectly displayed text.
-- `MUD eXtension Protocol (MXP)` Disables or enables MUD eXtension Protocol parsing and telnet option
-- `Echo` Disable or enables Echo option to display/hide text when server requests
-- `MUD Sound Protocol (MSP)` Disable or enable MSP
-- `Display Notification on MSP Play` Display a message when a file has started to play
+- `Connect to development` Connect to the developement mud.
+- `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
+- `Enable GMCP Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
+- `Enable debug` Will display debug data to the dev tool console
+- `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
+- `Backup save` what to save when using remote backup systems
+- `Backup load` what to load when using remote backup systems

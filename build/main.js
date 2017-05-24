@@ -394,7 +394,7 @@ var menuTemp = [
             click: () => {
               win.webContents.executeJavaScript('toggleView("button.characters")');
             }
-          },          
+          },
           {
             label: '&Preferences',
             id: "preferencesbutton",
@@ -849,8 +849,8 @@ function createWindow() {
       })
 
       var b = win.getBounds();
-      options.x += b.width / 2 - options.width / 2;
-      options.y += b.height / 2 - options.height / 2;
+      options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
+      options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
     }
     options.show = false;
     const w = new BrowserWindow(options)
@@ -1453,9 +1453,13 @@ function parseTemplate(str, data) {
 }
 
 function showPrefs() {
+  var b = win.getBounds();
+
   let pref = new BrowserWindow({
     parent: win,
     modal: true,
+    x: Math.floor(b.x + b.width / 2 - 400),
+    y: Math.floor(b.y + b.height / 2 - 200),
     width: 800,
     height: 400,
     movable: false,
