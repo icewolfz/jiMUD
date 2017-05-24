@@ -13,6 +13,7 @@
     - `-c=[name] \ -- character=[name]` allows you to load/create a character from character database
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
+  - Clear icons for display and chat windows have an X added to them to symbolize remove/delete
 - **Fixed:**
   - Preferences: font and command font not being correctly set
   - Window states for mapper, chat or editor where not saved depending on always on top settings when closing the main client

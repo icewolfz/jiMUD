@@ -1500,7 +1500,7 @@ function createMapper(show) {
     backgroundColor: '#eae4d6',
     show: false,
     skipTaskbar: (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false,
-    icon: path.join(__dirname, '../assets/icons/png/map2.png')
+    icon: path.join(__dirname, '../assets/icons/png/map.png')
   })
 
   if (s.fullscreen)
