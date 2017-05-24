@@ -76,8 +76,13 @@ body {
     background-color: #428bca;
 }
 
-.list-group-item::first-letter, #title::first-letter {
+.list-group-item::first-letter,
+#title::first-letter {
     text-transform: uppercase;
+}
+
+#title {
+    display: inline-block;
 }
 
 #btn-add-dropdown {
