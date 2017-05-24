@@ -126,7 +126,7 @@ var menuTemp = [
       {
         label: "Ch&aracters...",
         id: "characters",
-        accelerator: "CmdOrCtrl+A",
+        accelerator: "CmdOrCtrl+H",
         click: () => {
           win.webContents.executeJavaScript('showCharacters()');
         }
