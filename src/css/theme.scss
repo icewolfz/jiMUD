@@ -18,6 +18,19 @@
     font-size: 100% !important;
 }
 
+.button .fa-stack {
+    text-align: center;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    vertical-align: top;
+}
+
+.button .fa-stack .fa-stack-1x {
+    font-size: 0.5em;
+    margin-top: -3px;
+}
+
 .button .fa,
 .button-icon {
     margin-top: 6px;
