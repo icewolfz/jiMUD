@@ -136,7 +136,7 @@
                         return;
                     }
 
-                    $("#get-name").trigger('get-name-ok', [$('#get-name-value').val().toLowerCase()]);
+                    $("#get-name").trigger('get-name-ok', [$('#get-name-value').val().toLowerCase(), $("#get-name").data("name")]);
                     $("#get-name").off('get-name-ok');
                     $('#get-name')[0].close();
                 })
@@ -243,10 +243,11 @@
                     $("#settings").val(characters.characters[current].settings);
                     $("#map").val(characters.characters[current].map);
                     $("#auto-load").prop('checked', current == characters.load);
+                    $("#title").text(name);
                 });
-                item.on('dblclick', function() {
+                item.on('dblclick', function () {
                     $(this).click();
-                    load();                    
+                    load();
                 });
                 list.append(item);
             }
@@ -267,6 +268,7 @@
                 $("#character-editor input[type=text]").val('');
                 $("#character-editor input[type=checkbox]").prop('checked', false)
                 $("#character-editor button").prop('disabled', true);
+                $("#title").text('');
             }
 
             function validName(name) {
@@ -387,7 +389,7 @@
             function rename(name) {
                 if (name === undefined)
                     name = current;
-                showGetName(name, 0, 1, function (event, name) {
+                showGetName(name, 0, 1, function (event, name, oldName) {
                     saveCharacters();
                 });
             }
@@ -407,8 +409,46 @@
             function copy(name) {
                 if (name === undefined)
                     name = current;
-                showGetName(0, copyName(name), function (event, name) {
-                    console.log(name);
+                showGetName(name, copyName(name), function (event, name, oldName) {
+                    characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                    f = parseTemplate(characters.characters[oldName].settings);
+                    sf = parseTemplate(characters.characters[name].settings);
+                    if (fs.existsSync(sf)) {
+                        response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Setting file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response == 0)
+                            copyFile(f, sf);
+                    }
+                    else
+                        copyFile(f, sf);
+                    f = parseTemplate(characters.characters[oldName].map);
+                    sf = parseTemplate(characters.characters[name].map);
+                    if (fs.existsSync(sf)) {
+                        response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Map file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response == 0) {
+                            if (fs.existsSync(f))
+                                copyFile(f, sf);
+                            else
+                                fs.closeSync(fs.openSync(sf, 'w'));
+                        }
+                    }
+                    else if (fs.existsSync(f))
+                        copyFile(f, sf);
+                    else
+                        fs.closeSync(fs.openSync(sf, 'w'));
+                    changed++;
+                    createItem(name);
                     saveCharacters();
                 });
             }
@@ -458,7 +498,7 @@
             }
 
             function loadDefault() {
-                 response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                response = dialog.showMessageBox(remote.getCurrentWindow(), {
                     type: 'warning',
                     title: 'Load defaults',
                     message: 'Load defaults?',
@@ -496,15 +536,11 @@
             }
 
             function copyFile(src, dest) {
-
                 let readStream = fs.createReadStream(src);
-
                 readStream.once('error', (err) => {
                     console.log(err);
                 });
-
                 readStream.once('end', () => { });
-
                 readStream.pipe(fs.createWriteStream(dest));
             }
         </script>
@@ -559,7 +595,7 @@
             </div>
             <div id="content" class="panel panel-default" style="position: absolute;left:206px;right: 2px;top: 2px;bottom:2px;margin:0">
                 <div class="panel-heading">
-                    <span id="title">Character: None</span>
+                    Character: <span id="title"></span>
                 </div>
                 <div class="panel-body" id="character-editor">
                     <label class="control-label"> Settings
@@ -593,7 +629,7 @@
         <dialog id="get-name" style="z-index:1000;">
             <div class="form-group">
                 <label class="control-label">
-                    <span id="title">New character name</span>
+                    <span id="get-name-title">New character name</span>
                     <input class="form-control" style="width:100%" type="text" id="get-name-value">
                     <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>   
       				<div class="form-error"></div> 

@@ -76,7 +76,7 @@ body {
     background-color: #428bca;
 }
 
-.list-group-item::first-letter {
+.list-group-item::first-letter, #title {
     text-transform: uppercase;
 }
 
