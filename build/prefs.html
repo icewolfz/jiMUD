@@ -108,6 +108,7 @@
 
       function loadSettings() {
         $('#autoConnect').prop('checked', _settings.autoConnect);
+        $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
         $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
         $('#dev').prop('checked', _settings.dev);
         $('#lagMeter').prop('checked', _settings.lagMeter);
@@ -688,6 +689,12 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
+          <input type="checkbox" id="showCharacterManager" />
+          Show character manager on load
+          </label>
+          </div>          
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
           <input type="checkbox" id="enablePing" />
           Enable GMCP ping for lagmeter
           </label>
@@ -712,15 +719,15 @@
           </label>
           </div>
           <div class="col-sm-6 form-group">
-            <label class="control-label">Theme
-              <select id="theme" class="form-control selectpicker" data-width="150px"></select>
-            </label>
-          </div>
-          <div class="col-sm-6 form-group">
             <label class="control-label">
           <input type="checkbox" id="editorPersistent" />
          Persistent advanced editor
           </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">Theme
+              <select id="theme" class="form-control selectpicker" data-width="150px"></select>
+            </label>
           </div>
 
           <div class="col-sm-12 form-group">

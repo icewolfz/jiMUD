@@ -1,9 +1,15 @@
 # Preferences
+
+Reset - Resetting will revert all settings back to default values
+
 ## General
 
-- `Auto Connect onload` This will cause the client to try and connect as soon as the client has finished loading.
+- `Auto connect onload` This will cause the client to try and connect as soon as the client has finished loading.
+- `Auto create character` When connecting to mud and if it returns a character name, create/load character
+- `Connect to development` Connect to the developement mud.
 - `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
 - `Show Lagmeter` Weather to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
+- `Show character manager onload` open the character manager when the client first loads.
 - `Enable Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
 - `Enable debug` Will display debug data to the dev tool console
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.

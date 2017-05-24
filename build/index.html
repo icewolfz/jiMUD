@@ -1034,6 +1034,9 @@
         _finder.RegularExpression = client.options.find.regex;
         if (client.options.find.show)
           _finder.show();
+
+        if (client.options.showCharacterManager)
+          showCharacters();
       };
 
       function executeContext(item) {
@@ -1270,6 +1273,7 @@
 
       ipcRenderer.on('reload-options', (event) => {
         client.loadOptions()
+        updateMenu();
       });
 
       ipcRenderer.on('debug', (event, msg) => {

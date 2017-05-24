@@ -229,6 +229,7 @@ export class Settings {
 	public scrollLocked: boolean = false;
 	public showStatus: boolean = true;
 	public showMapper: boolean = false;
+	public showCharacterManager: boolean = false;
 	public showChat: boolean = false;
 	public showEditor: boolean = false;
 	public showArmor: boolean = false;
