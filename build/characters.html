@@ -279,6 +279,26 @@
                 return true;
             }
 
+            function sortList() {
+                var $list = $('#characters-list'),
+                    $listli = $list.children('li');
+
+                $listli.sort(function (a, b) {
+                    var an = a.textContent,
+                        bn = b.textContent;
+
+                    if (an > bn) {
+                        return 1;
+                    }
+                    if (an < bn) {
+                        return -1;
+                    }
+                    return 0;
+                });
+
+                $listli.detach().appendTo($list);
+            }
+
             function openFile(field, ext, callback) {
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
                     defaultPath: path.dirname(parseTemplate($(field).val())),
@@ -341,6 +361,7 @@
                     changed++;
                     createItem(name);
                     saveCharacters();
+                    sortList();
                 });
             }
 
@@ -383,6 +404,7 @@
                     changed++;
                     createItem(name);
                     saveCharacters();
+                    sortList();
                 });
             }
 
@@ -390,7 +412,48 @@
                 if (name === undefined)
                     name = current;
                 showGetName(name, 0, 1, function (event, name, oldName) {
+                    characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                    f = parseTemplate(characters.characters[oldName].settings);
+                    sf = parseTemplate(characters.characters[name].settings);
+                    if (fs.existsSync(sf)) {
+                        response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Setting file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response == 0)
+                            fs.renameSync(f, sf);
+                    }
+                    else
+                        fs.renameSync(f, sf);
+                    f = parseTemplate(characters.characters[oldName].map);
+                    sf = parseTemplate(characters.characters[name].map);
+                    if (fs.existsSync(sf)) {
+                        response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Map file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response == 0) {
+                            fs.renameSync(f, sf);
+                        }
+                    }
+                    else
+                        fs.renameSync(f, sf);
+                    changed++;
+                    delete characters.characters[oldName];
+                    $('#character-' + oldName).remove();
+                    createItem(name);
+                    if (current == oldName) {
+                        clearEditor();
+                        $('#character-' + name).click();
+                    }
                     saveCharacters();
+                    sortList();
                 });
             }
 
@@ -450,6 +513,7 @@
                     changed++;
                     createItem(name);
                     saveCharacters();
+                    sortList();
                 });
             }
 
