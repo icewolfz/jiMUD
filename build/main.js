@@ -48,6 +48,7 @@ function loadCharacter(char) {
       copyFile(parseTemplate(path.join("{data}", "map.sqlite")), parseTemplate(characters.characters[char].map));
     }
   }
+  global.character = char;
   global.settingsFile = parseTemplate(characters.characters[char].settings);
   global.mapFile = parseTemplate(characters.characters[char].map);
 }
@@ -1045,6 +1046,7 @@ ipcMain.on('load-char', (event, char) => {
     return;
   loadCharacter(char);
   set = settings.Settings.load(global.settingsFile);
+  win.webContents.send('load-char', char);
 
   if (winMap) {
     winMap.webContents.executeJavaScript('save();');

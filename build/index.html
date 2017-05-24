@@ -714,6 +714,8 @@
         });
         _logger = new Logger(client);
 
+        if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
+          _logger.name = remote.getGlobal('character');
         _logger.on('started', () => {
           $('#log').addClass('on');
           ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
@@ -1222,6 +1224,10 @@
         }
       }
 
+      ipcRenderer.on('load-char', (event, char) => {
+        _logger.name = char;
+      });
+
       ipcRenderer.on('change-options', (event, file) => {
         client.settingsFile = remote.getGlobal('settingsFile');
       });
@@ -1282,7 +1288,7 @@
       });
 
       function showCharacters() {
-        window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon='+path.join(__dirname, '../assets/icons/png/user.png'));
+        window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
       }
     </script>
   </head>
