@@ -16,6 +16,7 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
     - npm run build:winportable - build win 32/64 bit window's portable files
     - npm run build:winportable32 - build win 32 bit window's portable files
     - npm run build:winportable64 - build win64 bit window's portable files
+
 ### Linux
 1. npm install - install all the node modules
 2. npm run rebuild:linux - to rebuild on linux
@@ -34,7 +35,11 @@ Basic questions answered about jiMUD
 - [jiMUD FAQ](faq.md)
 
 ## Command line arguments
-- `--debug/-d` enable dev tools for all windows
+- `-d \ --debug` enable dev tools for all windows
+- `-s=[file] \ --setting=[file]` override default setting file
+- `-mf=[file] \ --map=[file]` override default map file
+- `-c=[name] \ --character=[name]` allows you to load/create a character from character database
+- `-pf=[list] \ --profiles[]` set which profiles will be enabled, if not found will default
 
 ## References
 - [Profiles](profiles.md)

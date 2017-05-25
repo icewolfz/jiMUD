@@ -10,7 +10,8 @@
   - Command line arguments:
     - `-s=[file] \ --setting=[file]` override default setting file
     - `-mf=[file] \ --map=[file]` override default map file
-    - `-c=[name] \ -- character=[name]` allows you to load/create a character from character database
+    - `-c=[name] \ --character=[name]` allows you to load/create a character from character database
+    - `-pf=[list] \ --profiles[]` set which profiles will be enabled, if not found will default
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
   - Clear icons for display and chat windows have an X added to them to symbolize remove/delete

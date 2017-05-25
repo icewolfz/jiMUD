@@ -35,7 +35,11 @@ Basic questions answered about jiMUD
 - [jiMUD FAQ](docs/faq.md)
 
 ## Command line arguments
-- `--debug/-d` enable dev tools for all windows
+- `-d \ --debug` enable dev tools for all windows
+- `-s=[file] \ --setting=[file]` override default setting file
+- `-mf=[file] \ --map=[file]` override default map file
+- `-c=[name] \ --character=[name]` allows you to load/create a character from character database
+- `-pf=[list] \ --profiles[]` set which profiles will be enabled, if not found will default
 
 ## References
 - [Profiles](docs/profiles.md)

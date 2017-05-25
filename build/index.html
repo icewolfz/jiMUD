@@ -1233,7 +1233,7 @@
         }
       });
 
-        ipcRenderer.on('load-default', (event, char) => {
+      ipcRenderer.on('load-default', (event, char) => {
         if (!client.connected) {
           _logger.name = "";
           $("#character-name").text("&nbsp;");
