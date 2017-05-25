@@ -136,7 +136,8 @@ export class Backup extends EventEmitter {
                     scrollLocked: this.client.options.scrollLocked,
                     showStatus: this.client.options.showStatus,
                     MapperOpen: this.client.options.showMapper,
-                    showCharacterManager: this.client.options.showCharacterManager
+                    showCharacterManager: this.client.options.showCharacterManager,
+                    logErrors: this.client.options.logErrors
                 },
                 map: {}
             };
@@ -448,6 +449,8 @@ export class Backup extends EventEmitter {
                 this.client.options.showStatus = data.settings.showStatus ? true : false;
                 this.client.options.showMapper = data.settings.MapperOpen ? true : false;
                 this.client.options.showCharacterManager = data.settings.showCharacterManager ? true : false;
+                this.client.options.logErrors = data.settings.showCharacterManager ? true : false;
+
 
                 this.client.clearTriggerCache();
                 this.client.saveOptions();

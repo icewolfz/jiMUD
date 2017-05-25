@@ -116,6 +116,8 @@
         $('#showScriptErrors').prop('checked', _settings.showScriptErrors);
         $('#enableDebug').prop('checked', _settings.enableDebug);
         $('#allowNegativeNumberNeeded').prop('checked', _settings.allowNegativeNumberNeeded);
+        $('#logErrors').prop('checked', _settings.logErrors);
+
         //$('#font').selectpicker('val', _settings.font);
         $('#font').val(_settings.font);
         $('#font').selectpicker('render');
@@ -1274,6 +1276,12 @@
         <label class="control-label">
           <input type="checkbox" id="enableDebug" />
           Enable debug
+          </label>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
+          <input type="checkbox" id="logErrors" />
+          Log errors
           </label>
       </div>
       <div class="col-sm-6 form-group">

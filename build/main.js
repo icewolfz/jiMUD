@@ -8,6 +8,16 @@ const fs = require('fs');
 const url = require('url')
 const settings = require('./js/settings');
 
+/*
+const {crashReporter} = require('electron')
+crashReporter.start({
+  productName: 'jiMUD',
+  companyName: 'jiMUD',
+  //submitURL: 'https://your-domain.com/url-to-submit',
+  submitURL: 'http://localhost:3000/api/app-crashes',
+  uploadToServer: true
+})
+*/
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win, winHelp, winWho, winMap, winProfiles, winEditor, winChat
@@ -31,10 +41,23 @@ let states = {
   'chat': { x: 0, y: 0, width: 300, height: 225 },
 };
 
+process.on('uncaughtException', (err) => {
+  if (debug) {
+    console.error(event);
+  }
+  else if (win)
+    win.webContents.send('error', err);
+  else if (set && set.logErrors) {
+    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + "\n", { flag: 'a' });
+    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), err, { flag: 'a' });
+  }
+});
+
 if (!fs.existsSync(path.join(app.getPath('userData'), "characters")))
   fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
 
 var characters;
+
 
 function loadCharacter(char) {
   if (!characters)
@@ -851,6 +874,54 @@ function createWindow() {
     trackWindowState('main', win);
   })
 
+  win.on('unresponsive', function () {
+    dialog.showMessageBox({
+      type: 'info',
+      message: 'Unresponsive',
+      buttons: ['Reopen', 'Keep waiting', 'Close']
+    }, result => {
+      if (!win)
+        return;
+      if (result === 0)
+        win.reload();
+      else if (result === 2) {
+
+        set = settings.Settings.load(global.settingsFile);
+        set.windows['main'] = getWindowState('main', win);
+        if (winMap) {
+          set.windows['mapper'] = getWindowState('mapper', winMap);
+          winMap.webContents.executeJavaScript('save();');
+          winMap.destroy();
+        }
+        if (winEditor) {
+          set.windows['editor'] = getWindowState('editor', winEditor);
+          winEditor.destroy();
+        }
+        if (winChat) {
+          set.windows['chat'] = getWindowState('chat', winChat);
+          winChat.destroy();
+        }
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.executeJavaScript('closing();');
+          windows[name].window.webContents.executeJavaScript('closed();');
+          set.windows[name] = getWindowState(name, windows[name].window);
+          windows[name].window.destroy();
+        }
+        set.save(global.settingsFile);
+        win.destroy();
+      }
+    });
+  });
+
+  win.webContents.on('crashed', (event, killed) => {
+    if (debug)
+      console.error(event);
+    else if (set && set.logErrors)
+      fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), `Crashed @ ${new Date().toLocaleString()}, killed: ${killed}\n`, { flag: 'a' });
+  });
+
   win.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
     event.preventDefault()
     if (frameName === 'modal') {
@@ -955,11 +1026,6 @@ function createWindow() {
     set.save(global.settingsFile);
     if (winMap)
       winMap.webContents.executeJavaScript('save();');
-    for (var name in windows) {
-      if (!windows.hasOwnProperty(name) || !windows[name].window)
-        continue;
-      windows[name].window.webContents.executeJavaScript('closing();');
-    }
     if (winProfiles) {
       e.preventDefault();
       dialog.showMessageBox(winProfiles, {
@@ -967,6 +1033,12 @@ function createWindow() {
         title: 'Close profile manager',
         message: 'You must close the profile manager before you can exit.'
       });
+      return;
+    }
+    for (var name in windows) {
+      if (!windows.hasOwnProperty(name) || !windows[name].window)
+        continue;
+      windows[name].window.webContents.executeJavaScript('closing();');
     }
   })
 
@@ -1204,6 +1276,10 @@ ipcMain.on('log', (event, raw) => {
 
 ipcMain.on('debug', (event, msg) => {
   win.webContents.send('debug', msg);
+})
+
+ipcMain.on('error', (event, err) => {
+  win.webContents.send('error', err);
 })
 
 ipcMain.on('reload-profiles', (event) => {

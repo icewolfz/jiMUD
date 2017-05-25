@@ -210,7 +210,12 @@ export class Telnet extends EventEmitter {
         this.reset();
         this.emit('connecting');
         this.socket = this._createSocket();
-        this.socket.connect(this.port, this.host);
+        try {
+            this.socket.connect(this.port, this.host);
+        }
+        catch (e) {
+            this.emit('error', e)
+        }
         if (this.enableDebug)
             this.emit('debug', 'Connecting to ' + this.host + ":" + this.port);
     };
@@ -1537,7 +1542,7 @@ export class Telnet extends EventEmitter {
             this.sendData([255, 250, 31, w1, w2, h1, h2, 255, 240], true);
         }
         catch (e) {
-            this.emit('error', { message: "UpdateWindow Error: " + e, err:e });
+            this.emit('error', { message: "UpdateWindow Error: " + e, err: e });
         }
     };
 
@@ -1663,7 +1668,7 @@ export class Telnet extends EventEmitter {
             //_socket.setEncoding('binary');
             _socket.on('close', err => {
                 if (err)
-                    this.emit('error', {message:'Closed due to transmission error', err:err});
+                    this.emit('error', { message: 'Closed due to transmission error', err: err });
                 else
                     this.close();
             });

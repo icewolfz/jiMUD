@@ -183,6 +183,9 @@ export class Settings {
 	public enableSpeedpaths: boolean = true;
 	public parseSpeedpaths: boolean = true;
 
+	public logErrors: boolean = false;
+	public reportCrashes: boolean = false;
+
 	public parseDoubleQuotes: boolean = true;
 	public logUniqueOnConnect: boolean = true;
 	public enableURLDetection: boolean = true;

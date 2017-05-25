@@ -230,6 +230,16 @@ export class Client extends EventEmitter {
 
     constructor(display, command, settings?: string) {
         super();
+
+        /*
+        process.on('uncaughtException', (err) => {
+            if (err.code == "ECONNREFUSED")
+                this._autoError = true;
+            this.error(err);
+        });
+        */
+
+
         if (command === null || typeof command == 'undefined') {
             throw "Missing command input";
         }
@@ -553,10 +563,10 @@ export class Client extends EventEmitter {
     }
 
     error(err) {
-        err = { error: err, handled: false };
-        //this.emit('error', err);
         if (err === null || typeof err == "undefined")
             return;
+        err = { error: err, handled: false };
+        //this.emit('error', err);
         if (err.handled) return;
         if (err.error === null || typeof err.error == "undefined")
             this.echo("Error: Unknown.", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
@@ -574,6 +584,11 @@ export class Client extends EventEmitter {
             this.echo("Error: " + err.error.message + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
         else
             this.echo("Error: " + err.error + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+        if (this.options.logErrors) {
+            fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), new Date().toLocaleString() + "\n", { flag: 'a' });
+            fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), err, { flag: 'a' });
+        }
+
         if (this.options.autoConnect && !this.telnet.connected && !this._autoError) {
             if (this._auto)
                 clearTimeout(this._auto);

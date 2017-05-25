@@ -108,6 +108,7 @@ Controls what is captured into the chat window
 - `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
 - `Enable GMCP Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
 - `Enable debug` Will display debug data to the dev tool console
+- `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Backup save` what to save when using remote backup systems
 - `Backup load` what to load when using remote backup systems

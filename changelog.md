@@ -1,6 +1,7 @@
 ## Changelog
 ##### 0.3.0
 - **New:**
+  - Basic error logging to appdata/jiMUD/jimud.error.log when enabled from preferences > advanced > log errors
   - Auto create character, will auto create a new settings file/map file based on GMCP character name
   - Character manager:
     - Add, edit, rename, delete character settings/map files
@@ -8,10 +9,11 @@
     - Load character on demand
     - Access from menu or new button on button bar
   - Command line arguments:
-    - `-s=[file] \ --setting=[file]` override default setting file
-    - `-mf=[file] \ --map=[file]` override default map file
-    - `-c=[name] \ --character=[name]` allows you to load/create a character from character database
-    - `-pf=[list] \ --profiles[]` set which profiles will be enabled, if not found will default
+    - `-h, --help` display console help
+    - `-s=[file], --setting=[file]` override default setting file
+    - `-mf=[file], --map=[file]` override default map file
+    - `-c=[name], --character=[name]` allows you to load/create a character from character database
+    - `-pf=[list], --profiles[]` set which profiles will be enabled, if not found will default
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
   - Clear icons for display and chat windows have an X added to them to symbolize remove/delete
@@ -21,6 +23,8 @@
 - **Fixed:**
   - Preferences: font and command font not being correctly set
   - Window states for mapper, chat or editor where not saved depending on always on top settings when closing the main client
+  - Fixed errors not being correctly caught and displayed when connecting
+  - Fixed uncaught errors not being displayed
 ##### 0.2.4 - 2017-05-22
 - **Changed:**
   - Profile manager: treeview should now sort by profile name, with default always being first
