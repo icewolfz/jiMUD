@@ -57,6 +57,18 @@ loadCharacters();
 
 process.argv.forEach((val, index) => {
   switch (val) {
+    case "-h":
+    case "--help":
+    case "-?":
+    case "/?":
+      console.log('-h, --help                    Print console help');
+      console.log('-d, --debug                   Enable dev tools for all windows');
+      console.log('-s=[file], --setting=[file]   Override default setting file');
+      console.log('-mf=[file], --map=[file]      Override default map file');
+      console.log('-c=[name], --character=[name] Allows you to load/create a character from character database');
+      console.log('-pf=[list], --profiles[]      Set which profiles will be enabled, if not found will default');
+      app.quit();
+      return;
     case "-debug":
     case "--debug":
     case "-d":

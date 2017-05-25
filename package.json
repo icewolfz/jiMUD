@@ -22,9 +22,9 @@
     "debug": "electron . -d",
     "clean:dist": "rm -rf ./dist",
     "compile": "npm run sass && npm run compile:themes && tsc -p . --listEmittedFiles && npm run min && echo Compile Done",
-    "build": "npm run build:win && npm run build:linux",
+    "build": "npm run build:win64 && npm run build:linux",
     "build:osx": "electron-packager . %npm_package_productName% --out=dist --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --overwrite --prune --asar --arch=all --platform=darwin --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/mac/app.icns",
-    "build:win": "electron-packager . %npm_package_productName% --out=dist --arch=x64 --platform=win32 --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/win/app.ico",
+    "build:win64": "electron-packager . %npm_package_productName% --out=dist --arch=x64 --platform=win32 --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/win/app.ico",
     "build:win32": "electron-packager . %npm_package_productName% --out=dist --arch=ia32 --platform=win32 --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/win/app.ico",
     "build:linux": "electron-packager . $npm_package_productName --out=dist --arch=all --platform=linux --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=$npm_package_electronVersion --app-version=$npm_package_version --icon=./assets/icons/png/64x64.png",
     "build:linuxwin": "electron-packager . %npm_package_productName% --out=dist --arch=all --platform=linux --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/png/64x64.png",
@@ -55,19 +55,15 @@
   "devDependencies": {
     "@types/jquery": "^2.0.42",
     "@types/node": "^7.0.16",
-    "accessibility-developer-tools": "^2.12.0",
     "babel-cli": "^6.24.1",
-    "babili": "0.0.12",
+    "babili": "^0.1.2",
     "devtron": "^1.4.0",
     "electron": "^1.7.1",
     "electron-builder": "^17.3.1",
     "electron-installer-dmg": "^0.2.1",
     "electron-packager": "^8.7.0",
     "electron-prebuilt": "^1.4.13",
-    "electron-rebuild": "^1.5.7",
-    "electron-winstaller": "^2.5.2",
-    "ts-node": "^2.0.0",
-    "typescript": "^2.2.2"
+    "electron-rebuild": "^1.5.7"
   },
   "build": {
     "appId": "jiMUD",
@@ -79,7 +75,7 @@
     },
     "linux": {
       "maintainer": "icewolfz",
-      "icon":"./assets/icons/png/"
+      "icon": "./assets/icons/png/"
     }
   },
   "dependencies": {
