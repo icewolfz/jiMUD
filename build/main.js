@@ -8,6 +8,8 @@ const fs = require('fs');
 const url = require('url')
 const settings = require('./js/settings');
 
+//require('electron-local-crash-reporter').start();
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win, winHelp, winWho, winMap, winProfiles, winEditor, winChat
