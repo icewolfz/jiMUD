@@ -47,11 +47,11 @@ Reset - Resetting will revert all settings back to default values
 - `Parse single quotes as strings` Treat single quotes as string encasing, meaning all text found inside single quotes are treated as is and not parsed.
 - `Parse double quotes as strings` Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
 - `Newline shortcut` A shortcut for adding newlines to command input
-  - `<kbd>None</kbd>` no shortcut enter always sends command
-  - `<kbd>Ctrl</kbd> + <kbd>Enter</kbd>` add newline on ctrl+enter
-  - `<kbd>Shift</kbd> + <kbd>Enter</kbd>` add newline on shift+enter
-  - `(<kbd>Ctrl</kbd> | <kbd>Shift</kbd>) + <kbd>Enter</kbd>` add a new line on ctrl+enter or shift+enter
-  - `<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>` add a newline on ctrl+shift+enter
+  - `None` no shortcut enter always sends command
+  - `Ctrl + Enter` add newline on ctrl+enter
+  - `Shift + Enter` add newline on shift+enter
+  - `(Ctrl | Shift) + Enter` add a new line on ctrl+enter or shift+enter
+  - `Ctrl + Shift + Enter` add a newline on ctrl+shift+enter
 
 ## Logging
 
