@@ -714,8 +714,10 @@
         });
         _logger = new Logger(client);
 
-        if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
+        if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
           _logger.name = remote.getGlobal('character');
+          $("#character-name").text(remote.getGlobal('character'));
+        }
         _logger.on('started', () => {
           $('#log').addClass('on');
           ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
@@ -1225,7 +1227,17 @@
       }
 
       ipcRenderer.on('load-char', (event, char) => {
-        _logger.name = char;
+        if (!client.connected) {
+          _logger.name = char;
+          $("#character-name").text(char);
+        }
+      });
+
+        ipcRenderer.on('load-default', (event, char) => {
+        if (!client.connected) {
+          _logger.name = "";
+          $("#character-name").text("&nbsp;");
+        }
       });
 
       ipcRenderer.on('change-options', (event, file) => {

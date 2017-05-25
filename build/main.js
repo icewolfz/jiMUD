@@ -532,9 +532,13 @@ var menuTemp = [
       {
         label: '&About...',
         click: () => {
+          var b = win.getBounds();
+
           let about = new BrowserWindow({
             parent: win,
             modal: true,
+            x: Math.floor(b.x + b.width / 2 - 225),
+            y: Math.floor(b.y + b.height / 2 - 200),
             width: 450,
             height: 400,
             movable: false,
@@ -1002,7 +1006,7 @@ ipcMain.on('load-default', (event) => {
   mf = parseTemplate(path.join("{data}", "map.sqlite"));
   if (sf == global.settingsFile && mf == global.mapFile)
     return;
-
+  win.webContents.send('load-default', char);
   global.settingsFile = sf;
   global.mapFile = mf;
 
