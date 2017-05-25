@@ -8,16 +8,6 @@ const fs = require('fs');
 const url = require('url')
 const settings = require('./js/settings');
 
-/*
-const {crashReporter} = require('electron')
-crashReporter.start({
-  productName: 'jiMUD',
-  companyName: 'jiMUD',
-  //submitURL: 'https://your-domain.com/url-to-submit',
-  submitURL: 'http://localhost:3000/api/app-crashes',
-  uploadToServer: true
-})
-*/
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win, winHelp, winWho, winMap, winProfiles, winEditor, winChat
@@ -42,22 +32,13 @@ let states = {
 };
 
 process.on('uncaughtException', (err) => {
-  if (debug) {
-    console.error(event);
-  }
-  else if (win)
-    win.webContents.send('error', err);
-  else if (set && set.logErrors) {
-    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + "\n", { flag: 'a' });
-    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), err, { flag: 'a' });
-  }
+  logError(err);
 });
 
 if (!fs.existsSync(path.join(app.getPath('userData'), "characters")))
   fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
 
 var characters;
-
 
 function loadCharacter(char) {
   if (!characters)
@@ -584,6 +565,10 @@ var menuTemp = [
             title: 'About jiMUD',
             icon: path.join(__dirname, '../assets/icons/png/64x64.png')
           })
+          about.webContents.on('crashed', (event, killed) => {
+            logError(`About crashed, killed: ${killed}\n`, true);
+          });
+
           about.setMenu(null);
           about.on('closed', () => {
             about = null
@@ -733,6 +718,11 @@ function showHelpWindow(url, title) {
     show: false, skipTaskbar: false
   })
 
+  winHelp.webContents.on('crashed', (event, killed) => {
+    logError(`Help crashed, killed: ${killed}\n`, true);
+  });
+
+
   if (s.fullscreen)
     winHelp.setFullScreen(s.fullscreen);
 
@@ -832,6 +822,20 @@ function createMenu() {
 }
 
 function createWindow() {
+  /*
+  if(set.reportCrashes)
+  {
+    const {crashReporter} = require('electron')
+    crashReporter.start({
+      productName: 'jiMUD',
+      companyName: 'jiMUD',
+      submitURL: 'http://localhost:3000/api/app-crashes',
+      uploadToServer: true
+    })
+  }
+  */
+  if (!set)
+    set = settings.Settings.load(global.settingsFile);
   s = loadWindowState('main');
   // Create the browser window.
   win = new BrowserWindow({
@@ -916,10 +920,7 @@ function createWindow() {
   });
 
   win.webContents.on('crashed', (event, killed) => {
-    if (debug)
-      console.error(event);
-    else if (set && set.logErrors)
-      fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), `Crashed @ ${new Date().toLocaleString()}, killed: ${killed}\n`, { flag: 'a' });
+    logError(`Client crashed, killed: ${killed}\n`, true);
   });
 
   win.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
@@ -949,6 +950,10 @@ function createWindow() {
       addInputContext(w);
       w.show();
     });
+    w.webContents.on('crashed', (event, killed) => {
+      logError(`${url} crashed, killed: ${killed}\n`, true);
+    });
+
     w.loadURL(url)
     event.newGuest = w;
   })
@@ -1041,9 +1046,6 @@ function createWindow() {
       windows[name].window.webContents.executeJavaScript('closing();');
     }
   })
-
-  if (!set)
-    set = settings.Settings.load(global.settingsFile);
 }
 
 
@@ -1581,6 +1583,10 @@ function showPrefs() {
   pref.once('ready-to-show', () => {
     pref.show()
   })
+
+  pref.webContents.on('crashed', (event, killed) => {
+    logError(`Preferences crashed, killed: ${killed}\n`, true);
+  });
   addInputContext(pref);
 }
 
@@ -1610,6 +1616,10 @@ function createMapper(show) {
     protocol: 'file:',
     slashes: true
   }));
+
+  winMap.webContents.on('crashed', (event, killed) => {
+    logError(`Mapper crashed, killed: ${killed}\n`, true);
+  });
 
   winMap.on('closed', () => {
     winMap = null;
@@ -1689,10 +1699,14 @@ function showProfiles() {
     maximizable: true,
     skipTaskbar: true,
     resizable: true,
-    title: 'Preferences',
+    title: 'Profile Manger',
     icon: path.join(__dirname, '../assets/icons/png/profiles.png'),
     show: false
   })
+
+  winProfiles.webContents.on('crashed', (event, killed) => {
+    logError(`Profile manager crashed, killed: ${killed}\n`, true);
+  });
 
   if (s.fullscreen)
     winProfiles.setFullScreen(s.fullscreen);
@@ -1752,6 +1766,10 @@ function createEditor(show) {
     skipTaskbar: false,
     icon: path.join(__dirname, '../assets/icons/png/edit.png')
   })
+
+  winEditor.webContents.on('crashed', (event, killed) => {
+    logError(`Advanced editor crashed, killed: ${killed}\n`, true);
+  });
 
   if (s.fullscreen)
     winEditor.setFullScreen(s.fullscreen);
@@ -1838,6 +1856,10 @@ function createChat(show) {
     skipTaskbar: (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false,
     icon: path.join(__dirname, '../assets/icons/png/chat.png')
   })
+
+  winChat.webContents.on('crashed', (event, killed) => {
+    logError(`Chat capture crashed, killed: ${killed}\n`, true);
+  });
 
   if (s.fullscreen)
     winChat.setFullScreen(s.fullscreen);
@@ -1933,6 +1955,9 @@ function createNewWindow(name, options) {
     icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png')
   });
 
+  windows[name].window.webContents.on('crashed', (event, killed) => {
+    logError(`${name} crashed, killed: ${killed}\n`, true);
+  });
 
   if (s.fullscreen)
     windows[name].window.setFullScreen(s.fullscreen);
@@ -2029,6 +2054,10 @@ function showColor(args) {
     icon: path.join(__dirname, '../assets/icons/png/color.png'),
     show: false,
   })
+  cp.webContents.on('crashed', (event, killed) => {
+    logError(`Colorpicker crashed, killed: ${killed}\n`, true);
+  });
+
   cp.setMenu(null);
   cp.on('closed', () => {
     cp = null
@@ -2074,5 +2103,16 @@ function loadCharacters(noLoad) {
       if (!noLoad && characters.load)
         loadCharacter(characters.load);
     }
+  }
+}
+
+function logError(err, skipClient) {
+  if (debug)
+    console.error(err);
+  if (win && !skipClient)
+    win.webContents.send('error', err);
+  else if (set && set.logErrors) {
+    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + "\n", { flag: 'a' });
+    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), err, { flag: 'a' });
   }
 }
