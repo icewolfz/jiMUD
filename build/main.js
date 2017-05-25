@@ -886,10 +886,11 @@ function createWindow() {
     }, result => {
       if (!win)
         return;
-      if (result === 0)
+      if (result === 0) {
         win.reload();
+        logError(`Client unresponsive, reload.\n`, true);
+      }
       else if (result === 2) {
-
         set = settings.Settings.load(global.settingsFile);
         set.windows['main'] = getWindowState('main', win);
         if (winMap) {
@@ -913,9 +914,13 @@ function createWindow() {
           set.windows[name] = getWindowState(name, windows[name].window);
           windows[name].window.destroy();
         }
+        logError(`Client unresponsive, closed.\n`, true);
         set.save(global.settingsFile);
         win.destroy();
+        win = null;
       }
+      else
+        logError(`Client unresponsive, waiting.\n`, true);
     });
   });
 
