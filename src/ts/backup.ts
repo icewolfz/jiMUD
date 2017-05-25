@@ -2,19 +2,12 @@
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { parseTemplate } from "./library";
+import { BackupSelection } from "./settings";
+import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
 const fs = require("fs");
 const path = require("path");
 const sqlite3 = require("sqlite3");
 const LZString = require("lz-string");
-const { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle } = require('./profile');
-
-export enum BackupSelection {
-    None = 0,
-    Map = 2,
-    Profiles = 4,
-    Settings = 8,
-    All = Map | Profiles | Settings
-}
 
 export class Backup extends EventEmitter {
     private client: Client = null;
@@ -28,13 +21,13 @@ export class Backup extends EventEmitter {
     public loadSelection: BackupSelection = BackupSelection.All;
     public saveSelection: BackupSelection = BackupSelection.All;
 
-    get URL():string {
+    get URL(): string {
         if (this.client.port == 1035)
             return "http://shadowmud.com:1132/client";
         return "http://shadowmud.com:1130/client";
     }
 
-    constructor(client: Client, map?:string) {
+    constructor(client: Client, map?: string) {
         super();
         if (!client)
             throw "Invalid client!";
@@ -74,7 +67,7 @@ export class Backup extends EventEmitter {
                     break;
             }
         });
-        if(map && map.length > 0)
+        if (map && map.length > 0)
             this.mapFile = map;
     }
 
@@ -237,8 +230,8 @@ export class Backup extends EventEmitter {
                     else if (data.error)
                         this.abort(data.error);
                     else {
-                        this._save[1] = data.chunk||0;
-                        this._save[3] += data.data||"";
+                        this._save[1] = data.chunk || 0;
+                        this._save[3] += data.data || "";
                         this.emit('progress', (this._save[1] + 1) / this._save[0] * 100)
                         if (this._save[1] >= this._save[0] - 1)
                             this.finishLoad();
@@ -246,7 +239,7 @@ export class Backup extends EventEmitter {
                             this.getChunk();
                     }
                 },
-                error: (data, error, errorThrown) =>    {
+                error: (data, error, errorThrown) => {
                     this.abort(error);
                 }
             });
@@ -311,9 +304,10 @@ export class Backup extends EventEmitter {
                     p.enableAliases = data.profiles[keys[k]].enableAliases ? true : false;
                     p.macros = [];
                     var l = data.profiles[keys[k]].macros.length;
+                    var item;
                     if (l > 0) {
                         for (var m = 0; m < l; m++) {
-                            var item = new Macro();
+                            item = new Macro();
                             item.key = data.profiles[keys[k]].macros[m].key;
                             item.value = data.profiles[keys[k]].macros[m].value;
                             item.style = data.profiles[keys[k]].macros[m].style;
@@ -332,7 +326,7 @@ export class Backup extends EventEmitter {
                     l = data.profiles[keys[k]].aliases.length;
                     if (l > 0) {
                         for (var m = 0; m < l; m++) {
-                            var item = new Alias();
+                            item = new Alias();
                             item.pattern = data.profiles[keys[k]].aliases[m].pattern;
                             item.value = data.profiles[keys[k]].aliases[m].value;
                             item.style = data.profiles[keys[k]].aliases[m].style;
@@ -351,7 +345,7 @@ export class Backup extends EventEmitter {
                     l = data.profiles[keys[k]].triggers.length;
                     if (l > 0) {
                         for (var m = 0; m < l; m++) {
-                            var item = new Trigger();
+                            item = new Trigger();
                             item.pattern = data.profiles[keys[k]].triggers[m].pattern;
                             item.value = data.profiles[keys[k]].triggers[m].value;
                             item.style = data.profiles[keys[k]].triggers[m].style;
@@ -372,17 +366,17 @@ export class Backup extends EventEmitter {
                         l = data.profiles[keys[k]].buttons.length;
                         if (l > 0) {
                             for (var m = 0; m < l; m++) {
-                                var item = new Button(data.profiles[keys[k]].buttons[m]);
+                                item = new Button(data.profiles[keys[k]].buttons[m]);
                                 p.triggers.push(item);
                             }
                         }
                     }
                     profiles.add(p);
                 }
-                var p = path.join(parseTemplate("{data}"), "profiles");
-                if (!fs.existsSync(p))
-                    fs.mkdirSync(p);
-                profiles.save(p);
+                var pf = path.join(parseTemplate("{data}"), "profiles");
+                if (!fs.existsSync(pf))
+                    fs.mkdirSync(pf);
+                profiles.save(pf);
                 //this.client.loadProfiles();
                 this.emit('imported-profiles');
             }
@@ -427,7 +421,7 @@ export class Backup extends EventEmitter {
 
                 this.client.options.parseDoubleQuotes = data.settings.parseDoubleQuotes ? true : false;
                 this.client.options.logUniqueOnConnect = data.settings.logUniqueOnConnect ? true : false;
-                this.client.options.enableURLDetection = data.settings.enableURLDetection  ? true : false;
+                this.client.options.enableURLDetection = data.settings.enableURLDetection ? true : false;
                 this.client.options.CommandonClick = data.settings.CommandonClick ? true : false;
                 this.client.options.cmdfontSize = data.settings.cmdfontSize;
                 this.client.options.fontSize = data.settings.fontSize;

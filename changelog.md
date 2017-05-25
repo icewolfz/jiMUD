@@ -3,6 +3,12 @@
 - **New:**
   - Basic error logging to appdata/jiMUD/jimud.error.log when enabled from preferences > advanced > log errors
   - Auto create character, will auto create a new settings file/map file based on GMCP character name
+  - Newline shortcut, allows you to pick a shortcut for adding newlines to command input
+    - None, no shortcut enter always sends command
+    - Ctrl+Enter, add newline on ctrl+enter
+    - Shift+Enter, add newline on shift+enter
+    - (Ctrl | Shift + Enter), add a new line on ctrl+enter or shift+enter
+    - Ctrl+Shift+Enter, add a newline on ctrl+shift+enter
   - Character manager:
     - Add, edit, rename, delete character settings/map files
     - Select character to auto load
@@ -17,6 +23,7 @@
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
   - Clear icons for display and chat windows have an X added to them to symbolize remove/delete
+  - Convert command input into a textarea field to allow multi-line text
   - Preferences:
     - Dialog now centers on main client window
     - Moved several settings to a new Advanced tab to simplify general settings

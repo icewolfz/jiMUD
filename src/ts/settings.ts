@@ -22,6 +22,15 @@ export enum BackupSelection {
 }
 
 
+export enum NewLineType
+{
+    None = 0,
+    Ctrl = 1,
+    Shift = 2,
+    CtrlOrShift =  4,
+	CtrlAndShift =  8
+}
+
 export class Mapper {
 	public enabled: boolean = true;
 	public follow: boolean = true;
@@ -171,6 +180,9 @@ export class Settings {
 	public enableEcho: boolean = true;
 	public autoConnect: boolean = true;
 	public commandEcho: boolean = true;
+	
+	public newlineShortcut: NewLineType = NewLineType.Ctrl;
+
 	public commandStacking: boolean = true;
 	public htmlLog: boolean = true;
 	public keepLastCommand: boolean = true;

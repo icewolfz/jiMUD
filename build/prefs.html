@@ -206,6 +206,13 @@
         $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) == 4);
         $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) == 8);
 
+
+        $('#newlineShortcut-0').prop('checked', _settings.newlineShortcut == 0);
+        $('#newlineShortcut-1').prop('checked', _settings.newlineShortcut == 1);
+        $('#newlineShortcut-2').prop('checked', _settings.newlineShortcut == 2);
+        $('#newlineShortcut-4').prop('checked', _settings.newlineShortcut == 4);
+        $('#newlineShortcut-8').prop('checked', _settings.newlineShortcut == 8);
+
         $('.btn-group input').parent().removeClass('active');
         $('.btn-group input:checked').parent().addClass('active');
 
@@ -309,6 +316,26 @@
 
         $('input[type="radio"]').change(function () {
           switch ($(this).attr('id')) {
+            case 'newlineShortcut-0':
+              if (this.checked)
+                _settings.newlineShortcut = 0;
+              break;
+            case 'newlineShortcut-1':
+              if (this.checked)
+                _settings.newlineShortcut = 1;
+              break;
+            case 'newlineShortcut-2':
+              if (this.checked)
+                _settings.newlineShortcut = 2;
+              break;
+            case 'newlineShortcut-4':
+              if (this.checked)
+                _settings.newlineShortcut = 4;
+              break;
+            case 'newlineShortcut-8':
+              if (this.checked)
+                _settings.newlineShortcut = 8;
+              break;
             case 'chat-selective':
               _settings.chat.captureAllLines = !this.checked;
               $("#chat-lines").prop('readonly', !_settings.chat.captureLines || !this.checked);
@@ -961,7 +988,6 @@
       <div class="input-group-addon"><label><input type="checkbox" id="parseSpeedpaths" /> Parse</label></div>
     </div>
     </label>
-
     </div>
 
     <div class="col-sm-3 form-group">
@@ -978,6 +1004,27 @@
           </label>
     </div>
 
+    <div class="col-sm-12 form-group">
+      <label class="control-label">Newline shotcut</label>
+      <div class="btn-group" data-toggle="buttons">
+        <label class="btn btn-default">
+              <input type="radio" name="newlineShortcut" id="newlineShortcut-0"> None
+            </label>
+        <label class="btn btn-default">
+              <input type="radio" name="newlineShortcut" id="newlineShortcut-1"> Ctrl + Enter
+            </label>
+        <label class="btn btn-default">
+              <input type="radio" name="newlineShortcut" id="newlineShortcut-2"> Shift + Enter
+            </label>
+        <label class="btn btn-default">
+              <input type="radio" name="newlineShortcut" id="newlineShortcut-4"> (Ctrl | Shift) + Enter
+            </label>
+        <label class="btn btn-default">
+              <input type="radio" name="newlineShortcut" id="newlineShortcut-8"> Ctrl + Shift + Enter
+            </label>
+
+      </div>
+    </div>
     </div>
     <div role="tabpanel" class="tab-pane fade" id="logging">
 

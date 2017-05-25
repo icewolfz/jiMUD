@@ -8,7 +8,7 @@ import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority } from "./libra
 import { Client } from "./client";
 import { Tests } from "./test";
 import { Alias, Trigger, Macro, Profile } from "./profile";
-import { SettingList } from "./settings";
+import { SettingList, NewLineType } from "./settings";
 
 const buzz = require('buzz');
 
@@ -112,9 +112,46 @@ export class input extends EventEmitter {
                     }
                     break;
                 case 13: // return
+                    switch (this.client.options.newlineShortcut) {
+                        case NewLineType.Ctrl:
+                            if (event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey) {
+                                this.client.commandInput.val(function (i, val) {
+                                    return val + "\n";
+                                });
+                                return true;
+                            }
+                            break;
+                        case NewLineType.CtrlAndShift:
+                            if (event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey) {
+                                this.client.commandInput.val(function (i, val) {
+                                    return val + "\n";
+                                });
+                                return true;
+                            }
+                            break;
+                        case NewLineType.CtrlOrShift:
+                            if ((event.ctrlKey || event.shiftKey) && !event.metaKey && !event.altKey) {
+                                this.client.commandInput.val(function (i, val) {
+                                    return val + "\n";
+                                });
+                                return true;
+                            }
+                            break;
+                        case NewLineType.Shift:
+                            if ((event.ctrlKey && event.shiftKey) && !event.metaKey && !event.altKey) {
+                                this.client.commandInput.val(function (i, val) {
+                                    return val + "\n";
+                                });
+                                return true;
+                            }
+                            break;
+                    }
+                    event.preventDefault();
                     this.client.sendCommand();
                     break;
             }
+        }).keypress((event) => {
+            return true;
         });
 
     }
@@ -454,26 +491,112 @@ export class input extends EventEmitter {
                 return null;
             case "setsetting":
             case "sets":
-                    if (args.length === 0)
-                        this.client.error("Invalid syntax use #setsetting name value");
-                    else if (args.length === 1)
-                        this.client.error("Must supply a setsetting value");
+                if (args.length === 0)
+                    this.client.error("Invalid syntax use #setsetting name value");
+                else if (args.length === 1)
+                    this.client.error("Must supply a setsetting value");
+                else {
+                    n = args[0];
+                    args = args.slice(1).join(' ');
+                    if (/^"(.*)"$/.exec(args) !== null || /^'(.*)'$/.exec(args) !== null)
+                        args = args.substring(1, args.length - 1);
+                    if (/^\d+$/.exec(n)) {
+                        tmp = n;
+                        n = parseInt(n, 10);
+                        if (n < 0 || n >= SettingList.length)
+                            this.client.error("Setting index must be >= 0 and < " + SettingList.length);
+                        f = true;
+                    }
                     else {
-                        n = args[0];
-                        args = args.slice(1).join(' ');
-                        if (/^"(.*)"$/.exec(args) !== null || /^'(.*)'$/.exec(args) !== null)
-                            args = args.substring(1, args.length - 1);
-                        if (/^\d+$/.exec(n)) {
-                            tmp = n;
-                            n = parseInt(n, 10);
-                            if (n < 0 || n >= SettingList.length)
-                                this.client.error("Setting index must be >= 0 and < " + SettingList.length);
-                            f = true;
+                        if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
+                            n = n.substring(1, n.length - 1);
+                        n = n.toLowerCase();
+                        for (i = 0, al = SettingList.length; i < al; i++) {
+                            if (SettingList[i][0].toLowerCase() == n) {
+                                n = i;
+                                f = true;
+                                break;
+                            }
                         }
-                        else {
-                            if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
-                                n = n.substring(1, n.length - 1);
-                            n = n.toLowerCase();
+                    }
+                    if (!f)
+                        this.client.error("Unknown setting '" + tmp + "'");
+                    else {
+                        switch (SettingList[n][2]) {
+                            case 0:
+                                if (SettingList[n][4] > 0 && args.length > SettingList[n][4])
+                                    this.client.error("String can not be longer then " + SettingList[n][4] + " characters");
+                                else {
+                                    this.client.setOption(SettingList[n][1] || SettingList[n][0], args);
+                                    this.client.echo("Setting '" + SettingList[n][0] + "' set to '" + args + "'.", -7, -8, true, true);
+                                    this.client.loadOptions();
+                                }
+                                break;
+                            case 1:
+                            case 3:
+                                switch (args.toLowerCase()) {
+                                    case "true":
+                                    case "1":
+                                    case "yes":
+                                        this.client.setOption(SettingList[n][1] || SettingList[n][0], true);
+                                        this.client.echo("Setting '" + SettingList[n][0] + "' set to true.", -7, -8, true, true);
+                                        this.client.loadOptions();
+                                        break;
+                                    case "no":
+                                    case "false":
+                                    case "0":
+                                        this.client.setOption(SettingList[n][1] || SettingList[n][0], false);
+                                        this.client.echo("Setting '" + SettingList[n][0] + "' set to false.", -7, -8, true, true);
+                                        this.client.loadOptions();
+                                        break;
+                                    case "toggle":
+                                        args = this.client.getOption(SettingList[n][1] || SettingList[n][0]) ? false : true;
+                                        this.client.setOption(SettingList[n][1] || SettingList[n][0], args);
+                                        this.client.echo("Setting '" + SettingList[n][0] + "' set to " + args + ".", -7, -8, true, true);
+                                        this.client.loadOptions();
+                                        break;
+                                    default:
+                                        this.client.error("Invalid value, must be true or false");
+                                        break;
+                                }
+                                break;
+                            case 2:
+                                i = parseInt(args, 10);
+                                if (isNaN(i))
+                                    this.client.error("Invalid number '" + args + "'");
+                                else {
+                                    this.client.setOption(SettingList[n][1] || SettingList[n][0], i);
+                                    this.client.echo("Setting '" + SettingList[n][0] + "' set to '" + i + "'.", -7, -8, true, true);
+                                    this.client.loadOptions();
+                                }
+                                break;
+                            case 4:
+                            case 5:
+                                this.client.error("Unsupported setting '" + n + "'");
+                                break;
+                        }
+                    }
+                }
+                return null;
+            case "getsetting":
+            case "gets":
+                if (args.length === 0)
+                    this.client.error("Invalid syntax use #getsetting name");
+                else {
+                    n = args.join(' ');
+                    if (/^\d+$/.exec(n)) {
+                        n = parseInt(n, 10);
+                        if (n < 0 || n >= SettingList.length)
+                            this.client.error("Setting index must be >= 0 and < " + SettingList.length);
+                        else
+                            f = true;
+                    }
+                    else {
+                        if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
+                            n = n.substring(1, n.length - 1);
+                        tmp = n;
+                        n = n.toLowerCase();
+                        if (n != "all") {
                             for (i = 0, al = SettingList.length; i < al; i++) {
                                 if (SettingList[i][0].toLowerCase() == n) {
                                     n = i;
@@ -482,134 +605,48 @@ export class input extends EventEmitter {
                                 }
                             }
                         }
-                        if (!f)
-                            this.client.error("Unknown setting '" + tmp + "'");
-                        else {
-                            switch (SettingList[n][2]) {
-                                case 0:
-                                    if (SettingList[n][4] > 0 && args.length > SettingList[n][4])
-                                        this.client.error("String can not be longer then " + SettingList[n][4] + " characters");
-                                    else {
-                                        this.client.setOption(SettingList[n][1]||SettingList[n][0], args);
-                                        this.client.echo("Setting '" + SettingList[n][0] + "' set to '" + args + "'.", -7, -8, true, true);
-                                        this.client.loadOptions();
-                                    }
-                                    break;
-                                case 1:
-                                case 3:
-                                    switch (args.toLowerCase()) {
-                                        case "true":
-                                        case "1":
-                                        case "yes":
-                                            this.client.setOption(SettingList[n][1]||SettingList[n][0], true);
-                                            this.client.echo("Setting '" + SettingList[n][0] + "' set to true.", -7, -8, true, true);
-                                            this.client.loadOptions();
-                                            break;
-                                        case "no":
-                                        case "false":
-                                        case "0":
-                                            this.client.setOption(SettingList[n][1]||SettingList[n][0], false);
-                                            this.client.echo("Setting '" + SettingList[n][0] + "' set to false.", -7, -8, true, true);
-                                            this.client.loadOptions();
-                                            break;
-                                        case "toggle":
-                                            args = this.client.getOption(SettingList[n][1]||SettingList[n][0]) ? false : true;
-                                            this.client.setOption(SettingList[n][1]||SettingList[n][0], args);
-                                            this.client.echo("Setting '" + SettingList[n][0] + "' set to " + args + ".", -7, -8, true, true);
-                                            this.client.loadOptions();
-                                            break;
-                                        default:
-                                            this.client.error("Invalid value, must be true or false");
-                                            break;
-                                    }
-                                    break;
-                                case 2:
-                                    i = parseInt(args, 10);
-                                    if (isNaN(i))
-                                        this.client.error("Invalid number '" + args + "'");
-                                    else {
-                                        this.client.setOption(SettingList[n][1]||SettingList[n][0], i);
-                                        this.client.echo("Setting '" + SettingList[n][0] + "' set to '" + i + "'.", -7, -8, true, true);
-                                        this.client.loadOptions();
-                                    }
-                                    break;
-                                case 4:
-                                case 5:
-                                    this.client.error("Unsupported setting '" + n + "'");
-                                    break;
-                            }
-                        }
-                    }
-                return null;
-            case "getsetting":
-            case "gets":
-                    if (args.length === 0)
-                        this.client.error("Invalid syntax use #getsetting name");
-                    else {
-                        n = args.join(' ');
-                        if (/^\d+$/.exec(n)) {
-                            n = parseInt(n, 10);
-                            if (n < 0 || n >= SettingList.length)
-                                this.client.error("Setting index must be >= 0 and < " + SettingList.length);
-                            else
-                                f = true;
-                        }
-                        else {
-                            if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
-                                n = n.substring(1, n.length - 1);
-                            tmp = n;
-                            n = n.toLowerCase();
-                            if (n != "all") {
-                                for (i = 0, al = SettingList.length; i < al; i++) {
-                                    if (SettingList[i][0].toLowerCase() == n) {
-                                        n = i;
-                                        f = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (n == "all") {
-                                tmp = "Current settings:\n";
-                                //this.client.echo("Current settings:", -7, -8, true, true);
-                                for (i = 0, al = SettingList.length; i < al; i++) {
-                                    switch (SettingList[i][2]) {
-                                        case 0:
-                                        case 2:
-                                            //this.client.echo("    "+_SettingList[i][0]+": "+getSetting(_SettingList[i][0]), -7, -8, true, true);
-                                            tmp += "    " + SettingList[i][0] + ": " + this.client.getOption(SettingList[n][1]||SettingList[n][0]) + "\n";
-                                            break;
-                                        case 1:
-                                        case 3:
-                                            if (this.client.getOption(SettingList[n][1]||SettingList[n][0]))
-                                                tmp += "    " + SettingList[i][0] + ": true\n";
-                                            //this.client.echo("    "+_SettingList[i][0]+": true", -7, -8, true, true);
-                                            else
-                                                tmp += "    " + SettingList[i][0] + ": false\n";
-                                            //this.client.echo("    "+_SettingList[i][0]+": false", -7, -8, true, true);
-                                            break;
-                                    }
-                                }
-                                this.client.echo(tmp, -7, -8, true, true);
-                            }
-                            else if (!f)
-                                this.client.error("Unknown setting '" + n + "'");
-                            else {
-                                switch (SettingList[n][2]) {
+                        if (n == "all") {
+                            tmp = "Current settings:\n";
+                            //this.client.echo("Current settings:", -7, -8, true, true);
+                            for (i = 0, al = SettingList.length; i < al; i++) {
+                                switch (SettingList[i][2]) {
                                     case 0:
                                     case 2:
-                                        this.client.echo("Setting '" + SettingList[n][0] + "' is '" + this.client.getOption(SettingList[n][1]||SettingList[n][0]) + "'", -7, -8, true, true);
+                                        //this.client.echo("    "+_SettingList[i][0]+": "+getSetting(_SettingList[i][0]), -7, -8, true, true);
+                                        tmp += "    " + SettingList[i][0] + ": " + this.client.getOption(SettingList[n][1] || SettingList[n][0]) + "\n";
                                         break;
                                     case 1:
                                     case 3:
-                                        if (this.client.getOption(SettingList[n][1]||SettingList[n][0]))
-                                            this.client.echo("Setting '" + SettingList[n][0] + "' is true", -7, -8, true, true);
+                                        if (this.client.getOption(SettingList[n][1] || SettingList[n][0]))
+                                            tmp += "    " + SettingList[i][0] + ": true\n";
+                                        //this.client.echo("    "+_SettingList[i][0]+": true", -7, -8, true, true);
                                         else
-                                            this.client.echo("Setting '" + SettingList[n][0] + "' is false", -7, -8, true, true);
+                                            tmp += "    " + SettingList[i][0] + ": false\n";
+                                        //this.client.echo("    "+_SettingList[i][0]+": false", -7, -8, true, true);
                                         break;
                                 }
                             }
+                            this.client.echo(tmp, -7, -8, true, true);
+                        }
+                        else if (!f)
+                            this.client.error("Unknown setting '" + n + "'");
+                        else {
+                            switch (SettingList[n][2]) {
+                                case 0:
+                                case 2:
+                                    this.client.echo("Setting '" + SettingList[n][0] + "' is '" + this.client.getOption(SettingList[n][1] || SettingList[n][0]) + "'", -7, -8, true, true);
+                                    break;
+                                case 1:
+                                case 3:
+                                    if (this.client.getOption(SettingList[n][1] || SettingList[n][0]))
+                                        this.client.echo("Setting '" + SettingList[n][0] + "' is true", -7, -8, true, true);
+                                    else
+                                        this.client.echo("Setting '" + SettingList[n][0] + "' is false", -7, -8, true, true);
+                                    break;
+                            }
                         }
                     }
+                }
                 return null;
             case "profilelist":
                 i = 0;
