@@ -697,7 +697,7 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">Theme
-              <select id="theme" class="form-control selectpicker" data-width="150px"></select>
+              <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
             </label>
           </div>
 
@@ -708,7 +708,7 @@
           <div class="col-sm-6">
             <div class="form-group">
               <label class="control-label">Font<br>
-              <select id="font" class="form-control selectpicker" data-width="250px">
+              <select id="font" class="form-control selectpicker" data-container="body" data-width="250px">
                 <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
                 <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
                 <option value="Georgia, serif">Georgia, serif</option>
@@ -786,7 +786,7 @@
         <div role="tabpanel" class="tab-pane fade" id="colors">
           <div class="col-sm-4 form-group">
             <label>Color scheme 
-				<select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" onchange="updateScheme(this.options.selectedIndex)" data-width="auto">
+				<select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" onchange="updateScheme(this.options.selectedIndex)" data-width="auto">
 					<option value="0">Default</option>
 					<option>Classic</option>
           <option>VGA</option>
@@ -896,7 +896,7 @@
           <div class="col-sm-5">
             <div class="form-group">
               <label class="control-label">Font<br>
-              <select id="cmdfont" class="form-control selectpicker" data-width="250px">
+              <select id="cmdfont" class="form-control selectpicker" data-container="body" data-width="250px">
                 <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
                 <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
                 <option value="Georgia, serif">Georgia, serif</option>
