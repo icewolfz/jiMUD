@@ -361,7 +361,7 @@
 
         client = new Client($("#display-frame").contents().find("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
         if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
-          client.enableProfiles = remote.getGlobal('profiles');
+          client.enabledProfiles = remote.getGlobal('profiles');
         client.parser.enableBell = false;
         client.parser.on('bell', () => {
           shell.beep();
