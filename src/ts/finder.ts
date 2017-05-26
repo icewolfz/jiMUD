@@ -251,7 +251,6 @@ export class Finder extends EventEmitter {
         if (idx < 0) idx = 0;
         if (idx >= this._results.length)
             idx = this._results.length - 1;
-        this.emit('moved', this._position, idx);
         this._position = idx;
         this.updateCount();
         $(".current", this._display).removeClass("current");
@@ -260,6 +259,7 @@ export class Finder extends EventEmitter {
             if (focus && this._results[this._position].els.length > 0)
                 this._results[this._position].els[0].scrollIntoView(false);
         }
+        setTimeout(() => { this.emit('moved', this._position, idx); }, 0);
         this.updateButtons();
     }
 
