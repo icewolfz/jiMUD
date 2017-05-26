@@ -22,13 +22,12 @@ export enum BackupSelection {
 }
 
 
-export enum NewLineType
-{
-    None = 0,
-    Ctrl = 1,
-    Shift = 2,
-    CtrlOrShift =  4,
-	CtrlAndShift =  8
+export enum NewLineType {
+	None = 0,
+	Ctrl = 1,
+	Shift = 2,
+	CtrlOrShift = 4,
+	CtrlAndShift = 8
 }
 
 export class Mapper {
@@ -180,7 +179,7 @@ export class Settings {
 	public enableEcho: boolean = true;
 	public autoConnect: boolean = true;
 	public commandEcho: boolean = true;
-	
+
 	public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
 	public commandStacking: boolean = true;
@@ -238,6 +237,13 @@ export class Settings {
 		selection: false,
 		show: false
 	}
+
+	public display = {
+		split: false,
+		splitHeight: -1,
+		splitLive: true
+	}
+
 	public backupLoad: BackupSelection = BackupSelection.All;
 	public backupSave: BackupSelection = BackupSelection.All;
 
@@ -275,7 +281,7 @@ export class Settings {
 			if (!data.hasOwnProperty(prop)) {
 				continue;
 			}
-			if (prop == 'mapper' || prop == 'profiles' || prop == 'buttons' || prop == 'chat' || prop == 'find') {
+			if (prop == 'mapper' || prop == 'profiles' || prop == 'buttons' || prop == 'chat' || prop == 'find' || prop == 'display') {
 				for (var prop2 in data[prop]) {
 					if (!data[prop].hasOwnProperty(prop2)) {
 						continue;

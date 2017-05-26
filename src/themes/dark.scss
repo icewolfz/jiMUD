@@ -21,6 +21,13 @@ $panelInsetBackground: "#252526";
     right: 168px;
 }
 
+#display-split-bar,
+#display-split-ghost-bar {
+    border-top: 1px solid #{$borderColor};
+    border-bottom: 1px solid #{$borderColor};
+    background-color: #{$panelBackground};
+}
+
 #command {
     height: 24px;
     bottom: 2px;

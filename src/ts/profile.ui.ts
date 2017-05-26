@@ -2209,7 +2209,6 @@ export function init() {
             else
                 ghostBar.css("left", e.pageX);
         });
-
     });
 
     $(window).on('resize', () => {

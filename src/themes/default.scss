@@ -23,6 +23,16 @@ $color: "wheat";
     border-style: solid;
 }
 
+#display-split-bar,
+#display-split-ghost-bar {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #33302b;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    border: 1px solid #{$borderColor};
+}
+
 #command {
     height: 26px;
     bottom: 0px;

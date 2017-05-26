@@ -5,7 +5,7 @@ import EventEmitter = require('events');
 import { Telnet, TelnetOption } from "./telnet";
 import { Parser, ParserLine } from "./parser";
 import { AnsiColorCode } from "./ansi";
-import { stripHTML, Size, parseTemplate } from "./library";
+import { stripHTML, Size, parseTemplate, getScrollBarHeight } from "./library";
 import { Settings } from "./settings";
 import { input } from "./input";
 import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context } from "./profile";
@@ -26,11 +26,13 @@ export class Client extends EventEmitter {
     private _auto: NodeJS.Timer = null;
     private _autoError: boolean = false;
     private _settingsFile: string = parseTemplate(path.join('{data}', 'settings.json'));
+    private _scrollHeight;
 
     public MSP: MSP;
 
     public version: string = version;
     public display = null;
+    public displaySplit = null;
     public commandInput = null;
     public character = null;
     public commandCharacter = null;
@@ -230,7 +232,6 @@ export class Client extends EventEmitter {
 
     constructor(display, command, settings?: string) {
         super();
-
         /*
         process.on('uncaughtException', (err) => {
             if (err.code == "ECONNREFUSED")
@@ -255,6 +256,25 @@ export class Client extends EventEmitter {
             if (this.options.CommandonClick)
                 this.commandInput.focus();
         });
+        this._scrollHeight = getScrollBarHeight(this.display[0]);
+        this.display.on('scroll', () => {
+            if (!this.displaySplit) return;
+            this.displaySplit.contents.css('left', -this.display.scrollLeft())
+            this.displaySplit.contents.scrollLeft(this.display.scrollLeft());
+            var h = this.display[0].scrollHeight - this.display.innerHeight();
+            h += this._scrollHeight;
+            if (h == this.display.scrollTop()) {
+                this.displaySplit.css('display', '');
+                this.displaySplit.shown = false;
+                this.emit('scroll-lock', false);
+            }
+            else {
+                this.displaySplit.css('display', 'block');
+                this.displaySplit.shown = true;
+                this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
+                this.emit('scroll-lock', true);
+            }
+        });
 
         if (typeof command === 'string')
             this.commandInput = $(command);
@@ -272,6 +292,10 @@ export class Client extends EventEmitter {
         });
         this._input = new input(this);
         this._input.on('scroll-lock', (lock) => {
+            if (this.displaySplit && this.displaySplit.shown)
+                this.scrollDisplay();
+            else if (this.displaySplit && !this.displaySplit.shown)
+                this.display[0].scrollTop = this.display[0].scrollHeight - this.display.innerHeight() - (this.character.innerHeight() + 0.5);
             this.emit('scroll-lock', lock);
         });
         this.character = $("<div id='Character' class='ansi' style='border-bottom: 1px solid black'>W</div>");
@@ -416,9 +440,23 @@ export class Client extends EventEmitter {
                 this.display.append(this.lineCache.join(''));
                 if (bar != this.display.hasHorizontalScrollBar())
                     this.UpdateWindow();
-                this.scrollDisplay();
+                if (this.displaySplit) {
+                    this.displaySplit.fill();
+                    if (this.scrollLock) {
+                        if (!this.displaySplit.shown && this.display[0].scrollHeight > this.display[0].clientHeight) {
+                            this.displaySplit.css('display', 'block');
+                            this.displaySplit.shown = true;
+                            this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
+                        }
+                    }
+                    else if (!this.displaySplit.shown)
+                        this.scrollDisplay();
+                }
+                else
+                    this.scrollDisplay();
                 this.emit('parse-done', this.lineCache);
                 this.lineCache = [];
+
             }
             var lines = $(this.lineID, this.display);
             if (lines.length > this.options.bufferSize) {
@@ -510,8 +548,113 @@ export class Client extends EventEmitter {
 
         this._input.scrollLock = this.options.scrollLocked;
 
+        var id = this.display.attr('id');
+        if (!this.displaySplit && this.options.display.split) {
+            this.displaySplit = $('<div id="' + id + '-split-frame"><div id="' + id + '-split-bar"></div><div id="' + id + '-split"></div></div>').click((event) => {
+                if (this.options.CommandonClick)
+                    this.commandInput.focus();
+            });
+            this.display.parent().append(this.displaySplit);
+            this.displaySplit.bar = $(this.displaySplit.children()[0]);
+            this.displaySplit.contents = $(this.displaySplit.children()[1]);
+            if (this.options.display.splitHeight != -1)
+                this.displaySplit.css('height', this.options.display.splitHeight + "%");
+            this.displaySplit.fill = () => {
+                if (this.display.hasHorizontalScrollBar())
+                    this._scrollHeight = getScrollBarHeight(this.display[0]);
+                else
+                    this._scrollHeight = 0;
+                this.displaySplit.css('bottom', this._scrollHeight + 'px');
+                var h = this.WindowHeight;
+
+                if (this.display.children().length > h) {
+                    this.displaySplit.contents.empty();
+                    var c = $(this.lineID + ":nth-last-child(-n+" + h + ")", this.display);
+                    this.displaySplit.contents.append(c.clone());
+                    //this.displaySplit.contents.css('width', this.display[0].scrollWidth);
+                    this.displaySplit.contents.css('left', -this.display.scrollLeft())
+                    this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
+                }
+            }
+            this.displaySplit.bar.mousedown((e) => {
+                e.preventDefault();
+                this.displaySplit.ghostBar = $('<div>',
+                    {
+                        id: id + '-split-ghost-bar',
+                        css: {
+                            top: this.displaySplit.offset().top - 3,
+                            display: this.options.display.splitLive ? 'none' : 'block'
+                        }
+                    }).appendTo(this.displaySplit.parent());
+                $(this.displaySplit.parent()).on('mousemove', (e) => {
+                    if (e.pageY < 20)
+                        this.displaySplit.ghostBar.css("top", 20);
+                    else if (e.pageY > this.display.outerHeight() - 150)
+                        this.displaySplit.ghostBar.css("top", this.display.outerHeight() - 150);
+                    else
+                        this.displaySplit.ghostBar.css("top", e.pageY);
+                    var h;
+                    if (this.options.display.splitLive) {
+                        if (e.pageY < 20)
+                            h = this.displaySplit.parent()[0].clientHeight - 20 + this.displaySplit.bar.height();
+                        else if (e.pageY > this.displaySplit.parent()[0].clientHeight - 150)
+                            h = 150;
+                        else
+                            h = this.displaySplit.parent()[0].clientHeight - e.pageY + this.displaySplit.bar.height();
+
+                        h = (h / this.displaySplit.parent()[0].clientHeight * 100);
+                        this.displaySplit.css("height", h + "%");
+                        this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
+                    }
+                });
+                $(this.displaySplit.parent()).on('mouseup', this.displaySplit.moveDone).on('mouseleave', this.displaySplit.moveDone);
+            });
+
+            this.displaySplit.moveDone = (e) => {
+                if (this.displaySplit.ghostBar && this.displaySplit.ghostBar.length) {
+                    var h;
+                    if (e.pageY < 20)
+                        h = this.displaySplit.parent()[0].clientHeight - 20 + this.displaySplit.bar.height();
+                    else if (e.pageY > this.displaySplit.parent()[0].clientHeight - 150)
+                        h = 150;
+                    else
+                        h = this.displaySplit.parent()[0].clientHeight - e.pageY + this.displaySplit.bar.height();
+                    h = (h / this.displaySplit.parent()[0].clientHeight * 100);
+                    this.displaySplit.css("height", h + "%");
+                    this.options.display.splitHeight = h;
+                    this.saveOptions();
+                    this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
+                    this.displaySplit.ghostBar.remove();
+                    delete this.displaySplit.ghostBar;
+                }
+                $(this.displaySplit.parent()).off('mousemove');
+                $(this.displaySplit.parent()).off('mouseup');
+                $(this.displaySplit.parent()).off('mouseleave');
+            }
+
+            $(this.displaySplit[0].ownerDocument.defaultView || this.displaySplit[0].ownerDocument.parentWindow).on('resize', () => {
+                clearTimeout(this.displaySplit.resizeTimer);
+                this.displaySplit.resizeTimer = setTimeout(this.displaySplit.fill, 250);
+            });
+
+            this.displaySplit.on('wheel', (event) => {
+                this.display.stop().animate({
+                    scrollTop: this.display[0].scrollTop + event.originalEvent.deltaY
+                }, 30, function () { });
+            });
+            this.displaySplit.fill();
+        }
+        else if (this.displaySplit && !this.options.display.split) {
+            $(this.displaySplit.parent()).off('mouseup');
+            $(this.displaySplit.parent()).off('mouseleave');
+            $(this.displaySplit[0].ownerDocument.defaultView || this.displaySplit[0].ownerDocument.parentWindow).off('resize');
+            this.displaySplit.remove();
+            this.displaySplit = null;
+        }
+
         this.UpdateFonts();
-        this.scrollDisplay();
+        if (!this.displaySplit || !this.displaySplit.shown)
+            this.scrollDisplay();
         this.emit('options-loaded');
     }
 
@@ -551,6 +694,11 @@ export class Client extends EventEmitter {
         this.character.css("font-family", this.options.font + ", monospace");
         this.commandCharacter.css("font-size", this.options.cmdfontSize);
         this.commandCharacter.css("font-family", this.options.cmdfont + ", monospace");
+        if (this.displaySplit) {
+            this.displaySplit.contents.css("font-size", this.options.fontSize);
+            this.displaySplit.contents.css("font-family", this.options.font + ", monospace");
+            this.displaySplit.fill();
+        }
         //this.parser.lineHeight = this.character.height();
     };
 

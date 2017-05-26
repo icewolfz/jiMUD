@@ -265,7 +265,7 @@
           $("#connect").css('display', 'none');
           $("#disconnect").css('display', 'none');
         }
-        else if (client.connecting) {
+        else if (client.connecting || client.connected) {
           $("#connect").css('display', 'none');
           $("#disconnect").css('display', '');
         }

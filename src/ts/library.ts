@@ -594,12 +594,11 @@ export function templatePath(p: string) {
 		'{pictures}',
 		'{videos}'
 	]
-	for(var s = 0, sl = paths.length;s < sl;s++)
-	{
+	for (var s = 0, sl = paths.length; s < sl; s++) {
 		var t = parseTemplate(paths[s]);
 		if (p.startsWith(t))
 			return paths[s] + p.substr(t.length);
-	}		
+	}
 	return p;
 }
 
@@ -618,3 +617,86 @@ export function naturalCompare(a, b) {
 
 	return ax.length - bx.length;
 }
+
+export function getScrollBarWidth(el) {
+	if (!el) return 0;
+	var inner = document.createElement('p');
+	inner.style.width = "100%";
+	inner.style.height = "100%";
+	inner.style.position = "absolute";
+	inner.style.top = "0px";
+	inner.style.left = "0px";
+	inner.style.visibility = "hidden";
+
+	el.style.overflowY = 'hidden';
+	el.style.overflowX = 'hidden';
+
+	el.appendChild(inner);
+	var w1 = inner.offsetWidth;
+	el.style.overflowY = '';
+	el.style.overflowX = '';
+
+	var w2 = inner.offsetWidth;
+	if (w1 == w2) w2 = el.clientWidth;
+
+	el.removeChild(inner);
+
+	return (w1 - w2);
+};
+
+export function getScrollBarHeight(el) {
+	if (!el) return 0;
+	var inner = document.createElement('p');
+	inner.style.width = "100%";
+	inner.style.height = "100%";
+	inner.style.position = "absolute";
+	inner.style.top = "0px";
+	inner.style.left = "0px";
+	inner.style.visibility = "hidden";
+
+	el.style.overflowY = 'hidden';
+	el.style.overflowX = 'hidden';
+
+	el.appendChild(inner);
+	var w1 = inner.offsetHeight;
+	el.style.overflowY = '';
+	el.style.overflowX = '';
+
+	var w2 = inner.offsetHeight;
+	if (w1 == w2) w2 = el.clientHeight;
+
+	el.removeChild(inner);
+
+	return (w1 - w2);
+};
+
+export function getScrollBarSize(el) {
+	if (!el) return 0;
+	var inner = document.createElement('p');
+	inner.style.width = "100%";
+	inner.style.height = "100%";
+	inner.style.position = "absolute";
+	inner.style.top = "0px";
+	inner.style.left = "0px";
+	inner.style.visibility = "hidden";
+
+	el.style.overflowY = 'hidden';
+	el.style.overflowX = 'hidden';
+
+	el.appendChild(inner);
+
+	var w1 = inner.offsetWidth;
+	var h1 = inner.offsetHeight;
+
+	el.style.overflowY = '';
+	el.style.overflowX = '';
+
+	var w2 = inner.offsetWidth;
+	var h2 = inner.offsetHeight;
+	if (w1 == w2) w2 = el.clientWidth;
+	if (h1 == h2) h2 = el.clientHeight;
+
+	el.removeChild(inner);
+
+	return [(w1 - w2), (h1 - h2)];
+};

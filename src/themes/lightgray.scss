@@ -21,6 +21,13 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     right: 168px;
 }
 
+#display-split-bar,
+#display-split-ghost-bar {
+    border-top: 1px solid #{$borderColor};
+    border-bottom: 1px solid #{$borderColor};
+    background-color: #{$panelBackground};
+}
+
 #command {
     height: 24px;
     bottom: 2px;
@@ -112,10 +119,8 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     border-radius: 4px;
     border: 1px solid #{$borderColor};
     background-color: #{$panelBackground};
-
     color: #{$color};
     text-shadow: 0 1px 0 #fff;
-    
 }
 
 #find input,
@@ -162,7 +167,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background-position: 0 -15px;
     color: #333;
     border-color: #adadad;
-    text-shadow: 0 1px 0 #fff;    
+    text-shadow: 0 1px 0 #fff;
 }
 
 #find button.active:hover {
@@ -171,8 +176,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background-position: 0 -15px;
     color: #fff;
     border-color: #adadad;
-
-    text-shadow: 0 1px 0 #333;    
+    text-shadow: 0 1px 0 #333;
 }
 
 #find button:active {

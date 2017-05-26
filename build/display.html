@@ -41,8 +41,147 @@
 
     <body>
         <div id="display"></div>
+        <!--div id="display-split-frame">
+            <div id="display-split-bar"></div>
+            <div id="display-split"></div>
+        </div-->
         <script>
             parent.init();
+            /*
+            var sbh = getScrollBarHeight(parent.client.display[0]);
+            parent.client.display.on('scroll', function () {
+                //if (!parent.client.options.display.split) return;
+                $('#display-split').scrollLeft($(this).scrollLeft());
+                var h = parent.client.display[0].scrollHeight - parent.client.display.innerHeight();
+                h += sbh;
+                if (h == parent.client.display.scrollTop())
+                    $("#display-split-frame").css('display', '');
+                else {
+                    $("#display-split-frame").css('display', 'block');
+                    $("#display-split")[0].scrollTop = $("#display-split")[0].scrollHeight;
+                }
+            });
+
+            if (parent.client.options.display.splitHeight != -1)
+                $('#display-split-frame').css('height', parent.client.options.display.splitHeight + "%");
+
+            parent.client.on('parse-done', () => {
+                fillSplit();
+            })
+
+            $('#display-split-bar').mousedown(function (e) {
+                e.preventDefault();
+                var main = $('#display-split-frame');
+                var ghostBar = $('<div>',
+                    {
+                        id: 'display-split-ghost-bar',
+                        css: {
+                            top: main.offset().top - 3,
+                        }
+                    }).appendTo('body');
+                $(parent.client.display.parent()).mousemove(function (e) {
+                    if (e.pageY < 20)
+                        ghostBar.css("top", 20);
+                    else if (e.pageY > parent.client.display.outerHeight() - 150)
+                        ghostBar.css("top", parent.client.display.outerHeight() - 150);
+                    else
+                        ghostBar.css("top", e.pageY);
+
+                    var h;
+                    if (e.pageY < 20)
+                        h = $('#display-split-frame').parent()[0].clientHeight - 20 + $("#display-split-bar").height();
+                    else if (e.pageY > $('#display-split-frame').parent()[0].clientHeight - 150)
+                        h = 150;
+                    else
+                        h = $('#display-split-frame').parent()[0].clientHeight - e.pageY + $("#display-split-bar").height();
+
+                    h = (h / $('#display-split-frame').parent()[0].clientHeight * 100);
+                    $('#display-split-frame').css("height", h + "%");
+                    $("#display-split")[0].scrollTop = $("#display-split")[0].scrollHeight;
+                });
+            });
+
+
+            $(parent.client.display.parent()).mouseup(moveSplit).mouseleave(moveSplit);
+
+            function moveSplit(e) {
+                if ($("#display-split-ghost-bar").length) {
+                    var h;
+                    if (e.pageY < 20)
+                        h = $('#display-split-frame').parent()[0].clientHeight - 20 + $("#display-split-bar").height();
+                    else if (e.pageY > $('#display-split-frame').parent()[0].clientHeight - 150)
+                        h = 150;
+                    else
+                        h = $('#display-split-frame').parent()[0].clientHeight - e.pageY + $("#display-split-bar").height();
+                    h = (h / $('#display-split-frame').parent()[0].clientHeight * 100);
+                    $('#display-split-frame').css("height", h + "%");
+                    parent.client.options.display.splitHeight = h;
+                    parent.client.saveOptions();
+                    $("#display-split")[0].scrollTop = $("#display-split")[0].scrollHeight;
+                    $('#display-split-ghost-bar').remove();
+                    $(parent.client.display.parent()).unbind('mousemove');
+                }
+            }
+
+            var resizeTimer;
+            $(window).on("resize", function () {
+                resizeStart();
+            });
+
+            function resizeStart() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(fillSplit, 250);
+            }
+
+            function fillSplit() {
+                //if (!parent.client.options.display.split) return;
+                if (parent.client.display.hasHorizontalScrollBar())
+                    sbh = getScrollBarHeight(parent.client.display[0]);
+                else
+                    sbh = 0;
+                $("#display-split-frame").css('bottom', sbh + 'px');
+                var h = parent.client.WindowHeight;
+
+                if (client.display.children().length > h) {
+                    $("#display-split").empty();
+                    var c = $(".line:nth-last-child(-n+" + h + ")", parent.client.display);
+                    $("#display-split").append(c.clone());
+                    $("#display-split")[0].scrollTop = $("#display-split")[0].scrollHeight;
+                }
+            }
+
+            $("#display-split-frame").on('wheel', function (event, delta) {
+                $("#display").stop().animate({
+                    scrollTop: $("#display")[0].scrollTop + event.originalEvent.deltaY
+                }, 40, function () { });
+            });
+
+            function getScrollBarHeight(el) {
+                if (!el) return 0;
+                var inner = document.createElement('p');
+                inner.style.width = "100%";
+                inner.style.height = "100%";
+                inner.style.position = "absolute";
+                inner.style.top = "0px";
+                inner.style.left = "0px";
+                inner.style.visibility = "hidden";
+
+                el.style.overflowY = 'hidden';
+                el.style.overflowX = 'hidden';
+
+                el.appendChild(inner);
+                var w1 = inner.offsetHeight;
+                el.style.overflowY = '';
+                el.style.overflowX = '';
+
+                var w2 = inner.offsetHeight;
+                if (w1 == w2) w2 = el.clientHeight;
+
+                el.removeChild(inner);
+
+                return (w1 - w2);
+            };
+            */
         </script>
     </body>
 

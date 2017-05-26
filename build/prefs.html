@@ -118,6 +118,9 @@
         $('#allowNegativeNumberNeeded').prop('checked', _settings.allowNegativeNumberNeeded);
         $('#logErrors').prop('checked', _settings.logErrors);
 
+        $('#displaySplit').prop('checked', _settings.display.split);
+        $('#display-splitLive').prop('checked', _settings.display.splitLive);
+
         //$('#font').selectpicker('val', _settings.font);
         $('#font').val(_settings.font);
         $('#font').selectpicker('render');
@@ -308,8 +311,15 @@
               if ($('#backup-load-settings').prop('checked'))
                 _settings.backupLoad |= 8;
               break;
+            case 'displaySplit':
+              _settings.display.split = this.checked;
+              break;
             default:
-              _settings[$(this).attr('id')] = this.checked;
+              var id = $(this).attr('id').split("-");
+              if (id.length == 2)
+                _settings[id[0]][id[1]] = this.checked;
+              else
+                _settings[id[0]] = this.checked;
               break;
           }
         });
@@ -803,6 +813,20 @@
           Focus command input on click
           </label>
           </div>
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="displaySplit" />
+          Split scroll
+          </label>
+          </div>
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+          <input type="checkbox" id="display-splitLive" />
+          Split scroll live update
+          </label>
+          </div>          
 
           <div class="form-group">
             <label class="control-label">
