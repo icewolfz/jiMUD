@@ -2043,8 +2043,8 @@ export class Parser extends EventEmitter {
           if (hint.length === 0)
             hint = href;
           if (expire.length > 0)
-            return "<a class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" expire=\"" + expire + "\" onclick=\""+this.mxpLinkFunction+"(this, '" + href + "');return false;\">";
-          return "<a class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" onclick=\""+this.mxpLinkFunction+"(this, '" + href + "');return false;\">";
+            return "<a class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" expire=\"" + expire + "\" onclick=\"" + this.mxpLinkFunction + "(this, '" + href + "');return false;\">";
+          return "<a class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" onclick=\"" + this.mxpLinkFunction + "(this, '" + href + "');return false;\">";
         case "SEND":
           tmp = this.GetCurrentStyle();
           tmp.tag = MXPTag[tag];
@@ -2099,7 +2099,7 @@ export class Parser extends EventEmitter {
           }
           else
             href = '\'' + href + '\'';
-          var l = ["<a class=\"MXPLink\" href=\"javascript:void(0);\" onclick=\""+this.mxpSendFunction+"(event||window.event, this, ", href, ", ", (prompt ? 1 : 0), ", ", tt, ");return false;\" title=\"", hint, "\" onmouseover=\""+this.mxpTooltipFunction+"(this)\""];
+          var l = ["<a class=\"MXPLink\" href=\"javascript:void(0);\" onclick=\"" + this.mxpSendFunction + "(event||window.event, this, ", href, ", ", (prompt ? 1 : 0), ", ", tt, ");return false;\" title=\"", hint, "\" onmouseover=\"" + this.mxpTooltipFunction + "(this)\""];
           if (expire.length > 0)
             l.push(" expire=\"", expire, "\"");
           l.push(">");
@@ -2698,13 +2698,17 @@ export class Parser extends EventEmitter {
             }
             else if (c === '>') {
               if (_MXPTag.toUpperCase() === "HR" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
-                strBuilder.push(this.EndDisplayBlock());
+
                 if (lineLength > 0) {
                   lineLength = 0;
-                  strBuilder.push("<br></span>");
+                  strBuilder.push("<br>", this.EndDisplayBlock());
+                  strBuilder.push("</span>");
                   this.MXPCapture("\n");
                   this.AddLine(strBuilder.join(''), false, false);
                 }
+                else
+                  strBuilder.push(this.EndDisplayBlock());
+
                 //skip = true;
                 strBuilder = [this.ParseMXPTag(_MXPTag, [], remote)];
                 this.AddLine(strBuilder.join(''), false, false);
@@ -2713,7 +2717,7 @@ export class Parser extends EventEmitter {
               }
               else if (_MXPTag.toUpperCase() === "BR" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
                 lineLength = 0;
-                strBuilder.push(this.EndDisplayBlock(), "<br></span>");
+                strBuilder.push("<br>", this.EndDisplayBlock(), "</span>");
                 this.MXPCapture("\n");
                 this.AddLine(strBuilder.join(''), false, false);
                 skip = false;
@@ -2964,7 +2968,7 @@ export class Parser extends EventEmitter {
                 _MXPComment += strBuilder.slice(lnk).join('');
                 if (this.enableDebug) this.emit('debug', "URL Found: " + _MXPComment);
                 if (this.enableLinks) {
-                  strBuilder.splice(lnk, 0, "<a class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\""+this.linkFunction+"('" + _MXPComment + "');return false;\">");
+                  strBuilder.splice(lnk, 0, "<a class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">");
                   strBuilder.push("</a>");
                 }
                 else {
@@ -3003,7 +3007,7 @@ export class Parser extends EventEmitter {
                   _MXPComment += strBuilder.slice(lnk).join('');
                   if (this.enableDebug) this.emit('debug', "URL Found: " + _MXPComment);
                   if (this.enableLinks) {
-                    strBuilder.splice(lnk, 0, "<a class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\""+this.linkFunction+"('" + _MXPComment + "');return false;\">");
+                    strBuilder.splice(lnk, 0, "<a class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">");
                     strBuilder.push("</a>");
                   }
                   else {
@@ -3145,7 +3149,7 @@ export class Parser extends EventEmitter {
 
               lineLength = 0;
               if (!skip) {
-                strBuilder.push(this.EndDisplayBlock(), "<br></span>");
+                strBuilder.push("<br>", this.EndDisplayBlock(), "</span>");
                 this.MXPCapture("\n");
               }
               this.AddLine(strBuilder.join(''), false, skip);
@@ -3719,7 +3723,7 @@ export class Parser extends EventEmitter {
   private _mxpLinkFunction;
   private _mxpSendFunction;
   private _mxpTooltipFunction;
-  
+
 
   get linkFunction(): string {
     return this._linkFunction || "doLink";

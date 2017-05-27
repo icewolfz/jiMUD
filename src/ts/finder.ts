@@ -15,6 +15,7 @@ export class Finder extends EventEmitter {
     private _word;
     private _reverse;
     private _regex;
+    private _all = false;
 
     constructor(display) {
         super();
@@ -119,8 +120,22 @@ export class Finder extends EventEmitter {
         }
     }
 
+    get Highlight(): boolean { return this._all; }
+    set Highlight(value: boolean) {
+        if (value != this._all) {
+            this._all = value;
+            if (this._all) {
+                $("#find-all", this._control).addClass("active");
+            }
+            else {
+                $("#find-all", this._control).removeClass("active");
+            }
+            this.find(true);
+            this.emit('highlight');
+        }
+    }
     private createControl() {
-        this._control = $('<div id="find"><input placeholder="Find" /><button id="find-case" title="Match Case">Aa</button><button id="find-word" title="Match Whole Word">Aa|</button><button id="find-regex" title="Use Regular Expression">.*</button><div id="find-count"></div><button id="find-prev" title="Previous Match" disabled="disabled"><i class="fa fa-arrow-down"></i></button><button id="find-next" title="Next Match" disabled="disabled"><i class="fa fa-arrow-up"></i></button><button id="find-selection" title="Find in selection" disabled="disabled"><i class="fa fa-align-left"></i></button><button id="find-reverse" title="Search Down"><i class="fa fa-caret-down"></i></button><button id="find-close" title="Close"><i class="fa fa-close"></i></button></div>');
+        this._control = $('<div id="find"><input placeholder="Find" /><button id="find-case" title="Match Case">Aa</button><button id="find-word" title="Match Whole Word">Aa|</button><button id="find-regex" title="Use Regular Expression">.*</button><button id="find-all" title="Highlight all matches"><i class="fa fa-paint-brush"></i></button><div id="find-count"></div><button id="find-prev" title="Previous Match" disabled="disabled"><i class="fa fa-arrow-down"></i></button><button id="find-next" title="Next Match" disabled="disabled"><i class="fa fa-arrow-up"></i></button><button id="find-selection" title="Find in selection" disabled="disabled"><i class="fa fa-align-left"></i></button><button id="find-reverse" title="Search Down"><i class="fa fa-caret-down"></i></button><button id="find-close" title="Close"><i class="fa fa-close"></i></button></div>');
         $("#find-close", this._control).on('click', () => {
             this.hide();
         });
@@ -139,6 +154,9 @@ export class Finder extends EventEmitter {
         $("#find-reverse", this._control).on('click', () => {
             this.Reverse = !this.Reverse;
         });
+        $("#find-all", this._control).on('click', () => {
+            this.Highlight = !this.Highlight;
+        });        
         $("#find-regex", this._control).on('click', () => {
             this.RegularExpression = !this.RegularExpression;
         });
@@ -210,19 +228,21 @@ export class Finder extends EventEmitter {
                     index: m.index,
                     length: m[0].length
                 });
-                this.addAnnotationElement(this.getTextSelection(lines[l], m.index, m.index + m[0].length), lines[l], "find-" + id);
-                var t = $('.find-' + id + '-child', lines[l]);
-                if (t.length > 1) {
-                    t.each(function (idx) {
-                        if (idx == 0)
-                            $(this).addClass('start');
-                        else if (idx == t.length - 1)
-                            $(this).addClass('end');
-                        else
-                            $(this).addClass('middle');
-                    })
-                };
-                items[items.length - 1].els = t;
+                if (this._all) {
+                    this.addAnnotationElement(this.getTextSelection(lines[l], m.index, m.index + m[0].length), lines[l], "find-" + id);
+                    var t = $('.find-' + id + '-child', lines[l]);
+                    if (t.length > 1) {
+                        t.each(function (idx) {
+                            if (idx == 0)
+                                $(this).addClass('start');
+                            else if (idx == t.length - 1)
+                                $(this).addClass('end');
+                            else
+                                $(this).addClass('middle');
+                        })
+                    };
+                    items[items.length - 1].els = t;
+                }
             }
             items.reverse();
             this._results = this._results.concat(items);
@@ -255,9 +275,28 @@ export class Finder extends EventEmitter {
         this.updateCount();
         $(".current", this._display).removeClass("current");
         if (this._results.length > 0) {
-            this._results[this._position].els.addClass('current');
-            if (focus && this._results[this._position].els.length > 0)
-                this._results[this._position].els[0].scrollIntoView(false);
+            if (this._all) {
+                this._results[this._position].els.addClass('current');
+                if (focus && this._results[this._position].els.length > 0)
+                    this._results[this._position].els[0].scrollIntoView(false);
+            }
+            else {
+                $(".find-highlight", this._display).removeClass("find-highlight");
+                var r = this._results[idx];
+                this.addAnnotationElement(this.getTextSelection(r.line, r.index, r.index + r.length), r.line, " find");
+                var t = $('.find-highlight', r.line);
+                if (t.length > 1) {
+                    t.each(function (idx) {
+                        if (idx == 0)
+                            $(this).addClass('start');
+                        else if (idx == t.length - 1)
+                            $(this).addClass('end');
+                        else
+                            $(this).addClass('middle');
+                    })
+                };
+                t[0].scrollIntoView(false);
+            }
         }
         setTimeout(() => { this.emit('moved', this._position, idx); }, 0);
         this.updateButtons();

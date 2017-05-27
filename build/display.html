@@ -19,6 +19,23 @@
                 background-color: #3399ff;
                 color: white;
             }
+            /*
+            #display {
+                -webkit-user-select: none;
+                user-select: none;
+            }
+
+            .selection-highlight {
+                background-color: #3399ff;
+                color: white;
+                border-bottom: 1px solid #3399ff;
+                border-top: 1px solid #3399ff;
+            }
+
+            .selection-highlight-newline {
+                padding-right: 5px;
+            }
+            */
         </style>
         <script src="../lib/jquery.min.js"></script>
         <script src="js/jquery.ext.js"></script>
@@ -41,146 +58,267 @@
 
     <body>
         <div id="display"></div>
-        <!--div id="display-split-frame">
-            <div id="display-split-bar"></div>
-            <div id="display-split"></div>
-        </div-->
         <script>
             parent.init();
             /*
-            var sbh = getScrollBarHeight(parent.client.display[0]);
-            parent.client.display.on('scroll', function () {
-                //if (!parent.client.options.display.split) return;
-                $('#display-split').scrollLeft($(this).scrollLeft());
-                var h = parent.client.display[0].scrollHeight - parent.client.display.innerHeight();
-                h += sbh;
-                if (h == parent.client.display.scrollTop())
-                    $("#display-split-frame").css('display', '');
-                else {
-                    $("#display-split-frame").css('display', 'block');
-                    $("#display-split")[0].scrollTop = $("#display-split")[0].scrollHeight;
-                }
-            });
+            var sel = { s: null, e: null, drag: false, x: null, y: null, sLine: null, eLine: null };
 
-            if (parent.client.options.display.splitHeight != -1)
-                $('#display-split-frame').css('height', parent.client.options.display.splitHeight + "%");
+            var selTimer;
 
-            parent.client.on('parse-done', () => {
-                fillSplit();
+            $("#display").on('mousedown', (e) => {
+                sel.drag = true;
+                var o = getTextOffset(e);
+                sel.s = o.x;
+                sel.e = sel.s;
+                sel.sLine = o.y;
+                sel.eLine = o.y;
+                sel.x = e.pageX;
+                sel.y = e.pageY;
+                //updateSelection()
             })
 
-            $('#display-split-bar').mousedown(function (e) {
-                e.preventDefault();
-                var main = $('#display-split-frame');
-                var ghostBar = $('<div>',
-                    {
-                        id: 'display-split-ghost-bar',
-                        css: {
-                            top: main.offset().top - 3,
-                        }
-                    }).appendTo('body');
-                $(parent.client.display.parent()).mousemove(function (e) {
-                    if (e.pageY < 20)
-                        ghostBar.css("top", 20);
-                    else if (e.pageY > parent.client.display.outerHeight() - 150)
-                        ghostBar.css("top", parent.client.display.outerHeight() - 150);
-                    else
-                        ghostBar.css("top", e.pageY);
+            $("#display").on('mousemove', (e) => {
+                if (!sel.drag) return;
+                var o = getTextOffset(e);
+                sel.e = o.x;
+                sel.eLine = o.y;
+                sel.x = e.pageX;
+                sel.y = e.pageY;
+                updateSelection();
+            })
 
-                    var h;
-                    if (e.pageY < 20)
-                        h = $('#display-split-frame').parent()[0].clientHeight - 20 + $("#display-split-bar").height();
-                    else if (e.pageY > $('#display-split-frame').parent()[0].clientHeight - 150)
-                        h = 150;
-                    else
-                        h = $('#display-split-frame').parent()[0].clientHeight - e.pageY + $("#display-split-bar").height();
+            $("#display").on('mouseup', (e) => {
+                sel.drag = false;
+                var o = getTextOffset(e);
+                sel.e = o.x;
+                sel.eLine = o.y;
+                sel.x = e.pageX;
+                sel.y = e.pageY;
+                updateSelection();
+            })
 
-                    h = (h / $('#display-split-frame').parent()[0].clientHeight * 100);
-                    $('#display-split-frame').css("height", h + "%");
-                    $("#display-split")[0].scrollTop = $("#display-split")[0].scrollHeight;
+            $("#display").on('mouseleave', (e) => {
+                console.log(e);
+                console.log(e.buttons);
+            });
+
+            $("#display").on('mouseenter', (e) => {
+                console.log(e);
+                console.log(e.buttons);
+            });
+
+            function getTextOffset(e) {
+                var y = (e.pageY - parent.client.display.offset().top) + parent.client.display.scrollTop();
+                y = Math.floor(y / parent.client.character.outerHeight());
+                var line = $("#display").children().eq(y);
+                if (line.length == 0) {
+                    if (y >= $("#display").children().length) {
+                        line = $(".line:last-child", $("#display"))
+                        p = line.prevAll();
+                        x = line.text().length + p.text().length + p.length + 1;
+                        return { x: x, y: line.index() };
+                    }
+                    line = $("#display").children().eq(y);
+                }
+                var p = line.prevAll();
+                var x = (e.pageX - parent.client.display.offset().left) + parent.client.display.scrollLeft();
+                x = Math.floor(x / parseFloat(window.getComputedStyle(parent.client.character[0]).width));
+                var l = line.text().length;
+                if (x > l)
+                    x = l + 1;
+                x += p.text().length + p.length;
+                return { x: x, y: y };
+            }
+
+            function updateSelection() {
+                clearTimeout(selTimer);
+                selTimer = setTimeout(function () {
+                    clearSelection();
+                    var ts;
+                    ts = getTextSelection($("#display")[0], Math.min(sel.s, sel.e), Math.max(sel.s, sel.e), sel.sLine);
+                    addAnnotationElement(ts, $("#display")[0]);
+                }, 5);
+            }
+
+            function clearSelection() {
+                $(".selection-highlight", $("#display")).each(function () {
+                    $(this).replaceWith(this.innerHTML);
                 });
-            });
+            }
 
+            function getTextNodesIn(node) {
+                var textNodes = [];
+                if (node.nodeType == 3 || node.tagName == "BR") {
+                    textNodes.push(node);
+                }
+                else {
+                    var children = node.childNodes;
+                    for (var i = 0, len = children.length; i < len; ++i) {
+                        textNodes.push.apply(textNodes, this.getTextNodesIn(children[i]));
+                    }
+                }
+                return textNodes;
+            }
 
-            $(parent.client.display.parent()).mouseup(moveSplit).mouseleave(moveSplit);
+            function validateTextRange(str, elem) {
+                var textRange = document.createRange();
 
-            function moveSplit(e) {
-                if ($("#display-split-ghost-bar").length) {
-                    var h;
-                    if (e.pageY < 20)
-                        h = $('#display-split-frame').parent()[0].clientHeight - 20 + $("#display-split-bar").height();
-                    else if (e.pageY > $('#display-split-frame').parent()[0].clientHeight - 150)
-                        h = 150;
+                textRange.selectNodeContents(elem);
+                if (str.compareBoundaryPoints(Range.START_TO_END, textRange) <= 0) {
+                    return 'textNotInRange';
+                }
+                else {
+                    if (str.compareBoundaryPoints(Range.END_TO_START, textRange) >= 0) {
+                        return 'textNotInRange';
+                    }
+                    else {
+                        var startPoints = str.compareBoundaryPoints(Range.START_TO_START, textRange),
+                            endPoints = str.compareBoundaryPoints(Range.END_TO_END, textRange);
+
+                        if (startPoints < 0) {
+                            if (endPoints < 0) {
+                                return 'textBeforeRangeButIntersect';
+                            }
+                            else {
+                                return "textExactlyInRange";
+                            }
+                        }
+                        else {
+                            if (endPoints > 0) {
+                                return 'textAfterRangeButIntersect';
+                            }
+                            else {
+                                if (startPoints === 0 && endPoints === 0) {
+                                    return "textExactlyInRange";
+                                }
+                                else {
+                                    return 'textWithinRange';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            function getTextSelection(el, start, end) {
+                var range = document.createRange();
+                range.selectNodeContents(el);
+                var textNodes = getTextNodesIn(el);
+                var foundStart = false;
+                var charCount = 0, endCharCount;
+
+                for (var i = 0, textNode; textNode = textNodes[i++];) {
+                    endCharCount = charCount + (textNode.length || 1);
+                    if (!foundStart && start >= charCount
+                        && (start < endCharCount ||
+                            (start == endCharCount && i <= textNodes.length))) {
+                        if (textNode.tagName == "BR")
+                            range.setStart(textNode.parentNode, textNode.parentNode.childNodes.length - 1);
+                        else
+                            range.setStart(textNode, start - charCount);
+                        foundStart = true;
+                    }
+                    if (foundStart && end <= endCharCount) {
+                        if (textNode.tagName == "BR")
+                            range.setEnd(textNode.parentNode, textNode.parentNode.childNodes.length - 1);
+                        else
+                            range.setEnd(textNode, end - charCount);
+                        break;
+                    }
+                    charCount = endCharCount;
+                }
+
+                return range;
+            }
+
+            function addAnnotationElement(str, elem, id, c) {
+                var text, textParent, origText, prevText, nextText, childCount,
+                    annotationTextRange,
+                    span = document.createElement('span');
+
+                if (elem.tagName == "BR") {
+                    span.setAttribute('class', 'selection-highlight selection-highlight-newline');
+                    span.innerHTML = "<br>";
+                    annotationTextRange = this.validateTextRange(str, elem);
+                    if (annotationTextRange == 'textBeforeRangeButIntersect') {
+                        text = origText.substring(0, str.endOffset);
+                        nextText = origText.substring(str.endOffset);
+                    } else if (annotationTextRange == 'textAfterRangeButIntersect') {
+                        prevText = origText.substring(0, str.startOffset);
+                        text = origText.substring(str.startOffset);
+                    } else if (annotationTextRange == 'textExactlyInRange') {
+                        text = origText
+                    } else if (annotationTextRange == 'textWithinRange') {
+                        prevText = origText.substring(0, str.startOffset);
+                        text = origText.substring(str.startOffset, str.endOffset);
+                        nextText = origText.substring(str.endOffset);
+                    } else if (annotationTextRange == 'textNotInRange') {
+                        return;
+                    }
+                    textParent = elem.parentElement;
+                    textParent.replaceChild(span, elem);
+                    if (prevText) {
+                        var prevDOM = document.createTextNode(prevText);
+                        textParent.insertBefore(prevDOM, span);
+                    }
+                    if (nextText) {
+                        var nextDOM = document.createTextNode(nextText);
+                        textParent.insertBefore(nextDOM, span.nextSibling);
+                    }
+                    return;
+                }
+                else if (elem.nodeType === 3) {
+                    if (!id)
+                        span.setAttribute('class', 'selection-highlight');
+                    else if (c)
+                        span.setAttribute('class', 'selection-highlight ' + id + '-child');
                     else
-                        h = $('#display-split-frame').parent()[0].clientHeight - e.pageY + $("#display-split-bar").height();
-                    h = (h / $('#display-split-frame').parent()[0].clientHeight * 100);
-                    $('#display-split-frame').css("height", h + "%");
-                    parent.client.options.display.splitHeight = h;
-                    parent.client.saveOptions();
-                    $("#display-split")[0].scrollTop = $("#display-split")[0].scrollHeight;
-                    $('#display-split-ghost-bar').remove();
-                    $(parent.client.display.parent()).unbind('mousemove');
+                        span.setAttribute('class', 'selection-highlight ' + id);
+                    origText = elem.textContent;
+                    annotationTextRange = this.validateTextRange(str, elem);
+                    if (annotationTextRange == 'textBeforeRangeButIntersect') {
+                        text = origText.substring(0, str.endOffset);
+                        nextText = origText.substring(str.endOffset);
+                    } else if (annotationTextRange == 'textAfterRangeButIntersect') {
+                        prevText = origText.substring(0, str.startOffset);
+                        text = origText.substring(str.startOffset);
+                    } else if (annotationTextRange == 'textExactlyInRange') {
+                        text = origText
+                    } else if (annotationTextRange == 'textWithinRange') {
+                        prevText = origText.substring(0, str.startOffset);
+                        text = origText.substring(str.startOffset, str.endOffset);
+                        nextText = origText.substring(str.endOffset);
+                    } else if (annotationTextRange == 'textNotInRange') {
+                        return;
+                    }
+                    span.textContent = text;
+                    textParent = elem.parentElement;
+                    textParent.replaceChild(span, elem);
+                    if (prevText) {
+                        var prevDOM = document.createTextNode(prevText);
+                        textParent.insertBefore(prevDOM, span);
+                    }
+                    if (nextText) {
+                        var nextDOM = document.createTextNode(nextText);
+                        textParent.insertBefore(nextDOM, span.nextSibling);
+                    }
+                    return;
+                }
+                childCount = elem.childNodes.length;
+                for (var i = 0; i < childCount; i++) {
+                    var elemChildNode = elem.childNodes[i];
+                    if (!elemChildNode.tagName ||
+                        !(elemChildNode.tagName.toLowerCase() === 'span' &&
+                            elemChildNode.classList.contains('selection-highlight'))) {
+                        this.addAnnotationElement(str, elem.childNodes[i], id, true);
+                    }
+                    childCount = elem.childNodes.length;
                 }
             }
 
-            var resizeTimer;
-            $(window).on("resize", function () {
-                resizeStart();
-            });
-
-            function resizeStart() {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(fillSplit, 250);
+            function getSelection() {
+                return $("<div></div>").append(getTextSelection($("#display")[0], Math.min(sel.s, sel.e), Math.max(sel.s, sel.e)).cloneContents()).innerText();
             }
-
-            function fillSplit() {
-                //if (!parent.client.options.display.split) return;
-                if (parent.client.display.hasHorizontalScrollBar())
-                    sbh = getScrollBarHeight(parent.client.display[0]);
-                else
-                    sbh = 0;
-                $("#display-split-frame").css('bottom', sbh + 'px');
-                var h = parent.client.WindowHeight;
-
-                if (client.display.children().length > h) {
-                    $("#display-split").empty();
-                    var c = $(".line:nth-last-child(-n+" + h + ")", parent.client.display);
-                    $("#display-split").append(c.clone());
-                    $("#display-split")[0].scrollTop = $("#display-split")[0].scrollHeight;
-                }
-            }
-
-            $("#display-split-frame").on('wheel', function (event, delta) {
-                $("#display").stop().animate({
-                    scrollTop: $("#display")[0].scrollTop + event.originalEvent.deltaY
-                }, 40, function () { });
-            });
-
-            function getScrollBarHeight(el) {
-                if (!el) return 0;
-                var inner = document.createElement('p');
-                inner.style.width = "100%";
-                inner.style.height = "100%";
-                inner.style.position = "absolute";
-                inner.style.top = "0px";
-                inner.style.left = "0px";
-                inner.style.visibility = "hidden";
-
-                el.style.overflowY = 'hidden';
-                el.style.overflowX = 'hidden';
-
-                el.appendChild(inner);
-                var w1 = inner.offsetHeight;
-                el.style.overflowY = '';
-                el.style.overflowX = '';
-
-                var w2 = inner.offsetHeight;
-                if (w1 == w2) w2 = el.clientHeight;
-
-                el.removeChild(inner);
-
-                return (w1 - w2);
-            };
             */
         </script>
     </body>

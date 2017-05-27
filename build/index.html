@@ -1031,10 +1031,12 @@
         _finder.on('moved', () => {
           if (client.displaySplit) {
             client.displaySplit.fill();
+            /*
               client.display.stop().animate({
                 scrollTop: client.display[0].scrollTop + client.displaySplit.outerHeight() + 5
               }, 500, function () { });
-            //client.display[0].scrollTop = client.display[0].scrollTop + client.displaySplit.outerHeight() + 5;
+              */
+            client.display[0].scrollTop = client.display[0].scrollTop + client.displaySplit.outerHeight() + 5;
           }
         })
 

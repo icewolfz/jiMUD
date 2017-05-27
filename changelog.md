@@ -1,7 +1,7 @@
 ## Changelog
 ##### 0.3.0
 - **New:**
-  - Split scroll, this will allow you to scroll while displaying the most recent lines at the bottom with option live update or post update
+  - Split scroll, **Experimental**  this will allow you to scroll while displaying the most recent lines at the bottom with option live update or post update
   - Basic error logging to appdata/jiMUD/jimud.error.log when enabled from preferences > advanced > log errors
   - Auto create character, will auto create a new settings file/map file based on GMCP character name
   - Newline shortcut, allows you to pick a shortcut for adding newlines to command input
@@ -28,12 +28,14 @@
   - Preferences:
     - Dialog now centers on main client window
     - Moved several settings to a new Advanced tab to simplify general settings
+  - Due to performance reasons fight now has a new highlight all option, default now will only highlight current match
 - **Fixed:**
   - Preferences: font and command font not being correctly set
   - Window states for mapper, chat or editor where not saved depending on always on top settings when closing the main client
   - Fixed errors not being correctly caught and displayed when connecting
   - Fixed uncaught errors not being displayed
   - Fixed a bug when changing settings it would reset connect button while still connected
+  - Issues with ansi parser and line heights, empty lines had wrong pixel hight throwing off other calculations, now all newlines are wrapped in basic ansi formatting to ensure empty lines have exactly the same height as all other lines.
 ##### 0.2.4 - 2017-05-22
 - **Changed:**
   - Profile manager: treeview should now sort by profile name, with default always being first
