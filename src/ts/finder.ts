@@ -216,7 +216,7 @@ export class Finder extends EventEmitter {
         var m, id = 0, items;
         for (var l = lines.length - 1; l >= 0; l--) {
             items = [];
-            while ((m = re.exec(lines[l].textContent)) !== null) {
+            while ((m = re.exec(lines[l].textContent)) !== null && id < 1000) {
                 id++;
                 // This is necessary to avoid infinite loops with zero-width matches
                 if (m.index === re.lastIndex) {

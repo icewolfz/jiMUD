@@ -2380,7 +2380,7 @@ export class Parser extends EventEmitter {
     var _TermTitle = "";
     var _TermTitleType = null;
     var _AnsiParams = null;
-    var strBuilder = ["<span class=\"line\">"];
+    var strBuilder = ["<span class=\"line\"", ">"];
     var state: ParserState = ParserState.None;
     var pState: ParserState = ParserState.None;
     var lineLength = 0;
@@ -2543,15 +2543,16 @@ export class Parser extends EventEmitter {
               this.ResetMXP();
               if (_AnsiParams.length > 0) {
                 if (parseInt(_AnsiParams, 10) == 2) {
+                  strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
                   lineLength = 0;
                   iTmp = this.window.height;
                   for (var j = 0; j < iTmp; j++) {
                     strBuilder.push("<br/>");
                     this.MXPCapture("\n");
                   }
-                  strBuilder.push("</div>");
+                  strBuilder.push("</span>");                  
                   this.AddLine(strBuilder.join(''), false, false);
-                  strBuilder = ["<div class=\"line\">"];
+                  strBuilder = ["<span class=\"line\"", ">"];
                   this.TextLength += iTmp;
                   this.mxpState.noBreak = false;
                 }
@@ -2698,8 +2699,8 @@ export class Parser extends EventEmitter {
             }
             else if (c === '>') {
               if (_MXPTag.toUpperCase() === "HR" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
-
                 if (lineLength > 0) {
+                  strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
                   lineLength = 0;
                   strBuilder.push("<br>", this.EndDisplayBlock());
                   strBuilder.push("</span>");
@@ -2708,20 +2709,21 @@ export class Parser extends EventEmitter {
                 }
                 else
                   strBuilder.push(this.EndDisplayBlock());
-
                 //skip = true;
                 strBuilder = [this.ParseMXPTag(_MXPTag, [], remote)];
+                //strBuilder.splice(1, 0, 'data-length="0"');
                 this.AddLine(strBuilder.join(''), false, false);
                 this.TextLength++;
-                strBuilder = ["<span class=\"line\">", this.StartDisplayBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
               }
               else if (_MXPTag.toUpperCase() === "BR" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
+                strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
                 lineLength = 0;
                 strBuilder.push("<br>", this.EndDisplayBlock(), "</span>");
                 this.MXPCapture("\n");
                 this.AddLine(strBuilder.join(''), false, false);
                 skip = false;
-                strBuilder = ["<span class=\"line\">", this.StartDisplayBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
                 this.TextLength++;
               }
               else if (_MXPTag.toUpperCase() === "IMAGE" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
@@ -2746,7 +2748,7 @@ export class Parser extends EventEmitter {
                 }
                 if (_MXPTag != "</a>") {
                   strBuilder.push(this.EndDisplayBlock());
-                  strBuilder.push(this.StartDisplayBlock());
+                  strBuilder.push(this.StartDisplayBlock(lineLength));
                 }
                 if (_MXPTag !== null && _MXPTag.length > 0) {
                   strBuilder.push(_MXPTag);
@@ -3036,14 +3038,14 @@ export class Parser extends EventEmitter {
               if (idx + 1 < tl && text.charAt(idx + 1) === '\n') {
                 idx++;
                 skip = false;
-                strBuilder = ["<span class=\"line\">", this.StartDisplayBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
                 this.mxpState.noBreak = false;
                 lineLength = 0;
               }
               else if (idx + 2 < tl && text[idx + 1] === "\r" && text[idx + 2] == "\n") {
                 idx += 2;
                 skip = false;
-                strBuilder = ["<span class=\"line\">", this.StartDisplayBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
                 this.mxpState.noBreak = false;
                 lineLength = 0;
               }
@@ -3064,14 +3066,14 @@ export class Parser extends EventEmitter {
               if (idx + 1 < tl && text.charAt(idx + 1) === '\n') {
                 idx++;
                 skip = false;
-                strBuilder = ["<span class=\"line\">", this.StartDisplayBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
                 this.mxpState.noBreak = false;
                 lineLength = 0;
               }
               else if (idx + 2 < tl && text[idx + 1] === "\r" && text[idx + 2] == "\n") {
                 idx += 2;
                 skip = false;
-                strBuilder = ["<span class=\"line\">", this.StartDisplayBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
                 this.mxpState.noBreak = false;
                 lineLength = 0;
               }
@@ -3146,7 +3148,7 @@ export class Parser extends EventEmitter {
                 if (this.mxpState.lineType != 2 && !this.enableMXP)
                   this.ResetMXP();
               }
-
+              strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
               lineLength = 0;
               if (!skip) {
                 strBuilder.push("<br>", this.EndDisplayBlock(), "</span>");
@@ -3154,7 +3156,7 @@ export class Parser extends EventEmitter {
               }
               this.AddLine(strBuilder.join(''), false, skip);
               skip = false;
-              strBuilder = ["<span class=\"line\">", this.StartDisplayBlock(lineLength)];
+              strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
               this.TextLength++;
               this.mxpState.noBreak = false;
             }
@@ -3662,6 +3664,7 @@ export class Parser extends EventEmitter {
       if (lineLength > 0) {
         strBuilder.push(this.EndDisplayBlock());
         strBuilder.push("</span>");
+        strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
         this.AddLine(strBuilder.join(''), true, false);
       }
     }
