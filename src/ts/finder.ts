@@ -1,6 +1,15 @@
 //cSpell:words keycode
 import EventEmitter = require('events');
 
+export enum validTextRange
+{
+    not = 0,
+    before = 1,
+    exact = 2,
+    after = 3,
+    within = 4
+}
+
 export class Finder extends EventEmitter {
     private _display;
     private _document;
@@ -388,19 +397,19 @@ export class Finder extends EventEmitter {
                 span.setAttribute('class', 'find-highlight ' + id);
             origText = elem.textContent;
             annotationTextRange = this.validateTextRange(str, elem);
-            if (annotationTextRange == 'textBeforeRangeButIntersect') {
+            if (annotationTextRange == validTextRange.before) {
                 text = origText.substring(0, str.endOffset);
                 nextText = origText.substring(str.endOffset);
-            } else if (annotationTextRange == 'textAfterRangeButIntersect') {
+            } else if (annotationTextRange == validTextRange.after) {
                 prevText = origText.substring(0, str.startOffset);
                 text = origText.substring(str.startOffset);
-            } else if (annotationTextRange == 'textExactlyInRange') {
+            } else if (annotationTextRange == validTextRange.exact) {
                 text = origText
-            } else if (annotationTextRange == 'textWithinRange') {
+            } else if (annotationTextRange == validTextRange.within) {
                 prevText = origText.substring(0, str.startOffset);
                 text = origText.substring(str.startOffset, str.endOffset);
                 nextText = origText.substring(str.endOffset);
-            } else if (annotationTextRange == 'textNotInRange') {
+            } else if (annotationTextRange == validTextRange.not) {
                 return;
             }
             span.textContent = text;
@@ -420,7 +429,7 @@ export class Finder extends EventEmitter {
         for (var i = 0; i < childCount; i++) {
             var elemChildNode = elem.childNodes[i];
             if (!elemChildNode.tagName ||
-                !(elemChildNode.tagName.toLowerCase() === 'span' &&
+                !(elemChildNode.tagName === 'SPAN' &&
                     elemChildNode.classList.contains('find-highlight'))) {
                 this.addAnnotationElement(str, elem.childNodes[i], id, true);
             }
@@ -433,11 +442,11 @@ export class Finder extends EventEmitter {
 
         textRange.selectNodeContents(elem);
         if (str.compareBoundaryPoints(Range.START_TO_END, textRange) <= 0) {
-            return 'textNotInRange';
+            return validTextRange.not;
         }
         else {
             if (str.compareBoundaryPoints(Range.END_TO_START, textRange) >= 0) {
-                return 'textNotInRange';
+                return validTextRange.not;
             }
             else {
                 var startPoints = str.compareBoundaryPoints(Range.START_TO_START, textRange),
@@ -445,22 +454,22 @@ export class Finder extends EventEmitter {
 
                 if (startPoints < 0) {
                     if (endPoints < 0) {
-                        return 'textBeforeRangeButIntersect';
+                        return validTextRange.before;
                     }
                     else {
-                        return "textExactlyInRange";
+                        return validTextRange.exact;
                     }
                 }
                 else {
                     if (endPoints > 0) {
-                        return 'textAfterRangeButIntersect';
+                        return validTextRange.after;
                     }
                     else {
                         if (startPoints === 0 && endPoints === 0) {
-                            return "textExactlyInRange";
+                            return validTextRange.exact;
                         }
                         else {
-                            return 'textWithinRange';
+                            return validTextRange.within;
                         }
                     }
                 }
