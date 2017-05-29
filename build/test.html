@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+    <head>
+        <meta charset="UTF-8">
+        <title>jiMUD</title>
+        <link href="css/main.css" rel="stylesheet" type="text/css" />
+        <link href="css/ansi.css" rel="stylesheet" type="text/css" />
+        <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+        <link href="css/theme.css" rel="stylesheet" type="text/css" />
+        <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css">
+        <style>
+            #display {
+                user-select: none;
+            }
+
+            #display-view {
+                position: relative;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+
+            #display-overlay {
+                top: 0px;
+                z-index: 1;
+                left: 0px;
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+                position: absolute;
+                
+            }
+
+            .overlay-line {
+                position: absolute;
+            }
+
+            .line {
+                position: absolute;
+                left: 0;
+            }
+
+
+            .ansi {
+                pointer-events: none;
+            }
+
+            .slt {
+                background-color: rgba(51, 153, 255, 0.6);
+                display: inline-block;
+                height: 100%;
+                pointer-events: none;
+                position: absolute;
+                box-sizing: border-box;
+            }
+
+            .find-overlay {
+                border-radius: 4px;
+                background: rgba(116, 192, 114, 0.6);
+                border: 1px solid #74C072;
+                display: inline-block;
+                height: 100%;                
+                box-sizing: border-box;
+                position: absolute;
+            }
+        </style>
+        <script src="../lib/jquery.min.js"></script>
+        <script src="js/jquery.ext.js"></script>
+    </head>
+
+    <body>
+        <div id="display">
+            <div id="display-overlay"></div>
+            <div id="display-view"></div>
+        </div>
+        <script>
+            var display = document.getElementById('display');
+            var displayView = document.getElementById('display-view');
+            var displayOverlay = document.getElementById('display-overlay');
+
+            $display = $(display);
+            $displayView = $(displayView);
+
+            display.lines = [];
+            display.overlays = [];
+            display.rawLines = [];
+            display.maxLine = 0;
+            display.currentSelect = { s: null, e: null, drag: false, x: null, y: null };
+            display.character = $("<div id='Character' class='ansi' style='border-bottom: 1px solid black'>W</div>");
+            display.character.appendTo('body');
+            display.lineOffset = 0;
+            display.start = 0;
+            display.end = 0;
+            display.lineHeight = Math.ceil($(display.character).innerHeight() + 0.5);
+            display.charWidth = parseFloat(window.getComputedStyle(display.character[0]).width);
+
+            h = display.lineHeight;
+            for (var l = 0; l < 50000; l++) {
+                var line = '' + (l * 10000000000000);
+                //var node =  document.createElement('span');
+                //node.className = "line";
+                //node.innerHTML = `<span class="ansi" style='border-bottom: 1px solid black'>${l}</span><br/>`
+
+                display.lines.push(line);
+                display.lineTop = l * h;
+                //display.overlays.push('');
+                display.rawLines.push(`<span data-index="${l}" class="line" style="height: ${h};px;top: ${display.lineTop}px"><span class="ansi" style='border-bottom: 1px solid black'>${line}</span></span>`);
+                if (line.length > display.maxLine)
+                    display.maxLine = line.length;
+            }
+            w = display.maxLine * display.charWidth;
+            h = display.lines.length * display.lineHeight;
+            displayView.style.height = h + "px";
+            displayView.style.width = w + "px";
+            displayOverlay.style.height = Math.max(h, display.clientHeight) + "px";
+
+            displayOverlay.style.width = Math.max(w, display.clientWidth) + "px";
+            display.addEventListener('scroll', (e) => {
+                display.start = Math.floor(display.scrollTop / display.lineHeight);
+                display.end = Math.ceil((display.scrollTop + $display.innerHeight()) / display.lineHeight);
+                lines = display.rawLines.slice(display.start, display.end);
+                overlays = display.overlays.slice(display.start, display.end);
+                displayView.innerHTML = lines.join('');
+                displayOverlay.innerHTML = overlays.join('');
+                /*
+                h = display.lineHeight;
+                for (var c = 0, cl = displayView.childNodes.length; c < cl; c++) {
+                    displayView.childNodes[c].style.top = (start + c) * h + "px";
+                }
+                */
+            });
+
+            displayOverlay.addEventListener('mousedown', (e) => {
+                var o = getLineOffset(e);
+                display.currentSelect.drag = true;
+                display.currentSelect.s = o.x;
+                display.currentSelect.e = o.x;
+                display.currentSelect.sLine = o.y;
+                display.currentSelect.eLine = o.y;
+                display.currentSelect.x = e.pageX;
+                display.currentSelect.x = e.pageY;
+                updateSelection()
+            })
+
+            displayOverlay.addEventListener('mousemove', (e) => {
+                if (!display.currentSelect.drag) return;
+                var o = getLineOffset(e);
+                display.currentSelect.e = o.x;
+                display.currentSelect.eLine = o.y;
+                display.currentSelect.x = e.pageX;
+                display.currentSelect.y = e.pageY;
+                updateSelection();
+            })
+
+            displayOverlay.addEventListener('mouseup', (e) => {
+                display.currentSelect.drag = false;
+                var o = getLineOffset(e);
+                display.currentSelect.e = o.x;
+                display.currentSelect.eLine = o.y;
+                display.currentSelect.x = e.pageX;
+                display.currentSelect.y = e.pageY;
+                updateSelection();
+            })
+
+            displayOverlay.addEventListener('mouseenter', (e) => {
+                if (!e.buttons || e.button != 0)
+                    display.currentSelect.drag = false;
+            })
+
+            displayOverlay.addEventListener('mouseleave', (e) => {
+
+            })
+
+            function updateSelection() {
+                sel = display.currentSelect;
+                var s, e, sL, eL;
+                //display.overlays.fill('');
+                display.overlays = [];
+                if (sel.sLine > sel.eLine) {
+                    sL = sel.eLine;
+                    eL = sel.sLine;
+                    s = sel.e;
+                    e = sel.s;
+                }
+                else if (sel.sLine < sel.eLine) {
+                    sL = sel.sLine;
+                    eL = sel.eLine;
+                    s = sel.s;
+                    e = sel.e;
+                }
+                else {
+                    s = Math.min(sel.s, sel.e);
+                    e = Math.max(sel.s, sel.e);
+                    e = (e - s) * display.charWidth;
+                    s *= display.charWidth;
+                    s += 2;
+                    display.overlays[sel.sLine] = `<div style="top: ${sel.sLine * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line"><span class="slt" style="left: ${s}px;width: ${e}px"></span></div>`
+                    updateOverlay();
+                    return;
+                }
+
+                w = (display.lines[sL].length - s) * display.charWidth;
+                s *= display.charWidth;
+                s += 2;
+                display.overlays[sL] = `<div style="top: ${sL * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line"><span class="slt" style="left: ${s}px;width: ${w}px"></span></div>`
+
+                s = 0;
+                w = (e) * display.charWidth;
+                s *= display.charWidth;
+                display.overlays[eL] = `<div style="top: ${eL * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line"><span class="slt" style="left:2px;width: ${w}px"></span></div>`
+
+
+                for (sL++; sL < eL; sL++) {
+                    w = (display.lines[sL].length) * display.charWidth;
+                    display.overlays[sL] = `<div style="top: ${sL * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line"><span class="slt" style="left:2px;width: ${w}px"></span></div>`
+                }
+
+                updateOverlay();
+            }
+
+            function getLineOffset(e) {
+                var os = offset(display);
+                var y = (e.pageY - os.top) + display.scrollTop;
+                y = Math.floor(y / display.lineHeight);
+                if (y < 0)
+                    y = 0;
+                if (y >= display.lines.length)
+                    y = display.lines.length - 1;
+                if (display.lines[y].length) {
+                    if (y >= display.lines.length) {
+                        x = line.text().length + 1;
+                        return { x: x, y: lines.length - 1 };
+                    }
+                }
+                var x = (e.pageX - os.left) + display.scrollLeft;
+                x = Math.floor(x / display.charWidth);
+                var l = display.lines[y].length;
+                if (x > l)
+                    x = l;
+                return { x: x, y: y };
+            }
+
+            function offset(elt) {
+                var rect = elt.getBoundingClientRect(), bodyElt = document.body;
+
+                return {
+                    top: rect.top + bodyElt.scrollTop,
+                    left: rect.left + bodyElt.scrollLeft
+                }
+            }
+
+            function updateOverlay(start, end) {
+                if (start === undefined)
+                    start = display.start;
+                if (end === undefined)
+                    end = display.start.end;
+                overlays = display.overlays.slice(start, end);
+                displayOverlay.innerHTML = overlays.join('');
+            }
+
+            function findOverlayTest(find) {
+                var start = new Date().getTime();
+                display.overlays = [];
+                pattern = find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                display.results = [];
+                re = new RegExp(pattern, 'gi');
+                lines = display.lines;
+                for (var l = display.lines.length - 1; l >= 0; l--) {
+                    items = [];
+                    ol = [];                    
+                    while ((m = re.exec(lines[l])) !== null) {
+                        if (m.index === re.lastIndex) {
+                            re.lastIndex++;
+                        }
+                        items.push({
+                            line: l,
+                            index: m.index,
+                            length: m[0].length
+                        });
+                        left = m.index * display.charWidth + 2;
+                        ol.push(`<span class="find-overlay" style="left:${left}px;width: ${m[0].length * display.charWidth}px"></span>`);
+                    }
+                    if (ol.length > 0)
+                        display.overlays[l] = `<div style="top: ${l * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line">${ol.join('')}</div>`
+                    items.reverse();
+                    display.results.push.apply(display.results, items);
+                }
+                updateOverlay();
+                var end = new Date().getTime();
+                console.log(end - start);
+            }            
+            display.scrollTop = display.scrollHeight;
+        </script>
+    </body>
+
+</html>

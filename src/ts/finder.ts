@@ -1,8 +1,7 @@
 //cSpell:words keycode
 import EventEmitter = require('events');
 
-export enum validTextRange
-{
+export enum validTextRange {
     not = 0,
     before = 1,
     exact = 2,
@@ -35,7 +34,7 @@ export class Finder extends EventEmitter {
         this.createControl();
 
         $(this._window.document).keyup((e) => {
-            if (e.keyCode == 27) { // escape key maps to keycode `27`
+            if (e.keyCode === 27) { // escape key maps to keycode `27`
                 this.hide();
             }
         });
@@ -165,7 +164,7 @@ export class Finder extends EventEmitter {
         });
         $("#find-all", this._control).on('click', () => {
             this.Highlight = !this.Highlight;
-        });        
+        });
         $("#find-regex", this._control).on('click', () => {
             this.RegularExpression = !this.RegularExpression;
         });
@@ -208,7 +207,7 @@ export class Finder extends EventEmitter {
             this.emit('found-results', this._results);
             return;
         }
-        var hs = this._display.text();
+        //var hs = this._display.text();
         var pattern;
         if (this._regex)
             pattern = val;
@@ -221,11 +220,12 @@ export class Finder extends EventEmitter {
             re = new RegExp(pattern, 'g');
         else
             re = new RegExp(pattern, 'gi');
-        var lines = this._display[0].children;
-        var m, id = 0, items;
+        var lines = this._display.lines;
+        var m, id = 0, items, elLine;
         for (var l = lines.length - 1; l >= 0; l--) {
             items = [];
-            while ((m = re.exec(lines[l].textContent)) !== null && id < 1000) {
+            elLine = this._display[0].childNodes[l];
+            while ((m = re.exec(lines[l])) !== null) {
                 id++;
                 // This is necessary to avoid infinite loops with zero-width matches
                 if (m.index === re.lastIndex) {
@@ -233,28 +233,25 @@ export class Finder extends EventEmitter {
                 }
                 items.push({
                     lineNo: l,
-                    line: lines[l],
+                    line: elLine,
                     index: m.index,
                     length: m[0].length
                 });
                 if (this._all) {
-                    this.addAnnotationElement(this.getTextSelection(lines[l], m.index, m.index + m[0].length), lines[l], "find-" + id);
-                    var t = $('.find-' + id + '-child', lines[l]);
+                    this.addAnnotationElement(this.getTextSelection(elLine, m.index, m.index + m[0].length), elLine, "find-" + id);
+                    var t = $('.find-' + id + '-child', elLine);
                     if (t.length > 1) {
-                        t.each(function (idx) {
-                            if (idx == 0)
-                                $(this).addClass('start');
-                            else if (idx == t.length - 1)
-                                $(this).addClass('end');
-                            else
-                                $(this).addClass('middle');
-                        })
+                        t[0].className += ' start';
+                        t[t.length - 1].className += ' end';
+                        for (var c = 1, cl = t.length - 1; c < cl; c++)
+                            t[c].className += ' middle';
                     };
                     items[items.length - 1].els = t;
                 }
             }
             items.reverse();
-            this._results = this._results.concat(items);
+            this._results.push.apply(this._results, items);
+            //this._results = this._results.concat(items);
         }
         if (this.Reverse)
             this._results.reverse();
@@ -296,9 +293,9 @@ export class Finder extends EventEmitter {
                 var t = $('.find-highlight', r.line);
                 if (t.length > 1) {
                     t.each(function (idx) {
-                        if (idx == 0)
+                        if (idx === 0)
                             $(this).addClass('start');
-                        else if (idx == t.length - 1)
+                        else if (idx === t.length - 1)
                             $(this).addClass('end');
                         else
                             $(this).addClass('middle');
@@ -326,28 +323,37 @@ export class Finder extends EventEmitter {
             $("#find-next", this._control).prop('disabled', true);
         else
             $("#find-next", this._control).prop('disabled', false);
-        if (this._position == 0 || this._results.length == 0)
+        if (this._position === 0 || this._results.length === 0)
             $("#find-prev", this._control).prop('disabled', true);
         else
             $("#find-prev", this._control).prop('disabled', false);
     }
 
     private updateCount() {
-        if (this._results.length == 0)
+        if (this._results.length === 0)
             $("#find-count", this._control).html("<span class='find-no-results'>No Results</span>")
-        else if (this._results.length >= 999)
-            $("#find-count", this._control).html("? of 999");
+        else if (this._results.length > 999)
+            $("#find-count", this._control).html((this._position + 1) + " of 999+");
         else
             $("#find-count", this._control).html((this._position + 1) + " of " + this._results.length);
     }
 
     private getTextNodesIn(node) {
         var textNodes = [];
-        if (node.nodeType == 3) {
+        var i, len
+        if (Array.isArray(node)) {
+            for (i = 0, len = node.length; i < len; ++i) {
+                //textNodes = textNodes.concat(this.getTextNodesIn(node[i]));
+                textNodes.push.apply(textNodes, this.getTextNodesIn(node[i]));
+            }
+
+        }
+        else if (node.nodeType === 3) {
             textNodes.push(node);
         } else {
             var children = node.childNodes;
-            for (var i = 0, len = children.length; i < len; ++i) {
+            for (i = 0, len = children.length; i < len; ++i) {
+                //textNodes = textNodes.concat(this.getTextNodesIn(children[i]));
                 textNodes.push.apply(textNodes, this.getTextNodesIn(children[i]));
             }
         }
@@ -365,7 +371,7 @@ export class Finder extends EventEmitter {
             endCharCount = charCount + textNode.length;
             if (!foundStart && start >= charCount
                 && (start < endCharCount ||
-                    (start == endCharCount && i <= textNodes.length))) {
+                    (start === endCharCount && i <= textNodes.length))) {
                 range.setStart(textNode, start - charCount);
                 foundStart = true;
             }
@@ -397,19 +403,19 @@ export class Finder extends EventEmitter {
                 span.setAttribute('class', 'find-highlight ' + id);
             origText = elem.textContent;
             annotationTextRange = this.validateTextRange(str, elem);
-            if (annotationTextRange == validTextRange.before) {
+            if (annotationTextRange === validTextRange.before) {
                 text = origText.substring(0, str.endOffset);
                 nextText = origText.substring(str.endOffset);
-            } else if (annotationTextRange == validTextRange.after) {
+            } else if (annotationTextRange === validTextRange.after) {
                 prevText = origText.substring(0, str.startOffset);
                 text = origText.substring(str.startOffset);
-            } else if (annotationTextRange == validTextRange.exact) {
+            } else if (annotationTextRange === validTextRange.exact) {
                 text = origText
-            } else if (annotationTextRange == validTextRange.within) {
+            } else if (annotationTextRange === validTextRange.within) {
                 prevText = origText.substring(0, str.startOffset);
                 text = origText.substring(str.startOffset, str.endOffset);
                 nextText = origText.substring(str.endOffset);
-            } else if (annotationTextRange == validTextRange.not) {
+            } else if (annotationTextRange === validTextRange.not) {
                 return;
             }
             span.textContent = text;

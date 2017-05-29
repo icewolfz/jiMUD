@@ -252,6 +252,8 @@ export class Client extends EventEmitter {
         else
             this.display = display;
 
+        this.display.lines = [];
+
         this.display.click((event) => {
             if (this.options.CommandonClick)
                 this.commandInput.focus();
@@ -414,6 +416,7 @@ export class Client extends EventEmitter {
                 return;
             t = $(data.line);
             $("span:empty", t).remove();
+            this.display.lines.push(data.raw);
             this.lineCache.push(t[0].outerHTML);
         });
         this.parser.on('MXP-tag-reply', (tag, args) => {
@@ -464,6 +467,7 @@ export class Client extends EventEmitter {
                 for (; l < c; l++)
                     $(lines[l]).remove();
             }
+            this.display.lines.splice(0, this.display.lines.length - this.options.bufferSize);
             lines = null;
             this.display.addClass("animate");
         });
@@ -914,6 +918,7 @@ export class Client extends EventEmitter {
     }
 
     clear() {
+        this.display.lines = [];
         this.display.empty();
         this.parser.Clear();
     }

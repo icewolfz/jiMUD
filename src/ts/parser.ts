@@ -428,6 +428,7 @@ export class Parser extends EventEmitter {
     mxp.style |= this._CurrentAttributes;
     if (mxp.style > 0) {
       if ((mxp.style & FontStyle.Italic) == FontStyle.Italic)
+        //strBuilder.push("font-style: italic;vertical-align: text-bottom;");
         strBuilder.push("font-style: italic;border-top: 1px solid ", colors.back, ";");
       if ((mxp.style & FontStyle.Overline) == FontStyle.Overline)
         td += "overline ";
