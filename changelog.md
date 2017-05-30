@@ -21,6 +21,7 @@
     - `-mf=[file], --map=[file]` override default map file
     - `-c=[name], --character=[name]` allows you to load/create a character from character database
     - `-pf=[list], --profiles[]` set which profiles will be enabled, if not found will default
+  - About memory tab now in cludes process type, cpu usage and idle wakeups as of when the dialog was opened.
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
   - Clear icons for display and chat windows have an X added to them to symbolize remove/delete
@@ -29,6 +30,8 @@
     - Dialog now centers on main client window
     - Moved several settings to a new Advanced tab to simplify general settings
   - Due to performance reasons fight now has a new highlight all option, default now will only highlight current match
+  - Upgrade to electron 1.7.2, adds better debugger support and other bug fixes
+  - Upgrade the about memory tab to use new API instead of old deprecated API
 - **Fixed:**
   - Preferences: font and command font not being correctly set
   - Window states for mapper, chat or editor where not saved depending on always on top settings when closing the main client

@@ -9,6 +9,9 @@
         <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
         <link href="css/theme.css" rel="stylesheet" type="text/css" />
         <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css">
+        <script>
+            if (typeof module === 'object') { window.module = module; module = undefined; }
+        </script>
         <style>
             #display {
                 user-select: none;
@@ -30,7 +33,6 @@
                 width: 100%;
                 overflow: hidden;
                 position: absolute;
-                
             }
 
             .overlay-line {
@@ -48,7 +50,7 @@
             }
 
             .slt {
-                background-color: rgba(51, 153, 255, 0.6);
+                background-color: rgba(51, 153, 255, 0.4);
                 display: inline-block;
                 height: 100%;
                 pointer-events: none;
@@ -58,16 +60,34 @@
 
             .find-overlay {
                 border-radius: 4px;
-                background: rgba(116, 192, 114, 0.6);
-                border: 1px solid #74C072;
+                background: rgba(241, 215, 0, 0.4);
                 display: inline-block;
-                height: 100%;                
+                height: 100%;
                 box-sizing: border-box;
                 position: absolute;
+            }
+
+            .slt.trc {
+                border-top-right-radius: 4px;
+            }
+
+            .slt.tlc {
+                border-top-left-radius: 4px;
+            }
+
+            .slt.brc {
+                border-bottom-right-radius: 4px;
+            }
+
+            .slt.blc {
+                border-bottom-left-radius: 4px;
             }
         </style>
         <script src="../lib/jquery.min.js"></script>
         <script src="js/jquery.ext.js"></script>
+        <script>
+            if (window.module) module.module;
+        </script>
     </head>
 
     <body>
@@ -76,6 +96,8 @@
             <div id="display-view"></div>
         </div>
         <script>
+            //const electron = require('electron');
+
             var display = document.getElementById('display');
             var displayView = document.getElementById('display-view');
             var displayOverlay = document.getElementById('display-overlay');
@@ -84,10 +106,10 @@
             $displayView = $(displayView);
 
             display.lines = [];
-            display.overlays = [];
+            display.overlays = {};
             display.rawLines = [];
             display.maxLine = 0;
-            display.currentSelect = { s: null, e: null, drag: false, x: null, y: null };
+            display.currentSelect = { s: null, e: null, drag: false };
             display.character = $("<div id='Character' class='ansi' style='border-bottom: 1px solid black'>W</div>");
             display.character.appendTo('body');
             display.lineOffset = 0;
@@ -98,7 +120,8 @@
 
             h = display.lineHeight;
             for (var l = 0; l < 50000; l++) {
-                var line = '' + (l * 10000000000000);
+
+                var line = '' + l + '-' + (l * (Math.floor(Math.random() * 10000000000000) + 1));
                 //var node =  document.createElement('span');
                 //node.className = "line";
                 //node.innerHTML = `<span class="ansi" style='border-bottom: 1px solid black'>${l}</span><br/>`
@@ -118,18 +141,12 @@
 
             displayOverlay.style.width = Math.max(w, display.clientWidth) + "px";
             display.addEventListener('scroll', (e) => {
-                display.start = Math.floor(display.scrollTop / display.lineHeight);
-                display.end = Math.ceil((display.scrollTop + $display.innerHeight()) / display.lineHeight);
-                lines = display.rawLines.slice(display.start, display.end);
-                overlays = display.overlays.slice(display.start, display.end);
+                display.start = Math.floor(display.scrollTop / display.lineHeight) - 6;
+                display.end = Math.ceil((display.scrollTop + $display.innerHeight()) / display.lineHeight) + 6;
+                lines = display.rawLines.slice(display.start, display.end);                
                 displayView.innerHTML = lines.join('');
-                displayOverlay.innerHTML = overlays.join('');
-                /*
-                h = display.lineHeight;
-                for (var c = 0, cl = displayView.childNodes.length; c < cl; c++) {
-                    displayView.childNodes[c].style.top = (start + c) * h + "px";
-                }
-                */
+                updateOverlay();
+                
             });
 
             displayOverlay.addEventListener('mousedown', (e) => {
@@ -139,8 +156,6 @@
                 display.currentSelect.e = o.x;
                 display.currentSelect.sLine = o.y;
                 display.currentSelect.eLine = o.y;
-                display.currentSelect.x = e.pageX;
-                display.currentSelect.x = e.pageY;
                 updateSelection()
             })
 
@@ -149,8 +164,6 @@
                 var o = getLineOffset(e);
                 display.currentSelect.e = o.x;
                 display.currentSelect.eLine = o.y;
-                display.currentSelect.x = e.pageX;
-                display.currentSelect.y = e.pageY;
                 updateSelection();
             })
 
@@ -159,25 +172,102 @@
                 var o = getLineOffset(e);
                 display.currentSelect.e = o.x;
                 display.currentSelect.eLine = o.y;
-                display.currentSelect.x = e.pageX;
-                display.currentSelect.y = e.pageY;
                 updateSelection();
             })
 
-            displayOverlay.addEventListener('mouseenter', (e) => {
-                if (!e.buttons || e.button != 0)
-                    display.currentSelect.drag = false;
+            displayOverlay.addEventListener('dblclick', (e) => {
+                var o = getLineOffset(e);
+                //select word
             })
 
-            displayOverlay.addEventListener('mouseleave', (e) => {
+            displayOverlay.addEventListener('click', (e) => {
+                if (e.detail === 3) {
+                    var o = getLineOffset(e);
+                    //select paragraph
+                }
+            })
 
+            display.addEventListener('mouseenter', (e) => {
+                if (!e.buttons || e.button != 0)
+                    display.currentSelect.drag = false;
+                display.currentSelect.scrollX = 0;
+                display.currentSelect.scrollY = 0;
+                clearInterval(display.scrollSelect);
+            })
+
+            display.addEventListener('mouseleave', (e) => {
+                if (e.buttons && e.button === 0) {
+                    if (e.pageY < 0)
+                        display.currentSelect.scrollY = -1;
+                    else if (e.pageY >= display.clientHeight)
+                        display.currentSelect.scrollY = 1;
+
+                    if (e.pageX < 0)
+                        display.currentSelect.scrollX = -1;
+                    else if (e.pageX >= display.clientWidth)
+                        display.currentSelect.scrollX = 1;
+
+                    console.log(e);
+                    display.scrollSelect = setInterval(() => {
+                        /// pull as long as you can scroll either direction
+                        //console.log(electron.screen.getCursorScreenPoint());
+                        y = display.currentSelect.scrollY;
+                        x = display.currentSelect.scrollX;
+
+                        if (y < 0 && display.scrollTop == 0) {
+                            display.currentSelect.e = 0;
+                            clearInterval(display.scrollSelect);
+                            updateSelection();
+                            return;
+                        }
+                        else if (y > 0 && display.scrollTop == display.scrollHeight - display.clientHeight) {
+                            display.currentSelect.e = display.lines[display.lines.length - 1].length;
+                            clearInterval(display.scrollSelect);
+                            updateSelection();
+                            return;
+                        }
+                        else if (x < 0 && display.scrollLeft == 0) {
+
+                            clearInterval(display.scrollSelect);
+                            updateSelection();
+                            return;
+                        }
+                        else if (x > 0 && display.scrollLeft == display.scrollWidth - display.clientWidth) {
+                            clearInterval(display.scrollSelect);
+                            updateSelection();
+                            return;
+                        }
+
+                        if (display.currentSelect.scrollX < 0) {
+                            x = -1 * display.charWidth;
+                            display.currentSelect.e--;
+                        }
+                        else if (display.currentSelect.scrollX > 0) {
+                            x = display.charWidth;
+                            display.currentSelect.e++;
+                        }
+                        if (display.currentSelect.scrollY < 0) {
+                            y = -1 * display.lineHeight;
+                            display.currentSelect.eLine--;
+                        }
+                        else if (display.currentSelect.scrollY > 0) {
+                            y = display.lineHeight;
+                            display.currentSelect.eLine++;
+                            if (display.currentSelect.eLine >= display.lines.length)
+                                display.currentSelect.e = display.lines[display.lines.length - 1].length;
+                        }
+                        display.scrollTop += y;
+                        display.scrollLeft += x;
+                        updateSelection();
+                    }, 50);
+                }
             })
 
             function updateSelection() {
                 sel = display.currentSelect;
-                var s, e, sL, eL;
+                var s, e, sL, eL, l, c, parts, w, w2;
                 //display.overlays.fill('');
-                display.overlays = [];
+                display.overlays.selection = [];
                 if (sel.sLine > sel.eLine) {
                     sL = sel.eLine;
                     eL = sel.sLine;
@@ -190,33 +280,115 @@
                     s = sel.s;
                     e = sel.e;
                 }
+                else if (sel.s == sel.e) {
+                    updateOverlay();
+                    return;
+                }
                 else {
                     s = Math.min(sel.s, sel.e);
                     e = Math.max(sel.s, sel.e);
                     e = (e - s) * display.charWidth;
                     s *= display.charWidth;
                     s += 2;
-                    display.overlays[sel.sLine] = `<div style="top: ${sel.sLine * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line"><span class="slt" style="left: ${s}px;width: ${e}px"></span></div>`
+                    display.overlays.selection[sel.sLine] = `<div style="top: ${sel.sLine * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line"><span class="slt trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`
                     updateOverlay();
                     return;
                 }
+                var len = display.lines.length;
+                flat = 0;
+                extern = 1;
+                intern = 2;
 
-                w = (display.lines[sL].length - s) * display.charWidth;
-                s *= display.charWidth;
-                s += 2;
-                display.overlays[sL] = `<div style="top: ${sL * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line"><span class="slt" style="left: ${s}px;width: ${w}px"></span></div>`
+                for (line = sL; line < eL + 1; line++) {
+                    startStyle = {
+                        top: extern,
+                        bottom: extern
+                    }
+                    endStyle = {
+                        top: extern,
+                        bottom: extern
+                    }
 
-                s = 0;
-                w = (e) * display.charWidth;
-                s *= display.charWidth;
-                display.overlays[eL] = `<div style="top: ${eL * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line"><span class="slt" style="left:2px;width: ${w}px"></span></div>`
+                    let cl = sL == line ? s : 0;
+                    let cr = eL == line ? e : display.lines[line].length;
+                    if (line > sL) {
+                        pl = sL == line - 1 ? s : 0;
+                        pr = display.lines[line - 1].length;
 
 
-                for (sL++; sL < eL; sL++) {
-                    w = (display.lines[sL].length) * display.charWidth;
-                    display.overlays[sL] = `<div style="top: ${sL * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line"><span class="slt" style="left:2px;width: ${w}px"></span></div>`
+                        if (cl == pl)
+                            startStyle.top = flat;
+                        else if (cl > pl)
+                            startStyle.top = intern;
+                        if (cr == pr)
+                            endStyle.top = flat;
+                        else if (pl < cr && cr < pr)
+                            endStyle.top = intern;
+                    }
+
+                    if (line < eL) {
+                        nl = 0;
+                        nr = eL == line + 1 ? e : display.lines[line + 1].length;
+                        if (cl === nl) {
+                            startStyle.bottom = flat;
+                        } else if (nl < cl && cl < nr) {
+                            startStyle.bottom = intern;
+                        }
+
+                        if (cr === nr) {
+                            endStyle.bottom = flat;
+                        } else if (cr < nr) {
+                            endStyle.bottom = intern;
+                        }
+                    }
+
+
+
+                    parts = [];
+                    cls = 'slt';
+                    if (startStyle.top === extern) {
+                        cls += ' tlc';
+                    }
+                    if (startStyle.bottom === extern) {
+                        cls += ' blc';
+                    }
+                    if (endStyle.top === extern) {
+                        cls += ' trc';
+                    }
+                    if (endStyle.bottom === extern) {
+                        cls += ' brc';
+                    }
+                    if (sL == line) {
+                        w = (display.lines[line].length - s) * display.charWidth;
+                        parts.push(`<span class="${cls}" style="left:${cl * display.charWidth + 2}px;width: ${w}px;"></span>`);
+                    }
+                    else if (eL == line) {
+                        w = e * display.charWidth;
+                        parts.push(`<span class="${cls}" style="left:${cl * display.charWidth + 2}px;width: ${w}px;"></span>`);
+                    }
+                    else {
+                        w = display.lines[line].length * display.charWidth;
+                        parts.push(`<span class="${cls}" style="left:${cl * display.charWidth + 2}px;width: ${w}px;"></span>`);
+                    }
+
+                    if (startStyle.top == intern || startStyle.bottom == intern) {
+                        parts.push(`<span class="slt" style="bottom:0px;height:2px;left:${(cl * display.charWidth)}px;width: 2px;"></span>`);
+                        parts.push(`<span class="slt" style="bottom:0px;height:2px;left:${(cl * display.charWidth)}px;width: 2px;background-color:black;border-bottom-right-radius: 2px"></span>`);
+                    }
+                    if (endStyle.top === intern) {
+                        parts.push(`<span class="slt" style="top:0px;height:2px;left:${(cl * display.charWidth) + 2 + w}px;width: 2px;"></span>`);
+                        parts.push(`<span class="slt" style="top:0px;height:2px;left:${(cl * display.charWidth) + 2 + w}px;width: 2px;background-color:black;border-top-left-radius: 2px"></span>`);
+                    }
+                    if (endStyle.bottom === intern) {
+                        parts.push(`<span class="slt" style="bottom:0px;height:2px;left:${(cl * display.charWidth) + 2 + w}px;width: 2px;"></span>`);
+                        parts.push(`<span class="slt" style="bottom:0px;height:2px;left:${(cl * display.charWidth) + 2 + w}px;width: 2px;background-color:black;border-bottom-left-radius: 2px"></span>`);
+                    }
+
+                    //parts.push(`<span class="slt" style="left:${l}px;width: ${w}px;background-color:rgba(0,128,0,0.5)"></span>`);
+                    //parts.push(`<span class="slt" style="left:${l}px;width: ${w}px;background-color:rgba(255,0,0,0.5)"></span>`);
+
+                    display.overlays.selection[line] = `<div style="top: ${line * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line">${parts.join('')}</div>`
                 }
-
                 updateOverlay();
             }
 
@@ -255,43 +427,457 @@
                 if (start === undefined)
                     start = display.start;
                 if (end === undefined)
-                    end = display.start.end;
-                overlays = display.overlays.slice(start, end);
+                    end = display.end;
+                overlays = [];
+                for(ol in display.overlays)
+                {
+                    if(!display.overlays.hasOwnProperty(ol))
+                        continue;
+                    overlays.push.apply(overlays, display.overlays[ol].slice(start, end));
+                }
                 displayOverlay.innerHTML = overlays.join('');
             }
 
             function findOverlayTest(find) {
                 var start = new Date().getTime();
-                display.overlays = [];
+                display.overlays.find = [];
                 pattern = find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
                 display.results = [];
                 re = new RegExp(pattern, 'gi');
                 lines = display.lines;
                 for (var l = display.lines.length - 1; l >= 0; l--) {
                     items = [];
-                    ol = [];                    
+                    ol = [];
                     while ((m = re.exec(lines[l])) !== null) {
                         if (m.index === re.lastIndex) {
                             re.lastIndex++;
                         }
-                        items.push({
+                        items.unshift({
                             line: l,
                             index: m.index,
                             length: m[0].length
                         });
-                        left = m.index * display.charWidth + 2;
-                        ol.push(`<span class="find-overlay" style="left:${left}px;width: ${m[0].length * display.charWidth}px"></span>`);
+                        ol.push(`<span class="find-overlay" style="left:${m.index * display.charWidth + 2}px;width: ${m[0].length * display.charWidth}px"></span>`);
                     }
                     if (ol.length > 0)
-                        display.overlays[l] = `<div style="top: ${l * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line">${ol.join('')}</div>`
-                    items.reverse();
+                        display.overlays.find[l] = `<div style="top: ${l * display.lineHeight}px;height:${display.lineHeight}px;" class="overlay-line">${ol.join('')}</div>`
                     display.results.push.apply(display.results, items);
+                    //display.results.concat(items);
                 }
                 updateOverlay();
                 var end = new Date().getTime();
                 console.log(end - start);
-            }            
+            }
             display.scrollTop = display.scrollHeight;
+
+
+
+
+
+
+
+
+
+
+
+
+
+            /*
+            $(parent.window).on('mouseup', (e) => {
+                console.log(e);
+            })
+
+            var sel = { s: null, e: null, drag: false, x: null, y: null, sLine: null, eLine: null };
+
+            var selTimer;
+
+            $("#display").on('mousedown', (e) => {
+                sel.drag = true;
+                var o = getLineOffset(e);
+                sel.s = o.x;
+                sel.e = sel.s;
+                sel.sLine = o.y;
+                sel.eLine = o.y;
+                sel.x = e.pageX;
+                sel.y = e.pageY;
+                //updateSelection()
+            })
+
+            $("#display").on('mousemove', (e) => {
+                if (!sel.drag) return;
+                var o = getLineOffset(e);
+                sel.e = o.x;
+                sel.eLine = o.y;
+                sel.x = e.pageX;
+                sel.y = e.pageY;
+                updateSelection();
+            })
+
+            $("#display").on('mouseup', (e) => {
+                sel.drag = false;
+                var o = getLineOffset(e);
+                sel.e = o.x;
+                sel.eLine = o.y;
+                sel.x = e.pageX;
+                sel.y = e.pageY;
+                updateSelection();
+                if (parent.client.displaySplit)
+                    parent.client.displaySplit.fill();
+            })
+
+            $("#display").on('mouseleave', (e) => {
+                console.log(e);
+                console.log(e.buttons);
+            });
+
+            $("#display").on('mouseenter', (e) => {
+                if (!e.buttons || e.button != 0)
+                    sel.drag = false;
+                console.log(e);
+                console.log(e.buttons);
+            });
+
+            function getTextOffset(e) {
+                var y = (e.pageY - parent.client.display.offset().top) + parent.client.display.scrollTop();
+                y = Math.floor(y / parent.client.character.outerHeight());
+                var line = $("#display").children().eq(y);
+                if (line.length === 0) {
+                    if (y >= $("#display").children().length) {
+                        line = $(".line:last-child", $("#display"))
+                        p = line.prevAll();
+                        x = line.text().length + p.text().length + p.length + 1;
+                        return { x: x, y: line.index() };
+                    }
+                    line = $("#display").children().eq(y);
+                }
+                var p = line.prevAll();
+                var x = (e.pageX - parent.client.display.offset().left) + parent.client.display.scrollLeft();
+                x = Math.floor(x / parseFloat(window.getComputedStyle(parent.client.character[0]).width));
+                var l = line.text().length;
+                if (x > l)
+                    x = l + 1;
+                x += p.text().length + p.length;
+                return { x: x, y: y };
+            }
+
+            function getLineOffset(e) {
+                var y = (e.pageY - parent.client.display.offset().top) + parent.client.display.scrollTop();
+                y = Math.floor(y / parent.client.character.outerHeight());
+                var line = $("#display").children().eq(y);
+                if (line.length === 0) {
+                    if (y >= $("#display").children().length) {
+                        line = $(".line:last-child", $("#display"))
+                        x = line.text().length + 1;
+                        return { x: x, y: line.index() };
+                    }
+                    line = $("#display").children().eq(y);
+                }
+                var x = (e.pageX - parent.client.display.offset().left) + parent.client.display.scrollLeft();
+                x = Math.floor(x / parseFloat(window.getComputedStyle(parent.client.character[0]).width));
+                var l = line.text().length;
+                if (x > l)
+                    x = l + 1;
+                return { x: x, y: y };
+            }
+
+            function updateSelection() {
+                clearTimeout(selTimer);
+                if (sel.sLine === -1 || sel.eLine === -1)
+                    return;
+                selTimer = setTimeout(function () {
+                    clearSelection();
+                    var c = $("#display").children();
+                    var s, e, ts, lines;
+                    var x, y;
+                    if (sel.sLine > sel.eLine) {
+                        s = $("#display").children().eq(sel.eLine)[0];
+                        e = $("#display").children().eq(sel.sLine)[0];
+                        ts = getLineSelection(s, e, sel.e, sel.s, $("#display")[0]);
+                        lines = $(".line:nth-child(n+" + (sel.eLine + 1) + "):nth-child(-n+" + (sel.sLine + 1) + ")", $("#display")).toArray();
+                        x = sel.e;
+                        y = sel.s;
+                    }
+                    else if (sel.sLine < sel.eLine) {
+                        s = $("#display").children().eq(sel.sLine)[0];
+                        e = $("#display").children().eq(sel.eLine)[0];
+                        ts = getLineSelection(s, e, sel.s, sel.e, $("#display")[0]);
+                        lines = $(".line:nth-child(n+" + (sel.sLine + 1) + "):nth-child(-n+" + (sel.eLine + 1) + ")", $("#display")).toArray();
+                        x = sel.s;
+                        y = sel.e;
+                    }
+                    else {
+                        y = 0;
+                        x = 0;
+                        s = $("#display").children().eq(sel.sLine)[0];
+                        e = s;
+                        ts = getLineSelection(s, s, Math.min(sel.s, sel.e), Math.max(sel.s, sel.e), $("#display")[0]);
+                        lines = [s];
+                    }
+                    addAnnotationElement(ts, lines[0]);
+                    var ll = lines.length - 1;
+                    //var el = $(".selection-highlight", lines[0]);
+                    //if (x >= y && ll === 1)
+                    //$(el[0]).addClass('sel-start sel-end-start');
+                    //else
+                    //$(el[0]).addClass('sel-start');
+                    //var dll = e.dataset ? parseInt(e.dataset.length, 10) : 0;
+                    //if (sel.e < dll + 1) {
+                    //if (ll === 1)
+                    //$(el[el.length - 1]).addClass('sel-end-start sel-end');
+                    //else
+                    //$(el[el.length - 1]).addClass('sel-start-end');
+                    if (ll > 0)
+                        addAnnotationElement(ts, lines[ll]);
+                    //el = $(".selection-highlight", lines[ll]);
+                    //if (ll === 1)
+                    //$(el[0]).addClass('sel-end-start sel-start');
+                    //else
+                    //$(el[0]).addClass('sel-end-start');
+                    //if (x >= y && ll === 1)
+                    //$(el[el.length - 1]).addClass('sel-end sel-start-end');
+                    //else
+                    //$(el[el.length - 1]).addClass('sel-end');
+
+                    for (var l = 1; l < ll; l++) {
+                        //if (l === 1 && sel.s != 0)
+                        //$(lines[l]).addClass('selection-highlight-line sel-start sel-middle');
+                        //else if (l === ll - 1 && sel.e < dll + 1)
+                        //$(lines[l]).addClass('selection-highlight-line sel-end sel-middle');
+                        //else
+                        //$(lines[l]).addClass('selection-highlight-line sel-middle');
+                        $(lines[l]).addClass('selection-highlight-line');
+                    }
+                }, 5);
+            }
+
+            function clearSelection() {
+                $(".selection-highlight-line", $("#display")).removeClass('selection-highlight-line');
+                //$(".sel-start", $("#display")).removeClass('sel-start');
+                //$(".sel-middle", $("#display")).removeClass('sel-middle');
+                //$(".sel-end", $("#display")).removeClass('sel-end');
+                $(".selection-highlight", $("#display")).each(function () {
+                    $(this).replaceWith(this.innerHTML);
+                });
+            }
+
+            function getTextNodesIn(node) {
+                var textNodes = [];
+                if (Array.isArray(node)) {
+                    for (var i = 0, len = node.length; i < len; ++i) {
+                        //textNodes = textNodes.concat(this.getTextNodesIn(node[i]));
+                        textNodes.push.apply(textNodes, this.getTextNodesIn(node[i]));
+                    }
+                }
+                else if (node.nodeType === 3 || node.tagName === "BR") {
+                    textNodes.push(node);
+                }
+                else {
+                    var children = node.childNodes;
+                    for (var i = 0, len = children.length; i < len; ++i) {
+                        //textNodes = textNodes.concat(this.getTextNodesIn(children[i]));
+                        textNodes.push.apply(textNodes, this.getTextNodesIn(children[i]));
+                    }
+                }
+                return textNodes;
+            }
+
+            function validateTextRange(str, elem) {
+                var textRange = document.createRange();
+
+                textRange.selectNodeContents(elem);
+                if (str.compareBoundaryPoints(Range.START_TO_END, textRange) <= 0) {
+                    return 0;
+                }
+                else {
+                    if (str.compareBoundaryPoints(Range.END_TO_START, textRange) >= 0) {
+                        return 0;
+                    }
+                    else {
+                        var startPoints = str.compareBoundaryPoints(Range.START_TO_START, textRange),
+                            endPoints = str.compareBoundaryPoints(Range.END_TO_END, textRange);
+
+                        if (startPoints < 0) {
+                            if (endPoints < 0) {
+                                return 1;
+                            }
+                            else {
+                                return 2;
+                            }
+                        }
+                        else {
+                            if (endPoints > 0) {
+                                return 3;
+                            }
+                            else {
+                                if (startPoints === 0 && endPoints === 0) {
+                                    return 2;
+                                }
+                                else {
+                                    return 4;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            function getLineSelection(start, end, startO, endO, parent) {
+                var range = document.createRange();
+                range.selectNodeContents(parent);
+                var textNodes = getTextNodesIn(start);
+                var charCount = 0, endCharCount;
+
+                for (var i = 0, textNode; textNode = textNodes[i++];) {
+                    endCharCount = charCount + (textNode.length || 1);
+                    if (startO >= charCount && (startO < endCharCount ||
+                        (startO === endCharCount && i <= textNodes.length))) {
+                        if (textNode.tagName === "BR")
+                            range.setStart(textNode.parentNode, textNode.parentNode.childNodes.length - 1);
+                        else
+                            range.setStart(textNode, startO - charCount);
+                        break;
+                    }
+                    charCount = endCharCount;
+                }
+
+                var textNodes = getTextNodesIn(end);
+                var charCount = 0, endCharCount;
+
+                for (var i = 0, textNode; textNode = textNodes[i++];) {
+                    endCharCount = charCount + (textNode.length || 1);
+                    if (endO <= endCharCount) {
+                        if (textNode.tagName === "BR")
+                            range.setEnd(textNode.parentNode, textNode.parentNode.childNodes.length - 1);
+                        else
+                            range.setEnd(textNode, endO - charCount);
+                        break;
+                    }
+                    charCount = endCharCount;
+                }
+                return range;
+            }
+
+            function getTextSelection(el, start, end, parent, offset) {
+                var range = document.createRange();
+                range.selectNodeContents(parent || el);
+                var textNodes = getTextNodesIn(el);
+                var foundStart = false;
+                var charCount = offset || 0, endCharCount;
+
+                for (var i = 0, textNode; textNode = textNodes[i++];) {
+                    endCharCount = charCount + (textNode.length || 1);
+                    if (!foundStart && start >= charCount
+                        && (start < endCharCount ||
+                            (start === endCharCount && i <= textNodes.length))) {
+                        if (textNode.tagName === "BR")
+                            range.setStart(textNode.parentNode, textNode.parentNode.childNodes.length - 1);
+                        else
+                            range.setStart(textNode, start - charCount);
+                        foundStart = true;
+                    }
+                    if (foundStart && end <= endCharCount) {
+                        if (textNode.tagName === "BR")
+                            range.setEnd(textNode.parentNode, textNode.parentNode.childNodes.length - 1);
+                        else
+                            range.setEnd(textNode, end - charCount);
+                        break;
+                    }
+                    charCount = endCharCount;
+                }
+
+                return range;
+            }
+
+            function addAnnotationElement(str, elem, id, c) {
+                var text, textParent, origText, prevText, nextText, childCount,
+                    annotationTextRange,
+                    span = document.createElement('span');
+
+                if (elem.tagName === "BR") {
+                    span.setAttribute('class', 'selection-highlight selection-highlight-newline');
+                    span.innerHTML = "<br>";
+                    annotationTextRange = validateTextRange(str, elem);
+                    if (annotationTextRange === 1) {
+                        text = origText.substring(0, str.endOffset);
+                        nextText = origText.substring(str.endOffset);
+                    } else if (annotationTextRange === 3) {
+                        prevText = origText.substring(0, str.startOffset);
+                        text = origText.substring(str.startOffset);
+                    } else if (annotationTextRange === 2) {
+                        text = origText
+                    } else if (annotationTextRange === 4) {
+                        prevText = origText.substring(0, str.startOffset);
+                        text = origText.substring(str.startOffset, str.endOffset);
+                        nextText = origText.substring(str.endOffset);
+                    } else if (annotationTextRange === 0) {
+                        return;
+                    }
+                    textParent = elem.parentElement;
+                    textParent.replaceChild(span, elem);
+                    if (prevText) {
+                        var prevDOM = document.createTextNode(prevText);
+                        textParent.insertBefore(prevDOM, span);
+                    }
+                    if (nextText) {
+                        var nextDOM = document.createTextNode(nextText);
+                        textParent.insertBefore(nextDOM, span.nextSibling);
+                    }
+                    return;
+                }
+                else if (elem.nodeType === 3) {
+                    if (!id)
+                        span.setAttribute('class', 'selection-highlight');
+                    else if (c)
+                        span.setAttribute('class', 'selection-highlight ' + id + '-child');
+                    else
+                        span.setAttribute('class', 'selection-highlight ' + id);
+                    origText = elem.textContent;
+                    annotationTextRange = validateTextRange(str, elem);
+                    if (annotationTextRange === 1) {
+                        text = origText.substring(0, str.endOffset);
+                        nextText = origText.substring(str.endOffset);
+                    } else if (annotationTextRange === 3) {
+                        prevText = origText.substring(0, str.startOffset);
+                        text = origText.substring(str.startOffset);
+                    } else if (annotationTextRange === 2) {
+                        text = origText
+                    } else if (annotationTextRange === 4) {
+                        prevText = origText.substring(0, str.startOffset);
+                        text = origText.substring(str.startOffset, str.endOffset);
+                        nextText = origText.substring(str.endOffset);
+                    } else if (annotationTextRange === 0) {
+                        return;
+                    }
+                    span.textContent = text;
+                    textParent = elem.parentElement;
+                    textParent.replaceChild(span, elem);
+                    if (prevText) {
+                        var prevDOM = document.createTextNode(prevText);
+                        textParent.insertBefore(prevDOM, span);
+                    }
+                    if (nextText) {
+                        var nextDOM = document.createTextNode(nextText);
+                        textParent.insertBefore(nextDOM, span.nextSibling);
+                    }
+                    return;
+                }
+                childCount = elem.childNodes.length;
+                for (var i = 0; i < childCount; i++) {
+                    var elemChildNode = elem.childNodes[i];
+                    if (!elemChildNode.tagName ||
+                        !(elemChildNode.tagName === 'SPAN' &&
+                            elemChildNode.classList.contains('selection-highlight'))) {
+                        this.addAnnotationElement(str, elem.childNodes[i], id, true);
+                    }
+                    childCount = elem.childNodes.length;
+                }
+            }
+
+            function getSelection() {
+                if (!sel || sel.s === null) return "";
+                return $("<div></div>").append(getTextSelection($("#display")[0], Math.min(sel.s, sel.e), Math.max(sel.s, sel.e), $("#display")[0]).cloneContents()).innerText();
+            }
+            */
         </script>
     </body>
 

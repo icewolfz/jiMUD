@@ -51,16 +51,21 @@
         top: 145px;
       }
 
-      #memory td {
-        text-align: center;
+      #memory th {
+        font-size: 0.7em;
       }
 
       #memory td {
         text-align: right;
+        white-space: nowrap;
       }
 
       #memory td:first-child {
         text-align: left;
+      }
+
+      .totals {
+        font-weight: bold;
       }
     </style>
     <script>
@@ -75,23 +80,43 @@
       const { version } = require("../package.json");
       const { remote } = require('electron');
 
+      function formatBytes(a,b){if(0==a)return"0 Bytes";var c=1e3,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f]}
+
       $(document).ready(() => {
         $("#ev").text(process.versions.electron);
         $("#nv").text(process.versions.node);
         $("#cv").text(process.versions.chrome);
         $("#logo-version").text("v" + version);
 
-        var mi = remote.app.getAppMemoryInfo();
+        var mi = remote.app.getAppMetrics();
 
-        var total = [0, 0, 0, 0];
+        var total = [0, 0, 0, 0, 0, 0];
         for (var i = 0; i < mi.length; i++) {
-          $("#memory tbody").append("<tr><td>" + mi[i].pid + "</td><td>" + mi[i].memory.peakWorkingSetSize + "</td><td>" + mi[i].memory.privateBytes + "</td><td>" + mi[i].memory.sharedBytes + "</td><td>" + mi[i].memory.workingSetSize + "</td></tr>");
+          var row = "<tr><td>" + mi[i].pid + "</td>";
+          row += "<td>" + mi[i].type + "</td>";
+          row += "<td>" + (mi[i].memory.peakWorkingSetSize).toLocaleString() + " K</td>";
+          row += "<td>" + (mi[i].memory.privateBytes).toLocaleString()  + "K</td>";
+          row += "<td>" + (mi[i].memory.sharedBytes).toLocaleString()  + " K</td>";
+          row += "<td>" + (mi[i].memory.workingSetSize).toLocaleString()  + " K</td>";
+          row += "<td>" + (mi[i].cpu.percentCPUUsage || 0.0).toFixed(3) + "%</td>";
+          row += "<td>" + mi[i].cpu.idleWakeupsPerSecond + "</td></tr>"
+          $("#memory tbody").append(row);
           total[0] += mi[i].memory.peakWorkingSetSize;
           total[1] += mi[i].memory.privateBytes;
           total[2] += mi[i].memory.sharedBytes;
           total[3] += mi[i].memory.workingSetSize;
+          total[4] += (mi[i].cpu.percentCPUUsage || 0.0);
+          total[5] += mi[i].cpu.idleWakeupsPerSecond;
         }
-        $("#memory tbody").append("<tr><td>Total:</td><td>" + total[0] + "</td><td>" + total[1] + "</td><td>" + total[2] + "</td><td>" + total[3] + "</td></tr>");
+        row = "<tr class='totals'><td>Total:</td>";
+          row += "<td></td>";
+          row += "<td>" + (total[0]).toLocaleString()  + " K</td>";
+          row += "<td>" + (total[1]).toLocaleString()  + " K</td>";
+          row += "<td>" + (total[2]).toLocaleString()  + " K</td>";
+          row += "<td>" + (total[3]).toLocaleString()  + " K</td>";
+          row += "<td>" + total[4].toFixed(3) + "%</td>";
+          row += "<td>" + total[5] + "</td></tr>";
+        $("#memory tbody").append(row);
       });
 
       $(window).keydown((event) => {
@@ -119,10 +144,13 @@
             <thead>
               <tr style="text-align: center">
                 <th>PID</th>
+                <th>Type</th>
                 <th>Peak Working Set</th>
                 <th>Private</th>
                 <th>Shared</th>
                 <th>Working Set</th>
+                <th>CPU Usage</th>
+                <th>idle Wakeups/Second</th>
               </tr>
             </thead>
             <tbody>
