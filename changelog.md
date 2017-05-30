@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.3.0
+##### 0.3.0 - 2017-05-30
 - **New:**
   - Split scroll, **Experimental**  this will allow you to scroll while displaying the most recent lines at the bottom with option live update or post update
   - Basic error logging to appdata/jiMUD/jimud.error.log when enabled from preferences > advanced > log errors
