@@ -22,3 +22,7 @@ declare var $selectedword:string;
 declare var $selurl:string;
 declare var $selline:string;
 declare var $selword:string;
+
+interface JQuery {
+	hasHorizontalScrollBar(): boolean;
+}

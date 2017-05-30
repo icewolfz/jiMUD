@@ -27,15 +27,9 @@ body {
 
 #display {
     position: absolute;
-    z-index: 0;
+    z-index: 2;
     overflow-y: scroll;
-    -webkit-user-select: auto;
-    user-select: auto;
     box-sizing: border-box;
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
     color: #BBBBBB;
     border: 0px solid silver;
     font-family: "Courier New", monospace;
@@ -48,6 +42,26 @@ body {
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);    
     */
+}
+
+#display-view {
+    /*
+    position: relative;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    */
+}
+
+#display-overlay {
+    top: 2px;
+    z-index: 1;
+    left: 2px;
+    right: 2px;
+    overflow: hidden;
+    position: absolute;
+    pointer-events: none;
 }
 
 #display-split {
@@ -112,6 +126,10 @@ body {
     position: absolute;
     z-index: 1;
     box-sizing: border-box;
+}
+
+.overlay-line {
+    position: absolute;
 }
 
 #Character,

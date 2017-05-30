@@ -10,13 +10,11 @@ import { Settings } from "./settings";
 import { input } from "./input";
 import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context } from "./profile";
 import { MSP } from "./msp";
+import { Display, Line } from "./display";
 const { version } = require("../../package.json");
 const path = require('path');
 const fs = require("fs");
 
-interface Line extends ParserLine {
-    raw: string;
-}
 
 export class Client extends EventEmitter {
     private lineID = ".line";
@@ -26,27 +24,23 @@ export class Client extends EventEmitter {
     private _auto: NodeJS.Timer = null;
     private _autoError: boolean = false;
     private _settingsFile: string = parseTemplate(path.join('{data}', 'settings.json'));
-    private _scrollHeight;
+
 
     public MSP: MSP;
 
     public version: string = version;
-    public display = null;
-    public displaySplit = null;
+    public display: Display;
     public commandInput = null;
-    public character = null;
     public commandCharacter = null;
 
     public connecting: boolean = false;
     public options: Settings;
 
     public telnet: Telnet;
-    public parser: Parser;
     public profiles: ProfileCollection = new ProfileCollection();
     public connectTime: number = 0;
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
-
 
     set enabledProfiles(value: string[]) {
         var a = [];
@@ -244,38 +238,12 @@ export class Client extends EventEmitter {
         if (command === null || typeof command == 'undefined') {
             throw "Missing command input";
         }
-        if (display === null || typeof display == 'undefined')
-            throw "Missing display";
 
-        if (typeof display === 'string')
-            this.display = $(display);
-        else
-            this.display = display;
-
-        this.display.lines = [];
+        this.display = new Display(display);
 
         this.display.click((event) => {
             if (this.options.CommandonClick)
                 this.commandInput.focus();
-        });
-        this._scrollHeight = getScrollBarHeight(this.display[0]);
-        this.display.on('scroll', () => {
-            if (!this.displaySplit) return;
-            this.displaySplit.contents.css('left', -this.display.scrollLeft())
-            this.displaySplit.contents.scrollLeft(this.display.scrollLeft());
-            var h = this.display[0].scrollHeight - this.display.innerHeight();
-            h += this._scrollHeight;
-            if (h == this.display.scrollTop()) {
-                this.displaySplit.css('display', '');
-                this.displaySplit.shown = false;
-                this.emit('scroll-lock', false);
-            }
-            else {
-                this.displaySplit.css('display', 'block');
-                this.displaySplit.shown = true;
-                this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
-                this.emit('scroll-lock', true);
-            }
         });
 
         if (typeof command === 'string')
@@ -294,14 +262,9 @@ export class Client extends EventEmitter {
         });
         this._input = new input(this);
         this._input.on('scroll-lock', (lock) => {
-            if (this.displaySplit && this.displaySplit.shown)
-                this.scrollDisplay();
-            else if (this.displaySplit && !this.displaySplit.shown)
-                this.display[0].scrollTop = this.display[0].scrollHeight - this.display.innerHeight() - (this.character.innerHeight() + 0.5);
+            this.display.scrollDisplay();
             this.emit('scroll-lock', lock);
         });
-        this.character = $("<div id='Character' class='ansi' style='border-bottom: 1px solid black'>W</div>");
-        this.character.appendTo('body');
         this.commandCharacter = $("<div id='CmdCharacter'>W</div>");
         this.commandCharacter.appendTo('body');
 
@@ -403,75 +366,28 @@ export class Client extends EventEmitter {
 
         this.telnet.on('windowSize', () => { this.UpdateWindow(); });
 
-        this.parser = new Parser({ display: this.display });
-        this.parser.on('debug', (msg) => { this.debug(msg) });
-        this.parser.on('add-line', (data: Line) => {
-            var t;
-            data.raw = stripHTML(data.line);
+        this.display.on('update-window', (width, height) => {
+            this.telnet.updateWindow(width, height);
+        });
+
+        this.display.on('debug', (msg) => { this.debug(msg) });
+        this.display.on('add-line', (data: Line) => {
             this.emit('add-line', data);
-            if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined" || data.line.length === 0)
-                return;
+        });
+        this.display.on('add-line-done', (data: Line) => {
             this.emit('add-line-done', data);
-            if (data.gagged)
-                return;
-            t = $(data.line);
-            $("span:empty", t).remove();
-            this.display.lines.push(data.raw);
-            this.lineCache.push(t[0].outerHTML);
         });
-        this.parser.on('MXP-tag-reply', (tag, args) => {
-
+        this.display.on('MXP-tag-reply', (tag, args) => {
+            this.emit('MXP-tag-reply', tag, args);
         });
-        this.parser.on('expire-links', (args) => {
-            var expire;
-            if (args.length > 0)
-                expire = this.display.find("a[expire='" + args[0] + "']");
-            else
-                expire = this.display.find("a[expire]");
-            expire.wrapInner('<span/>');
-            if (args.length > 0)
-                expire = this.display.find("a[expire='" + args[0] + "'] span");
-            else
-                expire = this.display.find("a[expire] span");
-            expire.unwrap();
+        this.display.on('expire-links', (args) => {
+            this.emit('expire-links', args);
         });
 
-        this.parser.on("parse-done", () => {
-            this.display.removeClass("animate");
-            if (this.lineCache.length > 0) {
-                var bar = this.display.hasHorizontalScrollBar();
-                this.display.append(this.lineCache.join(''));
-                if (bar != this.display.hasHorizontalScrollBar())
-                    this.UpdateWindow();
-                if (this.displaySplit) {
-                    this.displaySplit.fill();
-                    if (this.scrollLock) {
-                        if (!this.displaySplit.shown && this.display[0].scrollHeight > this.display[0].clientHeight) {
-                            this.displaySplit.css('display', 'block');
-                            this.displaySplit.shown = true;
-                            this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
-                        }
-                    }
-                    else if (!this.displaySplit.shown)
-                        this.scrollDisplay();
-                }
-                else
-                    this.scrollDisplay();
-                this.emit('parse-done', this.lineCache);
-                this.lineCache = [];
-
-            }
-            var lines = $(this.lineID, this.display);
-            if (lines.length > this.options.bufferSize) {
-                var l = 0, c = lines.length - this.options.bufferSize;
-                for (; l < c; l++)
-                    $(lines[l]).remove();
-            }
-            this.display.lines.splice(0, this.display.lines.length - this.options.bufferSize);
-            lines = null;
-            this.display.addClass("animate");
+        this.display.on("parse-done", () => {
+            this.emit('parse-done', this.lineCache);
         });
-        this.parser.on('set-title', (title, type) => {
+        this.display.on('set-title', (title, type) => {
 
             if (typeof title == "undefined" || title === null || title.length === 0)
                 window.document.title = this.defaultTitle;
@@ -479,11 +395,11 @@ export class Client extends EventEmitter {
                 window.document.title = this.options.title.replace("$t", title);
 
         });
-        this.parser.on('music', (data) => {
+        this.display.on('music', (data) => {
             this.MSP.music(data);
             this.emit('music', data);
         });
-        this.parser.on('sound', (data) => {
+        this.display.on('sound', (data) => {
             this.MSP.sound(data);
             this.emit('sound', data);
         });
@@ -501,7 +417,7 @@ export class Client extends EventEmitter {
     set enableDebug(enable: boolean) {
         this._enableDebug = enable;
         this.telnet.enableDebug = enable;
-        this.parser.enableDebug = enable;
+        this.display.enableDebug = enable;
         this.MSP.enableDebug = enable;
     }
 
@@ -527,16 +443,17 @@ export class Client extends EventEmitter {
         this.options = Settings.load(this._settingsFile);
 
         this.enableDebug = this.options.enableDebug;
-        this.parser.enableFlashing = this.options.flashing;
-        this.parser.enableMXP = this.options.enableMXP;
-        this.parser.enableURLDetection = this.options.enableURLDetection;
-        this.parser.enableMSP = this.options.enableMSP;
+        this.display.maxLines = this.options.bufferSize;
+        this.display.enableFlashing = this.options.flashing;
+        this.display.enableMXP = this.options.enableMXP;
+        this.display.enableURLDetection = this.options.enableURLDetection;
+        this.display.enableMSP = this.options.enableMSP;
 
         if (this.options.colors.length > 0) {
             var colors = this.options.colors;
             for (var c = 0, cl = colors.length; c < cl; c++) {
                 if (!colors[c] || colors[c].length === 0) continue;
-                this.parser.SetColor(c, colors[c]);
+                this.display.SetColor(c, colors[c]);
             }
         }
 
@@ -552,113 +469,8 @@ export class Client extends EventEmitter {
 
         this._input.scrollLock = this.options.scrollLocked;
 
-        var id = this.display.attr('id');
-        if (!this.displaySplit && this.options.display.split) {
-            this.displaySplit = $('<div id="' + id + '-split-frame"><div id="' + id + '-split-bar"></div><div id="' + id + '-split"></div></div>').click((event) => {
-                if (this.options.CommandonClick)
-                    this.commandInput.focus();
-            });
-            this.display.parent().append(this.displaySplit);
-            this.displaySplit.bar = $(this.displaySplit.children()[0]);
-            this.displaySplit.contents = $(this.displaySplit.children()[1]);
-            if (this.options.display.splitHeight != -1)
-                this.displaySplit.css('height', this.options.display.splitHeight + "%");
-            this.displaySplit.fill = () => {
-                if (this.display.hasHorizontalScrollBar())
-                    this._scrollHeight = getScrollBarHeight(this.display[0]);
-                else
-                    this._scrollHeight = 0;
-                this.displaySplit.css('bottom', this._scrollHeight + 'px');
-                var h = this.WindowHeight;
-
-                if (this.display.children().length > h) {
-                    this.displaySplit.contents.empty();
-                    var c = $(this.lineID + ":nth-last-child(-n+" + h + ")", this.display);
-                    this.displaySplit.contents.append(c.clone());
-                    //this.displaySplit.contents.css('width', this.display[0].scrollWidth);
-                    this.displaySplit.contents.css('left', -this.display.scrollLeft())
-                    this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
-                }
-            }
-            this.displaySplit.bar.mousedown((e) => {
-                e.preventDefault();
-                this.displaySplit.ghostBar = $('<div>',
-                    {
-                        id: id + '-split-ghost-bar',
-                        css: {
-                            top: this.displaySplit.offset().top - 3,
-                            display: this.options.display.splitLive ? 'none' : 'block'
-                        }
-                    }).appendTo(this.displaySplit.parent());
-                $(this.displaySplit.parent()).on('mousemove', (e) => {
-                    if (e.pageY < 20)
-                        this.displaySplit.ghostBar.css("top", 20);
-                    else if (e.pageY > this.display.outerHeight() - 150)
-                        this.displaySplit.ghostBar.css("top", this.display.outerHeight() - 150);
-                    else
-                        this.displaySplit.ghostBar.css("top", e.pageY);
-                    var h;
-                    if (this.options.display.splitLive) {
-                        if (e.pageY < 20)
-                            h = this.displaySplit.parent()[0].clientHeight - 20 + this.displaySplit.bar.height();
-                        else if (e.pageY > this.displaySplit.parent()[0].clientHeight - 150)
-                            h = 150;
-                        else
-                            h = this.displaySplit.parent()[0].clientHeight - e.pageY + this.displaySplit.bar.height();
-
-                        h = (h / this.displaySplit.parent()[0].clientHeight * 100);
-                        this.displaySplit.css("height", h + "%");
-                        this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
-                    }
-                });
-                $(this.displaySplit.parent()).on('mouseup', this.displaySplit.moveDone).on('mouseleave', this.displaySplit.moveDone);
-            });
-
-            this.displaySplit.moveDone = (e) => {
-                if (this.displaySplit.ghostBar && this.displaySplit.ghostBar.length) {
-                    var h;
-                    if (e.pageY < 20)
-                        h = this.displaySplit.parent()[0].clientHeight - 20 + this.displaySplit.bar.height();
-                    else if (e.pageY > this.displaySplit.parent()[0].clientHeight - 150)
-                        h = 150;
-                    else
-                        h = this.displaySplit.parent()[0].clientHeight - e.pageY + this.displaySplit.bar.height();
-                    h = (h / this.displaySplit.parent()[0].clientHeight * 100);
-                    this.displaySplit.css("height", h + "%");
-                    this.options.display.splitHeight = h;
-                    this.saveOptions();
-                    this.displaySplit.contents[0].scrollTop = this.displaySplit.contents[0].scrollHeight;
-                    this.displaySplit.ghostBar.remove();
-                    delete this.displaySplit.ghostBar;
-                }
-                $(this.displaySplit.parent()).off('mousemove');
-                $(this.displaySplit.parent()).off('mouseup');
-                $(this.displaySplit.parent()).off('mouseleave');
-            }
-
-            $(this.displaySplit[0].ownerDocument.defaultView || this.displaySplit[0].ownerDocument.parentWindow).on('resize', () => {
-                clearTimeout(this.displaySplit.resizeTimer);
-                this.displaySplit.resizeTimer = setTimeout(this.displaySplit.fill, 250);
-            });
-
-            this.displaySplit.on('wheel', (event) => {
-                this.display.stop().animate({
-                    scrollTop: this.display[0].scrollTop + event.originalEvent.deltaY
-                }, 30, function () { });
-            });
-            this.displaySplit.fill();
-        }
-        else if (this.displaySplit && !this.options.display.split) {
-            $(this.displaySplit.parent()).off('mouseup');
-            $(this.displaySplit.parent()).off('mouseleave');
-            $(this.displaySplit[0].ownerDocument.defaultView || this.displaySplit[0].ownerDocument.parentWindow).off('resize');
-            this.displaySplit.remove();
-            this.displaySplit = null;
-        }
-
         this.UpdateFonts();
-        if (!this.displaySplit || !this.displaySplit.shown)
-            this.scrollDisplay();
+        this.display.scrollDisplay();
         this.emit('options-loaded');
     }
 
@@ -690,20 +502,11 @@ export class Client extends EventEmitter {
     UpdateFonts() {
         //can only update if display has been setup
         if (!this.display) return;
-        this.display.css("font-size", this.options.fontSize);
-        this.display.css("font-family", this.options.font + ", monospace");
+        this.display.updateFont(this.options.font, this.options.fontSize);
         this.commandInput.css("font-size", this.options.cmdfontSize);
         this.commandInput.css("font-family", this.options.cmdfont + ", monospace");
-        this.character.css("font-size", this.options.fontSize);
-        this.character.css("font-family", this.options.font + ", monospace");
         this.commandCharacter.css("font-size", this.options.cmdfontSize);
         this.commandCharacter.css("font-family", this.options.cmdfont + ", monospace");
-        if (this.displaySplit) {
-            this.displaySplit.contents.css("font-size", this.options.fontSize);
-            this.displaySplit.contents.css("font-family", this.options.font + ", monospace");
-            this.displaySplit.fill();
-        }
-        //this.parser.lineHeight = this.character.height();
     };
 
     parse(txt: string) {
@@ -711,7 +514,7 @@ export class Client extends EventEmitter {
     };
 
     private parseInternal(txt: string, remote: boolean, force?: boolean) {
-        this.parser.parse(txt, remote, force);
+        this.display.append(txt, remote, force);
     }
 
     error(err) {
@@ -754,7 +557,7 @@ export class Client extends EventEmitter {
         if (forceLine == null) forceLine = false;
         if (fore == null) fore = AnsiColorCode.LocalEcho;
         if (back == null) back = AnsiColorCode.LocalEchoBack;
-        var codes = this.parser.CurrentAnsiCode() + "\n";
+        var codes = this.display.CurrentAnsiCode() + "\n";
         if (str.endsWith("\n"))
             str = str.substr(0, str.length - 1);
         if (this.telnet.prompt && forceLine)
@@ -771,7 +574,7 @@ export class Client extends EventEmitter {
         if (txt === null || typeof txt == "undefined") return;
         if (newline == null) newline = false;
         if (remote == null) remote = false;
-        if (newline && this.parser.TextLength > 0 && !this.parser.EndofLine && !this.telnet.prompt)
+        if (newline && this.display.textLength > 0 && !this.display.EndOfLine && !this.telnet.prompt)
             txt = "\n" + txt;
         this.parseInternal(txt, remote);
     }
@@ -851,20 +654,6 @@ export class Client extends EventEmitter {
         }
     };
 
-    get WindowSize(): Size {
-        return new Size(this.WindowWidth, this.WindowHeight);
-    }
-
-    get WindowWidth(): number {
-        return Math.floor((this.display.innerWidth() - 12) / parseFloat(window.getComputedStyle(this.character[0]).width)) - 1;
-    }
-
-    get WindowHeight(): number {
-        if (this.display.hasHorizontalScrollBar())
-            return Math.floor((this.display.innerHeight() - 12 - 4) / (this.character.innerHeight() + 0.5)) - 1;
-        return Math.floor((this.display.innerHeight() - 4) / (this.character.innerHeight() + 0.5)) - 1;
-    }
-
     get scrollLock(): boolean {
         return this._input.scrollLock;
     }
@@ -878,14 +667,7 @@ export class Client extends EventEmitter {
     }
 
     UpdateWindow() {
-        var ws: Size = this.WindowSize;
-        this.parser.updateWindow(ws.width, ws.height);
-        this.telnet.updateWindow(ws.width, ws.height);
-    }
-
-    scrollDisplay() {
-        if (!this._input.scrollLock && this.display)
-            this.display[0].scrollTop = this.display[0].scrollHeight;
+        this.display.updateWindow();
     }
 
     close() {
@@ -898,8 +680,8 @@ export class Client extends EventEmitter {
         this._autoError = false;
         this.emit('connecting');
         this.MSP.reset();
-        this.parser.ClearMXP();
-        this.parser.ResetMXPLine();
+        this.display.ClearMXP();
+        this.display.ResetMXPLine();
         this.telnet.connect();
         this.emit("connect");
         this.commandInput.focus();
@@ -918,9 +700,7 @@ export class Client extends EventEmitter {
     }
 
     clear() {
-        this.display.lines = [];
-        this.display.empty();
-        this.parser.Clear();
+        this.display.clear();
     }
 
     parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
