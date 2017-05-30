@@ -197,8 +197,10 @@
             }
 
             function loadCharacters() {
-                characters = fs.readFileSync(charactersFile, 'utf-8');
-                if (characters.length > 0) {
+                if (fs.existsSync(charactersFile))
+                    characters = fs.readFileSync(charactersFile, 'utf-8');
+
+                if (characters && characters.length > 0) {
                     try {
                         characters = JSON.parse(characters);
                         if (!characters)
