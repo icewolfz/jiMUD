@@ -137,7 +137,7 @@
       }
 
       function selectAll() {
-        $("#display")[0].contentWindow.selectAll();
+        client.display.selectAll();
       }
 
       function toggleView(view) {
@@ -281,28 +281,6 @@
         buildButtons();
       }
 
-      function getDisplaySelectionText() {
-        var text = "";
-        if ($("#display")[0].contentWindow.getSelection) {
-          text = $("#display")[0].contentWindow.getSelection().toString();
-        } else if ($("#display")[0].contentWindow.document.selection && document.selection.type != "Control") {
-          text = $("#display")[0].contentWindow.document.selection.createRange().text;
-        }
-        return text;
-      }
-
-      function clearDisplaySelection() {
-        if ($("#display")[0].contentWindow.getSelection) {
-          if ($("#display")[0].contentWindow.getSelection().empty) {  // Chrome
-            $("#display")[0].contentWindow.getSelection().empty();
-          } else if ($("#display")[0].contentWindow.getSelection().removeAllRanges) {  // Firefox
-            $("#display")[0].contentWindow.getSelection().removeAllRanges();
-          }
-        } else if ($("#display")[0].contentWindow.document.selection) {  // IE?
-          $("#display")[0].contentWindow.document.selection.empty();
-        }
-      }
-
       function buildMenu(name, context) {
         if (!name || context.length == 0)
           return [];
@@ -355,56 +333,23 @@
           shell.beep();
         });
 
-/*
-        client.display.linkFunction = "doLink";
-        client.display.mxpLinkFunction = "doMXPLink";
-        client.display.mxpSendFunction = "doMXPSend";
-        client.display.mxpTooltipFunction = "doMXPTooltip";
-        */
-        //var doc = $("#display")[0].contentDocument || $("#display")[0].contentWindow.document;
-
-        var mdown = false;
-        var sel = false;
-        /*
-        doc.addEventListener("mousedown", function (e) {
-          mdown = e.button == 0;
-          sel = false;
-        });
-
-        doc.addEventListener("mouseleave", function (e) {
-          if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
-            clipboard.writeText(getDisplaySelectionText(), 'selection');
-            clearDisplaySelection()
+        client.display.on('selection-done', () => {
+          if (client.options.AutoCopySelectedToClipboard && client.display.hasSelection) {
+            clipboard.writeText(client.display.selection, 'selection');
+            client.display.clearSelection();
           }
-          mdown = false;
-          sel = false;
-        });
+        })
 
-        doc.addEventListener("mouseup", function (e) {
-          if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
-            clipboard.writeText(getDisplaySelectionText(), 'selection');
-            clearDisplaySelection()
-          }
-          mdown = false;
-          sel = false;
-        });
-
-        doc.addEventListener("selectionchange", function () {
-          sel = true;
-        });
-        */
-
-        client.display._view.addEventListener('contextmenu', (e) => {
+        client.display._el.addEventListener('contextmenu', (e) => {
           e.preventDefault()
-          //TODO fix after display selection system is in place
-          window.$selected = getDisplaySelectionText();
+          window.$selected = client.display.selection;
           window.$copied = clipboard.readText('selection');
           window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
           window.$selectedline = $(e.srcElement).closest('.line').text();
 
           var line = $(e.srcElement).closest('.line').text();
-          var x = (e.pageX - client.display.offset().left) + client.display.scrollLeft();
-          x = Math.floor(x / parseFloat(window.getComputedStyle(client.character[0]).width));
+          var x = (e.pageX - client.display._elJ.offset().left) + client.display._elJ.scrollLeft();
+          x = Math.floor(x / client.display._charWidth);
 
           var sPos = x, ePos = x;
           while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
@@ -460,7 +405,7 @@
             if (window.$selected && window.$selected != "") {
               c.append(new MenuItem({ role: 'copy' }));
             }
-            c.append(new MenuItem({ role: 'selectall' }));
+            c.append(new MenuItem({ label:'Select All', click: selectAll }));
             c.append(new MenuItem({ type: 'separator' }));
             c.append(new MenuItem({
               label: 'Clear', click: () => {
@@ -476,11 +421,12 @@
         ['cut', 'copy', 'paste'].forEach(function (event) {
           document.addEventListener(event, function (e) {
             if (document.activeElement && (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA")) {
-              if ($(document.activeElement).val().length > 0 || getDisplaySelectionText().length == 0)
+
+              if ($(document.activeElement).val().length > 0 || !client.display.hasSelection)
                 return;
             }
-            if (getDisplaySelectionText().length > 0)
-              clipboard.writeText(getDisplaySelectionText(), 'selection')
+            if (client.display.hasSelection > 0)
+              clipboard.writeText(client.display.selection, 'selection')
           });
         });
 

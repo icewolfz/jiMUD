@@ -1,7 +1,7 @@
 import EventEmitter = require('events');
 import { Parser, ParserLine, ParserOptions } from "./parser";
 import { AnsiColorCode } from "./ansi";
-import { Size, stripHTML, getScrollBarHeight } from "./library";
+import { Size, stripHTML, getScrollBarSize } from "./library";
 const electron = require('electron');
 
 export interface Line extends ParserLine {
@@ -50,6 +50,7 @@ export class Display extends EventEmitter {
         scrollTimer: null,
         drag: false
     };
+    private _borderSize: Size = { width: 0, height: 0 };
     private _character: HTMLElement;
     private _viewRange: Range = { start: 0, end: 0 };
     private _enableDebug: boolean = false;
@@ -86,6 +87,8 @@ export class Display extends EventEmitter {
         else
             throw "Display must be an id, element or jquery object";
 
+        this.updateBox();
+
         this._elJ = $(this._el);
 
         this._overlay = document.createElement('div')
@@ -104,7 +107,7 @@ export class Display extends EventEmitter {
         document.body.appendChild(this._character);
 
         this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
-        this._charWidth = this._character.clientWidth;
+        this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
         if (!options)
             options = { display: this }
         else
@@ -126,7 +129,10 @@ export class Display extends EventEmitter {
             t = $(data.line);
             //clean up any empty elements to reduce memory and processing times
             $("span:empty", t).remove();
-            this.lines.push(data.raw);
+            if (data.raw === "\n")
+                this.lines.push("");
+            else
+                this.lines.push(data.raw);
             //t.css('top', ((this.lines.length - 1) * this._charHeight) + "px");
             //t.css('height', (this._charHeight) + "px");
             //t.data('index', this.lines.length - 1);
@@ -188,12 +194,30 @@ export class Display extends EventEmitter {
         });
 
         this._el.addEventListener('mousedown', (e) => {
+            //var sb =getScrollBarSize(this._el);
+            var os = this.offset(this._el);
+            if(e.pageX - os.left > this._el.clientWidth)
+                return;
+            if(e.pageY - os.top > this._el.clientHeight)
+                return;
+
+
+
             var o = this.getLineOffset(e);
-            this._currentSelection.start = o;
-            this._currentSelection.end = o;
-            this._currentSelection.drag = true;
-            this.updateSelection();
-            return true;
+            if (e.buttons && e.button == 0) {
+                if(e.shiftKey)
+                {
+                    this._currentSelection.end = o;
+                }
+                else
+                {
+                    this._currentSelection.start = o;
+                    this._currentSelection.end = o;
+                }
+                this._currentSelection.drag = true;
+                this.updateSelection();
+                this.emit('selection-start');
+            }
         })
 
         this._el.addEventListener('mousemove', (e) => {
@@ -201,15 +225,17 @@ export class Display extends EventEmitter {
             var o = this.getLineOffset(e);
             this._currentSelection.end = o;
             this.updateSelection();
-            return true;
+            this.emit('selection-changed');
         })
 
         this._el.addEventListener('mouseup', (e) => {
-            this._currentSelection.drag = false;
-            var o = this.getLineOffset(e);
-            this._currentSelection.end = o;
-            this.updateSelection();
-            return true;
+            if (this._currentSelection.drag) {
+                this._currentSelection.drag = false;
+                var o = this.getLineOffset(e);
+                this._currentSelection.end = o;
+                this.updateSelection();
+                this.emit('selection-done');
+            }
         })
 
         this._el.addEventListener('dblclick', (e) => {
@@ -225,8 +251,11 @@ export class Display extends EventEmitter {
         })
 
         this._el.addEventListener('mouseenter', (e) => {
-            if (!e.buttons || e.button != 0)
+            if (!e.buttons || e.button != 0) {
+                if (this._currentSelection.drag)
+                    this.emit('selection-done');
                 this._currentSelection.drag = false;
+            }
             this._currentSelection.scroll = { x: 0, y: 0 };
             clearInterval(this._currentSelection.scrollTimer);
         })
@@ -239,7 +268,6 @@ export class Display extends EventEmitter {
                     this._currentSelection.scroll.y = 1;
 
                 if (e.pageX < 0)
-
                     this._currentSelection.scroll.x = -1;
                 else if (e.pageX >= this._el.clientWidth)
                     this._currentSelection.scroll.x = 1;
@@ -256,23 +284,26 @@ export class Display extends EventEmitter {
                         this._currentSelection.end.x = 0;
                         clearInterval(this._currentSelection.scrollTimer);
                         this.updateSelection();
+                        this.emit('selection-changed');
                         return;
                     }
                     else if (y > 0 && this._el.scrollTop == this._el.scrollHeight - this._el.clientHeight) {
                         this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
                         clearInterval(this._currentSelection.scrollTimer);
                         this.updateSelection();
+                        this.emit('selection-changed');
                         return;
                     }
                     else if (x < 0 && this._el.scrollLeft == 0) {
-
                         clearInterval(this._currentSelection.scrollTimer);
                         this.updateSelection();
+                        this.emit('selection-changed');
                         return;
                     }
                     else if (x > 0 && this._el.scrollLeft == this._el.scrollWidth - this._el.clientWidth) {
                         clearInterval(this._currentSelection.scrollTimer);
                         this.updateSelection();
+                        this.emit('selection-changed');
                         return;
                     }
 
@@ -294,6 +325,7 @@ export class Display extends EventEmitter {
                         if (this._currentSelection.end.y >= this.lines.length)
                             this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
                     }
+                    this.emit('selection-changed');
                     this._el.scrollTop += y;
                     this._el.scrollLeft += x;
                     this.updateSelection();
@@ -464,8 +496,9 @@ export class Display extends EventEmitter {
             this._character.style.fontFamily = font;
             //recalculate height/width of characters so display can be calculated
             this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
-            this._charWidth = this._character.clientWidth;
-
+            this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
+            this.updateBox();
+            this.updateSelection();
             /*
             let html = this._htmlLines, t;
             let h = this._charHeight;
@@ -600,6 +633,8 @@ export class Display extends EventEmitter {
     }
 
     private getLineOffset(e) {
+        if (this.lines.length === 0)
+            return { x: 0, y: 0 }
         var os = this.offset(this._el);
         var y = (e.pageY - os.top) + this._el.scrollTop;
         y = Math.floor(y / this._charHeight);
@@ -632,7 +667,7 @@ export class Display extends EventEmitter {
 
     private updateSelection() {
         var sel = this._currentSelection;
-        var s, e, sL, eL, l, c, parts, w, w2;
+        var s, e, sL, eL, l, c, parts, w, w2, txt = '';
         //display.overlays.fill('');
         this._overlays.selection = [];
         if (sel.start.y > sel.end.y) {
@@ -654,10 +689,11 @@ export class Display extends EventEmitter {
         else {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
+            //txt = this.lines[sel.start.y].substring(s, e);
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
             s += 2;
-            this._overlays.selection[sel.start.y] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`)
+            this._overlays.selection[sel.start.y] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px">${txt}</span></div>`)
             this.updateOverlays();
             return;
         }
@@ -665,6 +701,15 @@ export class Display extends EventEmitter {
         let flat = 0;
         let extern = 1;
         let intern = 2;
+        if (sL < 0)
+            sL = 0;
+        if (eL >= len)
+            eL = len - 1;
+        if (s < 0)
+            s = 0;
+        if (e > this.lines[eL].length)
+            e = this.lines[eL].length;
+
 
         for (let line = sL; line < eL + 1; line++) {
             let startStyle = {
@@ -677,10 +722,10 @@ export class Display extends EventEmitter {
             }
 
             let cl = sL == line ? s : 0;
-            let cr = eL == line ? e : this.lines[line].length;
+            let cr = eL == line ? e : (this.lines[line].length || 1);
             if (line > sL) {
                 let pl = sL == line - 1 ? s : 0;
-                let pr = this.lines[line - 1].length;
+                let pr = this.lines[line - 1].length || 1;
 
 
                 if (cl == pl)
@@ -695,7 +740,7 @@ export class Display extends EventEmitter {
 
             if (line < eL) {
                 let nl = 0;
-                let nr = eL == line + 1 ? e : this.lines[line + 1].length;
+                let nr = eL == line + 1 ? e : (this.lines[line + 1].length || 1);
                 if (cl === nl) {
                     startStyle.bottom = flat;
                 } else if (nl < cl && cl < nr) {
@@ -724,17 +769,18 @@ export class Display extends EventEmitter {
                 cls += ' brc';
             }
             if (sL == line) {
-                w = (this.lines[line].length - s) * this._charWidth;
-                parts.push(`<span class="${cls}" style="left:${cl * this._charWidth + 2}px;width: ${w}px;"></span>`);
+                w = ((this.lines[line].length || 1) - s) * this._charWidth;
+                //txt = this.lines[line].substring(s);
             }
             else if (eL == line) {
                 w = e * this._charWidth;
-                parts.push(`<span class="${cls}" style="left:${cl * this._charWidth + 2}px;width: ${w}px;"></span>`);
+                //txt = this.lines[line].substring(0, e);
             }
             else {
-                w = this.lines[line].length * this._charWidth;
-                parts.push(`<span class="${cls}" style="left:${cl * this._charWidth + 2}px;width: ${w}px;"></span>`);
+                w = (this.lines[line].length || 1) * this._charWidth;
+                //txt = this.lines[line];
             }
+            parts.push(`<span class="${cls}" style="left:${cl * this._charWidth + 2}px;width: ${w}px;">${txt}</span>`);
 
             if (startStyle.top == intern || startStyle.bottom == intern) {
                 //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;"></span>`);
@@ -757,5 +803,83 @@ export class Display extends EventEmitter {
         this.updateOverlays();
     }
 
+    get hasSelection(): boolean {
+        var sel = this._currentSelection;
+        if (sel.start.x == sel.end.x && sel.start.y == sel.end.y)
+            return false;
+        return true;
+    }
 
+    get selection(): string {
+        var sel = this._currentSelection;
+        var s, e, sL, eL;
+        if (sel.start.y > sel.end.y) {
+            sL = sel.end.y;
+            eL = sel.start.y;
+            s = sel.end.x;
+            e = sel.start.x;
+        }
+        else if (sel.start.y < sel.end.y) {
+            sL = sel.start.y;
+            eL = sel.end.y;
+            s = sel.start.x;
+            e = sel.end.x;
+        }
+        else if (sel.start.x == sel.end.x) {
+            return "";
+        }
+        else {
+            s = Math.min(sel.start.x, sel.end.x);
+            e = Math.max(sel.start.x, sel.end.x);
+            return this.lines[sel.start.y].substring(s, e);
+        }
+        if (sL < 0)
+            sL = 0;
+        if (eL >= len)
+            eL = len - 1;
+        if (s < 0)
+            s = 0;
+        if (e > this.lines[eL].length)
+            e = this.lines[eL].length;
+        var len = this.lines.length;
+        var txt = [this.lines[sL].substring(s)];
+        sL++;
+        if (eL - sL > 0)
+            txt.push.apply(txt, this.lines.slice(sL, eL));
+        txt.push(this.lines[eL].substring(0, e));
+        return txt.join('\n');
+    }
+
+    public selectAll() {
+        let ll = this.lines.length;
+        if (ll === 0) return;
+        ll--;
+        this._currentSelection = {
+            start: { x: 0, y: 0 },
+            end: { x: this.lines[ll].length, y: ll },
+            scroll: { x: null, y: null },
+            scrollTimer: null,
+            drag: false
+        };
+        this.emit('selection-done');
+        this.updateSelection();
+    }
+
+    public clearSelection() {
+        this._currentSelection = {
+            start: { x: null, y: null },
+            end: { x: null, y: null },
+            scroll: { x: null, y: null },
+            scrollTimer: null,
+            drag: false
+        };
+        this.emit('selection-changed');
+        this.updateSelection();
+    }
+
+    private updateBox() {
+        let t = window.getComputedStyle(this._el);
+        this._borderSize.height = parseInt(t.borderTopWidth) || 0;
+        this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
+    }
 }

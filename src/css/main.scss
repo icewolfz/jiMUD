@@ -55,7 +55,7 @@ body {
 }
 
 #display-overlay {
-    top: 2px;
+    top: 3px;
     z-index: 1;
     left: 0px;
     right: 0px;
@@ -383,11 +383,22 @@ body {
 
 .select-text {
     background-color: rgba(51, 153, 255, 0.5);
+    color: rgba(255, 255, 255, 0.75);
     display: inline-block;
     height: 100%;
     pointer-events: none;
     position: absolute;
     box-sizing: border-box;
+    white-space: pre;
+}
+
+.select-text .line, .select-text > span {
+    position: absolute;
+}
+
+.select-text * {
+    background-color: transparent !important;
+    border-color: transparent !important;
 }
 
 .select-text.trc {
