@@ -57,9 +57,9 @@ body {
 #display-overlay {
     top: 2px;
     z-index: 1;
-    left: 2px;
-    right: 2px;
-    overflow: hidden;
+    left: 0px;
+    right: 0px;
+    /*overflow: hidden;*/
     position: absolute;
     pointer-events: none;
 }
@@ -380,3 +380,28 @@ body {
 
 
 /*end status*/
+
+.select-text {
+    background-color: rgba(51, 153, 255, 0.5);
+    display: inline-block;
+    height: 100%;
+    pointer-events: none;
+    position: absolute;
+    box-sizing: border-box;
+}
+
+.select-text.trc {
+    border-top-right-radius: 4px;
+}
+
+.select-text.tlc {
+    border-top-left-radius: 4px;
+}
+
+.select-text.brc {
+    border-bottom-right-radius: 4px;
+}
+
+.select-text.blc {
+    border-bottom-left-radius: 4px;
+}

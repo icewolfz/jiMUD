@@ -14,8 +14,8 @@ export interface DisplayOptions extends ParserOptions {
 }
 
 interface Overlays {
-    selection: string[];
-    find: string[];
+    selection: any[];
+    find: any[];
 }
 
 interface Point {
@@ -28,6 +28,7 @@ interface Selection {
     end: Point;
     scroll: Point;
     drag: boolean;
+    scrollTimer;
 }
 
 interface Range {
@@ -46,6 +47,7 @@ export class Display extends EventEmitter {
         start: { x: null, y: null },
         end: { x: null, y: null },
         scroll: { x: null, y: null },
+        scrollTimer: null,
         drag: false
     };
     private _character: HTMLElement;
@@ -184,6 +186,118 @@ export class Display extends EventEmitter {
         this._el.addEventListener('scroll', (e) => {
             this.updateView();
         });
+
+        this._view.addEventListener('mousedown', (e) => {
+            var o = this.getLineOffset(e);
+            this._currentSelection.start = o;
+            this._currentSelection.end = o;
+            this._currentSelection.drag = true;
+            this.updateSelection();
+        })
+
+        this._view.addEventListener('mousemove', (e) => {
+            if (!this._currentSelection.drag) return;
+            var o = this.getLineOffset(e);
+            this._currentSelection.end = o;
+            this.updateSelection();
+        })
+
+        this._view.addEventListener('mouseup', (e) => {
+            this._currentSelection.drag = false;
+            var o = this.getLineOffset(e);
+            this._currentSelection.end = o;
+            this.updateSelection();
+        })
+
+        this._view.addEventListener('dblclick', (e) => {
+            var o = this.getLineOffset(e);
+            //select word
+        })
+
+        this._view.addEventListener('click', (e) => {
+            if (e.detail === 3) {
+                var o = this.getLineOffset(e);
+                //select paragraph
+            }
+        })
+
+        this._el.addEventListener('mouseenter', (e) => {
+            if (!e.buttons || e.button != 0)
+                this._currentSelection.drag = false;
+            this._currentSelection.scroll = { x: 0, y: 0 };
+            clearInterval(this._currentSelection.scrollTimer);
+        })
+
+        this._el.addEventListener('mouseleave', (e) => {
+            if (e.buttons && e.button === 0) {
+                if (e.pageY < 0)
+                    this._currentSelection.scroll.y = -1;
+                else if (e.pageY >= this._el.clientHeight)
+                    this._currentSelection.scroll.y = 1;
+
+                if (e.pageX < 0)
+
+                    this._currentSelection.scroll.x = -1;
+                else if (e.pageX >= this._el.clientWidth)
+                    this._currentSelection.scroll.x = 1;
+
+                console.log(e);
+                this._currentSelection.scrollTimer = setInterval(() => {
+                    /// pull as long as you can scroll either direction
+                    //console.log(electron.screen.getCursorScreenPoint());
+
+                    let y = this._currentSelection.scroll.y;
+                    let x = this._currentSelection.scroll.x;
+
+                    if (y < 0 && this._el.scrollTop == 0) {
+                        this._currentSelection.end.x = 0;
+                        clearInterval(this._currentSelection.scrollTimer);
+                        this.updateSelection();
+                        return;
+                    }
+                    else if (y > 0 && this._el.scrollTop == this._el.scrollHeight - this._el.clientHeight) {
+                        this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                        clearInterval(this._currentSelection.scrollTimer);
+                        this.updateSelection();
+                        return;
+                    }
+                    else if (x < 0 && this._el.scrollLeft == 0) {
+
+                        clearInterval(this._currentSelection.scrollTimer);
+                        this.updateSelection();
+                        return;
+                    }
+                    else if (x > 0 && this._el.scrollLeft == this._el.scrollWidth - this._el.clientWidth) {
+                        clearInterval(this._currentSelection.scrollTimer);
+                        this.updateSelection();
+                        return;
+                    }
+
+                    if (this._currentSelection.scroll.x < 0) {
+                        x = -1 * this._charWidth;
+                        this._currentSelection.end.x--;
+                    }
+                    else if (this._currentSelection.scroll.x > 0) {
+                        x = this._charWidth;
+                        this._currentSelection.end.x++;
+                    }
+                    if (this._currentSelection.scroll.y < 0) {
+                        y = -1 * this._charHeight;;
+                        this._currentSelection.end.y--;
+                    }
+                    else if (this._currentSelection.scroll.y > 0) {
+                        y = this._charHeight;
+                        this._currentSelection.end.y++;
+                        if (this._currentSelection.end.y >= this.lines.length)
+                            this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                    }
+                    this._el.scrollTop += y;
+                    this._el.scrollLeft += x;
+                    this.updateSelection();
+                }, 50);
+            }
+        })
+
 
     }
 
@@ -326,7 +440,8 @@ export class Display extends EventEmitter {
             start: { x: null, y: null },
             end: { x: null, y: null },
             scroll: { x: null, y: null },
-            drag: false
+            drag: false,
+            scrollTimer: null
         };
         this._parser.Clear();
     };
@@ -386,17 +501,21 @@ export class Display extends EventEmitter {
     }
 
     public updateOverlays(start?: number, end?: number) {
+        /*
         if (start === undefined)
             start = this._viewRange.start;
         if (end === undefined)
             end = this._viewRange.end
+            */
         let overlays = [];
         for (let ol in this._overlays) {
             if (!this._overlays.hasOwnProperty(ol))
                 continue;
-            overlays.push.apply(overlays, this._overlays[ol].slice(start, end));
+            //overlays.push.apply(overlays, this._overlays[ol].slice(start, end));
+            overlays.push.apply(overlays, this._overlays[ol]);
         }
         this._overlay.innerHTML = overlays.join('');
+        $(this._overlay).empty().append(overlays);
     }
 
     public scrollDisplay() {
@@ -430,7 +549,7 @@ export class Display extends EventEmitter {
         //let lines = this._view.children;
         //let h = this._charHeight;
         //for (let l = 0, ll = lines.length; l < ll; l++)
-            //(lines[l] as HTMLElement).style.top = l * h + "px";
+        //(lines[l] as HTMLElement).style.top = l * h + "px";
 
 
         //TODO redo overlays
@@ -476,5 +595,164 @@ export class Display extends EventEmitter {
             this._maxLineLength = m;
         }
     }
+
+    private getLineOffset(e) {
+        var os = this.offset(this._el);
+        var y = (e.pageY - os.top) + this._el.scrollTop;
+        y = Math.floor(y / this._charHeight);
+        if (y < 0)
+            y = 0;
+        if (y >= this.lines.length)
+            y = this.lines.length - 1;
+        if (this.lines[y].length) {
+            if (y >= this.lines.length) {
+                x = this.lines[y].length + 1;
+                return { x: x, y: this.lines.length - 1 };
+            }
+        }
+        var x = (e.pageX - os.left) + this._el.scrollLeft;
+        x = Math.floor(x / this._charWidth);
+        var l = this.lines[y].length;
+        if (x > l)
+            x = l;
+        return { x: x, y: y };
+    }
+
+    private offset(elt) {
+        var rect = elt.getBoundingClientRect(), bodyElt = document.body;
+
+        return {
+            top: rect.top + bodyElt.scrollTop,
+            left: rect.left + bodyElt.scrollLeft
+        }
+    }
+
+    private updateSelection() {
+        var sel = this._currentSelection;
+        var s, e, sL, eL, l, c, parts, w, w2;
+        //display.overlays.fill('');
+        this._overlays.selection = [];
+        if (sel.start.y > sel.end.y) {
+            sL = sel.end.y;
+            eL = sel.start.y;
+            s = sel.end.x;
+            e = sel.start.x;
+        }
+        else if (sel.start.y < sel.end.y) {
+            sL = sel.start.y;
+            eL = sel.end.y;
+            s = sel.start.x;
+            e = sel.end.x;
+        }
+        else if (sel.start.x == sel.end.x) {
+            this.updateOverlays();
+            return;
+        }
+        else {
+            s = Math.min(sel.start.x, sel.end.x);
+            e = Math.max(sel.start.x, sel.end.x);
+            e = (e - s) * this._charWidth;
+            s *= this._charWidth;
+            s += 2;
+            this._overlays.selection[sel.start.y] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`)
+            this.updateOverlays();
+            return;
+        }
+        var len = this.lines.length;
+        let flat = 0;
+        let extern = 1;
+        let intern = 2;
+
+        for (let line = sL; line < eL + 1; line++) {
+            let startStyle = {
+                top: extern,
+                bottom: extern
+            }
+            let endStyle = {
+                top: extern,
+                bottom: extern
+            }
+
+            let cl = sL == line ? s : 0;
+            let cr = eL == line ? e : this.lines[line].length;
+            if (line > sL) {
+                let pl = sL == line - 1 ? s : 0;
+                let pr = this.lines[line - 1].length;
+
+
+                if (cl == pl)
+                    startStyle.top = flat;
+                else if (cl > pl)
+                    startStyle.top = intern;
+                if (cr == pr)
+                    endStyle.top = flat;
+                else if (pl < cr && cr < pr)
+                    endStyle.top = intern;
+            }
+
+            if (line < eL) {
+                let nl = 0;
+                let nr = eL == line + 1 ? e : this.lines[line + 1].length;
+                if (cl === nl) {
+                    startStyle.bottom = flat;
+                } else if (nl < cl && cl < nr) {
+                    startStyle.bottom = intern;
+                }
+
+                if (cr === nr) {
+                    endStyle.bottom = flat;
+                } else if (cr < nr) {
+                    endStyle.bottom = intern;
+                }
+            }
+
+            parts = [];
+            let cls = 'select-text';
+            if (startStyle.top === extern) {
+                cls += ' tlc';
+            }
+            if (startStyle.bottom === extern) {
+                cls += ' blc';
+            }
+            if (endStyle.top === extern) {
+                cls += ' trc';
+            }
+            if (endStyle.bottom === extern) {
+                cls += ' brc';
+            }
+            if (sL == line) {
+                w = (this.lines[line].length - s) * this._charWidth;
+                parts.push(`<span class="${cls}" style="left:${cl * this._charWidth + 2}px;width: ${w}px;"></span>`);
+            }
+            else if (eL == line) {
+                w = e * this._charWidth;
+                parts.push(`<span class="${cls}" style="left:${cl * this._charWidth + 2}px;width: ${w}px;"></span>`);
+            }
+            else {
+                w = this.lines[line].length * this._charWidth;
+                parts.push(`<span class="${cls}" style="left:${cl * this._charWidth + 2}px;width: ${w}px;"></span>`);
+            }
+
+            if (startStyle.top == intern || startStyle.bottom == intern) {
+                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;"></span>`);
+                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;background-color:black;border-bottom-right-radius: 2px"></span>`);
+            }
+            if (endStyle.top === intern) {
+                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + 2 + w}px;width: 2px;"></span>`);
+                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + 2 + w}px;width: 2px;background-color:black;border-top-left-radius: 2px"></span>`);
+            }
+            if (endStyle.bottom === intern) {
+                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + 2 + w}px;width: 2px;"></span>`);
+                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + 2 + w}px;width: 2px;background-color:black;border-bottom-left-radius: 2px"></span>`);
+            }
+
+            //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(0,128,0,0.5)"></span>`);
+            //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(255,0,0,0.5)"></span>`);
+
+            this._overlays.selection[line] = $(`<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`);
+        }
+        this.updateOverlays();
+    }
+
 
 }
