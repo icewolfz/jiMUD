@@ -5,10 +5,33 @@ import RGBColor = require("rgbcolor");
 import { clone, stripQuotes, CharAllowedInURL, Size } from "./library";
 const buzz = require('buzz');
 
+export enum FormatType {
+  Normal = 0,
+  Link = 1,
+  MXPLink = 2
+}
+
+export interface LinkFormat {
+  type: FormatType;
+  title: string;
+  href: string;
+}
+
+export interface LineFormat {
+  type: FormatType;
+  offset: number;
+  color: string;
+  background: string;
+  size: string;
+  font: string;
+  style: FontStyle;
+}
+
 export interface ParserLine {
   line: string;
   fragment: boolean;
   gagged: boolean;
+  formats: LineFormat[];
 }
 
 export interface ParserOptions {
@@ -444,8 +467,8 @@ export class Parser extends EventEmitter {
     if (mxp.style > 0) {
       if ((mxp.style & FontStyle.Italic) == FontStyle.Italic)
         strBuilder.push("font-style: italic;");
-        //strBuilder.push("font-style: italic;vertical-align: text-bottom;");
-        //strBuilder.push("font-style: italic;border-top: 1px solid ", colors.back, ";");
+      //strBuilder.push("font-style: italic;vertical-align: text-bottom;");
+      //strBuilder.push("font-style: italic;border-top: 1px solid ", colors.back, ";");
       if ((mxp.style & FontStyle.Overline) == FontStyle.Overline)
         td += "overline ";
       if ((mxp.style & FontStyle.DoubleUnderline) == FontStyle.DoubleUnderline || (mxp.style & FontStyle.Underline) == FontStyle.Underline)
