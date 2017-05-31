@@ -194,7 +194,7 @@ export class Settings {
 	public enableSpeedpaths: boolean = true;
 	public parseSpeedpaths: boolean = true;
 
-	public logErrors: boolean = false;
+	public logErrors: boolean = true;
 	public reportCrashes: boolean = false;
 
 	public parseDoubleQuotes: boolean = true;
