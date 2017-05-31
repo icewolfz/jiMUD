@@ -1,7 +1,8 @@
 ## Changelog
-##### 0.3.1 -
+##### 0.3.1 - 2017-05-30
 - **Fixed:**
   - Character manager: file not found issues, will now properly check if characters file exist before accessing it
+  - Do not attempt to access user data folder until app is ready, fixes character folder creation checks
 ##### 0.3.0 - 2017-05-30
 - **New:**
   - Split scroll, **Experimental**  this will allow you to scroll while displaying the most recent lines at the bottom with option live update or post update
@@ -24,7 +25,7 @@
     - `-mf=[file], --map=[file]` override default map file
     - `-c=[name], --character=[name]` allows you to load/create a character from character database
     - `-pf=[list], --profiles[]` set which profiles will be enabled, if not found will default
-  - About memory tab now in cludes process type, cpu usage and idle wakeups as of when the dialog was opened.
+  - About memory tab now includes process type, cpu usage and idle wakeups as of when the dialog was opened.
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
   - Clear icons for display and chat windows have an X added to them to symbolize remove/delete
