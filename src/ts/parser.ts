@@ -2059,8 +2059,8 @@ export class Parser extends EventEmitter {
           if (hint.length === 0)
             hint = href;
           if (expire.length > 0)
-            return "<a class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" expire=\"" + expire + "\" onclick=\"" + this.mxpLinkFunction + "(this, '" + href + "');return false;\">";
-          return "<a class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" onclick=\"" + this.mxpLinkFunction + "(this, '" + href + "');return false;\">";
+            return "<a draggable=\"false\" class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" expire=\"" + expire + "\" onclick=\"" + this.mxpLinkFunction + "(this, '" + href + "');return false;\">";
+          return "<a draggable=\"false\" class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" onclick=\"" + this.mxpLinkFunction + "(this, '" + href + "');return false;\">";
         case "SEND":
           tmp = this.GetCurrentStyle();
           tmp.tag = MXPTag[tag];
@@ -2115,7 +2115,7 @@ export class Parser extends EventEmitter {
           }
           else
             href = '\'' + href + '\'';
-          var l = ["<a class=\"MXPLink\" href=\"javascript:void(0);\" onclick=\"" + this.mxpSendFunction + "(event||window.event, this, ", href, ", ", (prompt ? 1 : 0), ", ", tt, ");return false;\" title=\"", hint, "\" onmouseover=\"" + this.mxpTooltipFunction + "(this)\""];
+          var l = ["<a draggable=\"false\" class=\"MXPLink\" href=\"javascript:void(0);\" onclick=\"" + this.mxpSendFunction + "(event||window.event, this, ", href, ", ", (prompt ? 1 : 0), ", ", tt, ");return false;\" title=\"", hint, "\" onmouseover=\"" + this.mxpTooltipFunction + "(this)\""];
           if (expire.length > 0)
             l.push(" expire=\"", expire, "\"");
           l.push(">");
@@ -2984,7 +2984,7 @@ export class Parser extends EventEmitter {
                 _MXPComment += strBuilder.slice(lnk).join('');
                 if (this.enableDebug) this.emit('debug', "URL Found: " + _MXPComment);
                 if (this.enableLinks) {
-                  strBuilder.splice(lnk, 0, "<a class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">");
+                  strBuilder.splice(lnk, 0, "<a draggable=\"false\" class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">");
                   strBuilder.push("</a>");
                 }
                 else {
@@ -3023,7 +3023,7 @@ export class Parser extends EventEmitter {
                   _MXPComment += strBuilder.slice(lnk).join('');
                   if (this.enableDebug) this.emit('debug', "URL Found: " + _MXPComment);
                   if (this.enableLinks) {
-                    strBuilder.splice(lnk, 0, "<a class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">");
+                    strBuilder.splice(lnk, 0, "<a draggable=\"false\" class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">");
                     strBuilder.push("</a>");
                   }
                   else {

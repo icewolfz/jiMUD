@@ -187,34 +187,37 @@ export class Display extends EventEmitter {
             this.updateView();
         });
 
-        this._view.addEventListener('mousedown', (e) => {
+        this._el.addEventListener('mousedown', (e) => {
             var o = this.getLineOffset(e);
             this._currentSelection.start = o;
             this._currentSelection.end = o;
             this._currentSelection.drag = true;
             this.updateSelection();
+            return true;
         })
 
-        this._view.addEventListener('mousemove', (e) => {
+        this._el.addEventListener('mousemove', (e) => {
             if (!this._currentSelection.drag) return;
             var o = this.getLineOffset(e);
             this._currentSelection.end = o;
             this.updateSelection();
+            return true;
         })
 
-        this._view.addEventListener('mouseup', (e) => {
+        this._el.addEventListener('mouseup', (e) => {
             this._currentSelection.drag = false;
             var o = this.getLineOffset(e);
             this._currentSelection.end = o;
             this.updateSelection();
+            return true;
         })
 
-        this._view.addEventListener('dblclick', (e) => {
+        this._el.addEventListener('dblclick', (e) => {
             var o = this.getLineOffset(e);
             //select word
         })
 
-        this._view.addEventListener('click', (e) => {
+        this._el.addEventListener('click', (e) => {
             if (e.detail === 3) {
                 var o = this.getLineOffset(e);
                 //select paragraph
@@ -538,7 +541,7 @@ export class Display extends EventEmitter {
     }
 
     click(callback) {
-        this._elJ.click(callback);
+        this._el.addEventListener('click', callback);
     }
 
     removeLine(line: number) {
