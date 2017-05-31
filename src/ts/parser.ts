@@ -3124,7 +3124,7 @@ export class Parser extends EventEmitter {
           default:
             if (e && i === 7) {
               if (f) {
-                c = "\u2022";
+                c = "\u2407";
                 strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
@@ -3225,7 +3225,7 @@ export class Parser extends EventEmitter {
                 else if (i === 6)
                   c = "\u2660";
                 else if (i === 7)
-                  c = "\u2022";
+                  c = "\u2407";
                 else if (i === 8)
                   c = "\u25D8";
                 else if (i === 9)
