@@ -1,4 +1,7 @@
 ## Changelog
+##### 0.3.1 -
+- **Fixed:**
+  - Character manager: file not found issues, will now properly check if characters file exist before accessing it
 ##### 0.3.0 - 2017-05-30
 - **New:**
   - Split scroll, **Experimental**  this will allow you to scroll while displaying the most recent lines at the bottom with option live update or post update
