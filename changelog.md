@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.3.1 -
+##### 0.3.1 - 2017-05-30
 - **Fixed:**
   - Character manager: file not found issues, will now properly check if characters file exist before accessing it
 ##### 0.3.0 - 2017-05-30
