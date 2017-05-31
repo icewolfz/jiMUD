@@ -37,8 +37,9 @@ process.on('uncaughtException', (err) => {
   logError(err);
 });
 
-if (!fs.existsSync(path.join(app.getPath('userData'), "characters")))
-  fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
+
+
+
 
 var characters;
 
@@ -58,63 +59,6 @@ function loadCharacter(char) {
   global.settingsFile = parseTemplate(characters.characters[char].settings);
   global.mapFile = parseTemplate(characters.characters[char].map);
 }
-
-loadCharacters();
-
-process.argv.forEach((val, index) => {
-  switch (val) {
-    case "-h":
-    case "--help":
-    case "-?":
-    case "/?":
-      console.log('-h, --help                    Print console help');
-      console.log('-d, --debug                   Enable dev tools for all windows');
-      console.log('-s=[file], --setting=[file]   Override default setting file');
-      console.log('-mf=[file], --map=[file]      Override default map file');
-      console.log('-c=[name], --character=[name] Allows you to load/create a character from character database');
-      console.log('-pf=[list], --profiles[]      Set which profiles will be enabled, if not found will default');
-      app.quit();
-      return;
-    case "-debug":
-    case "--debug":
-    case "-d":
-    case "--d":
-      debug = true;
-      break;
-  }
-
-  if (val.startsWith("--character=") || val.startsWith("--character:")) {
-    global.character = val.substring(12);
-    loadCharacter(global.character);
-  }
-  if (val.startsWith("-c=") || val.startsWith("-c:")) {
-    global.character = val.substring(3);
-    loadCharacter(global.character);
-  }
-
-  if (val.startsWith("--settings=") || val.startsWith("--settings:"))
-    global.settingsFile = parseTemplate(val.substring(11));
-  if (val.startsWith("-settings=") || val.startsWith("-settings:"))
-    global.settingsFile = parseTemplate(val.substring(10));
-  if (val.startsWith("-s=") || val.startsWith("-s:"))
-    global.settingsFile = parseTemplate(val.substring(3));
-  if (val.startsWith("-sf=") || val.startsWith("-sf:"))
-    global.settingsFile = parseTemplate(val.substring(4));
-
-  if (val.startsWith("--map=") || val.startsWith("--map:"))
-    global.mapFile = parseTemplate(val.substring(6));
-  if (val.startsWith("-map=") || val.startsWith("-map:"))
-    global.mapFile = parseTemplate(val.substring(5));
-  if (val.startsWith("-m=") || val.startsWith("-m:"))
-    global.mapFile = parseTemplate(val.substring(3));
-  if (val.startsWith("-mf=") || val.startsWith("-mf:"))
-    global.mapFile = parseTemplate(val.substring(4));
-
-  if (val.startsWith("--profiles=") || val.startsWith("--profiles:"))
-    global.profiles = parseTemplate(val.substring(11)).split(',');
-  if (val.startsWith("-pf=") || val.startsWith("-pf:"))
-    global.profiles = parseTemplate(val.substring(4)).split(',');
-});
 
 var menuTemp = [
   //File
@@ -1059,7 +1003,68 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.on('ready', () => {
+  if (!fs.existsSync(path.join(app.getPath('userData'), "characters")))
+    fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
+
+  loadCharacters();
+
+  process.argv.forEach((val, index) => {
+    switch (val) {
+      case "-h":
+      case "--help":
+      case "-?":
+      case "/?":
+        console.log('-h, --help                    Print console help');
+        console.log('-d, --debug                   Enable dev tools for all windows');
+        console.log('-s=[file], --setting=[file]   Override default setting file');
+        console.log('-mf=[file], --map=[file]      Override default map file');
+        console.log('-c=[name], --character=[name] Allows you to load/create a character from character database');
+        console.log('-pf=[list], --profiles[]      Set which profiles will be enabled, if not found will default');
+        app.quit();
+        return;
+      case "-debug":
+      case "--debug":
+      case "-d":
+      case "--d":
+        debug = true;
+        break;
+    }
+
+    if (val.startsWith("--character=") || val.startsWith("--character:")) {
+      global.character = val.substring(12);
+      loadCharacter(global.character);
+    }
+    if (val.startsWith("-c=") || val.startsWith("-c:")) {
+      global.character = val.substring(3);
+      loadCharacter(global.character);
+    }
+
+    if (val.startsWith("--settings=") || val.startsWith("--settings:"))
+      global.settingsFile = parseTemplate(val.substring(11));
+    if (val.startsWith("-settings=") || val.startsWith("-settings:"))
+      global.settingsFile = parseTemplate(val.substring(10));
+    if (val.startsWith("-s=") || val.startsWith("-s:"))
+      global.settingsFile = parseTemplate(val.substring(3));
+    if (val.startsWith("-sf=") || val.startsWith("-sf:"))
+      global.settingsFile = parseTemplate(val.substring(4));
+
+    if (val.startsWith("--map=") || val.startsWith("--map:"))
+      global.mapFile = parseTemplate(val.substring(6));
+    if (val.startsWith("-map=") || val.startsWith("-map:"))
+      global.mapFile = parseTemplate(val.substring(5));
+    if (val.startsWith("-m=") || val.startsWith("-m:"))
+      global.mapFile = parseTemplate(val.substring(3));
+    if (val.startsWith("-mf=") || val.startsWith("-mf:"))
+      global.mapFile = parseTemplate(val.substring(4));
+
+    if (val.startsWith("--profiles=") || val.startsWith("--profiles:"))
+      global.profiles = parseTemplate(val.substring(11)).split(',');
+    if (val.startsWith("-pf=") || val.startsWith("-pf:"))
+      global.profiles = parseTemplate(val.substring(4)).split(',');
+  });
+  createWindow();
+})
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
