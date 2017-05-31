@@ -55,7 +55,7 @@ body {
 }
 
 #display-overlay {
-    top: 3px;
+    top: 2px;
     z-index: 1;
     left: 0px;
     right: 0px;
@@ -382,14 +382,15 @@ body {
 /*end status*/
 
 .select-text {
-    background-color: rgba(51, 153, 255, 0.5);
-    color: rgba(255, 255, 255, 0.75);
+    background-color: rgb(51, 153, 255);
+    color: rgb(255, 255, 255);
     display: inline-block;
     height: 100%;
     pointer-events: none;
     position: absolute;
     box-sizing: border-box;
     white-space: pre;
+    overflow: hidden;
 }
 
 .select-text .line, .select-text > span {
@@ -399,6 +400,7 @@ body {
 .select-text * {
     background-color: transparent !important;
     border-color: transparent !important;
+    color: rgb(255, 255, 255) !important;
 }
 
 .select-text.trc {

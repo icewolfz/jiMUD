@@ -198,7 +198,7 @@ export class Display extends EventEmitter {
             var os = this.offset(this._el);
             if(e.pageX - os.left > this._el.clientWidth)
                 return;
-            if(e.pageY - os.top > this._el.clientHeight)
+            if(e.pageY - os.top > this._el.clientHeight )
                 return;
 
 
@@ -693,6 +693,7 @@ export class Display extends EventEmitter {
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
             s += 2;
+            txt = `<span style="left:-${s-2}px">${this._view.children[sel.start.y].outerHTML}</span>`;
             this._overlays.selection[sel.start.y] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px">${txt}</span></div>`)
             this.updateOverlays();
             return;
@@ -780,6 +781,7 @@ export class Display extends EventEmitter {
                 w = (this.lines[line].length || 1) * this._charWidth;
                 //txt = this.lines[line];
             }
+            txt = `<span style="left:-${cl * this._charWidth}px">${this._view.children[line].outerHTML}</span>`;
             parts.push(`<span class="${cls}" style="left:${cl * this._charWidth + 2}px;width: ${w}px;">${txt}</span>`);
 
             if (startStyle.top == intern || startStyle.bottom == intern) {
