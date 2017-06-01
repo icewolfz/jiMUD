@@ -913,8 +913,6 @@ export class Display extends EventEmitter {
                 else
                     end = text.length;
                 offset = format.offset;
-                //TODO move to css
-                bStyle.push('height: 100%;');
                 if (format.background)
                     bStyle.push("background:", format.background, ";");
                 if (format.color)

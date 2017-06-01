@@ -2705,7 +2705,7 @@ export class Parser extends EventEmitter {
                 }
                 //skip = true;
                 _MXPTag = this.getMXPBlock(_MXPTag, [], remote);
-                if (_MXPTag.format)
+                if (_MXPTag && _MXPTag.format)
                   formatBuilder.push(_MXPTag.format);
                 //strBuilder.splice(1, 0, 'data-length="0"');
                 this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
@@ -2723,7 +2723,7 @@ export class Parser extends EventEmitter {
               }
               else if (_MXPTag.toUpperCase() === "IMAGE" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
                 _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote);
-                if (_MXPTag.format !== null) {
+                if (_MXPTag && _MXPTag.format !== null) {
                   formatBuilder.push(_MXPTag.format);
                   lineLength += _MXPTag.length;
                   this.textLength += _MXPTag.length;
@@ -2733,7 +2733,7 @@ export class Parser extends EventEmitter {
               else {
                 _MXPTag = this.getMXPBlock(_MXPTag, [], remote);
                 if (this.mxpState.expanded) {
-                  if (_MXPTag.text !== null) text = text.splice(idx + 1, _MXPTag.text);
+                  if (_MXPTag && _MXPTag.text !== null) text = text.splice(idx + 1, _MXPTag.text);
                   tl = text.length;
                   this.mxpState.expanded = false;
                   state = ParserState.None;
@@ -2741,7 +2741,7 @@ export class Parser extends EventEmitter {
                   continue;
                 }
                 formatBuilder.push(this.getFormatBlock(lineLength));
-                if (_MXPTag.text !== null && _MXPTag.text.length > 0) {
+                if (_MXPTag && _MXPTag.text !== null && _MXPTag.text.length > 0) {
                   stringBuilder.push(_MXPTag.text);
                   lineLength += _MXPTag.text.length;
                   this.textLength += _MXPTag.text.length;
@@ -3693,6 +3693,7 @@ export class Parser extends EventEmitter {
   Clear() {
     this.ResetColors();
     this.textLength = 0;
+    this._SplitBuffer = "";
   };
 
   ClearMXP() {
