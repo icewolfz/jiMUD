@@ -4,6 +4,8 @@
   - Log error setting default to on
 - **Fixed:**
   - Fix bell unicode character display
+  - Editor: New lines where not correctly being sent when sending as formated text
+  - Editor: Trailing newlines where being cut off
 ##### 0.3.1 - 2017-05-30
 - **Fixed:**
   - Character manager: file not found issues, will now properly check if characters file exist before accessing it
