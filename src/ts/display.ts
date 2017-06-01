@@ -1,12 +1,8 @@
 import EventEmitter = require('events');
-import { Parser, ParserLine, ParserOptions } from "./parser";
+import { Parser, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from "./parser";
 import { AnsiColorCode } from "./ansi";
 import { Size, stripHTML, getScrollBarSize } from "./library";
 const electron = require('electron');
-
-export interface Line extends ParserLine {
-    raw: string;
-}
 
 export interface DisplayOptions extends ParserOptions {
     enableSplit?: boolean;
@@ -56,6 +52,7 @@ export class Display extends EventEmitter {
     private _enableDebug: boolean = false;
 
     public lines: string[] = [];
+    private lineFormats = [];
     public _maxLines: number = 5000;
     private _charHeight: number;
     private _charWidth: number;
@@ -117,28 +114,22 @@ export class Display extends EventEmitter {
 
         this._parser.on('bell', () => { this.emit('bell') })
 
-        this._parser.on('add-line', (data: Line) => {
+        this._parser.on('add-line', (data: ParserLine) => {
             var t;
-            data.raw = stripHTML(data.line);
             this.emit('add-line', data);
-            if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined" || data.line.length === 0)
+            if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined")
                 return;
             this.emit('add-line-done', data);
             if (data.gagged)
                 return;
-            t = $(data.line);
-            //clean up any empty elements to reduce memory and processing times
-            $("span:empty", t).remove();
-            if (data.raw === "\n")
+            if (data.line === "\n" || data.line.length == 0)
                 this.lines.push("");
             else
-                this.lines.push(data.raw);
-            //t.css('top', ((this.lines.length - 1) * this._charHeight) + "px");
-            //t.css('height', (this._charHeight) + "px");
-            //t.data('index', this.lines.length - 1);
-            if (data.raw.length > this._maxLineLength)
-                this._maxLineLength = data.raw.length;
-            this._htmlCache.push(t[0]);
+                this.lines.push(data.line);
+            this.lineFormats.push(data.formats);
+            if (data.line.length > this._maxLineLength)
+                this._maxLineLength = data.line.length;
+            this._htmlCache.push('<span class="line">' + data.line + '<br></span>');
         });
 
         this._parser.on('expire-links', (args) => {

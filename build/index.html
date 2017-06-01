@@ -455,14 +455,14 @@
           var res;
           if (_captures.length == 0) return;
           //custom capture to ignore who list
-          res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.raw);
+          res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.line);
           if (res && res.length > 0) {
             capture = 0;
             _noCapture = true;
             return;
           }
           //end capture blocking for who list
-          res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.raw);
+          res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.line);
           if (res && res.length > 0) {
             capture = 0;
             _noCapture = false;
@@ -470,8 +470,8 @@
           }
           if (_noCapture) return;
           //capture indented text
-          if (capture > 0 && data.raw.startsWith("    ")) {
-            ipcRenderer.send('chat', data.line);
+          if (capture > 0 && data.line.startsWith("    ")) {
+            ipcRenderer.send('chat', data);
             data.gagged = true;
             return;
           }
@@ -479,11 +479,11 @@
           //search capture review blocks
           for (var c = 0, cl = _captureReviews.length; c < cl; c++) {
             re = new RegExp(_captureReviews[c], 'g');
-            res = re.exec(data.raw);
+            res = re.exec(data.line);
             if (!res || res.length === 0)
               continue;
             captureReview = 1;
-            ipcRenderer.send('chat', data.line);
+            ipcRenderer.send('chat', data);
             data.gagged = true;
             return;
           }
@@ -491,14 +491,14 @@
           if (captureReview > 0) {
             ipcRenderer.send('chat', data.line);
             data.gagged = true;
-            res = /^-=-=- End Review -=-=-$/.exec(data.raw);
+            res = /^-=-=- End Review -=-=-$/.exec(data.line);
             if (res && res.length > 0)
               captureReview = -1;
             return;
           }
           //review requires 1 extra capture to get the current date/time
           if (captureReview == -1) {
-            ipcRenderer.send('chat', data.line);
+            ipcRenderer.send('chat', data);
             data.gagged = true;
             captureReview = 0;
             return;
@@ -508,13 +508,13 @@
           //capture lines based on matching regex's
           for (var c = 0, cl = _captures.length; c < cl; c++) {
             re = new RegExp(_captures[c], 'g');
-            res = re.exec(data.raw);
+            res = re.exec(data.line);
             if (!res || res.length === 0)
               continue;
             if (capture > 0)
               capture--;
             capture++;
-            ipcRenderer.send('chat', data.line);
+            ipcRenderer.send('chat', data);
             data.gagged = true;
             return;
           }

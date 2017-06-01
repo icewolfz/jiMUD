@@ -10,7 +10,7 @@ import { Settings } from "./settings";
 import { input } from "./input";
 import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context } from "./profile";
 import { MSP } from "./msp";
-import { Display, Line } from "./display";
+import { Display } from "./display";
 const { version } = require("../../package.json");
 const path = require('path');
 const fs = require("fs");
@@ -371,10 +371,10 @@ export class Client extends EventEmitter {
         });
 
         this.display.on('debug', (msg) => { this.debug(msg) });
-        this.display.on('add-line', (data: Line) => {
+        this.display.on('add-line', (data: ParserLine) => {
             this.emit('add-line', data);
         });
-        this.display.on('add-line-done', (data: Line) => {
+        this.display.on('add-line-done', (data: ParserLine) => {
             this.emit('add-line-done', data);
         });
         this.display.on('MXP-tag-reply', (tag, args) => {
