@@ -31,6 +31,18 @@ interface Range {
     end: number;
 }
 
+enum CornerType {
+    Flat = 0,
+    Extern = 1,
+    Intern = 2
+}
+
+interface ContextEvent extends PointerEvent {
+    word: string;
+    url: string;
+    line: string;
+}
+
 export class Display extends EventEmitter {
     private _parser: Parser;
     private _el: HTMLElement;
@@ -66,6 +78,44 @@ export class Display extends EventEmitter {
     };
 
     public scrollLock: boolean = false;
+
+    private _linkFunction;
+    private _mxpLinkFunction;
+    private _mxpSendFunction;
+    private _mxpTooltipFunction;
+
+
+    get linkFunction(): string {
+        return this._linkFunction || "doLink";
+    }
+
+    set linkFunction(val: string) {
+        this._linkFunction = val;
+    }
+
+    get mxpLinkFunction(): string {
+        return this._mxpLinkFunction || "doMXPLink";
+    }
+
+    set mxpLinkFunction(val: string) {
+        this._mxpLinkFunction = val;
+    }
+
+    get mxpSendFunction(): string {
+        return this._mxpSendFunction || "doMXPSend";
+    }
+
+    set mxpSendFunction(val: string) {
+        this._mxpSendFunction = val;
+    }
+
+    get mxpTooltipFunction(): string {
+        return this._mxpTooltipFunction || "doMXPTooltip";
+    }
+
+    set mxpTooltipFunction(val: string) {
+        this._mxpTooltipFunction = val;
+    }
 
     constructor(display: string, options?);
     constructor(display: JQuery, options?);
@@ -177,7 +227,7 @@ export class Display extends EventEmitter {
             this._viewCache = [];
             this._backgroundCache = [];
 
-            //renable animation so they are all synced
+            //re-enable animation so they are all synced
             this._el.classList.add('animate');
         });
 
@@ -318,6 +368,56 @@ export class Display extends EventEmitter {
             }
         })
 
+        this._el.addEventListener('contextmenu', (e: ContextEvent) => {
+            let word: string = '', line: string = '', url: string = '';
+            if (this.lines.length > 0) {
+                var o = this.getLineOffset(e);
+                if (o.y >= 0 && o.y < this.lines.length) {
+                    line = this.lines[o.y];
+                    let len = line.length;
+                    if (o.x >= 0 || o.x < len) {
+                        let sPos = o.x, ePos = o.x;
+                        while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+                            sPos--;
+                            if (sPos < 0)
+                                break;
+                        }
+                        sPos++;
+                        var ll = line.length;
+                        while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
+                            ePos++;
+                        }
+                        if (sPos >= 0 && ePos <= len)
+                            word = line.substring(sPos, ePos);
+                        let formats = this.lineFormats[o.y];
+                        for (let l = 0, len = formats.length; l < len; l++) {
+                            let format = formats[l];
+                            if (format.formatType !== FormatType.Link && format.formatType !== FormatType.MXPLink)
+                                continue;
+                            let end = format.offset;
+                            if (l < len - 1) {
+                                let nFormat = formats[l + 1];
+                                //skip empty blocks
+                                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                                    continue;
+                                end = nFormat.offset;
+                            }
+                            else
+                                end = line.length;
+                            if (o.x >= format.offset && o.x < end) {
+                                url = format.href;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            e.word = word;
+            e.url = url;
+            e.line = line;
+            this.emit('context-menu', e);
+        })
+
         window.addEventListener('mousemove', (e) => {
             if (this._currentSelection.drag) {
                 this._lastMouse = e;
@@ -388,34 +488,6 @@ export class Display extends EventEmitter {
         return this._parser.enableBell;
     }
 
-    set linkFunction(value: string) {
-        this._parser.linkFunction = value;
-    }
-    get linkFunction(): string {
-        return this._parser.linkFunction;
-    }
-
-    set mxpLinkFunction(value: string) {
-        this._parser.mxpLinkFunction = value;
-    }
-    get mxpLinkFunction(): string {
-        return this._parser.mxpLinkFunction;
-    }
-
-    set mxpSendFunction(value: string) {
-        this._parser.mxpSendFunction = value;
-    }
-    get mxpSendFunction(): string {
-        return this._parser.mxpSendFunction;
-    }
-
-    set mxpTooltipFunction(value: string) {
-        this._parser.mxpTooltipFunction = value;
-    }
-    get mxpTooltipFunction(): string {
-        return this._parser.mxpTooltipFunction;
-    }
-
     set enableURLDetection(value: boolean) {
         this._parser.enableURLDetection = value;
     }
@@ -478,7 +550,7 @@ export class Display extends EventEmitter {
         this._maxLineLength = 0;
         this._overlay.innerHTML = null;
         this._view.innerHTML = null;
-        this._background = null;
+        this._background.innerHTML = null;
         this._currentSelection = {
             start: { x: null, y: null },
             end: { x: null, y: null },
@@ -647,6 +719,7 @@ export class Display extends EventEmitter {
         var os = this.offset(this._el);
         var y = (e.pageY - os.top) + this._el.scrollTop;
         y = Math.floor(y / this._charHeight);
+        /*
         if (y < 0)
             y = 0;
         if (y >= this.lines.length)
@@ -657,11 +730,14 @@ export class Display extends EventEmitter {
                 return { x: x, y: this.lines.length - 1 };
             }
         }
+        */
         var x = (e.pageX - os.left) + this._el.scrollLeft;
         x = Math.floor(x / this._charWidth);
+        /*
         var l = this.lines[y].length;
         if (x > l)
             x = l;
+        */
         return { x: x, y: y };
     }
 
@@ -676,8 +752,8 @@ export class Display extends EventEmitter {
 
     private updateSelection() {
         var sel = this._currentSelection;
-        var s, e, sL, eL, l, c, parts, w, w2, txt = '';
-        //display.overlays.fill('');
+        var s, e, sL, eL, c, parts, w;
+
         this._overlays.selection = [];
         if (sel.start.y > sel.end.y) {
             sL = sel.end.y;
@@ -696,39 +772,42 @@ export class Display extends EventEmitter {
             return;
         }
         else {
+            sL = sel.start.y;
+            if (sL < 0 || sL >= this.lines.length)
+                return;
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
-            //txt = this.lines[sel.start.y].substring(s, e);
+            if (s < 0) s = 0;
+            if (e >= this.lines[sel.start.y].length)
+                e = this.lines[sel.start.y].length - 1;
+
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
             s += 2;
-            //txt = `<span style="left:-${s - 2}px">${this._view.children[sel.start.y].outerHTML}</span>`;
-            this._overlays.selection[sel.start.y] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px">${txt}</span></div>`)
+            this._overlays.selection[sL] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`)
             this.updateOverlays();
             return;
         }
         var len = this.lines.length;
-        let flat = 0;
-        let extern = 1;
-        let intern = 2;
+
         if (sL < 0)
             sL = 0;
         if (eL >= len)
             eL = len - 1;
         if (s < 0)
             s = 0;
-        if (e > this.lines[eL].length)
-            e = this.lines[eL].length;
+        if (e >= this.lines[eL].length)
+            e = this.lines[eL].length - 1;
 
 
         for (let line = sL; line < eL + 1; line++) {
             let startStyle = {
-                top: extern,
-                bottom: extern
+                top: CornerType.Extern,
+                bottom: CornerType.Extern
             }
             let endStyle = {
-                top: extern,
-                bottom: extern
+                top: CornerType.Extern,
+                bottom: CornerType.Extern
             }
 
             let cl = sL == line ? s : 0;
@@ -739,69 +818,66 @@ export class Display extends EventEmitter {
 
 
                 if (cl == pl)
-                    startStyle.top = flat;
+                    startStyle.top = CornerType.Flat;
                 else if (cl > pl)
-                    startStyle.top = intern;
+                    startStyle.top = CornerType.Intern;
                 if (cr == pr)
-                    endStyle.top = flat;
+                    endStyle.top = CornerType.Flat;
                 else if (pl < cr && cr < pr)
-                    endStyle.top = intern;
+                    endStyle.top = CornerType.Intern;
             }
 
             if (line < eL) {
                 let nl = 0;
                 let nr = eL == line + 1 ? e : (this.lines[line + 1].length || 1);
                 if (cl === nl) {
-                    startStyle.bottom = flat;
+                    startStyle.bottom = CornerType.Flat;
                 } else if (nl < cl && cl < nr) {
-                    startStyle.bottom = intern;
+                    startStyle.bottom = CornerType.Intern;
                 }
 
                 if (cr === nr) {
-                    endStyle.bottom = flat;
+                    endStyle.bottom = CornerType.Flat;
                 } else if (cr < nr) {
-                    endStyle.bottom = intern;
+                    endStyle.bottom = CornerType.Intern;
                 }
             }
 
             parts = [];
             let cls = 'select-text';
-            if (startStyle.top === extern) {
+            if (startStyle.top === CornerType.Extern) {
                 cls += ' tlc';
             }
-            if (startStyle.bottom === extern) {
+            if (startStyle.bottom === CornerType.Extern) {
                 cls += ' blc';
             }
-            if (endStyle.top === extern) {
+            if (endStyle.top === CornerType.Extern) {
                 cls += ' trc';
             }
-            if (endStyle.bottom === extern) {
+            if (endStyle.bottom === CornerType.Extern) {
                 cls += ' brc';
             }
             if (sL == line) {
                 w = ((this.lines[line].length || 1) - s) * this._charWidth;
-                //txt = this.lines[line].substring(s);
             }
             else if (eL == line) {
                 w = e * this._charWidth;
-                //txt = this.lines[line].substring(0, e);
             }
             else {
                 w = (this.lines[line].length || 1) * this._charWidth;
-                //txt = this.lines[line];
             }
-            //txt = `<span style="left:-${cl * this._charWidth}px">${this._view.children[line].outerHTML}</span>`;
-            parts.push(`<span class="${cls}" style="left:${cl * this._charWidth}px;width: ${w}px;">${txt}</span>`);
 
-            if (startStyle.top == intern || startStyle.bottom == intern) {
+            parts.push(`<span class="${cls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
+
+            if (startStyle.top == CornerType.Intern || startStyle.bottom == CornerType.Intern) {
                 //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;"></span>`);
                 //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;background-color:black;border-bottom-right-radius: 2px"></span>`);
             }
-            if (endStyle.top === intern) {
+            if (endStyle.top === CornerType.Intern) {
                 //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;"></span>`);
                 //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;background-color:black;border-top-left-radius: 2px"></span>`);
             }
-            if (endStyle.bottom === intern) {
+            if (endStyle.bottom === CornerType.Intern) {
                 //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;"></span>`);
                 //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;background-color:black;border-bottom-left-radius: 2px"></span>`);
             }
@@ -898,12 +974,12 @@ export class Display extends EventEmitter {
         let back = [], fore = [];
         let text = this.lines[idx];
         let formats = this.lineFormats[idx];
-        let offset = 0;
+        let offset = 0, bStyle = [];
+        let fStyle = [], fCls;
         for (let f = 0, len = formats.length; f < len; f++) {
             let format = formats[f];
             let nFormat;
-            let end, bStyle = [];
-            let fStyle = [], fCls = [], td = [];
+            let end, td = [];
             if (format.formatType === FormatType.Normal) {
                 if (f < len - 1) {
                     nFormat = formats[f + 1];
@@ -914,6 +990,9 @@ export class Display extends EventEmitter {
                 }
                 else
                     end = text.length;
+                bStyle = [];
+                fStyle = [];
+                fCls = [];
                 offset = format.offset;
                 if (format.background)
                     bStyle.push("background:", format.background, ";");
@@ -948,7 +1027,34 @@ export class Display extends EventEmitter {
                 back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', text.substring(offset, end), '</span>');
             }
+            else if (format.formatType === FormatType.Link) {
+                if (f < len - 1) {
+                    nFormat = formats[f + 1];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    end = nFormat.offset;
+                }
+                else
+                    end = text.length;
+                offset = format.offset;
+
+                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
+
+                fore.push('<a class="URLLink" href="javascript:void(0);" title="');
+                fore.push(format.href);
+                fore.push('" onclick="', this.linkFunction, '(\`', format.href, '\`);return false;">');
+                fore.push(text.substring(offset, end));
+                //"title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">"
+            }
+            else if (format.formatType === FormatType.LinkEnd) {
+                fore.push("</a></span>");
+            }
+            else if (format.formatType === FormatType.WordBreak)
+                fore.push('<wbr>')
         }
+
 
 
         return [`<span class="line" style="height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];

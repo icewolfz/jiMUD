@@ -3726,42 +3726,6 @@ export class Parser extends EventEmitter {
       bell.play();
     }
   };
-  private _linkFunction;
-  private _mxpLinkFunction;
-  private _mxpSendFunction;
-  private _mxpTooltipFunction;
-
-
-  get linkFunction(): string {
-    return this._linkFunction || "doLink";
-  }
-
-  set linkFunction(val: string) {
-    this._linkFunction = val;
-  }
-
-  get mxpLinkFunction(): string {
-    return this._mxpLinkFunction || "doMXPLink";
-  }
-
-  set mxpLinkFunction(val: string) {
-    this._mxpLinkFunction = val;
-  }
-
-  get mxpSendFunction(): string {
-    return this._mxpSendFunction || "doMXPSend";
-  }
-
-  set mxpSendFunction(val: string) {
-    this._mxpSendFunction = val;
-  }
-
-  get mxpTooltipFunction(): string {
-    return this._mxpTooltipFunction || "doMXPTooltip";
-  }
-
-  set mxpTooltipFunction(val: string) {
-    this._mxpTooltipFunction = val;
-  }
+  
 
 };
