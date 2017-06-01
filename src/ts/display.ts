@@ -36,8 +36,11 @@ export class Display extends EventEmitter {
     private _parser: Parser;
     private _el: HTMLElement;
     private _elJ: JQuery;
+
     private _overlay: HTMLElement;
     private _view: HTMLElement;
+    private _background: HTMLElement;
+
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
         start: { x: null, y: null },
@@ -56,7 +59,8 @@ export class Display extends EventEmitter {
     public _maxLines: number = 5000;
     private _charHeight: number;
     private _charWidth: number;
-    private _htmlCache: string[] = [];
+    private _viewCache: string[] = [];
+    private _backgroundCache: string[] = [];
     private _overlays: Overlays = {
         selection: [],
         find: []
@@ -87,6 +91,10 @@ export class Display extends EventEmitter {
         this.updateBox();
 
         this._elJ = $(this._el);
+
+        this._background = document.createElement('div')
+        this._background.id = this._el.id + "-background";
+        this._el.appendChild(this._background);
 
         this._overlay = document.createElement('div')
         this._overlay.id = this._el.id + "-overlay";
@@ -129,7 +137,9 @@ export class Display extends EventEmitter {
             this.lineFormats.push(data.formats);
             if (data.line.length > this._maxLineLength)
                 this._maxLineLength = data.line.length;
-            this._htmlCache.push('<span class="line">' + data.line + '<br></span>');
+            t = this.createLine();
+            this._viewCache.push(t[0]);
+            this._backgroundCache.push(t[1]);
         });
 
         this._parser.on('expire-links', (args) => {
@@ -156,7 +166,8 @@ export class Display extends EventEmitter {
             this._el.classList.remove('animate');
             let bar = this._elJ.hasHorizontalScrollBar();
             //TODO update overlays, either remove or recalculate
-            $(this._view).append(this._htmlCache);
+            $(this._view).append(this._viewCache);
+            $(this._background).append(this._backgroundCache);
             this.trimLines();
             //this.updateView();
             if (bar != this._elJ.hasHorizontalScrollBar())
@@ -164,7 +175,8 @@ export class Display extends EventEmitter {
             //TODO split screen support
             this.scrollDisplay();
             this.emit('parse-done');
-            this._htmlCache = [];
+            this._viewCache = [];
+            this._backgroundCache = [];
 
             //renable animation so they are all synced
             this._el.classList.add('animate');
@@ -187,21 +199,19 @@ export class Display extends EventEmitter {
         this._el.addEventListener('mousedown', (e) => {
             //var sb =getScrollBarSize(this._el);
             var os = this.offset(this._el);
-            if(e.pageX - os.left > this._el.clientWidth)
+            if (e.pageX - os.left > this._el.clientWidth)
                 return;
-            if(e.pageY - os.top > this._el.clientHeight )
+            if (e.pageY - os.top > this._el.clientHeight)
                 return;
 
 
 
             var o = this.getLineOffset(e);
             if (e.buttons && e.button == 0) {
-                if(e.shiftKey)
-                {
+                if (e.shiftKey) {
                     this._currentSelection.end = o;
                 }
-                else
-                {
+                else {
                     this._currentSelection.start = o;
                     this._currentSelection.end = o;
                 }
@@ -457,11 +467,13 @@ export class Display extends EventEmitter {
             selection: [],
             find: []
         }
-        this._htmlCache = [];
+        this._viewCache = [];
+        this._backgroundCache = [];
         this._viewRange = { start: 0, end: 0 };
         this._maxLineLength = 0;
         this._overlay.innerHTML = null;
         this._view.innerHTML = null;
+        this._background = null;
         this._currentSelection = {
             start: { x: null, y: null },
             end: { x: null, y: null },
@@ -572,11 +584,10 @@ export class Display extends EventEmitter {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line]);
         this.lines.splice(line, 1);
+        this.lineFormats.splice(line, 1);
         $($(this._view).children().splice(line, 1)).remove();
-        //let lines = this._view.children;
-        //let h = this._charHeight;
-        //for (let l = 0, ll = lines.length; l < ll; l++)
-        //(lines[l] as HTMLElement).style.top = l * h + "px";
+        $($(this._background).children().splice(line, 1)).remove();
+
 
 
         //TODO redo overlays
@@ -605,13 +616,16 @@ export class Display extends EventEmitter {
 
     public trimLines() {
         if (this.lines.length > this._maxLines) {
-            this.lines.splice(0, this.lines.length - this._maxLines);
-            $(this._view).children().slice(0, this.lines.length - this._maxLines).remove()
+            var amt = this.lines.length - this._maxLines
+            this.lines.splice(0, amt);
+            this.lineFormats.splice(0, amt);
+            $(this._view).children().slice(0, amt).remove()
+            $(this._background).children().slice(0, amt).remove()
 
             let m = 0;
             let lines = this.lines;
-            let t;
-            let h = this._charHeight;
+            //let t;
+            //let h = this._charHeight;
             //let html = $(this._view).children();
             for (let l = 0, ll = lines.length; l < ll; l++) {
                 if (lines[l].length > m)
@@ -684,7 +698,7 @@ export class Display extends EventEmitter {
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
             s += 2;
-            txt = `<span style="left:-${s-2}px">${this._view.children[sel.start.y].outerHTML}</span>`;
+            //txt = `<span style="left:-${s - 2}px">${this._view.children[sel.start.y].outerHTML}</span>`;
             this._overlays.selection[sel.start.y] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px">${txt}</span></div>`)
             this.updateOverlays();
             return;
@@ -772,20 +786,20 @@ export class Display extends EventEmitter {
                 w = (this.lines[line].length || 1) * this._charWidth;
                 //txt = this.lines[line];
             }
-            txt = `<span style="left:-${cl * this._charWidth}px">${this._view.children[line].outerHTML}</span>`;
-            parts.push(`<span class="${cls}" style="left:${cl * this._charWidth + 2}px;width: ${w}px;">${txt}</span>`);
+            //txt = `<span style="left:-${cl * this._charWidth}px">${this._view.children[line].outerHTML}</span>`;
+            parts.push(`<span class="${cls}" style="left:${cl * this._charWidth}px;width: ${w}px;">${txt}</span>`);
 
             if (startStyle.top == intern || startStyle.bottom == intern) {
                 //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;"></span>`);
                 //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;background-color:black;border-bottom-right-radius: 2px"></span>`);
             }
             if (endStyle.top === intern) {
-                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + 2 + w}px;width: 2px;"></span>`);
-                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + 2 + w}px;width: 2px;background-color:black;border-top-left-radius: 2px"></span>`);
+                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;"></span>`);
+                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;background-color:black;border-top-left-radius: 2px"></span>`);
             }
             if (endStyle.bottom === intern) {
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + 2 + w}px;width: 2px;"></span>`);
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + 2 + w}px;width: 2px;background-color:black;border-bottom-left-radius: 2px"></span>`);
+                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;"></span>`);
+                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;background-color:black;border-bottom-left-radius: 2px"></span>`);
             }
 
             //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(0,128,0,0.5)"></span>`);
@@ -874,5 +888,69 @@ export class Display extends EventEmitter {
         let t = window.getComputedStyle(this._el);
         this._borderSize.height = parseInt(t.borderTopWidth) || 0;
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
+    }
+
+    private createLine(idx?: number) {
+        if (idx === undefined)
+            idx = this.lines.length - 1;
+        let back = [], fore = [];
+        let text = this.lines[idx];
+        let formats = this.lineFormats[idx];
+        let offset = 0;
+        for (let f = 0, len = formats.length; f < len; f++) {
+            let format = formats[f];
+            let nFormat;
+            let end, bStyle = [];
+            let fStyle = [], fCls = [], td = [];
+            if (format.formatType === FormatType.Normal) {
+                if (f < len - 1) {
+                    nFormat = formats[f + 1];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    end = nFormat.offset;
+                }
+                else
+                    end = text.length;
+                offset = format.offset;
+                //TODO move to css
+                bStyle.push('height: 100%;');
+                if (format.background)
+                    bStyle.push("background:", format.background, ";");
+                if (format.color)
+                    fStyle.push("color:", format.color, ";");
+                if (format.font)
+                    fStyle.push("font-family: ", format.font, ";")
+                if (format.style !== FontStyle.None) {
+                    if ((format.style & FontStyle.Bold) == FontStyle.Bold)
+                        fStyle.push("font-weight: bold;");
+                    if ((format.style & FontStyle.Italic) == FontStyle.Italic)
+                        fStyle.push("font-style: italic;");
+                    if ((format.style & FontStyle.Overline) == FontStyle.Overline)
+                        td.push("overline ");
+                    if ((format.style & FontStyle.DoubleUnderline) == FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) == FontStyle.Underline)
+                        td.push("underline ");
+                    if ((format.style & FontStyle.DoubleUnderline) == FontStyle.DoubleUnderline)
+                        fStyle.push("border-bottom: 1px solid ", format.color, ";");
+                    else
+                        fStyle.push("padding-bottom: 1px;");
+                    if ((format.style & FontStyle.Rapid) == FontStyle.Rapid || (format.style & FontStyle.Slow) == FontStyle.Slow) {
+                        if (this.enableFlashing)
+                            fCls.push(" ansi-blink");
+                        else if ((format.style & FontStyle.DoubleUnderline) != FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) != FontStyle.Underline)
+                            td.push("underline ");
+                    }
+                    if ((format.style & FontStyle.Strikeout) == FontStyle.Strikeout)
+                        td.push("line-through ");
+                    if (td.length > 0)
+                        fStyle.push("text-decoration:", td.join(''), ";");
+                }
+                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', text.substring(offset, end), '</span>');
+            }
+        }
+
+
+        return [`<span class="line" style="height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
     }
 }

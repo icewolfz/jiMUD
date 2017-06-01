@@ -45,6 +45,10 @@ body {
 }
 
 #display-view {
+    z-index: 3;
+    position: absolute;
+    top: 2px;
+    left: 0px;
     /*
     position: relative;
     top: 2px;
@@ -54,12 +58,20 @@ body {
     */
 }
 
-#display-overlay {
+#display-background {
     top: 2px;
     z-index: 1;
     left: 0px;
     right: 0px;
-    /*overflow: hidden;*/
+    position: absolute;
+    pointer-events: none;
+}
+
+#display-overlay {
+    top: 2px;
+    z-index: 2;
+    left: 0px;
+    right: 0px;
     position: absolute;
     pointer-events: none;
 }
@@ -130,6 +142,11 @@ body {
 
 .overlay-line {
     position: absolute;
+}
+
+.background-line {
+    position: absolute;
+    overflow: hidden;
 }
 
 #Character,
@@ -393,7 +410,8 @@ body {
     overflow: hidden;
 }
 
-.select-text .line, .select-text > span {
+.select-text .line,
+.select-text>span {
     position: absolute;
 }
 
