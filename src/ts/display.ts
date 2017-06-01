@@ -261,10 +261,11 @@ export class Display extends EventEmitter {
                 this._currentSelection.drag = false;
             }
             clearInterval(this._currentSelection.scrollTimer);
+            this._currentSelection.scrollTimer = null;
         })
 
         this._el.addEventListener('mouseleave', (e) => {
-            if (e.buttons && e.button === 0) {
+            if (this._currentSelection.drag) {
                 this._lastMouse = e;
                 this._currentSelection.scrollTimer = setInterval(() => {
                     /// pull as long as you can scroll either direction
@@ -272,61 +273,43 @@ export class Display extends EventEmitter {
 
                     if (!this._lastMouse) {
                         clearInterval(this._currentSelection.scrollTimer);
+                        this._currentSelection.scrollTimer = null;
                         return;
                     }
-                    let x = 0, y = 0;
+                    var os = this.offset(this._el);
 
-                    if (e.pageY < 0)
-                        y = -1;
-                    else if (e.pageY >= this._el.clientHeight)
-                        y = 1;
+                    let x = this._lastMouse.pageX - os.left, y = this._lastMouse.pageY - os.top;
 
-                    if (e.pageX < 0)
-                        x = -1
-                    else if (e.pageX >= this._el.clientWidth)
-                        x = 1;
-
-                    if (y < 0 && this._el.scrollTop == 0) {
-                        this._currentSelection.end.x = 0;
-                        this.updateSelection();
-                        this.emit('selection-changed');
-                        return;
-                    }
-                    else if (y > 0 && this._el.scrollTop == this._el.scrollHeight - this._el.clientHeight) {
-                        this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
-                        this.updateSelection();
-                        this.emit('selection-changed');
-                        return;
-                    }
-                    else if (x < 0 && this._el.scrollLeft == 0) {
-                        this.updateSelection();
-                        this.emit('selection-changed');
-                        return;
-                    }
-                    else if (x > 0 && this._el.scrollLeft == this._el.scrollWidth - this._el.clientWidth) {
-                        this.updateSelection();
-                        this.emit('selection-changed');
-                        return;
-                    }
-
-                    if (x < 0) {
-                        x = -1 * this._charWidth;
-                        this._currentSelection.end.x--;
-                    }
-                    else if (x > 0) {
-                        x = this._charWidth;
-                        this._currentSelection.end.x++;
-                    }
-                    if (y < 0) {
+                    if (y <= 0 && this._el.scrollTop > 0) {
                         y = -1 * this._charHeight;;
                         this._currentSelection.end.y--;
                     }
-                    else if (y > 0) {
+                    else if (y >= this._el.clientHeight && this._el.scrollTop < this._el.scrollHeight - this._el.clientHeight) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
                         if (this._currentSelection.end.y >= this.lines.length)
                             this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
                     }
+                    else
+                        y = 0;
+
+                    if (x < 0 && this._el.scrollLeft > 0) {
+                        x = -1 * this._charWidth;
+                        this._currentSelection.end.x--;
+                    }
+                    else if (x >= this._el.clientWidth && this._el.scrollLeft < this._el.scrollWidth - this._el.clientWidth) {
+                        x = this._charWidth;
+                        this._currentSelection.end.x++;
+                    }
+                    else
+                        x = 0;
+
+                    console.log(`x ${x}`);
+                    console.log(`y ${y}`);
+                    console.log("------------------");
+                    if (x == 0 && y == 0)
+                        return;
+
                     this.emit('selection-changed');
                     this._el.scrollTop += y;
                     this._el.scrollLeft += x;
@@ -348,6 +331,7 @@ export class Display extends EventEmitter {
         window.addEventListener('mouseup', (e) => {
             if (this._currentSelection.drag) {
                 clearInterval(this._currentSelection.scrollTimer);
+                this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
                 var o = this.getLineOffset(e);
                 this._currentSelection.end = o;
