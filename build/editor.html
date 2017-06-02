@@ -298,14 +298,14 @@
             }
 
             function getFormatedText() {
-                var data = buildHTMLStack($("<html>" + tinymce.activeEditor.getContent({ format: 'raw' }) + "</html>"));
+                var data = buildHTMLStack($("<html>" + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/\<\/div\>\<div\>/g, "<br>") + "</html>"));
                 var buffer = [];
                 var codes = [];
                 var color;
                 if (options.enableDebug)
                     ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
                 for (var d = data.length - 1; d >= 0; d--) {
-                    if (!data[d].startsWith('"'))
+                    if (!data[d].startsWith('"') && data[d] != "BR")
                         data.pop();
                     else
                         break;
@@ -340,7 +340,9 @@
                         case "SPAN":
                         case "/SPAN":
                         case "/BR":
+                        case "/DIV":
                             break;
+                        case "DIV":
                         case "BR":
                             if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith("%^RESET%^"))
                                 buffer.push("%^RESET%^");
