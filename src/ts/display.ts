@@ -23,7 +23,7 @@ interface Selection {
     start: Point;
     end: Point;
     drag: boolean;
-    scrollTimer;
+    scrollTimer: NodeJS.Timer;
 }
 
 interface Range {
@@ -47,6 +47,7 @@ export class Display extends EventEmitter {
     private _parser: Parser;
     private _el: HTMLElement;
     private _elJ: JQuery;
+    private _os;
 
     private _overlay: HTMLElement;
     private _view: HTMLElement;
@@ -64,6 +65,9 @@ export class Display extends EventEmitter {
     private _viewRange: Range = { start: 0, end: 0 };
     private _enableDebug: boolean = false;
     private _lastMouse: MouseEvent;
+    private _mouseTimer;
+
+
 
     public lines: string[] = [];
     private lineFormats = [];
@@ -88,6 +92,7 @@ export class Display extends EventEmitter {
 
 
     get linkFunction(): string {
+
         return this._linkFunction || "doLink";
     }
 
@@ -138,8 +143,7 @@ export class Display extends EventEmitter {
             this._el = display;
         else
             throw "Display must be an id, element or jquery object";
-
-        this.updateBox();
+        this.update();
 
         this._elJ = $(this._el);
 
@@ -249,7 +253,7 @@ export class Display extends EventEmitter {
 
         this._el.addEventListener('mousedown', (e) => {
             if (e.buttons && e.button == 0) {
-                var os = this.offset(this._el);
+                var os = this._os;
                 if (e.pageX - os.left > this._el.clientWidth)
                     return;
                 if (e.pageY - os.top > this._el.clientHeight)
@@ -268,15 +272,6 @@ export class Display extends EventEmitter {
                     this.updateSelection();
                 }
 
-            }
-        })
-
-        this._el.addEventListener('mousemove', (e) => {
-            if (!this._currentSelection.drag) return;
-        })
-
-        this._el.addEventListener('mouseup', (e) => {
-            if (this._currentSelection.drag) {
             }
         })
 
@@ -361,7 +356,7 @@ export class Display extends EventEmitter {
                         this._currentSelection.scrollTimer = null;
                         return;
                     }
-                    let os = this.offset(this._el);
+                    let os = this._os;
 
                     let x = this._lastMouse.pageX - os.left, y = this._lastMouse.pageY - os.top;
                     let old: Point = this._currentSelection.end;
@@ -473,6 +468,9 @@ export class Display extends EventEmitter {
             }
         })
 
+        window.addEventListener('resize', (e) => {
+            this.update();
+        });
     }
 
     get maxLines(): number { return this._maxLines; }
@@ -611,7 +609,7 @@ export class Display extends EventEmitter {
             //recalculate height/width of characters so display can be calculated
             this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
-            this.updateBox();
+            this.update();
             this.updateSelection();
             /*
             let html = this._htmlLines, t;
@@ -751,34 +749,16 @@ export class Display extends EventEmitter {
     private getLineOffset(e) {
         if (this.lines.length === 0)
             return { x: 0, y: 0 }
-        var os = this.offset(this._el);
+        var os = this._os;
         var y = (e.pageY - os.top) + this._el.scrollTop;
         y = Math.floor(y / this._charHeight);
-        /*
-        if (y < 0)
-            y = 0;
-        if (y >= this.lines.length)
-            y = this.lines.length - 1;
-        if (this.lines[y].length) {
-            if (y >= this.lines.length) {
-                x = this.lines[y].length + 1;
-                return { x: x, y: this.lines.length - 1 };
-            }
-        }
-        */
         var x = (e.pageX - os.left) + this._el.scrollLeft;
         x = Math.floor(x / this._charWidth);
-        /*
-        var l = this.lines[y].length;
-        if (x > l)
-            x = l;
-        */
         return { x: x, y: y };
     }
 
     private offset(elt) {
         var rect = elt.getBoundingClientRect(), bodyElt = document.body;
-
         return {
             top: rect.top + bodyElt.scrollTop,
             left: rect.left + bodyElt.scrollLeft
@@ -927,7 +907,7 @@ export class Display extends EventEmitter {
         var sel = this._currentSelection;
         var s, e, sL, eL, c, parts, w;
         //nothing changed so bail
-        if(end.x == sel.end.x && end.y == sel.end.y)
+        if (end.x == sel.end.x && end.y == sel.end.y)
             return;
 
         if (sel.start.y > sel.end.y) {
@@ -1154,7 +1134,9 @@ export class Display extends EventEmitter {
         this.updateSelection();
     }
 
-    private updateBox() {
+
+    private update() {
+        this._os = this.offset(this._el);
         let t = window.getComputedStyle(this._el);
         this._borderSize.height = parseInt(t.borderTopWidth) || 0;
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
@@ -1190,22 +1172,18 @@ export class Display extends EventEmitter {
                     bStyle.push("background:", format.background, ";");
                 if (format.color)
                     fStyle.push("color:", format.color, ";");
-                if(format.font || format.size)
-                {
+                if (format.font || format.size) {
                     oSize = this._character.style.fontSize;
                     oFont = this._character.style.fontFamily;
                 }
-                if (format.font)
-                {
+                if (format.font) {
                     fStyle.push("font-family: ", format.font, ";")
                     this._character.style.fontFamily = format.font;
                 }
-                if(format.size)
-                {
+                if (format.size) {
                     this._character.style.fontSize = format.size;
                 }
-                if(format.font || format.size)
-                {
+                if (format.font || format.size) {
                     height = Math.max(height, Math.ceil($(this._character).innerHeight() + 0.5));
                     this._character.style.fontSize = oSize;
                     this._character.style.fontFamily = oFont;

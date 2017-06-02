@@ -50,18 +50,11 @@
 .line {
     word-wrap: break-word;
     word-break: break-all;
-    /*width: 100%;*/
-    /*display: block;*/
     display: inline-block;
-    /*padding-bottom: 1px;*/
     box-sizing: border-box;
-    clear: both;
     line-height: normal;
     white-space: pre;
     min-width: 100%;
-    /*
-    position: absolute;
-    left: 0;*/
 }
 
 .line hr {
