@@ -265,49 +265,83 @@ export class Display extends EventEmitter {
                     this._currentSelection.end = o;
                 }
                 this._currentSelection.drag = true;
-                this.updateSelection();
                 this.emit('selection-start');
+                this.updateSelection();
             }
         })
 
         this._el.addEventListener('mousemove', (e) => {
             if (!this._currentSelection.drag) return;
-            /*
-            var o = this.getLineOffset(e);
-            this._currentSelection.end = o;
-            this.updateSelection();
-            this.emit('selection-changed');
-            */
         })
 
         this._el.addEventListener('mouseup', (e) => {
             if (this._currentSelection.drag) {
-                /*
-                this._currentSelection.drag = false;
-                var o = this.getLineOffset(e);
-                this._currentSelection.end = o;
-                this.updateSelection();
-                this.emit('selection-done');
-                */
             }
         })
 
         this._el.addEventListener('dblclick', (e) => {
+            if (this.lines.length === 0) return;
             var o = this.getLineOffset(e);
-            //select word
+
+            var o = this.getLineOffset(e);
+            if (o.y >= 0 && o.y < this.lines.length) {
+                let line = this.lines[o.y];
+                let len = line.length;
+                if (o.x >= 0 || o.x < len) {
+                    let sPos = o.x, ePos = o.x;
+                    while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+                        sPos--;
+                        if (sPos < 0)
+                            break;
+                    }
+                    sPos++;
+                    var ll = line.length;
+                    while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
+                        ePos++;
+                    }
+                    if (sPos >= 0 && ePos <= len) {
+                        this._currentSelection = {
+                            start: { x: sPos, y: o.y },
+                            end: { x: ePos, y: o.y },
+                            scrollTimer: null,
+                            drag: false
+                        };
+                        this.emit('selection-changed');
+                        this.emit('selection-done');
+                        this.updateSelection();
+                    }
+                }
+            }
+
         })
 
         this._el.addEventListener('click', (e) => {
+            if (this.lines.length === 0) return;
             if (e.detail === 3) {
                 var o = this.getLineOffset(e);
-                //select paragraph
+                if (o.y >= 0 && o.y < this.lines.length) {
+                    this._currentSelection = {
+                        start: { x: 0, y: o.y },
+                        end: { x: this.lines[o.y].length, y: o.y },
+                        scrollTimer: null,
+                        drag: false
+                    };
+                    this.emit('selection-changed');
+                    this.emit('selection-done');
+                    this.updateSelection();
+                }
             }
+            else if (e.detail === 4)
+                this.selectAll();
         })
 
         this._el.addEventListener('mouseenter', (e) => {
             if (!e.buttons || e.button != 0) {
-                if (this._currentSelection.drag)
+                if (this._currentSelection.drag) {
+                    this.emit('selection-changed');
                     this.emit('selection-done');
+                    this.updateSelection();
+                }
                 this._currentSelection.drag = false;
             }
             clearInterval(this._currentSelection.scrollTimer);
@@ -354,9 +388,6 @@ export class Display extends EventEmitter {
                     else
                         x = 0;
 
-                    console.log(`x ${x}`);
-                    console.log(`y ${y}`);
-                    console.log("------------------");
                     if (x == 0 && y == 0)
                         return;
 
@@ -423,8 +454,8 @@ export class Display extends EventEmitter {
                 this._lastMouse = e;
                 var o = this.getLineOffset(e);
                 this._currentSelection.end = o;
-                this.updateSelection();
                 this.emit('selection-changed');
+                this.updateSelection();
             }
         })
 
@@ -435,8 +466,8 @@ export class Display extends EventEmitter {
                 this._currentSelection.drag = false;
                 var o = this.getLineOffset(e);
                 this._currentSelection.end = o;
-                this.updateSelection();
                 this.emit('selection-done');
+                this.updateSelection();
             }
         })
 
@@ -754,7 +785,6 @@ export class Display extends EventEmitter {
         var sel = this._currentSelection;
         var s, e, sL, eL, c, parts, w;
 
-        this._overlays.selection = [];
         if (sel.start.y > sel.end.y) {
             sL = sel.end.y;
             eL = sel.start.y;
@@ -778,16 +808,18 @@ export class Display extends EventEmitter {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
             if (s < 0) s = 0;
-            if (e >= this.lines[sel.start.y].length)
-                e = this.lines[sel.start.y].length - 1;
+            if (e > this.lines[sel.start.y].length)
+                e = this.lines[sel.start.y].length;
 
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
-            s += 2;
+            this._overlays.selection = [];
             this._overlays.selection[sL] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`)
             this.updateOverlays();
             return;
         }
+        //TODO re-code, instead of clearing all/doing all just update the changed lines: sL, sL+1, eL and eL- 1
+        this._overlays.selection = [];
         var len = this.lines.length;
 
         if (sL < 0)
@@ -796,8 +828,8 @@ export class Display extends EventEmitter {
             eL = len - 1;
         if (s < 0)
             s = 0;
-        if (e >= this.lines[eL].length)
-            e = this.lines[eL].length - 1;
+        if (e > this.lines[eL].length)
+            e = this.lines[eL].length;
 
 
         for (let line = sL; line < eL + 1; line++) {
@@ -947,6 +979,7 @@ export class Display extends EventEmitter {
             scrollTimer: null,
             drag: false
         };
+        this.emit('selection-changed');
         this.emit('selection-done');
         this.updateSelection();
     }
@@ -959,6 +992,7 @@ export class Display extends EventEmitter {
             drag: false
         };
         this.emit('selection-changed');
+        this.emit('selection-done');
         this.updateSelection();
     }
 
