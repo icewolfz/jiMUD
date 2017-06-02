@@ -1165,30 +1165,48 @@ export class Display extends EventEmitter {
         let formats = this.lineFormats[idx];
         let offset = 0, bStyle = [];
         let fStyle = [], fCls;
+        let height = this._charHeight;
         for (let f = 0, len = formats.length; f < len; f++) {
             let format = formats[f];
-            let nFormat;
-            let end, td = [];
+            let nFormat, end, td = [], oSize, oFont;
+            if (f < len - 1) {
+                nFormat = formats[f + 1];
+                //skip empty blocks
+                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                    continue;
+                end = nFormat.offset;
+            }
+            else
+                end = text.length;
+            offset = format.offset;
             if (format.formatType === FormatType.Normal) {
-                if (f < len - 1) {
-                    nFormat = formats[f + 1];
-                    //skip empty blocks
-                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                        continue;
-                    end = nFormat.offset;
-                }
-                else
-                    end = text.length;
                 bStyle = [];
                 fStyle = [];
                 fCls = [];
-                offset = format.offset;
                 if (format.background)
                     bStyle.push("background:", format.background, ";");
                 if (format.color)
                     fStyle.push("color:", format.color, ";");
+                if(format.font || format.size)
+                {
+                    oSize = this._character.style.fontSize;
+                    oFont = this._character.style.fontFamily;
+                }
                 if (format.font)
+                {
                     fStyle.push("font-family: ", format.font, ";")
+                    this._character.style.fontFamily = format.font;
+                }
+                if(format.size)
+                {
+                    this._character.style.fontSize = format.size;
+                }
+                if(format.font || format.size)
+                {
+                    height = Math.max(height, Math.ceil($(this._character).innerHeight() + 0.5));
+                    this._character.style.fontSize = oSize;
+                    this._character.style.fontFamily = oFont;
+                }
                 if (format.style !== FontStyle.None) {
                     if ((format.style & FontStyle.Bold) == FontStyle.Bold)
                         fStyle.push("font-weight: bold;");
@@ -1217,17 +1235,6 @@ export class Display extends EventEmitter {
                 fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
             }
             else if (format.formatType === FormatType.Link) {
-                if (f < len - 1) {
-                    nFormat = formats[f + 1];
-                    //skip empty blocks
-                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                        continue;
-                    end = nFormat.offset;
-                }
-                else
-                    end = text.length;
-                offset = format.offset;
-
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
                 fore.push(format.href);
                 fore.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
@@ -1242,17 +1249,6 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>')
             else if (format.formatType === FormatType.MXPLink) {
-                if (f < len - 1) {
-                    nFormat = formats[f + 1];
-                    //skip empty blocks
-                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                        continue;
-                    end = nFormat.offset;
-                }
-                else
-                    end = text.length;
-                offset = format.offset;
-
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.href);
                 fore.push('" expire="', format.expire, '"');
@@ -1261,41 +1257,26 @@ export class Display extends EventEmitter {
                 fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
                 fore.push(htmlEncode(text.substring(offset, end)));
                 fore.push('</span>');
-                //_expire
             }
             else if (format.formatType === FormatType.MXPLinkEnd) {
                 fore.push("</a>");
             }
             else if (format.formatType === FormatType.MXPSend) {
-                if (f < len - 1) {
-                    nFormat = formats[f + 1];
-                    //skip empty blocks
-                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                        continue;
-                    end = nFormat.offset;
-                }
-                else
-                    end = text.length;
-                offset = format.offset;
-
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.hint);
                 fore.push('" expire="', format.expire, '"');
-                fore.push(' onmouseover="', this.mxpTooltipFunction,'(this);"');
-                fore.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1:0 ,', ', format.tt,');return false;">');
-
+                fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
+                fore.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
                 back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
                 fore.push(htmlEncode(text.substring(offset, end)));
                 fore.push('</span>');
-                //_expire
             }
             else if (format.formatType === FormatType.MXPSendEnd) {
                 fore.push("</a>");
             }
-
+            //TODO add image and hr support
         }
-
-        return [`<span class="line" style="height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-index="${idx}" style="height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
     }
 }
