@@ -926,6 +926,9 @@ export class Display extends EventEmitter {
     private updateSelectionRange(end: Point) {
         var sel = this._currentSelection;
         var s, e, sL, eL, c, parts, w;
+        //nothing changed so bail
+        if(end.x == sel.end.x && end.y == sel.end.y)
+            return;
 
         if (sel.start.y > sel.end.y) {
             sL = sel.end.y;

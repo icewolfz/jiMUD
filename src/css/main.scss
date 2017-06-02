@@ -410,17 +410,6 @@ body {
     overflow: hidden;
 }
 
-.select-text .line,
-.select-text>span {
-    position: absolute;
-}
-
-.select-text * {
-    background-color: transparent !important;
-    border-color: transparent !important;
-    color: rgb(255, 255, 255) !important;
-}
-
 .select-text.trc {
     border-top-right-radius: 4px;
 }
