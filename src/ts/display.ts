@@ -1153,7 +1153,8 @@ export class Display extends EventEmitter {
         let height = this._charHeight;
         for (let f = 0, len = formats.length; f < len; f++) {
             let format = formats[f];
-            let nFormat, end, td = [], oSize, oFont;
+            let nFormat, end, td = [];
+            let oSize, oFont;
             if (f < len - 1) {
                 nFormat = formats[f + 1];
                 //skip empty blocks

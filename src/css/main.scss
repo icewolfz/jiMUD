@@ -142,11 +142,13 @@ body {
 
 .overlay-line {
     position: absolute;
+    clear: both;
 }
 
 .background-line {
     position: absolute;
     overflow: hidden;
+    clear: both;
 }
 
 #Character,
