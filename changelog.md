@@ -3,6 +3,7 @@
 - **Change:**
   - Log error setting default to on
   - Improved trigger performance by changing how some test are done
+  - Re-enable TestMapper() to allow testing of mapper
 - **Fixed:**
   - Fix bell unicode character display
   - Editor: New lines where not correctly being sent when sending as formated text
