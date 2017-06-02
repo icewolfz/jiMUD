@@ -72,14 +72,18 @@
 /* --- End CSS for ansi display --- */
 
 .line a,
-.line a:link {
+.line a:link,
+.line a *,
+.line a:link * {
     color: inherit;
     font-weight: inherit;
     text-decoration: underline;
 }
 
 .URLLink,
-.URLLink:link {
+.URLLink:link,
+.URLLink *,
+.URLLink:link * {
     text-decoration: underline;
     cursor: pointer;
 }

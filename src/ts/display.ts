@@ -1,7 +1,7 @@
 import EventEmitter = require('events');
 import { Parser, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from "./parser";
 import { AnsiColorCode } from "./ansi";
-import { clone, Size, stripHTML, getScrollBarSize } from "./library";
+import { clone, Size, stripHTML, getScrollBarSize, htmlEncode } from "./library";
 const electron = require('electron');
 
 export interface DisplayOptions extends ParserOptions {
@@ -76,6 +76,8 @@ export class Display extends EventEmitter {
         selection: [],
         find: []
     };
+
+    private _expire = {};
 
     public scrollLock: boolean = false;
 
@@ -571,6 +573,8 @@ export class Display extends EventEmitter {
     public clear() {
         this._parser.Clear();
         this.lines = [];
+        this.lineFormats = [];
+        this._expire = {};
         this._overlays = {
             selection: [],
             find: []
@@ -956,13 +960,16 @@ export class Display extends EventEmitter {
             this.updateOverlays();
             return;
         }
-        //this._overlays.selection = [];
+        this._overlays.selection = [];
+        //TODO make this smart, only update lines that have changed baed on the end and the new selected end
+        /*
         delete this._overlays.selection[sL - 1];
         delete this._overlays.selection[sL];
         delete this._overlays.selection[sL + 1];
         delete this._overlays.selection[eL];
         delete this._overlays.selection[eL - 1];
         delete this._overlays.selection[eL + 1];
+        */
 
         var len = this.lines.length;
 
@@ -977,8 +984,10 @@ export class Display extends EventEmitter {
 
 
         for (let line = sL; line < eL + 1; line++) {
+            /*
             if (line > sL + 1 && line < eL - 1)
                 continue;
+                */
             let startStyle = {
                 top: CornerType.Extern,
                 bottom: CornerType.Extern
@@ -1205,7 +1214,7 @@ export class Display extends EventEmitter {
                         fStyle.push("text-decoration:", td.join(''), ";");
                 }
                 back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
-                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', text.substring(offset, end), '</span>');
+                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
             }
             else if (format.formatType === FormatType.Link) {
                 if (f < len - 1) {
@@ -1219,23 +1228,73 @@ export class Display extends EventEmitter {
                     end = text.length;
                 offset = format.offset;
 
+                fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
+                fore.push(format.href);
+                fore.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
                 back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-
-                fore.push('<a class="URLLink" href="javascript:void(0);" title="');
-                fore.push(format.href);
-                fore.push('" onclick="', this.linkFunction, '(\`', format.href, '\`);return false;">');
-                fore.push(text.substring(offset, end));
-                //"title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">"
+                fore.push(htmlEncode(text.substring(offset, end)));
+                fore.push('</span>');
             }
             else if (format.formatType === FormatType.LinkEnd) {
-                fore.push("</a></span>");
+                fore.push("</a>");
             }
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>')
+            else if (format.formatType === FormatType.MXPLink) {
+                if (f < len - 1) {
+                    nFormat = formats[f + 1];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    end = nFormat.offset;
+                }
+                else
+                    end = text.length;
+                offset = format.offset;
+
+                fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
+                fore.push(format.href);
+                fore.push('" expire="', format.expire, '"');
+                fore.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
+                fore.push(htmlEncode(text.substring(offset, end)));
+                fore.push('</span>');
+                //_expire
+            }
+            else if (format.formatType === FormatType.MXPLinkEnd) {
+                fore.push("</a>");
+            }
+            else if (format.formatType === FormatType.MXPSend) {
+                if (f < len - 1) {
+                    nFormat = formats[f + 1];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    end = nFormat.offset;
+                }
+                else
+                    end = text.length;
+                offset = format.offset;
+
+                fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
+                fore.push(format.hint);
+                fore.push('" expire="', format.expire, '"');
+                fore.push(' onmouseover="', this.mxpTooltipFunction,'(this);"');
+                fore.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1:0 ,', ', format.tt,');return false;">');
+
+                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
+                fore.push(htmlEncode(text.substring(offset, end)));
+                fore.push('</span>');
+                //_expire
+            }
+            else if (format.formatType === FormatType.MXPSendEnd) {
+                fore.push("</a>");
+            }
+
         }
-
-
 
         return [`<span class="line" style="height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
     }
