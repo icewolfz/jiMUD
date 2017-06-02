@@ -1193,7 +1193,7 @@ export class input extends EventEmitter {
                 ret = alias.value;
                 break;
         }
-        if (ret === null)
+        if (ret === null || ret === undefined)
             return null;
         ret = this.ExecuteTriggers(1, ret, false, true);
         if (ret.endsWith("\n"))
@@ -1233,7 +1233,7 @@ export class input extends EventEmitter {
                 ret = macro.value;
                 break;
         }
-        if (ret == null)
+        if (ret === null || ret === undefined)
             return true;
         if (macro.send) {
             if (!ret.endsWith("\n"))
@@ -1351,9 +1351,9 @@ export class input extends EventEmitter {
         }
         var t = 0, tl = this._TriggerCache.length;
         for (; t < tl; t++) {
-            if (typeof this._TriggerCache[t].type != "undefined" && this._TriggerCache[t].type != type) continue;
+            if (this._TriggerCache[t].type !== undefined && this._TriggerCache[t].type != type) continue;
             if (frag && !this._TriggerCache[t].triggerPrompt) continue;
-            if (!frag && !this._TriggerCache[t].triggerNewline && (typeof this._TriggerCache[t].triggerNewline != "undefined"))
+            if (!frag && !this._TriggerCache[t].triggerNewline && (this._TriggerCache[t].triggerNewline !== undefined))
                 continue;
             if (this._TriggerCache[t].verbatim) {
                 if (raw != this._TriggerCache[t].pattern) continue;
@@ -1399,7 +1399,7 @@ export class input extends EventEmitter {
                 ret = trigger.value;
                 break;
         }
-        if (ret === null || typeof ret == 'undefined')
+        if (ret === null || ret === undefined)
             return null;
         if (r)
             return ret;
