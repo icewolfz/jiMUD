@@ -648,6 +648,17 @@ export class Display extends EventEmitter {
         this.updateOverlays();
     }
 
+    public updateOverlaysRange(start: number, end: number) {
+        let overlays = [];
+        for (let ol in this._overlays) {
+            if (!this._overlays.hasOwnProperty(ol))
+                continue;
+            overlays.push.apply(overlays, this._overlays[ol].slice(start, end));
+        }
+        //this._overlay.innerHTML = overlays.join('');
+        $(this._overlay).empty().append(overlays);
+    }    
+
     public updateOverlays(start?: number, end?: number) {
         /*
         if (start === undefined)
@@ -662,7 +673,7 @@ export class Display extends EventEmitter {
             //overlays.push.apply(overlays, this._overlays[ol].slice(start, end));
             overlays.push.apply(overlays, this._overlays[ol]);
         }
-        this._overlay.innerHTML = overlays.join('');
+        //this._overlay.innerHTML = overlays.join('');
         $(this._overlay).empty().append(overlays);
     }
 
@@ -905,7 +916,9 @@ export class Display extends EventEmitter {
 
     private updateSelectionRange(end: Point) {
         var sel = this._currentSelection;
-        var s, e, sL, eL, c, parts, w;
+        var s, e, sL, eL, parts, w;
+        var c, cE;
+        var start = sel.start;
         //nothing changed so bail
         if (end.x == sel.end.x && end.y == sel.end.y)
             return;
@@ -915,12 +928,26 @@ export class Display extends EventEmitter {
             eL = sel.start.y;
             s = sel.end.x;
             e = sel.start.x;
+            //lost lines
+            /*
+            c = Math.min(end.y, sL + 1);
+            cE = Math.max(end.y, sL + 1);
+            for (var tm = c; tm < cE; tm++)
+                delete this._overlays.selection[tm];
+                */
         }
         else if (sel.start.y < sel.end.y) {
             sL = sel.start.y;
             eL = sel.end.y;
             s = sel.start.x;
             e = sel.end.x;
+            //lost lines
+            /*
+            c = Math.min(end.y, eL + 1);
+            cE = Math.max(end.y, eL + 1);
+            for (var tm = c; tm < cE; tm++)
+                delete this._overlays.selection[tm];         
+                */
         }
         else if (sel.start.x == sel.end.x) {
             this.updateOverlays();
@@ -954,6 +981,7 @@ export class Display extends EventEmitter {
         delete this._overlays.selection[eL + 1];
         */
 
+
         var len = this.lines.length;
 
         if (sL < 0)
@@ -967,10 +995,8 @@ export class Display extends EventEmitter {
 
 
         for (let line = sL; line < eL + 1; line++) {
-            /*
-            if (line > sL + 1 && line < eL - 1)
+            if (line > c || line > cE)
                 continue;
-                */
             let startStyle = {
                 top: CornerType.Extern,
                 bottom: CornerType.Extern
@@ -1057,6 +1083,7 @@ export class Display extends EventEmitter {
 
             this._overlays.selection[line] = $(`<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`);
         }
+        //this.updateOverlays();
         this.updateOverlays();
     }
 
