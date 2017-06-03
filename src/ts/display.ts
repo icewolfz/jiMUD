@@ -257,6 +257,8 @@ export class Display extends EventEmitter {
 
         this._el.addEventListener('mousedown', (e) => {
             if (e.buttons && e.button == 0) {
+                e.preventDefault();
+                e.cancelBubble = true;                
                 var os = this._os;
                 if (e.pageX - os.left > this._el.clientWidth)
                     return;
@@ -457,7 +459,7 @@ export class Display extends EventEmitter {
                 this.updateSelectionRange(o);
             }
             else if (this._verticalScroll.dragging) {
-                this.updateScrollView(this._lastMouse.pageY);
+                this.updateScrollView();
             }
         })
 
@@ -1345,11 +1347,9 @@ export class Display extends EventEmitter {
         this.updateScrollView();
     }
 
-    updateScrollView(y?) {
+    updateScrollView() {
         var os = this._os;
-        if (y === undefined)
-            y = 0
-        y -= this._verticalScroll.dragY;
+        var y = this._lastMouse.pageY - this._verticalScroll.dragY;
 
         let h = this.lines.length * this._charHeight;
         let ch = this._el.clientHeight;
@@ -1392,8 +1392,8 @@ export class Display extends EventEmitter {
 
     scrollBy(x, y) {
         let h = this.lines.length * this._charHeight;
-        let ch = this._el.clientHeight;
+        let ch = this._el.clientHeight;        
         y = this._scrollLocation.top + (y < 0 ? Math.floor(y) : Math.ceil(y));
-        this.positionVerticalScroll(y / (h - ch) * this._verticalScroll.max);
+        this.positionVerticalScroll(y / (h - ch) *  this._verticalScroll.max);
     }
 }
