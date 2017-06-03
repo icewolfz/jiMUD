@@ -74,8 +74,8 @@ export class Display extends EventEmitter {
     public _maxLines: number = 5000;
     private _charHeight: number;
     private _charWidth: number;
-    private _viewCache: string[] = [];
-    private _backgroundCache: string[] = [];
+    private _viewLines: string[] = [];
+    private _backgroundLines: string[] = [];
     private _overlays: Overlays = {
         selection: [],
         find: []
@@ -143,6 +143,7 @@ export class Display extends EventEmitter {
             this._el = display;
         else
             throw "Display must be an id, element or jquery object";
+        this.createScrollbars();
         this.update();
 
         this._elJ = $(this._el);
@@ -168,6 +169,8 @@ export class Display extends EventEmitter {
 
         this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
+
+
         if (!options)
             options = { display: this }
         else
@@ -193,8 +196,8 @@ export class Display extends EventEmitter {
             if (data.line.length > this._maxLineLength)
                 this._maxLineLength = data.line.length;
             t = this.createLine();
-            this._viewCache.push(t[0]);
-            this._backgroundCache.push(t[1]);
+            this._viewLines.push(t[0]);
+            this._backgroundLines.push(t[1]);
         });
 
         this._parser.on('expire-links', (args) => {
@@ -221,17 +224,18 @@ export class Display extends EventEmitter {
             this._el.classList.remove('animate');
             let bar = this._elJ.hasHorizontalScrollBar();
             //TODO update overlays, either remove or recalculate
-            $(this._view).append(this._viewCache);
-            $(this._background).append(this._backgroundCache);
+            //$(this._view).append(this._viewCache);
+            //$(this._background).append(this._backgroundCache);
             this.trimLines();
-            //this.updateView();
+            this.updateScrollbars();
+            this.updateView();
             if (bar != this._elJ.hasHorizontalScrollBar())
                 this.updateWindow();
             //TODO split screen support
             this.scrollDisplay();
             this.emit('parse-done');
-            this._viewCache = [];
-            this._backgroundCache = [];
+            //this._viewCache = [];
+            //this._backgroundCache = [];
 
             //re-enable animation so they are all synced
             this._el.classList.add('animate');
@@ -277,8 +281,6 @@ export class Display extends EventEmitter {
 
         this._el.addEventListener('dblclick', (e) => {
             if (this.lines.length === 0) return;
-            var o = this.getLineOffset(e);
-
             var o = this.getLineOffset(e);
             if (o.y >= 0 && o.y < this.lines.length) {
                 let line = this.lines[o.y];
@@ -447,16 +449,20 @@ export class Display extends EventEmitter {
         })
 
         window.addEventListener('mousemove', (e) => {
+            this._lastMouse = e;
             if (this._currentSelection.drag) {
-                this._lastMouse = e;
                 var o = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-changed');
                 this.updateSelectionRange(o);
             }
+            else if (this._verticalScroll.dragging) {
+                this.updateScrollView(this._lastMouse.pageY);
+            }
         })
 
         window.addEventListener('mouseup', (e) => {
+            this._lastMouse = e;
             if (this._currentSelection.drag) {
                 clearInterval(this._currentSelection.scrollTimer);
                 this._currentSelection.scrollTimer = null;
@@ -465,6 +471,9 @@ export class Display extends EventEmitter {
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-done');
                 this.updateSelectionRange(o);
+            }
+            else if (this._verticalScroll.dragging) {
+                this.endScroll();
             }
         })
 
@@ -577,8 +586,8 @@ export class Display extends EventEmitter {
             selection: [],
             find: []
         }
-        this._viewCache = [];
-        this._backgroundCache = [];
+        this._viewLines = [];
+        this._backgroundLines = [];
         this._viewRange = { start: 0, end: 0 };
         this._maxLineLength = 0;
         this._overlay.innerHTML = null;
@@ -591,6 +600,7 @@ export class Display extends EventEmitter {
             scrollTimer: null
         };
         this._parser.Clear();
+        this.resetScrollBar();
     };
 
     public updateFont(font?: string, size?: string) {
@@ -626,7 +636,6 @@ export class Display extends EventEmitter {
     }
 
     public updateView() {
-        /*
         let w = this._maxLineLength * this._charWidth;
         let h = this.lines.length * this._charHeight;
         this._view.style.height = h + "px";
@@ -635,51 +644,38 @@ export class Display extends EventEmitter {
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + "px";
         this._overlay.style.width = Math.max(w, this._el.clientWidth) + "px";
 
-        this._viewRange.start = Math.floor(this._el.scrollTop / this._charHeight) - 6;
+        //this._viewRange.start = Math.floor(this._el.scrollTop / this._charHeight) - 6;
+        //this._viewRange.end = Math.ceil((this._el.scrollTop + this._elJ.innerHeight()) / this._charHeight) + 6;
+        this._viewRange.start = Math.floor(this._scrollLocation.top / this._charHeight);
+        this._viewRange.end = Math.ceil((this._scrollLocation.top + this._elJ.innerHeight()) / this._charHeight);
+
         if (this._viewRange.start < 0)
             this._viewRange.start = 0;
-        this._viewRange.end = Math.ceil((this._el.scrollTop + this._elJ.innerHeight()) / this._charHeight) + 6;
-        if (this._viewRange.end >= this.lines.length)
-            this._viewRange.end = this.lines.length - 1;
-        let lines = this._htmlLines.slice(this._viewRange.start, this._viewRange.end + 1);
-        $(this._view).empty().append(lines);
-        */
-        //this._view.innerHTML = lines.join('');
+        if (this._viewRange.end > this.lines.length)
+            this._viewRange.end = this.lines.length;
+        let lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
+        //$(this._view).empty().append(lines);
+        this._view.innerHTML = lines.join('');
+
+        lines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
+        this._background.innerHTML = lines.join('');
         this.updateOverlays();
     }
 
-    public updateOverlaysRange(start: number, end: number) {
-        let overlays = [];
-        for (let ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol))
-                continue;
-            overlays.push.apply(overlays, this._overlays[ol].slice(start, end));
-        }
-        //this._overlay.innerHTML = overlays.join('');
-        $(this._overlay).empty().append(overlays);
-    }    
-
     public updateOverlays(start?: number, end?: number) {
-        /*
         if (start === undefined)
             start = this._viewRange.start;
         if (end === undefined)
             end = this._viewRange.end
-            */
         let overlays = [];
         for (let ol in this._overlays) {
             if (!this._overlays.hasOwnProperty(ol))
                 continue;
-            //overlays.push.apply(overlays, this._overlays[ol].slice(start, end));
-            overlays.push.apply(overlays, this._overlays[ol]);
+            overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
+            //overlays.push.apply(overlays, this._overlays[ol]);
         }
-        //this._overlay.innerHTML = overlays.join('');
-        $(this._overlay).empty().append(overlays);
-    }
-
-    public scrollDisplay() {
-        if (!this.scrollLock)
-            this._el.scrollTop = this._el.scrollHeight;
+        this._overlay.innerHTML = overlays.join('');
+        //$(this._overlay).empty().append(overlays);
     }
 
     get WindowSize(): Size {
@@ -705,8 +701,10 @@ export class Display extends EventEmitter {
         this.emit('line-removed', line, this.lines[line]);
         this.lines.splice(line, 1);
         this.lineFormats.splice(line, 1);
-        $($(this._view).children().splice(line, 1)).remove();
-        $($(this._background).children().splice(line, 1)).remove();
+        this._backgroundLines.splice(line, 1);
+        this._viewLines.splice(line, 1);
+        //$($(this._view).children().splice(line, 1)).remove();
+        //$($(this._background).children().splice(line, 1)).remove();
 
 
 
@@ -739,8 +737,10 @@ export class Display extends EventEmitter {
             var amt = this.lines.length - this._maxLines
             this.lines.splice(0, amt);
             this.lineFormats.splice(0, amt);
-            $(this._view).children().slice(0, amt).remove()
-            $(this._background).children().slice(0, amt).remove()
+            this._viewLines.splice(0, amt);
+            this._backgroundLines.splice(0, amt);
+            //$(this._view).children().slice(0, amt).remove()
+            //$(this._background).children().slice(0, amt).remove()
 
             let m = 0;
             let lines = this.lines;
@@ -761,9 +761,11 @@ export class Display extends EventEmitter {
         if (this.lines.length === 0)
             return { x: 0, y: 0 }
         var os = this._os;
-        var y = (e.pageY - os.top) + this._el.scrollTop;
+        //var y = (e.pageY - os.top) + this._el.scrollTop;
+        var y = (e.pageY - os.top) + this._scrollLocation.top;
         y = Math.floor(y / this._charHeight);
-        var x = (e.pageX - os.left) + this._el.scrollLeft;
+        //var x = (e.pageX - os.left) + this._el.scrollLeft;
+        var x = (e.pageX - os.left) + this._scrollLocation.left;
         x = Math.floor(x / this._charWidth);
         return { x: x, y: y };
     }
@@ -808,7 +810,7 @@ export class Display extends EventEmitter {
 
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
-            this._overlays.selection[sL] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`)
+            this._overlays.selection[sL] = `<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`
             this.updateOverlays();
             return;
         }
@@ -909,7 +911,7 @@ export class Display extends EventEmitter {
             //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(0,128,0,0.5)"></span>`);
             //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(255,0,0,0.5)"></span>`);
 
-            this._overlays.selection[line] = $(`<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`);
+            this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
         this.updateOverlays();
     }
@@ -918,36 +920,21 @@ export class Display extends EventEmitter {
         var sel = this._currentSelection;
         var s, e, sL, eL, parts, w;
         var c, cE;
-        var start = sel.start;
         //nothing changed so bail
         if (end.x == sel.end.x && end.y == sel.end.y)
             return;
-
+        this._overlays.selection = [];
         if (sel.start.y > sel.end.y) {
             sL = sel.end.y;
             eL = sel.start.y;
             s = sel.end.x;
             e = sel.start.x;
-            //lost lines
-            /*
-            c = Math.min(end.y, sL + 1);
-            cE = Math.max(end.y, sL + 1);
-            for (var tm = c; tm < cE; tm++)
-                delete this._overlays.selection[tm];
-                */
         }
         else if (sel.start.y < sel.end.y) {
             sL = sel.start.y;
             eL = sel.end.y;
             s = sel.start.x;
             e = sel.end.x;
-            //lost lines
-            /*
-            c = Math.min(end.y, eL + 1);
-            cE = Math.max(end.y, eL + 1);
-            for (var tm = c; tm < cE; tm++)
-                delete this._overlays.selection[tm];         
-                */
         }
         else if (sel.start.x == sel.end.x) {
             this.updateOverlays();
@@ -965,23 +952,11 @@ export class Display extends EventEmitter {
 
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
-            this._overlays.selection = [];
-            this._overlays.selection[sL] = $(`<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`)
+
+            this._overlays.selection[sL] = `<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             this.updateOverlays();
             return;
         }
-        this._overlays.selection = [];
-        //TODO make this smart, only update lines that have changed baed on the end and the new selected end
-        /*
-        delete this._overlays.selection[sL - 1];
-        delete this._overlays.selection[sL];
-        delete this._overlays.selection[sL + 1];
-        delete this._overlays.selection[eL];
-        delete this._overlays.selection[eL - 1];
-        delete this._overlays.selection[eL + 1];
-        */
-
-
         var len = this.lines.length;
 
         if (sL < 0)
@@ -995,8 +970,6 @@ export class Display extends EventEmitter {
 
 
         for (let line = sL; line < eL + 1; line++) {
-            if (line > c || line > cE)
-                continue;
             let startStyle = {
                 top: CornerType.Extern,
                 bottom: CornerType.Extern
@@ -1081,7 +1054,7 @@ export class Display extends EventEmitter {
             //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(0,128,0,0.5)"></span>`);
             //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(255,0,0,0.5)"></span>`);
 
-            this._overlays.selection[line] = $(`<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`);
+            this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`
         }
         //this.updateOverlays();
         this.updateOverlays();
@@ -1167,6 +1140,7 @@ export class Display extends EventEmitter {
         let t = window.getComputedStyle(this._el);
         this._borderSize.height = parseInt(t.borderTopWidth) || 0;
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
+        this.updateScrollbars();
     }
 
     private createLine(idx?: number) {
@@ -1286,6 +1260,140 @@ export class Display extends EventEmitter {
             }
             //TODO add image and hr support
         }
-        return [`<span class="line" data-index="${idx}" style="height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-index="${idx}" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
+    }
+
+    public scrollDisplay() {
+        if (!this.scrollLock)
+            this.positionVerticalScroll(this._verticalScroll.max);
+        //this._el.scrollTop = this._el.scrollHeight;
+    }
+
+    private _verticalThumb: HTMLElement;
+    private _verticalTrack: HTMLElement;
+    private _verticalScroll = {
+        dragging: false,
+        dragY: 0,
+        y: 0,
+        max: 0
+    }
+    private _scrollLocation = {
+        top: 0,
+        left: 0
+    }
+
+    updateScrollbars() {
+        let h = this.lines.length * this._charHeight;
+        let ch = this._el.clientHeight; // - horzonal scroll height
+        let pv = h / ch;
+        let th = Math.ceil(1 / pv * ch);
+        if (th > ch)
+            th = ch;
+        this._verticalThumb.style.height = th + "px";
+
+        this._verticalScroll.max = ch - Math.ceil(1 / pv * ch);
+    }
+
+    createScrollbars() {
+        this._verticalTrack = document.createElement('div')
+        this._verticalTrack.id = this._el.id + "-vertical-track";
+        this._verticalTrack.className = 'scroll-track';
+        this._verticalTrack.style.width = "12px";
+        this._verticalTrack.style.position = "absolute";
+        this._verticalTrack.style.right = "0";
+        this._verticalTrack.style.top = "0";
+        this._verticalTrack.style.bottom = "0";
+        this._verticalTrack.style.zIndex = "49";
+        this._verticalTrack.style.backgroundColor = "green";
+        this._el.appendChild(this._verticalTrack);
+
+        this._verticalThumb = document.createElement('div')
+        this._verticalThumb.id = this._el.id + "-vertical-thumb";
+        this._verticalThumb.className = 'scroll-thumb';
+        this._verticalThumb.style.width = "12px";
+        this._verticalThumb.style.position = "absolute";
+        this._verticalThumb.style.right = "0";
+        this._verticalThumb.style.top = "0";
+        this._verticalThumb.style.zIndex = "50";
+        this._verticalThumb.style.backgroundColor = "red";
+        this._el.appendChild(this._verticalThumb);
+
+        this.updateScrollbars();
+        this._verticalThumb.addEventListener('mousedown', (e) => {
+            if (e.button === 0 && e.buttons) {
+                e.preventDefault();
+                e.cancelBubble = true;
+                var os = this._os;
+                this._verticalScroll.dragging = true;
+                this._verticalScroll.dragY = e.pageY - this._verticalScroll.y;
+            }
+        });
+        this._el.addEventListener('wheel', (event) => {
+            this.scrollBy(event.deltaX, event.deltaY);
+        });
+    }
+
+    resetScrollBar() {
+        this._verticalScroll = {
+            dragging: false,
+            dragY: 0,
+            y: 0,
+            max: 0
+        }
+        this._verticalThumb.style.top = "0";
+        this.updateScrollbars();
+        this.updateScrollView();
+    }
+
+    updateScrollView(y?) {
+        var os = this._os;
+        if (y === undefined)
+            y = 0
+        y -= this._verticalScroll.dragY;
+
+        let h = this.lines.length * this._charHeight;
+        let ch = this._el.clientHeight;
+
+        if (y < 0) {
+            y = 0;
+        } else if (y > this._verticalScroll.max) {
+            y = this._verticalScroll.max;
+        }
+
+        this.positionVerticalScroll(y);
+    }
+
+    endScroll() {
+        this._verticalScroll.dragging = false;
+        this.updateScrollView();
+    }
+
+    positionVerticalScroll(y) {
+        let h = this.lines.length * this._charHeight;
+        let ch = this._el.clientHeight;
+
+        if (y < 0) y = 0;
+        else if (y > this._verticalScroll.max)
+            y = this._verticalScroll.max;
+        this._verticalThumb.style.top = y + "px";
+        this._verticalScroll.y = y;
+
+        this._scrollLocation.top = (y / this._verticalScroll.max) * (h - ch);
+        if (this._scrollLocation.top <= 0)
+            this._scrollLocation.top = 0;
+        else if (this._scrollLocation.top > h - ch)
+            this._scrollLocation.top = h - ch;
+
+        this.updateView();
+        this._view.style.top = -this._scrollLocation.top + "px";
+        this._background.style.top = -this._scrollLocation.top + "px";
+        this._overlay.style.top = -this._scrollLocation.top + "px";
+    }
+
+    scrollBy(x, y) {
+        let h = this.lines.length * this._charHeight;
+        let ch = this._el.clientHeight;
+        y = this._scrollLocation.top + (y < 0 ? Math.floor(y) : Math.ceil(y));
+        this.positionVerticalScroll(y / (h - ch) * this._verticalScroll.max);
     }
 }

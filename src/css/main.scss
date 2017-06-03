@@ -38,6 +38,7 @@ body {
     background-color: black;
     text-shadow: none;
     padding: 2px;
+    overflow: hidden;
     /*
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);    
@@ -142,12 +143,6 @@ body {
 
 .overlay-line {
     position: absolute;
-    clear: both;
-}
-
-.background-line {
-    position: absolute;
-    overflow: hidden;
     clear: both;
 }
 

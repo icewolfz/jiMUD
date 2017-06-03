@@ -56,10 +56,17 @@
     white-space: pre;
     min-width: 100%;
     clear: both;
+    position: absolute;
 }
 
 .line hr {
     border: 0px;
+}
+
+.background-line {
+    position: absolute;
+    overflow: hidden;
+    clear: both;
 }
 
 
