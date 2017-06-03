@@ -47,7 +47,7 @@
     padding-top: 1px;
 }
 
-.line {
+.line, .background-line {
     word-wrap: break-word;
     word-break: break-all;
     display: inline-block;
@@ -64,9 +64,7 @@
 }
 
 .background-line {
-    position: absolute;
     overflow: hidden;
-    clear: both;
 }
 
 

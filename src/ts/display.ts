@@ -31,6 +31,14 @@ interface Range {
     end: number;
 }
 
+interface ScrollState {
+    dragging: boolean,
+    dragPosition: number,
+    position: number
+}
+
+export enum ScrollType { vertical = 0, horizontal = 1 }
+
 enum CornerType {
     Flat = 0,
     Extern = 1,
@@ -80,6 +88,9 @@ export class Display extends EventEmitter {
         selection: [],
         find: []
     };
+
+    private _VScroll: ScrollBar;
+    private _HScroll: ScrollBar;
 
     private _expire = {};
 
@@ -143,8 +154,7 @@ export class Display extends EventEmitter {
             this._el = display;
         else
             throw "Display must be an id, element or jquery object";
-        this.createScrollbars();
-        this.update();
+
 
         this._elJ = $(this._el);
 
@@ -170,6 +180,21 @@ export class Display extends EventEmitter {
         this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
 
+        this._VScroll = new ScrollBar(this._el, this._view);
+        this._VScroll.on('scroll', (amt) => {
+            this._view.style.top = -amt + "px";
+            this._background.style.top = -amt + "px";
+            this._overlay.style.top = -amt + "px";
+            this.updateView();
+        })
+        this._HScroll = new ScrollBar(this._el, this._view);
+        this._HScroll.type = ScrollType.horizontal;
+        this._HScroll.on('scroll', (amt) => {
+            this._view.style.left = -amt + "px";
+            this._background.style.left = -amt + "px";
+            this._overlay.style.left = -amt + "px";
+        })
+        this.update();
 
         if (!options)
             options = { display: this }
@@ -227,8 +252,8 @@ export class Display extends EventEmitter {
             //$(this._view).append(this._viewCache);
             //$(this._background).append(this._backgroundCache);
             this.trimLines();
-            this.updateScrollbars();
             this.updateView();
+            this.updateScrollbars();
             if (bar != this._elJ.hasHorizontalScrollBar())
                 this.updateWindow();
             //TODO split screen support
@@ -252,13 +277,13 @@ export class Display extends EventEmitter {
         });
 
         this._el.addEventListener('scroll', (e) => {
-            this.updateView();
+            //this.updateView();
         });
 
         this._el.addEventListener('mousedown', (e) => {
             if (e.buttons && e.button == 0) {
                 e.preventDefault();
-                e.cancelBubble = true;                
+                e.cancelBubble = true;
                 var os = this._os;
                 if (e.pageX - os.left > this._el.clientWidth)
                     return;
@@ -458,9 +483,6 @@ export class Display extends EventEmitter {
                 this.emit('selection-changed');
                 this.updateSelectionRange(o);
             }
-            else if (this._verticalScroll.dragging) {
-                this.updateScrollView();
-            }
         })
 
         window.addEventListener('mouseup', (e) => {
@@ -473,9 +495,6 @@ export class Display extends EventEmitter {
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-done');
                 this.updateSelectionRange(o);
-            }
-            else if (this._verticalScroll.dragging) {
-                this.endScroll();
             }
         })
 
@@ -602,7 +621,9 @@ export class Display extends EventEmitter {
             scrollTimer: null
         };
         this._parser.Clear();
-        this.resetScrollBar();
+        this._VScroll.reset();
+        this._HScroll.reset();
+        this.updateScrollbars();
     };
 
     public updateFont(font?: string, size?: string) {
@@ -634,6 +655,7 @@ export class Display extends EventEmitter {
             */
             //update view to display any line height changes
             this.updateView();
+            this.updateScrollbars();
         }
     }
 
@@ -648,8 +670,8 @@ export class Display extends EventEmitter {
 
         //this._viewRange.start = Math.floor(this._el.scrollTop / this._charHeight) - 6;
         //this._viewRange.end = Math.ceil((this._el.scrollTop + this._elJ.innerHeight()) / this._charHeight) + 6;
-        this._viewRange.start = Math.floor(this._scrollLocation.top / this._charHeight);
-        this._viewRange.end = Math.ceil((this._scrollLocation.top + this._elJ.innerHeight()) / this._charHeight);
+        this._viewRange.start = Math.floor(this._VScroll.position / this._charHeight);
+        this._viewRange.end = Math.ceil((this._VScroll.position + this._elJ.innerHeight()) / this._charHeight);
 
         if (this._viewRange.start < 0)
             this._viewRange.start = 0;
@@ -712,6 +734,7 @@ export class Display extends EventEmitter {
 
         //TODO redo overlays
         this.updateView();
+        this.updateScrollbars();
     }
 
     SetColor(code: number, color) {
@@ -764,10 +787,10 @@ export class Display extends EventEmitter {
             return { x: 0, y: 0 }
         var os = this._os;
         //var y = (e.pageY - os.top) + this._el.scrollTop;
-        var y = (e.pageY - os.top) + this._scrollLocation.top;
+        var y = (e.pageY - os.top) + this._VScroll.position;
         y = Math.floor(y / this._charHeight);
         //var x = (e.pageX - os.left) + this._el.scrollLeft;
-        var x = (e.pageX - os.left) + this._scrollLocation.left;
+        var x = (e.pageX - os.left) + this._HScroll.position;
         x = Math.floor(x / this._charWidth);
         return { x: x, y: y };
     }
@@ -1267,133 +1290,242 @@ export class Display extends EventEmitter {
 
     public scrollDisplay() {
         if (!this.scrollLock)
-            this.positionVerticalScroll(this._verticalScroll.max);
-        //this._el.scrollTop = this._el.scrollHeight;
+            this._VScroll.scrollToEnd();
     }
 
-    private _verticalThumb: HTMLElement;
-    private _verticalTrack: HTMLElement;
-    private _verticalScroll = {
-        dragging: false,
-        dragY: 0,
-        y: 0,
-        max: 0
-    }
-    private _scrollLocation = {
-        top: 0,
-        left: 0
-    }
+    private _scrollCorner: HTMLElement;
 
     updateScrollbars() {
-        let h = this.lines.length * this._charHeight;
-        let ch = this._el.clientHeight; // - horzonal scroll height
-        let pv = h / ch;
-        let th = Math.ceil(1 / pv * ch);
-        if (th > ch)
-            th = ch;
-        this._verticalThumb.style.height = th + "px";
+        this._HScroll.offset = this._VScroll.track.clientWidth;
+        this._HScroll.resize();
+        this._HScroll.visible = this._HScroll.scrollSize >= 0;
+        this._VScroll.offset = this._HScroll.visible ? this._HScroll.track.clientHeight : 0;
+        this._VScroll.resize();
 
-        this._verticalScroll.max = ch - Math.ceil(1 / pv * ch);
+        if (!this._HScroll.visible && this._scrollCorner) {
+            this._el.removeChild(this._scrollCorner);
+            this._scrollCorner = null;
+        }
+        else if (this._HScroll.visible && !this._scrollCorner) {
+            this._scrollCorner = document.createElement('div')
+            this._scrollCorner.className = 'scroll-corner';
+            this._scrollCorner.style.position = "absolute";
+            this._scrollCorner.style.right = "0";
+            this._scrollCorner.style.bottom = "0";
+            this._el.appendChild(this._scrollCorner);
+        }
+    }
+}
+
+export class ScrollBar extends EventEmitter {
+    private _parent;
+    private _content;
+    private _contentSize;
+    private _parentSize;
+    private _percentView;
+    private _visible = true;
+    private _offset = 0;
+    private _os = { left: 0, top: 0 };
+
+    private _lastMouse: MouseEvent;
+    public _type: ScrollType = ScrollType.vertical;
+
+    public thumb: HTMLElement;
+    public track: HTMLElement;
+    public position: number = 0;
+    public scrollSize: number = 0;
+    public maxPosition: number = 0;
+    public state: ScrollState = {
+        dragging: false,
+        dragPosition: 0,
+        position: 0
     }
 
-    createScrollbars() {
-        this._verticalTrack = document.createElement('div')
-        this._verticalTrack.id = this._el.id + "-vertical-track";
-        this._verticalTrack.className = 'scroll-track';
-        this._verticalTrack.style.width = "12px";
-        this._verticalTrack.style.position = "absolute";
-        this._verticalTrack.style.right = "0";
-        this._verticalTrack.style.top = "0";
-        this._verticalTrack.style.bottom = "0";
-        this._verticalTrack.style.zIndex = "49";
-        this._verticalTrack.style.backgroundColor = "green";
-        this._el.appendChild(this._verticalTrack);
+    get offset(): number { return this._offset; }
+    set offset(value: number) {
+        if (value != this._offset) {
+            this._offset = value;
+            this.updateLocation();
+        }
+    }
+    get type(): ScrollType { return this._type; }
+    set type(value: ScrollType) {
+        if (this._type != value) {
+            this._type = value;
+            this.updateLocation();
+        }
+    }
+    get visible(): boolean { return this._visible; }
+    set visible(value: boolean) {
+        if (!this._visible == value) {
+            this._visible = value;
+            this.track.style.display = value ? 'block' : 'none';
+        }
+    }
 
-        this._verticalThumb = document.createElement('div')
-        this._verticalThumb.id = this._el.id + "-vertical-thumb";
-        this._verticalThumb.className = 'scroll-thumb';
-        this._verticalThumb.style.width = "12px";
-        this._verticalThumb.style.position = "absolute";
-        this._verticalThumb.style.right = "0";
-        this._verticalThumb.style.top = "0";
-        this._verticalThumb.style.zIndex = "50";
-        this._verticalThumb.style.backgroundColor = "red";
-        this._el.appendChild(this._verticalThumb);
+    constructor(parent?: HTMLElement, content?: HTMLElement) {
+        super();
+        this.setParent(parent, content);
+    }
 
-        this.updateScrollbars();
-        this._verticalThumb.addEventListener('mousedown', (e) => {
+    setParent(parent: HTMLElement, content?: HTMLElement) {
+
+        if (this.track)
+            this._parent.removeChild(this.track);
+        this._parent = parent;
+        this._content = content || parent;
+        this.createBar();
+    }
+
+    private updateLocation() {
+        if (this._type === ScrollType.horizontal) {
+            this.track.style.top = "";
+            this.track.style.right = this.offset + "px";
+            this.track.style.left = "0";
+            this.track.style.bottom = "0";
+            this.track.style.width = "auto";
+            this.track.style.height = "";
+
+            this.thumb.style.height = "100%";
+            this.thumb.style.width = "";
+        }
+        else {
+            this.track.style.top = "0";
+            this.track.style.right = "0";
+            this.track.style.left = "";
+            this.track.style.bottom = this.offset + "px";
+            this.track.style.width = "";
+            this.track.style.height = "auto";
+
+            this.thumb.style.height = "";
+            this.thumb.style.width = "100%";
+        }
+        this.thumb.style.left = "0";
+        this.thumb.style.top = "0";
+        this._os = this.elOffset(this.track);
+    }
+
+    private createBar() {
+        this.track = document.createElement('div')
+        this.track.className = 'scroll-track';
+        this.track.style.position = "absolute";
+        this._parent.appendChild(this.track);
+
+        this.thumb = document.createElement('div')
+        this.thumb.className = 'scroll-thumb';
+        this.thumb.style.position = "absolute";
+        this.track.appendChild(this.thumb);
+        this.updateLocation();
+        this.thumb.addEventListener('mousedown', (e) => {
             if (e.button === 0 && e.buttons) {
                 e.preventDefault();
                 e.cancelBubble = true;
-                var os = this._os;
-                this._verticalScroll.dragging = true;
-                this._verticalScroll.dragY = e.pageY - this._verticalScroll.y;
+                this.state.dragging = true;
+                this.state.dragPosition = (this._type === ScrollType.horizontal ? (e.pageX - this._os.left) : (e.pageY - this._os.top)) - this.state.position;
             }
         });
-        this._el.addEventListener('wheel', (event) => {
-            this.scrollBy(event.deltaX, event.deltaY);
+        this._parent.addEventListener('wheel', (event) => {
+            this.scrollBy(this._type === ScrollType.horizontal ? event.deltaX : event.deltaY);
         });
+
+        window.addEventListener('mousemove', (e) => {
+            this._lastMouse = e;
+            if (this.state.dragging) {
+                this.updatePosition(this.currentPosition());
+            }
+        })
+
+        window.addEventListener('mouseup', (e) => {
+            this._lastMouse = e;
+            if (this.state.dragging) {
+                this.state.dragging = false;
+                this.updatePosition(this.currentPosition());
+            }
+        })
+
+        window.addEventListener('resize', (e) => {
+            this.resize();
+        });
+        this.resize();
     }
 
-    resetScrollBar() {
-        this._verticalScroll = {
+    reset() {
+        this.state = {
             dragging: false,
-            dragY: 0,
-            y: 0,
-            max: 0
+            dragPosition: 0,
+            position: 0
         }
-        this._verticalThumb.style.top = "0";
-        this.updateScrollbars();
-        this.updateScrollView();
+        this.maxPosition = 0;
+        this.updatePosition(0);
+        this.update();
     }
 
-    updateScrollView() {
-        var os = this._os;
-        var y = this._lastMouse.pageY - this._verticalScroll.dragY;
+    update() {
+        let thumbSize = Math.ceil(1 / this._percentView * this._parentSize);
+        if (thumbSize > this._parentSize)
+            thumbSize = this._parentSize;
+        this.thumb.style[this._type === ScrollType.horizontal ? "width" : "height"] = thumbSize + "px";
+    }
 
-        let h = this.lines.length * this._charHeight;
-        let ch = this._el.clientHeight;
+    scrollBy(amount: number) {
+        amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
+        this.updatePosition(amount / this.scrollSize * this.maxPosition);
+    }
 
-        if (y < 0) {
-            y = 0;
-        } else if (y > this._verticalScroll.max) {
-            y = this._verticalScroll.max;
+    scrollToEnd() {
+        this.updatePosition(this.maxPosition);
+    }
+
+    resize() {
+        if (this._type === ScrollType.horizontal) {
+            this._contentSize = this._content.clientWidth;
+            this._parentSize = this._parent.clientWidth - this.offset;
         }
-
-        this.positionVerticalScroll(y);
+        else {
+            this._contentSize = this._content.clientHeight;
+            this._parentSize = this._parent.clientHeight - this.offset;
+        }
+        this.scrollSize = this._contentSize - this._parentSize;
+        this._percentView = this._contentSize / this._parentSize;
+        this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
+        if (this.maxPosition < 0)
+            this.maxPosition = 0;
+        this.update();
     }
 
-    endScroll() {
-        this._verticalScroll.dragging = false;
-        this.updateScrollView();
+    currentPosition() {
+        let p = this._type === ScrollType.horizontal ? (this._lastMouse.pageX - this.state.position - this._os.left) : (this._lastMouse.pageY - this.state.position - this._os.top);
+        if (p < 0)
+            return 0;
+        if (p > this.maxPosition)
+            return this.maxPosition;
+        return p;
     }
 
-    positionVerticalScroll(y) {
-        let h = this.lines.length * this._charHeight;
-        let ch = this._el.clientHeight;
-
-        if (y < 0) y = 0;
-        else if (y > this._verticalScroll.max)
-            y = this._verticalScroll.max;
-        this._verticalThumb.style.top = y + "px";
-        this._verticalScroll.y = y;
-
-        this._scrollLocation.top = (y / this._verticalScroll.max) * (h - ch);
-        if (this._scrollLocation.top <= 0)
-            this._scrollLocation.top = 0;
-        else if (this._scrollLocation.top > h - ch)
-            this._scrollLocation.top = h - ch;
-
-        this.updateView();
-        this._view.style.top = -this._scrollLocation.top + "px";
-        this._background.style.top = -this._scrollLocation.top + "px";
-        this._overlay.style.top = -this._scrollLocation.top + "px";
+    private updatePosition(p) {
+        if (p < 0)
+            p = 0;
+        else if (p > this.maxPosition)
+            p = this.maxPosition;
+        this.thumb.style[this._type === ScrollType.horizontal ? "left" : "top"] = p + "px";
+        this.state.dragPosition = p;
+        if (this.maxPosition != 0)
+            this.position = (p / this.maxPosition) * this.scrollSize;
+        else
+            this.position = 0;
+        if (this.position <= 0)
+            this.position = 0;
+        else if (this.position > this.scrollSize)
+            this.position = this.scrollSize;
+        this.update();
+        this.emit('scroll', this.position);
     }
 
-    scrollBy(x, y) {
-        let h = this.lines.length * this._charHeight;
-        let ch = this._el.clientHeight;        
-        y = this._scrollLocation.top + (y < 0 ? Math.floor(y) : Math.ceil(y));
-        this.positionVerticalScroll(y / (h - ch) *  this._verticalScroll.max);
+    private elOffset(elt) {
+        var rect = elt.getBoundingClientRect(), bodyElt = document.body;
+        return {
+            top: rect.top + bodyElt.scrollTop,
+            left: rect.left + bodyElt.scrollLeft
+        }
     }
 }
