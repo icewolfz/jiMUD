@@ -684,10 +684,17 @@ export class Display extends EventEmitter {
         if (this._viewRange.end > this.lines.length)
             this._viewRange.end = this.lines.length;
         let lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
+        let start = this._viewRange.start;
+        lines = lines.map((value, idx) => {
+            return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`);
+        })
         //$(this._view).empty().append(lines);
         this._view.innerHTML = lines.join('');
 
         lines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
+        lines = lines.map((value, idx) => {
+            return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`);
+        })
         this._background.innerHTML = lines.join('');
         this.updateOverlays();
     }
@@ -1291,7 +1298,7 @@ export class Display extends EventEmitter {
             }
             //TODO add image and hr support
         }
-        return [`<span class="line" data-index="${idx}" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-index="${idx}" style="top:{top}px;height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
     }
 
     public scrollDisplay() {
