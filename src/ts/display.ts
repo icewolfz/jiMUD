@@ -182,17 +182,23 @@ export class Display extends EventEmitter {
 
         this._VScroll = new ScrollBar(this._el, this._view);
         this._VScroll.on('scroll', (amt) => {
-            this._view.style.top = -amt + "px";
-            this._background.style.top = -amt + "px";
-            this._overlay.style.top = -amt + "px";
+            this._view.style.transform = `translate(${-this._HScroll.position}px, ${-amt}px)`;
+            this._background.style.transform = `translate(${-this._HScroll.position}px, ${-amt}px)`;
+            this._overlay.style.transform = `translate(${-this._HScroll.position}px, ${-amt}px)`;
+            //this._view.style.top = -amt + "px";
+            //this._background.style.top = -amt + "px";
+            //this._overlay.style.top = -amt + "px";
             this.updateView();
         })
         this._HScroll = new ScrollBar(this._el, this._view);
         this._HScroll.type = ScrollType.horizontal;
         this._HScroll.on('scroll', (amt) => {
-            this._view.style.left = -amt + "px";
-            this._background.style.left = -amt + "px";
-            this._overlay.style.left = -amt + "px";
+            this._view.style.transform = `translate(${-amt}px, ${-this._VScroll.position}px)`;
+            this._background.style.transform = `translate(${-amt}px, ${-this._VScroll.position}px)`;
+            this._overlay.style.transform = `translate(${-amt}px, ${-this._VScroll.position}px)`;
+            //this._view.style.left = -amt + "px";
+            //this._background.style.left = -amt + "px";
+            //this._overlay.style.left = -amt + "px";
         })
         this.update();
 
