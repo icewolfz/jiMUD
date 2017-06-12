@@ -1,12 +1,13 @@
 $images: "./../../assets";
 $borderColor: "#908271";
 $color: "wheat";
-#display {
+#display-container {
     left: 35px;
     right: 181px;
     top: 3px;
     bottom: 29px;
     border: 1px solid #{$borderColor}#{$borderColor};
+    padding: 0px;
 }
 
 #display-border {

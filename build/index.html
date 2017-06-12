@@ -1,258 +1,602 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-  <head>
-    <meta charset="UTF-8">
-    <title>jiMUD</title>
-    <link href="css/main.css" rel="stylesheet" type="text/css" />
-    <link href="css/ansi.css" rel="stylesheet" type="text/css" />
-    <link href="css/monsters.css" rel="stylesheet" type="text/css" />
-    <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
-    <link href="css/theme.css" rel="stylesheet" type="text/css" />
-    <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css">
-    <script>
-      if (typeof module === 'object') { window.module = module; module = undefined; }
-    </script>
-    <script src="../lib/jquery.min.js"></script>
-    <script src="js/jquery.ext.js"></script>
-    <script>
-      //cSpell:ignore ismap hellip selectall lagmeter
-      if (window.module) module.module;
+<head>
+  <meta charset="UTF-8">
+  <title>jiMUD</title>
+  <link href="css/main.css" rel="stylesheet" type="text/css" />
+  <link href="css/ansi.css" rel="stylesheet" type="text/css" />
+  <link href="css/monsters.css" rel="stylesheet" type="text/css" />
+  <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+  <link href="css/theme.css" rel="stylesheet" type="text/css" />
+  <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css">
+  <script>
+    if (typeof module === 'object') { window.module = module; module = undefined; }
+  </script>
+  <script src="../lib/jquery.min.js"></script>
+  <script src="js/jquery.ext.js"></script>
+  <script>
+    //cSpell:ignore ismap hellip selectall lagmeter
+    if (window.module) module.module;
 
-      window.$selected = '';
-      window.$selectedurl = '';
-      window.$selectedline = '';
-      window.$selectedword = '';
+    window.$selected = '';
+    window.$selectedurl = '';
+    window.$selectedline = '';
+    window.$selectedword = '';
 
-      window.$selurl = window.$selectedurl;
-      window.$selline = window.$selectedline;
-      window.$selword = window.$selectedword;
+    window.$selurl = window.$selectedurl;
+    window.$selline = window.$selectedline;
+    window.$selword = window.$selectedword;
 
-      const Client = require('./js/client.js').Client;
-      const Status = require('./js/status.js').Status;
-      const Logger = require('./js/logging.js').Logger;
-      const Backup = require('./js/backup.js').Backup;
-      const { Settings } = require('./js/settings');
-      const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
-      const { dialog, Menu, MenuItem, app, nativeImage } = remote;
-      const { parseTemplate, setSelectionRange } = require("./js/library.js");
-      const { Finder } = require('./js/finder.js');
-      const fs = require('fs');
-      const path = require('path');
-      const { version } = require("../package.json");
+    const Client = require('./js/client.js').Client;
+    const Status = require('./js/status.js').Status;
+    const Logger = require('./js/logging.js').Logger;
+    const Backup = require('./js/backup.js').Backup;
+    const { Settings } = require('./js/settings');
+    const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
+    const { dialog, Menu, MenuItem, app, nativeImage } = remote;
+    const { parseTemplate, setSelectionRange } = require("./js/library.js");
+    const { Finder } = require('./js/finder.js');
+    const fs = require('fs');
+    const path = require('path');
+    const { version } = require("../package.json");
 
-      var set = Settings.load(remote.getGlobal('settingsFile'));
-      loadTheme(set.theme);
-      delete set;
+    var set = Settings.load(remote.getGlobal('settingsFile'));
+    loadTheme(set.theme);
+    delete set;
 
-      var client, _status, _logger, _backup;
-      var OoMUD;
-      var active = false;
-      var capture = 0, captureReview = 0;
-      var _captures = [], _captureReviews = [];
-      var _noCapture = false;
-      var _finder;
+    var client, _status, _logger, _backup;
+    var OoMUD;
+    var active = false;
+    var capture = 0, captureReview = 0;
+    var _captures = [], _captureReviews = [];
+    var _noCapture = false;
+    var _finder;
 
-      webFrame.setSpellCheckProvider("en-US", true, {
-        spellCheck: function (text) {
-          if (!client.options.spellchecking)
-            return true;          
-          return !(require('spellchecker').isMisspelled(text));
+    webFrame.setSpellCheckProvider("en-US", true, {
+      spellCheck: function (text) {
+        if (!client.options.spellchecking)
+          return true;
+        return !(require('spellchecker').isMisspelled(text));
+      }
+    });
+
+    function doLink(url) {
+      if (confirm("Open '" + url + "'?") === true)
+        shell.openExternal(url);
+    }
+
+    function doMXPLink(el, url) {
+      if (url.startsWith("OoMUD://") || url.startsWith("jiMUD://") || url.startsWith("client://"))
+        doMXPSend(0, el, url.substring(8));
+      else if (confirm("Open '" + url + "'?") === true)
+        shell.openExternal(url.replace("&text;", $(el).text()));
+    }
+
+    function doMXPSend(e, el, url, pmt, tt) {
+      el = $(el);
+      var im = el.find("img[ismap]");
+      var extra = "";
+      if (im.length > 0) {
+        var offset = im.offset();
+        var x = Math.floor(e.clientX - offset.left);
+        var y = Math.floor(e.clientY - offset.top);
+        extra = "?" + x + "," + y;
+      }
+
+      if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) == "[object Array]") {
+        var menu = new Menu();
+        var item;
+        for (var i = 0, il = url.length; i < il; i++) {
+          url[i] = url[i].replace("&text;", $(el).text());
+          if (i < tt.length) {
+            item = new MenuItem({
+              label: tt[i], click(item) {
+                MXPMenuHandler(item.cmd, pmt);
+              }
+            });
+          }
+          else {
+            item = new MenuItem({
+              label: url[i], click(item) {
+                MXPMenuHandler(item.cmd, pmt);
+              }
+            });
+          }
+          item.cmd = url[i] + extra;
+          menu.append(item);
         }
+        menu.popup(remote.getCurrentWindow(), e.pageX, e.pageY);
+      }
+      else if (pmt) {
+        url = url.replace("&text;", $(el).text()) + extra;
+        client.commandInput.val(url);
+        setSelectionRange(client.commandInput[0], url.length, url.length);
+      }
+      else {
+        url = url.replace("&text;", $(el).text()) + extra + "\n";
+        client.send(url);
+        if (client.telnet.echo && client.options.commandEcho)
+          client.echo(url);
+      }
+    }
+
+    function MXPMenuHandler(cmd, pmt) {
+      if (pmt) {
+        client.commandInput.val(cmd);
+        setSelectionRange(client.commandInput[0], cmd.length, cmd.length);
+      }
+      else {
+        client.send(cmd);
+        if (client.telnet.echo && client.options.commandEcho)
+          client.echo(cmd);
+      }
+    }
+
+    function doMXPTooltip(el) {
+      el = $(el);
+      el.prop("title", el.prop("title").replace("&text;", el.text()));
+    }
+
+    function selectAll() {
+      $("#display-frame")[0].contentWindow.selectAll();
+    }
+
+    function toggleView(view) {
+      switch (view) {
+        case 'button.connect':
+        case 'button.preferences':
+        case 'button.log':
+        case 'button.clear':
+        case 'button.lock':
+        case 'button.map':
+        case 'button.user':
+        case 'button.characters':
+          view = view.split('.');
+          client.options.buttons[view[1]] = !client.options.buttons[view[1]];
+          updateInterface();
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + "button"], checked: client.options.showButtonBar });
+          break;
+        case 'buttons':
+          client.options.showButtonBar = !client.options.showButtonBar;
+          updateInterface();
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
+          break;
+        case 'status':
+          client.options.showStatus = !client.options.showStatus;
+          updateInterface();
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
+          break;
+        case 'lagmeter':
+          client.options.lagMeter = !client.options.lagMeter;
+          updateInterface()
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
+          break;
+        case 'weather':
+          client.options.showStatusWeather = !client.options.showStatusWeather;
+          updateInterface()
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'weather'], checked: client.options.showStatusWeather });
+          break;
+        case 'limbs':
+          client.options.showStatusLimbs = !client.options.showStatusLimbs;
+          updateInterface()
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: client.options.showStatusLimbs });
+          break;
+        case 'health':
+          client.options.showStatusHealth = !client.options.showStatusHealth;
+          updateInterface()
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'health'], checked: client.options.showStatusHealth });
+          break;
+        case 'experience':
+          client.options.showStatusExperience = !client.options.showStatusExperience;
+          updateInterface()
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'experience'], checked: client.options.showStatusExperience });
+          break;
+        case 'partyhealth':
+          client.options.showStatusPartyHealth = !client.options.showStatusPartyHealth;
+          updateInterface()
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'partyhealth'], checked: client.options.showStatusPartyHealth });
+          break;
+        case 'combathealth':
+          client.options.showStatusCombatHealth = !client.options.showStatusCombatHealth;
+          updateInterface()
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'combathealth'], checked: client.options.showStatusCombatHealth });
+          break;
+        case 'limbhealth':
+          _status.ac = false;
+          break;
+        case 'limbarmor':
+          _status.ac = true;
+          break;
+      }
+    }
+
+    function loadTheme(theme) {
+      theme = parseTemplate(theme) + ".css";
+      if (!fs.existsSync(theme))
+        theme = parseTemplate(path.join("{themes}", "default")) + ".css";
+      var el = $("#theme");
+      if (el.attr('href') != theme)
+        el.attr('href', theme);
+      el = $("#theme", $("#display-frame").contents().find("head"));
+      if (el.attr('href') != theme)
+        el.attr('href', theme);
+    }
+
+    function updateInterface() {
+      loadTheme(client.options.theme);
+      $("#display-container").css('left', '');
+      $("#display-border").css('left', '');
+      $("#command").css('left', '');
+      if (!client.options.showButtonBar) {
+        $("#buttonbar").css('display', 'none');
+        var w = parseInt($("#buttonbar").css('left'), 10);
+        if (isNaN(w)) w = 0;
+        w += $("#buttonbar").outerWidth();
+
+        $("#display-container").css('left', $("#display-container").offset().left - w);
+        $("#display-border").css('left', $("#display-border").offset().left - w);
+        $("#command").css('left', $("#command").offset().left - w);
+      }
+      else {
+        $("#buttonbar").css('display', '');
+      }
+      if (client.options.scrollLocked) {
+        $("#lock").prop("title", "Unlock display");
+        $("#lock i").removeClass("fa-lock");
+        $("#lock i").addClass("fa-unlock");
+        $("#lock").addClass("on");
+      }
+      else {
+        $("#lock").removeClass("on");
+        $("#lock").prop("title", "Lock display");
+        $("#lock i").addClass("fa-lock");
+        $("#lock i").removeClass("fa-unlock");
+      }
+      if (!client.options.buttons.connect) {
+        $("#connect").css('display', 'none');
+        $("#disconnect").css('display', 'none');
+      }
+      else if (client.connecting || client.connected) {
+        $("#connect").css('display', 'none');
+        $("#disconnect").css('display', '');
+      }
+      else {
+        $("#connect").css('display', '');
+        $("#disconnect").css('display', 'none');
+      }
+      $("#characters").css('display', client.options.buttons.characters ? '' : 'none');
+      $("#preferences").css('display', client.options.buttons.preferences ? '' : 'none');
+      $("#log").css('display', client.options.buttons.log ? '' : 'none');
+      $("#clear").css('display', client.options.buttons.clear ? '' : 'none');
+      $("#lock").css('display', client.options.buttons.lock ? '' : 'none');
+      $("#map").css('display', client.options.buttons.map ? '' : 'none');
+
+      _status.updateInterface();
+      buildButtons();
+    }
+
+    function getDisplaySelectionText() {
+      var text = "";
+      if ($("#display-frame")[0].contentWindow.getSelection) {
+        text = $("#display-frame")[0].contentWindow.getSelection().toString();
+      } else if ($("#display-frame")[0].contentWindow.document.selection && document.selection.type != "Control") {
+        text = $("#display-frame")[0].contentWindow.document.selection.createRange().text;
+      }
+      return text;
+    }
+
+    function clearDisplaySelection() {
+      if ($("#display-frame")[0].contentWindow.getSelection) {
+        if ($("#display-frame")[0].contentWindow.getSelection().empty) {  // Chrome
+          $("#display-frame")[0].contentWindow.getSelection().empty();
+        } else if ($("#display-frame")[0].contentWindow.getSelection().removeAllRanges) {  // Firefox
+          $("#display-frame")[0].contentWindow.getSelection().removeAllRanges();
+        }
+      } else if ($("#display-frame")[0].contentWindow.document.selection) {  // IE?
+        $("#display-frame")[0].contentWindow.document.selection.empty();
+      }
+    }
+
+    function buildMenu(name, context) {
+      if (!name || context.length == 0)
+        return [];
+      var items = [];
+      for (var x = 0, xl = context.length; x < xl; x++) {
+        if (!context[x].enabled || context[x].parent != name) continue;
+        var menu;
+        if (context[x].caption == "-")
+          menu = { type: 'separator' };
+        else {
+          menu = {};
+          menu.label = context[x].caption;
+          menu.item = context[x];
+          menu.click = (item, win) => {
+            executeContext(item.item);
+          };
+          var sub = buildMenu(context[x].name || x, context);
+          if (sub.length > 0)
+            menu.submenu = sub;
+          if (context[x].icon && context[x].icon.length > 0)
+            menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
+        }
+        items.push(new MenuItem(menu));
+      }
+      return items;
+    }
+
+    function init() {
+      ipcRenderer.send('set-overlay', 0);
+      $(window).blur(function () {
+        active = false;
+      });
+      $(window).focus(function () {
+        active = true;
+        if (client.connected)
+          ipcRenderer.send('set-overlay', 1);
+        else if (!client.connecting)
+          ipcRenderer.send('set-overlay', 0);
       });
 
-      function doLink(url) {
-        if (confirm("Open '" + url + "'?") === true)
-          shell.openExternal(url);
-      }
+      $(window).resize(function () {
+        client.UpdateWindow();
+      });
 
-      function doMXPLink(el, url) {
-        if (url.startsWith("OoMUD://") || url.startsWith("jiMUD://") || url.startsWith("client://"))
-          doMXPSend(0, el, url.substring(8));
-        else if (confirm("Open '" + url + "'?") === true)
-          shell.openExternal(url.replace("&text;", $(el).text()));
-      }
+      client = new Client($("#display-frame").contents().find("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
+      if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
+        client.enabledProfiles = remote.getGlobal('profiles');
+      client.parser.enableBell = false;
+      client.parser.on('bell', () => {
+        shell.beep();
+      });
 
-      function doMXPSend(e, el, url, pmt, tt) {
-        el = $(el);
-        var im = el.find("img[ismap]");
-        var extra = "";
-        if (im.length > 0) {
-          var offset = im.offset();
-          var x = Math.floor(e.clientX - offset.left);
-          var y = Math.floor(e.clientY - offset.top);
-          extra = "?" + x + "," + y;
+      client.parser.linkFunction = "parent.doLink";
+      client.parser.mxpLinkFunction = "parent.doMXPLink";
+      client.parser.mxpSendFunction = "parent.doMXPSend";
+      client.parser.mxpTooltipFunction = "parent.doMXPTooltip";
+      var doc = $("#display-frame")[0].contentDocument || $("#display-frame")[0].contentWindow.document;
+
+      var mdown = false;
+      var sel = false;
+      doc.addEventListener("mousedown", function (e) {
+        mdown = e.button == 0;
+        sel = false;
+      });
+
+      doc.addEventListener("mouseleave", function (e) {
+        if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
+          clipboard.writeText(getDisplaySelectionText(), 'selection');
+          clearDisplaySelection()
+        }
+        mdown = false;
+        sel = false;
+      });
+
+      doc.addEventListener("mouseup", function (e) {
+        if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
+          clipboard.writeText(getDisplaySelectionText(), 'selection');
+          clearDisplaySelection()
+        }
+        mdown = false;
+        sel = false;
+      });
+
+      doc.addEventListener("selectionchange", function () {
+        sel = true;
+      });
+
+      doc.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
+        window.$selected = getDisplaySelectionText();
+        window.$copied = clipboard.readText('selection');
+        window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
+        window.$selectedline = $(e.srcElement).closest('.line').text();
+
+        var line = $(e.srcElement).closest('.line').text();
+        var x = (e.pageX - client.display.offset().left) + client.display.scrollLeft();
+        x = Math.floor(x / parseFloat(window.getComputedStyle(client.character[0]).width));
+
+        var sPos = x, ePos = x;
+        while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+          sPos--;
+          if (sPos < 0)
+            break;
+        }
+        sPos++;
+        var ll = line.length;
+        while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < ll) {
+          ePos++;
         }
 
-        if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) == "[object Array]") {
-          var menu = new Menu();
-          var item;
-          for (var i = 0, il = url.length; i < il; i++) {
-            url[i] = url[i].replace("&text;", $(el).text());
-            if (i < tt.length) {
-              item = new MenuItem({
-                label: tt[i], click(item) {
-                  MXPMenuHandler(item.cmd, pmt);
-                }
-              });
-            }
+        if (sPos + ePos - sPos > ll)
+          window.$selectedword = '';
+        else
+          window.$selectedword = line.substring(sPos, ePos);
+
+        window.$selurl = window.$selectedurl;
+        window.$selline = window.$selectedline;
+        window.$selword = window.$selectedword;
+
+        var c = new Menu();
+
+
+        var context = client.contexts;
+        if (context.length > 0) {
+          for (var x = 0, xl = context.length; x < xl; x++) {
+            if (!context[x].enabled || context[x].parent) continue;
+            var menu;
+            if (context[x].caption == "-")
+              menu = { type: 'separator' };
             else {
-              item = new MenuItem({
-                label: url[i], click(item) {
-                  MXPMenuHandler(item.cmd, pmt);
-                }
-              });
+              menu = {};
+              menu.label = context[x].caption;
+              menu.item = context[x];
+              menu.click = (item, win) => {
+                executeContext(item.item);
+              };
+              var sub = buildMenu(context[x].name || x, context);
+              if (sub.length > 0)
+                menu.submenu = sub;
+              if (context[x].icon && context[x].icon.length > 0)
+                menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
             }
-            item.cmd = url[i] + extra;
-            menu.append(item);
+            c.append(new MenuItem(menu));
           }
-          menu.popup(remote.getCurrentWindow(), e.pageX, e.pageY);
         }
-        else if (pmt) {
-          url = url.replace("&text;", $(el).text()) + extra;
-          client.commandInput.val(url);
-          setSelectionRange(client.commandInput[0], url.length, url.length);
-        }
-        else {
-          url = url.replace("&text;", $(el).text()) + extra + "\n";
-          client.send(url);
-          if (client.telnet.echo && client.options.commandEcho)
-            client.echo(url);
-        }
-      }
 
-      function MXPMenuHandler(cmd, pmt) {
-        if (pmt) {
-          client.commandInput.val(cmd);
-          setSelectionRange(client.commandInput[0], cmd.length, cmd.length);
+        if (client.defaultContext) {
+          if (c.items.length > 0)
+            c.append(new MenuItem({ type: 'separator' }));
+          if (window.$selected && window.$selected != "") {
+            c.append(new MenuItem({ role: 'copy' }));
+          }
+          c.append(new MenuItem({ role: 'selectall' }));
+          c.append(new MenuItem({ type: 'separator' }));
+          c.append(new MenuItem({
+            label: 'Clear', click: () => {
+              client.clear()
+            }
+          }));
         }
-        else {
-          client.send(cmd);
-          if (client.telnet.echo && client.options.commandEcho)
-            client.echo(cmd);
+
+        if (c.items.length > 0)
+          c.popup(remote.getCurrentWindow());
+      }, false);
+
+      ['cut', 'copy', 'paste'].forEach(function (event) {
+        document.addEventListener(event, function (e) {
+          if (document.activeElement && (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA")) {
+            if ($(document.activeElement).val().length > 0 || getDisplaySelectionText().length == 0)
+              return;
+          }
+          if (getDisplaySelectionText().length > 0)
+            clipboard.writeText(getDisplaySelectionText(), 'selection')
+        });
+      });
+
+
+      OoMUD = client;
+      window.client = client;
+      window.OoMUD = client;
+      window.readClipboard = () => { return clipboard.readText('selection') || '' };
+      window.writeClipboard = (txt) => { clipboard.writeText(txt || '', 'selection') };
+      client.readClipboard = window.readClipboard;
+      client.writeClipboard = window.writeClipboard;
+
+      client.version = version;
+      client.host = "www.shadowmud.com";
+      client.port = client.options.dev ? 1035 : 1030;
+      client.telnet.GMCPSupports.push("Room 1");
+
+      client.on('profile-updated', (profile) => {
+        ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.enabledProfiles.indexOf(profile) != -1 });
+      });
+
+      client.on('profiles-updated', () => {
+        updateMenu();
+      });
+      client.on('add-line', (data) => {
+        var res;
+        if (_captures.length == 0) return;
+        //custom capture to ignore who list
+        res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.raw);
+        if (res && res.length > 0) {
+          capture = 0;
+          _noCapture = true;
+          return;
         }
-      }
-
-      function doMXPTooltip(el) {
-        el = $(el);
-        el.prop("title", el.prop("title").replace("&text;", el.text()));
-      }
-
-      function selectAll() {
-        client.display.selectAll();
-      }
-
-      function toggleView(view) {
-        switch (view) {
-          case 'button.connect':
-          case 'button.preferences':
-          case 'button.log':
-          case 'button.clear':
-          case 'button.lock':
-          case 'button.map':
-          case 'button.user':
-          case 'button.characters':
-            view = view.split('.');
-            client.options.buttons[view[1]] = !client.options.buttons[view[1]];
-            updateInterface();
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + "button"], checked: client.options.showButtonBar });
-            break;
-          case 'buttons':
-            client.options.showButtonBar = !client.options.showButtonBar;
-            updateInterface();
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
-            break;
-          case 'status':
-            client.options.showStatus = !client.options.showStatus;
-            updateInterface();
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
-            break;
-          case 'lagmeter':
-            client.options.lagMeter = !client.options.lagMeter;
-            updateInterface()
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
-            break;
-          case 'weather':
-            client.options.showStatusWeather = !client.options.showStatusWeather;
-            updateInterface()
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'weather'], checked: client.options.showStatusWeather });
-            break;
-          case 'limbs':
-            client.options.showStatusLimbs = !client.options.showStatusLimbs;
-            updateInterface()
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: client.options.showStatusLimbs });
-            break;
-          case 'health':
-            client.options.showStatusHealth = !client.options.showStatusHealth;
-            updateInterface()
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'health'], checked: client.options.showStatusHealth });
-            break;
-          case 'experience':
-            client.options.showStatusExperience = !client.options.showStatusExperience;
-            updateInterface()
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'experience'], checked: client.options.showStatusExperience });
-            break;
-          case 'partyhealth':
-            client.options.showStatusPartyHealth = !client.options.showStatusPartyHealth;
-            updateInterface()
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'partyhealth'], checked: client.options.showStatusPartyHealth });
-            break;
-          case 'combathealth':
-            client.options.showStatusCombatHealth = !client.options.showStatusCombatHealth;
-            updateInterface()
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'combathealth'], checked: client.options.showStatusCombatHealth });
-            break;
-          case 'limbhealth':
-            _status.ac = false;
-            break;
-          case 'limbarmor':
-            _status.ac = true;
-            break;
+        //end capture blocking for who list
+        res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.raw);
+        if (res && res.length > 0) {
+          capture = 0;
+          _noCapture = false;
+          return;
         }
-      }
-
-      function loadTheme(theme) {
-        theme = parseTemplate(theme) + ".css";
-        if (!fs.existsSync(theme))
-          theme = parseTemplate(path.join("{themes}", "default")) + ".css";
-        var el = $("#theme");
-        if (el.attr('href') != theme)
-          el.attr('href', theme);
-      }
-
-      function updateInterface() {
-        loadTheme(client.options.theme);
-        $("#display").css('left', '');
-        $("#display-border").css('left', '');
-        $("#command").css('left', '');
-        if (!client.options.showButtonBar) {
-          $("#buttonbar").css('display', 'none');
-          var w = parseInt($("#buttonbar").css('left'), 10);
-          if (isNaN(w)) w = 0;
-          w += $("#buttonbar").outerWidth();
-
-          $("#display").css('left', $("#display").offset().left - w);
-          $("#display-border").css('left', $("#display-border").offset().left - w);
-          $("#command").css('left', $("#command").offset().left - w);
+        if (_noCapture) return;
+        //capture indented text
+        if (capture > 0 && data.raw.startsWith("    ")) {
+          ipcRenderer.send('chat', data.line);
+          data.gagged = true;
+          return;
         }
-        else {
-          $("#buttonbar").css('display', '');
+        var res, re;
+        //search capture review blocks
+        for (var c = 0, cl = _captureReviews.length; c < cl; c++) {
+          re = new RegExp(_captureReviews[c], 'g');
+          res = re.exec(data.raw);
+          if (!res || res.length === 0)
+            continue;
+          captureReview = 1;
+          ipcRenderer.send('chat', data.line);
+          data.gagged = true;
+          return;
         }
-        if (client.options.scrollLocked) {
+        //if in a review capture until end review
+        if (captureReview > 0) {
+          ipcRenderer.send('chat', data.line);
+          data.gagged = true;
+          res = /^-=-=- End Review -=-=-$/.exec(data.raw);
+          if (res && res.length > 0)
+            captureReview = -1;
+          return;
+        }
+        //review requires 1 extra capture to get the current date/time
+        if (captureReview == -1) {
+          ipcRenderer.send('chat', data.line);
+          data.gagged = true;
+          captureReview = 0;
+          return;
+        }
+
+
+        //capture lines based on matching regex's
+        for (var c = 0, cl = _captures.length; c < cl; c++) {
+          re = new RegExp(_captures[c], 'g');
+          res = re.exec(data.raw);
+          if (!res || res.length === 0)
+            continue;
+          if (capture > 0)
+            capture--;
+          capture++;
+          ipcRenderer.send('chat', data.line);
+          data.gagged = true;
+          return;
+        }
+        //no matching capture so if in capture mode reduce
+        if (capture > 0)
+          capture--;
+      });
+
+      client.on('notify', (title, message) => {
+        var notify = new window.Notification(title, { body: message });
+        notify.click = () => {
+          client.emit('notify-clicked', title);
+        };
+      });
+      client.on('options-loaded', () => {
+        _backup.loadSelection = client.options.backupLoad;
+        _backup.saveSelection = client.options.backupSave;
+        updateInterface();
+        buildCaptures();
+        client.port = client.options.dev ? 1035 : 1030;
+      });
+      client.on('scroll-lock', (lock) => {
+        ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: lock });
+        if (lock) {
           $("#lock").prop("title", "Unlock display");
+          $("#lock").addClass("on");
           $("#lock i").removeClass("fa-lock");
           $("#lock i").addClass("fa-unlock");
-          $("#lock").addClass("on");
         }
         else {
           $("#lock").removeClass("on");
@@ -260,1131 +604,857 @@
           $("#lock i").addClass("fa-lock");
           $("#lock i").removeClass("fa-unlock");
         }
-        if (!client.options.buttons.connect) {
-          $("#connect").css('display', 'none');
-          $("#disconnect").css('display', 'none');
+        client.options.scrollLocked = lock;
+        client.saveOptions();
+      });
+      client.on('connecting', () => {
+        if (client.options.buttons.connect) {
+          $("#connect").css("display", "none");
+          $("#disconnect").css("display", "");
         }
-        else if (client.connecting || client.connected) {
-          $("#connect").css('display', 'none');
-          $("#disconnect").css('display', '');
+        ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
+        ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
+        ipcRenderer.send('set-overlay', 1);
+      });
+
+      client.on('closed', () => {
+        if (client.options.buttons.connect) {
+          $("#connect").css("display", "");
+          $("#disconnect").css("display", "none");
+        }
+        ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
+        ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
+        ipcRenderer.send('set-overlay', 0);
+        ipcRenderer.send('closed');
+      });
+
+      client.on('connected', () => {
+        ipcRenderer.send('connected');
+      });
+
+      client.on('received-data', (data) => {
+        if (!active && client.connected)
+          ipcRenderer.send('set-overlay', 2);
+      });
+      client.on('parse-done', (lines) => {
+        _finder.find(false);
+      });
+
+      this.client.on('received-GMCP', (mod, obj) => {
+        ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
+      });
+
+      if (client.options.autoConnect)
+        setTimeout(function () { client.connect(); }, 600);
+
+      _backup = new Backup(client, remote.getGlobal('mapFile'));
+      _backup.loadSelection = client.options.backupLoad;
+      _backup.saveSelection = client.options.backupSave;
+
+      _backup.on('progress-start', (title) => {
+        ipcRenderer.send('set-progress', { value: 0 });
+        ipcRenderer.send('flush');
+        $("#Progressbar").html('<progress max="100"></progress>');
+        $("#ProgressTitle").html(title || "Importing data&hellip;");
+        $("#Progress")[0].showModal();
+      });
+
+      _backup.on('error', (err) => {
+        $("#Progress")[0].close();
+        ipcRenderer.send('set-progress', { value: -1 });
+        dialog.showMessageBox(remote.getCurrentWindow(), {
+          type: 'error',
+          title: 'Import error',
+          message: err || 'Error importing or exporting data.'
+        });
+      });
+
+      _backup.on('abort', (err) => {
+        $("#Progress")[0].close();
+        ipcRenderer.send('set-progress', { value: -1 });
+        dialog.showMessageBox(remote.getCurrentWindow(), {
+          type: 'error',
+          title: 'Aborted',
+          message: err || 'Aborted importing or exporting data.'
+        });
+      });
+
+      _backup.on('close', () => {
+        $("#Progress")[0].close();
+        ipcRenderer.send('set-progress', { value: -1 });
+      });
+
+      _backup.on('progress', (value) => {
+        $("#Progress progress").val(value);
+        ipcRenderer.send('set-progress', { value: value / 100.0 });
+      });
+
+      _backup.on('import-map', (data) => {
+        ipcRenderer.send('import-map', data);
+      });
+
+      _backup.on('imported-profiles', (data) => {
+        ipcRenderer.send('reload-profiles');
+      });
+
+      _backup.on('imported-settings', (data) => {
+        updateInterface();
+        buildCaptures();
+      });
+
+      _backup.on('finish-load', (data) => {
+
+      });
+      _logger = new Logger(client);
+
+      if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
+        _logger.name = remote.getGlobal('character');
+        $("#character-name").text(remote.getGlobal('character'));
+      }
+      _logger.on('started', () => {
+        $('#log').addClass('on');
+        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
+      });
+      _logger.on('stopped', () => {
+        $('#log').removeClass('on');
+        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
+      });
+
+      _status = new Status(client);
+      _status.on('display-changed', () => {
+        if (_status.ac) {
+          $("#health").removeClass('on');
+          $("#armor").addClass('on');
         }
         else {
-          $("#connect").css('display', '');
-          $("#disconnect").css('display', 'none');
+          $("#health").addClass('on');
+          $("#armor").removeClass('on');
         }
-        $("#characters").css('display', client.options.buttons.characters ? '' : 'none');
-        $("#preferences").css('display', client.options.buttons.preferences ? '' : 'none');
-        $("#log").css('display', client.options.buttons.log ? '' : 'none');
-        $("#clear").css('display', client.options.buttons.clear ? '' : 'none');
-        $("#lock").css('display', client.options.buttons.lock ? '' : 'none');
-        $("#map").css('display', client.options.buttons.map ? '' : 'none');
+        if (client.options.showArmor != _status.ac) {
+          client.options.showArmor = _status.ac;
+          client.saveOptions();
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !client.options.showArmor });
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
+        }
+      });
+      _status.ac = client.options.showArmor;
+      _status.on('set-title', (title) => {
+        if (this.client.options.autoCreateCharacter)
+          ipcRenderer.send('change-char', title);
+        _logger.name = title;
+        ipcRenderer.send('set-title', title);
+      });
+      updateMenu();
+      updateInterface();
+      buildCaptures();
 
-        client.display.update();
-        _status.updateInterface();
-        buildButtons();
+      window.onbeforeunload = function () {
+        if (client.options.askonclose && client.connected) {
+          var choice = dialog.showMessageBox(
+            remote.getCurrentWindow(),
+            {
+              type: 'warning',
+              title: 'Connected',
+              message: 'Closing will disconnect you from the mud, close anyway?',
+              buttons: ['Yes', 'No', 'Never ask again'],
+              defaultId: 1
+            });
+          if (choice === 2) {
+            client.options.askonclose = false;
+            client.saveOptions();
+            return;
+          }
+          if (choice !== 0)
+            return 'no';
+        }
+        return;
       }
 
-      function buildMenu(name, context) {
-        if (!name || context.length == 0)
-          return [];
-        var items = [];
-        for (var x = 0, xl = context.length; x < xl; x++) {
-          if (!context[x].enabled || context[x].parent != name) continue;
-          var menu;
-          if (context[x].caption == "-")
-            menu = { type: 'separator' };
-          else {
-            menu = {};
-            menu.label = context[x].caption;
-            menu.item = context[x];
-            menu.click = (item, win) => {
-              executeContext(item.item);
-            };
-            var sub = buildMenu(context[x].name || x, context);
-            if (sub.length > 0)
-              menu.submenu = sub;
-            if (context[x].icon && context[x].icon.length > 0)
-              menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
+      $("#status").on('contextmenu', (e) => {
+        e.preventDefault()
+        var c = new Menu();
+        c.append(new MenuItem({
+          label: '&Visible',
+          type: 'checkbox',
+          checked: client.options.showStatus,
+          click: () => {
+            toggleView("status");
           }
-          items.push(new MenuItem(menu));
-        }
-        return items;
-      }
-
-      function init() {
-        ipcRenderer.send('set-overlay', 0);
-        $(window).blur(function () {
-          active = false;
-        });
-        $(window).focus(function () {
-          active = true;
-          if (client.connected)
-            ipcRenderer.send('set-overlay', 1);
-          else if (!client.connecting)
-            ipcRenderer.send('set-overlay', 0);
-        });
-
-        $(window).resize(function () {
-          client.UpdateWindow();
-        });
-
-        client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
-        if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
-          client.enabledProfiles = remote.getGlobal('profiles');
-        client.display.enableBell = false;
-        client.display.on('bell', () => {
-          shell.beep();
-        });
-
-        client.display.on('selection-done', () => {
-          if (client.options.AutoCopySelectedToClipboard && client.display.hasSelection) {
-            clipboard.writeText(client.display.selection, 'selection');
-            client.display.clearSelection();
+        }));
+        c.append(new MenuItem({
+          label: '&Refresh',
+          click: () => {
+            client.sendGMCP('Core.Hello { "client\": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
           }
-        })
-
-        client.display._el.addEventListener('contextmenu', (e) => {
-          e.preventDefault()
-          window.$selected = client.display.selection;
-          window.$copied = clipboard.readText('selection');
-          window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
-          window.$selectedline = $(e.srcElement).closest('.line').text();
-
-          var line = $(e.srcElement).closest('.line').text();
-          var x = (e.pageX - client.display._elJ.offset().left) + client.display._elJ.scrollLeft();
-          x = Math.floor(x / client.display._charWidth);
-
-          var sPos = x, ePos = x;
-          while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
-            sPos--;
-            if (sPos < 0)
-              break;
+        }));
+        c.append(new MenuItem({ type: 'separator' }));
+        c.append(new MenuItem({
+          label: '&Weather',
+          type: 'checkbox',
+          checked: client.options.showStatusWeather,
+          click: () => {
+            toggleView("weather");
           }
-          sPos++;
-          var ll = line.length;
-          while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < ll) {
-            ePos++;
-          }
+        }));
 
-          if (sPos + ePos - sPos > ll)
-            window.$selectedword = '';
-          else
-            window.$selectedword = line.substring(sPos, ePos);
-
-          window.$selurl = window.$selectedurl;
-          window.$selline = window.$selectedline;
-          window.$selword = window.$selectedword;
-
-          var c = new Menu();
-
-
-          var context = client.contexts;
-          if (context.length > 0) {
-            for (var x = 0, xl = context.length; x < xl; x++) {
-              if (!context[x].enabled || context[x].parent) continue;
-              var menu;
-              if (context[x].caption == "-")
-                menu = { type: 'separator' };
-              else {
-                menu = {};
-                menu.label = context[x].caption;
-                menu.item = context[x];
-                menu.click = (item, win) => {
-                  executeContext(item.item);
-                };
-                var sub = buildMenu(context[x].name || x, context);
-                if (sub.length > 0)
-                  menu.submenu = sub;
-                if (context[x].icon && context[x].icon.length > 0)
-                  menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
+        c.append(new MenuItem({
+          label: '&Limbs',
+          submenu: [
+            {
+              label: '&Visible',
+              type: 'checkbox',
+              checked: client.options.showStatusLimbs,
+              click: () => {
+                toggleView("limbs");
               }
-              c.append(new MenuItem(menu));
-            }
+            },
+            { type: 'separator' },
+            {
+              label: '&Health',
+              type: 'checkbox',
+              checked: !client.options.showArmor,
+              click: () => {
+                toggleView("limbhealth");
+              }
+            },
+            {
+              label: '&Armor',
+              type: 'checkbox',
+              checked: client.options.showArmor,
+              click: () => {
+                toggleView("limbarmor");
+              }
+            },
+          ]
+        }));
+        c.append(new MenuItem({
+          label: '&Health',
+          type: 'checkbox',
+          checked: client.options.showStatusHealth,
+          click: () => {
+            toggleView("health");
           }
+        }));
+        c.append(new MenuItem({
+          label: '&Experience',
+          type: 'checkbox',
+          checked: client.options.showStatusExperience,
+          click: () => {
+            toggleView("experience");
+          }
+        }));
+        c.append(new MenuItem({
+          label: '&Party Health',
+          type: 'checkbox',
+          checked: client.options.showStatusPartyHealth,
+          click: () => {
+            toggleView("partyhealth");
+          }
+        }));
+        c.append(new MenuItem({
+          label: '&Combat Health',
+          type: 'checkbox',
+          checked: client.options.showStatusCombatHealth,
+          click: () => {
+            toggleView("combathealth");
+          }
+        }));
+        c.append(new MenuItem({
+          label: '&Lagmeter',
+          type: 'checkbox',
+          checked: client.options.lagMeter,
+          click: () => {
+            toggleView("lagmeter");
+          }
+        }));
 
-          if (client.defaultContext) {
-            if (c.items.length > 0)
-              c.append(new MenuItem({ type: 'separator' }));
-            if (window.$selected && window.$selected != "") {
-              c.append(new MenuItem({ role: 'copy' }));
-            }
-            c.append(new MenuItem({ label:'Select All', click: selectAll }));
-            c.append(new MenuItem({ type: 'separator' }));
-            c.append(new MenuItem({
-              label: 'Clear', click: () => {
-                client.clear()
+        c.popup(remote.getCurrentWindow());
+      });
+
+      $("#buttonbar").on('contextmenu', (e) => {
+        e.preventDefault()
+        var c = new Menu();
+        c.append(new MenuItem({
+          label: '&Visible',
+          type: 'checkbox',
+          checked: client.options.showButtonBar,
+          click: () => {
+            toggleView("buttons");
+          }
+        }));
+        c.append(new MenuItem({ type: 'separator' }));
+        c.append(new MenuItem({
+          label: '&Connect',
+          type: 'checkbox',
+          checked: client.options.buttons.connect,
+          click: () => {
+            toggleView("button.connect");
+          }
+        }));
+        c.append(new MenuItem({
+          label: 'C&hacters',
+          type: 'checkbox',
+          checked: client.options.buttons.characters,
+          click: () => {
+            toggleView("button.characters");
+          }
+        }));
+        c.append(new MenuItem({
+          label: '&Preferences',
+          type: 'checkbox',
+          checked: client.options.buttons.preferences,
+          click: () => {
+            toggleView("button.preferences");
+          }
+        }));
+        c.append(new MenuItem({
+          label: '&Log',
+          type: 'checkbox',
+          checked: client.options.buttons.log,
+          click: () => {
+            toggleView("button.log");
+          }
+        }));
+        c.append(new MenuItem({
+          label: '&Clear',
+          type: 'checkbox',
+          checked: client.options.buttons.clear,
+          click: () => {
+            toggleView("button.clear");
+          }
+        }));
+        c.append(new MenuItem({
+          label: '&Lock',
+          type: 'checkbox',
+          checked: client.options.buttons.lock,
+          click: () => {
+            toggleView("button.lock");
+          }
+        }));
+        c.append(new MenuItem({
+          label: '&Map',
+          type: 'checkbox',
+          checked: client.options.buttons.map,
+          click: () => {
+            toggleView("button.map");
+          }
+        }));
+        c.append(new MenuItem({
+          label: '&User buttons',
+          type: 'checkbox',
+          checked: client.options.buttons.user,
+          click: () => {
+            toggleView("button.user");
+          }
+        }));
+
+        c.popup(remote.getCurrentWindow());
+      });
+
+      $("#commandinput").on('contextmenu', (e) => {
+        e.preventDefault();
+        var inputMenu = Menu.buildFromTemplate([
+          { role: 'undo' },
+          { role: 'redo' },
+          { type: 'separator' },
+          { role: 'cut' },
+          { role: 'copy' },
+          { role: 'paste' },
+          { type: 'separator' },
+          { role: 'selectall' },
+        ])
+        var word = e.currentTarget.value.substring(e.currentTarget.selectionStart, e.currentTarget.selectionEnd);
+        var ol = word.length;
+        word = word.trimRight();
+        var ll = ol - word.length;
+        if (ll > 0)
+          e.currentTarget.selectionEnd = e.currentTarget.selectionEnd - ll;
+
+        if (client.options.spellchecking && require('spellchecker').isMisspelled(word)) {
+          var words = require('spellchecker').getCorrectionsForMisspelling(word);
+          if (words.length > 0)
+            inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+          var start = e.currentTarget.selectionStart;
+          var end = e.currentTarget.selectionEnd
+          for (var w = words.length - 1; w >= 0; w--) {
+            inputMenu.insert(0, new MenuItem({
+              label: words[w],
+              start: start,
+              end: end,
+              click: function (item) {
+                var value = $("#commandinput").val();
+                value = value.substring(0, item.start) + item.label + value.substring(item.end);
+                $("#commandinput").val(value);
+                $("#commandinput")[0].selectionStart = value.length;
+                $("#commandinput")[0].selectionEnd = value.length;
+                $("#commandinput").blur();
+                $("#commandinput").focus();
               }
             }));
           }
-
-          if (c.items.length > 0)
-            c.popup(remote.getCurrentWindow());
-        }, false);
-
-        ['cut', 'copy', 'paste'].forEach(function (event) {
-          document.addEventListener(event, function (e) {
-            if (document.activeElement && (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA")) {
-
-              if ($(document.activeElement).val().length > 0 || !client.display.hasSelection)
-                return;
-            }
-            if (client.display.hasSelection > 0)
-              clipboard.writeText(client.display.selection, 'selection')
-          });
-        });
-
-
-        OoMUD = client;
-        window.client = client;
-        window.OoMUD = client;
-        window.readClipboard = () => { return clipboard.readText('selection') || '' };
-        window.writeClipboard = (txt) => { clipboard.writeText(txt || '', 'selection') };
-        client.readClipboard = window.readClipboard;
-        client.writeClipboard = window.writeClipboard;
-
-        client.version = version;
-        client.host = "www.shadowmud.com";
-        client.port = client.options.dev ? 1035 : 1030;
-        client.telnet.GMCPSupports.push("Room 1");
-
-        client.on('profile-updated', (profile) => {
-          ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.enabledProfiles.indexOf(profile) != -1 });
-        });
-
-        client.on('profiles-updated', () => {
-          updateMenu();
-        });
-        client.on('add-line', (data) => {
-          var res;
-          if (_captures.length == 0) return;
-          //custom capture to ignore who list
-          res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.line);
-          if (res && res.length > 0) {
-            capture = 0;
-            _noCapture = true;
-            return;
-          }
-          //end capture blocking for who list
-          res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.line);
-          if (res && res.length > 0) {
-            capture = 0;
-            _noCapture = false;
-            return;
-          }
-          if (_noCapture) return;
-          //capture indented text
-          if (capture > 0 && data.line.startsWith("    ")) {
-            ipcRenderer.send('chat', data);
-            data.gagged = true;
-            return;
-          }
-          var res, re;
-          //search capture review blocks
-          for (var c = 0, cl = _captureReviews.length; c < cl; c++) {
-            re = new RegExp(_captureReviews[c], 'g');
-            res = re.exec(data.line);
-            if (!res || res.length === 0)
-              continue;
-            captureReview = 1;
-            ipcRenderer.send('chat', data);
-            data.gagged = true;
-            return;
-          }
-          //if in a review capture until end review
-          if (captureReview > 0) {
-            ipcRenderer.send('chat', data.line);
-            data.gagged = true;
-            res = /^-=-=- End Review -=-=-$/.exec(data.line);
-            if (res && res.length > 0)
-              captureReview = -1;
-            return;
-          }
-          //review requires 1 extra capture to get the current date/time
-          if (captureReview == -1) {
-            ipcRenderer.send('chat', data);
-            data.gagged = true;
-            captureReview = 0;
-            return;
-          }
-
-
-          //capture lines based on matching regex's
-          for (var c = 0, cl = _captures.length; c < cl; c++) {
-            re = new RegExp(_captures[c], 'g');
-            res = re.exec(data.line);
-            if (!res || res.length === 0)
-              continue;
-            if (capture > 0)
-              capture--;
-            capture++;
-            ipcRenderer.send('chat', data);
-            data.gagged = true;
-            return;
-          }
-          //no matching capture so if in capture mode reduce
-          if (capture > 0)
-            capture--;
-        });
-
-        client.on('notify', (title, message) => {
-          var notify = new window.Notification(title, { body: message });
-          notify.click = () => {
-            client.emit('notify-clicked', title);
-          };
-        });
-        client.on('options-loaded', () => {
-          _backup.loadSelection = client.options.backupLoad;
-          _backup.saveSelection = client.options.backupSave;
-          updateInterface();
-          buildCaptures();
-          client.port = client.options.dev ? 1035 : 1030;
-        });
-        client.on('scroll-lock', (lock) => {
-          ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: lock });
-          if (lock) {
-            $("#lock").prop("title", "Unlock display");
-            $("#lock").addClass("on");
-            $("#lock i").removeClass("fa-lock");
-            $("#lock i").addClass("fa-unlock");
-          }
-          else {
-            $("#lock").removeClass("on");
-            $("#lock").prop("title", "Lock display");
-            $("#lock i").addClass("fa-lock");
-            $("#lock i").removeClass("fa-unlock");
-          }
-          client.options.scrollLocked = lock;
-          client.saveOptions();
-        });
-        client.on('connecting', () => {
-          if (client.options.buttons.connect) {
-            $("#connect").css("display", "none");
-            $("#disconnect").css("display", "");
-          }
-          ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
-          ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
-          ipcRenderer.send('set-overlay', 1);
-        });
-
-        client.on('closed', () => {
-          if (client.options.buttons.connect) {
-            $("#connect").css("display", "");
-            $("#disconnect").css("display", "none");
-          }
-          ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
-          ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
-          ipcRenderer.send('set-overlay', 0);
-          ipcRenderer.send('closed');
-        });
-
-        client.on('connected', () => {
-          ipcRenderer.send('connected');
-        });
-
-        client.on('received-data', (data) => {
-          if (!active && client.connected)
-            ipcRenderer.send('set-overlay', 2);
-        });
-        client.on('parse-done', (lines) => {
-          _finder.find(false);
-        });
-
-        client.on('received-GMCP', (mod, obj) => {
-          ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
-        });
-
-        if (client.options.autoConnect)
-          setTimeout(function () { client.connect(); }, 600);
-
-        _backup = new Backup(client, remote.getGlobal('mapFile'));
-        _backup.loadSelection = client.options.backupLoad;
-        _backup.saveSelection = client.options.backupSave;
-
-        _backup.on('progress-start', (title) => {
-          ipcRenderer.send('set-progress', { value: 0 });
-          ipcRenderer.send('flush');
-          $("#Progressbar").html('<progress max="100"></progress>');
-          $("#ProgressTitle").html(title || "Importing data&hellip;");
-          $("#Progress")[0].showModal();
-        });
-
-        _backup.on('error', (err) => {
-          $("#Progress")[0].close();
-          ipcRenderer.send('set-progress', { value: -1 });
-          dialog.showMessageBox(remote.getCurrentWindow(), {
-            type: 'error',
-            title: 'Import error',
-            message: err || 'Error importing or exporting data.'
-          });
-        });
-
-        _backup.on('abort', (err) => {
-          $("#Progress")[0].close();
-          ipcRenderer.send('set-progress', { value: -1 });
-          dialog.showMessageBox(remote.getCurrentWindow(), {
-            type: 'error',
-            title: 'Aborted',
-            message: err || 'Aborted importing or exporting data.'
-          });
-        });
-
-        _backup.on('close', () => {
-          $("#Progress")[0].close();
-          ipcRenderer.send('set-progress', { value: -1 });
-        });
-
-        _backup.on('progress', (value) => {
-          $("#Progress progress").val(value);
-          ipcRenderer.send('set-progress', { value: value / 100.0 });
-        });
-
-        _backup.on('import-map', (data) => {
-          ipcRenderer.send('import-map', data);
-        });
-
-        _backup.on('imported-profiles', (data) => {
-          ipcRenderer.send('reload-profiles');
-        });
-
-        _backup.on('imported-settings', (data) => {
-          updateInterface();
-          buildCaptures();
-        });
-
-        _backup.on('finish-load', (data) => {
-
-        });
-        _logger = new Logger(client);
-
-        if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
-          _logger.name = remote.getGlobal('character');
-          $("#character-name").text(remote.getGlobal('character'));
         }
-        _logger.on('started', () => {
-          $('#log').addClass('on');
-          ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-        });
-        _logger.on('stopped', () => {
-          $('#log').removeClass('on');
-          ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-        });
+        inputMenu.popup(remote.getCurrentWindow());
 
-        _status = new Status(client);
-        _status.on('display-changed', () => {
-          if (_status.ac) {
-            $("#health").removeClass('on');
-            $("#armor").addClass('on');
-          }
-          else {
-            $("#health").addClass('on');
-            $("#armor").removeClass('on');
-          }
-          if (client.options.showArmor != _status.ac) {
-            client.options.showArmor = _status.ac;
-            client.saveOptions();
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !client.options.showArmor });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
-          }
-        });
-        _status.ac = client.options.showArmor;
-        _status.on('set-title', (title) => {
-          if (this.client.options.autoCreateCharacter)
-            ipcRenderer.send('change-char', title);
-          _logger.name = title;
-          ipcRenderer.send('set-title', title);
-        });
-        updateMenu();
-        updateInterface();
-        buildCaptures();
+      });
 
-        window.onbeforeunload = function () {
-          if (client.options.askonclose && client.connected) {
-            var choice = dialog.showMessageBox(
-              remote.getCurrentWindow(),
-              {
-                type: 'warning',
-                title: 'Connected',
-                message: 'Closing will disconnect you from the mud, close anyway?',
-                buttons: ['Yes', 'No', 'Never ask again'],
-                defaultId: 1
-              });
-            if (choice === 2) {
-              client.options.askonclose = false;
-              client.saveOptions();
-              return;
-            }
-            if (choice !== 0)
-              return 'no';
-          }
-          return;
+      _finder = new Finder(client.display);
+      _finder.on('word', () => {
+        client.options.find.word = _finder.MatchWord;
+        client.saveOptions();
+      })
+      _finder.on('case', () => {
+        client.options.find.case = _finder.MatchCase;
+        client.saveOptions();
+
+      })
+      _finder.on('reverse', () => {
+        client.options.find.reverse = _finder.Reverse;
+        client.saveOptions();
+      })
+      _finder.on('regex', () => {
+        client.options.find.regex = _finder.RegularExpression;
+        client.saveOptions();
+      })
+
+      _finder.on('shown', () => {
+        client.options.find.show = true;
+        client.saveOptions();
+      })
+      _finder.on('closed', () => {
+        client.options.find.show = false;
+        client.saveOptions();
+      })
+
+      _finder.on('found-results', () => {
+        if (client.displaySplit)
+          client.displaySplit.fill();
+      })
+
+      _finder.on('moved', () => {
+        if (client.displaySplit) {
+          client.displaySplit.fill();
+          /*
+            client.display.stop().animate({
+              scrollTop: client.display[0].scrollTop + client.displaySplit.outerHeight() + 5
+            }, 500, function () { });
+            */
+          client.display[0].scrollTop = client.display[0].scrollTop + client.displaySplit.outerHeight() + 5;
         }
+      })
 
-        $("#status").on('contextmenu', (e) => {
-          e.preventDefault()
-          var c = new Menu();
-          c.append(new MenuItem({
-            label: '&Visible',
-            type: 'checkbox',
-            checked: client.options.showStatus,
-            click: () => {
-              toggleView("status");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Refresh',
-            click: () => {
-              client.sendGMCP('Core.Hello { "client\": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
-            }
-          }));
-          c.append(new MenuItem({ type: 'separator' }));
-          c.append(new MenuItem({
-            label: '&Weather',
-            type: 'checkbox',
-            checked: client.options.showStatusWeather,
-            click: () => {
-              toggleView("weather");
-            }
-          }));
+      _finder.MatchCase = client.options.find.case;
+      _finder.MatchWord = client.options.find.word;
+      _finder.Reverse = client.options.find.reverse;
+      _finder.RegularExpression = client.options.find.regex;
+      if (client.options.find.show)
+        _finder.show();
 
-          c.append(new MenuItem({
-            label: '&Limbs',
-            submenu: [
-              {
-                label: '&Visible',
-                type: 'checkbox',
-                checked: client.options.showStatusLimbs,
-                click: () => {
-                  toggleView("limbs");
-                }
-              },
-              { type: 'separator' },
-              {
-                label: '&Health',
-                type: 'checkbox',
-                checked: !client.options.showArmor,
-                click: () => {
-                  toggleView("limbhealth");
-                }
-              },
-              {
-                label: '&Armor',
-                type: 'checkbox',
-                checked: client.options.showArmor,
-                click: () => {
-                  toggleView("limbarmor");
-                }
-              },
-            ]
-          }));
-          c.append(new MenuItem({
-            label: '&Health',
-            type: 'checkbox',
-            checked: client.options.showStatusHealth,
-            click: () => {
-              toggleView("health");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Experience',
-            type: 'checkbox',
-            checked: client.options.showStatusExperience,
-            click: () => {
-              toggleView("experience");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Party Health',
-            type: 'checkbox',
-            checked: client.options.showStatusPartyHealth,
-            click: () => {
-              toggleView("partyhealth");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Combat Health',
-            type: 'checkbox',
-            checked: client.options.showStatusCombatHealth,
-            click: () => {
-              toggleView("combathealth");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Lagmeter',
-            type: 'checkbox',
-            checked: client.options.lagMeter,
-            click: () => {
-              toggleView("lagmeter");
-            }
-          }));
+      if (client.options.showCharacterManager)
+        showCharacters();
+    };
 
-          c.popup(remote.getCurrentWindow());
-        });
-
-        $("#buttonbar").on('contextmenu', (e) => {
-          e.preventDefault()
-          var c = new Menu();
-          c.append(new MenuItem({
-            label: '&Visible',
-            type: 'checkbox',
-            checked: client.options.showButtonBar,
-            click: () => {
-              toggleView("buttons");
-            }
-          }));
-          c.append(new MenuItem({ type: 'separator' }));
-          c.append(new MenuItem({
-            label: '&Connect',
-            type: 'checkbox',
-            checked: client.options.buttons.connect,
-            click: () => {
-              toggleView("button.connect");
-            }
-          }));
-          c.append(new MenuItem({
-            label: 'C&hacters',
-            type: 'checkbox',
-            checked: client.options.buttons.characters,
-            click: () => {
-              toggleView("button.characters");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Preferences',
-            type: 'checkbox',
-            checked: client.options.buttons.preferences,
-            click: () => {
-              toggleView("button.preferences");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Log',
-            type: 'checkbox',
-            checked: client.options.buttons.log,
-            click: () => {
-              toggleView("button.log");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Clear',
-            type: 'checkbox',
-            checked: client.options.buttons.clear,
-            click: () => {
-              toggleView("button.clear");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Lock',
-            type: 'checkbox',
-            checked: client.options.buttons.lock,
-            click: () => {
-              toggleView("button.lock");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&Map',
-            type: 'checkbox',
-            checked: client.options.buttons.map,
-            click: () => {
-              toggleView("button.map");
-            }
-          }));
-          c.append(new MenuItem({
-            label: '&User buttons',
-            type: 'checkbox',
-            checked: client.options.buttons.user,
-            click: () => {
-              toggleView("button.user");
-            }
-          }));
-
-          c.popup(remote.getCurrentWindow());
-        });
-
-        $("#commandinput").on('contextmenu', (e) => {
-          e.preventDefault();
-          var inputMenu = Menu.buildFromTemplate([
-            { role: 'undo' },
-            { role: 'redo' },
-            { type: 'separator' },
-            { role: 'cut' },
-            { role: 'copy' },
-            { role: 'paste' },
-            { type: 'separator' },
-            { role: 'selectall' },
-          ])
-          var word = e.currentTarget.value.substring(e.currentTarget.selectionStart, e.currentTarget.selectionEnd);
-          var ol = word.length;
-          word = word.trimRight();
-          var ll = ol - word.length;
-          if (ll > 0)
-            e.currentTarget.selectionEnd = e.currentTarget.selectionEnd - ll;
-
-          if (client.options.spellchecking && require('spellchecker').isMisspelled(word)) {
-            var words = require('spellchecker').getCorrectionsForMisspelling(word);
-            if (words.length > 0)
-              inputMenu.insert(0, new MenuItem({ type: 'separator' }));
-            var start = e.currentTarget.selectionStart;
-            var end = e.currentTarget.selectionEnd
-            for (var w = words.length - 1; w >= 0; w--) {
-              inputMenu.insert(0, new MenuItem({
-                label: words[w],
-                start: start,
-                end: end,
-                click: function (item) {
-                  var value = $("#commandinput").val();
-                  value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                  $("#commandinput").val(value);
-                  $("#commandinput")[0].selectionStart = value.length;
-                  $("#commandinput")[0].selectionEnd = value.length;
-                  $("#commandinput").blur();
-                  $("#commandinput").focus();
-                }
-              }));
-            }
-          }
-          inputMenu.popup(remote.getCurrentWindow());
-
-        });
-
-        _finder = new Finder(client.display);
-        _finder.on('word', () => {
-          client.options.find.word = _finder.MatchWord;
-          client.saveOptions();
-        })
-        _finder.on('case', () => {
-          client.options.find.case = _finder.MatchCase;
-          client.saveOptions();
-
-        })
-        _finder.on('reverse', () => {
-          client.options.find.reverse = _finder.Reverse;
-          client.saveOptions();
-        })
-        _finder.on('regex', () => {
-          client.options.find.regex = _finder.RegularExpression;
-          client.saveOptions();
-        })
-
-        _finder.on('shown', () => {
-          client.options.find.show = true;
-          client.saveOptions();
-        })
-        _finder.on('closed', () => {
-          client.options.find.show = false;
-          client.saveOptions();
-        })
-
-        _finder.on('found-results', () => {
-          if (client.displaySplit)
-            client.displaySplit.fill();
-        })
-
-        _finder.on('moved', () => {
-          if (client.displaySplit) {
-            client.displaySplit.fill();
-            /*
-              client.display.stop().animate({
-                scrollTop: client.display[0].scrollTop + client.displaySplit.outerHeight() + 5
-              }, 500, function () { });
-              */
-            client.display[0].scrollTop = client.display[0].scrollTop + client.displaySplit.outerHeight() + 5;
-          }
-        })
-
-        _finder.MatchCase = client.options.find.case;
-        _finder.MatchWord = client.options.find.word;
-        _finder.Reverse = client.options.find.reverse;
-        _finder.RegularExpression = client.options.find.regex;
-        if (client.options.find.show)
-          _finder.show();
-
-        if (client.options.showCharacterManager)
-          showCharacters();
-      };
-
-      function executeContext(item) {
-        if (!item) return;
-        if (!item.enabled) return false;
-        var ret;// = "";
-        switch (item.style) {
-          case 1:
-            ret = client.parseOutgoing(item.value);
-            break;
-          case 2:
-            /*jslint evil: true */
-            var f = new Function("try { " + item.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
-            ret = f.apply(client);
-            break;
-          default:
-            ret = item.value;
-            break;
-        }
-        if (ret == null)
-          return true;
-        if (item.send) {
-          if (!ret.endsWith("\n"))
-            ret += "\n";
-          if (item.chain && this.client.commandInput.val().endsWith(" ")) {
-            this.client.commandInput.val(this.client.commandInput.val() + ret);
-            this.client.sendCommand();
-            return true;
-          }
-          if (this.client.connected)
-            this.client.send(ret);
-          if (this.client.telnet.echo && this.client.options.commandEcho)
-            this.client.echo(ret);
-        }
-        else if (item.append)
-          this.client.commandInput.val(this.client.commandInput.val() + ret);
+    function executeContext(item) {
+      if (!item) return;
+      if (!item.enabled) return false;
+      var ret;// = "";
+      switch (item.style) {
+        case 1:
+          ret = client.parseOutgoing(item.value);
+          break;
+        case 2:
+          /*jslint evil: true */
+          var f = new Function("try { " + item.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
+          ret = f.apply(client);
+          break;
+        default:
+          ret = item.value;
+          break;
+      }
+      if (ret == null)
         return true;
-      }
-
-      function executeButton(idx) {
-        var button;
-        if (idx < 0 || idx >= client.buttons.length) return false;
-        button = client.buttons[idx];
-        if (!button.enabled) return false;
-        var ret;// = "";
-        switch (button.style) {
-          case 1:
-            ret = client.parseOutgoing(button.value);
-            break;
-          case 2:
-            /*jslint evil: true */
-            var f = new Function("try { " + button.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
-            ret = f.apply(client);
-            break;
-          default:
-            ret = button.value;
-            break;
-        }
-        if (ret == null)
-          return true;
-        if (button.send) {
-          if (!ret.endsWith("\n"))
-            ret += "\n";
-          if (button.chain && this.client.commandInput.val().endsWith(" ")) {
-            this.client.commandInput.val(this.client.commandInput.val() + ret);
-            this.client.sendCommand();
-            return true;
-          }
-          if (this.client.connected)
-            this.client.send(ret);
-          if (this.client.telnet.echo && this.client.options.commandEcho)
-            this.client.echo(ret);
-        }
-        else if (button.append)
+      if (item.send) {
+        if (!ret.endsWith("\n"))
+          ret += "\n";
+        if (item.chain && this.client.commandInput.val().endsWith(" ")) {
           this.client.commandInput.val(this.client.commandInput.val() + ret);
+          this.client.sendCommand();
+          return true;
+        }
+        if (this.client.connected)
+          this.client.send(ret);
+        if (this.client.telnet.echo && this.client.options.commandEcho)
+          this.client.echo(ret);
+      }
+      else if (item.append)
+        this.client.commandInput.val(this.client.commandInput.val() + ret);
+      return true;
+    }
+
+    function executeButton(idx) {
+      var button;
+      if (idx < 0 || idx >= client.buttons.length) return false;
+      button = client.buttons[idx];
+      if (!button.enabled) return false;
+      var ret;// = "";
+      switch (button.style) {
+        case 1:
+          ret = client.parseOutgoing(button.value);
+          break;
+        case 2:
+          /*jslint evil: true */
+          var f = new Function("try { " + button.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
+          ret = f.apply(client);
+          break;
+        default:
+          ret = button.value;
+          break;
+      }
+      if (ret == null)
         return true;
-      }
-
-      function buildButtons() {
-        var buttons = $("#user-buttons");
-        buttons.empty();
-        if (!client.options.buttons.user)
-          return;
-        var bl = client.buttons.length;
-        if (bl > 0) {
-          for (var b = 0; b < bl; b++) {
-            var item = client.buttons[b];
-            if (!item.enabled) continue;
-            var button;
-            if (item.name && item.name.length > 0)
-              button = $('<a id="' + item.name + '" href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"></a>');
-            else
-              button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"></a>');
-            if (item.stretch)
-              button.addClass('button-stretch');
-
-            button.prop('title', item.caption);
-            if (item.icon.startsWith("fa-"))
-              button.html('<i class="fa ' + item.icon + '"></i>');
-            else if (item.icon.startsWith("gi-"))
-              button.html('<i class="glyphicon glyphicon-' + item.icon.substring(3) + '"></i>');
-            else if (item.icon.startsWith("glyphicon-"))
-              button.html('<i class="glyphicon ' + item.icon + '"></i>');
-            else if (item.icon.startsWith("."))
-              button.html('<i class="fa button-icon ' + item.icon.substring(1) + '"></i>');
-            else if (item.icon.length > 0)
-              button.html('<img src="' + parseTemplate(item.icon) + '" />');
-            else
-              button.html('<i class="fa fa-question"></i>');
-            buttons.append(button);
-          }
+      if (button.send) {
+        if (!ret.endsWith("\n"))
+          ret += "\n";
+        if (button.chain && this.client.commandInput.val().endsWith(" ")) {
+          this.client.commandInput.val(this.client.commandInput.val() + ret);
+          this.client.sendCommand();
+          return true;
         }
+        if (this.client.connected)
+          this.client.send(ret);
+        if (this.client.telnet.echo && this.client.options.commandEcho)
+          this.client.echo(ret);
       }
+      else if (button.append)
+        this.client.commandInput.val(this.client.commandInput.val() + ret);
+      return true;
+    }
 
-      function updateMenu() {
-        for (var profile in client.profiles.items)
-          ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.enabledProfiles.indexOf(profile) != -1 });
-
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: client.options.scrollLocked });
-        ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: !client.connected });
-        ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: client.connected });
-        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'connectbutton'], checked: client.options.buttons.connect });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'preferencesbutton'], checked: client.options.buttons.preferences });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'logbutton'], checked: client.options.buttons.log });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'clearbutton'], checked: client.options.buttons.clear });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'lockbutton'], checked: client.options.buttons.lock });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mapbutton'], checked: client.options.buttons.map });
-        ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
-
-      }
-
-      /**
-       * Build capture array
-       *
-       * Builds an array of regular expressions to text lines against to know if they should be captured, built
-       * based on chat capture preferences
-      */
-      function buildCaptures() {
-        _captures = [];
-        _captureReviews = [];
-        if (client.options.chat.captureTells) {
-          _captures.push('^([a-zA-Z_-]*) tells you:(.*)$',
-            '^You tell ([a-zA-Z_-]*):(.*)$',
-            '^\\*([a-zA-Z_-]*)(\\s?)(.*?)$',
-            '^([a-zA-Z_-]*) is idle, and may not have been paying attention.$',
-            '^([a-zA-Z_-]*) is in combat and may not have heard you.$',
-            '^([a-zA-Z_-]*) is in edit and may not be in a position to respond.$',
-            '^([a-zA-Z_-]*) is arrested and can not respond.$',
-            '^\\*You emote to ([a-zA-Z_-]*):(.*)$');
-          if (client.options.chat.captureReviews)
-            _captureReviews.push('^-=-=- Tell Review -=-=-$');
-        }
-        if (client.options.chat.captureTalk) {
-          _captures.push('^([a-zA-Z_-]*) says:(.*)$',
-            '^You say:(.*)$',
-            '^([a-zA-Z_-]*) whispers to you:(.*)$',
-            'You whisper to ([a-zA-Z_-]*):(.*)',
-            '^([a-zA-Z_-]*) yells:(.*)$',
-            '^You yell:(.*)$',
-            'You say in (.*):(.*)',
-            '([a-zA-Z_-]*) says something in (.*).',
-            '([a-zA-Z_-]*) says in (.*):(.*)');
-          if (client.options.chat.captureReviews)
-            _captureReviews.push('^-=-=- Say Review -=-=-$');
-        }
-        if (client.options.chat.captureLines) {
-          if (client.options.chat.captureAllLines) {
-            _captures.push('^\\[([a-zA-Z_-]*)\\](.*)$');
-            if (client.options.chat.captureReviews)
-              _captureReviews.push('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$');
-          }
+    function buildButtons() {
+      var buttons = $("#user-buttons");
+      buttons.empty();
+      if (!client.options.buttons.user)
+        return;
+      var bl = client.buttons.length;
+      if (bl > 0) {
+        for (var b = 0; b < bl; b++) {
+          var item = client.buttons[b];
+          if (!item.enabled) continue;
+          var button;
+          if (item.name && item.name.length > 0)
+            button = $('<a id="' + item.name + '" href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"></a>');
           else
-            for (var l = 0, ll = client.options.chat.lines.length; l < ll; l++) {
-              _captures.push('\\[' + client.options.chat.lines[l].trim() + '\\](.*)');
-              if (client.options.chat.captureReviews)
-                _captureReviews.push('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$');
-            }
+            button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"></a>');
+          if (item.stretch)
+            button.addClass('button-stretch');
+
+          button.prop('title', item.caption);
+          if (item.icon.startsWith("fa-"))
+            button.html('<i class="fa ' + item.icon + '"></i>');
+          else if (item.icon.startsWith("gi-"))
+            button.html('<i class="glyphicon glyphicon-' + item.icon.substring(3) + '"></i>');
+          else if (item.icon.startsWith("glyphicon-"))
+            button.html('<i class="glyphicon ' + item.icon + '"></i>');
+          else if (item.icon.startsWith("."))
+            button.html('<i class="fa button-icon ' + item.icon.substring(1) + '"></i>');
+          else if (item.icon.length > 0)
+            button.html('<img src="' + parseTemplate(item.icon) + '" />');
+          else
+            button.html('<i class="fa fa-question"></i>');
+          buttons.append(button);
         }
       }
+    }
 
-      ipcRenderer.on('load-char', (event, char) => {
-        if (!client.connected) {
-          _logger.name = char;
-          $("#character-name").text(char);
-        }
-      });
+    function updateMenu() {
+      for (var profile in client.profiles.items)
+        ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.enabledProfiles.indexOf(profile) != -1 });
 
-      ipcRenderer.on('load-default', (event, char) => {
-        if (!client.connected) {
-          _logger.name = "";
-          $("#character-name").text("&nbsp;");
-        }
-      });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: client.options.scrollLocked });
+      ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: !client.connected });
+      ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: client.connected });
+      ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
 
-      ipcRenderer.on('change-options', (event, file) => {
-        client.settingsFile = remote.getGlobal('settingsFile');
-      });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'connectbutton'], checked: client.options.buttons.connect });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'preferencesbutton'], checked: client.options.buttons.preferences });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'logbutton'], checked: client.options.buttons.log });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'clearbutton'], checked: client.options.buttons.clear });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'lockbutton'], checked: client.options.buttons.lock });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mapbutton'], checked: client.options.buttons.map });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
 
-      ipcRenderer.on('setting-changed', (event, data) => {
-        if (data.type == "mapper") {
-          client.options.mapper[data.name] = data.value;
-          client.saveOptions();
-        }
-        else if (data.type == "profiles") {
-          client.options.profiles[data.name] = data.value;
-          if (data.name == "enabled")
-            updateMenu();
-          client.saveOptions();
-        }
-        else if (data.type == "chat") {
-          client.options.chat[data.name] = data.value;
-          client.saveOptions();
-        }
-      });
+    }
 
-      ipcRenderer.on('send-background', (event, command) => {
-        client.sendCommand(command);
-      });
-
-      ipcRenderer.on('send-command', (event, command) => {
-        client.sendCommand(command);
-      });
-
-      ipcRenderer.on('send-raw', (event, raw) => {
-        client.sendRaw(raw);
-      });
-
-      ipcRenderer.on('send', (event, raw) => {
-        client.send(raw);
-      });
-
-      ipcRenderer.on('menu-reload', (event) => {
-        if (!client) return;
-        updateMenu();
-      });
-
-      ipcRenderer.on('reload-profiles', (event) => {
-        client.loadProfiles();
-        client.loadOptions();
-        buildButtons();
-        updateMenu();
-      });
-
-      ipcRenderer.on('reload-options', (event) => {
-        client.loadOptions()
-        updateMenu();
-      });
-
-      ipcRenderer.on('debug', (event, msg) => {
-        if (client.options.enableDebug)
-          client.debug(msg);
-      });
-
-      ipcRenderer.on('error', (event, err) => {
-        client.error(err);
-      });
-
-      function showCharacters() {
-        window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+    /**
+     * Build capture array
+     *
+     * Builds an array of regular expressions to text lines against to know if they should be captured, built
+     * based on chat capture preferences
+    */
+    function buildCaptures() {
+      _captures = [];
+      _captureReviews = [];
+      if (client.options.chat.captureTells) {
+        _captures.push('^([a-zA-Z_-]*) tells you:(.*)$',
+          '^You tell ([a-zA-Z_-]*):(.*)$',
+          '^\\*([a-zA-Z_-]*)(\\s?)(.*?)$',
+          '^([a-zA-Z_-]*) is idle, and may not have been paying attention.$',
+          '^([a-zA-Z_-]*) is in combat and may not have heard you.$',
+          '^([a-zA-Z_-]*) is in edit and may not be in a position to respond.$',
+          '^([a-zA-Z_-]*) is arrested and can not respond.$',
+          '^\\*You emote to ([a-zA-Z_-]*):(.*)$');
+        if (client.options.chat.captureReviews)
+          _captureReviews.push('^-=-=- Tell Review -=-=-$');
       }
+      if (client.options.chat.captureTalk) {
+        _captures.push('^([a-zA-Z_-]*) says:(.*)$',
+          '^You say:(.*)$',
+          '^([a-zA-Z_-]*) whispers to you:(.*)$',
+          'You whisper to ([a-zA-Z_-]*):(.*)',
+          '^([a-zA-Z_-]*) yells:(.*)$',
+          '^You yell:(.*)$',
+          'You say in (.*):(.*)',
+          '([a-zA-Z_-]*) says something in (.*).',
+          '([a-zA-Z_-]*) says in (.*):(.*)');
+        if (client.options.chat.captureReviews)
+          _captureReviews.push('^-=-=- Say Review -=-=-$');
+      }
+      if (client.options.chat.captureLines) {
+        if (client.options.chat.captureAllLines) {
+          _captures.push('^\\[([a-zA-Z_-]*)\\](.*)$');
+          if (client.options.chat.captureReviews)
+            _captureReviews.push('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$');
+        }
+        else
+          for (var l = 0, ll = client.options.chat.lines.length; l < ll; l++) {
+            _captures.push('\\[' + client.options.chat.lines[l].trim() + '\\](.*)');
+            if (client.options.chat.captureReviews)
+              _captureReviews.push('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$');
+          }
+      }
+    }
 
-      $(document).ready(init);
-    </script>
-  </head>
+    ipcRenderer.on('load-char', (event, char) => {
+      if (!client.connected) {
+        _logger.name = char;
+        $("#character-name").text(char);
+      }
+    });
 
-  <body id="client">
-    <div id="display">
+    ipcRenderer.on('load-default', (event, char) => {
+      if (!client.connected) {
+        _logger.name = "";
+        $("#character-name").text("&nbsp;");
+      }
+    });
+
+    ipcRenderer.on('change-options', (event, file) => {
+      client.settingsFile = remote.getGlobal('settingsFile');
+    });
+
+    ipcRenderer.on('setting-changed', (event, data) => {
+      if (data.type == "mapper") {
+        client.options.mapper[data.name] = data.value;
+        client.saveOptions();
+      }
+      else if (data.type == "profiles") {
+        client.options.profiles[data.name] = data.value;
+        if (data.name == "enabled")
+          updateMenu();
+        client.saveOptions();
+      }
+      else if (data.type == "chat") {
+        client.options.chat[data.name] = data.value;
+        client.saveOptions();
+      }
+    });
+
+    ipcRenderer.on('send-background', (event, command) => {
+      client.sendCommand(command);
+    });
+
+    ipcRenderer.on('send-command', (event, command) => {
+      client.sendCommand(command);
+    });
+
+    ipcRenderer.on('send-raw', (event, raw) => {
+      client.sendRaw(raw);
+    });
+
+    ipcRenderer.on('send', (event, raw) => {
+      client.send(raw);
+    });
+
+    ipcRenderer.on('menu-reload', (event) => {
+      if (!client) return;
+      updateMenu();
+    });
+
+    ipcRenderer.on('reload-profiles', (event) => {
+      client.loadProfiles();
+      client.loadOptions();
+      buildButtons();
+      updateMenu();
+    });
+
+    ipcRenderer.on('reload-options', (event) => {
+      client.loadOptions()
+      updateMenu();
+    });
+
+    ipcRenderer.on('debug', (event, msg) => {
+      if (client.options.enableDebug)
+        client.debug(msg);
+    });
+
+    ipcRenderer.on('error', (event, err) => {
+      client.error(err);
+    });
+
+    function showCharacters() {
+      window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+    }
+  </script>
+</head>
+
+<body id="client">
+  <div id="display-container">
+    <iframe id="display-frame" src="display.html" style="border: 0; padding:0; margin: 0;width: 100%; height: 100%" /></iframe>
+  </div>
+  <div id="display-border"></div>
+  <div id="command">
+    <div id="commandleft"></div>
+    <div id="commandright"></div>
+    <div id="commandbox">
+      <textarea type="text" id="commandinput" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
     </div>
-    <div id="display-border"></div>
-    <div id="command">
-      <div id="commandleft"></div>
-      <div id="commandright"></div>
-      <div id="commandbox">
-        <textarea type="text" id="commandinput" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
-      </div>
-      <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
+    <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
         <i class="fa fa-edit"></i>
       </a>
-    </div>
-    <div id="buttonbar">
-      <a href="javascript:void(0)" title="Connect" id="connect" class="button" onclick="client.connect();">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-0.6 -0.6 17 16">
-          <path d="M16 0c0 0.5 0 1.1 0 1.6 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.2 0.1 0.6 0 0.8 0 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.6 0 0.8 -0.1 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.8 0-1.6 0-2.4 0 -0.1-0.2 0.1-0.7 0-0.8s-0.7 0.1-0.8 0 0.1-0.7 0-0.8c-0.1-0.1-0.8 0.1-0.8 0 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.2-0.1-0.6 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.2-0.1 0.6 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.3-0.1 0.5 0 0.8 0 0.1-0.2-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.7 0.1 0.8 0c0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.6 0.1 0.8 0C15.5 0 15.8 0 16 0z" />
-          <path d="M6.4 8c0.3 0 0.5 0 0.8 0 0.1 0 0.7-0.1 0.8 0 0.1 0.2-0.1 0.6 0 0.8 0.1 0.2-0.1 0.7 0 0.8 0 0 0.8 0 0.8 0 -0.1 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.8 0 0.8 -0.2 0.1-0.6 0-0.8 0 -0.3 0-0.5 0-0.8 0 -0.2 0-0.7-0.1-0.8 0 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.3 0-0.5 0-0.8 0 -0.1 0-0.7 0.1-0.8 0 -0.1-0.2 0.1-0.6 0-0.8 0.2-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8c0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1 0-0.7 0-0.8 0-0.3 0-0.5 0-0.8 0-0.2-0.1-0.6 0-0.8 0-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8s0.7 0.1 0.8 0 -0.1-0.6 0-0.8c0.3 0 0.5 0 0.8 0 0.1-0.2-0.1-0.6 0-0.8 0 0 0.8 0 0.8 0C6.6 7.4 6.3 7.9 6.4 8z" />
-        </svg>
-      </a>
-      <a href="javascript:void(0)" title="Disconnect" id="disconnect" class="button on" onclick="client.close();" style="display:none">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-0.6 -0.6 17 17">
-          <path d="M16 0c0 0.5 0 1.1 0 1.6 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.8-0.1-0.8 0 -0.1 0.2 0 0.6 0 0.8 0 0.3 0 0.5 0 0.8 0 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.7-0.1-0.8 0s0.1 0.7 0 0.8c-0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.3 0-0.5 0-0.8 0 -0.1 0-0.7 0.1-0.8 0 -0.1-0.2 0.1-0.6 0-0.8 -0.2-0.1-0.6 0.1-0.8 0 -0.1-0.1 0.1-0.7 0-0.8 -0.1-0.1-0.7 0.1-0.8 0 -0.1-0.1 0-0.6 0-0.8 0-0.2 0-0.6 0-0.8 0-0.3 0-0.5 0-0.8 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.2-0.1 0.6 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.1 0-0.1-0.7 0-0.8 0.1-0.1 0.7 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.6 0.1 0.8 0C15.5 0 15.7 0 16 0z" class="a" />
-          <path d="M6.4 10.4c0.2 0.1 0.6-0.1 0.8 0 0.1 0.1 0 0.7 0 0.8 0 0.3 0 0.5 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.1 0.1 0.8 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.1 0-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.8 0 0.8 -0.2 0.1-0.6 0-0.8 0 -0.2 0-0.6-0.1-0.8 0 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.3 0-0.5 0-0.8 0 0-0.5 0-1.1 0-1.6 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0-0.3 0-0.5 0-0.8 0-0.2-0.1-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.8 0.1 0.8 0 0.1-0.2 0-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0.3 0 0.5 0 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.1 0 0.8 0 0.8 0 0.1 0.1-0.1 0.7 0 0.8 0.2 0.1 0.6-0.1 0.8 0 0.2 0.1 0.7-0.1 0.8 0C6.5 9.8 6.3 10.3 6.4 10.4z" class="a" />
-        </svg>
-      </a>
-      <a href="javascript:void(0)" title="Characters" id="characters" class="button" onclick="showCharacters();">
+  </div>
+  <div id="buttonbar">
+    <a href="javascript:void(0)" title="Connect" id="connect" class="button" onclick="client.connect();">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-0.6 -0.6 17 16">
+        <path d="M16 0c0 0.5 0 1.1 0 1.6 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.2 0.1 0.6 0 0.8 0 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.6 0 0.8 -0.1 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.8 0-1.6 0-2.4 0 -0.1-0.2 0.1-0.7 0-0.8s-0.7 0.1-0.8 0 0.1-0.7 0-0.8c-0.1-0.1-0.8 0.1-0.8 0 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.2-0.1-0.6 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.2-0.1 0.6 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.3-0.1 0.5 0 0.8 0 0.1-0.2-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.7 0.1 0.8 0c0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.6 0.1 0.8 0C15.5 0 15.8 0 16 0z"
+        />
+        <path d="M6.4 8c0.3 0 0.5 0 0.8 0 0.1 0 0.7-0.1 0.8 0 0.1 0.2-0.1 0.6 0 0.8 0.1 0.2-0.1 0.7 0 0.8 0 0 0.8 0 0.8 0 -0.1 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.8 0 0.8 -0.2 0.1-0.6 0-0.8 0 -0.3 0-0.5 0-0.8 0 -0.2 0-0.7-0.1-0.8 0 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.3 0-0.5 0-0.8 0 -0.1 0-0.7 0.1-0.8 0 -0.1-0.2 0.1-0.6 0-0.8 0.2-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8c0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1 0-0.7 0-0.8 0-0.3 0-0.5 0-0.8 0-0.2-0.1-0.6 0-0.8 0-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8s0.7 0.1 0.8 0 -0.1-0.6 0-0.8c0.3 0 0.5 0 0.8 0 0.1-0.2-0.1-0.6 0-0.8 0 0 0.8 0 0.8 0C6.6 7.4 6.3 7.9 6.4 8z"
+        />
+      </svg>
+    </a>
+    <a href="javascript:void(0)" title="Disconnect" id="disconnect" class="button on" onclick="client.close();" style="display:none">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-0.6 -0.6 17 17">
+        <path d="M16 0c0 0.5 0 1.1 0 1.6 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.8-0.1-0.8 0 -0.1 0.2 0 0.6 0 0.8 0 0.3 0 0.5 0 0.8 0 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.7-0.1-0.8 0s0.1 0.7 0 0.8c-0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.3 0-0.5 0-0.8 0 -0.1 0-0.7 0.1-0.8 0 -0.1-0.2 0.1-0.6 0-0.8 -0.2-0.1-0.6 0.1-0.8 0 -0.1-0.1 0.1-0.7 0-0.8 -0.1-0.1-0.7 0.1-0.8 0 -0.1-0.1 0-0.6 0-0.8 0-0.2 0-0.6 0-0.8 0-0.3 0-0.5 0-0.8 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.2-0.1 0.6 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.1 0-0.1-0.7 0-0.8 0.1-0.1 0.7 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.6 0.1 0.8 0C15.5 0 15.7 0 16 0z"
+          class="a" />
+        <path d="M6.4 10.4c0.2 0.1 0.6-0.1 0.8 0 0.1 0.1 0 0.7 0 0.8 0 0.3 0 0.5 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.1 0.1 0.8 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.1 0-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.8 0 0.8 -0.2 0.1-0.6 0-0.8 0 -0.2 0-0.6-0.1-0.8 0 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.3 0-0.5 0-0.8 0 0-0.5 0-1.1 0-1.6 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0-0.3 0-0.5 0-0.8 0-0.2-0.1-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.8 0.1 0.8 0 0.1-0.2 0-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0.3 0 0.5 0 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.1 0 0.8 0 0.8 0 0.1 0.1-0.1 0.7 0 0.8 0.2 0.1 0.6-0.1 0.8 0 0.2 0.1 0.7-0.1 0.8 0C6.5 9.8 6.3 10.3 6.4 10.4z"
+          class="a" />
+      </svg>
+    </a>
+    <a href="javascript:void(0)" title="Characters" id="characters" class="button" onclick="showCharacters();">
         <i class="fa fa-user"></i>
       </a>
-      <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
+    <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
         <i class="fa fa-gears"></i>
       </a>
-      <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="_logger.toggle();">
+    <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="_logger.toggle();">
         <i class="fa fa-file-text-o"></i>
       </a>
-      <a href="javascript:void(0)" title="Clear display" id="clear" class="button" onclick="client.clear()">
+    <a href="javascript:void(0)" title="Clear display" id="clear" class="button" onclick="client.clear()">
         <span class="fa-stack">
           <i class="fa fa-file-o fa-stack-2x"></i>
           <i class="fa fa-times fa-stack-1x"></i>
         </span>
       </a>
-      <a href="javascript:void(0)" title="Lock display" id="lock" class="button" onclick="client.toggleScrollLock()">
+    <a href="javascript:void(0)" title="Lock display" id="lock" class="button" onclick="client.toggleScrollLock()">
         <i class="fa fa-lock"></i>
       </a>
-      <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');">
+    <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');">
         <i class="fa fa-map"></i>
       </a>
-      <div id="user-buttons"></div>
+    <div id="user-buttons"></div>
+  </div>
+  <div id="status-border"></div>
+  <div id="status">
+    <div id="environment" class="day">
+      <div id="environmentleft"></div>
+      <div id="environmentcenter"></div>
+      <div id="environmentright"></div>
+      <div id="environmentweather"></div>
     </div>
-    <div id="status-border"></div>
-    <div id="status">
-      <div id="environment" class="day">
-        <div id="environmentleft"></div>
-        <div id="environmentcenter"></div>
-        <div id="environmentright"></div>
-        <div id="environmentweather"></div>
-      </div>
-      <div id="body">
-        <div id="limbs">
-          <a href="javascript:void(0)" id="health" title="Show limb health" class="button button-sm on" onclick="_status.ac = false" ;>
+    <div id="body">
+      <div id="limbs">
+        <a href="javascript:void(0)" id="health" title="Show limb health" class="button button-sm on" onclick="_status.ac = false"
+          ;>
             <i class="fa fa-heart"></i>
           </a>
-          <a href="javascript:void(0)" id="armor" class="button button-sm" title="Show limb armor protection" onclick="_status.ac = true" ;>
-            <svg width="11" height="17" viewBox="-0.09 -0.88 11 17" preserveAspectRatio="xMidYMid">
-              <path d="M5 0c0 0 1 0 1 0 1 0 2 1 3 1 1 1 1 2 1 3 0 2 0 5 0 8 -1 1-2 3-3 3 0-2 0-4 0-6 1-1 2-1 2-1C9 7 9 6 9 6 8 6 7 7 6 7 6 7 5 8 5 8 5 8 4 7 4 7 3 7 2 6 1 6 1 6 1 7 1 8c1 0 2 1 2 1 0 2 0 4 0 6 -1-1-2-1-3-2 0 0-1-1-1-1 0-1 0-1 0-2 0-1 0-1 0-2 0-1 0-3 0-4 0-1 1-2 2-2C3 1 4 0 5 0z" />
-            </svg>
-          </a>
-          <div id="character-name">&nbsp;</div>
-          <svg id="fullbody" class="health-full" xmlns="http://www.w3.org/2000/svg" width="128" height="200" viewBox="-0.9 -0.8 179 297">
-            <path id="rightwing" d="M140.5 0.1c7-0.8 8 6.4 7.7 11.8 -0.4 9.2-0.3 18.2 1.1 25.8 0.6 3.1 2 6 2 8.3 0.1 7.6-6.1 11.4-10 14.6 1.9 0.5 4.5 0.3 6 1.1 0.6 1.8 0.3 4.7 0 6.6 1.9 0.5 4.7 0.1 6 1.1 0.4 2.2-0.7 2.4-0.6 4 0.3 3 4.2 4.2 4.3 6.6 0.1 1.8-1.1 2.3-2 4 0.6 1.1 2.2 1.2 2.3 2.9 -2.3 2.3-4.2 4.2-1.4 6.9 5.8 5.6 20.4 8.8 21.8 18.6 -3.5 3.1-7.3-0.6-10-2.6 -3-2.2-5.1-5.5-7.7-7.7 -3.3-2.8-9.4-7.3-12.3-2 -0.3 1.6 0.9 1.8 0.6 3.4 -6-0.7-7.7 3-9.7 6.3 -4.9-0.5-6.6-5.4-12.3-4 -1.1-1-1.8-0.7-3.4-0.3 -0.3-1.5-1.6-2-3.2-2.3 -1.5-7.4-6.6-11.2-11.5-15.2 -1.3 5.8-4.9 9.5-11.8 9.8 -5.8-7.5-8.3-23-5.4-35.6 2-1.4 4.5-2.4 8-2.3C103.8 35.9 114.5 3 140.5 0.1zM138.2 6.1c3.6 0.1 5.2 2.3 4.6 6.6C146.3 8.9 141.8 0.5 138.2 6.1zM129.9 7.2c-7 3.1-12.1 10.6-15.5 18.4 1.6 0.2 2.8-2.6 4.6-4 1.4-1.1 3.6-1.8 4.9-3.2C126.7 15.3 126.6 9.9 129.9 7.2zM139.1 9.8c-6.4 4-8.6 12.1-11.5 19.5C133.3 26 139.7 19.4 139.1 9.8zM140.5 20.4c3.4-0.7 4 4.1 2.3 6C146.7 26.3 144.7 15.9 140.5 20.4zM124.7 20.7c-2.7 4.4-7.3 6.9-10.9 10.6 -7.8 8.1-10.7 20.2-13.2 32.7 4.9-6.8 9.9-13.3 15.8-19.8 1.8-2 4.7-4 5.7-6C124.6 33.4 123.5 27.4 124.7 20.7zM140.5 24.1c-1.2 0-2.6-0.1-3.4 0.3 -2.1 4-5.7 6.6-10 8.3 -0.2 1.1-0.6 2.1-0.9 3.2C132.1 33.1 138.4 30.8 140.5 24.1zM145.9 32.7c-0.9 1.9-1.6 4-2.6 5.7C146.1 38.4 146.3 35.1 145.9 32.7zM119.8 44.2c5.5 0.4 9.9-2.7 15.5-3.2 1.5-3 5.2-3.8 6.3-7.2C131.7 33.5 125.4 39.2 119.8 44.2zM144.2 42.8c0.6 2.8-1.6 4.8-3.7 5.7C144.8 50.7 149.8 43.7 144.2 42.8zM111.5 53.7c5.5-2.1 11.4-3.7 18.1-4.6 1.4-2.5 4.9-2.9 6.9-4.9C125.6 43.5 116.3 48.3 111.5 53.7zM108.7 57.7c4.6 0.6 10.2 0.3 14.3 1.4 2.4-1.8 4.6-3.8 7.5-5.2C122.4 52.3 113.7 54.5 108.7 57.7zM138.2 54.8c-3.6 0.5-4.2 3.8-8 4C133.9 59.7 138 58.4 138.2 54.8zM103.8 63.7c2.7-1.8 11.9 1.9 12-3.2C110.9 60 105.3 60 103.8 63.7zM119 61.7c0.7 1.4-0.4 2.9 0 3.7 2.4 0 3.7-1.1 3.4-3.7C121.8 61.3 119.6 61.3 119 61.7zM126.4 65.1c4.1-0.3 11.1 1.8 14.6-0.6C138.9 59.6 128.5 62.6 126.4 65.1zM130.7 67.7c3.4 3.1 8 5 14.6 4.9C143.7 69 137.3 66.5 130.7 67.7zM110.1 71.7c4.6 4.2 17.8 5.3 23.2 1.1 -3.3-2.2-6.9-4-12-3.2C118.1 70.3 114.1 72.8 110.1 71.7zM108.4 74.3c-0.5 0.2 0 0.5 0 0.9 9.8 7 20.8 12.9 34.7 15.8 -3.7-4.5-6.7-9.5-11.5-12.9C122.6 78.9 114.6 77.2 108.4 74.3zM135.6 76c2.6 2.5 9 2.6 13.8 2C147.2 74.3 140.9 76.5 135.6 76zM109.8 78.3c-0.4 0.1 0 0.3 0 0.6 3.9 3.2 8.4 5.5 12 8.9 3.6 3.3 7.2 6.8 8.9 12 1.5 0.5 2.8 1.2 3.7 2.3 0-6.3-5.4-10.3-9.7-13.8C120 84.6 114.9 81.2 109.8 78.3zM136.2 79.2c1.7 2.9 7.1 4.5 12.3 4.9 0.1-1-0.1-1.6-0.3-2.3C144.9 80.2 139 81.2 136.2 79.2zM152.5 81.2c-0.6 0.2-0.9 0.6-1.4 0.9 -0.1 1.2 0.4 1.9 0.9 2.6C152.5 83.8 152.3 82.3 152.5 81.2zM110.1 81.5c-0.8 0.6 0.1 1.8 0 2.6 4.4 2.6 7.6 6.4 8.9 12 0.5 0 1 0 1.4 0 0.8 2 2.3 3.5 3.4 5.2 1.7-0.2 2-1.9 4.3-1.4C125.3 90.5 116.8 86.9 110.1 81.5zM141.9 85.2c0.5 2.1 3 4.6 6 5.2 0.1-1.3 0-2.5-0.6-3.2C144.9 87.2 143.2 86.4 141.9 85.2zM149.7 86.7c0.1 1.6 0.9 2.5 1.4 3.7 0.8-0.6 1-1.8 1.4-2.9C151.4 87.4 151.1 86.4 149.7 86.7zM127.6 88.1c2.8 2.9 5.3 6.2 10 7.2C135.1 92.1 132.6 88.8 127.6 88.1zM140.5 93.2c0.5 1 0 3 2 2.6 0.3-0.3 0.3-1 0.3-1.7C142 93.9 141.6 93.2 140.5 93.2zM144.2 98.7c1.1-1.2 3.1-3 3.4-4C146 94.4 144.1 96.2 144.2 98.7zM136.8 98.1c-0.7 0.6 0.1 1.1 0 2 0.8 0.2 0.7-0.4 1.4-0.3C138.2 98.8 137.6 98.3 136.8 98.1zM140.5 101.6c-0.9-0.5-2.3 0.9-2.3 2.3C139 103.2 139.3 101.9 140.5 101.6z" />
-            <path id="leftwing" d="M78.9 60c3.6-0.1 6 0.9 8 2.3 2.9 12.6 0.4 28-5.4 35.6 -6.9-0.3-10.4-3.9-11.8-9.7 -4.9 4-10 7.8-11.5 15.2 -1.5 0.3-2.9 0.8-3.2 2.3 -1.6-0.4-2.3-0.7-3.4 0.3 -5.8-1.3-7.5 3.5-12.3 4 -2.1-3.3-3.7-7-9.7-6.3 -0.3-1.6 0.9-1.8 0.6-3.4 -3-5.3-9-0.8-12.3 2 -2.6 2.3-4.7 5.5-7.7 7.7 -2.7 2-6.5 5.7-10 2.6 1.4-9.8 16-13 21.8-18.6 2.8-2.7 0.9-4.6-1.4-6.9 0.1-1.6 1.7-1.7 2.3-2.9 -0.9-1.8-2.1-2.2-2-4 0.1-2.4 4-3.6 4.3-6.6 0.2-1.6-0.9-1.8-0.6-4 1.3-1.1 4.1-0.6 6-1.1 -0.3-1.9-0.6-4.8 0-6.6 1.5-0.9 4.1-0.6 6-1.1 -3.9-3.2-10.2-7.1-10-14.6 0-2.3 1.4-5.2 2-8.3 1.5-7.6 1.6-16.6 1.1-25.8C29.3 6.5 30.3-0.7 37.3 0.1 63.3 3 74 35.9 78.9 60zM35 12.7c-0.6-4.3 1-6.5 4.6-6.6C36 0.5 31.5 8.9 35 12.7zM53.9 18.4c1.3 1.4 3.5 2 4.9 3.2 1.8 1.5 3 4.2 4.6 4C60 17.9 54.9 10.3 47.9 7.2 51.2 9.9 51 15.3 53.9 18.4zM50.2 29.3c-2.9-7.4-5.1-15.5-11.5-19.5C38.1 19.4 44.5 26 50.2 29.3zM35 26.4c-1.7-1.9-1.2-6.7 2.3-6C33 15.9 31.1 26.3 35 26.4zM55.6 38.2c1 2 3.9 4 5.7 6 5.9 6.4 10.9 12.9 15.8 19.8 -2.5-12.5-5.4-24.6-13.2-32.7 -3.6-3.7-8.2-6.2-10.9-10.6C54.3 27.4 53.2 33.4 55.6 38.2zM51.6 35.9c-0.3-1.1-0.6-2-0.9-3.2 -4.4-1.7-8-4.3-10-8.3 -0.9-0.4-2.2-0.3-3.4-0.3C39.3 30.8 45.7 33.1 51.6 35.9zM34.4 38.5c-1-1.8-1.7-3.9-2.6-5.7C31.4 35.1 31.7 38.4 34.4 38.5zM36.1 33.9c1.1 3.4 4.8 4.2 6.3 7.2 5.6 0.4 10 3.6 15.5 3.2C52.4 39.2 46.1 33.5 36.1 33.9zM37.3 48.5c-2.1-1-4.3-2.9-3.7-5.7C27.9 43.7 33 50.7 37.3 48.5zM41.3 44.2c2 1.9 5.4 2.4 6.9 4.9 6.7 0.9 12.6 2.5 18.1 4.6C61.5 48.3 52.2 43.5 41.3 44.2zM47.3 54c2.9 1.3 5.1 3.3 7.5 5.2 4.1-1.1 9.7-0.8 14.3-1.4C64.1 54.5 55.3 52.3 47.3 54zM47.6 58.8c-3.8-0.2-4.5-3.6-8-4C39.8 58.4 43.9 59.7 47.6 58.8zM61.9 60.6c0.2 5.1 9.3 1.3 12 3.2C72.5 60 66.9 60 61.9 60.6zM55.3 61.7c-0.2 2.6 1 3.8 3.4 3.7 0.4-0.8-0.7-2.3 0-3.7C58.1 61.3 56 61.3 55.3 61.7zM36.7 64.6c3.5 2.4 10.5 0.3 14.6 0.6C49.3 62.6 38.9 59.6 36.7 64.6zM32.4 72.6c6.6 0.1 11.2-1.8 14.6-4.9C40.5 66.5 34 69 32.4 72.6zM56.5 69.7c-5.2-0.8-8.7 0.9-12 3.2 5.5 4.1 18.7 3 23.2-1.1C63.7 72.8 59.7 70.3 56.5 69.7zM46.2 78.1c-4.7 3.4-7.8 8.4-11.5 12.9 13.9-2.9 24.9-8.8 34.7-15.8 0-0.3 0.5-0.6 0-0.9C63.2 77.2 55.2 78.9 46.2 78.1zM28.4 78.1c4.8 0.6 11.2 0.5 13.8-2C36.9 76.5 30.5 74.3 28.4 78.1zM53 88.4c-4.3 3.4-9.8 7.4-9.7 13.8 0.9-1.1 2.2-1.8 3.7-2.3 1.7-5.2 5.3-8.7 8.9-12 3.7-3.4 8.1-5.7 12-8.9 0-0.3 0.4-0.4 0-0.6C62.9 81.2 57.8 84.6 53 88.4zM29.5 81.8c-0.2 0.7-0.4 1.3-0.3 2.3 5.2-0.3 10.6-2 12.3-4.9C38.7 81.2 32.8 80.2 29.5 81.8zM25.8 84.6c0.5-0.7 0.9-1.4 0.9-2.6 -0.5-0.3-0.8-0.7-1.4-0.9C25.5 82.3 25.3 83.8 25.8 84.6zM49.6 99.8c2.3-0.4 2.6 1.3 4.3 1.4 1.2-1.7 2.6-3.1 3.4-5.2 0.5 0 1 0 1.4 0 1.3-5.7 4.5-9.5 8.9-12 -0.1-0.8 0.8-2 0-2.6C60.9 86.9 52.4 90.5 49.6 99.8zM30.4 87.2c-0.6 0.7-0.7 1.8-0.6 3.2 3-0.5 5.6-3 6-5.2C34.5 86.4 32.8 87.2 30.4 87.2zM25.2 87.5c0.4 1 0.6 2.2 1.4 2.9 0.5-1.2 1.3-2.1 1.4-3.7C26.6 86.4 26.4 87.4 25.2 87.5zM40.1 95.3c4.7-1 7.2-4.2 10-7.2C45.1 88.8 42.7 92.1 40.1 95.3zM35 94.1c0 0.7 0 1.4 0.3 1.7 2 0.4 1.5-1.6 2-2.6C36.2 93.2 35.8 93.9 35 94.1zM30.1 94.7c0.3 1 2.3 2.9 3.4 4C33.7 96.2 31.8 94.4 30.1 94.7zM39.6 99.8c0.7-0.1 0.6 0.5 1.4 0.3 -0.1-0.9 0.7-1.4 0-2C40.1 98.3 39.5 98.8 39.6 99.8zM39.6 103.9c0.1-1.4-1.4-2.8-2.3-2.3C38.5 101.9 38.7 103.2 39.6 103.9z" />
-            <path id="tail" d="M146 229.8c1.8-3.3 1.5-7.5 4.3-10.1 -2-5.3 0.6-12.5-1.2-17.8 -5.6-7.1-8.8-15.2-18.3-20.7 -6.5-1.7-14.5-9.2-22.2-9.3 -4.7-2.4-5.9-6.3-10.4-8.7 0.8-0.8 1-1.7 0.9-2.6l-13.4-3.7c-0.9 3.9 0.5 6.9-0.2 10.8 4.4 4.3 5.6 10.4 11.7 13.6 3.1 1.6 6.9-0.4 9 3.6 8.4 4.5 18.5 0.8 23.2 10 0 0 0 0 0-0.1 5.3 3.7 6.6 9 9.4 13.7 0.2 3 0.4 6.7 0.6 8.9 0.5 4.1 0 2.9-1.8 6.8 -1 2.2-0.4 2.5-1 5 -4.8 0.9-6.5 6-10.2 8.7 -3.1 2.3-7.5 2.5-9.9 5.6 6.5 0.9 11.8-1.1 17.8-1.2 1.6-4.2 4.7-3.2 6.4-4.9 1.1-1.1 1-3.4 1.9-4.6C143.8 231.2 145.4 231 146 229.8z" />
-            <path id="head" d="M97.5 43.8c0.5-1.7 1.8-3 2.6-4.7 0.4-0.9-0.1-2.1 0.5-3.2 0.1-0.2 0.9 0.1 1.1 0 1.1-1.1-0.1-4.1 1.1-6.3 0.5-2-2.3-0.9-1.6-3.2 1.6-4.8-0.3-12.8-3.2-13.2 1.8-0.6-1.5-0.2-0.5-1.6 -2.5-0.6-5-1.3-7.4-2.1 -1.1 0-2.1 0-3.2 0 -0.2 1.7-3 0.8-4.7 1.1 0.4 1.4-0.9 0.7-1.6 1.1 -0.6 0.4-1.3 1.3-1.6 1.6 -0.1 0.1-1 0.4-1.1 0.5 -0.5 1.2-0.8 3.1-2.1 4.2 0.9 2.7-0.9 6.1 0.5 9 0.3 1.1-0.8 1.1-1.1 1.6 -0.9 1.5-0.4 7.5 2.1 7.9 0 3.3 1.7 5 2.6 7.4 -0.1 1.4 0 3 0 4.6 5.8 0 11.6 0 17.4 0C97.4 46.8 97.5 45.3 97.5 43.8z" />
-            <path id="lefthand" d="M48.4 162.4c0 0.7 0 1.4 0 2.1 0.3 0 0.6 0.4 0 0.5 0 1.6 0 3.2 0 4.7 1.7-0.6 0.8 1.5 1.1 2.1 0.3 0.8 1.2 1.4 1.6 2.1 1.7 3 2.5 4 5.3 5.3 0.9 0.4 1.9 1.6 3.2 1.1 1.3-2.9-0.6-3.8-2.1-5.3 -0.2-1.3 2.4 0.3 1.6-1.6 -2.1-2.3-7.7-3.9-5.3-9 4.1-0.6 1.3 5.7 5.3 5.3 0.5-3 0-7 0.5-11.1 -0.6-1.6-2.4-3.4-2.6-5.3 0 0 0-0.1 0-0.1l-7.3 0C49.4 156.6 49 159.6 48.4 162.4z" />
-            <path id="leftleg" d="M78 266.8c-0.7-4.4-0.5-11.2 0-16.9 0.4-4.1 1.8-7.8 2.1-11.6 0.2-3.3 0.3-6.9 0-10 -0.4-3.5-2.2-6.2-2.1-9 0.1-1.9 1.4-3.7 2.1-5.8 1.1-3.3 2.2-6.8 2.6-10 0.9-6.3 0.6-13.4 1.1-20 0.4-5 1.6-8.6 2.6-12.1 0.3-0.9 0.9-1.4 1.1-2.1 0.7-3.5-0.9-6.7 1.3-8.1 -8.6 0-17.2 0-25.9 0 -0.1 9.7 1.1 19.4 1.5 28.6 0.2 3.8-0.3 7.7 0 11.1 0.3 3.5 0.7 7.9 0 11.1 0 0.2-1 1.3-1.1 1.6 -0.2 1.6-0.3 3.2-0.5 4.7 -0.7 5.4-0.9 12.8-0.5 17.9 0.3 4.6 1.5 7.4 2.6 10.5 1.1 3.2 2 6.1 2.6 9.5 0.2 1 0.9 2 1.1 3.2 0.2 1.3-0.2 2.9 0 4.2 0.2 1.5 0.9 2.4 1.1 3.7 0 0 0 0 0 0h8.5C78 267.1 78 267 78 266.8z" />
-            <path id="leftfoot" d="M78.1 267.3h-8.5c0.5 5.9-1.2 9.3-1.1 14.2 -1.7 3-3.8 7.9-3.2 11.6 2 2.4 9.1-0.4 11.1 2.1 0.7 0 1.4 0 2.1 0 3.9-5-0.7-15.5 2.1-21.1C80 271.9 78.6 269.8 78.1 267.3z" />
-            <path id="leftarm" d="M63.2 59.1c-0.6 0.2-0.7 0.9-1.1 1.1 -0.4 0.2-1.2-0.2-1.6 0 -0.5 0.3-0.2 0.8-0.5 1.1 -0.4 0.2-1.2-0.2-1.6 0 -0.5 0.3-0.2 0.8-0.5 1.1 -0.2 0.2-0.8-0.2-1.1 0 -0.2 0.1-0.4 1-0.5 1.1 -1.2 0.6-0.6 0.5-1.6 1.6 -0.6 0.6-1.5 1.4-2.1 3.2 -0.3 0.8-0.3 1.2-0.5 1.6 -0.8 1.8-1 7-1.6 11.1 -0.5 2.9-1.3 6-1.6 9 -0.7 8 2.4 17.9 0 24.3 0 0.1-0.5 0-0.5 0 0 4.9 0 9.8 0 14.8 0.9 7.7 1.6 16.6 1.1 24.7l7.3 0c-0.1-1.1 0.6-3.1 1.1-5.2 0.7-2.9 1.7-6.3 2.1-7.9 0.8-3.1 1.4-6.1 1.6-9 0.5-6.1-1.2-12.9-0.5-17.9 0.3-1.8 1.2-3.6 1.6-5.3 0.5-2.1 0.8-4.2 1.1-6.3 0.5-4.2 0-8.9 2.5-11.9V59.1C65.2 59 64.1 58.8 63.2 59.1z" />
-            <path id="rightfoot" d="M96.9 274c1.3 2.8 1.2 6.6 1.1 10.1 -0.2 4.2-0.9 8.1 1.1 11.2 0.5 0 1.1 0 1.6 0 0.5-1.3 2.2-0.9 3.7-1.1 3-0.3 6.7 0.3 8.4-1.1 0.3-4.1-2.2-7.7-3.2-11.7 -0.4-1.6-0.2-3-0.5-4.8 -0.3-1.5-1-3.2-1.1-4.8 -0.1-1.3 0-2.6 0.1-4h-9C98.6 270.2 97.9 272.3 96.9 274z" />
-            <path id="torso" d="M89.5 161.7c8.4 0 16.9 0 25.5 0 0-1.2-0.1-2.4-0.1-3.5 -0.5-7.1-1.7-14.2-2.6-21.2 -0.5-3.6-0.9-7.1-1.6-10.6 -1.1-5.7-3-12.3-2.1-19.1 0.3-2.7 1.8-5 2.1-7.4 0.4-3.2-1-6.5 0.8-9.7v-31.1c-0.8 0-1.6 0.1-2.4 0 -1.3-1.7-3.9-1.3-5.8-2.1 -0.3-0.1-1.4-1.2-2.1-1.6 -0.9-0.4-1.9-0.4-2.6-1.1 -0.8-1.5-1-3.7-1.1-6 -5.8 0-11.6 0-17.4 0 0 2 0 4-0.6 5.5 -1 0.3-1.7 1-2.6 1.6 -0.4 0.3-1 0.2-1.6 0.5 -0.5 0.3-0.5 0.8-1.1 1.1 -0.6 0.3-1.5-0.2-2.1 0 -0.4 0.2-0.4 0.9-1.1 1.1 -0.6 0.2-1.5-0.2-2.1 0 -0.2 0.1-0.9 1-1.1 1.1 -0.6 0.1-1.2 0.1-1.8 0v30.9c0.1-0.1 0.1-0.1 0.2-0.2 0.7 2.8 0.1 5.9 0.5 9 0.4 2.8 1.8 5.2 2.1 7.9 0.3 2.8 0.2 6.4 0 9.5 -0.4 4.9-2 9.2-2.6 13.2 -0.2 1.2 0.1 2.5 0 3.7 -0.1 1.2-0.9 2.1-1.1 3.2 -0.2 1.4 0.2 2.8 0 4.2 -0.2 1.1-0.9 2.2-1.1 3.2 -0.2 1.8 0.2 3.5 0 5.3 -0.2 1.5-0.9 3.2-1.1 4.8 -0.3 2.6-0.4 5.2-0.4 7.8 8.7 0 17.3 0 25.9 0H89.5z" />
-            <path id="rightleg" d="M114.9 217.2c-0.5-4.3-2-8.4-2.1-12.7 -0.1-4.3 0.9-9.1 1.1-13.7 0.1-2.8-0.1-5.2 0-7.9 0.3-7.2 1.3-14.5 1.2-21.8 -8.6 0-17 0-25.5 0 -0.4 6.7 3.5 13.3 4.2 20.2 0.3 3.5-0.2 6.7 0 10 0.3 4.6 0.8 9.1 1.6 13.2 0.4 2.1 1 3.9 1.6 5.8 0.2 0.5-0.1 1.1 0 1.6 0.1 0.2 0.9 0.8 1.1 1.1 0.2 0.6-0.3 1.5 0 2.1 0.1 0.1 0.9-0.1 1.1 0 0.1 0.1-0.1 0.8 0 1.1 1.2 4-0.5 6.8-1.1 10.5 -0.6 4.7-0.6 10.8 0 15.8 0.1 1.2 0.8 2.5 1.1 3.7 0.3 1.5 0.4 2.9 0.5 4.2 0.6 6.4 0.5 12.6-0.5 17.6h9c0.2-2.9 0.6-5.9 1-7.6 0.7-3.3 1.3-5.8 2.1-8.4 0.6-2.2 1.5-5 2.1-6.3 0.6-1.3 1.3-3.1 1.6-4.2C116.5 233.7 115.9 225 114.9 217.2z" />
-            <path id="rightarm" d="M128 154c-0.5-11.9 1.1-24.4 1.6-33.7 0-1.4 0-2.8 0-4.2 -3.4-6.7 0.2-18.4-1.1-29 -0.2-2-1.2-3.8-1.6-5.8 -0.9-5.7-0.5-10-2.6-14.2 -0.2-0.3-0.3-1.2-0.5-1.6 -0.1-0.2-0.9 0.2-1.1 0 -0.2-0.2-0.6-1.6-1.1-2.1 -0.6-0.7-1-1.2-2.6-2.1 -0.7-0.4-0.6-0.1-1.1-0.5 -0.7-0.7-1.4 0-3.2-0.5 -0.7-0.2-0.5-0.9-1.6-1.1 -0.6-0.1-1.2-0.1-1.8 0v31c0.1-0.1 0.1-0.3 0.2-0.4 -0.6 0.9 1 0.9 1.1 1.1 0.3 0.6-0.2 1.5 0 2.1 1.5 4.5 1.1 11.6 2.1 15.8 0.4 1.8 1.4 3.5 1.6 5.3 0.8 6.9-1.3 15.2 0 20.6 1.7 6.9 3.4 13.1 4.2 20h7.4C128.1 154.3 128.1 154.1 128 154z" />
-            <path id="righthand" d="M120.7 154.5c0 0 0 0 0 0 -0.9 1.5-1.9 3-2.6 4.7 -0.4 1.7 0.5 3.6 0.5 5.3 0.1 1.9-1.6 4.8 0.5 5.3 2.1 0.7 1.5-5.8 5.3-5.3 0.6 2.2-0.1 3.8-1.1 5.3 -1 1.4-3.4 2.9-4.7 3.2 -0.3 2.7 1.9 0 1.6 2.1 -0.8 0.8-1.8 1.4-2.1 2.6 -1 0.7 1.2 1.1 0 2.6 2.4 0.1 4.9-1.2 5.8-2.1 0.5-0.5 0.5-1.4 1.1-2.1 0.8-1 2-2 2.6-3.2 2.9-5.2 1-10.9 0.6-18.5H120.7z" />
+        <a href="javascript:void(0)" id="armor" class="button button-sm" title="Show limb armor protection" onclick="_status.ac = true"
+          ;>
+          <svg width="11" height="17" viewBox="-0.09 -0.88 11 17" preserveAspectRatio="xMidYMid">
+            <path d="M5 0c0 0 1 0 1 0 1 0 2 1 3 1 1 1 1 2 1 3 0 2 0 5 0 8 -1 1-2 3-3 3 0-2 0-4 0-6 1-1 2-1 2-1C9 7 9 6 9 6 8 6 7 7 6 7 6 7 5 8 5 8 5 8 4 7 4 7 3 7 2 6 1 6 1 6 1 7 1 8c1 0 2 1 2 1 0 2 0 4 0 6 -1-1-2-1-3-2 0 0-1-1-1-1 0-1 0-1 0-2 0-1 0-1 0-2 0-1 0-3 0-4 0-1 1-2 2-2C3 1 4 0 5 0z"
+            />
           </svg>
-          <div id="lefthandweapon"></div>
-          <div id="righthandweapon"></div>
-          <div id="overall" class="health-full">Top Shape</div>
+        </a>
+        <div id="character-name">&nbsp;</div>
+        <svg id="fullbody" class="health-full" xmlns="http://www.w3.org/2000/svg" width="128" height="200" viewBox="-0.9 -0.8 179 297">
+          <path id="rightwing" d="M140.5 0.1c7-0.8 8 6.4 7.7 11.8 -0.4 9.2-0.3 18.2 1.1 25.8 0.6 3.1 2 6 2 8.3 0.1 7.6-6.1 11.4-10 14.6 1.9 0.5 4.5 0.3 6 1.1 0.6 1.8 0.3 4.7 0 6.6 1.9 0.5 4.7 0.1 6 1.1 0.4 2.2-0.7 2.4-0.6 4 0.3 3 4.2 4.2 4.3 6.6 0.1 1.8-1.1 2.3-2 4 0.6 1.1 2.2 1.2 2.3 2.9 -2.3 2.3-4.2 4.2-1.4 6.9 5.8 5.6 20.4 8.8 21.8 18.6 -3.5 3.1-7.3-0.6-10-2.6 -3-2.2-5.1-5.5-7.7-7.7 -3.3-2.8-9.4-7.3-12.3-2 -0.3 1.6 0.9 1.8 0.6 3.4 -6-0.7-7.7 3-9.7 6.3 -4.9-0.5-6.6-5.4-12.3-4 -1.1-1-1.8-0.7-3.4-0.3 -0.3-1.5-1.6-2-3.2-2.3 -1.5-7.4-6.6-11.2-11.5-15.2 -1.3 5.8-4.9 9.5-11.8 9.8 -5.8-7.5-8.3-23-5.4-35.6 2-1.4 4.5-2.4 8-2.3C103.8 35.9 114.5 3 140.5 0.1zM138.2 6.1c3.6 0.1 5.2 2.3 4.6 6.6C146.3 8.9 141.8 0.5 138.2 6.1zM129.9 7.2c-7 3.1-12.1 10.6-15.5 18.4 1.6 0.2 2.8-2.6 4.6-4 1.4-1.1 3.6-1.8 4.9-3.2C126.7 15.3 126.6 9.9 129.9 7.2zM139.1 9.8c-6.4 4-8.6 12.1-11.5 19.5C133.3 26 139.7 19.4 139.1 9.8zM140.5 20.4c3.4-0.7 4 4.1 2.3 6C146.7 26.3 144.7 15.9 140.5 20.4zM124.7 20.7c-2.7 4.4-7.3 6.9-10.9 10.6 -7.8 8.1-10.7 20.2-13.2 32.7 4.9-6.8 9.9-13.3 15.8-19.8 1.8-2 4.7-4 5.7-6C124.6 33.4 123.5 27.4 124.7 20.7zM140.5 24.1c-1.2 0-2.6-0.1-3.4 0.3 -2.1 4-5.7 6.6-10 8.3 -0.2 1.1-0.6 2.1-0.9 3.2C132.1 33.1 138.4 30.8 140.5 24.1zM145.9 32.7c-0.9 1.9-1.6 4-2.6 5.7C146.1 38.4 146.3 35.1 145.9 32.7zM119.8 44.2c5.5 0.4 9.9-2.7 15.5-3.2 1.5-3 5.2-3.8 6.3-7.2C131.7 33.5 125.4 39.2 119.8 44.2zM144.2 42.8c0.6 2.8-1.6 4.8-3.7 5.7C144.8 50.7 149.8 43.7 144.2 42.8zM111.5 53.7c5.5-2.1 11.4-3.7 18.1-4.6 1.4-2.5 4.9-2.9 6.9-4.9C125.6 43.5 116.3 48.3 111.5 53.7zM108.7 57.7c4.6 0.6 10.2 0.3 14.3 1.4 2.4-1.8 4.6-3.8 7.5-5.2C122.4 52.3 113.7 54.5 108.7 57.7zM138.2 54.8c-3.6 0.5-4.2 3.8-8 4C133.9 59.7 138 58.4 138.2 54.8zM103.8 63.7c2.7-1.8 11.9 1.9 12-3.2C110.9 60 105.3 60 103.8 63.7zM119 61.7c0.7 1.4-0.4 2.9 0 3.7 2.4 0 3.7-1.1 3.4-3.7C121.8 61.3 119.6 61.3 119 61.7zM126.4 65.1c4.1-0.3 11.1 1.8 14.6-0.6C138.9 59.6 128.5 62.6 126.4 65.1zM130.7 67.7c3.4 3.1 8 5 14.6 4.9C143.7 69 137.3 66.5 130.7 67.7zM110.1 71.7c4.6 4.2 17.8 5.3 23.2 1.1 -3.3-2.2-6.9-4-12-3.2C118.1 70.3 114.1 72.8 110.1 71.7zM108.4 74.3c-0.5 0.2 0 0.5 0 0.9 9.8 7 20.8 12.9 34.7 15.8 -3.7-4.5-6.7-9.5-11.5-12.9C122.6 78.9 114.6 77.2 108.4 74.3zM135.6 76c2.6 2.5 9 2.6 13.8 2C147.2 74.3 140.9 76.5 135.6 76zM109.8 78.3c-0.4 0.1 0 0.3 0 0.6 3.9 3.2 8.4 5.5 12 8.9 3.6 3.3 7.2 6.8 8.9 12 1.5 0.5 2.8 1.2 3.7 2.3 0-6.3-5.4-10.3-9.7-13.8C120 84.6 114.9 81.2 109.8 78.3zM136.2 79.2c1.7 2.9 7.1 4.5 12.3 4.9 0.1-1-0.1-1.6-0.3-2.3C144.9 80.2 139 81.2 136.2 79.2zM152.5 81.2c-0.6 0.2-0.9 0.6-1.4 0.9 -0.1 1.2 0.4 1.9 0.9 2.6C152.5 83.8 152.3 82.3 152.5 81.2zM110.1 81.5c-0.8 0.6 0.1 1.8 0 2.6 4.4 2.6 7.6 6.4 8.9 12 0.5 0 1 0 1.4 0 0.8 2 2.3 3.5 3.4 5.2 1.7-0.2 2-1.9 4.3-1.4C125.3 90.5 116.8 86.9 110.1 81.5zM141.9 85.2c0.5 2.1 3 4.6 6 5.2 0.1-1.3 0-2.5-0.6-3.2C144.9 87.2 143.2 86.4 141.9 85.2zM149.7 86.7c0.1 1.6 0.9 2.5 1.4 3.7 0.8-0.6 1-1.8 1.4-2.9C151.4 87.4 151.1 86.4 149.7 86.7zM127.6 88.1c2.8 2.9 5.3 6.2 10 7.2C135.1 92.1 132.6 88.8 127.6 88.1zM140.5 93.2c0.5 1 0 3 2 2.6 0.3-0.3 0.3-1 0.3-1.7C142 93.9 141.6 93.2 140.5 93.2zM144.2 98.7c1.1-1.2 3.1-3 3.4-4C146 94.4 144.1 96.2 144.2 98.7zM136.8 98.1c-0.7 0.6 0.1 1.1 0 2 0.8 0.2 0.7-0.4 1.4-0.3C138.2 98.8 137.6 98.3 136.8 98.1zM140.5 101.6c-0.9-0.5-2.3 0.9-2.3 2.3C139 103.2 139.3 101.9 140.5 101.6z"
+          />
+          <path id="leftwing" d="M78.9 60c3.6-0.1 6 0.9 8 2.3 2.9 12.6 0.4 28-5.4 35.6 -6.9-0.3-10.4-3.9-11.8-9.7 -4.9 4-10 7.8-11.5 15.2 -1.5 0.3-2.9 0.8-3.2 2.3 -1.6-0.4-2.3-0.7-3.4 0.3 -5.8-1.3-7.5 3.5-12.3 4 -2.1-3.3-3.7-7-9.7-6.3 -0.3-1.6 0.9-1.8 0.6-3.4 -3-5.3-9-0.8-12.3 2 -2.6 2.3-4.7 5.5-7.7 7.7 -2.7 2-6.5 5.7-10 2.6 1.4-9.8 16-13 21.8-18.6 2.8-2.7 0.9-4.6-1.4-6.9 0.1-1.6 1.7-1.7 2.3-2.9 -0.9-1.8-2.1-2.2-2-4 0.1-2.4 4-3.6 4.3-6.6 0.2-1.6-0.9-1.8-0.6-4 1.3-1.1 4.1-0.6 6-1.1 -0.3-1.9-0.6-4.8 0-6.6 1.5-0.9 4.1-0.6 6-1.1 -3.9-3.2-10.2-7.1-10-14.6 0-2.3 1.4-5.2 2-8.3 1.5-7.6 1.6-16.6 1.1-25.8C29.3 6.5 30.3-0.7 37.3 0.1 63.3 3 74 35.9 78.9 60zM35 12.7c-0.6-4.3 1-6.5 4.6-6.6C36 0.5 31.5 8.9 35 12.7zM53.9 18.4c1.3 1.4 3.5 2 4.9 3.2 1.8 1.5 3 4.2 4.6 4C60 17.9 54.9 10.3 47.9 7.2 51.2 9.9 51 15.3 53.9 18.4zM50.2 29.3c-2.9-7.4-5.1-15.5-11.5-19.5C38.1 19.4 44.5 26 50.2 29.3zM35 26.4c-1.7-1.9-1.2-6.7 2.3-6C33 15.9 31.1 26.3 35 26.4zM55.6 38.2c1 2 3.9 4 5.7 6 5.9 6.4 10.9 12.9 15.8 19.8 -2.5-12.5-5.4-24.6-13.2-32.7 -3.6-3.7-8.2-6.2-10.9-10.6C54.3 27.4 53.2 33.4 55.6 38.2zM51.6 35.9c-0.3-1.1-0.6-2-0.9-3.2 -4.4-1.7-8-4.3-10-8.3 -0.9-0.4-2.2-0.3-3.4-0.3C39.3 30.8 45.7 33.1 51.6 35.9zM34.4 38.5c-1-1.8-1.7-3.9-2.6-5.7C31.4 35.1 31.7 38.4 34.4 38.5zM36.1 33.9c1.1 3.4 4.8 4.2 6.3 7.2 5.6 0.4 10 3.6 15.5 3.2C52.4 39.2 46.1 33.5 36.1 33.9zM37.3 48.5c-2.1-1-4.3-2.9-3.7-5.7C27.9 43.7 33 50.7 37.3 48.5zM41.3 44.2c2 1.9 5.4 2.4 6.9 4.9 6.7 0.9 12.6 2.5 18.1 4.6C61.5 48.3 52.2 43.5 41.3 44.2zM47.3 54c2.9 1.3 5.1 3.3 7.5 5.2 4.1-1.1 9.7-0.8 14.3-1.4C64.1 54.5 55.3 52.3 47.3 54zM47.6 58.8c-3.8-0.2-4.5-3.6-8-4C39.8 58.4 43.9 59.7 47.6 58.8zM61.9 60.6c0.2 5.1 9.3 1.3 12 3.2C72.5 60 66.9 60 61.9 60.6zM55.3 61.7c-0.2 2.6 1 3.8 3.4 3.7 0.4-0.8-0.7-2.3 0-3.7C58.1 61.3 56 61.3 55.3 61.7zM36.7 64.6c3.5 2.4 10.5 0.3 14.6 0.6C49.3 62.6 38.9 59.6 36.7 64.6zM32.4 72.6c6.6 0.1 11.2-1.8 14.6-4.9C40.5 66.5 34 69 32.4 72.6zM56.5 69.7c-5.2-0.8-8.7 0.9-12 3.2 5.5 4.1 18.7 3 23.2-1.1C63.7 72.8 59.7 70.3 56.5 69.7zM46.2 78.1c-4.7 3.4-7.8 8.4-11.5 12.9 13.9-2.9 24.9-8.8 34.7-15.8 0-0.3 0.5-0.6 0-0.9C63.2 77.2 55.2 78.9 46.2 78.1zM28.4 78.1c4.8 0.6 11.2 0.5 13.8-2C36.9 76.5 30.5 74.3 28.4 78.1zM53 88.4c-4.3 3.4-9.8 7.4-9.7 13.8 0.9-1.1 2.2-1.8 3.7-2.3 1.7-5.2 5.3-8.7 8.9-12 3.7-3.4 8.1-5.7 12-8.9 0-0.3 0.4-0.4 0-0.6C62.9 81.2 57.8 84.6 53 88.4zM29.5 81.8c-0.2 0.7-0.4 1.3-0.3 2.3 5.2-0.3 10.6-2 12.3-4.9C38.7 81.2 32.8 80.2 29.5 81.8zM25.8 84.6c0.5-0.7 0.9-1.4 0.9-2.6 -0.5-0.3-0.8-0.7-1.4-0.9C25.5 82.3 25.3 83.8 25.8 84.6zM49.6 99.8c2.3-0.4 2.6 1.3 4.3 1.4 1.2-1.7 2.6-3.1 3.4-5.2 0.5 0 1 0 1.4 0 1.3-5.7 4.5-9.5 8.9-12 -0.1-0.8 0.8-2 0-2.6C60.9 86.9 52.4 90.5 49.6 99.8zM30.4 87.2c-0.6 0.7-0.7 1.8-0.6 3.2 3-0.5 5.6-3 6-5.2C34.5 86.4 32.8 87.2 30.4 87.2zM25.2 87.5c0.4 1 0.6 2.2 1.4 2.9 0.5-1.2 1.3-2.1 1.4-3.7C26.6 86.4 26.4 87.4 25.2 87.5zM40.1 95.3c4.7-1 7.2-4.2 10-7.2C45.1 88.8 42.7 92.1 40.1 95.3zM35 94.1c0 0.7 0 1.4 0.3 1.7 2 0.4 1.5-1.6 2-2.6C36.2 93.2 35.8 93.9 35 94.1zM30.1 94.7c0.3 1 2.3 2.9 3.4 4C33.7 96.2 31.8 94.4 30.1 94.7zM39.6 99.8c0.7-0.1 0.6 0.5 1.4 0.3 -0.1-0.9 0.7-1.4 0-2C40.1 98.3 39.5 98.8 39.6 99.8zM39.6 103.9c0.1-1.4-1.4-2.8-2.3-2.3C38.5 101.9 38.7 103.2 39.6 103.9z"
+          />
+          <path id="tail" d="M146 229.8c1.8-3.3 1.5-7.5 4.3-10.1 -2-5.3 0.6-12.5-1.2-17.8 -5.6-7.1-8.8-15.2-18.3-20.7 -6.5-1.7-14.5-9.2-22.2-9.3 -4.7-2.4-5.9-6.3-10.4-8.7 0.8-0.8 1-1.7 0.9-2.6l-13.4-3.7c-0.9 3.9 0.5 6.9-0.2 10.8 4.4 4.3 5.6 10.4 11.7 13.6 3.1 1.6 6.9-0.4 9 3.6 8.4 4.5 18.5 0.8 23.2 10 0 0 0 0 0-0.1 5.3 3.7 6.6 9 9.4 13.7 0.2 3 0.4 6.7 0.6 8.9 0.5 4.1 0 2.9-1.8 6.8 -1 2.2-0.4 2.5-1 5 -4.8 0.9-6.5 6-10.2 8.7 -3.1 2.3-7.5 2.5-9.9 5.6 6.5 0.9 11.8-1.1 17.8-1.2 1.6-4.2 4.7-3.2 6.4-4.9 1.1-1.1 1-3.4 1.9-4.6C143.8 231.2 145.4 231 146 229.8z"
+          />
+          <path id="head" d="M97.5 43.8c0.5-1.7 1.8-3 2.6-4.7 0.4-0.9-0.1-2.1 0.5-3.2 0.1-0.2 0.9 0.1 1.1 0 1.1-1.1-0.1-4.1 1.1-6.3 0.5-2-2.3-0.9-1.6-3.2 1.6-4.8-0.3-12.8-3.2-13.2 1.8-0.6-1.5-0.2-0.5-1.6 -2.5-0.6-5-1.3-7.4-2.1 -1.1 0-2.1 0-3.2 0 -0.2 1.7-3 0.8-4.7 1.1 0.4 1.4-0.9 0.7-1.6 1.1 -0.6 0.4-1.3 1.3-1.6 1.6 -0.1 0.1-1 0.4-1.1 0.5 -0.5 1.2-0.8 3.1-2.1 4.2 0.9 2.7-0.9 6.1 0.5 9 0.3 1.1-0.8 1.1-1.1 1.6 -0.9 1.5-0.4 7.5 2.1 7.9 0 3.3 1.7 5 2.6 7.4 -0.1 1.4 0 3 0 4.6 5.8 0 11.6 0 17.4 0C97.4 46.8 97.5 45.3 97.5 43.8z"
+          />
+          <path id="lefthand" d="M48.4 162.4c0 0.7 0 1.4 0 2.1 0.3 0 0.6 0.4 0 0.5 0 1.6 0 3.2 0 4.7 1.7-0.6 0.8 1.5 1.1 2.1 0.3 0.8 1.2 1.4 1.6 2.1 1.7 3 2.5 4 5.3 5.3 0.9 0.4 1.9 1.6 3.2 1.1 1.3-2.9-0.6-3.8-2.1-5.3 -0.2-1.3 2.4 0.3 1.6-1.6 -2.1-2.3-7.7-3.9-5.3-9 4.1-0.6 1.3 5.7 5.3 5.3 0.5-3 0-7 0.5-11.1 -0.6-1.6-2.4-3.4-2.6-5.3 0 0 0-0.1 0-0.1l-7.3 0C49.4 156.6 49 159.6 48.4 162.4z"
+          />
+          <path id="leftleg" d="M78 266.8c-0.7-4.4-0.5-11.2 0-16.9 0.4-4.1 1.8-7.8 2.1-11.6 0.2-3.3 0.3-6.9 0-10 -0.4-3.5-2.2-6.2-2.1-9 0.1-1.9 1.4-3.7 2.1-5.8 1.1-3.3 2.2-6.8 2.6-10 0.9-6.3 0.6-13.4 1.1-20 0.4-5 1.6-8.6 2.6-12.1 0.3-0.9 0.9-1.4 1.1-2.1 0.7-3.5-0.9-6.7 1.3-8.1 -8.6 0-17.2 0-25.9 0 -0.1 9.7 1.1 19.4 1.5 28.6 0.2 3.8-0.3 7.7 0 11.1 0.3 3.5 0.7 7.9 0 11.1 0 0.2-1 1.3-1.1 1.6 -0.2 1.6-0.3 3.2-0.5 4.7 -0.7 5.4-0.9 12.8-0.5 17.9 0.3 4.6 1.5 7.4 2.6 10.5 1.1 3.2 2 6.1 2.6 9.5 0.2 1 0.9 2 1.1 3.2 0.2 1.3-0.2 2.9 0 4.2 0.2 1.5 0.9 2.4 1.1 3.7 0 0 0 0 0 0h8.5C78 267.1 78 267 78 266.8z"
+          />
+          <path id="leftfoot" d="M78.1 267.3h-8.5c0.5 5.9-1.2 9.3-1.1 14.2 -1.7 3-3.8 7.9-3.2 11.6 2 2.4 9.1-0.4 11.1 2.1 0.7 0 1.4 0 2.1 0 3.9-5-0.7-15.5 2.1-21.1C80 271.9 78.6 269.8 78.1 267.3z"
+          />
+          <path id="leftarm" d="M63.2 59.1c-0.6 0.2-0.7 0.9-1.1 1.1 -0.4 0.2-1.2-0.2-1.6 0 -0.5 0.3-0.2 0.8-0.5 1.1 -0.4 0.2-1.2-0.2-1.6 0 -0.5 0.3-0.2 0.8-0.5 1.1 -0.2 0.2-0.8-0.2-1.1 0 -0.2 0.1-0.4 1-0.5 1.1 -1.2 0.6-0.6 0.5-1.6 1.6 -0.6 0.6-1.5 1.4-2.1 3.2 -0.3 0.8-0.3 1.2-0.5 1.6 -0.8 1.8-1 7-1.6 11.1 -0.5 2.9-1.3 6-1.6 9 -0.7 8 2.4 17.9 0 24.3 0 0.1-0.5 0-0.5 0 0 4.9 0 9.8 0 14.8 0.9 7.7 1.6 16.6 1.1 24.7l7.3 0c-0.1-1.1 0.6-3.1 1.1-5.2 0.7-2.9 1.7-6.3 2.1-7.9 0.8-3.1 1.4-6.1 1.6-9 0.5-6.1-1.2-12.9-0.5-17.9 0.3-1.8 1.2-3.6 1.6-5.3 0.5-2.1 0.8-4.2 1.1-6.3 0.5-4.2 0-8.9 2.5-11.9V59.1C65.2 59 64.1 58.8 63.2 59.1z"
+          />
+          <path id="rightfoot" d="M96.9 274c1.3 2.8 1.2 6.6 1.1 10.1 -0.2 4.2-0.9 8.1 1.1 11.2 0.5 0 1.1 0 1.6 0 0.5-1.3 2.2-0.9 3.7-1.1 3-0.3 6.7 0.3 8.4-1.1 0.3-4.1-2.2-7.7-3.2-11.7 -0.4-1.6-0.2-3-0.5-4.8 -0.3-1.5-1-3.2-1.1-4.8 -0.1-1.3 0-2.6 0.1-4h-9C98.6 270.2 97.9 272.3 96.9 274z"
+          />
+          <path id="torso" d="M89.5 161.7c8.4 0 16.9 0 25.5 0 0-1.2-0.1-2.4-0.1-3.5 -0.5-7.1-1.7-14.2-2.6-21.2 -0.5-3.6-0.9-7.1-1.6-10.6 -1.1-5.7-3-12.3-2.1-19.1 0.3-2.7 1.8-5 2.1-7.4 0.4-3.2-1-6.5 0.8-9.7v-31.1c-0.8 0-1.6 0.1-2.4 0 -1.3-1.7-3.9-1.3-5.8-2.1 -0.3-0.1-1.4-1.2-2.1-1.6 -0.9-0.4-1.9-0.4-2.6-1.1 -0.8-1.5-1-3.7-1.1-6 -5.8 0-11.6 0-17.4 0 0 2 0 4-0.6 5.5 -1 0.3-1.7 1-2.6 1.6 -0.4 0.3-1 0.2-1.6 0.5 -0.5 0.3-0.5 0.8-1.1 1.1 -0.6 0.3-1.5-0.2-2.1 0 -0.4 0.2-0.4 0.9-1.1 1.1 -0.6 0.2-1.5-0.2-2.1 0 -0.2 0.1-0.9 1-1.1 1.1 -0.6 0.1-1.2 0.1-1.8 0v30.9c0.1-0.1 0.1-0.1 0.2-0.2 0.7 2.8 0.1 5.9 0.5 9 0.4 2.8 1.8 5.2 2.1 7.9 0.3 2.8 0.2 6.4 0 9.5 -0.4 4.9-2 9.2-2.6 13.2 -0.2 1.2 0.1 2.5 0 3.7 -0.1 1.2-0.9 2.1-1.1 3.2 -0.2 1.4 0.2 2.8 0 4.2 -0.2 1.1-0.9 2.2-1.1 3.2 -0.2 1.8 0.2 3.5 0 5.3 -0.2 1.5-0.9 3.2-1.1 4.8 -0.3 2.6-0.4 5.2-0.4 7.8 8.7 0 17.3 0 25.9 0H89.5z"
+          />
+          <path id="rightleg" d="M114.9 217.2c-0.5-4.3-2-8.4-2.1-12.7 -0.1-4.3 0.9-9.1 1.1-13.7 0.1-2.8-0.1-5.2 0-7.9 0.3-7.2 1.3-14.5 1.2-21.8 -8.6 0-17 0-25.5 0 -0.4 6.7 3.5 13.3 4.2 20.2 0.3 3.5-0.2 6.7 0 10 0.3 4.6 0.8 9.1 1.6 13.2 0.4 2.1 1 3.9 1.6 5.8 0.2 0.5-0.1 1.1 0 1.6 0.1 0.2 0.9 0.8 1.1 1.1 0.2 0.6-0.3 1.5 0 2.1 0.1 0.1 0.9-0.1 1.1 0 0.1 0.1-0.1 0.8 0 1.1 1.2 4-0.5 6.8-1.1 10.5 -0.6 4.7-0.6 10.8 0 15.8 0.1 1.2 0.8 2.5 1.1 3.7 0.3 1.5 0.4 2.9 0.5 4.2 0.6 6.4 0.5 12.6-0.5 17.6h9c0.2-2.9 0.6-5.9 1-7.6 0.7-3.3 1.3-5.8 2.1-8.4 0.6-2.2 1.5-5 2.1-6.3 0.6-1.3 1.3-3.1 1.6-4.2C116.5 233.7 115.9 225 114.9 217.2z"
+          />
+          <path id="rightarm" d="M128 154c-0.5-11.9 1.1-24.4 1.6-33.7 0-1.4 0-2.8 0-4.2 -3.4-6.7 0.2-18.4-1.1-29 -0.2-2-1.2-3.8-1.6-5.8 -0.9-5.7-0.5-10-2.6-14.2 -0.2-0.3-0.3-1.2-0.5-1.6 -0.1-0.2-0.9 0.2-1.1 0 -0.2-0.2-0.6-1.6-1.1-2.1 -0.6-0.7-1-1.2-2.6-2.1 -0.7-0.4-0.6-0.1-1.1-0.5 -0.7-0.7-1.4 0-3.2-0.5 -0.7-0.2-0.5-0.9-1.6-1.1 -0.6-0.1-1.2-0.1-1.8 0v31c0.1-0.1 0.1-0.3 0.2-0.4 -0.6 0.9 1 0.9 1.1 1.1 0.3 0.6-0.2 1.5 0 2.1 1.5 4.5 1.1 11.6 2.1 15.8 0.4 1.8 1.4 3.5 1.6 5.3 0.8 6.9-1.3 15.2 0 20.6 1.7 6.9 3.4 13.1 4.2 20h7.4C128.1 154.3 128.1 154.1 128 154z"
+          />
+          <path id="righthand" d="M120.7 154.5c0 0 0 0 0 0 -0.9 1.5-1.9 3-2.6 4.7 -0.4 1.7 0.5 3.6 0.5 5.3 0.1 1.9-1.6 4.8 0.5 5.3 2.1 0.7 1.5-5.8 5.3-5.3 0.6 2.2-0.1 3.8-1.1 5.3 -1 1.4-3.4 2.9-4.7 3.2 -0.3 2.7 1.9 0 1.6 2.1 -0.8 0.8-1.8 1.4-2.1 2.6 -1 0.7 1.2 1.1 0 2.6 2.4 0.1 4.9-1.2 5.8-2.1 0.5-0.5 0.5-1.4 1.1-2.1 0.8-1 2-2 2.6-3.2 2.9-5.2 1-10.9 0.6-18.5H120.7z"
+          />
+        </svg>
+        <div id="lefthandweapon"></div>
+        <div id="righthandweapon"></div>
+        <div id="overall" class="health-full">Top Shape</div>
+      </div>
+      <div id="hp-status">
+        <div><span>HP:</span>
+          <div class="progressbar" id="hp-bar">
+            <div class="progressbar-text">0/0</div>
+            <div class="progressbar-value"></div>
+          </div>
         </div>
-        <div id="hp-status">
-          <div><span>HP:</span>
-            <div class="progressbar" id="hp-bar">
-              <div class="progressbar-text">0/0</div>
-              <div class="progressbar-value"></div>
-            </div>
+        <div><span>SP:</span>
+          <div class="progressbar" id="sp-bar">
+            <div class="progressbar-text">0/0</div>
+            <div class="progressbar-value"></div>
           </div>
-          <div><span>SP:</span>
-            <div class="progressbar" id="sp-bar">
-              <div class="progressbar-text">0/0</div>
-              <div class="progressbar-value"></div>
-            </div>
-          </div>
-          <div><span>MP:</span>
-            <div class="progressbar" id="mp-bar">
-              <div class="progressbar-text">0/0</div>
-              <div class="progressbar-value"></div>
-            </div>
+        </div>
+        <div><span>MP:</span>
+          <div class="progressbar" id="mp-bar">
+            <div class="progressbar-text">0/0</div>
+            <div class="progressbar-value"></div>
           </div>
         </div>
       </div>
-      <div id="experience">
-        <div><span>XP:</span> <span id="xp-value">0</span></div>
-        <div><span>Needed:</span> <span id="need-value">0</span></div>
-        <div><span>Earned:</span> <span id="earn-value">0</span></div>
-        <div><span>BankedXP:</span> <span id="xp-banked">0</span></div>
-        <!--
+    </div>
+    <div id="experience">
+      <div><span>XP:</span> <span id="xp-value">0</span></div>
+      <div><span>Needed:</span> <span id="need-value">0</span></div>
+      <div><span>Earned:</span> <span id="earn-value">0</span></div>
+      <div><span>BankedXP:</span> <span id="xp-banked">0</span></div>
+      <!--
         <div>
           <div class="progressbar" id="need-value" style="width: 100%;background: rgb(252, 238, 42);">
             <div class="progressbar-text" style="right: 5px;">0%</div>
@@ -1392,22 +1462,22 @@
           </div>
         </div>
         -->
-      </div>
-      <div id="bars">
-        <div id="party"></div>
-        <div id="combat"></div>
-      </div>
-      <div class="progressbar" id="lagMeter">
-        <div class="progressbar-text">0.000 s</div>
-        <div class="progressbar-value" style="width: 100%"></div>
-      </div>
     </div>
-    <dialog id="Progress" style="z-index:1000;text-align:center">
-      <div id="ProgressTitle"></div>
-      <div id="Progressbar">
-        <progress max="100"></progress>
-      </div>
-    </dialog>
-  </body>
+    <div id="bars">
+      <div id="party"></div>
+      <div id="combat"></div>
+    </div>
+    <div class="progressbar" id="lagMeter">
+      <div class="progressbar-text">0.000 s</div>
+      <div class="progressbar-value" style="width: 100%"></div>
+    </div>
+  </div>
+  <dialog id="Progress" style="z-index:1000;text-align:center">
+    <div id="ProgressTitle"></div>
+    <div id="Progressbar">
+      <progress max="100"></progress>
+    </div>
+  </dialog>
+</body>
 
 </html>
