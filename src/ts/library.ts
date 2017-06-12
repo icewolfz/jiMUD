@@ -30,6 +30,10 @@ export function htmlDecode(value) {
 	return $('<div/>').html(value).text();
 }
 
+export function htmlEntities(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export function stripHTML(html) {
 	var tmp = document.createElement("DIV");
 	tmp.innerHTML = html;
