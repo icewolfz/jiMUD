@@ -1,99 +1,14 @@
-//cSpell:ignore rgbcolor, Fraktur, aixterm, FNAME, ismap, ATTLIST, windowname, cmds, apos
+//cSpell:ignore rgbcolor, Endof, EndofLine, Fraktur, aixterm, FNAME, ismap, ATTLIST, windowname, cmds, apos
 /// <reference path="global.d.ts" />
 import EventEmitter = require('events');
 import RGBColor = require("rgbcolor");
 import { clone, stripQuotes, CharAllowedInURL, Size } from "./library";
 const buzz = require('buzz');
 
-export enum FormatType {
-  Normal = 0,
-  Link = 1,
-  LinkEnd = 2,
-  MXPLink = 3,
-  MXPLinkEnd = 4,
-  Image = 5,
-  WordBreak = 6,
-  MXPSend = 7,
-  MXPSendEnd = 8
-}
-
-/**
-   * Enum flag for Font styles.
-   * @readonly
-   * @enum {number}
-   * @typedef {number} FontStyle
-   */
-export enum FontStyle {
-  None = 0,
-  Bold = 1,
-  Faint = 2,
-  Italic = 4,
-  Underline = 8,
-  Slow = 16, /** @desc Slow blink text combined with slow for final blink  */
-  Rapid = 32,/** @desc Rapid blink text combined with slow for final blink */
-  Inverse = 64,/** @desc reverse back and fore color */
-  Hidden = 128, /** @desc hide text */
-  Strikeout = 256,
-  DoubleUnderline = 512,
-  Overline = 1024
-}
-
-export interface LineFormat {
-  formatType: FormatType;
-  offset: number;
-  color: string | number;
-  background: string | number;
-  size: string;
-  font: string;
-  style: FontStyle;
-  hr?: boolean;
-}
-
-export interface ImageFormat {
-  formatType: FormatType;
-  name: string;
-  url: string;
-  type: string;
-  height: string;
-  width: string;
-  vspace: string;
-  align: string;
-  ismap: boolean;
-}
-
-export interface LinkFormat {
-  formatType: FormatType;
-  href?: string;
-  hint?: string;
-  expire?: string;
-  prompt?: boolean;
-  tt?: string | number;
-}
 export interface ParserLine {
   line: string;
   fragment: boolean;
   gagged: boolean;
-  formats: LineFormat[];
-}
-
-export interface ParserOptions {
-  DefaultImageURL?: string;
-  enableMXP?: boolean;
-  enableDebug?: boolean;
-  enableMSP?: boolean;
-  enableURLDetection?: boolean;
-  window?: Size;
-  enableFlashing?: boolean;
-  emulateTerminal?: boolean;
-  bell?: string;
-  enableBell?: boolean;
-  display?;
-  enableLinks?: boolean;
-}
-
-interface MXPBlock {
-  format: LineFormat | LinkFormat | ImageFormat;
-  text: string;
 }
 
 /**
@@ -134,6 +49,26 @@ enum lineType {
   WelcomeText = 19
 }
 
+/**
+   * Enum flag for Font styles.
+   * @readonly
+   * @enum {number}
+   * @typedef {number} FontStyle
+   */
+enum FontStyle {
+  None = 0,
+  Bold = 1,
+  Faint = 2,
+  Italic = 4,
+  Underline = 8,
+  Slow = 16, /** @desc Slow blink text combined with slow for final blink  */
+  Rapid = 32,/** @desc Rapid blink text combined with slow for final blink */
+  Inverse = 64,/** @desc reverse back and fore color */
+  Hidden = 128, /** @desc hide text */
+  Strikeout = 256,
+  DoubleUnderline = 512,
+  Overline = 1024
+}
 
 /**
  * Enum for parser state.
@@ -326,8 +261,8 @@ class MXPStyle {
  * @property {String}  [StyleVersion=""]						- The MXP cached version style set from the VERSION tag, used by a client to reply to a VERSION request
  * @property {Boolean} [displayControlCodes=false]	- Display unreadable characters, code < 32 || 127
  * @property {Boolean} [emulateControlCodes=true]		- Emulate control codes like escape, tabs, etc...
- * @property {Boolean} [EndOfLine=false]						- Is the current parser state at end of line or on a fragment
- * @property {Number}  [textLength=0]								- The current amount of text that has been parsed
+ * @property {Boolean} [EndofLine=false]						- Is the current parser state at end of line or on a fragment
+ * @property {Number}  [TextLength=0]								- The current amount of text that has been parsed
  * @property {Boolean} [enableMXP=true]							- Enable/disable MXP parsing
  * @property {Boolean} [enableMSP=true]							- Enable/disable MSP parsing
  * @property {Boolean} window												- The window size, used for clearing screen and other ansi related systems
@@ -370,8 +305,8 @@ export class Parser extends EventEmitter {
   public displayControlCodes: boolean = false;
   public emulateControlCodes: boolean = true;
   public StyleVersion: string = "";
-  public EndOfLine: boolean = false;
-  public textLength: number = 0;
+  public EndofLine: boolean = false;
+  public TextLength: number = 0;
   public enableMXP: boolean = true;
   public DefaultImgUrl: string = "themes/general";
   public enableDebug: boolean = false;
@@ -385,25 +320,25 @@ export class Parser extends EventEmitter {
   public enableBell: boolean = true;
   public display: any = null;
 
-  constructor(options?: ParserOptions) {
+  constructor(options?) {
     super();
     if (options != null) {
       if (options.DefaultImageURL)
         this.DefaultImgUrl = options.DefaultImageURL;
       if (options.enableMXP != null)
-        this.enableMXP = options.enableMXP;
+        this.enableMXP = options.MXP;
       if (options.enableDebug != null)
         this.enableDebug = options.enableDebug;
-      if (options.enableMSP != null)
-        this.enableMSP = options.enableMSP;
-      if (options.enableURLDetection != null)
+      if (options.MSP != null)
+        this.enableMSP = options.MSP;
+      if (options.URLDetection != null)
         this.enableURLDetection = options.enableURLDetection;
       if (options.window != null)
         this.window = options.window;
-      if (options.enableFlashing != null)
-        this.enableFlashing = options.enableFlashing;
-      if (options.emulateTerminal != null)
-        this.emulateTerminal = options.emulateTerminal;
+      if (options.flashing != null)
+        this.enableFlashing = options.flashing;
+      if (options.terminal != null)
+        this.emulateTerminal = options.terminal;
       if (options.bell != null)
         this.bell = options.bell;
       if (options.enableBell != null)
@@ -477,18 +412,53 @@ export class Parser extends EventEmitter {
     return { fore: f, back: b, foreCode: fc, backCode: bc };
   }
 
-  private getFormatBlock(offset) {
+  private StartDisplayBlock(offset?) {
     var mxp: MXPStyle = this.GetCurrentStyle();
     var colors = this.getColors(mxp);
-    return {
-      formatType: FormatType.Normal,
-      offset: offset,
-      color: colors.fore,
-      background: colors.back,
-      size: mxp.fontSize,
-      font: mxp.font,
-      style: mxp.style | (this._CurrentAttributes & ~FontStyle.Bold)
-    };
+    var cls: string = "", td: string = "";
+
+    var strBuilder = ["<span style=\"", "color: ", colors.fore, ";", "background-color: ", colors.back, ";"];
+    if (mxp.font.length > 0)
+      strBuilder.push("font-family: ", mxp.font, ";");
+    if (mxp.fontSize.length > 0)
+      strBuilder.push("font-size: ", mxp.fontSize, ";");
+    if ((mxp.style & FontStyle.Bold) == FontStyle.Bold)
+      strBuilder.push("font-weight: bold;");
+    //combine after mxp bold as bold weight vs ansi bold are different effects
+    mxp.style |= this._CurrentAttributes;
+    if (mxp.style > 0) {
+      if ((mxp.style & FontStyle.Italic) == FontStyle.Italic)
+        //strBuilder.push("font-style: italic;vertical-align: text-bottom;");
+        strBuilder.push("font-style: italic;border-top: 1px solid ", colors.back, ";");
+      if ((mxp.style & FontStyle.Overline) == FontStyle.Overline)
+        td += "overline ";
+      if ((mxp.style & FontStyle.DoubleUnderline) == FontStyle.DoubleUnderline || (mxp.style & FontStyle.Underline) == FontStyle.Underline)
+        td += "underline ";
+      if ((mxp.style & FontStyle.DoubleUnderline) == FontStyle.DoubleUnderline)
+        strBuilder.push("border-bottom: 1px solid ", colors.fore, ";");
+      else
+        strBuilder.push("border-bottom: 1px solid ", colors.back, ";");
+      if ((mxp.style & FontStyle.Rapid) == FontStyle.Rapid || (mxp.style & FontStyle.Slow) == FontStyle.Slow) {
+        if (this.enableFlashing)
+          cls += " ansi-blink";
+        else if ((mxp.style & FontStyle.DoubleUnderline) != FontStyle.DoubleUnderline && (mxp.style & FontStyle.Underline) != FontStyle.Underline)
+          td += "underline ";
+      }
+      if ((mxp.style & FontStyle.Strikeout) == FontStyle.Strikeout)
+        td += "line-through ";
+      if (td.length > 0)
+        strBuilder.push("text-decoration:", td, ";");
+    }
+    else
+      strBuilder.push("border-bottom: 1px solid ", colors.back, ";");
+    strBuilder.push("\" class=\"ansi", cls, " ansi-fore", colors.foreCode, " ansi-back", colors.backCode, "\"");
+    strBuilder.push("data-offset=\"", offset, "\"");
+    strBuilder.push(">");
+    return strBuilder.join('');
+  }
+
+  private EndDisplayBlock() {
+    return "</span>";
   }
 
   private ResetColors() {
@@ -950,10 +920,10 @@ export class Parser extends EventEmitter {
     this._ColorTable[code] = color.toRGB();
   };
 
-  private AddLine(line: string, fragment: boolean, skip: boolean, formats: LineFormat[]) {
-    var data: ParserLine = { line: line, fragment: fragment, gagged: skip, formats: formats };
+  private AddLine(line: string, fragment: boolean, skip: boolean) {
+    var data: ParserLine = { line: line, fragment: fragment, gagged: skip };
     this.emit('add-line', data)
-    this.EndOfLine = !fragment;
+    this.EndofLine = !fragment;
   }
 
   private GetEntity(entity: string) {
@@ -987,7 +957,7 @@ export class Parser extends EventEmitter {
     return tmp;
   }
 
-  private getMXPBlock(tag: string, args, remote): MXPBlock {
+  private ParseMXPTag(tag: string, args, remote) {
     var tmp, arg, sArg, sArgs, color, x, xl = args.length, e, sl, s;
     var href = "", hint = "", expire = "", prompt = false;
     tag = tag.toUpperCase();
@@ -1169,7 +1139,6 @@ export class Parser extends EventEmitter {
       switch (tag) {
         case "IMAGE":
           e = {
-            formatType: FormatType.Image,
             name: "",
             url: this.DefaultImgUrl,
             t: "",
@@ -1231,7 +1200,81 @@ export class Parser extends EventEmitter {
                 break;
             }
           }
-          return { format: e, text: null };
+          tmp = "";
+          s = ["<img src=\""];
+          if (e.url.length > 0) {
+            s.push(e.url);
+            tmp += e.url;
+            if (!e.url.endsWith("/")) {
+              s.push("/");
+              tmp += "/";
+            }
+          }
+          if (e.t.length > 0) {
+            s.push(e.t);
+            tmp += e.t;
+            if (!e.t.endsWith("/")) {
+              s.push("/");
+              tmp += "/";
+            }
+          }
+          tmp += e.name;
+          s.push(e.name);
+          s.push("\"");
+          s.push(" style=\"");
+          if (e.w.length > 0) {
+            s.push("width:");
+            s.push(e.w);
+            s.push(";");
+          }
+          if (e.h.length > 0) {
+            s.push("height:");
+            s.push(e.h);
+            s.push(";");
+          }
+          switch (e.align.toLowerCase()) {
+            case "left":
+              s.push("float:left;");
+              break;
+            case "right":
+              s.push("float:right;");
+              break;
+            case "top":
+            case "middle":
+            case "bottom":
+              s.push("vertical-align:");
+              s.push(e.align);
+              s.push(";");
+              break;
+          }
+          if (e.hspace.length > 0 && e.vspace.length > 0) {
+            s.push("margin:");
+            if (this.isNumber(e.vspace))
+              e.vspace = parseInt(e.vspace, 10) + "px";
+            s.push(e.vspace, " ");
+            if (this.isNumber(e.hspace))
+              e.hspace = parseInt(e.hspace, 10) + "px";
+            s.push(e.hspace, ";");
+          }
+          else if (e.hspace.length > 0) {
+            s.push("margin:");
+            if (this.isNumber(e.hspace))
+              e.hspace = parseInt(e.hspace, 10) + "px";
+            s.push("0px ", e.hspace, ";");
+          }
+          else if (e.vspace.length > 0) {
+            s.push("margin:");
+            if (this.isNumber(e.vspace))
+              e.vspace = parseInt(e.vspace, 10) + "px";
+            s.push(e.vspace, " 0px;");
+          }
+          s.push("\"");
+          if (e.ismap) s.push(" ismap onclick=\"return false;\"");
+          s.push("/>");
+          //try and preload the image to try and save some time and prevent height issues.
+          var img = new Image();
+          img.src = tmp;
+          return s.join('');
         case "!AT":
         case "!ATTLIST":
           if (args.length === 0) return null;
@@ -2000,15 +2043,9 @@ export class Parser extends EventEmitter {
           this.mxpStyles.push(tmp);
           if (hint.length === 0)
             hint = href;
-          return {
-            format: {
-              formatType: FormatType.MXPLink,
-              href: href,
-              hint: hint,
-              expire: expire,
-            },
-            text: null
-          };
+          if (expire.length > 0)
+            return "<a class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" expire=\"" + expire + "\" onclick=\"" + this.mxpLinkFunction + "(this, '" + href + "');return false;\">";
+          return "<a class=\"MXPLink\" href=\"javascript:void(0);\" title=\"" + hint + "\" onclick=\"" + this.mxpLinkFunction + "(this, '" + href + "');return false;\">";
         case "SEND":
           tmp = this.GetCurrentStyle();
           tmp.tag = MXPTag[tag];
@@ -2063,17 +2100,11 @@ export class Parser extends EventEmitter {
           }
           else
             href = '\'' + href + '\'';
-          return {
-            format: {
-              formatType: FormatType.MXPSend,
-              href: href,
-              hint: hint,
-              expire: expire,
-              prompt: prompt,
-              tt: tt
-            },
-            text: null
-          };
+          var l = ["<a class=\"MXPLink\" href=\"javascript:void(0);\" onclick=\"" + this.mxpSendFunction + "(event||window.event, this, ", href, ", ", (prompt ? 1 : 0), ", ", tt, ");return false;\" title=\"", hint, "\" onmouseover=\"" + this.mxpTooltipFunction + "(this)\""];
+          if (expire.length > 0)
+            l.push(" expire=\"", expire, "\"");
+          l.push(">");
+          return l.join('');
         case "H1":
         case "H2":
         case "H3":
@@ -2087,19 +2118,9 @@ export class Parser extends EventEmitter {
           this.mxpStyles.push(tmp);
           return null;
         case "/A":
-          this.ClearMXPToTag(MXPTag[tag.substring(1)]);
-          return {
-            format: {
-              formatType: FormatType.MXPLinkEnd,
-            }, text: null
-          };
         case "/SEND":
           this.ClearMXPToTag(MXPTag[tag.substring(1)]);
-          return {
-            format: {
-              formatType: FormatType.MXPSendEnd,
-            }, text: null
-          };
+          return "</a>";
         case "/H1":
         case "/H2":
         case "/H3":
@@ -2123,33 +2144,13 @@ export class Parser extends EventEmitter {
           this.mxpState.paragraph = true;
           return null;
         case "SBR":
-          return {
-            format: {
-              formatType: FormatType.WordBreak,
-              href: null,
-              hint: null,
-              expire: null,
-              prompt: null,
-              tt: null
-            }, text: " "
-          };
+          return "<wbr> ";
         case "RESET":
           this.ResetMXP();
           return null;
         case "HR":
           var colors = this.getColors();
-          return {
-            format: {
-              formatType: FormatType.Normal,
-              offset: 0,
-              color: colors.backCode,
-              background: colors.back,
-              size: null,
-              font: null,
-              style: FontStyle.None,
-              hr: true,
-            }, text: null
-          }
+          return "<div class=\"line ansi-back" + colors.backCode + "\" style=\"position:relative;background-color:" + colors.back + "\"> <div style=\"position:absolute;top: 49%;height:4px;width:100%;background-color:" + colors.fore + "\" class=\" ansi-fore" + colors.foreCode + "\"><hr/></div></div>";
       }
     }
     if (this.mxpElements[tag]) {
@@ -2190,7 +2191,7 @@ export class Parser extends EventEmitter {
       this.mxpState.gagged = tmp.gagged;
       this.mxpState.expanded = true;
       this.mxpStyles.push(tmp);
-      return { format: null, text: arg };
+      return arg;
     }
     else if (tag.startsWith("/") && this.mxpElements[tag.substring(1)] && !this.mxpElements[tag.substring(1)].empty) {
       tag = tag.substring(1);
@@ -2222,7 +2223,7 @@ export class Parser extends EventEmitter {
       if (e.empty)
         return null;
       this.mxpState.expanded = true;
-      return { format: null, text: arg };
+      return arg;
     }
     return null;
   }
@@ -2380,8 +2381,7 @@ export class Parser extends EventEmitter {
     var _TermTitle = "";
     var _TermTitleType = null;
     var _AnsiParams = null;
-    var stringBuilder = [];
-    var formatBuilder = [];
+    var strBuilder = ["<span class=\"line\"", ">"];
     var state: ParserState = ParserState.None;
     var pState: ParserState = ParserState.None;
     var lineLength = 0;
@@ -2395,16 +2395,19 @@ export class Parser extends EventEmitter {
     this.parsing.unshift([text, remote]);
     //store remote state as mxp requires it
     //not end of line but text, so fragment, re-get and re-parse to ensure proper triggering
-    if (!this.EndOfLine && this.textLength > 0) {
-      var lines = this.display.lines;
-      if (lines.length > 0) {
-        stringBuilder.push(this.display.lines[lines.length - 1]);
-        formatBuilder.push(this.display.lineFormats[lines.length - 1]);
-        this.display.removeLine(lines.length - 1);
-      }
+    if (!this.EndofLine && this.TextLength > 0) {
+      var lines;
+      if (this.display && this.display !== null)
+        lines = this.display.children(".line");
+      else
+        lines = $("#display .line");
+      var line = lines[lines.length - 1];
+      strBuilder.push($(line).html());
+      $(line).remove();
+      line = null;
       lines = null;
     }
-    formatBuilder.push(this.getFormatBlock(lineLength));
+    strBuilder.push(this.StartDisplayBlock(lineLength));
     if (this._SplitBuffer.length > 0) {
       text = this._SplitBuffer + text;
       this._SplitBuffer = "";
@@ -2416,7 +2419,7 @@ export class Parser extends EventEmitter {
     var f: boolean = this.emulateTerminal;
     var u: boolean = this.enableURLDetection;
     var s: boolean = this.enableMSP;
-    var lnk = 0, fLnk = 0, lnkOffset;
+    var lnk = 0;
     var lLnk = 0;
     var lNest = null;
     var p, pl = this.protocols.length;
@@ -2541,17 +2544,17 @@ export class Parser extends EventEmitter {
               this.ResetMXP();
               if (_AnsiParams.length > 0) {
                 if (parseInt(_AnsiParams, 10) == 2) {
+                  strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
                   lineLength = 0;
                   iTmp = this.window.height;
                   for (var j = 0; j < iTmp; j++) {
-                    //TODO recode should send addline for reach new line
-                    stringBuilder.push("\n");
+                    strBuilder.push("<br/>");
                     this.MXPCapture("\n");
                   }
-                  this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
-                  stringBuilder = [];
-                  formatBuilder = [this.getFormatBlock(lineLength)];
-                  this.textLength += iTmp;
+                  strBuilder.push("</span>");                  
+                  this.AddLine(strBuilder.join(''), false, false);
+                  strBuilder = ["<span class=\"line\"", ">"];
+                  this.TextLength += iTmp;
                   this.mxpState.noBreak = false;
                 }
               }
@@ -2560,8 +2563,9 @@ export class Parser extends EventEmitter {
               state = ParserState.None;
             }
             else if (c === 'm') {
+              strBuilder.push(this.EndDisplayBlock());
               this.ProcessAnsiColorParams(_AnsiParams.split(';'));
-              formatBuilder.push(this.getFormatBlock(lineLength));
+              strBuilder.push(this.StartDisplayBlock(lineLength));
               this._SplitBuffer = "";
               _AnsiParams = null;
               state = ParserState.None;
@@ -2635,16 +2639,15 @@ export class Parser extends EventEmitter {
             ) {
               if (d) {
                 if (i < 16) {
-                  stringBuilder.push(String.fromCharCode(parseInt("240" + i.toString(16), 16)));
+                  strBuilder.push("&#x240", i.toString(16), ";");
                   this.MXPCapture("&#x240" + i.toString(16) + ";");
                 }
                 else {
-                  stringBuilder.push("\u241B");
-                  stringBuilder.push(String.fromCharCode(parseInt("24" + i.toString(16), 16)));
+                  strBuilder.push("&#x241B&#x24", i.toString(16), ";");
                   this.MXPCapture("&#x241B&#x24" + i.toString(16) + ";");
                 }
                 lineLength += 2;
-                this.textLength += 2;
+                this.TextLength += 2;
                 this.mxpState.noBreak = false;
               }
               state = ParserState.None;
@@ -2696,70 +2699,63 @@ export class Parser extends EventEmitter {
               this._SplitBuffer += c;
             }
             else if (c === '>') {
-              _MXPTag = _MXPTag.toUpperCase();
-              if (_MXPTag === "HR" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
+              if (_MXPTag.toUpperCase() === "HR" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
                 if (lineLength > 0) {
+                  strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
                   lineLength = 0;
+                  strBuilder.push("<br>", this.EndDisplayBlock());
+                  strBuilder.push("</span>");
                   this.MXPCapture("\n");
-                  this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
-                  stringBuilder = [];
-                  formatBuilder = [this.getFormatBlock(lineLength)];
+                  this.AddLine(strBuilder.join(''), false, false);
                 }
+                else
+                  strBuilder.push(this.EndDisplayBlock());
                 //skip = true;
-                _MXPTag = this.getMXPBlock(_MXPTag, [], remote);
-                if (_MXPTag && _MXPTag.format) {
-                  _MXPTag.format.offset = lineLength;
-                  formatBuilder.push(_MXPTag.format);
-                }
+                strBuilder = [this.ParseMXPTag(_MXPTag, [], remote)];
                 //strBuilder.splice(1, 0, 'data-length="0"');
-                this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
-                this.textLength++;
-                stringBuilder = [];
-                formatBuilder = [this.getFormatBlock(lineLength)];
+                this.AddLine(strBuilder.join(''), false, false);
+                this.TextLength++;
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
               }
-              else if (_MXPTag === "BR" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
-                this.MXPCapture("\n");
-                this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
-                skip = false;
+              else if (_MXPTag.toUpperCase() === "BR" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
+                strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
                 lineLength = 0;
-                stringBuilder = [];
-                formatBuilder = [this.getFormatBlock(lineLength)];
-                this.textLength++;
+                strBuilder.push("<br>", this.EndDisplayBlock(), "</span>");
+                this.MXPCapture("\n");
+                this.AddLine(strBuilder.join(''), false, false);
+                skip = false;
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
+                this.TextLength++;
               }
-              else if (_MXPTag === "IMAGE" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
-                _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote);
-                if (_MXPTag && _MXPTag.format !== null) {
-                  formatBuilder.push(_MXPTag.format);
+              else if (_MXPTag.toUpperCase() === "IMAGE" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
+                strBuilder.push(this.EndDisplayBlock());
+                _MXPTag = this.ParseMXPTag(_MXPTag, _MXPArgs, remote);
+                if (_MXPTag !== null && _MXPTag.length > 0) {
+                  strBuilder.push(_MXPTag);
                   lineLength += _MXPTag.length;
-                  this.textLength += _MXPTag.length;
+                  this.TextLength += _MXPTag.length;
                 }
-                formatBuilder.push(this.getFormatBlock(lineLength));
+                strBuilder.push(this.StartDisplayBlock(lineLength));
               }
               else {
-                _MXPTag = this.getMXPBlock(_MXPTag, [], remote);
+                _MXPTag = this.ParseMXPTag(_MXPTag, [], remote);
                 if (this.mxpState.expanded) {
-                  if (_MXPTag && _MXPTag.text !== null) text = text.splice(idx + 1, _MXPTag.text);
+                  if (_MXPTag !== null) text = text.splice(idx + 1, _MXPTag);
                   tl = text.length;
                   this.mxpState.expanded = false;
                   state = ParserState.None;
                   _MXPTag = "";
                   continue;
                 }
-                if (_MXPTag) {
-                  if (_MXPTag.format) {
-                    _MXPTag.format.offset = lineLength;
-                    formatBuilder.push(_MXPTag.format)
-                  }
-                  formatBuilder.push(this.getFormatBlock(lineLength));
-                  if (_MXPTag.text !== null && _MXPTag.text.length > 0) {
-                    stringBuilder.push(_MXPTag.text);
-                    lineLength += _MXPTag.text.length;
-                    this.textLength += _MXPTag.text.length;
-                  }
+                if (_MXPTag != "</a>") {
+                  strBuilder.push(this.EndDisplayBlock());
+                  strBuilder.push(this.StartDisplayBlock(lineLength));
                 }
-                else
-                  formatBuilder.push(this.getFormatBlock(lineLength));
-
+                if (_MXPTag !== null && _MXPTag.length > 0) {
+                  strBuilder.push(_MXPTag);
+                  lineLength += _MXPTag.length;
+                  this.TextLength += _MXPTag.length;
+                }
               }
               state = ParserState.None;
               this._SplitBuffer = "";
@@ -2815,36 +2811,31 @@ export class Parser extends EventEmitter {
             }
             else if (c === '>') {
               if (_MXPTag.toUpperCase() === "IMAGE" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
-                _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote);
-                if (_MXPTag !== null && _MXPTag.format !== null) {
-                  _MXPTag.format.offset = lineLength;
-                  formatBuilder.push(_MXPTag.format);
+                strBuilder.push(this.EndDisplayBlock());
+                _MXPTag = this.ParseMXPTag(_MXPTag, _MXPArgs, remote);
+                if (_MXPTag !== null && _MXPTag.length > 0) {
+                  strBuilder.push(_MXPTag);
+                  lineLength += _MXPTag.length;
+                  this.TextLength += _MXPTag.length;
                 }
-                formatBuilder.push(this.getFormatBlock(lineLength));
+                strBuilder.push(this.StartDisplayBlock(lineLength));
               }
               else {
-                _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote);
+                strBuilder.push(this.EndDisplayBlock());
+                _MXPTag = this.ParseMXPTag(_MXPTag, _MXPArgs, remote);
                 if (this.mxpState.expanded) {
-                  if (_MXPTag !== null) text = text.splice(idx + 1, _MXPTag.text);
+                  if (_MXPTag !== null) text = text.splice(idx + 1, _MXPTag);
                   tl = text.length;
                   this.mxpState.expanded = false;
                   state = ParserState.None;
                   continue;
                 }
-                if (_MXPTag !== null) {
-                  if (_MXPTag !== null && _MXPTag.format) {
-                    _MXPTag.format.offset = lineLength;
-                    formatBuilder.push(_MXPTag.format)
-                  }
-                  formatBuilder.push(this.getFormatBlock(lineLength));
-                  if (_MXPTag.text !== null) {
-                    stringBuilder.push(_MXPTag.text);
-                    lineLength += _MXPTag.text.length;
-                    this.textLength += _MXPTag.text.length;
-                  }
+                strBuilder.push(this.StartDisplayBlock(lineLength));
+                if (_MXPTag !== null && _MXPTag.length > 0) {
+                  strBuilder.push(_MXPTag);
+                  lineLength += _MXPTag.length;
+                  this.TextLength += _MXPTag.length;
                 }
-                else
-                  formatBuilder.push(this.getFormatBlock(lineLength));
               }
               state = ParserState.None;
               this._SplitBuffer = "";
@@ -2872,10 +2863,11 @@ export class Parser extends EventEmitter {
                   state = ParserState.None;
                   continue;
                 }
-                stringBuilder.push($('<div/>').html("&" + _MXPEntity).text());
+                strBuilder.push("&");
+                strBuilder.push(_MXPEntity);
                 this.MXPCapture("&" + _MXPEntity);
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
                 this.mxpState.noBreak = false;
                 //Abnormal end, send as is
                 state = ParserState.None;
@@ -2893,12 +2885,12 @@ export class Parser extends EventEmitter {
                   state = pState;
                   continue;
                 }
-                stringBuilder.push($('<div/>').html("&" + _MXPEntity + ";").text());
+                strBuilder.push("&", _MXPEntity, ";");
                 this.MXPCapture("&");
                 this.MXPCapture(_MXPEntity);
                 this.MXPCapture(";");
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
                 this.mxpState.noBreak = false;
                 this._SplitBuffer = "";
               }
@@ -2931,40 +2923,39 @@ export class Parser extends EventEmitter {
             break;
           case ParserState.URL:
             if (idx > lnk + 2) {
-              stringBuilder.pop();
-              stringBuilder.pop();
+              strBuilder.pop();
+              strBuilder.pop();
               lineLength -= 2;
-              this.textLength -= 2;
+              this.TextLength -= 2;
               this.MXPDeCapture(2);
               idx = lnk;
               state = ParserState.None;
             }
             else if (c === '/') {
-              stringBuilder.push(c);
+              strBuilder.push(c);
               this.MXPCapture(c);
               lineLength++;
-              this.textLength++;
+              this.TextLength++;
               if (idx == lnk + 2) {
                 state = ParserState.URLFound;
                 //Found :// so valid url
-                lnk = stringBuilder.length - 4;
-                lLnk = stringBuilder.length - 1;
-                fLnk = formatBuilder.length;
-                while (lnk > 0 && CharAllowedInURL(stringBuilder[lnk], true))
+                lnk = strBuilder.length - 4;
+                lLnk = strBuilder.length - 1;
+                while (lnk > 0 && CharAllowedInURL(strBuilder[lnk], true))
                   lnk--;
-                if (!CharAllowedInURL(stringBuilder[lnk], true))
+                if (!CharAllowedInURL(strBuilder[lnk], true))
                   lnk++;
                 lNest = [];
-                if (lnk > 0 && stringBuilder[lnk - 1] === "(")
+                if (lnk > 0 && strBuilder[lnk - 1] === "(")
                   lNest.push(")");
-                if (lnk > 0 && stringBuilder[lnk - 1] === "[")
+                if (lnk > 0 && strBuilder[lnk - 1] === "[")
                   lNest.push("]");
               }
             }
             else if (idx > lnk + 1) {
-              stringBuilder.pop();
+              strBuilder.pop();
               lineLength--;
-              this.textLength--;
+              this.TextLength--;
               this.MXPDeCapture(1);
               idx = lnk;
               state = ParserState.None;
@@ -2976,72 +2967,65 @@ export class Parser extends EventEmitter {
             break;
           case ParserState.URLFound:
             if (!CharAllowedInURL(c, false)) {
-              if (lLnk != stringBuilder.length - 1) {
-                _MXPComment += stringBuilder.slice(lnk).join('');
+              if (lLnk != strBuilder.length - 1) {
+                _MXPComment += strBuilder.slice(lnk).join('');
                 if (this.enableDebug) this.emit('debug', "URL Found: " + _MXPComment);
-                formatBuilder.splice(fLnk, 0,
-                  {
-                    formatType: FormatType.Link,
-                    offset: lnkOffset,
-                    href: _MXPComment
-                  });
-                formatBuilder.push({
-                  formatType: FormatType.LinkEnd,
-                  offset: lineLength,
-                  href: _MXPComment
-                });
+                if (this.enableLinks) {
+                  strBuilder.splice(lnk, 0, "<a class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">");
+                  strBuilder.push("</a>");
+                }
+                else {
+                  strBuilder.splice(lnk, 0, "<span class=\"URLLink\" title=\"" + _MXPComment + "\">");
+                  strBuilder.push("</span>");
+                }
               }
               state = ParserState.None;
               idx--;
             }
             else {
-              var si = stringBuilder.length - 1;
+              var si = strBuilder.length - 1;
               if (lNest.length > 1 && lNest[lNest.length - 1] == c) {
                 lNest.pop();
-                stringBuilder.push(c);
+                strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
               }
               else if (lNest.length > 0 && c == '(') {
                 lNest.push(')');
-                stringBuilder.push(c);
+                strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
               }
               else if (lNest.length > 0 && c == '[') {
                 lNest.push(']');
-                stringBuilder.push(c);
+                strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
               }
               else if (lNest.length == 1 && lNest[lNest.length - 1] == c) {
-                if (lLnk != stringBuilder.length - 1) {
-                  _MXPComment += stringBuilder.slice(lnk).join('');
+                if (lLnk != strBuilder.length - 1) {
+                  _MXPComment += strBuilder.slice(lnk).join('');
                   if (this.enableDebug) this.emit('debug', "URL Found: " + _MXPComment);
-
-                  formatBuilder.splice(fLnk, 0,
-                    {
-                      formatType: FormatType.Link,
-                      href: _MXPComment,
-                      offset: lnkOffset
-                    });
-                  formatBuilder.push({
-                    formatType: FormatType.LinkEnd,
-                    href: _MXPComment,
-                    offset: lineLength
-                  });
+                  if (this.enableLinks) {
+                    strBuilder.splice(lnk, 0, "<a class=\"URLLink\" href=\"javascript:void(0);\" title=\"" + _MXPComment + "\" onclick=\"" + this.linkFunction + "('" + _MXPComment + "');return false;\">");
+                    strBuilder.push("</a>");
+                  }
+                  else {
+                    strBuilder.splice(lnk, 0, "<span class=\"URLLink\" title=\"" + _MXPComment + "\">");
+                    strBuilder.push("</span>");
+                  }
                 }
                 state = ParserState.None;
                 idx--;
               }
               else {
-                stringBuilder.push(c);
+                strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
               }
             }
             break;
@@ -3049,22 +3033,20 @@ export class Parser extends EventEmitter {
             if (c === ")") {
               lnk = this.mxpState.lineType;
               this.mxpState.lineType = lineType.TempSecure;
-              this.getMXPBlock("SOUND", _MXPArgs, remote);
+              _MXPTag = this.ParseMXPTag("SOUND", _MXPArgs, remote);
               this.mxpState.lineType = lnk;
               state = ParserState.None;
               if (idx + 1 < tl && text.charAt(idx + 1) === '\n') {
                 idx++;
                 skip = false;
-                stringBuilder = [];
-                formatBuilder = [this.getFormatBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
                 this.mxpState.noBreak = false;
                 lineLength = 0;
               }
               else if (idx + 2 < tl && text[idx + 1] === "\r" && text[idx + 2] == "\n") {
                 idx += 2;
                 skip = false;
-                stringBuilder = [];
-                formatBuilder = [this.getFormatBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
                 this.mxpState.noBreak = false;
                 lineLength = 0;
               }
@@ -3079,22 +3061,20 @@ export class Parser extends EventEmitter {
             if (c === ")") {
               lnk = this.mxpState.lineType;
               this.mxpState.lineType = lineType.TempSecure;
-              this.getMXPBlock("MUSIC", _MXPArgs, remote);
+              _MXPTag = this.ParseMXPTag("MUSIC", _MXPArgs, remote);
               this.mxpState.lineType = lnk;
               state = ParserState.None;
               if (idx + 1 < tl && text.charAt(idx + 1) === '\n') {
                 idx++;
                 skip = false;
-                stringBuilder = [];
-                formatBuilder = [this.getFormatBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
                 this.mxpState.noBreak = false;
                 lineLength = 0;
               }
               else if (idx + 2 < tl && text[idx + 1] === "\r" && text[idx + 2] == "\n") {
                 idx += 2;
                 skip = false;
-                stringBuilder = [];
-                formatBuilder = [this.getFormatBlock(lineLength)];
+                strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
                 this.mxpState.noBreak = false;
                 lineLength = 0;
               }
@@ -3108,17 +3088,17 @@ export class Parser extends EventEmitter {
             if (e && i === 7) {
               if (f) {
                 c = "\u2407";
-                stringBuilder.push(c);
+                strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
                 this.mxpState.noBreak = false;
               }
               else if (d) {
-                stringBuilder.push(c);
+                strBuilder.push("&#x2407;");
                 this.MXPCapture("&#x2407;");
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
                 this.mxpState.noBreak = false;
               }
               this.emit('bell');
@@ -3133,10 +3113,10 @@ export class Parser extends EventEmitter {
             else if (e && c === '\t') {
               var _Tab = 8 - lineLength % 8;
               if (_Tab > 0) {
-                stringBuilder.push(Array(_Tab + 1).join(" "));
+                strBuilder.push(Array(_Tab + 1).join(" "));
                 this.MXPCapture(Array(_Tab + 1).join(" "));
                 lineLength += _Tab;
-                this.textLength += _Tab;
+                this.TextLength += _Tab;
                 this.mxpState.noBreak = false;
               }
             }
@@ -3145,7 +3125,7 @@ export class Parser extends EventEmitter {
               if (!this.mxpState.locked) {
                 //notify client that a tag is over, allow for tagging the 10,11,12,19 tag types for auto mapper tagging/welcome test/custom tags
                 if (this.mxpState.lineType !== lineType.Open)
-                  this.emit('MXP-tag-end', this.mxpState.lineType, stringBuilder.join(''), formatBuilder);
+                  this.emit('MXP-tag-end', this.mxpState.lineType, strBuilder.join(''));
                 //custom element linked to tag so expanded it into the line
                 if (!this.mxpState.lineExpanded && this.mxpLines[this.mxpState.lineType] && this.mxpLines[this.mxpState.lineType].enabled) {
                   iTmp = "";
@@ -3169,15 +3149,16 @@ export class Parser extends EventEmitter {
                 if (this.mxpState.lineType != 2 && !this.enableMXP)
                   this.ResetMXP();
               }
+              strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
               lineLength = 0;
               if (!skip) {
+                strBuilder.push("<br>", this.EndDisplayBlock(), "</span>");
                 this.MXPCapture("\n");
               }
-              this.AddLine(stringBuilder.join(''), false, skip, formatBuilder);
+              this.AddLine(strBuilder.join(''), false, skip);
               skip = false;
-              stringBuilder = [];
-              formatBuilder = [this.getFormatBlock(lineLength)];
-              this.textLength++;
+              strBuilder = ["<span class=\"line\"", ">", this.StartDisplayBlock(lineLength)];
+              this.TextLength++;
               this.mxpState.noBreak = false;
             }
             else if (e && c === '\r') {
@@ -3258,30 +3239,30 @@ export class Parser extends EventEmitter {
                   c = "\u25BC";
                 else if (i === 127)
                   c = "\u2302";
-                stringBuilder.push(c);
+                strBuilder.push(c);
                 this.MXPCapture(c);
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
                 this.mxpState.noBreak = false;
               }
               else if (d) {
                 i = 9215 + i;
-                stringBuilder.push(String.fromCharCode(i));
+                strBuilder.push("&#", i.toString(), ";");
                 this.MXPCapture("&#");
                 this.MXPCapture(i.toString());
                 this.MXPCapture(";");
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
                 this.mxpState.noBreak = false;
               }
               else
                 continue;
             }
             else if (c === ' ' || (this._CurrentAttributes > 0 && (this._CurrentAttributes & FontStyle.Hidden) === FontStyle.Hidden)) {
-              stringBuilder.push(' ');
+              strBuilder.push(' ');
               this.MXPCapture(' ');
               lineLength++;
-              this.textLength++;
+              this.TextLength++;
               this.mxpState.noBreak = false;
             }
             else if (c === '<') {
@@ -3292,17 +3273,17 @@ export class Parser extends EventEmitter {
                 state = ParserState.MXPTag;
               }
               else {
-                stringBuilder.push("<");
+                strBuilder.push("&lt;");
                 this.MXPCapture("&lt;");
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
               }
             }
             else if (c === '>') {
-              stringBuilder.push(">");
+              strBuilder.push("&gt;");
               this.MXPCapture("&gt;");
               lineLength++;
-              this.textLength++;
+              this.TextLength++;
               this.mxpState.noBreak = false;
             }
             else if (c === '&') {
@@ -3313,31 +3294,31 @@ export class Parser extends EventEmitter {
                 state = ParserState.MXPEntity;
               }
               else {
-                stringBuilder.push(c);
+                strBuilder.push("&amp;");
                 lineLength++;
-                this.textLength++;
+                this.TextLength++;
                 this.mxpState.noBreak = false;
               }
             }
             else if (c === '"') {
-              stringBuilder.push(c);
+              strBuilder.push("&quot;");
               this.MXPCapture("&quot;");
               lineLength++;
-              this.textLength++;
+              this.TextLength++;
               this.mxpState.noBreak = false;
             }
             else if (c === "'") {
-              stringBuilder.push(c);
+              strBuilder.push("&apos;");
               this.MXPCapture("&apos;");
               lineLength++;
-              this.textLength++;
+              this.TextLength++;
               this.mxpState.noBreak = false;
             }
             else if (c == ":") {
-              stringBuilder.push(c);
+              strBuilder.push(c);
               this.MXPCapture(c);
               lineLength++;
-              this.textLength++;
+              this.TextLength++;
               this.mxpState.noBreak = false;
               if (u) {
                 _MXPComment = "";
@@ -3355,21 +3336,19 @@ export class Parser extends EventEmitter {
                   }
                   if (psk)
                     continue;
-                  lnk = stringBuilder.length;
-                  lnkOffset = lineLength;
-                  fLnk = formatBuilder.length;
-                  if (lnk > 1 + nl && stringBuilder[lnk - (2 + nl)].length === 1 && /\S/.test(stringBuilder[lnk - (2 + nl)]) && stringBuilder[lnk - (2 + nl)] !== "(" && stringBuilder[lnk - (2 + nl)] !== "[")
+                  lnk = strBuilder.length;
+                  if (lnk > 1 + nl && strBuilder[lnk - (2 + nl)].length === 1 && /\S/.test(strBuilder[lnk - (2 + nl)]) && strBuilder[lnk - (2 + nl)] !== "(" && strBuilder[lnk - (2 + nl)] !== "[")
                     continue;
                   lNest = [];
-                  lnk = stringBuilder.length - (1 + nl);
-                  lnkOffset -= (1 + nl);
-                  lLnk = stringBuilder.length - 1;
-                  if (lnk > 0 && stringBuilder[lnk - 1] === "(")
+                  lnk = strBuilder.length - (1 + nl);
+                  lLnk = strBuilder.length - 1;
+                  if (lnk > 0 && strBuilder[lnk - 1] === "(")
                     lNest.push(")");
-                  if (lnk > 0 && stringBuilder[lnk - 1] === "[")
+                  if (lnk > 0 && strBuilder[lnk - 1] === "[")
                     lNest.push("]");
                   state = ParserState.URLFound;
                   pFnd = true;
+
                   if (pFnd)
                     break;
                 }
@@ -3380,10 +3359,10 @@ export class Parser extends EventEmitter {
               }
             }
             else if (c == ".") {
-              stringBuilder.push(c);
+              strBuilder.push(c);
               this.MXPCapture(c);
               lineLength++;
-              this.textLength++;
+              this.TextLength++;
               this.mxpState.noBreak = false;
               if (u && idx - 3 >= 0) {
                 _MXPComment = "http://";
@@ -3391,18 +3370,15 @@ export class Parser extends EventEmitter {
                   (text[idx - 2] === 'w' || idx[lnk - 2] === 'W') &&
                   (text[idx - 3] === 'w' || idx[lnk - 3] === 'W')
                 ) {
-                  lnk = stringBuilder.length;
-                  lnkOffset = lineLength;
-                  fLnk = formatBuilder.length;
-                  if (lnk > 4 && stringBuilder[lnk - 5].length === 1 && /\S/.test(stringBuilder[lnk - 5]) && stringBuilder[lnk - 5] !== "(" && stringBuilder[lnk - 5] !== "[")
+                  lnk = strBuilder.length;
+                  if (lnk > 4 && strBuilder[lnk - 5].length === 1 && /\S/.test(strBuilder[lnk - 5]) && strBuilder[lnk - 5] !== "(" && strBuilder[lnk - 5] !== "[")
                     continue;
                   lNest = [];
-                  lnk = stringBuilder.length - 4;
-                  lnkOffset -= 4;
-                  lLnk = stringBuilder.length - 1;
-                  if (lnk > 0 && stringBuilder[lnk - 1] === "(")
+                  lnk = strBuilder.length - 4;
+                  lLnk = strBuilder.length - 1;
+                  if (lnk > 0 && strBuilder[lnk - 1] === "(")
                     lNest.push(")");
-                  if (lnk > 0 && stringBuilder[lnk - 1] === "[")
+                  if (lnk > 0 && strBuilder[lnk - 1] === "[")
                     lNest.push("]");
                   state = ParserState.URLFound;
                 }
@@ -3677,17 +3653,20 @@ export class Parser extends EventEmitter {
                 else if (i === 254)
                   c = "\u25A0";
               }
-              stringBuilder.push(c);
+              strBuilder.push(c);
               this.MXPCapture(c);
               lineLength++;
-              this.textLength++;
+              this.TextLength++;
               this.mxpState.noBreak = false;
             }
             break;
         }
       }
       if (lineLength > 0) {
-        this.AddLine(stringBuilder.join(''), true, false, formatBuilder);
+        strBuilder.push(this.EndDisplayBlock());
+        strBuilder.push("</span>");
+        strBuilder.splice(1, 0, 'data-length="', ""+lineLength, '"');
+        this.AddLine(strBuilder.join(''), true, false);
       }
     }
     catch (ex) {
@@ -3711,8 +3690,7 @@ export class Parser extends EventEmitter {
 
   Clear() {
     this.ResetColors();
-    this.textLength = 0;
-    this._SplitBuffer = "";
+    this.TextLength = 0;
   };
 
   ClearMXP() {
@@ -3745,6 +3723,42 @@ export class Parser extends EventEmitter {
       bell.play();
     }
   };
+  private _linkFunction;
+  private _mxpLinkFunction;
+  private _mxpSendFunction;
+  private _mxpTooltipFunction;
 
+
+  get linkFunction(): string {
+    return this._linkFunction || "doLink";
+  }
+
+  set linkFunction(val: string) {
+    this._linkFunction = val;
+  }
+
+  get mxpLinkFunction(): string {
+    return this._mxpLinkFunction || "doMXPLink";
+  }
+
+  set mxpLinkFunction(val: string) {
+    this._mxpLinkFunction = val;
+  }
+
+  get mxpSendFunction(): string {
+    return this._mxpSendFunction || "doMXPSend";
+  }
+
+  set mxpSendFunction(val: string) {
+    this._mxpSendFunction = val;
+  }
+
+  get mxpTooltipFunction(): string {
+    return this._mxpTooltipFunction || "doMXPTooltip";
+  }
+
+  set mxpTooltipFunction(val: string) {
+    this._mxpTooltipFunction = val;
+  }
 
 };

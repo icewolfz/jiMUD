@@ -4,11 +4,15 @@
   - Log error setting default to on
   - Improved trigger performance by changing how some test are done
   - Re-enable TestMapper() to allow testing of mapper
+  - Add enable spellchecking preferance to allow spell checking to be turned off
 - **Fixed:**
   - Fix bell unicode character display
-  - Editor: New lines where not correctly being sent when sending as formated text
-  - Editor: Trailing newlines where being cut off
+  - Editor: 
+    - New lines where not correctly being sent when sending as formated text
+    - Trailing newlines where being cut off
+    - Fix flashing format not being sent when flashing disabled
   - Fix a bug in aliases and macros when script style was used, would error due to strict type comparison
+  - Fix a bug in aliases, macros, and triggers when script style returns a non string/null/undefined
 ##### 0.3.1 - 2017-05-30
 - **Fixed:**
   - Character manager: file not found issues, will now properly check if characters file exist before accessing it
