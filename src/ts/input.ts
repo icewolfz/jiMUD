@@ -1196,6 +1196,12 @@ export class input extends EventEmitter {
         if (ret === null || ret === undefined)
             return null;
         ret = this.ExecuteTriggers(1, ret, false, true);
+        if (ret === null || ret === undefined)
+            return null;
+        //Convert to string
+        if (typeof ret !== 'string')
+            ret = ret.toString();
+
         if (ret.endsWith("\n"))
             return ret;
         return ret + "\n";
@@ -1235,6 +1241,9 @@ export class input extends EventEmitter {
         }
         if (ret === null || ret === undefined)
             return true;
+        //Convert to string
+        if (typeof ret !== 'string')
+            ret = ret.toString();
         if (macro.send) {
             if (!ret.endsWith("\n"))
                 ret += "\n";
@@ -1403,6 +1412,9 @@ export class input extends EventEmitter {
             return null;
         if (r)
             return ret;
+        //Convert to string
+        if (typeof ret !== 'string')
+            ret = ret.toString();
         if (!ret.endsWith("\n"))
             ret += "\n";
         if (this.client.connected)

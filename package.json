@@ -53,6 +53,7 @@
     "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed"
   },
   "devDependencies": {
+    "@types/bootstrap": "^3.3.33",
     "@types/jquery": "^2.0.42",
     "@types/node": "^7.0.16",
     "babel-cli": "^6.24.1",
@@ -63,7 +64,6 @@
     "electron-installer-dmg": "^0.2.1",
     "electron-local-crash-reporter": "^1.0.1",
     "electron-packager": "^8.7.0",
-    "electron-prebuilt": "^1.4.13",
     "electron-rebuild": "^1.5.7"
   },
   "build": {
