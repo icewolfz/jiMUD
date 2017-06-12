@@ -53,13 +53,13 @@
       var _noCapture = false;
       var _finder;
 
-      webFrame.setSpellCheckProvider("en-US", true, {
-        spellCheck: function (text) {
-		  if (!client.options.spellchecking)
-		    return true;		
-          return !(require('spellchecker').isMisspelled(text));
-        }
-      });
+        webFrame.setSpellCheckProvider("en-US", true, {
+          spellCheck: function (text) {
+            if (!client.options.spellchecking)
+              return true;
+            return !(require('spellchecker').isMisspelled(text));
+          }
+        });
 
       function doLink(url) {
         if (confirm("Open '" + url + "'?") === true)
