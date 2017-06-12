@@ -386,21 +386,21 @@ export class Tests extends EventEmitter {
             for (i = 127; i <= 254; i++)
                 sample += String.fromCharCode(i);
             sample += "\n";
-            var dcc = this.Client.parser.displayControlCodes;
-            this.Client.parser.displayControlCodes = true;
-            if (!this.Client.parser.emulateTerminal) {
+            var dcc = this.Client.display.displayControlCodes;
+            this.Client.display.displayControlCodes = true;
+            if (!this.Client.display.emulateTerminal) {
                 this.Client.print(sample, true);
-                this.Client.parser.emulateTerminal = true;
+                this.Client.display.emulateTerminal = true;
                 this.Client.print(sample, true);
-                this.Client.parser.emulateTerminal = false;
+                this.Client.display.emulateTerminal = false;
             }
             else {
-                this.Client.parser.emulateTerminal = false;
+                this.Client.display.emulateTerminal = false;
                 this.Client.print(sample, true);
-                this.Client.parser.emulateTerminal = true;
+                this.Client.display.emulateTerminal = true;
                 this.Client.print(sample, true);
             }
-            this.Client.parser.displayControlCodes = dcc;
+            this.Client.display.displayControlCodes = dcc;
         };
 
         this.TestFunctions["TestMXP2()"] = function () {
