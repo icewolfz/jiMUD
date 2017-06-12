@@ -44,7 +44,7 @@ export class Status extends EventEmitter {
         this.client.telnet.GMCPSupports.push("oMUD 1");
         this.client.telnet.GMCPSupports.push("Char.Skills 1");
         this.client.on('add-line', (data) => {
-            if (data.line == 'Connected...')
+            if (data.raw == 'Connected...')
                 this.init();
         });
         this.client.on('options-loaded', () => {

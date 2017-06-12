@@ -102,7 +102,7 @@ export class Logger extends EventEmitter {
             this.timeStamp = new Date().getTime();
         this.buildFilename();
         if (this.client.options.logPrepend)
-            this.write(this.client.display.html);
+            this.write(this.client.display.html());
         this.emit('started');
     }
 

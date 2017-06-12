@@ -9,8 +9,6 @@ export enum validTextRange {
     within = 4
 }
 
-//TODO recode once new display is finished
-
 export class Finder extends EventEmitter {
     private _display;
     private _document;
@@ -30,7 +28,7 @@ export class Finder extends EventEmitter {
     constructor(display) {
         super();
         this._display = display;
-        this._document = display._el.ownerDocument;
+        this._document = display[0].ownerDocument;
         this._frame = this._document.defaultView || this._document.parentWindow;
         this._window = this._frame.parent;
         this.createControl();

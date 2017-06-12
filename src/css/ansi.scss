@@ -36,10 +36,6 @@
     -webkit-animation-duration: 1s;
 }
 
-.background-line .ansi {
-    height: 100%;
-}
-
 .ansi {
     padding: 0px;
     margin: 0px;
@@ -47,42 +43,36 @@
     padding-top: 1px;
 }
 
-.line, .background-line {
+.line {
     word-wrap: break-word;
     word-break: break-all;
-    display: inline-block;
+    /*width: 100%;*/
+    /*display: block;*/
+    display:inline-block;
+    /*padding-bottom: 1px;*/
     box-sizing: border-box;
+    clear: both;
     line-height: normal;
     white-space: pre;
     min-width: 100%;
-    clear: both;
-    position: absolute;
 }
 
 .line hr {
     border: 0px;
 }
 
-.background-line {
-    overflow: hidden;
-}
-
 
 /* --- End CSS for ansi display --- */
 
 .line a,
-.line a:link,
-.line a *,
-.line a:link * {
+.line a:link {
     color: inherit;
     font-weight: inherit;
     text-decoration: underline;
 }
 
 .URLLink,
-.URLLink:link,
-.URLLink *,
-.URLLink:link * {
+.URLLink:link {
     text-decoration: underline;
     cursor: pointer;
 }

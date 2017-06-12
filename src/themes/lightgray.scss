@@ -7,12 +7,13 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background-color: #{$panelBackground};
 }
 
-#display {
+#display-container {
     left: 34px;
     right: 165px;
     top: 2px;
     bottom: 29px;
     border: 1px solid #{$borderColor};
+    padding: 0px;
 }
 
 #display-border {
