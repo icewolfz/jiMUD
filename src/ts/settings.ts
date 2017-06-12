@@ -262,7 +262,6 @@ export class Settings {
 	public showStatusCombatHealth: boolean = true;
 	public showButtonBar: boolean = true;
 	public allowNegativeNumberNeeded = false;
-	public spellchecking: boolean = true;
 
 	static load(file) {
 		if (!fs.existsSync(file))

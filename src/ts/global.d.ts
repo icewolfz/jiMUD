@@ -24,9 +24,5 @@ declare var $selline:string;
 declare var $selword:string;
 
 interface JQuery {
-	hasHorizontalScrollBar():boolean;	
-	innerText(msg):string;
-	textContents(msg):string;
-	treeview:any;
-	selectpicker:any
+	hasHorizontalScrollBar(): boolean;
 }

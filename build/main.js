@@ -152,6 +152,7 @@ var menuTemp = [
       },
       {
         label: 'Select All',
+        accelerator: 'CmdOrCtrl+A',
         click: () => {
           win.webContents.executeJavaScript('selectAll()');
         }

@@ -105,7 +105,7 @@
 ### Parsed Predefined variables
 
 - `${selected}` - selected text
-- `${selectedword}` - word under mouse when right clicked
+- `${selectedword]` - word under mouse when right clicked
 - `${selectedline}` - line under mouse when right clicked
 - `${selectedurl}` - url under mouse when right clicked
 - `${selword}` same as $selectedword

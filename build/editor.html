@@ -149,8 +149,8 @@
                     ctx.fillStyle = "#d6d6d6";
                     ctx.strokeRect(0, 0, 16, 16);
                 }
-                //if (save)
-                    //return fs.writeFileSync('C:\\Development\\jiMUD\\assets\\icons\\png\\colors\\' + name + '.png', nativeImage.createFromDataURL(canvas.toDataURL('image/png', 0.92)).toPng());
+                if (save)
+                    return fs.writeFileSync('C:\\Development\\jiMUD\\assets\\icons\\png\\colors\\' + name + '.png', nativeImage.createFromDataURL(canvas.toDataURL('image/png', 0.92)).toPng());
 
                 return nativeImage.createFromDataURL(canvas.toDataURL('image/png', 0.92));
             }
@@ -203,8 +203,6 @@
 
             webFrame.setSpellCheckProvider("en-US", true, {
                 spellCheck: function (text) {
-                    if(!options.spellchecking)
-                        return true;
                     return !(require('spellchecker').isMisspelled(text));
                 }
             });
@@ -227,15 +225,15 @@
                             tag = els[e].className.toUpperCase().split(/\s+/g);
                             var t, tl = tag.length;
                             for (t = 0; t < tl; t++) {
-                                if (tag[t] == "NOFLASH")
-                                    stack.push("FLASH");
+                                if (tag[t] == "noflash")
+                                    stack.push("flash");
                                 else if (tag[t].length > 0)
                                     stack.push(tag[t]);
                             }
                             stack = stack.concat(buildHTMLStack($el.contents()));
                             for (t = 0; t < tl; t++) {
-                                if (tag[t] == "NOFLASH")
-                                    stack.push("FLASH");
+                                if (tag[t] == "noflash")
+                                    stack.push("flash");
                                 else if (tag[t].length > 0)
                                     stack.push("/" + tag[t]);
                             }
@@ -607,9 +605,9 @@
                         ]
                         for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
                             //generate icon for the first 16 user definable colors, else use predefined icons
-                            //if (c >= 64)
-                                //icon = path.join(__dirname, '../assets/icons/png/colors/' + _ColorTable[c + 1].replace(/\s+/g, "-") + '.png');
-                            //else
+                            if (c >= 64)
+                                icon = path.join(__dirname, '../assets/icons/png/colors/' + _ColorTable[c + 1].replace(/\s+/g, "-") + '.png');
+                            else
                                 icon = createIcon(0, 0, 0, "#" + _ColorTable[c], true);
                             fmi.push({
                                 label: _ColorTable[c + 1] + ", " + colorNames[_ColorTable[c + 1]],
@@ -886,7 +884,7 @@
                     if (l > 0)
                         selRng.setStart(selRng.startContainer, selRng.startOffset - l);
 
-                    if (options.spellchecking && require('spellchecker').isMisspelled(word)) {
+                    if (require('spellchecker').isMisspelled(word)) {
                         var words = require('spellchecker').getCorrectionsForMisspelling(word);
                         if (words.length > 0)
                             cMenu.insert(0, new MenuItem({ type: 'separator' }));
