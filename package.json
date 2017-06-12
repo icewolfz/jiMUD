@@ -37,7 +37,7 @@
     "package:winportable64": "node_modules/.bin/build --pd=dist/jiMUD-win32-x64/ --win portable:x64 && ren \"dist\\jiMUD %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows_portable-x64.exe",
     "package:winportable32": "node_modules/.bin/build --pd=dist/jiMUD-win32-ia32/ --win portable:ia32 && ren \"dist\\jiMUD %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows_portable-x32.exe",
     "package:osx": "hdiutil create -format UDZO -srcfolder dist/jiMUD-darwin-x64/jiMUD.app dist/jiMUD_Mac.dmg",
-    "package:linuxall": "package:linuxx && package:linux-other",
+    "package:linuxall": "package:linux && package:linux-other",
     "package:linuxb": "cd dist/ && tar -jcvf jiMUD_${npm_package_version}_Linux_x64.tar.bz2 jiMUD-linux-x64 && tar -jcvf jiMUD_${npm_package_version}_Linux_ia32.tar.bz2 jiMUD-linux-ia32 && tar -jcvf jiMUD_${npm_package_version}_Linux_armv7l.tar.bz2 jiMUD-linux-armv7l && cd ../",
     "package:linux": "cd dist/ && tar -Jcvf jiMUD_${npm_package_version}_Linux_x64.tar.xz jiMUD-linux-x64 && tar -Jcvf jiMUD_${npm_package_version}_Linux_ia32.tar.xz jiMUD-linux-ia32 && tar -Jcvf jiMUD_${npm_package_version}_Linux_armv7l.tar.xz jiMUD-linux-armv7l && cd ../",
     "package:linuxwin": "cd dist && \"C:\\Program Files\\7-Zip\\7z.exe\" a -r -mx9 jiMUD_%npm_package_version%_Linux_x64.7z jiMUD-linux-x64 && \"C:\\Program Files\\7-Zip\\7z.exe\" a -r -mx9 jiMUD_%npm_package_version%_Linux_ia32.7z jiMUD-linux-ia32 && \"C:\\Program Files\\7-Zip\\7z.exe\" a -r -mx9 jiMUD_%npm_package_version%_Linux_armv7l.7z jiMUD-linux-armv7l && cd ../",
@@ -53,6 +53,7 @@
     "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed"
   },
   "devDependencies": {
+    "@types/bootstrap": "^3.3.33",
     "@types/jquery": "^2.0.42",
     "@types/node": "^7.0.16",
     "babel-cli": "^6.24.1",
@@ -63,7 +64,6 @@
     "electron-installer-dmg": "^0.2.1",
     "electron-local-crash-reporter": "^1.0.1",
     "electron-packager": "^8.7.0",
-    "electron-prebuilt": "^1.4.13",
     "electron-rebuild": "^1.5.7"
   },
   "build": {
