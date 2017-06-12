@@ -203,6 +203,8 @@
 
             webFrame.setSpellCheckProvider("en-US", true, {
                 spellCheck: function (text) {
+                    if(!options.spellchecking)
+                        return true;
                     return !(require('spellchecker').isMisspelled(text));
                 }
             });
@@ -884,7 +886,7 @@
                     if (l > 0)
                         selRng.setStart(selRng.startContainer, selRng.startOffset - l);
 
-                    if (require('spellchecker').isMisspelled(word)) {
+                    if (options.spellchecking && require('spellchecker').isMisspelled(word)) {
                         var words = require('spellchecker').getCorrectionsForMisspelling(word);
                         if (words.length > 0)
                             cMenu.insert(0, new MenuItem({ type: 'separator' }));
