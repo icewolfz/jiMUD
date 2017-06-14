@@ -2,7 +2,6 @@ import EventEmitter = require('events');
 import { Parser, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from "./parser";
 import { AnsiColorCode } from "./ansi";
 import { clone, Size, stripHTML, getScrollBarSize, htmlEncode } from "./library";
-const electron = require('electron');
 
 export interface DisplayOptions extends ParserOptions {
     enableSplit?: boolean;
@@ -383,7 +382,6 @@ export class Display extends EventEmitter {
                 this._lastMouse = e;
                 this._currentSelection.scrollTimer = setInterval(() => {
                     /// pull as long as you can scroll either direction
-                    //console.log(electron.screen.getCursorScreenPoint());
 
                     if (!this._lastMouse) {
                         clearInterval(this._currentSelection.scrollTimer);
@@ -395,11 +393,11 @@ export class Display extends EventEmitter {
                     let x = this._lastMouse.pageX - os.left, y = this._lastMouse.pageY - os.top;
                     let old: Point = this._currentSelection.end;
 
-                    if (y <= 0 && this._el.scrollTop > 0) {
+                    if (y <= 0 && this._VScroll.position > 0) {
                         y = -1 * this._charHeight;;
                         this._currentSelection.end.y--;
                     }
-                    else if (y >= this._el.clientHeight && this._el.scrollTop < this._el.scrollHeight - this._el.clientHeight) {
+                    else if (y >= this._el.clientHeight && this._VScroll.position < this._VScroll.scrollSize) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
                         if (this._currentSelection.end.y >= this.lines.length)
@@ -408,11 +406,11 @@ export class Display extends EventEmitter {
                     else
                         y = 0;
 
-                    if (x < 0 && this._el.scrollLeft > 0) {
+                    if (x < 0 && this._HScroll.position > 0) {
                         x = -1 * this._charWidth;
                         this._currentSelection.end.x--;
                     }
-                    else if (x >= this._el.clientWidth && this._el.scrollLeft < this._el.scrollWidth - this._el.clientWidth) {
+                    else if (x >= this._el.clientWidth && this._HScroll.position < this._HScroll.scrollSize) {
                         x = this._charWidth;
                         this._currentSelection.end.x++;
                     }
@@ -423,10 +421,10 @@ export class Display extends EventEmitter {
                         return;
 
                     this.emit('selection-changed');
-                    this._el.scrollTop += y;
-                    this._el.scrollLeft += x;
+                    this._VScroll.scrollBy(y);
+                    this._HScroll.scrollBy(x);
                     this.updateSelectionRange(old);
-                }, 50);
+                }, 20);
             }
         })
 
@@ -506,8 +504,8 @@ export class Display extends EventEmitter {
         window.addEventListener('resize', (e) => {
             this.update();
         });
-        //setTimeout(() => { this.update(); }, 0);
-        this.update();
+        setTimeout(() => { this.update(); }, 0);
+        //this.update();
     }
 
     get maxLines(): number { return this._maxLines; }
@@ -800,10 +798,8 @@ export class Display extends EventEmitter {
         if (this.lines.length === 0)
             return { x: 0, y: 0 }
         var os = this._os;
-        //var y = (e.pageY - os.top) + this._el.scrollTop;
         var y = (e.pageY - os.top) + this._VScroll.position;
         y = Math.floor(y / this._charHeight);
-        //var x = (e.pageX - os.left) + this._el.scrollLeft;
         var x = (e.pageX - os.left) + this._HScroll.position;
         x = Math.floor(x / this._charWidth);
         return { x: x, y: y };
@@ -1495,6 +1491,7 @@ export class ScrollBar extends EventEmitter {
     }
 
     scrollBy(amount: number) {
+        if(amount === 0) return;
         amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
         this.updatePosition(amount / this.scrollSize * this.maxPosition);
     }
@@ -1537,7 +1534,7 @@ export class ScrollBar extends EventEmitter {
         this.thumb.style[this._type === ScrollType.horizontal ? "left" : "top"] = p + "px";
         this.state.dragPosition = p;
         if (this.maxPosition != 0)
-            this.position = (p / this.maxPosition) * this.scrollSize;
+            this.position = Math.ceil((p / this.maxPosition) * this.scrollSize);
         else
             this.position = 0;
         if (this.position <= 0)
