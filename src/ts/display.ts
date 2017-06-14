@@ -190,8 +190,7 @@ export class Display extends EventEmitter {
             //this._overlay.style.top = -amt + "px";
             this.updateView();
         })
-        this._HScroll = new ScrollBar(this._el, this._view);
-        this._HScroll.type = ScrollType.horizontal;
+        this._HScroll = new ScrollBar(this._el, this._view, ScrollType.horizontal);
         this._HScroll.on('scroll', (amt) => {
             this._view.style.transform = `translate(${-amt}px, ${-this._VScroll.position}px)`;
             this._background.style.transform = `translate(${-amt}px, ${-this._VScroll.position}px)`;
@@ -200,7 +199,7 @@ export class Display extends EventEmitter {
             //this._background.style.left = -amt + "px";
             //this._overlay.style.left = -amt + "px";
         })
-        this.update();
+        //this.update();
 
         if (!options)
             options = { display: this }
@@ -507,6 +506,7 @@ export class Display extends EventEmitter {
         window.addEventListener('resize', (e) => {
             this.update();
         });
+        this.update();
     }
 
     get maxLines(): number { return this._maxLines; }
@@ -1376,13 +1376,13 @@ export class ScrollBar extends EventEmitter {
         }
     }
 
-    constructor(parent?: HTMLElement, content?: HTMLElement) {
+    constructor(parent?: HTMLElement, content?: HTMLElement, type?:ScrollType) {
         super();
         this.setParent(parent, content);
+        this.type = type || ScrollType.vertical;
     }
 
     setParent(parent: HTMLElement, content?: HTMLElement) {
-
         if (this.track)
             this._parent.removeChild(this.track);
         this._parent = parent;
@@ -1434,6 +1434,7 @@ export class ScrollBar extends EventEmitter {
                 e.preventDefault();
                 e.cancelBubble = true;
                 this.state.dragging = true;
+                this.state.position = (this._type === ScrollType.horizontal ? e.pageX : e.pageY) - this.state.dragPosition;
                 this.state.dragPosition = (this._type === ScrollType.horizontal ? (e.pageX - this._os.left) : (e.pageY - this._os.top)) - this.state.position;
             }
         });
