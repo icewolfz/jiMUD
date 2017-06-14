@@ -37,6 +37,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64 }
 
 enum CornerType {
     Flat = 0,
@@ -90,6 +91,7 @@ export class Display extends EventEmitter {
 
     private _VScroll: ScrollBar;
     private _HScroll: ScrollBar;
+    private _updating: UpdateType = UpdateType.none;
 
     private _expire = {};
 
@@ -181,22 +183,11 @@ export class Display extends EventEmitter {
 
         this._VScroll = new ScrollBar(this._el, this._view);
         this._VScroll.on('scroll', (amt) => {
-            this._view.style.transform = `translate(${-this._HScroll.position}px, ${-amt}px)`;
-            this._background.style.transform = `translate(${-this._HScroll.position}px, ${-amt}px)`;
-            this._overlay.style.transform = `translate(${-this._HScroll.position}px, ${-amt}px)`;
-            //this._view.style.top = -amt + "px";
-            //this._background.style.top = -amt + "px";
-            //this._overlay.style.top = -amt + "px";
-            this.updateView();
+            this.doUpdate(UpdateType.scroll | UpdateType.view);
         })
         this._HScroll = new ScrollBar(this._el, this._view, ScrollType.horizontal);
         this._HScroll.on('scroll', (amt) => {
-            this._view.style.transform = `translate(${-amt}px, ${-this._VScroll.position}px)`;
-            this._background.style.transform = `translate(${-amt}px, ${-this._VScroll.position}px)`;
-            this._overlay.style.transform = `translate(${-amt}px, ${-this._VScroll.position}px)`;
-            //this._view.style.left = -amt + "px";
-            //this._background.style.left = -amt + "px";
-            //this._overlay.style.left = -amt + "px";
+            this.doUpdate(UpdateType.scroll);
         })
         //this.update();
 
@@ -251,21 +242,14 @@ export class Display extends EventEmitter {
         this._parser.on("parse-done", () => {
             //disable animation
             this._el.classList.remove('animate');
-            let bar = this._elJ.hasHorizontalScrollBar();
+            let bar = this._HScroll.visible;
             //TODO update overlays, either remove or recalculate
-            //$(this._view).append(this._viewCache);
-            //$(this._background).append(this._backgroundCache);
             this.trimLines();
-            this.updateView();
-            this.updateScrollbars();
-            if (bar != this._elJ.hasHorizontalScrollBar())
+            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd);
+            if (bar != this._HScroll.visible)
                 this.updateWindow();
             //TODO split screen support
-            this.scrollDisplay();
             this.emit('parse-done');
-            //this._viewCache = [];
-            //this._backgroundCache = [];
-
             //re-enable animation so they are all synced
             this._el.classList.add('animate');
         });
@@ -298,13 +282,14 @@ export class Display extends EventEmitter {
                     var o = this._currentSelection.end;
                     this._currentSelection.end = this.getLineOffset(e);
                     this.emit('selection-start');
-                    this.updateSelectionRange(o);
+                    //this.updateSelectionRange(o);
+                    this.doUpdate(UpdateType.selection);
                 }
                 else {
                     this._currentSelection.start = this.getLineOffset(e);
                     this._currentSelection.end = this._currentSelection.start;
                     this.emit('selection-start');
-                    this.updateSelection();
+                    this.doUpdate(UpdateType.selection);
                 }
 
             }
@@ -337,7 +322,7 @@ export class Display extends EventEmitter {
                         };
                         this.emit('selection-changed');
                         this.emit('selection-done');
-                        this.updateSelection();
+                        this.doUpdate(UpdateType.selection);
                     }
                 }
             }
@@ -357,7 +342,7 @@ export class Display extends EventEmitter {
                     };
                     this.emit('selection-changed');
                     this.emit('selection-done');
-                    this.updateSelection();
+                    this.doUpdate(UpdateType.selection);
                 }
             }
             else if (e.detail === 4)
@@ -369,7 +354,7 @@ export class Display extends EventEmitter {
                 if (this._currentSelection.drag) {
                     this.emit('selection-changed');
                     this.emit('selection-done');
-                    this.updateSelection();
+                    this.doUpdate(UpdateType.selection);
                 }
                 this._currentSelection.drag = false;
             }
@@ -423,7 +408,8 @@ export class Display extends EventEmitter {
                     this.emit('selection-changed');
                     this._VScroll.scrollBy(y);
                     this._HScroll.scrollBy(x);
-                    this.updateSelectionRange(old);
+                    //this.updateSelectionRange(old);
+                    this.doUpdate(UpdateType.selection);
                 }, 20);
             }
         })
@@ -484,7 +470,8 @@ export class Display extends EventEmitter {
                 var o = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-changed');
-                this.updateSelectionRange(o);
+                //this.updateSelectionRange(o);
+                this.doUpdate(UpdateType.selection);
             }
         })
 
@@ -497,16 +484,66 @@ export class Display extends EventEmitter {
                 var o = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-done');
-                this.updateSelectionRange(o);
+                //this.updateSelectionRange(o);
+                this.doUpdate(UpdateType.selection);
             }
         })
 
         window.addEventListener('resize', (e) => {
-            this.update();
+            this.doUpdate(UpdateType.update);
         });
-        setTimeout(() => { this.update(); }, 0);
+        this.doUpdate(UpdateType.update);
+        //setTimeout(() => { this.update(); }, 0);
         //this.update();
     }
+
+    private doUpdate(type?: UpdateType) {
+        if (!type) return;
+        this._updating |= type;
+        if (this._updating === UpdateType.none)
+            return;
+        window.requestAnimationFrame(() => {
+            if ((this._updating & UpdateType.scroll) === UpdateType.scroll) {
+                this._view.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
+                this._background.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
+                this._overlay.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
+                this._updating &= ~UpdateType.scroll;
+            }
+            if ((this._updating & UpdateType.view) === UpdateType.view)
+            {
+                this.updateView();
+                this._updating &= ~UpdateType.view;
+            }
+            if ((this._updating & UpdateType.selection) === UpdateType.selection)
+            {
+                this.updateSelection();
+                this._updating &= ~UpdateType.selection;
+            }
+            if ((this._updating & UpdateType.overlays) === UpdateType.overlays)
+            {
+                this.updateOverlays();
+                this._updating &= ~UpdateType.overlays;
+            }
+            if ((this._updating & UpdateType.update) === UpdateType.update) {
+                this.update();
+                this.updateScrollbars();
+                this._updating &= ~UpdateType.update;
+                this._updating &= ~UpdateType.scrollbars;
+            }
+            else if ((this._updating & UpdateType.scrollbars) === UpdateType.scrollbars)
+            {
+                this.updateScrollbars();
+                this._updating &= ~UpdateType.scrollbars;
+            }
+            if ((this._updating & UpdateType.scrollEnd) === UpdateType.scrollEnd)
+            {
+                this.scrollDisplay();
+                this._updating &= ~UpdateType.scrollEnd;
+            }
+            this.doUpdate(this._updating);
+        });
+    }
+
 
     get maxLines(): number { return this._maxLines; }
     set maxLines(value: number) {
@@ -628,7 +665,7 @@ export class Display extends EventEmitter {
         this._parser.Clear();
         this._VScroll.reset();
         this._HScroll.reset();
-        this.updateScrollbars();
+        this.doUpdate(UpdateType.scrollbars);
     };
 
     public updateFont(font?: string, size?: string) {
@@ -647,8 +684,6 @@ export class Display extends EventEmitter {
             //recalculate height/width of characters so display can be calculated
             this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
-            this.update();
-            this.updateSelection();
             /*
             let html = this._htmlLines, t;
             let h = this._charHeight;
@@ -659,8 +694,7 @@ export class Display extends EventEmitter {
             }
             */
             //update view to display any line height changes
-            this.updateView();
-            this.updateScrollbars();
+            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update);
         }
     }
 
@@ -695,7 +729,7 @@ export class Display extends EventEmitter {
             return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`);
         })
         this._background.innerHTML = lines.join('');
-        this.updateOverlays();
+        this.doUpdate(UpdateType.overlays);
     }
 
     public updateOverlays(start?: number, end?: number) {
@@ -745,8 +779,7 @@ export class Display extends EventEmitter {
 
 
         //TODO redo overlays
-        this.updateView();
-        this.updateScrollbars();
+        this.doUpdate(UpdateType.view | UpdateType.scrollbars);
     }
 
     SetColor(code: number, color) {
@@ -830,7 +863,7 @@ export class Display extends EventEmitter {
             e = sel.end.x;
         }
         else if (sel.start.x == sel.end.x) {
-            this.updateOverlays();
+            this.doUpdate(UpdateType.overlays);
             return;
         }
         else {
@@ -846,7 +879,7 @@ export class Display extends EventEmitter {
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
             this._overlays.selection[sL] = `<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`
-            this.updateOverlays();
+            this.doUpdate(UpdateType.overlays);
             return;
         }
         var len = this.lines.length;
@@ -948,7 +981,7 @@ export class Display extends EventEmitter {
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
-        this.updateOverlays();
+        this.doUpdate(UpdateType.overlays);
     }
 
     private updateSelectionRange(end: Point) {
@@ -972,7 +1005,7 @@ export class Display extends EventEmitter {
             e = sel.end.x;
         }
         else if (sel.start.x == sel.end.x) {
-            this.updateOverlays();
+            this.doUpdate(UpdateType.overlays);
             return;
         }
         else {
@@ -989,7 +1022,7 @@ export class Display extends EventEmitter {
             s *= this._charWidth;
 
             this._overlays.selection[sL] = `<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
-            this.updateOverlays();
+            this.doUpdate(UpdateType.overlays);
             return;
         }
         var len = this.lines.length;
@@ -1092,7 +1125,7 @@ export class Display extends EventEmitter {
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`
         }
         //this.updateOverlays();
-        this.updateOverlays();
+        this.doUpdate(UpdateType.overlays);
     }
 
     get hasSelection(): boolean {
@@ -1175,7 +1208,6 @@ export class Display extends EventEmitter {
         let t = window.getComputedStyle(this._el);
         this._borderSize.height = parseInt(t.borderTopWidth) || 0;
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
-        this.updateScrollbars();
     }
 
     private createLine(idx?: number) {
@@ -1491,7 +1523,7 @@ export class ScrollBar extends EventEmitter {
     }
 
     scrollBy(amount: number) {
-        if(amount === 0) return;
+        if (amount === 0) return;
         amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
         this.updatePosition(amount / this.scrollSize * this.maxPosition);
     }
