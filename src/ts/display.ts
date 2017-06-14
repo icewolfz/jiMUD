@@ -506,6 +506,7 @@ export class Display extends EventEmitter {
         window.addEventListener('resize', (e) => {
             this.update();
         });
+        //setTimeout(() => { this.update(); }, 0);
         this.update();
     }
 
@@ -1376,7 +1377,7 @@ export class ScrollBar extends EventEmitter {
         }
     }
 
-    constructor(parent?: HTMLElement, content?: HTMLElement, type?:ScrollType) {
+    constructor(parent?: HTMLElement, content?: HTMLElement, type?: ScrollType) {
         super();
         this.setParent(parent, content);
         this.type = type || ScrollType.vertical;
@@ -1422,6 +1423,17 @@ export class ScrollBar extends EventEmitter {
         this.track = document.createElement('div')
         this.track.className = 'scroll-track';
         this.track.style.position = "absolute";
+        this.track.addEventListener('mousedown', (e) => {
+            if (e.button === 0 && e.buttons) {
+                this._lastMouse = e;
+                e.preventDefault();
+                e.cancelBubble = true;
+                this.state.dragging = true;
+                this.state.position = 0;
+                this.state.dragPosition = (this._type === ScrollType.horizontal ? (e.pageX - this._os.left) : (e.pageY - this._os.top)) - this.state.position;
+                this.updatePosition(this.currentPosition());
+            }
+        })
         this._parent.appendChild(this.track);
 
         this.thumb = document.createElement('div')
@@ -1430,6 +1442,7 @@ export class ScrollBar extends EventEmitter {
         this.track.appendChild(this.thumb);
         this.updateLocation();
         this.thumb.addEventListener('mousedown', (e) => {
+            this._lastMouse = e;
             if (e.button === 0 && e.buttons) {
                 e.preventDefault();
                 e.cancelBubble = true;
