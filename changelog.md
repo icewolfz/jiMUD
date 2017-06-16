@@ -4,12 +4,12 @@
   - Log error setting default to on
   - Improved trigger performance by changing how some test are done
   - Re-enable TestMapper() to allow testing of mapper
-  - Add enable spellchecking preferance to allow spell checking to be turned off
+  - Add enable spellchecking preference to allow spell checking to be turned off
   - Updated to electron 1.7.3 beta
 - **Fixed:**
-  - Fix bell unicode character display
+  - Fix bell Unicode character display
   - Editor: 
-    - New lines where not correctly being sent when sending as formated text
+    - New lines where not correctly being sent when sending as formatted text
     - Trailing newlines where being cut off
     - Fix flashing format not being sent when flashing disabled
   - Fix a bug in aliases and macros when script style was used, would error due to strict type comparison
