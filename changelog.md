@@ -5,6 +5,7 @@
   - Improved trigger performance by changing how some test are done
   - Re-enable TestMapper() to allow testing of mapper
   - Add enable spellchecking preferance to allow spell checking to be turned off
+  - Updated to electron 1.7.3 beta
 - **Fixed:**
   - Fix bell unicode character display
   - Editor: 
