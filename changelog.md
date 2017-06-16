@@ -1,10 +1,11 @@
 ## Changelog
 ##### 0.3.2 2017-06-16
+- **New:**
+  - Add enable spellchecking preference to allow spell checking to be turned off
 - **Change:**
   - Log error setting default to on
   - Improved trigger performance by changing how some test are done
   - Re-enable TestMapper() to allow testing of mapper
-  - Add enable spellchecking preference to allow spell checking to be turned off
   - Updated to electron 1.7.3 beta
 - **Fixed:**
   - Fix bell Unicode character display
