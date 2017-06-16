@@ -26,7 +26,7 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
 3. npm run compile - will compile typescript and scss files into js and css files
 4. npm run build:linux64 - builds application files in dist/jiMUD-linux-x64
     - npm run build:linux32 - build 32bit in dist/jiMUD-linux-ia32
-    - npm run build:linuxarm - build arm in dist/jiMUD-linux-arml7
+    - npm run build:linuxarm - build arm in dist/jiMUD-linux-armv7l
 5. npm run package:linux64 - build tar.xz file
     - npm run package:linux - build tar.xz files for all 3 archs
     - npm run package:linux32 - build tar.xz file
