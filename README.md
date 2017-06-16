@@ -8,33 +8,33 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
 ### Windows
 1. npm install - install all the node modules
 2. npm run rebuild:win64 - rebuild sqlite3 and spellchecker
-  - npm run rebuild:win32 - rebuild 32bit verison, it will override any other windows versions
+    - npm run rebuild:win32 - rebuild 32bit verison, it will override any other windows versions
 3. npm run compile - will compile typescript and scss files into js and css files
 4. npm run build:win64 - builds application files in dist/jiMUD-win32-x64
-  - npm run build:win32 - build 32bit in dist/jiMUD-win32-ia32
+    - npm run build:win32 - build 32bit in dist/jiMUD-win32-ia32
 5. npm run package:win64 - build intaller
-  - npm run build:win32 - build just 32bit window's installer, requires 32bit build folder
-  - npm run build:winportable - build win 32/64 bit window's portable files, requires both build folders
-  - npm run build:winportable32 - build win 32 bit window's portable files, requires 32bit build folder
-  - npm run build:winportable64 - build win64 bit window's portable files, requires 64bit build folder
+    - npm run build:win32 - build just 32bit window's installer, requires 32bit build folder
+    - npm run build:winportable - build win 32/64 bit window's portable files, requires both build folders
+    - npm run build:winportable32 - build win 32 bit window's portable files, requires 32bit build folder
+    - npm run build:winportable64 - build win64 bit window's portable files, requires 64bit build folder
 
 ### Linux
 1. npm install - install all the node modules
 2. npm run rebuild:linux64 - rebuild sqlite3 and spellchecker
-  - npm run rebuild:linux32 - rebuild 32bit verison, it will override any other windows versions
-  - npm run rebuild:linuxarm - rebuild for arm
+    - npm run rebuild:linux32 - rebuild 32bit verison, it will override any other windows versions
+    - npm run rebuild:linuxarm - rebuild for arm
 3. npm run compile - will compile typescript and scss files into js and css files
 4. npm run build:linux64 - builds application files in dist/jiMUD-linux-x64
-  - npm run build:linux32 - build 32bit in dist/jiMUD-linux-ia32
-  - npm run build:linuxarm - build arm in dist/jiMUD-linux-arml7
+    - npm run build:linux32 - build 32bit in dist/jiMUD-linux-ia32
+    - npm run build:linuxarm - build arm in dist/jiMUD-linux-arml7
 5. npm run package:linux64 - build tar.xz file
-  - npm run package:linux - build tar.xz files for all 3 archs
-  - npm run package:linux32 - build tar.xz file
-  - npm run package:linuxarm - build tar.xz file
-  - npm run package:linux-other - build deb, rpm and appimage packges for all archs, requires all 3 build folders
-  - npm run package:linux-other64 - build deb, rpm and appimage packages
-  - npm run package:linux-other32 - build deb, rpm and appimage packages, requires 32bit build folder
-  - npm run package:linux-otherarm - build deb, rpm and appimage packages, requires arm build folder
+    - npm run package:linux - build tar.xz files for all 3 archs
+    - npm run package:linux32 - build tar.xz file
+    - npm run package:linuxarm - build tar.xz file
+    - npm run package:linux-other - build deb, rpm and appimage packges for all archs, requires all 3 build folders
+    - npm run package:linux-other64 - build deb, rpm and appimage packages
+    - npm run package:linux-other32 - build deb, rpm and appimage packages, requires 32bit build folder
+    - npm run package:linux-otherarm - build deb, rpm and appimage packages, requires arm build folder
 
 Build and package files are all saved to dist folder
 
