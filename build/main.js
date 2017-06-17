@@ -171,7 +171,7 @@ var menuTemp = [
         label: 'Find',
         accelerator: 'CmdOrCtrl+F',
         click: () => {
-          win.webContents.executeJavaScript('_finder.show()');
+          win.webContents.executeJavaScript('client.display.showFind()');
         }
       },
     ]

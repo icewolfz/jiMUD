@@ -199,24 +199,7 @@ $color: "wheat";
 
 .find-highlight {
     border-radius: 4px;
-    background: rgba(51, 153, 255, 0.6);
-    border-bottom: 1px solid #3399ff;
-    border-top: 1px solid #3399ff;
-}
-
-.find-highlight.start,
-.find-highlight.current.start {
-    border-radius: 4px 0px 0px 4px;
-}
-
-.find-highlight.middle,
-.find-highlight.current.middle {
-    border-radius: 0px;
-}
-
-.find-highlight.end,
-.find-highlight.current.end {
-    border-radius: 0px 4px 4px 0px;
+    background: rgb(171, 102, 31);
 }
 
 .find-no-results {
@@ -225,9 +208,7 @@ $color: "wheat";
 
 .find-highlight.current {
     border-radius: 4px;
-    background: rgba(116, 192, 114, 0.6);
-    border-bottom: 1px solid #74C072;
-    border-top: 1px solid #74C072;
+    background: rgb(116, 192, 114);
 }
 
 

@@ -2,6 +2,7 @@ import EventEmitter = require('events');
 import { Parser, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from "./parser";
 import { AnsiColorCode } from "./ansi";
 import { clone, Size, stripHTML, getScrollBarSize, htmlEncode } from "./library";
+import { Finder } from './finder.js';
 
 export interface DisplayOptions extends ParserOptions {
     enableSplit?: boolean;
@@ -10,7 +11,6 @@ export interface DisplayOptions extends ParserOptions {
 
 interface Overlays {
     selection: any[];
-    find: any[];
 }
 
 interface Point {
@@ -18,9 +18,12 @@ interface Point {
     y: number
 }
 
-interface Selection {
+export interface OverlayRange {
     start: Point;
     end: Point;
+}
+
+interface Selection extends OverlayRange {
     drag: boolean;
     scrollTimer: NodeJS.Timer;
 }
@@ -60,6 +63,7 @@ export class Display extends EventEmitter {
     private _overlay: HTMLElement;
     private _view: HTMLElement;
     private _background: HTMLElement;
+    private _finder: Finder
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -85,8 +89,7 @@ export class Display extends EventEmitter {
     private _viewLines: string[] = [];
     private _backgroundLines: string[] = [];
     private _overlays: Overlays = {
-        selection: [],
-        find: []
+        selection: []
     };
 
     private _VScroll: ScrollBar;
@@ -492,9 +495,87 @@ export class Display extends EventEmitter {
         window.addEventListener('resize', (e) => {
             this.doUpdate(UpdateType.update);
         });
+
+        this._finder = new Finder(this);
+        this._finder.on('word', () => {
+            this.emit('word');
+        })
+        this._finder.on('case', () => {
+            this.emit('case');
+        })
+        this._finder.on('reverse', () => {
+            this.emit('reverse');
+        })
+        this._finder.on('regex', () => {
+            this.emit('regex');
+        })
+
+        this._finder.on('shown', () => {
+            this.emit('shown');
+        })
+        this._finder.on('closed', () => {
+            this.emit('closed');
+        })
+
+        this._finder.on('found-results', () => {
+            //if (client.displaySplit)
+            //client.displaySplit.fill();
+            this.emit('found-results');
+        })
+
+        this._finder.on('moved', () => {
+            this.emit('moved');
+            /*
+            if (client.displaySplit) {
+                client.displaySplit.fill();
+                client.display[0].scrollTop = client.display[0].scrollTop + client.displaySplit.outerHeight() + 5;
+            }
+            */
+        })
+
+
         this.doUpdate(UpdateType.update);
         //setTimeout(() => { this.update(); }, 0);
         //this.update();
+    }
+
+    get MatchCase(): boolean {
+        return this._finder.MatchCase;
+    }
+
+    set MatchCase(value: boolean) {
+        this._finder.MatchCase = value;
+    }
+
+    get RegularExpression(): boolean {
+        return this._finder.RegularExpression;
+    }
+
+    set RegularExpression(value: boolean) {
+        this._finder.RegularExpression = value;
+    }
+
+    get MatchWord(): boolean {
+        return this._finder.MatchWord;
+    }
+
+    set MatchWord(value: boolean) {
+        this._finder.MatchWord = value;
+    }
+
+    get Reverse(): boolean {
+        return this._finder.Reverse;
+    }
+
+    set Reverse(value: boolean) {
+        this._finder.Reverse = value;
+    }
+
+    get Highlight(): boolean {
+        return this._finder.Highlight;
+    }
+    set Highlight(value: boolean) {
+        this._finder.Highlight = value;
     }
 
     private doUpdate(type?: UpdateType) {
@@ -509,18 +590,15 @@ export class Display extends EventEmitter {
                 this._overlay.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
                 this._updating &= ~UpdateType.scroll;
             }
-            if ((this._updating & UpdateType.view) === UpdateType.view)
-            {
+            if ((this._updating & UpdateType.view) === UpdateType.view) {
                 this.updateView();
                 this._updating &= ~UpdateType.view;
             }
-            if ((this._updating & UpdateType.selection) === UpdateType.selection)
-            {
+            if ((this._updating & UpdateType.selection) === UpdateType.selection) {
                 this.updateSelection();
                 this._updating &= ~UpdateType.selection;
             }
-            if ((this._updating & UpdateType.overlays) === UpdateType.overlays)
-            {
+            if ((this._updating & UpdateType.overlays) === UpdateType.overlays) {
                 this.updateOverlays();
                 this._updating &= ~UpdateType.overlays;
             }
@@ -530,20 +608,17 @@ export class Display extends EventEmitter {
                 this._updating &= ~UpdateType.update;
                 this._updating &= ~UpdateType.scrollbars;
             }
-            else if ((this._updating & UpdateType.scrollbars) === UpdateType.scrollbars)
-            {
+            else if ((this._updating & UpdateType.scrollbars) === UpdateType.scrollbars) {
                 this.updateScrollbars();
                 this._updating &= ~UpdateType.scrollbars;
             }
-            if ((this._updating & UpdateType.scrollEnd) === UpdateType.scrollEnd)
-            {
+            if ((this._updating & UpdateType.scrollEnd) === UpdateType.scrollEnd) {
                 this.scrollDisplay();
                 this._updating &= ~UpdateType.scrollEnd;
             }
             this.doUpdate(this._updating);
         });
     }
-
 
     get maxLines(): number { return this._maxLines; }
     set maxLines(value: number) {
@@ -646,8 +721,7 @@ export class Display extends EventEmitter {
         this.lineFormats = [];
         this._expire = {};
         this._overlays = {
-            selection: [],
-            find: []
+            selection: []
         }
         this._viewLines = [];
         this._backgroundLines = [];
@@ -739,13 +813,12 @@ export class Display extends EventEmitter {
             end = this._viewRange.end
         let overlays = [];
         for (let ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol))
+            if (!this._overlays.hasOwnProperty(ol) || ol == "selection")
                 continue;
             overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
-            //overlays.push.apply(overlays, this._overlays[ol]);
         }
+        overlays.push.apply(overlays, this._overlays["selection"].slice(start, end + 1));
         this._overlay.innerHTML = overlays.join('');
-        //$(this._overlay).empty().append(overlays);
     }
 
     get WindowSize(): Size {
@@ -846,6 +919,153 @@ export class Display extends EventEmitter {
         }
     }
 
+    clearOverlay(type?: string) {
+        if (!type)
+            type = "default";
+        this._overlays[type] = [];
+        this.doUpdate(UpdateType.overlays);
+    }
+
+    addOverlays(ranges: OverlayRange[], cls?: string, type?: string) {
+        var s, e, sL, eL, c, w, range;
+        if (!type)
+            type = "default";
+        if (!cls || cls.length === 0)
+            cls = "overlay-default";
+        this._overlays[type] = [];
+        for (var r = 0, rl = ranges.length; r < rl; r++) {
+            range = ranges[r];
+            if (range.start.y > range.end.y) {
+                sL = range.end.y;
+                eL = range.start.y;
+                s = range.end.x;
+                e = range.start.x;
+            }
+            else if (range.start.y < range.end.y) {
+                sL = range.start.y;
+                eL = range.end.y;
+                s = range.start.x;
+                e = range.end.x;
+            }
+            else if (range.start.x === range.end.x) {
+                //empty range
+                continue;
+            }
+            else {
+                sL = range.start.y;
+                //invalide view
+                if (sL < 0 || sL >= this.lines.length)
+                    continue;
+                s = Math.min(range.start.x, range.end.x);
+                e = Math.max(range.start.x, range.end.x);
+                if (s < 0) s = 0;
+                if (e > this.lines[sL].length)
+                    e = this.lines[sL].length;
+                e = (e - s) * this._charWidth;
+                s *= this._charWidth;
+                if (!this._overlays[type][sL])
+                    this._overlays[type][sL] = [];
+                this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls} trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`);
+                continue;
+            }
+            var len = this.lines.length;
+
+            if (sL < 0)
+                sL = 0;
+            if (eL >= len)
+                eL = len - 1;
+            if (s < 0)
+                s = 0;
+            if (e > this.lines[eL].length)
+                e = this.lines[eL].length;
+
+
+            for (let line = sL; line < eL + 1; line++) {
+                let startStyle = {
+                    top: CornerType.Extern,
+                    bottom: CornerType.Extern
+                }
+                let endStyle = {
+                    top: CornerType.Extern,
+                    bottom: CornerType.Extern
+                }
+
+                let cl = sL == line ? s : 0;
+                let cr = eL == line ? e : (this.lines[line].length || 1);
+                if (line > sL) {
+                    let pl = sL == line - 1 ? s : 0;
+                    let pr = this.lines[line - 1].length || 1;
+
+
+                    if (cl == pl)
+                        startStyle.top = CornerType.Flat;
+                    else if (cl > pl)
+                        startStyle.top = CornerType.Intern;
+                    if (cr == pr)
+                        endStyle.top = CornerType.Flat;
+                    else if (pl < cr && cr < pr)
+                        endStyle.top = CornerType.Intern;
+                }
+
+                if (line < eL) {
+                    let nl = 0;
+                    let nr = eL == line + 1 ? e : (this.lines[line + 1].length || 1);
+                    if (cl === nl) {
+                        startStyle.bottom = CornerType.Flat;
+                    } else if (nl < cl && cl < nr) {
+                        startStyle.bottom = CornerType.Intern;
+                    }
+
+                    if (cr === nr) {
+                        endStyle.bottom = CornerType.Flat;
+                    } else if (cr < nr) {
+                        endStyle.bottom = CornerType.Intern;
+                    }
+                }
+                let rcls = cls;
+                if (startStyle.top === CornerType.Extern) {
+                    rcls += ' tlc';
+                }
+                if (startStyle.bottom === CornerType.Extern) {
+                    rcls += ' blc';
+                }
+                if (endStyle.top === CornerType.Extern) {
+                    rcls += ' trc';
+                }
+                if (endStyle.bottom === CornerType.Extern) {
+                    rcls += ' brc';
+                }
+                if (sL == line) {
+                    w = ((this.lines[line].length || 1) - s) * this._charWidth;
+                }
+                else if (eL == line) {
+                    w = e * this._charWidth;
+                }
+                else {
+                    w = (this.lines[line].length || 1) * this._charWidth;
+                }
+
+                if (!this._overlays[type][line])
+                    this._overlays[type][line] = [];
+
+                this._overlays[type][line].push(`<span id="${type}-${r}" class="${rcls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
+
+                if (startStyle.top == CornerType.Intern || startStyle.bottom == CornerType.Intern) {
+                }
+                if (endStyle.top === CornerType.Intern) {
+                }
+                if (endStyle.bottom === CornerType.Intern) {
+                }
+            }
+        }
+        for (let ol in this._overlays[type]) {
+            if (!this._overlays[type].hasOwnProperty(ol))
+                continue;
+            this._overlays[type][ol] = `<div style="top: ${(parseInt(ol, 10) || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
+        }
+        this.doUpdate(UpdateType.overlays);
+    }
+
     private updateSelection() {
         var sel = this._currentSelection;
         var s, e, sL, eL, c, parts, w;
@@ -873,12 +1093,12 @@ export class Display extends EventEmitter {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
             if (s < 0) s = 0;
-            if (e > this.lines[sel.start.y].length)
-                e = this.lines[sel.start.y].length;
+            if (e > this.lines[sL].length)
+                e = this.lines[sL].length;
 
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
-            this._overlays.selection[sL] = `<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`
+            this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`
             this.doUpdate(UpdateType.overlays);
             return;
         }
@@ -1015,13 +1235,13 @@ export class Display extends EventEmitter {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
             if (s < 0) s = 0;
-            if (e > this.lines[sel.start.y].length)
-                e = this.lines[sel.start.y].length;
+            if (e > this.lines[sL].length)
+                e = this.lines[sL].length;
 
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
 
-            this._overlays.selection[sL] = `<div style="top: ${sel.start.y * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
+            this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             this.doUpdate(UpdateType.overlays);
             return;
         }
@@ -1357,6 +1577,34 @@ export class Display extends EventEmitter {
             this._el.appendChild(this._scrollCorner);
         }
     }
+
+    showFind() {
+        this._finder.show();
+    }
+
+    hideFind() {
+        this._finder.hide();
+    }
+
+    find(focus?: boolean) {
+        {
+            this._finder.find(false);
+        }
+    }
+
+    scrollTo(x: number, y: number) {
+        this._VScroll.scrollTo(y);
+        this._HScroll.scrollTo(x);
+    }
+
+    scrollToCharacter(x: number, y: number) {
+        x *= this._charWidth;
+        y *= this._charHeight;
+        if (y < this._VScroll.position || y > this._VScroll.position + this._VScroll.scrollSize)
+            this._VScroll.scrollTo(y);
+        if (x < this._HScroll.position || x > this._HScroll.position + this._HScroll.scrollSize)
+            this._HScroll.scrollTo(x);
+    }
 }
 
 export class ScrollBar extends EventEmitter {
@@ -1526,6 +1774,11 @@ export class ScrollBar extends EventEmitter {
         if (amount === 0) return;
         amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
         this.updatePosition(amount / this.scrollSize * this.maxPosition);
+    }
+
+    scrollTo(position: number) {
+        position = (position < 0 ? Math.floor(position) : Math.ceil(position));
+        this.updatePosition(position / this.scrollSize * this.maxPosition);
     }
 
     scrollToEnd() {

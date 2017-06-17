@@ -395,6 +395,17 @@ body {
 
 /*end status*/
 
+.find-highlight
+{
+    display: inline-block;
+    height: 100%;
+    pointer-events: none;
+    position: absolute;
+    box-sizing: border-box;
+    white-space: pre;
+    overflow: hidden;
+}
+
 .select-text {
     background-color: rgb(51, 153, 255);
     color: rgb(255, 255, 255);
@@ -407,18 +418,18 @@ body {
     overflow: hidden;
 }
 
-.select-text.trc {
+.select-text.trc, .find-highlight.trc {
     border-top-right-radius: 4px;
 }
 
-.select-text.tlc {
+.select-text.tlc, .find-highlight.tlc {
     border-top-left-radius: 4px;
 }
 
-.select-text.brc {
+.select-text.brc, .find-highlight.brc {
     border-bottom-right-radius: 4px;
 }
 
-.select-text.blc {
+.select-text.blc, .find-highlight.blc {
     border-bottom-left-radius: 4px;
 }

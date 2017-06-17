@@ -1,5 +1,6 @@
 //cSpell:words keycode
 import EventEmitter = require('events');
+import { Display, OverlayRange } from './display.js';
 
 export enum validTextRange {
     not = 0,
@@ -12,10 +13,8 @@ export enum validTextRange {
 //TODO recode once new display is finished
 
 export class Finder extends EventEmitter {
-    private _display;
+    private _display: Display;
     private _document;
-    private _frame;
-    private _window;
     private _control;
 
     private _timer;
@@ -31,11 +30,9 @@ export class Finder extends EventEmitter {
         super();
         this._display = display;
         this._document = display._el.ownerDocument;
-        this._frame = this._document.defaultView || this._document.parentWindow;
-        this._window = this._frame.parent;
         this.createControl();
 
-        $(this._window.document).keyup((e) => {
+        $(window.document).keyup((e) => {
             if (e.keyCode === 27) { // escape key maps to keycode `27`
                 this.hide();
             }
@@ -170,22 +167,12 @@ export class Finder extends EventEmitter {
         $("#find-regex", this._control).on('click', () => {
             this.RegularExpression = !this.RegularExpression;
         });
-        this._window.document.body.append(this._control[0]);
-    }
-
-    private getDisplaySelectionText() {
-        var text = "";
-        if (this._frame.getSelection) {
-            text = this._frame.getSelection().toString();
-        } else if (this._document.selection && this._document.selection.type != "Control") {
-            text = this._document.selection.createRange().text;
-        }
-        return text;
+        window.document.body.appendChild(this._control[0]);
     }
 
     show() {
         this._control.slideDown();
-        var sel = this.getDisplaySelectionText();
+        var sel = this._display.selection;
         if (sel.length)
             $("input", this._control).val(sel);
         $("input", this._control).focus().select();
@@ -223,10 +210,10 @@ export class Finder extends EventEmitter {
         else
             re = new RegExp(pattern, 'gi');
         var lines = this._display.lines;
-        var m, id = 0, items, elLine;
+        var m, id = 0, items;
+        var ranges: OverlayRange[] = [];
         for (var l = lines.length - 1; l >= 0; l--) {
             items = [];
-            elLine = this._display[0].childNodes[l];
             while ((m = re.exec(lines[l])) !== null) {
                 id++;
                 // This is necessary to avoid infinite loops with zero-width matches
@@ -234,27 +221,25 @@ export class Finder extends EventEmitter {
                     re.lastIndex++;
                 }
                 items.push({
-                    lineNo: l,
-                    line: elLine,
+                    line: l,
                     index: m.index,
-                    length: m[0].length
+                    length: m[0].length,
+                    range: ranges.length
                 });
                 if (this._all) {
-                    this.addAnnotationElement(this.getTextSelection(elLine, m.index, m.index + m[0].length), elLine, "find-" + id);
-                    var t = $('.find-' + id + '-child', elLine);
-                    if (t.length > 1) {
-                        t[0].className += ' start';
-                        t[t.length - 1].className += ' end';
-                        for (var c = 1, cl = t.length - 1; c < cl; c++)
-                            t[c].className += ' middle';
-                    };
-                    items[items.length - 1].els = t;
+                    ranges.push(
+                        {
+                            start: { x: m.index, y: l },
+                            end: { x: m.index + m[0].length, y: l }
+                        }
+                    )
                 }
             }
             items.reverse();
             this._results.push.apply(this._results, items);
-            //this._results = this._results.concat(items);
         }
+        if (ranges.length)
+            this._display.addOverlays(ranges, 'find-highlight', 'find');
         if (this.Reverse)
             this._results.reverse();
         this.gotoResult(0, !focus);
@@ -281,30 +266,15 @@ export class Finder extends EventEmitter {
             idx = this._results.length - 1;
         this._position = idx;
         this.updateCount();
-        $(".current", this._display).removeClass("current");
+        this._display.clearOverlay('find-current');
         if (this._results.length > 0) {
-            if (this._all) {
-                this._results[this._position].els.addClass('current');
-                if (focus && this._results[this._position].els.length > 0)
-                    this._results[this._position].els[0].scrollIntoView(false);
-            }
-            else {
-                $(".find-highlight", this._display).removeClass("find-highlight");
-                var r = this._results[idx];
-                this.addAnnotationElement(this.getTextSelection(r.line, r.index, r.index + r.length), r.line, " find");
-                var t = $('.find-highlight', r.line);
-                if (t.length > 1) {
-                    t.each(function (idx) {
-                        if (idx === 0)
-                            $(this).addClass('start');
-                        else if (idx === t.length - 1)
-                            $(this).addClass('end');
-                        else
-                            $(this).addClass('middle');
-                    })
-                };
-                t[0].scrollIntoView(false);
-            }
+            var r = this._results[idx];
+            this._display.addOverlays([{
+                start: { x: r.index, y: r.line },
+                end: { x: r.index + r.length, y: r.line }
+            }], 'find-highlight current', 'find-curent');
+            if (focus)
+                this._display.scrollToCharacter(r.index, r.line);
         }
         setTimeout(() => { this.emit('moved', this._position, idx); }, 0);
         this.updateButtons();
@@ -313,9 +283,8 @@ export class Finder extends EventEmitter {
     clear() {
         this._results = [];
         this._position = 0;
-        $(".find-highlight", this._display).each(function () {
-            $(this).replaceWith(this.textContent);
-        });
+        this._display.clearOverlay('find');
+        this._display.clearOverlay('find-current');
         this.updateButtons();
         this.emit('reset');
     }
@@ -339,150 +308,4 @@ export class Finder extends EventEmitter {
         else
             $("#find-count", this._control).html((this._position + 1) + " of " + this._results.length);
     }
-
-    private getTextNodesIn(node) {
-        var textNodes = [];
-        var i, len
-        if (Array.isArray(node)) {
-            for (i = 0, len = node.length; i < len; ++i) {
-                //textNodes = textNodes.concat(this.getTextNodesIn(node[i]));
-                textNodes.push.apply(textNodes, this.getTextNodesIn(node[i]));
-            }
-
-        }
-        else if (node.nodeType === 3) {
-            textNodes.push(node);
-        } else {
-            var children = node.childNodes;
-            for (i = 0, len = children.length; i < len; ++i) {
-                //textNodes = textNodes.concat(this.getTextNodesIn(children[i]));
-                textNodes.push.apply(textNodes, this.getTextNodesIn(children[i]));
-            }
-        }
-        return textNodes;
-    }
-
-    private getTextSelection(el, start, end) {
-        var range = document.createRange();
-        range.selectNodeContents(el);
-        var textNodes = this.getTextNodesIn(el);
-        var foundStart = false;
-        var charCount = 0, endCharCount;
-
-        for (var i = 0, textNode; textNode = textNodes[i++];) {
-            endCharCount = charCount + textNode.length;
-            if (!foundStart && start >= charCount
-                && (start < endCharCount ||
-                    (start === endCharCount && i <= textNodes.length))) {
-                range.setStart(textNode, start - charCount);
-                foundStart = true;
-            }
-            if (foundStart && end <= endCharCount) {
-                range.setEnd(textNode, end - charCount);
-                break;
-            }
-            charCount = endCharCount;
-        }
-
-        return range;
-    }
-
-    private setTextSelection(range) {
-        var sel = this._frame.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-    }
-
-    private addAnnotationElement(str, elem, id, c?: boolean) {
-        var text, textParent, origText, prevText, nextText, childCount,
-            annotationTextRange,
-            span = document.createElement('span');
-
-        if (elem.nodeType === 3) {
-            if (c)
-                span.setAttribute('class', 'find-highlight ' + id + '-child');
-            else
-                span.setAttribute('class', 'find-highlight ' + id);
-            origText = elem.textContent;
-            annotationTextRange = this.validateTextRange(str, elem);
-            if (annotationTextRange === validTextRange.before) {
-                text = origText.substring(0, str.endOffset);
-                nextText = origText.substring(str.endOffset);
-            } else if (annotationTextRange === validTextRange.after) {
-                prevText = origText.substring(0, str.startOffset);
-                text = origText.substring(str.startOffset);
-            } else if (annotationTextRange === validTextRange.exact) {
-                text = origText
-            } else if (annotationTextRange === validTextRange.within) {
-                prevText = origText.substring(0, str.startOffset);
-                text = origText.substring(str.startOffset, str.endOffset);
-                nextText = origText.substring(str.endOffset);
-            } else if (annotationTextRange === validTextRange.not) {
-                return;
-            }
-            span.textContent = text;
-            textParent = elem.parentElement;
-            textParent.replaceChild(span, elem);
-            if (prevText) {
-                var prevDOM = document.createTextNode(prevText);
-                textParent.insertBefore(prevDOM, span);
-            }
-            if (nextText) {
-                var nextDOM = document.createTextNode(nextText);
-                textParent.insertBefore(nextDOM, span.nextSibling);
-            }
-            return;
-        }
-        childCount = elem.childNodes.length;
-        for (var i = 0; i < childCount; i++) {
-            var elemChildNode = elem.childNodes[i];
-            if (!elemChildNode.tagName ||
-                !(elemChildNode.tagName === 'SPAN' &&
-                    elemChildNode.classList.contains('find-highlight'))) {
-                this.addAnnotationElement(str, elem.childNodes[i], id, true);
-            }
-            childCount = elem.childNodes.length;
-        }
-    }
-
-    private validateTextRange(str, elem) {
-        var textRange = document.createRange();
-
-        textRange.selectNodeContents(elem);
-        if (str.compareBoundaryPoints(Range.START_TO_END, textRange) <= 0) {
-            return validTextRange.not;
-        }
-        else {
-            if (str.compareBoundaryPoints(Range.END_TO_START, textRange) >= 0) {
-                return validTextRange.not;
-            }
-            else {
-                var startPoints = str.compareBoundaryPoints(Range.START_TO_START, textRange),
-                    endPoints = str.compareBoundaryPoints(Range.END_TO_END, textRange);
-
-                if (startPoints < 0) {
-                    if (endPoints < 0) {
-                        return validTextRange.before;
-                    }
-                    else {
-                        return validTextRange.exact;
-                    }
-                }
-                else {
-                    if (endPoints > 0) {
-                        return validTextRange.after;
-                    }
-                    else {
-                        if (startPoints === 0 && endPoints === 0) {
-                            return validTextRange.exact;
-                        }
-                        else {
-                            return validTextRange.within;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
 }
