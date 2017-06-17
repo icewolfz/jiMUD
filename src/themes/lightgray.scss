@@ -73,6 +73,38 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 
 /* Let's get this party started */
+.scroll-track {
+    background-color: #{$panelBackground};
+}
+
+.scroll-thumb {
+    background: #aaa;
+    border: 1px solid #{$borderColor};
+}
+
+.scroll-thumb:hover {
+    background: #e6e6e6;
+}
+
+.scroll-thumb:active {
+    background-color: #848282;
+}
+
+.scroll-corner {
+    background-color: #{$panelBackground};
+}
+
+.scroll-horizontal {
+    border-top: 0px;
+}
+
+.scroll-vertical {
+    border-left: 0px;
+}
+
+.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
+    background: #888;
+}
 
 #display::-webkit-scrollbar,
 #bars::-webkit-scrollbar {
@@ -96,6 +128,17 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background: #aaa;
     border: 1px solid #{$borderColor};
 }
+
+#display::-webkit-scrollbar-thumb:hover,
+#bars::-webkit-scrollbar-thumb:hover {
+    background: #e6e6e6;
+}
+
+#display::-webkit-scrollbar-thumb:active,
+#bars::-webkit-scrollbar-thumb:active {
+    background: #848282;
+}
+
 
 #display::-webkit-scrollbar-thumb:window-inactive,
 #bars::-webkit-scrollbar-thumb:window-inactive {

@@ -88,20 +88,45 @@
 .scroll-track {
     width: 12px;
     height: 12px;
-    background-color: green;
+    background-color: Scrollbar;
     box-sizing: border-box;
-    z-index: 1000;
+    z-index: 1001;
 }
 
 .scroll-thumb {
-    background-color: red;
+    background-color: ButtonFace;
     box-sizing: border-box;
+    border-top: 1px solid ButtonHighlight;
+    border-left: 1px solid ButtonHighlight;
+    border-right: 1px solid ButtonShadow;
+    border-bottom: 1px solid ButtonShadow;
+    z-index: 2000;
+}
+
+.scroll-thumb:hover {
+    background-color: ActiveBorder;
+}
+
+.scroll-thumb:active {
+    background-color: ThreeDDarkShadow;
 }
 
 .scroll-corner {
     box-sizing: border-box;
     width: 12px;
     height: 12px;
+    background-color: Scrollbar;
     z-index: 1000;
-    background-color: magenta;
+}
+
+.scroll-horizontal {
+    border-top: 1px solid ButtonHighlight;
+}
+
+.scroll-vertical {
+    border-left: 1px solid ButtonHighlight;
+}
+
+.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
+    background-color: ThreeDLightShadow;
 }

@@ -1642,6 +1642,7 @@ export class ScrollBar extends EventEmitter {
     set type(value: ScrollType) {
         if (this._type != value) {
             this._type = value;
+            this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
             this.updateLocation();
         }
     }
@@ -1697,7 +1698,7 @@ export class ScrollBar extends EventEmitter {
 
     private createBar() {
         this.track = document.createElement('div')
-        this.track.className = 'scroll-track';
+        this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
         this.track.style.position = "absolute";
         this.track.addEventListener('mousedown', (e) => {
             if (e.button === 0 && e.buttons) {
@@ -1764,6 +1765,10 @@ export class ScrollBar extends EventEmitter {
     }
 
     update() {
+        if(this.scrollSize >= 0)
+            this.track.classList.remove('scroll-disabled');
+        else
+            this.track.classList.add('scroll-disabled');        
         let thumbSize = Math.ceil(1 / this._percentView * this._parentSize);
         if (thumbSize > this._parentSize)
             thumbSize = this._parentSize;

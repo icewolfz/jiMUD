@@ -62,15 +62,53 @@ $color: "wheat";
     bottom: 2px;
 }
 
+.scroll-track {
+    background-color: #191814;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+}
 
-/* Let's get this party started */
+.scroll-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #33302b;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    border: 1px solid #{$borderColor};
+}
+
+.scroll-thumb:hover {
+    background: #988f7f;
+}
+
+.scroll-thumb:active {
+    background-color: #544f46;
+}
+
+.scroll-corner {
+    background-color: black;
+    display:none;
+}
+
+.scroll-horizontal {
+    border-top: 1px solid #494238;
+}
+
+.scroll-vertical {
+    border-left: 1px solid #494238;
+}
+
+.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
+    background: rgba(51, 48, 43, 0.4);
+}
 
 #display::-webkit-scrollbar,
 #bars::-webkit-scrollbar {
     width: 12px;
     height: 12px;
 }
-
 
 /* Track */
 
@@ -84,7 +122,6 @@ $color: "wheat";
     border: 1px solid #494238;
 }
 
-
 /* Handle */
 
 #display::-webkit-scrollbar-thumb,
@@ -95,6 +132,16 @@ $color: "wheat";
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     border: 1px solid #{$borderColor};
+}
+
+#display::-webkit-scrollbar-thumb:hover,
+#bars::-webkit-scrollbar-thumb:hover {
+    background: #988f7f;
+}
+
+#display::-webkit-scrollbar-thumb:active,
+#bars::-webkit-scrollbar-thumb:active {
+    background: #544f46;
 }
 
 #display::-webkit-scrollbar-thumb:window-inactive,
