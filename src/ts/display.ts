@@ -1765,10 +1765,10 @@ export class ScrollBar extends EventEmitter {
     }
 
     update() {
-        if(this.scrollSize >= 0)
+        if (this.scrollSize >= 0)
             this.track.classList.remove('scroll-disabled');
         else
-            this.track.classList.add('scroll-disabled');        
+            this.track.classList.add('scroll-disabled');
         let thumbSize = Math.ceil(1 / this._percentView * this._parentSize);
         if (thumbSize > this._parentSize)
             thumbSize = this._parentSize;
@@ -1791,6 +1791,11 @@ export class ScrollBar extends EventEmitter {
     }
 
     resize() {
+        let p = 0;
+        if (this.position !== 0) {
+            p = (this.scrollSize * this.maxPosition) / this.position;
+            p = (p < 0 ? Math.floor(p) : Math.ceil(p));
+        }
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth;
             this._parentSize = this._parent.clientWidth - this.offset;
@@ -1805,6 +1810,7 @@ export class ScrollBar extends EventEmitter {
         if (this.maxPosition < 0)
             this.maxPosition = 0;
         this.update();
+        this.scrollTo(p || 0);
     }
 
     currentPosition() {
