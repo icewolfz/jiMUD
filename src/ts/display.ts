@@ -824,20 +824,23 @@ export class Display extends EventEmitter {
         if (this._viewRange.end > this.lines.length)
             this._viewRange.end = this.lines.length;
         let lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
+        let bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
         let start = this._viewRange.start;
-        
-        lines = lines.map((value, idx) => {
-            
-            return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
-        })
-        //$(this._view).empty().append(lines);
-        this._view.innerHTML = lines.join('');
+        for (var l = 0, ll = lines.length; l < ll; l++) {
+            lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
+            bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
+        }
+        /*
+                lines = lines.map((value, idx) => {            
+                    return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
+                })
+                bLines = bLines.map((value, idx) => {
+                    return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
+                })*/
 
-        lines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
-        lines = lines.map((value, idx) => {
-            return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
-        })
-        this._background.innerHTML = lines.join('');
+
+        this._view.innerHTML = lines.join('');
+        this._background.innerHTML = bLines.join('');
         this.doUpdate(UpdateType.overlays);
     }
 
@@ -962,12 +965,31 @@ export class Display extends EventEmitter {
             this._viewLines.splice(0, amt);
             this._backgroundLines.splice(0, amt);
             this._expire2.splice(0, amt);
-
-            this._currentSelection.start.y -= amt;
-            this._currentSelection.end.y -= amt;
-            if (amt > 0) {
-                if (this._currentSelection.start.y === 0)
+            if (this.hasSelection) {
+                this._currentSelection.start.y -= amt;
+                this._currentSelection.end.y -= amt;
+                
+                if(this._currentSelection.start.y < 0 && this._currentSelection.end.y < 0)
+                {                
+                    this._currentSelection = {
+                        start: { x: null, y: null },
+                        end: { x: null, y: null },
+                        scrollTimer: null,
+                        drag: false
+                    };
+                }
+                else if(this._currentSelection.start.y < 0)
+                {
+                    this._currentSelection.start.y = 0;
                     this._currentSelection.start.x = 0;
+                }
+                else if(this._currentSelection.end.y < 0)
+                {
+                    this._currentSelection.end.y = 0;
+                    this._currentSelection.end.x = 0;
+                }
+                this.emit('selection-changed');
+                this.emit('selection-done');
             }
             for (let ol in this._overlays) {
                 if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
@@ -1577,6 +1599,7 @@ export class Display extends EventEmitter {
                     this._character.style.fontFamily = format.font;
                 }
                 if (format.size) {
+                    fStyle.push("font-size: ", format.size, ";")
                     this._character.style.fontSize = format.size;
                 }
                 if (format.font || format.size) {
@@ -1629,6 +1652,12 @@ export class Display extends EventEmitter {
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
                 fore.push("</a>");
+                /*
+                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
+                fore.push(htmlEncode(text.substring(offset, end)));
+                fore.push('</span>');                
+                */
             }
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>')
@@ -1686,7 +1715,7 @@ export class Display extends EventEmitter {
 
             //TODO add image
         }
-        return [`<span class="line" data-index="${idx}" style="top:{top}px;height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-index="${idx}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
     }
 
     public scrollDisplay() {

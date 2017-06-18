@@ -2414,7 +2414,7 @@ export class Parser extends EventEmitter {
     var f: boolean = this.emulateTerminal;
     var u: boolean = this.enableURLDetection;
     var s: boolean = this.enableMSP;
-    var lnk = 0, fLnk = 0, lnkOffset;
+    var lnk = 0, fLnk = 0, lnkOffset = 0;
     var lLnk = 0;
     var lNest = null;
     var p, pl = this.protocols.length;
@@ -2947,10 +2947,17 @@ export class Parser extends EventEmitter {
                 lnk = stringBuilder.length - 4;
                 lLnk = stringBuilder.length - 1;
                 fLnk = formatBuilder.length;
+                lnkOffset -= 2;
                 while (lnk > 0 && CharAllowedInURL(stringBuilder[lnk], true))
+                {
                   lnk--;
+                  lnkOffset--;
+                }
                 if (!CharAllowedInURL(stringBuilder[lnk], true))
+                {
                   lnk++;
+                  lnkOffset++;
+                }
                 lNest = [];
                 if (lnk > 0 && stringBuilder[lnk - 1] === "(")
                   lNest.push(")");
@@ -2987,6 +2994,7 @@ export class Parser extends EventEmitter {
                   offset: lineLength,
                   href: _MXPComment
                 });
+                formatBuilder.push(this.getFormatBlock(lineLength));
               }
               state = ParserState.None;
               idx--;
@@ -3030,6 +3038,7 @@ export class Parser extends EventEmitter {
                     href: _MXPComment,
                     offset: lineLength
                   });
+                  formatBuilder.push(this.getFormatBlock(lineLength));
                 }
                 state = ParserState.None;
                 idx--;
@@ -3373,6 +3382,7 @@ export class Parser extends EventEmitter {
                 if (!pFnd) {
                   state = ParserState.URL;
                   lnk = idx;
+                  lnkOffset = lineLength;
                 }
               }
             }
