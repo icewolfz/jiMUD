@@ -1592,6 +1592,7 @@ export class Display extends EventEmitter {
                     oFont = this._character.style.fontFamily;
                 }
                 //TODO varibale charcter width/height is not supported
+                //TODO once supported update parser support tag to add font
                 /*
                 if (format.font) {
                     
@@ -1652,12 +1653,6 @@ export class Display extends EventEmitter {
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
                 fore.push("</a>");
-                /*
-                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
-                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-                fore.push(htmlEncode(text.substring(offset, end)));
-                fore.push('</span>');                
-                */
             }
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>')
@@ -1712,8 +1707,8 @@ export class Display extends EventEmitter {
                 fore.push(htmlEncode(text.substring(offset, end)));
                 fore.push('</span>');
             }
-
             //TODO add image
+            //TODO once supported update parser support tag to add image
         }
         return [`<span class="line" data-index="${idx}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
     }

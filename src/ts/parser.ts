@@ -1800,6 +1800,10 @@ export class Parser extends EventEmitter {
               if (arg.indexOf(".") == -1) {
                 arg = arg.toUpperCase();
                 switch (arg) {
+                  //TODO re-enable once font size/face  are supported
+                  //case "FONT":
+                  //TODO re-enable once images are supported
+                  //case "IMAGE":
                   case "HR":
                   case "A":
                   case "SEND":
@@ -1817,8 +1821,7 @@ export class Parser extends EventEmitter {
                   case "STRIKEOUT":
                   case "STRIKE":
                   case "H":
-                  case "HIGH":
-                  case "FONT":
+                  case "HIGH":                  
                   case "EXPIRE":
                   case "VERSION":
                   case "SUPPORT":
@@ -1837,7 +1840,6 @@ export class Parser extends EventEmitter {
                   case "H4":
                   case "H5":
                   case "H6":
-                  case "IMAGE":
                   case "RESET":
                   case "GAUGE":
                   case "STAT":
@@ -1853,6 +1855,22 @@ export class Parser extends EventEmitter {
                 arg[0] = arg[0].toUpperCase();
                 switch (arg[0]) {
                   case "IMAGE":
+                    //TODO switch to + when supported
+                    if (arg[1] != "*")
+                      sArgs.push("-" + arg[0] + "." + arg[1]);
+                    else {
+                      sArgs.push("-image.fname");
+                      sArgs.push("-image.url");
+                      sArgs.push("-image.t");
+                      sArgs.push("-image.h");
+                      sArgs.push("-image.w");
+                      sArgs.push("-image.hspace");
+                      sArgs.push("-image.vspace");
+                      sArgs.push("-image.align");
+                      sArgs.push("-image.ismap");
+                    }
+
+                    /*
                     if (arg[1] != "*")
                       sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
@@ -1866,6 +1884,7 @@ export class Parser extends EventEmitter {
                       sArgs.push("+image.align");
                       sArgs.push("+image.ismap");
                     }
+                    */
                     break;
                   case "SOUND":
                     if (arg[1] != "*")
@@ -1928,8 +1947,9 @@ export class Parser extends EventEmitter {
                     if (arg[1] != "*")
                       sArgs.push("+" + arg[0] + "." + arg[1]);
                     else {
-                      sArgs.push("+font.face");
-                      sArgs.push("+font.size");
+                      //TODO switch to + when face and size supported
+                      sArgs.push("-font.face");
+                      sArgs.push("-font.size");
                       sArgs.push("+font.color");
                       sArgs.push("+font.back");
                     }
@@ -1967,8 +1987,10 @@ export class Parser extends EventEmitter {
               }
             }
           }
-          else
-            this.emit('MXP-tag-reply', tag, ["+A", "+SEND", "+B", "+I", "+COLOR", "+C", "+EM", "+ITALIC", "+STRONG", "+BOLD", "+UNDERLINE", "+U", "+S", "+STRIKEOUT", "+H", "+HIGH", "+FONT", "+EXPIRE", "+VERSION", "+SUPPORT", "+NOBR", "+P", "+BR", "+SBR", "+VAR", "+SOUND", "+MUSIC", "+USER", "+PASSWORD", "+RESET", "+STRIKE", "+H1", "+H2", "+H3", "+H4", "+H5", "+H6", "+IMAGE", "+STAT", "+GAUGE"]);
+          else 
+            //TODO enable font once font face/size are supported
+            //TODO enable imges once supported
+            this.emit('MXP-tag-reply', tag, ["+A", "+SEND", "+B", "+I", "+COLOR", "+C", "+EM", "+ITALIC", "+STRONG", "+BOLD", "+UNDERLINE", "+U", "+S", "+STRIKEOUT", "+H", "+HIGH", "-FONT", "+EXPIRE", "+VERSION", "+SUPPORT", "+NOBR", "+P", "+BR", "+SBR", "+VAR", "+SOUND", "+MUSIC", "+USER", "+PASSWORD", "+RESET", "+STRIKE", "+H1", "+H2", "+H3", "+H4", "+H5", "+H6", "-IMAGE", "+STAT", "+GAUGE"]);
           break;
         case "A":
           tmp = this.GetCurrentStyle();
