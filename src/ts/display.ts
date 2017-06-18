@@ -1,3 +1,12 @@
+/**
+ * Ansi display
+ * 
+ * Display ansi and mxp formated text
+ * 
+ * @arthur Icewolfz
+ * @todo Add MXP image, font (requires varible char width), font size(requires varible line height) support
+ * @todo Add split screen support
+ */
 import EventEmitter = require('events');
 import { Parser, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from "./parser";
 import { AnsiColorCode } from "./ansi";
@@ -217,7 +226,12 @@ export class Display extends EventEmitter {
             else
                 this.lines.push(data.line);
             this.lineFormats.push(data.formats);
-            if (data.line.length > this._maxLineLength)
+            if (data.formats[0].hr) {
+                t = this.WindowWidth;
+                if (t > this._maxLineLength)
+                    this._maxLineLength = t;
+            }
+            else if (data.line.length > this._maxLineLength)
                 this._maxLineLength = data.line.length;
             t = this.createLine();
             this._viewLines.push(t[0]);
@@ -792,11 +806,13 @@ export class Display extends EventEmitter {
     public updateView() {
         let w = this._maxLineLength * this._charWidth;
         let h = this.lines.length * this._charHeight;
+        let mw = Math.max(w, this._el.clientWidth);
+
         this._view.style.height = h + "px";
         this._view.style.width = w + "px";
 
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + "px";
-        this._overlay.style.width = Math.max(w, this._el.clientWidth) + "px";
+        this._overlay.style.width = mw + "px";
 
         //this._viewRange.start = Math.floor(this._el.scrollTop / this._charHeight) - 6;
         //this._viewRange.end = Math.ceil((this._el.scrollTop + this._elJ.innerHeight()) / this._charHeight) + 6;
@@ -809,15 +825,17 @@ export class Display extends EventEmitter {
             this._viewRange.end = this.lines.length;
         let lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
         let start = this._viewRange.start;
+        
         lines = lines.map((value, idx) => {
-            return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`);
+            
+            return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
         })
         //$(this._view).empty().append(lines);
         this._view.innerHTML = lines.join('');
 
         lines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
         lines = lines.map((value, idx) => {
-            return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`);
+            return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
         })
         this._background.innerHTML = lines.join('');
         this.doUpdate(UpdateType.overlays);
@@ -966,8 +984,11 @@ export class Display extends EventEmitter {
 
             let m = 0;
             let lines = this.lines;
+            let formats = this.lineFormats;
             for (let l = 0, ll = lines.length; l < ll; l++) {
-                if (lines[l].length > m)
+                if (formats[0].hr)
+                    m = this.WindowWidth;
+                else if (lines[l].length > m)
                     m = lines[l].length;
             }
             this._maxLineLength = m;
@@ -1548,7 +1569,10 @@ export class Display extends EventEmitter {
                     oSize = this._character.style.fontSize;
                     oFont = this._character.style.fontFamily;
                 }
+                //TODO varibale charcter width/height is not supported
+                /*
                 if (format.font) {
+                    
                     fStyle.push("font-family: ", format.font, ";")
                     this._character.style.fontFamily = format.font;
                 }
@@ -1560,6 +1584,7 @@ export class Display extends EventEmitter {
                     this._character.style.fontSize = oSize;
                     this._character.style.fontFamily = oFont;
                 }
+                */
                 if (format.style !== FontStyle.None) {
                     if ((format.style & FontStyle.Bold) == FontStyle.Bold)
                         fStyle.push("font-weight: bold;");
@@ -1584,8 +1609,14 @@ export class Display extends EventEmitter {
                     if (td.length > 0)
                         fStyle.push("text-decoration:", td.join(''), ";");
                 }
-                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
-                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
+                if (format.hr) {
+                    back.push('<span style="left:0;width:{max}px;', bStyle.join(''), '" class="ansi"></span>');
+                    fore.push('<span style="left:0;width:{max}px;', fStyle.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                }
+                else {
+                    back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                    fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
+                }
             }
             else if (format.formatType === FormatType.Link) {
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
@@ -1652,7 +1683,8 @@ export class Display extends EventEmitter {
                 fore.push(htmlEncode(text.substring(offset, end)));
                 fore.push('</span>');
             }
-            //TODO add image and hr support
+
+            //TODO add image
         }
         return [`<span class="line" data-index="${idx}" style="top:{top}px;height:${this._charHeight}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${this._charHeight}px;">${back.join('')}<br></span>`];
     }

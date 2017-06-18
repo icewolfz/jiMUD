@@ -59,6 +59,14 @@
     position: absolute;
 }
 
+.ansi .hr {
+    position:relative;
+    top: 50%;
+    transform: translateY(-50%);
+    height:4px;
+    width:100%;    
+}
+
 .line hr {
     border: 0px;
 }

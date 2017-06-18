@@ -2134,16 +2134,17 @@ export class Parser extends EventEmitter {
           this.ResetMXP();
           return null;
         case "HR":
-          var colors = this.getColors();
+          var mxp: MXPStyle = this.GetCurrentStyle();
+          var colors = this.getColors(mxp);
           return {
             format: {
               formatType: FormatType.Normal,
               offset: 0,
-              color: colors.backCode,
+              color: colors.fore,
               background: colors.back,
-              size: null,
-              font: null,
-              style: FontStyle.None,
+              size: mxp.fontSize,
+              font: mxp.font,
+              style: mxp.style | (this._CurrentAttributes & ~FontStyle.Bold),
               hr: true,
             }, text: null
           }
@@ -2702,13 +2703,12 @@ export class Parser extends EventEmitter {
                   stringBuilder = [];
                   formatBuilder = [this.getFormatBlock(lineLength)];
                 }
-                //skip = true;
+                //skip = text.charAt(idx + 1) === '\n';
                 _MXPTag = this.getMXPBlock(_MXPTag, [], remote);
                 if (_MXPTag && _MXPTag.format) {
                   _MXPTag.format.offset = lineLength;
                   formatBuilder.push(_MXPTag.format);
                 }
-                //strBuilder.splice(1, 0, 'data-length="0"');
                 this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
                 this.textLength++;
                 stringBuilder = [];
