@@ -2419,8 +2419,9 @@ export class Parser extends EventEmitter {
       var lines = this.display.lines;
       if (lines.length > 0) {
         stringBuilder.push(this.display.lines[lines.length - 1]);
-        formatBuilder.push(this.display.lineFormats[lines.length - 1]);
-        this.display.removeLine(lines.length - 1);
+        formatBuilder.push.apply(formatBuilder, this.display.lineFormats[lines.length - 1]);
+        lineLength = this.display.lines[lines.length - 1].length;
+        this.display.removeLine(lines.length - 1);        
       }
       lines = null;
     }
