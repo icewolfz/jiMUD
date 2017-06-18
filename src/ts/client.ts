@@ -262,6 +262,7 @@ export class Client extends EventEmitter {
         });
         this._input = new input(this);
         this._input.on('scroll-lock', (lock) => {
+            this.display.scrollLock = lock;
             this.display.scrollDisplay();
             this.emit('scroll-lock', lock);
         });
@@ -468,6 +469,7 @@ export class Client extends EventEmitter {
         this.MSP.savePath = parseTemplate(this.options.soundPath);
 
         this._input.scrollLock = this.options.scrollLocked;
+        this.display.scrollLock = this.options.scrollLocked;
 
         this.UpdateFonts();
         this.display.scrollDisplay();

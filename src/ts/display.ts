@@ -246,7 +246,6 @@ export class Display extends EventEmitter {
             //disable animation
             this._el.classList.remove('animate');
             let bar = this._HScroll.visible;
-            //TODO update overlays, either remove or recalculate
             this.trimLines();
             this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd);
             if (bar != this._HScroll.visible)
@@ -846,13 +845,50 @@ export class Display extends EventEmitter {
         this.lineFormats.splice(line, 1);
         this._backgroundLines.splice(line, 1);
         this._viewLines.splice(line, 1);
-        //$($(this._view).children().splice(line, 1)).remove();
-        //$($(this._background).children().splice(line, 1)).remove();
+
+        if (!this._currentSelection.drag) {
+            if (this._currentSelection.start.y === line && this._currentSelection.end.y === line) {
+                this._currentSelection.start.y = null;
+                this._currentSelection.start.x = null;
+                this._currentSelection.end.y = null;
+                this._currentSelection.end.x = null;
+            }
+            else if (this._currentSelection.start.y === line) {
+                if (this._currentSelection.start.y > this._currentSelection.end.y) {
+                    this._currentSelection.start.y--;
+                    if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this.lines.length)
+                        this._currentSelection.start.x = this.lines[this._currentSelection.start.y].length;
+                    else
+                        this._currentSelection.start.x = 0;
+                }
+                else {
+                    this._currentSelection.start.y++;
+                    this._currentSelection.start.x = 0;
+                }
+            }
+            else if (this._currentSelection.end.y === line) {
+                if (this._currentSelection.start.y > this._currentSelection.end.y) {
+                    this._currentSelection.end.y++;
+                    this._currentSelection.end.x = 0;
+                }
+                else {
+                    this._currentSelection.end.y--;
+                    if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this.lines.length)
+                        this._currentSelection.end.x = this.lines[this._currentSelection.end.y].length;
+                    else
+                        this._currentSelection.end.x = 0;
+                }
+            }
+        }
+
+        for (let ol in this._overlays) {
+            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
+                continue;
+            this._overlays[ol].splice(line, 1);
+        }
 
 
-
-        //TODO redo overlays
-        this.doUpdate(UpdateType.view | UpdateType.scrollbars);
+        this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
     SetColor(code: number, color) {
@@ -882,21 +918,27 @@ export class Display extends EventEmitter {
             this.lineFormats.splice(0, amt);
             this._viewLines.splice(0, amt);
             this._backgroundLines.splice(0, amt);
-            //$(this._view).children().slice(0, amt).remove()
-            //$(this._background).children().slice(0, amt).remove()
+
+            this._currentSelection.start.y -= amt;
+            this._currentSelection.end.y -= amt;
+            if (amt > 0) {
+                if (this._currentSelection.start.y === 0)
+                    this._currentSelection.start.x = 0;
+            }
+            for (let ol in this._overlays) {
+                if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
+                    continue;
+                this._overlays[ol].splice(0, amt);
+            }
 
             let m = 0;
             let lines = this.lines;
-            //let t;
-            //let h = this._charHeight;
-            //let html = $(this._view).children();
             for (let l = 0, ll = lines.length; l < ll; l++) {
                 if (lines[l].length > m)
                     m = lines[l].length;
-                //t = $(html[l]);
-                //t.css('top', (l * h) + "px");
             }
             this._maxLineLength = m;
+            this.doUpdate(UpdateType.selection | UpdateType.overlays);
         }
     }
 
