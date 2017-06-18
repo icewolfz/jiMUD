@@ -14,7 +14,9 @@ export enum FormatType {
   Image = 5,
   WordBreak = 6,
   MXPSend = 7,
-  MXPSendEnd = 8
+  MXPSendEnd = 8,
+  MXPExpired = 9,
+  MXPSkip = 10
 }
 
 /**
@@ -2126,11 +2128,6 @@ export class Parser extends EventEmitter {
           return {
             format: {
               formatType: FormatType.WordBreak,
-              href: null,
-              hint: null,
-              expire: null,
-              prompt: null,
-              tt: null
             }, text: " "
           };
         case "RESET":

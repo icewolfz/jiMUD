@@ -88,15 +88,16 @@ export class Display extends EventEmitter {
     private _charWidth: number;
     private _viewLines: string[] = [];
     private _backgroundLines: string[] = [];
+    private _expire = {};
+    private _expire2 = [];
     private _overlays: Overlays = {
         selection: []
     };
-
     private _VScroll: ScrollBar;
     private _HScroll: ScrollBar;
     private _updating: UpdateType = UpdateType.none;
 
-    private _expire = {};
+
 
     public scrollLock: boolean = false;
 
@@ -224,21 +225,37 @@ export class Display extends EventEmitter {
         });
 
         this._parser.on('expire-links', (args) => {
-            //TODO loop html and strip out expired links
-            /*
-            var expire;
-            if (args.length > 0)
-                expire = this.display.find("a[expire='" + args[0] + "']");
-            else
-                expire = this.display.find("a[expire]");
-            expire.wrapInner('<span/>');
-            if (args.length > 0)
-                expire = this.display.find("a[expire='" + args[0] + "'] span");
-            else
-                expire = this.display.find("a[expire] span");
-            expire.unwrap();
-            */
-
+            let lines;
+            if (!args || args.length === 0) {
+                for (let line in this._expire2) {
+                    if (!this._expire2.hasOwnProperty(line))
+                        continue;
+                    this.expireLineLinkFormat(this._expire2[line], parseInt(line))
+                }
+                for (let expire in this._expire) {
+                    if (!this._expire.hasOwnProperty(expire))
+                        continue;
+                    lines = this._expire[expire];
+                    for (let line in lines) {
+                        if (!lines.hasOwnProperty(line))
+                            continue;
+                        this.expireLineLinkFormat(lines[line], parseInt(line))
+                    }
+                }
+                this._expire2 = [];
+                this._expire = {};
+                this.doUpdate(UpdateType.view);
+            }
+            else if (this._expire[args]) {
+                lines = this._expire[args];
+                for (let line in lines) {
+                    if (!lines.hasOwnProperty(line))
+                        continue;
+                    this.expireLineLinkFormat(lines[line], parseInt(line))
+                }
+                delete this._expire[args];
+                this.doUpdate(UpdateType.view);
+            }
             this.emit('expire-links', args);
         });
 
@@ -719,6 +736,7 @@ export class Display extends EventEmitter {
         this.lines = [];
         this.lineFormats = [];
         this._expire = {};
+        this._expire2 = [];
         this._overlays = {
             selection: []
         }
@@ -845,6 +863,7 @@ export class Display extends EventEmitter {
         this.lineFormats.splice(line, 1);
         this._backgroundLines.splice(line, 1);
         this._viewLines.splice(line, 1);
+        this._expire2.splice(line, 1);
 
         if (!this._currentSelection.drag) {
             if (this._currentSelection.start.y === line && this._currentSelection.end.y === line) {
@@ -887,6 +906,12 @@ export class Display extends EventEmitter {
             this._overlays[ol].splice(line, 1);
         }
 
+        for (let ol in this._expire) {
+            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
+                continue;
+            this._expire[ol].splice(line, 1);
+        }
+
 
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
@@ -918,6 +943,7 @@ export class Display extends EventEmitter {
             this.lineFormats.splice(0, amt);
             this._viewLines.splice(0, amt);
             this._backgroundLines.splice(0, amt);
+            this._expire2.splice(0, amt);
 
             this._currentSelection.start.y -= amt;
             this._currentSelection.end.y -= amt;
@@ -929,6 +955,13 @@ export class Display extends EventEmitter {
                 if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
                     continue;
                 this._overlays[ol].splice(0, amt);
+            }
+
+
+            for (let ol in this._expire) {
+                if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
+                    continue;
+                this._expire[ol].splice(0, amt);
             }
 
             let m = 0;
@@ -1481,6 +1514,14 @@ export class Display extends EventEmitter {
         let offset = 0, bStyle = [];
         let fStyle = [], fCls;
         let height = this._charHeight;
+        for (let ol in this._expire) {
+            if (!this._expire.hasOwnProperty(ol))
+                continue;
+            if (this._expire[ol][idx])
+                delete this._expire[ol][idx];
+        }
+        delete this._expire2[idx];
+
         for (let f = 0, len = formats.length; f < len; f++) {
             let format = formats[f];
             let nFormat, end, td = [];
@@ -1555,7 +1596,7 @@ export class Display extends EventEmitter {
                 fore.push(htmlEncode(text.substring(offset, end)));
                 fore.push('</span>');
             }
-            else if (format.formatType === FormatType.LinkEnd) {
+            else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
                 fore.push("</a>");
             }
             else if (format.formatType === FormatType.WordBreak)
@@ -1563,20 +1604,41 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.MXPLink) {
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.href);
-                fore.push('" expire="', format.expire, '"');
+                fore.push('"');
+                if (format.expire && format.expire.length > 0) {
+                    if (!this._expire[format.expire])
+                        this._expire[format.expire] = [];
+                    if (!this._expire[format.expire][idx])
+                        this._expire[format.expire][idx] = [];
+                    this._expire[format.expire][idx].push(f);
+                }
+                else {
+                    if (!this._expire2[idx])
+                        this._expire2[idx] = [];
+                    this._expire2[idx].push(f);
+                }
                 fore.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
                 back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
                 fore.push(htmlEncode(text.substring(offset, end)));
                 fore.push('</span>');
             }
-            else if (format.formatType === FormatType.MXPLinkEnd) {
-                fore.push("</a>");
-            }
             else if (format.formatType === FormatType.MXPSend) {
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.hint);
-                fore.push('" expire="', format.expire, '"');
+                fore.push('"');
+                if (format.expire && format.expire.length > 0) {
+                    if (!this._expire[format.expire])
+                        this._expire[format.expire] = [];
+                    if (!this._expire[format.expire][idx])
+                        this._expire[format.expire][idx] = [];
+                    this._expire[format.expire][idx].push(f);
+                }
+                else {
+                    if (!this._expire2[idx])
+                        this._expire2[idx] = [];
+                    this._expire2[idx].push(f);
+                }
                 fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
                 fore.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
                 back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
@@ -1584,8 +1646,11 @@ export class Display extends EventEmitter {
                 fore.push(htmlEncode(text.substring(offset, end)));
                 fore.push('</span>');
             }
-            else if (format.formatType === FormatType.MXPSendEnd) {
-                fore.push("</a>");
+            else if (format.formatType === FormatType.MXPExpired) {
+                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
+                fore.push(htmlEncode(text.substring(offset, end)));
+                fore.push('</span>');
             }
             //TODO add image and hr support
         }
@@ -1646,6 +1711,36 @@ export class Display extends EventEmitter {
             this._VScroll.scrollTo(y);
         if (x < this._HScroll.position || x > this._HScroll.position + this._HScroll.scrollSize)
             this._HScroll.scrollTo(x);
+    }
+
+    private expireLineLinkFormat(formats, idx: number) {
+        let t, f, fs, fl, fsl, type, eType, format, n = 0;
+        for (fs = 0, fsl = formats.length; fs < fsl; fs++) {
+            fl = this.lineFormats[idx].length;
+            f = formats[fs];
+            format = this.lineFormats[idx][f];
+            if (format.formatType === FormatType.MXPLink)
+                eType = FormatType.MXPLinkEnd;
+            else
+                eType = FormatType.MXPSendEnd;
+            format.formatType = FormatType.MXPExpired;
+            f++;
+            for (; f < fl; f++) {
+                if (this.lineFormats[idx][f] === eType) {
+                    if (n == 0) {
+                        format.formatType = FormatType.MXPSkip;
+                        break;
+                    }
+                    else
+                        n--;
+                }
+                else if (this.lineFormats[idx][f] === type)
+                    n++;
+            }
+            t = this.createLine(idx);
+            this._viewLines[idx] = t[0];
+            this._backgroundLines[idx] = t[1];
+        }
     }
 }
 
