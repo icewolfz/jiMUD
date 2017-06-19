@@ -42,8 +42,8 @@ export class Logger extends EventEmitter {
             if (!data.gagged || (this.client.options.logGagged && data.gagged))
                 this.write(data.line);
         })
-        this.client.on('parse-done', (lines) => {
-            //this.writeLines(lines);
+        this.client.on('parse-done', () => {
+
         })
         if (this.client.options.logOffline)
             this.start();

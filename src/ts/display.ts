@@ -214,28 +214,7 @@ export class Display extends EventEmitter {
         this._parser.on('bell', () => { this.emit('bell') })
 
         this._parser.on('add-line', (data: ParserLine) => {
-            var t;
-            this.emit('add-line', data);
-            if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined")
-                return;
-            this.emit('add-line-done', data);
-            if (data.gagged)
-                return;
-            if (data.line === "\n" || data.line.length == 0)
-                this.lines.push("");
-            else
-                this.lines.push(data.line);
-            this.lineFormats.push(data.formats);
-            if (data.formats[0].hr) {
-                t = this.WindowWidth;
-                if (t > this._maxLineLength)
-                    this._maxLineLength = t;
-            }
-            else if (data.line.length > this._maxLineLength)
-                this._maxLineLength = data.line.length;
-            t = this.createLine();
-            this._viewLines.push(t[0]);
-            this._backgroundLines.push(t[1]);
+            this.addParserLine(data, true);
         });
 
         this._parser.on('expire-links', (args) => {
@@ -877,6 +856,45 @@ export class Display extends EventEmitter {
         this._el.addEventListener('click', callback);
     }
 
+    addParserLine(data: ParserLine, noUpdate?:boolean) {
+        var t;
+        this.emit('add-line', data);
+        if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined")
+            return;
+        this.emit('add-line-done', data);
+        if (data.gagged)
+            return;
+        if (data.line === "\n" || data.line.length == 0)
+            this.lines.push("");
+        else
+            this.lines.push(data.line);
+        this.lineFormats.push(data.formats);
+        if (data.formats[0].hr) {
+            t = this.WindowWidth;
+            if (t > this._maxLineLength)
+                this._maxLineLength = t;
+        }
+        else if (data.line.length > this._maxLineLength)
+            this._maxLineLength = data.line.length;
+        t = this.createLine();
+        this._viewLines.push(t[0]);
+        this._backgroundLines.push(t[1]);
+
+        if(!noUpdate)
+        {
+            //disable animation
+            this._el.classList.remove('animate');
+            let bar = this._HScroll.visible;
+            this.trimLines();
+            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd);
+            if (bar != this._HScroll.visible)
+                this.updateWindow();
+            //TODO split screen support
+            //re-enable animation so they are all synced
+            this._el.classList.add('animate');            
+        }
+    }
+
     removeLine(line: number) {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line]);
@@ -958,6 +976,8 @@ export class Display extends EventEmitter {
     }
 
     public trimLines() {
+        if(this._maxLines == -1)
+            return;
         if (this.lines.length > this._maxLines) {
             var amt = this.lines.length - this._maxLines
             this.lines.splice(0, amt);
@@ -968,9 +988,8 @@ export class Display extends EventEmitter {
             if (this.hasSelection) {
                 this._currentSelection.start.y -= amt;
                 this._currentSelection.end.y -= amt;
-                
-                if(this._currentSelection.start.y < 0 && this._currentSelection.end.y < 0)
-                {                
+
+                if (this._currentSelection.start.y < 0 && this._currentSelection.end.y < 0) {
                     this._currentSelection = {
                         start: { x: null, y: null },
                         end: { x: null, y: null },
@@ -978,13 +997,11 @@ export class Display extends EventEmitter {
                         drag: false
                     };
                 }
-                else if(this._currentSelection.start.y < 0)
-                {
+                else if (this._currentSelection.start.y < 0) {
                     this._currentSelection.start.y = 0;
                     this._currentSelection.start.x = 0;
                 }
-                else if(this._currentSelection.end.y < 0)
-                {
+                else if (this._currentSelection.end.y < 0) {
                     this._currentSelection.end.y = 0;
                     this._currentSelection.end.x = 0;
                 }
@@ -1985,10 +2002,9 @@ export class ScrollBar extends EventEmitter {
 
     resize() {
         let p = 0;
-        if (this.position !== 0) {
-            p = (this.scrollSize * this.maxPosition) / this.position;
-            p = (p < 0 ? Math.floor(p) : Math.ceil(p));
-        }
+        let m = this.maxPosition;
+        p = (this.position / this.scrollSize) * this.maxPosition;
+        p = (p < 0 ? Math.floor(p) : Math.ceil(p));
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth;
             this._parentSize = this._parent.clientWidth - this.offset;
@@ -2002,8 +2018,9 @@ export class ScrollBar extends EventEmitter {
         this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
             this.maxPosition = 0;
+        p = Math.ceil(p * (this.maxPosition/m));
         this.update();
-        this.scrollTo(p || 0);
+        this.updatePosition(p || 0);
     }
 
     currentPosition() {

@@ -72,6 +72,7 @@ export interface LinkFormat {
   tt?: string | number;
 }
 export interface ParserLine {
+  raw: string;
   line: string;
   fragment: boolean;
   gagged: boolean;
@@ -953,7 +954,7 @@ export class Parser extends EventEmitter {
   };
 
   private AddLine(line: string, fragment: boolean, skip: boolean, formats: LineFormat[]) {
-    var data: ParserLine = { line: line, fragment: fragment, gagged: skip, formats: formats };
+    var data: ParserLine = { raw: line, line: line, fragment: fragment, gagged: skip, formats: formats };
     this.emit('add-line', data)
     this.EndOfLine = !fragment;
   }
@@ -1821,7 +1822,7 @@ export class Parser extends EventEmitter {
                   case "STRIKEOUT":
                   case "STRIKE":
                   case "H":
-                  case "HIGH":                  
+                  case "HIGH":
                   case "EXPIRE":
                   case "VERSION":
                   case "SUPPORT":
@@ -1987,7 +1988,7 @@ export class Parser extends EventEmitter {
               }
             }
           }
-          else 
+          else
             //TODO enable font once font face/size are supported
             //TODO enable imges once supported
             this.emit('MXP-tag-reply', tag, ["+A", "+SEND", "+B", "+I", "+COLOR", "+C", "+EM", "+ITALIC", "+STRONG", "+BOLD", "+UNDERLINE", "+U", "+S", "+STRIKEOUT", "+H", "+HIGH", "-FONT", "+EXPIRE", "+VERSION", "+SUPPORT", "+NOBR", "+P", "+BR", "+SBR", "+VAR", "+SOUND", "+MUSIC", "+USER", "+PASSWORD", "+RESET", "+STRIKE", "+H1", "+H2", "+H3", "+H4", "+H5", "+H6", "-IMAGE", "+STAT", "+GAUGE"]);
@@ -2421,7 +2422,7 @@ export class Parser extends EventEmitter {
         stringBuilder.push(this.display.lines[lines.length - 1]);
         formatBuilder.push.apply(formatBuilder, this.display.lineFormats[lines.length - 1]);
         lineLength = this.display.lines[lines.length - 1].length;
-        this.display.removeLine(lines.length - 1);        
+        this.display.removeLine(lines.length - 1);
       }
       lines = null;
     }
@@ -2971,13 +2972,11 @@ export class Parser extends EventEmitter {
                 lLnk = stringBuilder.length - 1;
                 fLnk = formatBuilder.length;
                 lnkOffset -= 2;
-                while (lnk > 0 && CharAllowedInURL(stringBuilder[lnk], true))
-                {
+                while (lnk > 0 && CharAllowedInURL(stringBuilder[lnk], true)) {
                   lnk--;
                   lnkOffset--;
                 }
-                if (!CharAllowedInURL(stringBuilder[lnk], true))
-                {
+                if (!CharAllowedInURL(stringBuilder[lnk], true)) {
                   lnk++;
                   lnkOffset++;
                 }

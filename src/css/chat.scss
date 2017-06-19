@@ -1,3 +1,9 @@
+$images: "./../../assets";
+$borderColor: "rgb(204, 204, 204)";
+$color: "#333";
+$panelBackground: "rgb(240, 240, 240)";
+$panelInsetBackground: "rgb(240, 240, 240)";
+
 #toolbar {
     background-color: menu;
     margin-left: 2px;
@@ -43,4 +49,121 @@
     left: 0;
     right: 0;
     position: absolute;
+}
+
+#find {
+    top: 5px;
+    right: 20px;
+    padding: 2px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1em;
+    border-radius: 4px;
+    border: 1px solid #{$borderColor};
+    background-color: #{$panelBackground};
+    color: #{$color};
+    text-shadow: 0 1px 0 #fff;
+}
+
+#find input,
+#find input:focus {
+    border: 1px solid #{$borderColor};
+    width: 100px;
+    background-color: white;
+    color: black;
+    padding: 2px 2px;
+    height: 22px;
+    top: -1px;
+    border-radius: 2px;
+}
+
+#find input:focus {
+    border: 1px solid adadad;
+    color: #{$color};
+}
+
+#find button .fa {
+    margin-top: 3px;
+}
+
+#find button {
+    width: 22px;
+    height: 22px;
+    border: 1px solid transparent;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    vertical-align: top;
+    line-height: 16px;
+    color: inherit;
+    background-color: inherit;
+    padding: 0px;
+    margin-left: 2px;
+    margin-right: 2px;
+    border-radius: 2px;
+}
+
+#find button:hover,
+#find button.active:hover {
+    color: #{$color};
+    background-color: #e0e0e0;
+    background-position: 0 -15px;
+    color: #333;
+    border-color: #adadad;
+    text-shadow: 0 1px 0 #fff;
+}
+
+#find button.active:hover {
+    color: #{$color};
+    background-color: #a0a0a0;
+    background-position: 0 -15px;
+    color: #fff;
+    border-color: #adadad;
+    text-shadow: 0 1px 0 #333;
+}
+
+#find button:active {
+    border: 1px solid #0052A4;
+}
+
+#find button:disabled,
+#find button:disabled:hover {
+    background-color: inherit !important;
+    background-image: none;
+    box-shadow: none;
+    opacity: .25;
+    border: 1px solid transparent;
+    color: #666;
+}
+
+#find button.active {
+    background-color: #666;
+    border-color: #ccc;
+    text-shadow: 0 1px 0 #{$color};
+    color: #fff;
+}
+
+#find-count {
+    padding: 0px;
+}
+
+#find-case {
+    font-size: 10px;
+}
+
+#find-word {
+    text-decoration: overline underline;
+    font-size: 10px;
+}
+
+.find-highlight {
+    border-radius: 4px;
+    background: rgb(171, 102, 31);
+}
+
+.find-no-results {
+    color: #F08080;
+}
+
+.find-highlight.current {
+    border-radius: 4px;
+    background: rgb(116, 192, 114);
 }

@@ -18,7 +18,6 @@ const fs = require("fs");
 
 export class Client extends EventEmitter {
     private lineID = ".line";
-    private lineCache: string[] = [];
     private _enableDebug: boolean = false;
     private _input: input;
     private _auto: NodeJS.Timer = null;
@@ -31,7 +30,6 @@ export class Client extends EventEmitter {
     public version: string = version;
     public display: Display;
     public commandInput = null;
-    public commandCharacter = null;
 
     public connecting: boolean = false;
     public options: Settings;
@@ -266,8 +264,6 @@ export class Client extends EventEmitter {
             this.display.scrollDisplay();
             this.emit('scroll-lock', lock);
         });
-        this.commandCharacter = $("<div id='CmdCharacter'>W</div>");
-        this.commandCharacter.appendTo('body');
 
         this.commandInput.val("");
         this.commandInput.focus();
@@ -386,7 +382,7 @@ export class Client extends EventEmitter {
         });
 
         this.display.on("parse-done", () => {
-            this.emit('parse-done', this.lineCache);
+            this.emit('parse-done');
         });
         this.display.on('set-title', (title, type) => {
 
@@ -507,8 +503,6 @@ export class Client extends EventEmitter {
         this.display.updateFont(this.options.font, this.options.fontSize);
         this.commandInput.css("font-size", this.options.cmdfontSize);
         this.commandInput.css("font-family", this.options.cmdfont + ", monospace");
-        this.commandCharacter.css("font-size", this.options.cmdfontSize);
-        this.commandCharacter.css("font-family", this.options.cmdfont + ", monospace");
     };
 
     parse(txt: string) {

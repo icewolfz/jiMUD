@@ -1,204 +1,183 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-    <head>
-        <meta charset="UTF-8">
-        <title>Chat</title>
-        <link rel="shortcut icon" href="../assets/icons/png/chat.png" />
-        <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-        <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
-        <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
-        <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
-        <link href="css/main.css" rel="stylesheet" type="text/css" />
-        <link href="css/ansi.css" rel="stylesheet" type="text/css" />
-        <link href="css/chat.css" rel="stylesheet" type="text/css" />
-        <script>
-            if (typeof module === 'object') { window.module = module; module = undefined; }
-        </script>
-        <script src="../lib/jquery.min.js"></script>
-        <script src="../lib/bootstrap.min.js"></script>
-        <script src="../lib/bootstrap-select.min.js"></script>
-        <script>
-            const { shell, clipboard, ipcRenderer, remote } = require('electron');
-            const { dialog, Menu, MenuItem, app } = remote;
-            const { parseTemplate, setSelectionRange } = require("./js/library.js");
-            const { Settings } = require('./js/settings');
-            const fs = require('fs');
-            const path = require('path');
-            const { version } = require("../package.json");
-            var options, currentFile, _path, timeStamp = new Date().getTime(), _name;
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <link rel="shortcut icon" href="../assets/icons/png/chat.png" />
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+    <link href="css/ansi.css" rel="stylesheet" type="text/css" />
+    <link href="css/chat.css" rel="stylesheet" type="text/css" />
+    <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <script>
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-select.min.js"></script>
+    <script>
+        const { shell, clipboard, ipcRenderer, remote } = require('electron');
+        const { dialog, Menu, MenuItem, app } = remote;
+        const { parseTemplate, setSelectionRange } = require("./js/library.js");
+        const { Settings } = require('./js/settings');
+        const { Display } = require('./js/display');
+        const fs = require('fs');
+        const path = require('path');
+        const { version } = require("../package.json");
+        var options, currentFile, _path, timeStamp = new Date().getTime(), _name;
 
-            function loadOptions() {
-                options = Settings.load(remote.getGlobal('settingsFile'));
-                _path = parseTemplate(options.logPath);
+        var display;
+
+        function loadOptions() {
+            options = Settings.load(remote.getGlobal('settingsFile'));
+            _path = parseTemplate(options.logPath);
+            if (display) {
+                display.updateFont(options.font, options.fontSize);
+                display.maxLines = options.bufferSize;
             }
+        }
 
-            $(document).ready(function () {
-                loadOptions();
-                if (options.chat.log)
-                    start();
+        $(document).ready(function () {
+            display = new Display($("#display"));
 
-                var mdown = false;
-                var sel = false;
-                document.addEventListener("mousedown", function () {
-                    mdown = true;
-                    sel = false;
-                    $("#btn-copy").prop('disabled', getDisplaySelectionText().length === 0);
-                });
-
-                document.addEventListener("mouseleave", function () {
-                    if (sel && options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
-                        clipboard.writeText(getDisplaySelectionText(), 'selection');
-                        clearDisplaySelection()
-                    }
-                    mdown = false;
-                    sel = false;
-                    $("#btn-copy").prop('disabled', getDisplaySelectionText().length === 0);
-                });
-
-                document.addEventListener("mouseup", function () {
-                    if (sel && options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
-                        clipboard.writeText(getDisplaySelectionText(), 'selection');
-                        clearDisplaySelection()
-                    }
-                    mdown = false;
-                    sel = false;
-                    $("#btn-copy").prop('disabled', getDisplaySelectionText().length === 0);
-                });
-
-                document.addEventListener("selectionchange", function () {
-                    sel = true;
-                });
-
-                ['copy'].forEach(function (event) {
-                    document.addEventListener(event, function (e) {
-                        if (getDisplaySelectionText().length > 0)
-                            clipboard.writeText(getDisplaySelectionText(), 'selection');
-                    });
-                });
-            });
-
-            function doCopy() {
-                if (getDisplaySelectionText().length > 0)
-                    clipboard.writeText(getDisplaySelectionText(), 'selection');
-            }
-
-            ipcRenderer.on('chat', (event, text) => {
-                $("#display").removeClass("animate");
-                $("#display").append(text);
-                $("#display").addClass("animate");
-                scrollDisplay();
-                if (options.chat.log)
-                    write(text);
-            });
-
-            ipcRenderer.on('chat', (event, title) => {
-                _name = title;
-                buildFilename();
-            });
-
-            function scrollDisplay() {
-                $("#display")[0].scrollTop = $("#display")[0].scrollHeight;
-            }
-
-            function write(data) {
-                writeHeader();
-                fs.appendFile(currentFile, data, (err) => {
-                    if (err) throw err;
-                });
-            }
-
-            function writeHeader() {
-                buildFilename();
-                if (fs.existsSync(currentFile)) return;
-                fs.appendFile(currentFile, "<head>\n<style>\nbody\n{\n	font-family: \'Courier New\', Courier, monospace;\n	text-align: left;\n	font-size: 1em;\n	white-space: pre;\n	background-color: black;	\n}\n/* --- Start CSS for ansi display --- */\n@-webkit-keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n@keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n.ansi-blink { \n	text-decoration:blink;\n	animation-name: blinker;\n	animation-iteration-count: infinite; \n	animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	animation-duration: 1s; \n	-webkit-animation-name: blinker;\n	-webkit-animation-iteration-count: infinite; \n	-webkit-animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	-webkit-animation-duration: 1s; \n}\n\n.ansi\n{\n	padding: 0px;\n	margin:0px;\n	\n}\n\n.line \n{\n	word-wrap:break-word;\n	word-break:break-all;\n	width: 100%;\n	display: block;\n	padding-bottom:1px;\n	clear:both;\n	line-height: normal;\n}	\n\n.line hr{ border: 0px; }\n/* --- End CSS for ansi display --- */\n\n.line a, .line a:link \n{\n	color: inherit;\n	font-weight: inherit;\n	text-decoration: underline;\n}\n\n.URLLink, .URLLink:link\n{\n	text-decoration: underline;\n	cursor: pointer;\n}\n</style>\n", (err) => {
-                    if (err) throw err;
-                });
-            }
-
-            function buildFilename() {
-                currentFile = timeStamp.toString();
-                if (_name && _name.length > 0)
-                    currentFile += "." + _name;
-                currentFile = path.join(_path, currentFile) + ".chat.htm";
-                if (options.enableDebug)
-                    console.log('Log file: "' + currentFile + '"');
-            }
-
-            ipcRenderer.on('reload-options', (event) => {
-                loadOptions();
-                buildFilename();
-            });
-
-            ipcRenderer.on('connected', (event) => {
-                if (!options)
-                    loadOptions();
-                if (options.logUniqueOnConnect || !timeStamp)
-                    timeStamp = new Date().getTime();
-                buildFilename();
-            });
-
-            function start() {
-                options.chat.log = true;
-                $("#btn-enable").button('toggle');
-                ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: true });
-                if (!timeStamp)
-                    timeStamp = new Date().getTime();
-                buildFilename();
-                if (options.logPrepend)
-                    write($("#display").html());
-            }
-
-            function stop() {
-                options.chat.log = false;
-                ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: false });
-            }
-
-            function toggle() {
-                if (options.chat.log)
-                    stop();
-                else
-                    start();
-            }
-
-            function getDisplaySelectionText() {
-                var text = "";
-                if (getSelection) {
-                    text = getSelection().toString();
-                } else if (document.selection && document.selection.type != "Control") {
-                    text = document.selection.createRange().text;
+            display.on('selection-done', () => {
+                if (options.AutoCopySelectedToClipboard && display.hasSelection) {
+                    clipboard.writeText(display.selection, 'selection');
+                    display.clearSelection();
                 }
-                return text;
-            }
+            })
 
-            function clearDisplaySelection() {
-                if (getSelection) {
-                    if (getSelection().empty) {  // Chrome
-                        getSelection().empty();
-                    } else if (getSelection().removeAllRanges) {  // Firefox
-                        getSelection().removeAllRanges();
-                    }
-                } else if (document.selection) {  // IE?
-                    document.selection.empty();
-                }
-            }
-        </script>
-    </head>
+            loadOptions();
+            if (options.chat.log)
+                start();
 
-    <body>
-        <div id="toolbar" class="btn-toolbar" role="toolbar">
-            <div class="btn-group" role="group">
-                <button id="btn-enable" type="button" class="btn btn-default btn-xs" title="Log to file" onclick="toggle()" data-toggle="button"><i class="fa fa-file-text-o"></i></button>
-                <button id="btn-clear" type="button" class="btn btn-default btn-xs" title="Clear display" onclick="$('#display').empty();" data-toggle="button">
+
+            document.addEventListener("selectionchange", function () {
+                sel = true;
+            });
+
+            ['copy'].forEach(function (event) {
+                document.addEventListener(event, function (e) {
+                    if (display.hasSelection)
+                        clipboard.writeText(client.display.selection, 'selection');
+                });
+            });
+        });
+
+        function doCopy() {
+            if (display.hasSelection)
+                clipboard.writeText(gclient.display.selection, 'selection');
+        }
+
+        function doFind() {
+            display.showFind();
+        }
+
+        ipcRenderer.on('chat', (event, data) => {
+            display.addParserLine(data);
+            if (!options)
+                loadOptions();
+            if (options.chat.log)
+                write(data.line);
+        });
+
+        ipcRenderer.on('chat-done', (event, data) => {
+
+        });
+
+        ipcRenderer.on('set-title', (event, title) => {
+            if (!options)
+                loadOptions();
+            _name = title;
+            buildFilename();
+        });
+
+        function write(data) {
+            writeHeader();
+            fs.appendFile(currentFile, data, (err) => {
+                if (err) throw err;
+            });
+        }
+
+        function writeHeader() {
+            buildFilename();
+            if (fs.existsSync(currentFile)) return;
+            fs.appendFile(currentFile, "<head>\n<style>\nbody\n{\n	font-family: \'Courier New\', Courier, monospace;\n	text-align: left;\n	font-size: 1em;\n	white-space: pre;\n	background-color: black;	\n}\n/* --- Start CSS for ansi display --- */\n@-webkit-keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n@keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n.ansi-blink { \n	text-decoration:blink;\n	animation-name: blinker;\n	animation-iteration-count: infinite; \n	animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	animation-duration: 1s; \n	-webkit-animation-name: blinker;\n	-webkit-animation-iteration-count: infinite; \n	-webkit-animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	-webkit-animation-duration: 1s; \n}\n\n.ansi\n{\n	padding: 0px;\n	margin:0px;\n	\n}\n\n.line \n{\n	word-wrap:break-word;\n	word-break:break-all;\n	width: 100%;\n	display: block;\n	padding-bottom:1px;\n	clear:both;\n	line-height: normal;\n}	\n\n.line hr{ border: 0px; }\n/* --- End CSS for ansi display --- */\n\n.line a, .line a:link \n{\n	color: inherit;\n	font-weight: inherit;\n	text-decoration: underline;\n}\n\n.URLLink, .URLLink:link\n{\n	text-decoration: underline;\n	cursor: pointer;\n}\n</style>\n", (err) => {
+                if (err) throw err;
+            });
+        }
+
+        function buildFilename() {
+            currentFile = timeStamp.toString();
+            if (_name && _name.length > 0)
+                currentFile += "." + _name;
+            currentFile = path.join(_path, currentFile) + ".chat.htm";
+            if (options.enableDebug)
+                console.log('Log file: "' + currentFile + '"');
+        }
+
+        ipcRenderer.on('reload-options', (event) => {
+            loadOptions();
+            buildFilename();
+        });
+
+        ipcRenderer.on('connected', (event) => {
+            if (!options)
+                loadOptions();
+            if (options.logUniqueOnConnect || !timeStamp)
+                timeStamp = new Date().getTime();
+            buildFilename();
+        });
+
+        function start() {
+            options.chat.log = true;
+            $("#btn-enable").button('toggle');
+            ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: true });
+            if (!timeStamp)
+                timeStamp = new Date().getTime();
+            buildFilename();
+            if (options.logPrepend)
+                write($("#display").html());
+        }
+
+        function stop() {
+            options.chat.log = false;
+            ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: false });
+        }
+
+        function toggle() {
+            if (options.chat.log)
+                stop();
+            else
+                start();
+        }
+
+        function clearDisplaySelection() {
+            display.clear();
+        }
+    </script>
+</head>
+
+<body>
+    <div id="toolbar" class="btn-toolbar" role="toolbar">
+        <button id="btn-find" type="button" class="btn btn-default btn-xs" title="Find" onclick="doFind()"><i class="fa fa-search"></i></button>
+        <div class="btn-group" role="group">
+            <button id="btn-enable" type="button" class="btn btn-default btn-xs" title="Log to file" onclick="toggle()" data-toggle="button"><i class="fa fa-file-text-o"></i></button>
+            <button id="btn-clear" type="button" class="btn btn-default btn-xs" title="Clear display" onclick="$('#display').empty();"
+                data-toggle="button">
                     <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                         <i class="fa fa-file-o fa-stack-2x" style="font-size: 1em"></i>
                         <i class="fa fa-times fa-stack-1x" style="font-size: 0.5em;margin-top: 1px;"></i>
                     </span>                    
                 </button>
-            </div>
-            <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick="doCopy()"><i class="fa fa-copy"></i></button>
         </div>
-        <div id="display"></div>
-    </body>
+        <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick="doCopy()"><i class="fa fa-copy"></i></button>
+    </div>
+    <div id="display"></div>
+</body>
 
 </html>
