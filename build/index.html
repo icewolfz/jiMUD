@@ -499,7 +499,7 @@
       client.telnet.GMCPSupports.push("Room 1");
 
       client.on('profile-updated', (profile) => {
-        ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.enabledProfiles.indexOf(profile) != -1 });
+        ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
       });
 
       client.on('profiles-updated', () => {
@@ -640,7 +640,7 @@
         _finder.find(false);
       });
 
-      this.client.on('received-GMCP', (mod, obj) => {
+      client.on('received-GMCP', (mod, obj) => {
         ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
       });
 
@@ -739,7 +739,7 @@
       });
       _status.ac = client.options.showArmor;
       _status.on('set-title', (title) => {
-        if (this.client.options.autoCreateCharacter)
+        if (client.options.autoCreateCharacter)
           ipcRenderer.send('change-char', title);
         _logger.name = title;
         ipcRenderer.send('set-title', title);
@@ -1075,18 +1075,18 @@
       if (item.send) {
         if (!ret.endsWith("\n"))
           ret += "\n";
-        if (item.chain && this.client.commandInput.val().endsWith(" ")) {
-          this.client.commandInput.val(this.client.commandInput.val() + ret);
-          this.client.sendCommand();
+        if (item.chain && client.commandInput.val().endsWith(" ")) {
+          client.commandInput.val(client.commandInput.val() + ret);
+          client.sendCommand();
           return true;
         }
-        if (this.client.connected)
-          this.client.send(ret);
-        if (this.client.telnet.echo && this.client.options.commandEcho)
-          this.client.echo(ret);
+        if (client.connected)
+          client.send(ret);
+        if (client.telnet.echo && client.options.commandEcho)
+          client.echo(ret);
       }
       else if (item.append)
-        this.client.commandInput.val(this.client.commandInput.val() + ret);
+        client.commandInput.val(client.commandInput.val() + ret);
       return true;
     }
 
@@ -1114,18 +1114,18 @@
       if (button.send) {
         if (!ret.endsWith("\n"))
           ret += "\n";
-        if (button.chain && this.client.commandInput.val().endsWith(" ")) {
-          this.client.commandInput.val(this.client.commandInput.val() + ret);
-          this.client.sendCommand();
+        if (button.chain && client.commandInput.val().endsWith(" ")) {
+          client.commandInput.val(client.commandInput.val() + ret);
+          client.sendCommand();
           return true;
         }
-        if (this.client.connected)
-          this.client.send(ret);
-        if (this.client.telnet.echo && this.client.options.commandEcho)
-          this.client.echo(ret);
+        if (client.connected)
+          client.send(ret);
+        if (client.telnet.echo && client.options.commandEcho)
+          client.echo(ret);
       }
       else if (button.append)
-        this.client.commandInput.val(this.client.commandInput.val() + ret);
+        client.commandInput.val(client.commandInput.val() + ret);
       return true;
     }
 
@@ -1167,7 +1167,7 @@
 
     function updateMenu() {
       for (var profile in client.profiles.items)
-        ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: this.client.enabledProfiles.indexOf(profile) != -1 });
+        ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
 
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });

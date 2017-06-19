@@ -1,4 +1,7 @@
 ## Changelog
+##### 0.3.3
+- **Fixed:**
+  - Fixed options undefined errors
 ##### 0.3.2 2017-06-16
 - **New:**
   - Add enable spellchecking preference to allow spell checking to be turned off
