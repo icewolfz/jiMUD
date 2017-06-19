@@ -6,9 +6,9 @@
     - Fixes find all highlighting performance issues
     - Cleaner text selection effect
   - Logging
-    - Log raw - Log raw ansi to a seperate log file.
-    - Log text - Log text to a seperte log file
-    - Log html - Log html to a seperate log file
+    - Log raw - Log raw ansi to a separate log file.
+    - Log text - Log text to a separate log file
+    - Log html - Log html to a separate log file
   - Chat capture find text
 ##### 0.3.3
 - **Fixed:**

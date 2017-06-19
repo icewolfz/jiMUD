@@ -10,8 +10,6 @@ export enum validTextRange {
     within = 4
 }
 
-//TODO recode once new display is finished
-
 export class Finder extends EventEmitter {
     private _display: Display;
     private _document;
@@ -272,7 +270,7 @@ export class Finder extends EventEmitter {
             this._display.addOverlays([{
                 start: { x: r.index, y: r.line },
                 end: { x: r.index + r.length, y: r.line }
-            }], 'find-highlight current', 'find-curent');
+            }], 'find-highlight current', 'find-current');
             if (focus)
                 this._display.scrollToCharacter(r.index, r.line);
         }

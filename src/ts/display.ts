@@ -4,7 +4,7 @@
  * Display ansi and mxp formated text
  * 
  * @arthur Icewolfz
- * @todo Add MXP image, font (requires varible char width), font size(requires varible line height) support
+ * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support
  * @todo Add split screen support
  */
 import EventEmitter = require('events');
@@ -1097,7 +1097,7 @@ export class Display extends EventEmitter {
             }
             else {
                 sL = range.start.y;
-                //invalide view
+                //invalid view
                 if (sL < 0 || sL >= this.lines.length)
                     continue;
                 s = Math.min(range.start.x, range.end.x);
@@ -1166,18 +1166,18 @@ export class Display extends EventEmitter {
                         endStyle.bottom = CornerType.Intern;
                     }
                 }
-                let rcls = cls;
+                let rCls = cls;
                 if (startStyle.top === CornerType.Extern) {
-                    rcls += ' tlc';
+                    rCls += ' tlc';
                 }
                 if (startStyle.bottom === CornerType.Extern) {
-                    rcls += ' blc';
+                    rCls += ' blc';
                 }
                 if (endStyle.top === CornerType.Extern) {
-                    rcls += ' trc';
+                    rCls += ' trc';
                 }
                 if (endStyle.bottom === CornerType.Extern) {
-                    rcls += ' brc';
+                    rCls += ' brc';
                 }
                 if (sL == line) {
                     w = ((this.lines[line].length || 1) - s) * this._charWidth;
@@ -1192,7 +1192,7 @@ export class Display extends EventEmitter {
                 if (!this._overlays[type][line])
                     this._overlays[type][line] = [];
 
-                this._overlays[type][line].push(`<span id="${type}-${r}" class="${rcls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
+                this._overlays[type][line].push(`<span id="${type}-${r}" class="${rCls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
 
                 if (startStyle.top == CornerType.Intern || startStyle.bottom == CornerType.Intern) {
                 }
@@ -1617,7 +1617,7 @@ export class Display extends EventEmitter {
                     oSize = this._character.style.fontSize;
                     oFont = this._character.style.fontFamily;
                 }
-                //TODO varibale charcter width/height is not supported
+                //TODO variable character width/height is not supported
                 //TODO once supported update parser support tag to add font
                 /*
                 if (format.font) {

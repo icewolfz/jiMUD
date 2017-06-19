@@ -1990,7 +1990,7 @@ export class Parser extends EventEmitter {
           }
           else
             //TODO enable font once font face/size are supported
-            //TODO enable imges once supported
+            //TODO enable images once supported
             this.emit('MXP-tag-reply', tag, ["+A", "+SEND", "+B", "+I", "+COLOR", "+C", "+EM", "+ITALIC", "+STRONG", "+BOLD", "+UNDERLINE", "+U", "+S", "+STRIKEOUT", "+H", "+HIGH", "-FONT", "+EXPIRE", "+VERSION", "+SUPPORT", "+NOBR", "+P", "+BR", "+SBR", "+VAR", "+SOUND", "+MUSIC", "+USER", "+PASSWORD", "+RESET", "+STRIKE", "+H1", "+H2", "+H3", "+H4", "+H5", "+H6", "-IMAGE", "+STAT", "+GAUGE"]);
           break;
         case "A":
