@@ -10,9 +10,10 @@
     - Log text - Log text to a seperte log file
     - Log html - Log html to a seperate log file
   - Chat capture find text
+##### 0.3.3
 - **Fixed:**
   - Fixed undefined options error
-##### 0.3.2
+##### 0.3.2 2017-06-16
 - **Change:**
   - Log error setting default to on
   - Improved trigger performance by changing how some test are done
