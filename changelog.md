@@ -1,4 +1,17 @@
 ## Changelog
+##### 0.4.0
+- **New:**
+  - Display control
+    - Faster then old system by nearly 200%
+    - Fixes find all highlighting performance issues
+    - Cleaner text selection effect
+  - Logging
+    - Log raw - Log raw ansi to a seperate log file.
+    - Log text - Log text to a seperte log file
+    - Log html - Log html to a seperate log file
+  - Chat capture find text
+- **Fixed:**
+  - Fixed undefined options error
 ##### 0.3.2
 - **Change:**
   - Log error setting default to on

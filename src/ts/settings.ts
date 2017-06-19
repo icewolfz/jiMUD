@@ -30,6 +30,13 @@ export enum NewLineType {
 	CtrlAndShift = 8
 }
 
+export enum Log {
+	None = 0,
+	Html = 1,
+	Text = 2,
+	Raw = 4
+}
+
 export class Mapper {
 	public enabled: boolean = true;
 	public follow: boolean = true;
@@ -183,7 +190,7 @@ export class Settings {
 	public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
 	public commandStacking: boolean = true;
-	public htmlLog: boolean = true;
+	public logWhat: Log = Log.Html;
 	public keepLastCommand: boolean = true;
 	public enableMXP: boolean = true;
 	public enableMSP: boolean = true;

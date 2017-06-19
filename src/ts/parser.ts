@@ -953,8 +953,8 @@ export class Parser extends EventEmitter {
     this._ColorTable[code] = color.toRGB();
   };
 
-  private AddLine(line: string, fragment: boolean, skip: boolean, formats: LineFormat[]) {
-    var data: ParserLine = { raw: line, line: line, fragment: fragment, gagged: skip, formats: formats };
+  private AddLine(line: string, raw:string, fragment: boolean, skip: boolean, formats: LineFormat[]) {
+    var data: ParserLine = { raw: raw, line: line, fragment: fragment, gagged: skip, formats: formats };
     this.emit('add-line', data)
     this.EndOfLine = !fragment;
   }
@@ -2403,6 +2403,7 @@ export class Parser extends EventEmitter {
     var _AnsiParams = null;
     var stringBuilder = [];
     var formatBuilder = [];
+    var rawBuilder = [];
     var state: ParserState = ParserState.None;
     var pState: ParserState = ParserState.None;
     var lineLength = 0;
@@ -2421,6 +2422,7 @@ export class Parser extends EventEmitter {
       if (lines.length > 0) {
         stringBuilder.push(this.display.lines[lines.length - 1]);
         formatBuilder.push.apply(formatBuilder, this.display.lineFormats[lines.length - 1]);
+        rawBuilder.push(this.display.rawLines[lines.length - 1]);
         lineLength = this.display.lines[lines.length - 1].length;
         this.display.removeLine(lines.length - 1);
       }
@@ -2446,6 +2448,7 @@ export class Parser extends EventEmitter {
       for (idx = 0; idx < tl; idx++) {
         c = text.charAt(idx);
         i = text.charCodeAt(idx);
+        rawBuilder.push(c);
         switch (state) {
           case ParserState.AnsiParams:
             if (
@@ -2565,14 +2568,14 @@ export class Parser extends EventEmitter {
                 if (parseInt(_AnsiParams, 10) == 2) {
                   lineLength = 0;
                   iTmp = this.window.height;
-                  for (var j = 0; j < iTmp; j++) {
-                    //TODO recode should send addline for reach new line
-                    stringBuilder.push("\n");
+                  this.AddLine(stringBuilder.join(''), rawBuilder.join(''), false, false, formatBuilder);
+                  stringBuilder = [];
+                  rawBuilder = [];
+                  formatBuilder = [this.getFormatBlock(lineLength)];                  
+                  for (var j = 0; j < iTmp; j++) {                  
+                    this.AddLine("", "\n", false, false, formatBuilder);
                     this.MXPCapture("\n");
                   }
-                  this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
-                  stringBuilder = [];
-                  formatBuilder = [this.getFormatBlock(lineLength)];
                   this.textLength += iTmp;
                   this.mxpState.noBreak = false;
                 }
@@ -2676,6 +2679,7 @@ export class Parser extends EventEmitter {
           case ParserState.MXPTag:
             if (_MXPTag === "!--") {
               idx--;
+              rawBuilder.pop();
               pState = ParserState.None;
               state = ParserState.MXPComment;
               _MXPComment = "<!--";
@@ -2684,6 +2688,7 @@ export class Parser extends EventEmitter {
             }
             else if (_MXPTag.endsWith("<!--")) {
               idx--;
+              rawBuilder.pop();
               pState = state;
               state = ParserState.MXPComment;
               _MXPComment = "<!--";
@@ -2708,6 +2713,7 @@ export class Parser extends EventEmitter {
             }
             else if (c === '\n' || c === '\x1b') {
               idx--;
+              rawBuilder.pop();
               //Abnormal end, discard
               state = ParserState.None;
               this._SplitBuffer = "";
@@ -2723,8 +2729,9 @@ export class Parser extends EventEmitter {
                 if (lineLength > 0) {
                   lineLength = 0;
                   this.MXPCapture("\n");
-                  this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
+                  this.AddLine(stringBuilder.join(''), rawBuilder.join(''), false, false, formatBuilder);
                   stringBuilder = [];
+                  rawBuilder = [];
                   formatBuilder = [this.getFormatBlock(lineLength)];
                 }
                 //skip = text.charAt(idx + 1) === '\n';
@@ -2733,17 +2740,19 @@ export class Parser extends EventEmitter {
                   _MXPTag.format.offset = lineLength;
                   formatBuilder.push(_MXPTag.format);
                 }
-                this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
+                this.AddLine(stringBuilder.join(''), rawBuilder.join(''), false, false, formatBuilder);
                 this.textLength++;
                 stringBuilder = [];
+                rawBuilder = [];
                 formatBuilder = [this.getFormatBlock(lineLength)];
               }
               else if (_MXPTag === "BR" && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
                 this.MXPCapture("\n");
-                this.AddLine(stringBuilder.join(''), false, false, formatBuilder);
+                this.AddLine(stringBuilder.join(''), rawBuilder.join(''), false, false, formatBuilder);
                 skip = false;
                 lineLength = 0;
                 stringBuilder = [];
+                rawBuilder = [];
                 formatBuilder = [this.getFormatBlock(lineLength)];
                 this.textLength++;
               }
@@ -2825,6 +2834,7 @@ export class Parser extends EventEmitter {
             }
             else if (c === '\n' || c === '\x1b') {
               idx--;
+              rawBuilder.pop();
               //Abnormal end, discard
               state = ParserState.None;
               this._SplitBuffer = "";
@@ -2878,6 +2888,7 @@ export class Parser extends EventEmitter {
           case ParserState.MXPEntity:
             if (c === '\n' || c === '\x1b') {
               idx--;
+              rawBuilder.pop();
               if (this.enableDebug) this.emit('debug', "MXP Entity: " + _MXPEntity);
               if (<ParserState>pState == ParserState.MXPTag) {
                 _MXPTag += "&" + _MXPEntity;
@@ -2936,6 +2947,7 @@ export class Parser extends EventEmitter {
             if (_MXPComment.endsWith("-->")) {
               if (this.enableDebug) this.emit('debug', "MXP Comment: " + _MXPComment);
               idx--;
+              rawBuilder.pop();
               state = pState;
               if (state === ParserState.None)
                 this._SplitBuffer = "";
@@ -2944,6 +2956,7 @@ export class Parser extends EventEmitter {
             else if (c === '\n' || c === '\x1b') {
               if (this.enableDebug) this.emit('debug', "MXP Comment: " + _MXPComment);
               idx--;
+              rawBuilder.pop();
               state = pState;
               _MXPComment = "";
             }
@@ -3020,6 +3033,7 @@ export class Parser extends EventEmitter {
               }
               state = ParserState.None;
               idx--;
+              rawBuilder.pop();
             }
             else {
               var si = stringBuilder.length - 1;
@@ -3064,6 +3078,7 @@ export class Parser extends EventEmitter {
                 }
                 state = ParserState.None;
                 idx--;
+                rawBuilder.pop();
               }
               else {
                 stringBuilder.push(c);
@@ -3185,6 +3200,7 @@ export class Parser extends EventEmitter {
                     text = text.splice(idx, iTmp);
                     tl = text.length;
                     idx--;
+                    rawBuilder.pop();
                     this.mxpState.lineExpanded = true;
                     continue;
                   }
@@ -3201,9 +3217,10 @@ export class Parser extends EventEmitter {
               if (!skip) {
                 this.MXPCapture("\n");
               }
-              this.AddLine(stringBuilder.join(''), false, skip, formatBuilder);
+              this.AddLine(stringBuilder.join(''), rawBuilder.join(''), false, skip, formatBuilder);
               skip = false;
               stringBuilder = [];
+              rawBuilder = [];
               formatBuilder = [this.getFormatBlock(lineLength)];
               this.textLength++;
               this.mxpState.noBreak = false;
@@ -3716,7 +3733,7 @@ export class Parser extends EventEmitter {
         }
       }
       if (lineLength > 0) {
-        this.AddLine(stringBuilder.join(''), true, false, formatBuilder);
+        this.AddLine(stringBuilder.join(''), rawBuilder.join(''), true, false, formatBuilder);
       }
     }
     catch (ex) {

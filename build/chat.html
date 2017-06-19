@@ -25,6 +25,7 @@
         const { parseTemplate, setSelectionRange } = require("./js/library.js");
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
+        const { AnsiColorCode } = require('./js/ansi');
         const fs = require('fs');
         const path = require('path');
         const { version } = require("../package.json");
@@ -41,6 +42,25 @@
             }
         }
 
+        function error(err) {
+            echo("Error: " + err + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+        }
+
+        function echo(str, fore, back, newline, forceLine) {
+            if (str == null) str = "";
+            if (newline == null) newline = false;
+            if (forceLine == null) forceLine = false;
+            if (fore == null) fore = AnsiColorCode.LocalEcho;
+            if (back == null) back = AnsiColorCode.LocalEchoBack;
+            var codes = display.CurrentAnsiCode() + "\n";
+            if (str.endsWith("\n"))
+                str = str.substr(0, str.length - 1);
+            str = "\x1b[" + fore + ";" + back + "m" + str + codes;
+            if (newline && display.textLength > 0 && !display.EndOfLine)
+                str = "\n" + str;
+            display.append(str, false);
+        }
+
         $(document).ready(function () {
             display = new Display($("#display"));
 
@@ -54,11 +74,6 @@
             loadOptions();
             if (options.chat.log)
                 start();
-
-
-            document.addEventListener("selectionchange", function () {
-                sel = true;
-            });
 
             ['copy'].forEach(function (event) {
                 document.addEventListener(event, function (e) {
@@ -81,8 +96,14 @@
             display.addParserLine(data);
             if (!options)
                 loadOptions();
-            if (options.chat.log)
-                write(data.line);
+            if ((options.logWhat & Log.Html) === Log.Html) {
+                //TODO build html from formats
+                //writeHtml("");
+            }
+            if ((options.logWhat & Log.Text) === Log.Text || options.logWhat === Log.None)
+                writeText(data.line + "\n");
+            if ((options.logWhat & Log.Raw) === Log.Raw)
+                writeRaw(data.raw);
         });
 
         ipcRenderer.on('chat-done', (event, data) => {
@@ -96,26 +117,44 @@
             buildFilename();
         });
 
-        function write(data) {
+        function writeText(data) {
+            if (!options.chat.log) return;
             writeHeader();
-            fs.appendFile(currentFile, data, (err) => {
-                if (err) throw err;
+            fs.appendFile(currentFile + ".txt", data, (err) => {
+                error(err);
+            });
+        }
+
+        function writeHtml(data) {
+            if (!options.chat.log) return;
+            writeHeader();
+            fs.appendFile(currentFile + ".htm", data, (err) => {
+                error(err);
+            });
+        }
+
+        function writeRaw(data) {
+            if (!options.chat.log) return;
+            writeHeader();
+            fs.appendFile(currentFile + ".raw.txt", data, (err) => {
+                error(err);
             });
         }
 
         function writeHeader() {
             buildFilename();
-            if (fs.existsSync(currentFile)) return;
-            fs.appendFile(currentFile, "<head>\n<style>\nbody\n{\n	font-family: \'Courier New\', Courier, monospace;\n	text-align: left;\n	font-size: 1em;\n	white-space: pre;\n	background-color: black;	\n}\n/* --- Start CSS for ansi display --- */\n@-webkit-keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n@keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n.ansi-blink { \n	text-decoration:blink;\n	animation-name: blinker;\n	animation-iteration-count: infinite; \n	animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	animation-duration: 1s; \n	-webkit-animation-name: blinker;\n	-webkit-animation-iteration-count: infinite; \n	-webkit-animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	-webkit-animation-duration: 1s; \n}\n\n.ansi\n{\n	padding: 0px;\n	margin:0px;\n	\n}\n\n.line \n{\n	word-wrap:break-word;\n	word-break:break-all;\n	width: 100%;\n	display: block;\n	padding-bottom:1px;\n	clear:both;\n	line-height: normal;\n}	\n\n.line hr{ border: 0px; }\n/* --- End CSS for ansi display --- */\n\n.line a, .line a:link \n{\n	color: inherit;\n	font-weight: inherit;\n	text-decoration: underline;\n}\n\n.URLLink, .URLLink:link\n{\n	text-decoration: underline;\n	cursor: pointer;\n}\n</style>\n", (err) => {
-                if (err) throw err;
-            });
+            if (!fs.existsSync(currentFile + ".htm") && (options.logWhat & Log.Html) === Log.Html) {
+                fs.appendFile(currentFile + ".htm", "<style>\nbody\n{\n	font-family: \'Courier New\', Courier, monospace;\n	text-align: left;\n	font-size: 1em;\n	white-space: pre;\n	background-color: black;	\n}\n/* --- Start CSS for ansi display --- */\n@-webkit-keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n@keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n.ansi-blink { \n	text-decoration:blink;\n	animation-name: blinker;\n	animation-iteration-count: infinite; \n	animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	animation-duration: 1s; \n	-webkit-animation-name: blinker;\n	-webkit-animation-iteration-count: infinite; \n	-webkit-animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	-webkit-animation-duration: 1s; \n}\n\n.ansi\n{\n	padding: 0px;\n	margin:0px;\n	\n}\n\n.line \n{\n	word-wrap:break-word;\n	word-break:break-all;\n	width: 100%;\n	display: block;\n	padding-bottom:1px;\n	clear:both;\n	line-height: normal;\n}	\n\n.line hr{ border: 0px; }\n/* --- End CSS for ansi display --- */\n\n.line a, .line a:link \n{\n	color: inherit;\n	font-weight: inherit;\n	text-decoration: underline;\n}\n\n.URLLink, .URLLink:link\n{\n	text-decoration: underline;\n	cursor: pointer;\n}\n</style>\n", (err) => {
+                    error(err);
+                });
+            }
         }
 
         function buildFilename() {
             currentFile = timeStamp.toString();
             if (_name && _name.length > 0)
                 currentFile += "." + _name;
-            currentFile = path.join(_path, currentFile) + ".chat.htm";
+            currentFile = path.join(_path, currentFile) + ".chat";
             if (options.enableDebug)
                 console.log('Log file: "' + currentFile + '"');
         }
@@ -140,8 +179,17 @@
             if (!timeStamp)
                 timeStamp = new Date().getTime();
             buildFilename();
-            if (options.logPrepend)
-                write($("#display").html());
+            if (options.logPrepend) {
+                if ((options.logWhat & Log.Html) === Log.Html) {
+                    //TODO build html from formats
+                    //writeHtml("");
+                }
+                if ((options.logWhat & Log.Text) === Log.Text || options.logWhat === Log.None)
+                    writeText(display.text);
+                if ((options.logWhat & Log.Raw) === Log.Raw)
+                    writeRaw(display.raw);
+            }
+
         }
 
         function stop() {

@@ -91,6 +91,7 @@ export class Display extends EventEmitter {
 
 
     public lines: string[] = [];
+    public rawLines: string[] = [];
     private lineFormats = [];
     public _maxLines: number = 5000;
     private _charHeight: number;
@@ -727,6 +728,7 @@ export class Display extends EventEmitter {
     public clear() {
         this._parser.Clear();
         this.lines = [];
+        this.rawLines = [];
         this.lineFormats = [];
         this._expire = {};
         this._expire2 = [];
@@ -868,6 +870,7 @@ export class Display extends EventEmitter {
             this.lines.push("");
         else
             this.lines.push(data.line);
+        this.rawLines.push(data.raw);
         this.lineFormats.push(data.formats);
         if (data.formats[0].hr) {
             t = this.WindowWidth;
@@ -899,6 +902,7 @@ export class Display extends EventEmitter {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line]);
         this.lines.splice(line, 1);
+        this.rawLines.splice(line, 1);
         this.lineFormats.splice(line, 1);
         this._backgroundLines.splice(line, 1);
         this._viewLines.splice(line, 1);
@@ -975,12 +979,17 @@ export class Display extends EventEmitter {
         return this.lines.join('\n');
     }
 
+    get raw(): string {
+        return this.rawLines.join('');
+    }
+
     public trimLines() {
         if(this._maxLines == -1)
             return;
         if (this.lines.length > this._maxLines) {
             var amt = this.lines.length - this._maxLines
             this.lines.splice(0, amt);
+            this.rawLines.splice(0, amt);
             this.lineFormats.splice(0, amt);
             this._viewLines.splice(0, amt);
             this._backgroundLines.splice(0, amt);
