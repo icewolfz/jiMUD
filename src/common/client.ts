@@ -538,7 +538,7 @@ export class Client extends EventEmitter {
             this.echo("Error: " + err.error + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
         if (this.options.logErrors) {
             fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), new Date().toLocaleString() + "\n", { flag: 'a' });
-            fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), err, { flag: 'a' });
+            fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), err + "\n", { flag: 'a' });
         }
 
         if (this.options.autoConnect && !this.telnet.connected && !this._autoError) {

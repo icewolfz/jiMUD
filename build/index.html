@@ -322,15 +322,56 @@
       });
       $(window).focus(function () {
         active = true;
-        if (client.connected)
+        if (client && client.connected)
           ipcRenderer.send('set-overlay', 1);
-        else if (!client.connecting)
+        else if (client && !client.connecting)
           ipcRenderer.send('set-overlay', 0);
       });
 
       $(window).resize(function () {
         client.UpdateWindow();
       });
+
+      _logger = new Worker("./js/logging.js");
+      _logger.onmessage = (e) => {
+        switch (e.data.event) {
+          case 'started':
+            $('#log').addClass('on');
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+            break;
+          case 'stopped':
+            $('#log').removeClass('on');
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+            break;
+          case 'logging':
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+            break;
+          case 'error':
+            client.error(e.data.args);
+            break;
+          case 'debug':
+            if (!client)
+              console.log(e.data.args);
+            if (client.options.enableDebug)
+              client.debug(e.data.args);
+            break;
+          case 'toggled':
+            if (client) {
+              client.options.logEnabled = e.data.args;
+              client.saveOptions();
+            }
+            break;
+          case 'start':
+            _logger.postMessage({ action: 'start', args: { lines: client.display.lines||[], raw: client.display.rawLines, formats: client.display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt } });
+            break;
+        }
+      };
+      _logger.onerror = (e) => {
+        if (!client)
+          console.log(e);
+        else
+          client.error(e);
+      };
 
       client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
       if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
@@ -543,6 +584,19 @@
         updateInterface();
         buildCaptures();
         client.port = client.options.dev ? 1035 : 1030;
+        if (_logger)
+          _logger.postMessage({
+            action: 'options', args: {
+              path: parseTemplate(client.options.logPath),
+              offline: client.options.logOffline,
+              gagged: client.options.logGagged,
+              enabled: client.options.logEnabled,
+              unique: client.options.logUniqueOnConnect,
+              prepend: client.options.logPrepend,
+              what: client.options.logWhat,
+              debug: client.options.enableDebug
+            }
+          });
       });
       client.on('scroll-lock', (lock) => {
         ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: lock });
@@ -580,11 +634,19 @@
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
         ipcRenderer.send('set-overlay', 0);
         ipcRenderer.send('closed');
+        _logger.postMessage({ action: 'connected', args: client.connected });
+        _logger.postMessage({ action: 'stop' });
       });
 
       client.on('connected', () => {
         ipcRenderer.send('connected');
+        _logger.postMessage({ action: 'connected', args: client.connected });
+        _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt  } });
       });
+
+      client.on('add-line-done', (data) => {
+        _logger.postMessage({ action: 'add-line', args: data });
+      })
 
       client.on('received-data', (data) => {
         if (!active && client.connected)
@@ -660,22 +722,12 @@
       _backup.on('finish-load', (data) => {
 
       });
-      /*
-            _logger = new Logger(client);
-            if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
-              _logger.name = remote.getGlobal('character');
-              $("#character-name").text(remote.getGlobal('character'));
-            }
-            _logger.on('started', () => {
-              $('#log').addClass('on');
-              ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-            });
-            _logger.on('stopped', () => {
-              $('#log').removeClass('on');
-              ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-            });
-      
-      */
+
+      if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
+        _logger.postMessage({ action: 'name', args: remote.getGlobal('character') });
+        $("#character-name").text(remote.getGlobal('character'));
+      }
+
       _status = new Status(client);
       _status.on('display-changed', () => {
         if (_status.ac) {
@@ -697,13 +749,24 @@
       _status.on('set-title', (title) => {
         if (client.options.autoCreateCharacter)
           ipcRenderer.send('change-char', title);
-        //_logger.name = title;
+        _logger.postMessage({ action: 'name', args: title });
         ipcRenderer.send('set-title', title);
       });
       updateMenu();
       updateInterface();
       buildCaptures();
-
+      _logger.postMessage({
+        action: 'options', args: {
+          path: parseTemplate(client.options.logPath),
+          offline: client.options.logOffline,
+          gagged: client.options.logGagged,
+          enabled: client.options.logEnabled,
+          unique: client.options.logUniqueOnConnect,
+          prepend: client.options.logPrepend,
+          what: client.options.logWhat,
+          debug: client.options.enableDebug
+        }
+      });
       window.onbeforeunload = function () {
         if (client.options.askonclose && client.connected) {
           var choice = dialog.showMessageBox(
@@ -1113,8 +1176,6 @@
       ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: client.options.scrollLocked });
       ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: !client.connected });
       ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: client.connected });
-      //ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'connectbutton'], checked: client.options.buttons.connect });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'preferencesbutton'], checked: client.options.buttons.preferences });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'logbutton'], checked: client.options.buttons.log });
@@ -1122,7 +1183,7 @@
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'lockbutton'], checked: client.options.buttons.lock });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mapbutton'], checked: client.options.buttons.map });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
-
+      _logger.postMessage({ action: 'logging' });
     }
 
     /**
@@ -1176,14 +1237,14 @@
 
     ipcRenderer.on('load-char', (event, char) => {
       if (!client.connected) {
-        //_logger.name = char;
+        _logger.postMessage({ action: 'name', args: char });
         $("#character-name").text(char);
       }
     });
 
     ipcRenderer.on('load-default', (event, char) => {
       if (!client.connected) {
-        //_logger.name = "";
+        _logger.postMessage({ action: 'name', args: "" });
         $("#character-name").text("&nbsp;");
       }
     });
@@ -1233,12 +1294,37 @@
     ipcRenderer.on('reload-profiles', (event) => {
       client.loadProfiles();
       client.loadOptions();
+      _logger.postMessage({
+        action: 'options', args: {
+          path: parseTemplate(client.options.logPath),
+          offline: client.options.logOffline,
+          gagged: client.options.logGagged,
+          enabled: client.options.logEnabled,
+          unique: client.options.logUniqueOnConnect,
+          prepend: client.options.logPrepend,
+          what: client.options.logWhat,
+          debug: client.options.enableDebug
+        }
+      });
       buildButtons();
       updateMenu();
     });
 
     ipcRenderer.on('reload-options', (event) => {
       client.loadOptions()
+      _logger.postMessage({
+        action: 'options', args: {
+          path: parseTemplate(client.options.logPath),
+          offline: client.options.logOffline,
+          gagged: client.options.logGagged,
+          enabled: client.options.logEnabled,
+          unique: client.options.logUniqueOnConnect,
+          prepend: client.options.logPrepend,
+          what: client.options.logWhat,
+          debug: client.options.enableDebug
+        }
+      });
+      buildButtons();
       updateMenu();
     });
 
@@ -1258,7 +1344,7 @@
     $(document).ready(init);
 
     function toggleLogging() {
-      //_logger.toggle();
+      _logger.postMessage({ action: 'toggle' });
     }
   </script>
 </head>

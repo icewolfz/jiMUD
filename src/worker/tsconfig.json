@@ -2,8 +2,8 @@
     "compileOnSave": true,
     "compilerOptions": {
         "target": "es6",
-        "module": "commonjs",
-        "moduleResolution": "node",
+        "module": "none",
+        "moduleResolution": "classic",
         "sourceMap": false,
         "noImplicitAny": false,
         "allowJs": true,

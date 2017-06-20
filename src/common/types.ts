@@ -15,8 +15,6 @@ export interface OverlayRange {
 
 export interface LogOptions {
     path?: string;
-    timeStamp?: number;
-    logging?: boolean;
     offline?: boolean;
     gagged?: boolean;
     enabled?: boolean;
@@ -24,6 +22,7 @@ export interface LogOptions {
     prepend?: boolean;
     name?: string;
     what?: Log;
+    debug?: boolean;
 }
 
 export interface WindowState {

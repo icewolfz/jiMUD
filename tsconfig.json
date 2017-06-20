@@ -7,7 +7,7 @@
         "sourceMap": false,
         "noImplicitAny": false,
         "allowJs": true,
-        "outDir": "./out/common",
+        "outDir": "./out",
         "rootDirs": [
             "./src/common",
             "./src/workers"
