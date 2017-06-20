@@ -53,7 +53,7 @@
                         debug: options.enableDebug
                     }
                 });
-                _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment:display.EndOfLine } });
+                _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
             }
         }
 
@@ -109,8 +109,9 @@
                         options.chat.log = e.data.args;
                         ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
                         break;
+                    case 'startInternal':
                     case 'start':
-                        _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
+                        _logger.postMessage({ action: e.data.event, args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
                         break;
                 }
             };
