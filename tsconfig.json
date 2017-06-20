@@ -7,8 +7,11 @@
         "sourceMap": false,
         "noImplicitAny": false,
         "allowJs": true,
-        "outDir": "./out",
-        "rootDir": "./src/ts",
+        "outDir": "./out/common",
+        "rootDirs": [
+            "./src/common",
+            "./src/workers"
+        ],
         "newLine": "LF",
         "checkJs": true
     },

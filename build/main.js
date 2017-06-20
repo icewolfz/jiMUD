@@ -796,7 +796,10 @@ function createWindow() {
     height: s.height,
     backgroundColor: '#000',
     show: false,
-    icon: path.join(__dirname, '../assets/icons/png/64x64.png')
+    icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
+    webPreferences: {
+      nodeIntegrationInWorker: true
+    }
   })
   if (s.fullscreen)
     win.setFullScreen(s.fullscreen);

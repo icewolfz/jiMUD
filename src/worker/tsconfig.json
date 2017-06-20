@@ -1,0 +1,35 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": false,
+        "noImplicitAny": false,
+        "allowJs": true,
+        "outDir": "../../out",
+        "rootDirs": [
+            "../common",
+            "../worker"
+        ],
+        "newLine": "LF",
+        "checkJs": true,
+        "lib": [
+            "webworker",
+            "es6",
+            "scripthost"
+        ],
+        "types": [
+            "node"
+        ]
+    },
+    "exclude": [
+        "../common/**/*.ts",
+        "@types/jquery/index.d.ts",
+        "node_modules/**/*",
+        "jquery/**/*.ts"
+    ],
+    "include": [
+        "../worker/**/*.ts"
+    ]
+}
