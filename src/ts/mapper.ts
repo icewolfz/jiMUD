@@ -1,7 +1,8 @@
 //cSpell:ignore pathfinding, vscroll, hscroll, AUTOINCREMENT, Arial, isdoor, isclosed, prevroom, islocked, cmds
 //cSpell:ignore watersource, dirtroad, sanddesert, icesheet, highmountain, pavedroad, rockdesert
 import EventEmitter = require('events');
-import { parseTemplate, Size, clone } from "./library";
+import { Size } from "./types";
+import { parseTemplate, clone } from "./library";
 const fs = require("fs");
 const path = require("path");
 const sqlite3 = require("sqlite3");

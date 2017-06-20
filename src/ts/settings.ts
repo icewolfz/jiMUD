@@ -1,41 +1,8 @@
 //cSpell:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //cSpell:ignore emoteto, emotetos
+import { NewLineType, Log, BackupSelection } from "./types"
 const path = require('path');
 const fs = require('fs');
-
-export interface WindowState {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	fullscreen: boolean;
-	maximized: boolean;
-	devTools: boolean;
-}
-
-export enum BackupSelection {
-	None = 0,
-	Map = 2,
-	Profiles = 4,
-	Settings = 8,
-	All = Map | Profiles | Settings
-}
-
-
-export enum NewLineType {
-	None = 0,
-	Ctrl = 1,
-	Shift = 2,
-	CtrlOrShift = 4,
-	CtrlAndShift = 8
-}
-
-export enum Log {
-	None = 0,
-	Html = 1,
-	Text = 2,
-	Raw = 4
-}
 
 export class Mapper {
 	public enabled: boolean = true;

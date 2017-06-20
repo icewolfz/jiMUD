@@ -8,7 +8,8 @@ import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority } from "./libra
 import { Client } from "./client";
 import { Tests } from "./test";
 import { Alias, Trigger, Macro, Profile } from "./profile";
-import { SettingList, NewLineType } from "./settings";
+import { NewLineType } from "./types";
+import { SettingList } from "./settings";
 
 const buzz = require('buzz');
 

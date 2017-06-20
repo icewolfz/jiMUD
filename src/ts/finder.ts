@@ -1,14 +1,7 @@
 //cSpell:words keycode
 import EventEmitter = require('events');
-import { Display, OverlayRange } from './display.js';
-
-export enum validTextRange {
-    not = 0,
-    before = 1,
-    exact = 2,
-    after = 3,
-    within = 4
-}
+import { Display } from './display.js';
+import { OverlayRange } from './types.js';
 
 export class Finder extends EventEmitter {
     private _display: Display;

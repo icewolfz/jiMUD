@@ -2,6 +2,7 @@
 import EventEmitter = require('events');
 import net = require("net");
 import util = require("util");
+
 const ZLIB: any = require("./../../lib/inflate_stream.min.js").Zlib;
 
 const Socket = net.Socket;

@@ -7,29 +7,17 @@
  * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support
  * @todo Add split screen support
  */
-import EventEmitter = require('events');
-import { Parser, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from "./parser";
-import { AnsiColorCode } from "./ansi";
-import { clone, Size, stripHTML, getScrollBarSize, htmlEncode } from "./library";
-import { Finder } from './finder.js';
 
-export interface DisplayOptions extends ParserOptions {
-    enableSplit?: boolean;
-    enableSplitLive?: boolean;
-}
+import { Size, Point, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from './types';
+import EventEmitter = require('events');
+import { Parser } from "./parser";
+import { AnsiColorCode } from "./ansi";
+import { clone, stripHTML, getScrollBarSize, htmlEncode } from "./library";
+import { Finder } from './finder.js';
+import { DisplayOptions, OverlayRange } from './types.js'
 
 interface Overlays {
     selection: any[];
-}
-
-interface Point {
-    x: number,
-    y: number
-}
-
-export interface OverlayRange {
-    start: Point;
-    end: Point;
 }
 
 interface Selection extends OverlayRange {
@@ -43,9 +31,9 @@ interface Range {
 }
 
 interface ScrollState {
-    dragging: boolean,
-    dragPosition: number,
-    position: number
+    dragging: boolean;
+    dragPosition: number;
+    position: number;
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
@@ -858,7 +846,7 @@ export class Display extends EventEmitter {
         this._el.addEventListener('click', callback);
     }
 
-    addParserLine(data: ParserLine, noUpdate?:boolean) {
+    addParserLine(data: ParserLine, noUpdate?: boolean) {
         var t;
         this.emit('add-line', data);
         if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined")
@@ -883,8 +871,7 @@ export class Display extends EventEmitter {
         this._viewLines.push(t[0]);
         this._backgroundLines.push(t[1]);
 
-        if(!noUpdate)
-        {
+        if (!noUpdate) {
             //disable animation
             this._el.classList.remove('animate');
             let bar = this._HScroll.visible;
@@ -894,7 +881,7 @@ export class Display extends EventEmitter {
                 this.updateWindow();
             //TODO split screen support
             //re-enable animation so they are all synced
-            this._el.classList.add('animate');            
+            this._el.classList.add('animate');
         }
     }
 
@@ -984,7 +971,7 @@ export class Display extends EventEmitter {
     }
 
     public trimLines() {
-        if(this._maxLines == -1)
+        if (this._maxLines == -1)
             return;
         if (this.lines.length > this._maxLines) {
             var amt = this.lines.length - this._maxLines
@@ -2027,7 +2014,7 @@ export class ScrollBar extends EventEmitter {
         this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
             this.maxPosition = 0;
-        p = Math.ceil(p * (this.maxPosition/m));
+        p = Math.ceil(p * (this.maxPosition / m));
         this.update();
         this.updatePosition(p || 0);
     }

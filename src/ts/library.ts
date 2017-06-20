@@ -522,16 +522,6 @@ String.prototype.paddingRight = function (this: string, paddingValue: (string | 
 	return this + paddingValue.slice(-this.length);
 }
 
-export class Size {
-	public width: number = 0;
-	public height: number = 0;
-
-	constructor(width: number, height: number) {
-		this.width = width;
-		this.height = height;
-	}
-}
-
 export function getTimeSpan(i: number): string {
 	var al;
 	var tmp = [];

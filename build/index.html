@@ -30,7 +30,7 @@
 
     const Client = require('./js/client.js').Client;
     const Status = require('./js/status.js').Status;
-    const Logger = require('./js/logging.js').Logger;
+    //const Logger = require('./js/logging.js').Logger;
     const Backup = require('./js/backup.js').Backup;
     const { Settings } = require('./js/settings');
     const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
@@ -44,7 +44,8 @@
     loadTheme(set.theme);
     delete set;
 
-    var client, _status, _logger, _backup;
+    var client, _status, _backup;
+    var _logger;
     var OoMUD;
     var active = false;
     var capture = 0, captureReview = 0;
@@ -590,7 +591,7 @@
           ipcRenderer.send('set-overlay', 2);
       });
       client.on('parse-done', () => {
-        client.display.find(false);        
+        client.display.find(false);
         ipcRenderer.send('chat-done');
       });
 
@@ -659,21 +660,22 @@
       _backup.on('finish-load', (data) => {
 
       });
-      _logger = new Logger(client);
-
-      if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
-        _logger.name = remote.getGlobal('character');
-        $("#character-name").text(remote.getGlobal('character'));
-      }
-      _logger.on('started', () => {
-        $('#log').addClass('on');
-        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-      });
-      _logger.on('stopped', () => {
-        $('#log').removeClass('on');
-        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-      });
-
+      /*
+            _logger = new Logger(client);
+            if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
+              _logger.name = remote.getGlobal('character');
+              $("#character-name").text(remote.getGlobal('character'));
+            }
+            _logger.on('started', () => {
+              $('#log').addClass('on');
+              ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
+            });
+            _logger.on('stopped', () => {
+              $('#log').removeClass('on');
+              ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
+            });
+      
+      */
       _status = new Status(client);
       _status.on('display-changed', () => {
         if (_status.ac) {
@@ -695,7 +697,7 @@
       _status.on('set-title', (title) => {
         if (client.options.autoCreateCharacter)
           ipcRenderer.send('change-char', title);
-        _logger.name = title;
+        //_logger.name = title;
         ipcRenderer.send('set-title', title);
       });
       updateMenu();
@@ -1111,7 +1113,7 @@
       ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: client.options.scrollLocked });
       ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: !client.connected });
       ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: client.connected });
-      ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
+      //ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
 
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'connectbutton'], checked: client.options.buttons.connect });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'preferencesbutton'], checked: client.options.buttons.preferences });
@@ -1174,14 +1176,14 @@
 
     ipcRenderer.on('load-char', (event, char) => {
       if (!client.connected) {
-        _logger.name = char;
+        //_logger.name = char;
         $("#character-name").text(char);
       }
     });
 
     ipcRenderer.on('load-default', (event, char) => {
       if (!client.connected) {
-        _logger.name = "";
+        //_logger.name = "";
         $("#character-name").text("&nbsp;");
       }
     });
@@ -1254,6 +1256,10 @@
     }
 
     $(document).ready(init);
+
+    function toggleLogging() {
+      //_logger.toggle();
+    }
   </script>
 </head>
 
@@ -1294,7 +1300,7 @@
     <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
         <i class="fa fa-gears"></i>
       </a>
-    <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="_logger.toggle();">
+    <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="toggleLogging();">
         <i class="fa fa-file-text-o"></i>
       </a>
     <a href="javascript:void(0)" title="Clear display" id="clear" class="button" onclick="client.clear()">

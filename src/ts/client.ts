@@ -3,9 +3,10 @@
 
 import EventEmitter = require('events');
 import { Telnet, TelnetOption } from "./telnet";
-import { Parser, ParserLine } from "./parser";
+import { ParserLine, Size } from "./types";
+import { Parser } from "./parser";
 import { AnsiColorCode } from "./ansi";
-import { stripHTML, Size, parseTemplate, getScrollBarHeight } from "./library";
+import { stripHTML, parseTemplate, getScrollBarHeight } from "./library";
 import { Settings } from "./settings";
 import { input } from "./input";
 import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context } from "./profile";

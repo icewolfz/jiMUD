@@ -18,7 +18,8 @@
         "./src/**/*.js",
         "./lib/**/*.js",
         "./_bak/**/*.js",
-        "./out/**/*.js"
+        "./out/**/*.js",
+        "./src/worker/**/*.*"
     ],
     "include": [
         "./src/**/*.ts"

@@ -99,7 +99,10 @@ var menuTemp = [
         label: '&Log',
         id: "log",
         type: 'checkbox',
-        checked: false
+        checked: false,
+        click: () => {
+          win.webContents.executeJavaScript('toggleLogging()');
+        }
       },
       {
         label: '&View logs...'

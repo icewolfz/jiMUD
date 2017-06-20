@@ -2,97 +2,9 @@
 /// <reference path="global.d.ts" />
 import EventEmitter = require('events');
 import RGBColor = require("rgbcolor");
-import { clone, stripQuotes, CharAllowedInURL, Size } from "./library";
+import { ParserLine, FormatType, ParserOptions, FontStyle, LineFormat, LinkFormat, ImageFormat, Size } from "./types";
+import { clone, stripQuotes, CharAllowedInURL } from "./library";
 const buzz = require('buzz');
-
-export enum FormatType {
-  Normal = 0,
-  Link = 1,
-  LinkEnd = 2,
-  MXPLink = 3,
-  MXPLinkEnd = 4,
-  Image = 5,
-  WordBreak = 6,
-  MXPSend = 7,
-  MXPSendEnd = 8,
-  MXPExpired = 9,
-  MXPSkip = 10
-}
-
-/**
-   * Enum flag for Font styles.
-   * @readonly
-   * @enum {number}
-   * @typedef {number} FontStyle
-   */
-export enum FontStyle {
-  None = 0,
-  Bold = 1,
-  Faint = 2,
-  Italic = 4,
-  Underline = 8,
-  Slow = 16, /** @desc Slow blink text combined with slow for final blink  */
-  Rapid = 32,/** @desc Rapid blink text combined with slow for final blink */
-  Inverse = 64,/** @desc reverse back and fore color */
-  Hidden = 128, /** @desc hide text */
-  Strikeout = 256,
-  DoubleUnderline = 512,
-  Overline = 1024
-}
-
-export interface LineFormat {
-  formatType: FormatType;
-  offset: number;
-  color: string | number;
-  background: string | number;
-  size: string;
-  font: string;
-  style: FontStyle;
-  hr?: boolean;
-}
-
-export interface ImageFormat {
-  formatType: FormatType;
-  name: string;
-  url: string;
-  type: string;
-  height: string;
-  width: string;
-  vspace: string;
-  align: string;
-  ismap: boolean;
-}
-
-export interface LinkFormat {
-  formatType: FormatType;
-  href?: string;
-  hint?: string;
-  expire?: string;
-  prompt?: boolean;
-  tt?: string | number;
-}
-export interface ParserLine {
-  raw: string;
-  line: string;
-  fragment: boolean;
-  gagged: boolean;
-  formats: LineFormat[];
-}
-
-export interface ParserOptions {
-  DefaultImageURL?: string;
-  enableMXP?: boolean;
-  enableDebug?: boolean;
-  enableMSP?: boolean;
-  enableURLDetection?: boolean;
-  window?: Size;
-  enableFlashing?: boolean;
-  emulateTerminal?: boolean;
-  bell?: string;
-  enableBell?: boolean;
-  display?;
-  enableLinks?: boolean;
-}
 
 interface MXPBlock {
   format: LineFormat | LinkFormat | ImageFormat;
@@ -953,7 +865,7 @@ export class Parser extends EventEmitter {
     this._ColorTable[code] = color.toRGB();
   };
 
-  private AddLine(line: string, raw:string, fragment: boolean, skip: boolean, formats: LineFormat[]) {
+  private AddLine(line: string, raw: string, fragment: boolean, skip: boolean, formats: LineFormat[]) {
     var data: ParserLine = { raw: raw, line: line, fragment: fragment, gagged: skip, formats: formats };
     this.emit('add-line', data)
     this.EndOfLine = !fragment;
@@ -2571,8 +2483,8 @@ export class Parser extends EventEmitter {
                   this.AddLine(stringBuilder.join(''), rawBuilder.join(''), false, false, formatBuilder);
                   stringBuilder = [];
                   rawBuilder = [];
-                  formatBuilder = [this.getFormatBlock(lineLength)];                  
-                  for (var j = 0; j < iTmp; j++) {                  
+                  formatBuilder = [this.getFormatBlock(lineLength)];
+                  for (var j = 0; j < iTmp; j++) {
                     this.AddLine("", "\n", false, false, formatBuilder);
                     this.MXPCapture("\n");
                   }

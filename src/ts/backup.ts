@@ -2,7 +2,7 @@
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { parseTemplate } from "./library";
-import { BackupSelection, Log } from "./settings";
+import { BackupSelection, Log } from "./types";
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
 const fs = require("fs");
 const path = require("path");
