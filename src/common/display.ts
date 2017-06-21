@@ -76,8 +76,6 @@ export class Display extends EventEmitter {
     private _lastMouse: MouseEvent;
     private _mouseTimer;
 
-
-
     public lines: string[] = [];
     public rawLines: string[] = [];
     private lineFormats = [];
@@ -157,7 +155,6 @@ export class Display extends EventEmitter {
             this._el = display;
         else
             throw "Display must be an id, element or jquery object";
-
 
         this._elJ = $(this._el);
 
@@ -1822,13 +1819,15 @@ export class ScrollBar extends EventEmitter {
     private _visible = true;
     private _offset = 0;
     private _os = { left: 0, top: 0 };
+    private _padding = [0, 0, 0, 0];
+    private _position: number = 0;
 
     private _lastMouse: MouseEvent;
     public _type: ScrollType = ScrollType.vertical;
 
     public thumb: HTMLElement;
     public track: HTMLElement;
-    public position: number = 0;
+    
     public scrollSize: number = 0;
     public maxPosition: number = 0;
     public state: ScrollState = {
@@ -1836,6 +1835,8 @@ export class ScrollBar extends EventEmitter {
         dragPosition: 0,
         position: 0
     }
+
+    get position():number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3]: this._padding[0]); }
 
     get offset(): number { return this._offset; }
     set offset(value: number) {
@@ -1997,16 +1998,25 @@ export class ScrollBar extends EventEmitter {
     }
 
     resize() {
+        let pc = window.getComputedStyle(this._parent);
+        this._padding = [
+            parseInt(pc.getPropertyValue('padding-top')) || 0,
+            parseInt(pc.getPropertyValue('padding-right')) || 0,
+            parseInt(pc.getPropertyValue('padding-bottom')) || 0,
+            parseInt(pc.getPropertyValue('padding-left')) || 0
+        ]
+
+
         let p = 0;
         let m = this.maxPosition;
         p = (this.position / this.scrollSize) * this.maxPosition;
         p = (p < 0 ? Math.floor(p) : Math.ceil(p));
         if (this._type === ScrollType.horizontal) {
-            this._contentSize = this._content.clientWidth;
+            this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
             this._parentSize = this._parent.clientWidth - this.offset;
         }
         else {
-            this._contentSize = this._content.clientHeight;
+            this._contentSize = this._content.clientHeight + this._padding[0] + this._padding[2];
             this._parentSize = this._parent.clientHeight - this.offset;
         }
         this.scrollSize = this._contentSize - this._parentSize;
@@ -2036,13 +2046,13 @@ export class ScrollBar extends EventEmitter {
         this.thumb.style[this._type === ScrollType.horizontal ? "left" : "top"] = p + "px";
         this.state.dragPosition = p;
         if (this.maxPosition != 0)
-            this.position = Math.ceil((p / this.maxPosition) * this.scrollSize);
+            this._position = Math.ceil((p / this.maxPosition) * this.scrollSize);
         else
-            this.position = 0;
-        if (this.position <= 0)
-            this.position = 0;
-        else if (this.position > this.scrollSize)
-            this.position = this.scrollSize;
+            this._position = 0;
+        if (this._position <= 0)
+            this._position = 0;
+        else if (this._position > this.scrollSize)
+            this._position = this.scrollSize;
         this.update();
         this.emit('scroll', this.position);
     }
