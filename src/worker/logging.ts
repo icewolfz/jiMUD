@@ -67,6 +67,9 @@ interface LogOptions {
     name?: string;
     what?: Log;
     debug?: boolean;
+    postfix?:string;
+    prefix?:string;
+    format?:string;
 }
 
 let options: LogOptions = {
@@ -185,10 +188,17 @@ function fileChanged() {
 }
 
 function buildFilename() {
-    currentFile = timeStamp.toString();
+    if(options.prefix)
+        currentFile = options.prefix + timeStamp.toString();
+    else
+        currentFile = timeStamp.toString();
     if (options.name && options.name.length > 0)
         currentFile += "." + options.name;
     currentFile = path.join(options.path, currentFile);
+    if(options.postfix)
+        currentFile += options.postfix;
+
+
     if (options.debug)
         postMessage({ event: 'debug', args: 'Log file: "' + currentFile + '"' });
 }

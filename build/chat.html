@@ -50,7 +50,8 @@
                         unique: options.logUniqueOnConnect,
                         prepend: options.logPrepend,
                         what: options.logWhat,
-                        debug: options.enableDebug
+                        debug: options.enableDebug,
+                        postfix: '.chat'
                     }
                 });
                 _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
