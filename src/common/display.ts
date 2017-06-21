@@ -647,7 +647,7 @@ export class Display extends EventEmitter {
 
         this._finder.on('moved', () => {
             this.doUpdate(UpdateType.scrollView);
-            this.emit('moved');            
+            this.emit('moved');
         })
 
 
@@ -712,6 +712,9 @@ export class Display extends EventEmitter {
                         this.split.style.display = 'block';
                         this.split.shown = true;
                         this.emit('scroll-lock', true);
+                        this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
+                        this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
+                        this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
                     }
                 }
                 this._view.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
@@ -980,6 +983,7 @@ export class Display extends EventEmitter {
         }
         overlays.push.apply(overlays, this._overlays["selection"].slice(start, end + 1));
         this._overlay.innerHTML = overlays.join('');
+        this.doUpdate(UpdateType.scrollView);
     }
 
     get WindowSize(): Size {
