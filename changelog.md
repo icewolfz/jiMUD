@@ -5,10 +5,11 @@
     - Faster then old system by nearly 200%
     - Fixes find all highlighting performance issues
     - Cleaner text selection effect
-  - Logging
-    - Log raw - Log raw ansi to a separate log file.
-    - Log text - Log text to a separate log file
+  - Logging  
     - Log html - Log html to a separate log file
+    - Log text - Log text to a separate log file
+    - Log raw - Log raw ansi to a separate log file.
+    - Format Timestamp in file name using moment
   - Chat capture find text
 ##### 0.3.3
 - **Fixed:**

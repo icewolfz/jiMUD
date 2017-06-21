@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const moment = require("moment");
 
 enum FormatType {
     Normal = 0,
@@ -81,11 +82,12 @@ let options: LogOptions = {
     prepend: false,
     name: "",
     what: Log.Html,
-    debug: false
+    debug: false,
 }
 
 let connected: boolean = false;
-let timeStamp: number = 0;
+let timeStamp: number;
+let fTimeStamp: string = "";
 let logging: boolean = false;
 let currentFile: string = "";
 
@@ -108,6 +110,11 @@ self.addEventListener('message', (e: MessageEvent) => {
                 }
                 else
                     options[option] = e.data.args[option];
+                if(timeStamp !== 0)
+                {
+                    fTimeStamp = new moment(timeStamp).format(options.format||"YYYYMMDD-HHmmss");
+                    buildFilename();
+                }
                 if (options.offline)
                     postMessage({ event: 'start' });
             }
@@ -162,7 +169,7 @@ self.addEventListener('message', (e: MessageEvent) => {
 
 function fileChanged() {
     if ((options.what & Log.Html) === Log.Html) {
-        var f = path.join(options.path, timeStamp.toString()) + ".htm";
+        var f = path.join(options.path, fTimeStamp) + ".htm";
         buildFilename();
         if (fs.existsSync(f) && f != currentFile + ".htm")
             fs.renameSync(f, currentFile);
@@ -170,7 +177,7 @@ function fileChanged() {
             postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
     }
     if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
-        var f = path.join(options.path, timeStamp.toString()) + ".txt";
+        var f = path.join(options.path, fTimeStamp) + ".txt";
         buildFilename();
         if (fs.existsSync(f) && f != currentFile + ".txt")
             fs.renameSync(f, currentFile);
@@ -178,7 +185,7 @@ function fileChanged() {
             postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
     }
     if ((options.what & Log.Raw) === Log.Raw) {
-        var f = path.join(options.path, timeStamp.toString()) + ".raw.txt";
+        var f = path.join(options.path, fTimeStamp) + ".raw.txt";
         buildFilename();
         if (fs.existsSync(f) && f != currentFile + ".raw.txt")
             fs.renameSync(f, currentFile);
@@ -189,16 +196,14 @@ function fileChanged() {
 
 function buildFilename() {
     if(options.prefix)
-        currentFile = options.prefix + timeStamp.toString();
+        currentFile = options.prefix + fTimeStamp;
     else
-        currentFile = timeStamp.toString();
+        currentFile = fTimeStamp;
     if (options.name && options.name.length > 0)
         currentFile += "." + options.name;
     currentFile = path.join(options.path, currentFile);
     if(options.postfix)
         currentFile += options.postfix;
-
-
     if (options.debug)
         postMessage({ event: 'debug', args: 'Log file: "' + currentFile + '"' });
 }
@@ -243,7 +248,10 @@ function start(lines: string[], raw: string[], formats: any[], fragment: boolean
     }
     logging = true;
     if (options.unique || timeStamp === 0)
+    {
         timeStamp = new Date().getTime();
+        fTimeStamp = new moment(timeStamp).format(options.format||"YYYYMMDD-HHmmss");
+    }
     buildFilename();
     if (options.prepend) {
         if ((options.what & Log.Html) === Log.Html)
@@ -388,10 +396,12 @@ function createLine(text: string, formats: any[]) {
 }
 
 function htmlEncode(text) {
+    if(!text || text.length === 0)
+        return;
     return text
         .replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;')
         .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');;
+        .replace(/>/g, '&gt;');
 }

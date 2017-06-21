@@ -157,6 +157,7 @@
       $('#logOffline').prop('checked', _settings.logOffline);
       $('#logUniqueOnConnect').prop('checked', _settings.logUniqueOnConnect);
       $('#logPath').val(_settings.logPath);
+      $('#logTimeFormat').val(_settings.logTimeFormat);
 
       $("#editorPersistent").prop('checked', _settings.editorPersistent);
 
@@ -1121,7 +1122,15 @@
               <input type="checkbox" id="logWhat-raw"> Raw
             </label>
       </div>
-      <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">If all are disabled will default to text</span>
+      <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">If all are disabled will default to text</span>
+    </div>
+
+    <div class="col-sm-12 form-group">
+      <label class="control-label" style="width:100%">          
+          Date/time format
+          <input type="text" id="logTimeFormat" style="width:100%" class="form-control"/>
+          </label>
+          <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
     </div>
 
     <div class="col-sm-12 form-group">

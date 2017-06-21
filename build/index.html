@@ -363,7 +363,7 @@
             break;
           case 'startInternal':
           case 'start':
-            _logger.postMessage({ action: e.data.event, args: { lines: client.display.lines||[], raw: client.display.rawLines, formats: client.display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt } });
+            _logger.postMessage({ action: e.data.event, args: { lines: client.display.lines || [], raw: client.display.rawLines, formats: client.display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt } });
             break;
         }
       };
@@ -595,7 +595,8 @@
               unique: client.options.logUniqueOnConnect,
               prepend: client.options.logPrepend,
               what: client.options.logWhat,
-              debug: client.options.enableDebug
+              debug: client.options.enableDebug,
+              format: client.options.logTimeFormat
             }
           });
       });
@@ -642,7 +643,7 @@
       client.on('connected', () => {
         ipcRenderer.send('connected');
         _logger.postMessage({ action: 'connected', args: client.connected });
-        _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt  } });
+        _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt } });
       });
 
       client.on('add-line-done', (data) => {
@@ -765,7 +766,8 @@
           unique: client.options.logUniqueOnConnect,
           prepend: client.options.logPrepend,
           what: client.options.logWhat,
-          debug: client.options.enableDebug
+          debug: client.options.enableDebug,
+          format: client.options.logTimeFormat
         }
       });
       window.onbeforeunload = function () {
@@ -1304,7 +1306,8 @@
           unique: client.options.logUniqueOnConnect,
           prepend: client.options.logPrepend,
           what: client.options.logWhat,
-          debug: client.options.enableDebug
+          debug: client.options.enableDebug,
+          format: client.options.logTimeFormat
         }
       });
       buildButtons();
@@ -1322,7 +1325,8 @@
           unique: client.options.logUniqueOnConnect,
           prepend: client.options.logPrepend,
           what: client.options.logWhat,
-          debug: client.options.enableDebug
+          debug: client.options.enableDebug,
+          format: client.options.logTimeFormat
         }
       });
       buildButtons();

@@ -147,6 +147,7 @@ export class Settings {
 	public logOffline: boolean = false;
 	public logPrepend: boolean = false;
 	public logGagged: boolean = false;
+	public logTimeFormat: string = "YYYYMMDD-HHmmss";
 	public notifyMSPPlay: boolean = false;
 	public bufferSize: number = 5000;
 	public commandHistorySize: number = 20;

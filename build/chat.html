@@ -51,7 +51,8 @@
                         prepend: options.logPrepend,
                         what: options.logWhat,
                         debug: options.enableDebug,
-                        postfix: '.chat'
+                        postfix: '.chat',
+                        format: options.logTimeFormat
                     }
                 });
                 _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
