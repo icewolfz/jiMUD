@@ -2,7 +2,7 @@
 ##### 0.4.0
 - **New:**
   - Display control
-    - Faster then old system by nearly 200%
+    - Faster then old system by nearly 50%
     - Fixes find all highlighting performance issues
     - Cleaner text selection effect
   - Logging  
@@ -19,7 +19,7 @@
   - Log error setting default to on
   - Improved trigger performance by changing how some test are done
   - Re-enable TestMapper() to allow testing of mapper
-  - Add enable spellchecking preferance to allow spell checking to be turned off
+  - Add enable spellchecking preference to allow spell checking to be turned off
   - Updated to electron 1.7.3 beta
 - **Fixed:**
   - Fix bell unicode character display
