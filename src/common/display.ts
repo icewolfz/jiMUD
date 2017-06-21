@@ -5,7 +5,7 @@
  * 
  * @arthur Icewolfz
  * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support
- * @todo Add split screen support
+ * @todo when split screen enabled/disabled need to refresh scroll state
  */
 
 import { Size, Point, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from './types';
@@ -1941,10 +1941,20 @@ export class Display extends EventEmitter {
     scrollToCharacter(x: number, y: number) {
         x *= this._charWidth;
         y *= this._charHeight;
-        if (y < this._VScroll.position || y > this._VScroll.position + this._VScroll.scrollSize)
+        if (this.split && this.split.shown) {
+            if (y < this._VScroll.position)
+                this._VScroll.scrollTo(y);
+            else if (y + this._charHeight > this._VScroll.position + this._VScroll.track.clientHeight - this.split.clientHeight)
+                this._VScroll.scrollTo(y - this._VScroll.track.clientHeight + this.split.clientHeight + this._charHeight);
+        }
+        else if (y < this._VScroll.position)
             this._VScroll.scrollTo(y);
-        if (x < this._HScroll.position || x > this._HScroll.position + this._HScroll.scrollSize)
+        else if(y + this._charHeight > this._VScroll.position + this._VScroll.track.clientHeight)
+            this._VScroll.scrollTo(y - this._VScroll.track.clientHeight + this._charHeight);
+        if (x < this._HScroll.position)
             this._HScroll.scrollTo(x);
+        else if(x + this._charWidth > this._HScroll.position + this._HScroll.track.clientWidth)
+            this._HScroll.scrollTo(x- this._HScroll.track.clientWidth + this._charWidth);
     }
 
     private expireLineLinkFormat(formats, idx: number) {
@@ -1989,6 +1999,7 @@ export class ScrollBar extends EventEmitter {
     private _os = { left: 0, top: 0 };
     private _padding = [0, 0, 0, 0];
     private _position: number = 0;
+    private _scrollOffset: number = 0;
 
     private _lastMouse: MouseEvent;
     public _type: ScrollType = ScrollType.vertical;
@@ -2028,6 +2039,14 @@ export class ScrollBar extends EventEmitter {
         if (!this._visible == value) {
             this._visible = value;
             this.track.style.display = value ? 'block' : 'none';
+        }
+    }
+
+    get scrollOffset(): number { return this._scrollOffset; }
+    set scrollOffset(value: number) {
+        if (value != this._scrollOffset) {
+            this._scrollOffset = value;
+            this.resize();
         }
     }
 
@@ -2183,11 +2202,11 @@ export class ScrollBar extends EventEmitter {
         p = (p < 0 ? Math.floor(p) : Math.ceil(p));
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
-            this._parentSize = this._parent.clientWidth - this.offset;
+            this._parentSize = this._parent.clientWidth - this.offset - this._scrollOffset;
         }
         else {
             this._contentSize = this._content.clientHeight + this._padding[0] + this._padding[2];
-            this._parentSize = this._parent.clientHeight - this.offset;
+            this._parentSize = this._parent.clientHeight - this.offset - this._scrollOffset;
         }
         this.scrollSize = this._contentSize - this._parentSize;
         this._percentView = this._contentSize / this._parentSize;
