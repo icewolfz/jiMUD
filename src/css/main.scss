@@ -126,6 +126,7 @@ body {
 
 #display-split-frame {
     height: 20%;
+    min-height: 150px;
     position: absolute;
     bottom: 0;
     left: 0;
@@ -133,6 +134,7 @@ body {
     display: none;
     background-color: black;
     overflow: hidden;
+    z-index: 10;
 }
 
 #display-border {
