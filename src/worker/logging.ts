@@ -293,7 +293,6 @@ function createLine(text: string, formats: any[]) {
     let parts = [];
     let offset = 0;
     let style = [], fCls;
-    let height = this._charHeight;
 
     for (let f = 0, len = formats.length; f < len; f++) {
         let format = formats[f];
@@ -316,10 +315,6 @@ function createLine(text: string, formats: any[]) {
                 style.push("background:", format.background, ";");
             if (format.color)
                 style.push("color:", format.color, ";");
-            if (format.font || format.size) {
-                oSize = this._character.style.fontSize;
-                oFont = this._character.style.fontFamily;
-            }
             if (format.font)
                 style.push("font-family: ", format.font, ";")
             if (format.size)
