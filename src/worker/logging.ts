@@ -155,6 +155,7 @@ self.addEventListener('message', (e: MessageEvent) => {
             break;
         case 'add-line':
             var data: ParserLine = e.data.args;
+            if(data.fragment) return;
             if (!data.gagged || (options.gagged && data.gagged)) {
                 if ((options.what & Log.Html) === Log.Html)
                     writeHtml(createLine(data.line, data.formats));
@@ -253,9 +254,9 @@ function start(lines: string[], raw: string[], formats: any[], fragment: boolean
         fTimeStamp = new moment(timeStamp).format(options.format||"YYYYMMDD-HHmmss");
     }
     buildFilename();
-    if (options.prepend) {
+    if (options.prepend && lines && lines.length > 0) {
         if ((options.what & Log.Html) === Log.Html)
-            writeHtml(createLines(lines, formats))
+            writeHtml(createLines(lines||[], formats||[]))
         if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
             writeText(lines.join('\n') + (fragment || lines.length === 0 ? "" : "\n"));
         if ((options.what & Log.Raw) === Log.Raw)
