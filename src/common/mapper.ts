@@ -2012,14 +2012,29 @@ export class Mapper extends EventEmitter {
                     callback();
                 return;
             }
-            this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
+            this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk', (err) => {
+                if (err) this.emit('error', err);
+            });
             this.createDatabase('Disk');
-            this._db.run('DELETE FROM Disk.Rooms');
-            this._db.run('DELETE FROM Disk.Exits');
-            this._db.run('INSERT OR REPLACE INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms');
-            this._db.run('INSERT OR REPLACE INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits');
-            this._db.run('VACUUM Disk');
-            this._db.run('DETACH DATABASE Disk', callback);
+            this._db.run('DELETE FROM Disk.Rooms', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('DELETE FROM Disk.Exits'), (err) => {
+                if (err) this.emit('error', err);
+            };
+            this._db.run('INSERT OR REPLACE INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('INSERT OR REPLACE INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('VACUUM Disk', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('DETACH DATABASE Disk', (err) => {
+                if (err) this.emit('error', err);
+                if (callback) callback();
+            });
             this._changed = false;
         }
         else if (callback)

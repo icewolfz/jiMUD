@@ -514,31 +514,36 @@ export class Client extends EventEmitter {
         this.display.append(txt, remote, force);
     }
 
-    error(err) {
+     error(err) {
+        let msg = "";
         if (err === null || typeof err == "undefined")
             return;
         err = { error: err, handled: false };
         //this.emit('error', err);
         if (err.handled) return;
+
         if (err.error === null || typeof err.error == "undefined")
-            this.echo("Error: Unknown.", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+            msg = "Unknown";
         else if (typeof err.error == "string" && err.error.length === 0)
-            this.echo("Error: Unknown.", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+            msg = "Unknown";
         else if (err.error instanceof ReferenceError) {
             if (err.error.lineNumber)
-                this.echo("Error: File: " + err.error.fileName + ", Line: " + err.error.lineNumber + ", " + err.error.message + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+                msg = " File: " + err.error.fileName + ", Line: " + err.error.lineNumber + ", " + err.error.message;
             else
-                this.echo("Error: " + err.error + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+                msg = err.error;
         }
         else if (err.error instanceof Error)
-            this.echo("Error: " + err.error.name + " - " + err.error.message + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+            msg = err.error.name + " - " + err.error.message;
         else if (err.error.message)
-            this.echo("Error: " + err.error.message + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+            msg = err.error.message;
         else
-            this.echo("Error: " + err.error + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+            msg = err.error;
+
+        this.echo("Error: " + msg + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+
         if (this.options.logErrors) {
             fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), new Date().toLocaleString() + "\n", { flag: 'a' });
-            fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), err + "\n", { flag: 'a' });
+            fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), msg + "\n", { flag: 'a' });
         }
 
         if (this.options.autoConnect && !this.telnet.connected && !this._autoError) {
