@@ -2,6 +2,9 @@
 ##### 0.3.3
 - **Fixed:**
   - Fixed options undefined errors
+  - Log mapper errors to log file when log errors enabled
+  - Fixed issues with error log not correctly logging the error message
+  - Attempted fixes to mapper losing data
 ##### 0.3.2 2017-06-16
 - **New:**
   - Add enable spellchecking preference to allow spell checking to be turned off

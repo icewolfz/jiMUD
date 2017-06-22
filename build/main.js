@@ -2125,6 +2125,6 @@ function logError(err, skipClient) {
     win.webContents.send('error', err);
   else if (set && set.logErrors) {
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + "\n", { flag: 'a' });
-    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), err, { flag: 'a' });
+    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), err.toLocaleString() + "\n", { flag: 'a' });
   }
 }
