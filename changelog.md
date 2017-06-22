@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.3.3
+##### 0.3.3 2017-06-21
 - **Fixed:**
   - Fixed options undefined errors
   - Log mapper errors to log file when log errors enabled
