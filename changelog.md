@@ -11,20 +11,24 @@
     - Log raw - Log raw ansi to a separate log file.
     - Format Timestamp in file name using moment
   - Chat capture find text
-##### 0.3.3
+##### 0.3.3 2017-06-21
 - **Fixed:**
-  - Fixed undefined options error
+  - Fixed options undefined errors
+  - Log mapper errors to log file when log errors enabled
+  - Fixed issues with error log not correctly logging the error message
+  - Attempted fixes to mapper losing data
 ##### 0.3.2 2017-06-16
+- **New:**
+  - Add enable spellchecking preference to allow spell checking to be turned off
 - **Change:**
   - Log error setting default to on
   - Improved trigger performance by changing how some test are done
   - Re-enable TestMapper() to allow testing of mapper
-  - Add enable spellchecking preference to allow spell checking to be turned off
   - Updated to electron 1.7.3 beta
 - **Fixed:**
-  - Fix bell unicode character display
+  - Fix bell Unicode character display
   - Editor: 
-    - New lines where not correctly being sent when sending as formated text
+    - New lines where not correctly being sent when sending as formatted text
     - Trailing newlines where being cut off
     - Fix flashing format not being sent when flashing disabled
   - Fix a bug in aliases and macros when script style was used, would error due to strict type comparison
