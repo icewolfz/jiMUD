@@ -1892,13 +1892,15 @@ export class Display extends EventEmitter {
     }
 
     public scrollDisplay() {
-        if (this.scrollLock && !this.split.shown && this._VScroll.scrollSize > 0) {
-            this.split.style.display = "block";
-            this.split.shown = true;
-            this.doUpdate(UpdateType.scrollView);
+        if (this.split) {
+            if (this.split.shown)
+                return;
+            if (this.scrollLock && !this.split.shown && this._VScroll.scrollSize > 0) {
+                this.split.style.display = "block";
+                this.split.shown = true;
+                this.doUpdate(UpdateType.scrollView);
+            }                
         }
-        if (this.split && this.split.shown)
-            return;
         if (!this.scrollLock)
             this._VScroll.scrollToEnd();
     }
