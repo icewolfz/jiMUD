@@ -5,8 +5,7 @@
  * 
  * @arthur Icewolfz
  * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support
- * @todo when split screen enabled/disabled need to refresh scroll state
- */
+  */
 
 import { Size, Point, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from './types';
 import EventEmitter = require('events');
@@ -166,7 +165,7 @@ export class Display extends EventEmitter {
                 e.cancelBubble = true;
                 this.split.ghostBar = document.createElement('div');
                 this.split.ghostBar.id = id + '-split-ghost-bar';
-                this.split.ghostBar.style.top = (this.offset(this.split).top - 4)+"px";
+                this.split.ghostBar.style.top = (this.offset(this.split).top - 4) + "px";
                 this.split.ghostBar.style.display = this.splitLive ? 'none' : 'block';
                 this._el.appendChild(this.split.ghostBar);
 
@@ -180,8 +179,8 @@ export class Display extends EventEmitter {
                 e.cancelBubble = true;
                 if (e.pageY < 20)
                     this.split.ghostBar.style.top = "20px";
-                else if (e.pageY > this._el.clientHeight - 150)
-                    this.split.ghostBar.style.top = (this._el.clientHeight - 150 - 4) + "px";
+                else if (e.pageY > this._el.clientHeight - 150 - this._HScroll.size)
+                    this.split.ghostBar.style.top = (this._el.clientHeight - 150 - 4 - this._HScroll.size) + "px";
                 else
                     this.split.ghostBar.style.top = (e.pageY - 4) + "px";
                 var h;
@@ -204,8 +203,8 @@ export class Display extends EventEmitter {
                 if (this.split.ghostBar) {
                     var h;
                     if (e.pageY < 20)
-                        h = this._el.clientHeight - 20 + 4;//TODO change the 4 to calculate split bar height
-                    else if (e.pageY > this._el.clientHeight - 150)
+                        h = this._el.clientHeight - 20 + 4 - this._HScroll.size;//TODO change the 4 to calculate split bar height
+                    else if (e.pageY > this._el.clientHeight - 150 - this._HScroll.size)
                         h = 150;
                     else
                         h = this._el.clientHeight - e.pageY + 4;//TODO change the 4 to calculate split bar height
@@ -1192,8 +1191,17 @@ export class Display extends EventEmitter {
         if (this.lines.length === 0)
             return { x: 0, y: 0 }
         var os = this._os;
-        var y = (e.pageY - os.top) + this._VScroll.position;
+        var y = (e.pageY - os.top);
+        if (this.split && this.split.shown) {
+            if (y >= this._VScroll.track.clientHeight - this.split.clientHeight)
+                y += this._VScroll.scrollSize;
+            else
+                y += this._VScroll.position;
+        }
+        else
+            y += this._VScroll.position;
         y = Math.floor(y / this._charHeight);
+
         var x = (e.pageX - os.left) + this._HScroll.position;
         x = Math.floor(x / this._charWidth);
         return { x: x, y: y };
