@@ -166,7 +166,7 @@ export class Display extends EventEmitter {
                 e.cancelBubble = true;
                 this.split.ghostBar = document.createElement('div');
                 this.split.ghostBar.id = id + '-split-ghost-bar';
-                this.split.ghostBar.style.top = this.offset(this.split).top - 3;
+                this.split.ghostBar.style.top = (this.offset(this.split).top - 4)+"px";
                 this.split.ghostBar.style.display = this.splitLive ? 'none' : 'block';
                 this._el.appendChild(this.split.ghostBar);
 
@@ -176,7 +176,6 @@ export class Display extends EventEmitter {
             });
 
             this.split.mouseMove = (e) => {
-                console.log("mouseMove");
                 e.preventDefault();
                 e.cancelBubble = true;
                 if (e.pageY < 20)
@@ -188,28 +187,28 @@ export class Display extends EventEmitter {
                 var h;
                 if (this.splitLive) {
                     if (e.pageY < 20)
-                        h = this._el.clientHeight - 20 + 4;//TODO change the 4 to calcualte splitbar height
+                        h = this._el.clientHeight - 20 + 4;//TODO change the 4 to calculate split bar height
                     else if (e.pageY > this._el.clientHeight - 150)
                         h = 150;
                     else
-                        h = this._el.clientHeight - e.pageY + 4;//TODO change the 4 to calcualte splitbar height
+                        h = this._el.clientHeight - e.pageY + 4;//TODO change the 4 to calculate split bar height
 
                     h = (h / this._el.clientHeight * 100);
                     this.split.style.height = h + "%";
                     this.doUpdate(UpdateType.scrollView);
                 }
+                this.emit('split-move', h);
             }
 
             this.split.moveDone = (e) => {
-                console.log("moveDone");
                 if (this.split.ghostBar) {
                     var h;
                     if (e.pageY < 20)
-                        h = this._el.clientHeight - 20 + 4;//TODO change the 4 to calcualte splitbar height
+                        h = this._el.clientHeight - 20 + 4;//TODO change the 4 to calculate split bar height
                     else if (e.pageY > this._el.clientHeight - 150)
                         h = 150;
                     else
-                        h = this._el.clientHeight - e.pageY + 4;//TODO change the 4 to calcualte splitbar height
+                        h = this._el.clientHeight - e.pageY + 4;//TODO change the 4 to calculate split bar height
                     h = (h / this._el.clientHeight * 100);
                     this.split.style.height = h + "%";
                     this.split.top = Math.ceil(this.offset(this.split).top + 0.5);
@@ -225,7 +224,6 @@ export class Display extends EventEmitter {
                 this._el.removeEventListener('mouseup', this.split.moveDone);
                 this._el.removeEventListener('mouseleave', this.split.moveDone);
             }
-            this.doUpdate(UpdateType.scrollView);
         }
         else if (this.split && !value) {
             this._el.removeEventListener('mouseup', this.split.moveDone);
@@ -233,6 +231,7 @@ export class Display extends EventEmitter {
             this._el.removeChild(this.split);
             this.split = null;
         }
+        this.doUpdate(UpdateType.scroll | UpdateType.view | UpdateType.scrollView);
     }
 
     get linkFunction(): string {
@@ -1949,12 +1948,12 @@ export class Display extends EventEmitter {
         }
         else if (y < this._VScroll.position)
             this._VScroll.scrollTo(y);
-        else if(y + this._charHeight > this._VScroll.position + this._VScroll.track.clientHeight)
+        else if (y + this._charHeight > this._VScroll.position + this._VScroll.track.clientHeight)
             this._VScroll.scrollTo(y - this._VScroll.track.clientHeight + this._charHeight);
         if (x < this._HScroll.position)
             this._HScroll.scrollTo(x);
-        else if(x + this._charWidth > this._HScroll.position + this._HScroll.track.clientWidth)
-            this._HScroll.scrollTo(x- this._HScroll.track.clientWidth + this._charWidth);
+        else if (x + this._charWidth > this._HScroll.position + this._HScroll.track.clientWidth)
+            this._HScroll.scrollTo(x - this._HScroll.track.clientWidth + this._charWidth);
     }
 
     private expireLineLinkFormat(formats, idx: number) {

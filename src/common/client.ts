@@ -244,6 +244,11 @@ export class Client extends EventEmitter {
                 this.commandInput.focus();
         });
 
+        this.display.on('split-move-done', (h)=> {
+            this.options.display.splitHeight = h;
+            this.saveOptions();
+        });
+
         if (typeof command === 'string')
             this.commandInput = $(command);
         else
@@ -466,7 +471,9 @@ export class Client extends EventEmitter {
 
         this._input.scrollLock = this.options.scrollLocked;
         this.display.scrollLock = this.options.scrollLocked;
-
+        this.display.enableSplit = this.options.display.split;
+        this.display.splitLive = this.options.display.splitLive;
+        this.display.splitHeight = this.options.display.splitHeight;
         this.UpdateFonts();
         this.display.scrollDisplay();
         this.emit('options-loaded');
