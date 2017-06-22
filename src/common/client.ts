@@ -4,7 +4,6 @@
 import EventEmitter = require('events');
 import { Telnet, TelnetOption } from "./telnet";
 import { ParserLine, Size } from "./types";
-import { Parser } from "./parser";
 import { AnsiColorCode } from "./ansi";
 import { stripHTML, parseTemplate, getScrollBarHeight } from "./library";
 import { Settings } from "./settings";
