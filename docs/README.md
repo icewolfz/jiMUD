@@ -35,12 +35,12 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
     - npm run package:linux-other64 - build deb, rpm and appimage packages
     - npm run package:linux-other32 - build deb, rpm and appimage packages, requires 32bit build folder
     - npm run package:linux-otherarm - build deb, rpm and appimage packages, requires arm build folder
-
+  
 Build and package files are all saved to dist folder
 
 ## FAQ
 Basic questions answered about jiMUD
-- [jiMUD FAQ](docs/faq.md)
+- [jiMUD FAQ](faq.md)
 
 ## Command line arguments
 - `-h, --help`                    Print console help
@@ -51,14 +51,14 @@ Basic questions answered about jiMUD
 - `-pf=[list], --profiles[]`      Set which profiles will be enabled, if not found will default
 
 ## References
-- [Profiles](docs/profiles.md)
-- [Speedpaths](docs/speedpaths.md)
-- [Commands](docs/commands.md)
-- [Preferences](docs/preferences.md)
-- [Scripting](docs/scripting.md)
-- [Customizing](docs/customizing.md)
-- [Assets](docs/assets.md)
-- [Mapper](docs/mapper.md)
+- [Profiles](profiles.md)
+- [Speedpaths](speedpaths.md)
+- [Commands](commands.md)
+- [Preferences](preferences.md)
+- [Scripting](scripting.md)
+- [Customizing](customizing.md)
+- [Assets](assets.md)
+- [Mapper](mapper.md)
 
 ## Known Issues
 - Command input spell checking
@@ -70,4 +70,4 @@ Basic questions answered about jiMUD
   - Toolbar text/background color picker may be cut off in small window sizes
   - Reverse style has wierd results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
   - Correction from context menu may remove applied styles depending on if they are just that word
-- [Mapper](docs/mapper.md#know-issues)
+- [Mapper](mapper.md#know-issues)

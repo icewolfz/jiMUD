@@ -5,7 +5,7 @@
  * 
  * @arthur Icewolfz
  * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support
-  */
+   */
 
 import { Size, Point, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from './types';
 import EventEmitter = require('events');
@@ -1899,7 +1899,7 @@ export class Display extends EventEmitter {
                 this.split.style.display = "block";
                 this.split.shown = true;
                 this.doUpdate(UpdateType.scrollView);
-            }                
+            }
         }
         if (!this.scrollLock)
             this._VScroll.scrollToEnd();
@@ -2009,15 +2009,20 @@ export class ScrollBar extends EventEmitter {
     private _padding = [0, 0, 0, 0];
     private _position: number = 0;
     private _scrollOffset: number = 0;
+    private _thumbSize: number = 0;
+    private _trackSize: number = 0;
+    private _ratio:number = 0;
+    private _ratio2:number = 0;
 
     private _lastMouse: MouseEvent;
     public _type: ScrollType = ScrollType.vertical;
+    public maxPosition: number = 0;
+    private _maxDrag: number = 0;
 
     public thumb: HTMLElement;
     public track: HTMLElement;
-
     public scrollSize: number = 0;
-    public maxPosition: number = 0;
+
     public state: ScrollState = {
         dragging: false,
         dragPosition: 0,
@@ -2041,6 +2046,7 @@ export class ScrollBar extends EventEmitter {
             this._type = value;
             this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
             this.updateLocation();
+            this.resize();
         }
     }
     get visible(): boolean { return this._visible; }
@@ -2048,6 +2054,7 @@ export class ScrollBar extends EventEmitter {
         if (!this._visible == value) {
             this._visible = value;
             this.track.style.display = value ? 'block' : 'none';
+            this.resize();
         }
     }
 
@@ -2174,21 +2181,39 @@ export class ScrollBar extends EventEmitter {
             this.track.classList.remove('scroll-disabled');
         else
             this.track.classList.add('scroll-disabled');
-        let thumbSize = Math.ceil(1 / this._percentView * this._parentSize);
-        if (thumbSize > this._parentSize)
-            thumbSize = this._parentSize;
-        this.thumb.style[this._type === ScrollType.horizontal ? "width" : "height"] = thumbSize + "px";
+        this._thumbSize = Math.ceil(1 / this._percentView * this._parentSize);
+        if (this._thumbSize > this._parentSize)
+            this._thumbSize = this._parentSize;
+        if (this._thumbSize < 20)
+            this._thumbSize = 20;
+        this.thumb.style[this._type === ScrollType.horizontal ? "width" : "height"] = this._thumbSize + "px";
+        this._maxDrag = this._trackSize - this._thumbSize;
+        if(this._maxDrag < 0)
+        {
+            this._maxDrag = 0;
+            this._ratio = 1;
+            this._ratio2 = 1;
+        }
+        else
+        {
+            this._ratio = (this._contentSize - this._parentSize) / (this._maxDrag);
+            this._ratio2 = (this._maxDrag) / (this._contentSize - this._parentSize);
+        }
     }
 
     scrollBy(amount: number) {
         if (amount === 0) return;
         amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
-        this.updatePosition(amount / this.scrollSize * this.maxPosition);
+        amount = Math.ceil(amount * this._ratio2);
+        //this.updatePosition(amount / this.scrollSize * this.maxPosition);
+        this.updatePosition(amount);
     }
 
     scrollTo(position: number) {
         position = (position < 0 ? Math.floor(position) : Math.ceil(position));
-        this.updatePosition(position / this.scrollSize * this.maxPosition);
+        position = Math.ceil(position * this._ratio2);
+        //this.updatePosition(position / this.scrollSize * this.maxPosition);
+        this.updatePosition(position);
     }
 
     scrollToEnd() {
@@ -2212,10 +2237,12 @@ export class ScrollBar extends EventEmitter {
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
             this._parentSize = this._parent.clientWidth - this.offset - this._scrollOffset;
+            this._trackSize = this.track.clientWidth;
         }
         else {
             this._contentSize = this._content.clientHeight + this._padding[0] + this._padding[2];
             this._parentSize = this._parent.clientHeight - this.offset - this._scrollOffset;
+            this._trackSize = this.track.clientHeight;
         }
         this.scrollSize = this._contentSize - this._parentSize;
         this._percentView = this._contentSize / this._parentSize;
@@ -2237,20 +2264,16 @@ export class ScrollBar extends EventEmitter {
     }
 
     private updatePosition(p) {
-        if (p < 0)
+        if (p < 0 || this._maxDrag < 0)
             p = 0;
-        else if (p > this.maxPosition)
-            p = this.maxPosition;
+        else if (p > this._maxDrag)
+            p = this._maxDrag; 
+        
         this.thumb.style[this._type === ScrollType.horizontal ? "left" : "top"] = p + "px";
         this.state.dragPosition = p;
-        if (this.maxPosition != 0)
-            this._position = Math.ceil((p / this.maxPosition) * this.scrollSize);
-        else
+        this._position = p * this._ratio;
+        if(this._position < 0)
             this._position = 0;
-        if (this._position <= 0)
-            this._position = 0;
-        else if (this._position > this.scrollSize)
-            this._position = this.scrollSize;
         this.update();
         this.emit('scroll', this.position);
     }
