@@ -2,9 +2,10 @@
 ##### 0.4.0 2017-06-23
 - **New:**
   - Display control
-    - Faster then old system by nearly 50%
+    - Faster then old system by nearly 50% when processing
     - Fixes find all highlighting performance issues
     - Cleaner text selection effect
+    - Better experimental scroll support
   - Logging  
     - Log html - Log html to a separate log file
     - Log text - Log text to a separate log file
