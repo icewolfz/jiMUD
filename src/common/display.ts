@@ -2271,7 +2271,7 @@ export class ScrollBar extends EventEmitter {
         
         this.thumb.style[this._type === ScrollType.horizontal ? "left" : "top"] = p + "px";
         this.state.dragPosition = p;
-        this._position = p * this._ratio;
+        this._position = Math.ceil(p * this._ratio);
         if(this._position < 0)
             this._position = 0;
         this.update();
