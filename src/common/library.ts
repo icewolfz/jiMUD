@@ -30,6 +30,10 @@ export function htmlDecode(value) {
 	return $('<div/>').html(value).text();
 }
 
+export function htmlEntities(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export function stripHTML(html) {
 	var tmp = document.createElement("DIV");
 	tmp.innerHTML = html;
@@ -516,16 +520,6 @@ String.prototype.paddingRight = function (this: string, paddingValue: (string | 
 	}
 	if (paddingValue.length <= this.length) return this;
 	return this + paddingValue.slice(-this.length);
-}
-
-export class Size {
-	public width: number = 0;
-	public height: number = 0;
-
-	constructor(width: number, height: number) {
-		this.width = width;
-		this.height = height;
-	}
 }
 
 export function getTimeSpan(i: number): string {

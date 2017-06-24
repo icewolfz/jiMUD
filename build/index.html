@@ -30,13 +30,11 @@
 
     const Client = require('./js/client.js').Client;
     const Status = require('./js/status.js').Status;
-    const Logger = require('./js/logging.js').Logger;
     const Backup = require('./js/backup.js').Backup;
     const { Settings } = require('./js/settings');
     const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
     const { dialog, Menu, MenuItem, app, nativeImage } = remote;
     const { parseTemplate, setSelectionRange } = require("./js/library.js");
-    const { Finder } = require('./js/finder.js');
     const fs = require('fs');
     const path = require('path');
     const { version } = require("../package.json");
@@ -45,13 +43,13 @@
     loadTheme(set.theme);
     delete set;
 
-    var client, _status, _logger, _backup;
+    var client, _status, _backup;
+    var _logger;
     var OoMUD;
     var active = false;
     var capture = 0, captureReview = 0;
     var _captures = [], _captureReviews = [];
     var _noCapture = false;
-    var _finder;
 
     webFrame.setSpellCheckProvider("en-US", true, {
       spellCheck: function (text) {
@@ -133,14 +131,17 @@
       }
     }
 
+
     function doMXPTooltip(el) {
       el = $(el);
       el.prop("title", el.prop("title").replace("&text;", el.text()));
     }
 
+
     function selectAll() {
-      $("#display-frame")[0].contentWindow.selectAll();
+      client.display.selectAll();
     }
+
 
     function toggleView(view) {
       switch (view) {
@@ -221,6 +222,7 @@
       }
     }
 
+
     function loadTheme(theme) {
       theme = parseTemplate(theme) + ".css";
       if (!fs.existsSync(theme))
@@ -228,14 +230,12 @@
       var el = $("#theme");
       if (el.attr('href') != theme)
         el.attr('href', theme);
-      el = $("#theme", $("#display-frame").contents().find("head"));
-      if (el.attr('href') != theme)
-        el.attr('href', theme);
     }
+
 
     function updateInterface() {
       loadTheme(client.options.theme);
-      $("#display-container").css('left', '');
+      $("#display").css('left', '');
       $("#display-border").css('left', '');
       $("#command").css('left', '');
       if (!client.options.showButtonBar) {
@@ -244,7 +244,7 @@
         if (isNaN(w)) w = 0;
         w += $("#buttonbar").outerWidth();
 
-        $("#display-container").css('left', $("#display-container").offset().left - w);
+        $("#display").css('left', $("#display").offset().left - w);
         $("#display-border").css('left', $("#display-border").offset().left - w);
         $("#command").css('left', $("#command").offset().left - w);
       }
@@ -282,30 +282,9 @@
       $("#lock").css('display', client.options.buttons.lock ? '' : 'none');
       $("#map").css('display', client.options.buttons.map ? '' : 'none');
 
+      client.display.update();
       _status.updateInterface();
       buildButtons();
-    }
-
-    function getDisplaySelectionText() {
-      var text = "";
-      if ($("#display-frame")[0].contentWindow.getSelection) {
-        text = $("#display-frame")[0].contentWindow.getSelection().toString();
-      } else if ($("#display-frame")[0].contentWindow.document.selection && document.selection.type != "Control") {
-        text = $("#display-frame")[0].contentWindow.document.selection.createRange().text;
-      }
-      return text;
-    }
-
-    function clearDisplaySelection() {
-      if ($("#display-frame")[0].contentWindow.getSelection) {
-        if ($("#display-frame")[0].contentWindow.getSelection().empty) {  // Chrome
-          $("#display-frame")[0].contentWindow.getSelection().empty();
-        } else if ($("#display-frame")[0].contentWindow.getSelection().removeAllRanges) {  // Firefox
-          $("#display-frame")[0].contentWindow.getSelection().removeAllRanges();
-        }
-      } else if ($("#display-frame")[0].contentWindow.document.selection) {  // IE?
-        $("#display-frame")[0].contentWindow.document.selection.empty();
-      }
     }
 
     function buildMenu(name, context) {
@@ -342,9 +321,9 @@
       });
       $(window).focus(function () {
         active = true;
-        if (client.connected)
+        if (client && client.connected)
           ipcRenderer.send('set-overlay', 1);
-        else if (!client.connecting)
+        else if (client && !client.connecting)
           ipcRenderer.send('set-overlay', 0);
       });
 
@@ -352,59 +331,73 @@
         client.UpdateWindow();
       });
 
-      client = new Client($("#display-frame").contents().find("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
+      _logger = new Worker("./js/logging.js");
+      _logger.onmessage = (e) => {
+        switch (e.data.event) {
+          case 'started':
+            $('#log').addClass('on');
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+            break;
+          case 'stopped':
+            $('#log').removeClass('on');
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+            break;
+          case 'logging':
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+            break;
+          case 'error':
+            client.error(e.data.args);
+            break;
+          case 'debug':
+            if (!client)
+              console.log(e.data.args);
+            if (client.options.enableDebug)
+              client.debug(e.data.args);
+            break;
+          case 'toggled':
+            if (client) {
+              client.options.logEnabled = e.data.args;
+              client.saveOptions();
+            }
+            break;
+          case 'startInternal':
+          case 'start':
+            _logger.postMessage({ action: e.data.event, args: { lines: client.display.lines || [], raw: client.display.rawLines, formats: client.display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt } });
+            break;
+        }
+      };
+      _logger.onerror = (e) => {
+        if (!client)
+          console.log(e);
+        else
+          client.error(e);
+      };
+
+      client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
       if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
         client.enabledProfiles = remote.getGlobal('profiles');
-      client.parser.enableBell = false;
-      client.parser.on('bell', () => {
+      client.display.enableBell = false;
+      client.display.on('bell', () => {
         shell.beep();
       });
 
-      client.parser.linkFunction = "parent.doLink";
-      client.parser.mxpLinkFunction = "parent.doMXPLink";
-      client.parser.mxpSendFunction = "parent.doMXPSend";
-      client.parser.mxpTooltipFunction = "parent.doMXPTooltip";
-      var doc = $("#display-frame")[0].contentDocument || $("#display-frame")[0].contentWindow.document;
-
-      var mdown = false;
-      var sel = false;
-      doc.addEventListener("mousedown", function (e) {
-        mdown = e.button == 0;
-        sel = false;
-      });
-
-      doc.addEventListener("mouseleave", function (e) {
-        if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
-          clipboard.writeText(getDisplaySelectionText(), 'selection');
-          clearDisplaySelection()
+      client.display.on('selection-done', () => {
+        if (client.options.AutoCopySelectedToClipboard && client.display.hasSelection) {
+          clipboard.writeText(client.display.selection, 'selection');
+          client.display.clearSelection();
         }
-        mdown = false;
-        sel = false;
-      });
+      })
 
-      doc.addEventListener("mouseup", function (e) {
-        if (sel && client.options.AutoCopySelectedToClipboard && getDisplaySelectionText().length > 0) {
-          clipboard.writeText(getDisplaySelectionText(), 'selection');
-          clearDisplaySelection()
-        }
-        mdown = false;
-        sel = false;
-      });
-
-      doc.addEventListener("selectionchange", function () {
-        sel = true;
-      });
-
-      doc.addEventListener('contextmenu', (e) => {
+      client.display._el.addEventListener('contextmenu', (e) => {
         e.preventDefault()
-        window.$selected = getDisplaySelectionText();
+        window.$selected = client.display.selection;
         window.$copied = clipboard.readText('selection');
         window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
         window.$selectedline = $(e.srcElement).closest('.line').text();
 
         var line = $(e.srcElement).closest('.line').text();
-        var x = (e.pageX - client.display.offset().left) + client.display.scrollLeft();
-        x = Math.floor(x / parseFloat(window.getComputedStyle(client.character[0]).width));
+        var x = (e.pageX - client.display._elJ.offset().left) + client.display._elJ.scrollLeft();
+        x = Math.floor(x / client.display._charWidth);
 
         var sPos = x, ePos = x;
         while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
@@ -460,7 +453,7 @@
           if (window.$selected && window.$selected != "") {
             c.append(new MenuItem({ role: 'copy' }));
           }
-          c.append(new MenuItem({ role: 'selectall' }));
+          c.append(new MenuItem({ label: 'Select All', click: selectAll }));
           c.append(new MenuItem({ type: 'separator' }));
           c.append(new MenuItem({
             label: 'Clear', click: () => {
@@ -469,6 +462,7 @@
           }));
         }
 
+
         if (c.items.length > 0)
           c.popup(remote.getCurrentWindow());
       }, false);
@@ -476,11 +470,12 @@
       ['cut', 'copy', 'paste'].forEach(function (event) {
         document.addEventListener(event, function (e) {
           if (document.activeElement && (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA")) {
-            if ($(document.activeElement).val().length > 0 || getDisplaySelectionText().length == 0)
+
+            if ($(document.activeElement).val().length > 0 || !client.display.hasSelection)
               return;
           }
-          if (getDisplaySelectionText().length > 0)
-            clipboard.writeText(getDisplaySelectionText(), 'selection')
+          if (client.display.hasSelection > 0)
+            clipboard.writeText(client.display.selection, 'selection')
         });
       });
 
@@ -509,14 +504,14 @@
         var res;
         if (_captures.length == 0) return;
         //custom capture to ignore who list
-        res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.raw);
+        res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.line);
         if (res && res.length > 0) {
           capture = 0;
           _noCapture = true;
           return;
         }
         //end capture blocking for who list
-        res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.raw);
+        res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.line);
         if (res && res.length > 0) {
           capture = 0;
           _noCapture = false;
@@ -524,8 +519,8 @@
         }
         if (_noCapture) return;
         //capture indented text
-        if (capture > 0 && data.raw.startsWith("    ")) {
-          ipcRenderer.send('chat', data.line);
+        if (capture > 0 && data.line.startsWith("    ")) {
+          ipcRenderer.send('chat', data);
           data.gagged = true;
           return;
         }
@@ -533,26 +528,26 @@
         //search capture review blocks
         for (var c = 0, cl = _captureReviews.length; c < cl; c++) {
           re = new RegExp(_captureReviews[c], 'g');
-          res = re.exec(data.raw);
+          res = re.exec(data.line);
           if (!res || res.length === 0)
             continue;
           captureReview = 1;
-          ipcRenderer.send('chat', data.line);
+          ipcRenderer.send('chat', data);
           data.gagged = true;
           return;
         }
         //if in a review capture until end review
         if (captureReview > 0) {
-          ipcRenderer.send('chat', data.line);
+          ipcRenderer.send('chat', data);
           data.gagged = true;
-          res = /^-=-=- End Review -=-=-$/.exec(data.raw);
+          res = /^-=-=- End Review -=-=-$/.exec(data.line);
           if (res && res.length > 0)
             captureReview = -1;
           return;
         }
         //review requires 1 extra capture to get the current date/time
         if (captureReview == -1) {
-          ipcRenderer.send('chat', data.line);
+          ipcRenderer.send('chat', data);
           data.gagged = true;
           captureReview = 0;
           return;
@@ -562,13 +557,13 @@
         //capture lines based on matching regex's
         for (var c = 0, cl = _captures.length; c < cl; c++) {
           re = new RegExp(_captures[c], 'g');
-          res = re.exec(data.raw);
+          res = re.exec(data.line);
           if (!res || res.length === 0)
             continue;
           if (capture > 0)
             capture--;
           capture++;
-          ipcRenderer.send('chat', data.line);
+          ipcRenderer.send('chat', data);
           data.gagged = true;
           return;
         }
@@ -589,6 +584,20 @@
         updateInterface();
         buildCaptures();
         client.port = client.options.dev ? 1035 : 1030;
+        if (_logger)
+          _logger.postMessage({
+            action: 'options', args: {
+              path: parseTemplate(client.options.logPath),
+              offline: client.options.logOffline,
+              gagged: client.options.logGagged,
+              enabled: client.options.logEnabled,
+              unique: client.options.logUniqueOnConnect,
+              prepend: client.options.logPrepend,
+              what: client.options.logWhat,
+              debug: client.options.enableDebug,
+              format: client.options.logTimeFormat
+            }
+          });
       });
       client.on('scroll-lock', (lock) => {
         ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: lock });
@@ -626,18 +635,27 @@
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
         ipcRenderer.send('set-overlay', 0);
         ipcRenderer.send('closed');
+        _logger.postMessage({ action: 'connected', args: client.connected });
+        _logger.postMessage({ action: 'stop' });
       });
 
       client.on('connected', () => {
         ipcRenderer.send('connected');
+        _logger.postMessage({ action: 'connected', args: client.connected });
+        _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt } });
       });
+
+      client.on('add-line-done', (data) => {
+        _logger.postMessage({ action: 'add-line', args: data });
+      })
 
       client.on('received-data', (data) => {
         if (!active && client.connected)
           ipcRenderer.send('set-overlay', 2);
       });
-      client.on('parse-done', (lines) => {
-        _finder.find(false);
+      client.on('parse-done', () => {
+        client.display.find(false);
+        ipcRenderer.send('chat-done');
       });
 
       client.on('received-GMCP', (mod, obj) => {
@@ -705,20 +723,11 @@
       _backup.on('finish-load', (data) => {
 
       });
-      _logger = new Logger(client);
 
       if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
-        _logger.name = remote.getGlobal('character');
+        _logger.postMessage({ action: 'name', args: remote.getGlobal('character') });
         $("#character-name").text(remote.getGlobal('character'));
       }
-      _logger.on('started', () => {
-        $('#log').addClass('on');
-        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-      });
-      _logger.on('stopped', () => {
-        $('#log').removeClass('on');
-        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-      });
 
       _status = new Status(client);
       _status.on('display-changed', () => {
@@ -741,13 +750,25 @@
       _status.on('set-title', (title) => {
         if (client.options.autoCreateCharacter)
           ipcRenderer.send('change-char', title);
-        _logger.name = title;
+        _logger.postMessage({ action: 'name', args: title });
         ipcRenderer.send('set-title', title);
       });
       updateMenu();
       updateInterface();
       buildCaptures();
-
+      _logger.postMessage({
+        action: 'options', args: {
+          path: parseTemplate(client.options.logPath),
+          offline: client.options.logOffline,
+          gagged: client.options.logGagged,
+          enabled: client.options.logEnabled,
+          unique: client.options.logUniqueOnConnect,
+          prepend: client.options.logPrepend,
+          what: client.options.logWhat,
+          debug: client.options.enableDebug,
+          format: client.options.logTimeFormat
+        }
+      });
       window.onbeforeunload = function () {
         if (client.options.askonclose && client.connected) {
           var choice = dialog.showMessageBox(
@@ -997,57 +1018,39 @@
 
       });
 
-      _finder = new Finder(client.display);
-      _finder.on('word', () => {
-        client.options.find.word = _finder.MatchWord;
+      client.display.on('word', () => {
+        client.options.find.word = client.display.MatchWord;
         client.saveOptions();
       })
-      _finder.on('case', () => {
-        client.options.find.case = _finder.MatchCase;
+      client.display.on('case', () => {
+        client.options.find.case = client.display.MatchCase;
         client.saveOptions();
 
       })
-      _finder.on('reverse', () => {
-        client.options.find.reverse = _finder.Reverse;
+      client.display.on('reverse', () => {
+        client.options.find.reverse = client.display.Reverse;
         client.saveOptions();
       })
-      _finder.on('regex', () => {
-        client.options.find.regex = _finder.RegularExpression;
+      client.display.on('regex', () => {
+        client.options.find.regex = client.display.RegularExpression;
         client.saveOptions();
       })
 
-      _finder.on('shown', () => {
+      client.display.on('shown', () => {
         client.options.find.show = true;
         client.saveOptions();
       })
-      _finder.on('closed', () => {
+      client.display.on('closed', () => {
         client.options.find.show = false;
         client.saveOptions();
       })
 
-      _finder.on('found-results', () => {
-        if (client.displaySplit)
-          client.displaySplit.fill();
-      })
-
-      _finder.on('moved', () => {
-        if (client.displaySplit) {
-          client.displaySplit.fill();
-          /*
-            client.display.stop().animate({
-              scrollTop: client.display[0].scrollTop + client.displaySplit.outerHeight() + 5
-            }, 500, function () { });
-            */
-          client.display[0].scrollTop = client.display[0].scrollTop + client.displaySplit.outerHeight() + 5;
-        }
-      })
-
-      _finder.MatchCase = client.options.find.case;
-      _finder.MatchWord = client.options.find.word;
-      _finder.Reverse = client.options.find.reverse;
-      _finder.RegularExpression = client.options.find.regex;
+      client.display.MatchCase = client.options.find.case;
+      client.display.MatchWord = client.options.find.word;
+      client.display.Reverse = client.options.find.reverse;
+      client.display.RegularExpression = client.options.find.regex;
       if (client.options.find.show)
-        _finder.show();
+        client.display.showFind();
 
       if (client.options.showCharacterManager)
         showCharacters();
@@ -1175,8 +1178,6 @@
       ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: client.options.scrollLocked });
       ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: !client.connected });
       ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: client.connected });
-      ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: _logger.logging });
-
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'connectbutton'], checked: client.options.buttons.connect });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'preferencesbutton'], checked: client.options.buttons.preferences });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'logbutton'], checked: client.options.buttons.log });
@@ -1184,7 +1185,7 @@
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'lockbutton'], checked: client.options.buttons.lock });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mapbutton'], checked: client.options.buttons.map });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
-
+      _logger.postMessage({ action: 'logging' });
     }
 
     /**
@@ -1238,14 +1239,14 @@
 
     ipcRenderer.on('load-char', (event, char) => {
       if (!client.connected) {
-        _logger.name = char;
+        _logger.postMessage({ action: 'name', args: char });
         $("#character-name").text(char);
       }
     });
 
     ipcRenderer.on('load-default', (event, char) => {
       if (!client.connected) {
-        _logger.name = "";
+        _logger.postMessage({ action: 'name', args: "" });
         $("#character-name").text("&nbsp;");
       }
     });
@@ -1295,12 +1296,39 @@
     ipcRenderer.on('reload-profiles', (event) => {
       client.loadProfiles();
       client.loadOptions();
+      _logger.postMessage({
+        action: 'options', args: {
+          path: parseTemplate(client.options.logPath),
+          offline: client.options.logOffline,
+          gagged: client.options.logGagged,
+          enabled: client.options.logEnabled,
+          unique: client.options.logUniqueOnConnect,
+          prepend: client.options.logPrepend,
+          what: client.options.logWhat,
+          debug: client.options.enableDebug,
+          format: client.options.logTimeFormat
+        }
+      });
       buildButtons();
       updateMenu();
     });
 
     ipcRenderer.on('reload-options', (event) => {
       client.loadOptions()
+      _logger.postMessage({
+        action: 'options', args: {
+          path: parseTemplate(client.options.logPath),
+          offline: client.options.logOffline,
+          gagged: client.options.logGagged,
+          enabled: client.options.logEnabled,
+          unique: client.options.logUniqueOnConnect,
+          prepend: client.options.logPrepend,
+          what: client.options.logWhat,
+          debug: client.options.enableDebug,
+          format: client.options.logTimeFormat
+        }
+      });
+      buildButtons();
       updateMenu();
     });
 
@@ -1316,12 +1344,17 @@
     function showCharacters() {
       window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
     }
+
+    $(document).ready(init);
+
+    function toggleLogging() {
+      _logger.postMessage({ action: 'toggle' });
+    }
   </script>
 </head>
 
 <body id="client">
-  <div id="display-container">
-    <iframe id="display-frame" src="display.html" style="border: 0; padding:0; margin: 0;width: 100%; height: 100%" /></iframe>
+  <div id="display">
   </div>
   <div id="display-border"></div>
   <div id="command">
@@ -1357,7 +1390,7 @@
     <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
         <i class="fa fa-gears"></i>
       </a>
-    <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="_logger.toggle();">
+    <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="toggleLogging();">
         <i class="fa fa-file-text-o"></i>
       </a>
     <a href="javascript:void(0)" title="Clear display" id="clear" class="button" onclick="client.clear()">

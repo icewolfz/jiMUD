@@ -99,7 +99,10 @@ var menuTemp = [
         label: '&Log',
         id: "log",
         type: 'checkbox',
-        checked: false
+        checked: false,
+        click: () => {
+          win.webContents.executeJavaScript('toggleLogging()');
+        }
       },
       {
         label: '&View logs...'
@@ -152,6 +155,7 @@ var menuTemp = [
       },
       {
         label: 'Select All',
+        accelerator: 'CmdOrCtrl+A',
         click: () => {
           win.webContents.executeJavaScript('selectAll()');
         }
@@ -170,7 +174,7 @@ var menuTemp = [
         label: 'Find',
         accelerator: 'CmdOrCtrl+F',
         click: () => {
-          win.webContents.executeJavaScript('_finder.show()');
+          win.webContents.executeJavaScript('client.display.showFind()');
         }
       },
     ]
@@ -792,7 +796,10 @@ function createWindow() {
     height: s.height,
     backgroundColor: '#000',
     show: false,
-    icon: path.join(__dirname, '../assets/icons/png/64x64.png')
+    icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
+    webPreferences: {
+      nodeIntegrationInWorker: true
+    }
   })
   if (s.fullscreen)
     win.setFullScreen(s.fullscreen);
@@ -1866,7 +1873,10 @@ function createChat(show) {
     backgroundColor: '#000',
     show: false,
     skipTaskbar: (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false,
-    icon: path.join(__dirname, '../assets/icons/png/chat.png')
+    icon: path.join(__dirname, '../assets/icons/png/chat.png'),
+    webPreferences: {
+      nodeIntegrationInWorker: true
+    }
   })
 
   winChat.webContents.on('crashed', (event, killed) => {

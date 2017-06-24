@@ -2,7 +2,7 @@
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { parseTemplate } from "./library";
-import { BackupSelection } from "./settings";
+import { BackupSelection, Log } from "./types";
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
 const fs = require("fs");
 const path = require("path");
@@ -102,7 +102,7 @@ export class Backup extends EventEmitter {
                     autoConnect: this.client.options.autoConnect,
                     commandEcho: this.client.options.commandEcho,
                     commandStacking: this.client.options.commandStacking,
-                    htmlLog: this.client.options.htmlLog,
+                    htmlLog: (this.client.options.logWhat & Log.Html) === Log.Html,
                     keepLastCommand: this.client.options.keepLastCommand,
                     enableMXP: this.client.options.enableMXP,
                     enableMSP: this.client.options.enableMSP,
@@ -407,7 +407,7 @@ export class Backup extends EventEmitter {
                 this.client.options.autoConnect = data.settings.autoConnect ? true : false;
                 this.client.options.commandEcho = data.settings.commandEcho ? true : false;
                 this.client.options.commandStacking = data.settings.commandStacking ? true : false;
-                this.client.options.htmlLog = data.settings.htmlLog ? true : false;
+                this.client.options.logWhat = data.settings ? Log.Html : Log.None;
                 this.client.options.keepLastCommand = data.settings.keepLastCommand ? true : false;
                 this.client.options.enableMXP = data.settings.enableMXP ? true : false;
                 this.client.options.enableMSP = data.settings.enableMSP ? true : false;

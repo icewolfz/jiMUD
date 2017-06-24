@@ -208,14 +208,12 @@
         $("#btn-room").button('toggle');
         toggleRooms();
       }
-
-      mapper.on('error', (err) => {
-        console.log(err);
-        if (options.logErrors) {
-          fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), new Date().toLocaleString() + "\n", { flag: 'a' });
-          fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), err + "\n", { flag: 'a' });
-        }
+      /*
+      mapper._db.on('profile', (sql, time)=>{
+        console.log(sql);
+        console.log(time);
       })
+      */
 
       mapper.on('path-shown', () => {
         $("#btn-clear").prop('disabled', false);
@@ -881,7 +879,7 @@
     ipcRenderer.on('reload-options', (event) => {
       save(function () {
         remote.getCurrentWindow().reload();
-      });
+      });        
     });
 
     ipcRenderer.on('import', (event, data) => {

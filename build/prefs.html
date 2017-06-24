@@ -1,759 +1,774 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-  <head>
-    <meta charset="UTF-8">
-    <title>Preferences</title>
-    <link rel="shortcut icon" href="../assets/icons/png/preferences.png" />
-    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
-    <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
-    <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
-    <link href="css/form.css" rel="stylesheet" type="text/css" />
-    <style>
-      body {
-        -webkit-user-select: none;
-        user-select: none;
-      }
-    </style>
-    <script>
-      if (typeof module === 'object') { window.module = module; module = undefined; }
-    </script>
-    <script src="../lib/jquery.min.js"></script>
-    <script src="../lib/bootstrap.min.js"></script>
-    <script src="../lib/bootstrap-select.min.js"></script>
-    <script>
-      //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-      const { parseTemplate } = require('./js/library');
-      const Settings = require('./js/settings').Settings;
-      const { remote, ipcRenderer } = require('electron');
-      const { dialog } = remote;
-      const RGBColor = require('rgbcolor');
-      const path = require('path')
-      const fs = require('fs');
+<head>
+  <meta charset="UTF-8">
+  <title>Preferences</title>
+  <link rel="shortcut icon" href="../assets/icons/png/preferences.png" />
+  <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+  <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+  <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+  <link href="css/form.css" rel="stylesheet" type="text/css" />
+  <style>
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  </style>
+  <script>
+    if (typeof module === 'object') { window.module = module; module = undefined; }
+  </script>
+  <script src="../lib/jquery.min.js"></script>
+  <script src="../lib/bootstrap.min.js"></script>
+  <script src="../lib/bootstrap-select.min.js"></script>
+  <script>
+    //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+    const { parseTemplate } = require('./js/library');
+    const Settings = require('./js/settings').Settings;
+    const { remote, ipcRenderer } = require('electron');
+    const { dialog } = remote;
+    const RGBColor = require('rgbcolor');
+    const path = require('path')
+    const fs = require('fs');
 
-      var _settings;
-      if (window.module) module.module;
-      $(window).keydown((event) => {
-        if (event.which == 27)
-          window.close();
+    var _settings;
+    if (window.module) module.module;
+    $(window).keydown((event) => {
+      if (event.which == 27)
+        window.close();
+    });
+
+    $(document).ready(() => {
+      if (process.platform === 'win32')
+        $('.win32').css('display', 'inline-block');
+      else
+        $('.win32').css('display', 'none');
+      $('#font').change(() => {
+        $("#font-sample").css("font-family", $("#font").val() + ", monospace");
+        $("#font-sample").css("font-size", $("#fontSize").val());
       });
 
-      $(document).ready(() => {
-        if (process.platform === 'win32')
-          $('.win32').css('display', 'inline-block');
-        else
-          $('.win32').css('display', 'none');
-        $('#font').change(() => {
-          $("#font-sample").css("font-family", $("#font").val() + ", monospace");
-          $("#font-sample").css("font-size", $("#fontSize").val());
-        });
-
-        $('#fontSize').change(() => {
-          $("#font-sample").css("font-family", $("#font").val() + ", monospace");
-          $("#font-sample").css("font-size", $("#fontSize").val());
-        });
-
-        $('#cmdfont').change(() => {
-          $("#cmd-font-sample").css("font-family", $("#cmdfont").val() + ", monospace");
-          $("#cmd-font-sample").css("font-size", $("#cmdfontSize").val());
-        });
-
-        $('#cmdfontSize').change(() => {
-          $("#cmd-font-sample").css("font-family", $("#cmdfont").val() + ", monospace");
-          $("#cmd-font-sample").css("font-size", $("#cmdfontSize").val());
-        });
-
-        _settings = Settings.load(remote.getGlobal('settingsFile'));
-        loadThemes();
-        loadSettings();
-
-        $("#colorScheme").parent().find('.dropdown-menu.inner li').click(() => {
-          $("#colorScheme").change();
-        });
+      $('#fontSize').change(() => {
+        $("#font-sample").css("font-family", $("#font").val() + ", monospace");
+        $("#font-sample").css("font-size", $("#fontSize").val());
       });
 
-      function sortFiles(a, b) {
-        return a.name.localeCompare(b.name);
+      $('#cmdfont').change(() => {
+        $("#cmd-font-sample").css("font-family", $("#cmdfont").val() + ", monospace");
+        $("#cmd-font-sample").css("font-size", $("#cmdfontSize").val());
+      });
+
+      $('#cmdfontSize').change(() => {
+        $("#cmd-font-sample").css("font-family", $("#cmdfont").val() + ", monospace");
+        $("#cmd-font-sample").css("font-size", $("#cmdfontSize").val());
+      });
+
+      _settings = Settings.load(remote.getGlobal('settingsFile'));
+      loadThemes();
+      loadSettings();
+
+      $("#colorScheme").parent().find('.dropdown-menu.inner li').click(() => {
+        $("#colorScheme").change();
+      });
+    });
+
+    function sortFiles(a, b) {
+      return a.name.localeCompare(b.name);
+    }
+
+    function getThemes(p) {
+      p2 = parseTemplate(p);
+      if (!fs.existsSync(p2))
+        return [];
+      var themes = [];
+      var files = fs.readdirSync(p2);
+      for (var f = 0, fl = files.length; f < fl; f++) {
+        if (path.extname(files[f]).toLowerCase() != ".css") continue;
+        themes.push({
+          name: path.basename(files[f], path.extname(files[f])),
+          path: p
+        })
       }
+      return themes;
+    }
 
-      function getThemes(p) {
-        p2 = parseTemplate(p);
-        if (!fs.existsSync(p2))
-          return [];
-        var themes = [];
-        var files = fs.readdirSync(p2);
-        for (var f = 0, fl = files.length; f < fl; f++) {
-          if (path.extname(files[f]).toLowerCase() != ".css") continue;
-          themes.push({
-            name: path.basename(files[f], path.extname(files[f])),
-            path: p
-          })
-        }
-        return themes;
+    function loadThemes() {
+      var themes = getThemes("{themes}");
+      themes = themes.concat(getThemes(path.join("{data}", "themes")));
+      themes = themes.concat(getThemes(path.join("{documents}", "jiMUD", "themes")));
+      themes.sort(sortFiles);
+      $("#theme").append($('<option></option>').val(path.join("{themes}", "default")).html("Default"));
+      for (var t = 0, tl = themes.length; t < tl; t++) {
+        if (themes[t].path == "{themes}" && themes[t].name == "default") continue;
+        $("#theme").append($('<option></option>').val(path.join(themes[t].path, themes[t].name)).html(themes[t].name[0].toUpperCase() + themes[t].name.substr(1)));
       }
+      $("#theme").selectpicker('refresh')
+    }
 
-      function loadThemes() {
-        var themes = getThemes("{themes}");
-        themes = themes.concat(getThemes(path.join("{data}", "themes")));
-        themes = themes.concat(getThemes(path.join("{documents}", "jiMUD", "themes")));
-        themes.sort(sortFiles);
-        $("#theme").append($('<option></option>').val(path.join("{themes}", "default")).html("Default"));
-        for (var t = 0, tl = themes.length; t < tl; t++) {
-          if (themes[t].path == "{themes}" && themes[t].name == "default") continue;
-          $("#theme").append($('<option></option>').val(path.join(themes[t].path, themes[t].name)).html(themes[t].name[0].toUpperCase() + themes[t].name.substr(1)));
-        }
-        $("#theme").selectpicker('refresh')
-      }
+    function loadSettings() {
+      $('#autoConnect').prop('checked', _settings.autoConnect);
+      $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
+      $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
+      $('#dev').prop('checked', _settings.dev);
+      $('#lagMeter').prop('checked', _settings.lagMeter);
+      $('#enablePing').prop('checked', _settings.enablePing);
+      $('#showScriptErrors').prop('checked', _settings.showScriptErrors);
+      $('#enableDebug').prop('checked', _settings.enableDebug);
+      $('#allowNegativeNumberNeeded').prop('checked', _settings.allowNegativeNumberNeeded);
+      $('#logErrors').prop('checked', _settings.logErrors);
+      $('#spellchecking').prop('checked', _settings.spellchecking);
 
-      function loadSettings() {
-        $('#autoConnect').prop('checked', _settings.autoConnect);
-        $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
-        $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
-        $('#dev').prop('checked', _settings.dev);
-        $('#lagMeter').prop('checked', _settings.lagMeter);
-        $('#enablePing').prop('checked', _settings.enablePing);
-        $('#showScriptErrors').prop('checked', _settings.showScriptErrors);
-        $('#enableDebug').prop('checked', _settings.enableDebug);
-        $('#allowNegativeNumberNeeded').prop('checked', _settings.allowNegativeNumberNeeded);
-        $('#logErrors').prop('checked', _settings.logErrors);
-        $('#spellchecking').prop('checked', _settings.spellchecking);
+      $('#displaySplit').prop('checked', _settings.display.split);
+      $('#display-splitLive').prop('checked', _settings.display.splitLive);
 
-        $('#displaySplit').prop('checked', _settings.display.split);
-        $('#display-splitLive').prop('checked', _settings.display.splitLive);
+      //$('#font').selectpicker('val', _settings.font);
+      $('#font').val(_settings.font);
+      $('#font').selectpicker('render');
+      $('#fontSize').val(_settings.fontSize);
+      $('#font').change();
+      //$('#cmdfont').selectpicker('val', _settings.cmdfont);
+      $('#cmdfont').val(_settings.font);
+      $('#cmdfont').selectpicker('render');
+      $('#cmdfontSize').val(_settings.cmdfontSize);
+      $('#cmdfont').change();
+      $('#commandEcho').prop('checked', _settings.commandEcho);
+      $('#AutoCopySelectedToClipboard').prop('checked', _settings.AutoCopySelectedToClipboard);
+      $('#flashing').prop('checked', _settings.flashing);
+      $('#enableURLDetection').prop('checked', _settings.enableURLDetection);
+      $('#CommandonClick').prop('checked', _settings.CommandonClick);
+      $('#bufferSize').val(_settings.bufferSize);
+      LoadColors();
+      $('#keepLastCommand').prop('checked', _settings.keepLastCommand);
+      $('#commandHistorySize').val(_settings.commandHistorySize);
+      $('#commandStacking').prop('checked', _settings.commandStacking);
+      $('#commandStackingChar').val(_settings.commandStackingChar);
 
-        //$('#font').selectpicker('val', _settings.font);
-        $('#font').val(_settings.font);
-        $('#font').selectpicker('render');
-        $('#fontSize').val(_settings.fontSize);
-        $('#font').change();
-        //$('#cmdfont').selectpicker('val', _settings.cmdfont);
-        $('#cmdfont').val(_settings.font);
-        $('#cmdfont').selectpicker('render');
-        $('#cmdfontSize').val(_settings.cmdfontSize);
-        $('#cmdfont').change();
-        $('#commandEcho').prop('checked', _settings.commandEcho);
-        $('#AutoCopySelectedToClipboard').prop('checked', _settings.AutoCopySelectedToClipboard);
-        $('#flashing').prop('checked', _settings.flashing);
-        $('#enableURLDetection').prop('checked', _settings.enableURLDetection);
-        $('#CommandonClick').prop('checked', _settings.CommandonClick);
-        $('#bufferSize').val(_settings.bufferSize);
-        LoadColors();
-        $('#keepLastCommand').prop('checked', _settings.keepLastCommand);
-        $('#commandHistorySize').val(_settings.commandHistorySize);
-        $('#commandStacking').prop('checked', _settings.commandStacking);
-        $('#commandStackingChar').val(_settings.commandStackingChar);
+      $('#enableSpeedpaths').prop('checked', _settings.enableSpeedpaths);
+      $('#speedpathsChar').val(_settings.speedpathsChar);
+      $('#parseSpeedpaths').prop('checked', _settings.parseSpeedpaths);
 
-        $('#enableSpeedpaths').prop('checked', _settings.enableSpeedpaths);
-        $('#speedpathsChar').val(_settings.speedpathsChar);
-        $('#parseSpeedpaths').prop('checked', _settings.parseSpeedpaths);
+      $('#parseDoubleQuotes').prop('checked', _settings.parseDoubleQuotes);
+      $('#parseSingleQuotes').prop('checked', _settings.parseSingleQuotes);
 
-        $('#parseDoubleQuotes').prop('checked', _settings.parseDoubleQuotes);
-        $('#parseSingleQuotes').prop('checked', _settings.parseSingleQuotes);
+      $('#logEnabled').prop('checked', _settings.logEnabled);
+      $('#logGagged').prop('checked', _settings.logEnabled);
+      $('#logPrepend').prop('checked', _settings.logPrepend);
+      $('#logOffline').prop('checked', _settings.logOffline);
+      $('#logUniqueOnConnect').prop('checked', _settings.logUniqueOnConnect);
+      $('#logPath').val(_settings.logPath);
+      $('#logTimeFormat').val(_settings.logTimeFormat);
 
-        $('#logEnabled').prop('checked', _settings.logEnabled);
-        $('#logGagged').prop('checked', _settings.logEnabled);
-        $('#logPrepend').prop('checked', _settings.logPrepend);
-        $('#logOffline').prop('checked', _settings.logOffline);
-        $('#logUniqueOnConnect').prop('checked', _settings.logUniqueOnConnect);
-        $('#logPath').val(_settings.logPath);
+      $("#editorPersistent").prop('checked', _settings.editorPersistent);
 
-        $("#editorPersistent").prop('checked', _settings.editorPersistent);
+      $('#MapperSplitArea').prop('checked', _settings.mapper.split);
+      $('#mapFollow').prop('checked', _settings.mapper.follow);
+      $('#mapEnabled').prop('checked', _settings.mapper.enabled);
+      $('#mapLegend').prop('checked', _settings.mapper.legend);
+      $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
 
-        $('#MapperSplitArea').prop('checked', _settings.mapper.split);
-        $('#mapFollow').prop('checked', _settings.mapper.follow);
-        $('#mapEnabled').prop('checked', _settings.mapper.enabled);
-        $('#mapLegend').prop('checked', _settings.mapper.legend);
-        $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
+      $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
+      $('#mapper-memory').prop('checked', _settings.mapper.memory);
+      $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
+      $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
 
-        $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
-        $('#mapper-memory').prop('checked', _settings.mapper.memory);
-        $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
-        $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
+      $('#mapper-importTypeReplace').prop('checked', _settings.mapper.importType == 1);
+      $('#mapper-importTypeMerge').prop('checked', _settings.mapper.importType == 0);
 
-        $('#mapper-importTypeReplace').prop('checked', _settings.mapper.importType == 1);
-        $('#mapper-importTypeMerge').prop('checked', _settings.mapper.importType == 0);
+      $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
+      $('#chat-persistent').prop('checked', _settings.chat.persistent);
 
-        $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
-        $('#chat-persistent').prop('checked', _settings.chat.persistent);
+      $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
+      $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
+      $('#chat-captureLines').prop('checked', _settings.chat.captureLines);
+      $('#chat-captureReviews').prop('checked', _settings.chat.captureReviews);
+      $('#chat-captureTells').prop('checked', _settings.chat.captureTells);
+      $('#chat-captureTalk').prop('checked', _settings.chat.captureTalk);
+      $('#chat-captureAllLines').prop('checked', _settings.chat.captureAllLines);
+      $('#chat-selective').prop('checked', !_settings.chat.captureAllLines);
+      $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
+      $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
+      $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
 
-        $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
-        $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
-        $('#chat-captureLines').prop('checked', _settings.chat.captureLines);
-        $('#chat-captureReviews').prop('checked', _settings.chat.captureReviews);
-        $('#chat-captureTells').prop('checked', _settings.chat.captureTells);
-        $('#chat-captureTalk').prop('checked', _settings.chat.captureTalk);
-        $('#chat-captureAllLines').prop('checked', _settings.chat.captureAllLines);
-        $('#chat-selective').prop('checked', !_settings.chat.captureAllLines);
-        $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
-        $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
-        $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
+      $('#chat-lines').val(_settings.chat.lines.join(','));
 
-        $('#chat-lines').val(_settings.chat.lines.join(','));
+      $('#showMapper').prop('checked', _settings.showMapper);
+      $('#commandDelay').val(_settings.commandDelay);
+      $('#commandDelayCount').val(_settings.commandDelayCount);
 
-        $('#showMapper').prop('checked', _settings.showMapper);
-        $('#commandDelay').val(_settings.commandDelay);
-        $('#commandDelayCount').val(_settings.commandDelayCount);
+      $('#enableMCCP').prop('checked', _settings.enableMCCP);
+      $('#enableUTF8').prop('checked', _settings.enableUTF8);
+      $('#enableMXP').prop('checked', _settings.enableMXP);
+      $('#enableEcho').prop('checked', _settings.enableEcho);
+      $('#enableMSP').prop('checked', _settings.enableMSP);
+      $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
 
-        $('#enableMCCP').prop('checked', _settings.enableMCCP);
-        $('#enableUTF8').prop('checked', _settings.enableUTF8);
-        $('#enableMXP').prop('checked', _settings.enableMXP);
-        $('#enableEcho').prop('checked', _settings.enableEcho);
-        $('#enableMSP').prop('checked', _settings.enableMSP);
-        $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
+      $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) == 2);
+      $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) == 4);
+      $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) == 8);
 
-        $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) == 2);
-        $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) == 4);
-        $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) == 8);
+      $('#backup-save-map').prop('checked', (_settings.backupSave & 2) == 2);
+      $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) == 4);
+      $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) == 8);
 
-        $('#backup-save-map').prop('checked', (_settings.backupSave & 2) == 2);
-        $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) == 4);
-        $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) == 8);
+      $('#logWhat-html').prop('checked', (_settings.logWhat & 1) == 1);
+      $('#logWhat-text').prop('checked', (_settings.logWhat & 2) == 2);
+      $('#logWhat-raw').prop('checked', (_settings.logWhat & 4) == 4);
 
+      $('#newlineShortcut-0').prop('checked', _settings.newlineShortcut == 0);
+      $('#newlineShortcut-1').prop('checked', _settings.newlineShortcut == 1);
+      $('#newlineShortcut-2').prop('checked', _settings.newlineShortcut == 2);
+      $('#newlineShortcut-4').prop('checked', _settings.newlineShortcut == 4);
+      $('#newlineShortcut-8').prop('checked', _settings.newlineShortcut == 8);
 
-        $('#newlineShortcut-0').prop('checked', _settings.newlineShortcut == 0);
-        $('#newlineShortcut-1').prop('checked', _settings.newlineShortcut == 1);
-        $('#newlineShortcut-2').prop('checked', _settings.newlineShortcut == 2);
-        $('#newlineShortcut-4').prop('checked', _settings.newlineShortcut == 4);
-        $('#newlineShortcut-8').prop('checked', _settings.newlineShortcut == 8);
+      $('.btn-group input').parent().removeClass('active');
+      $('.btn-group input:checked').parent().addClass('active');
 
-        $('.btn-group input').parent().removeClass('active');
-        $('.btn-group input:checked').parent().addClass('active');
+      $('#theme').val(_settings.theme);
+      $('#theme').selectpicker('render');
 
-        $('#theme').val(_settings.theme);
-        $('#theme').selectpicker('render');
-
-        $('input[type="checkbox"]').change(function () {
-          switch ($(this).attr('id')) {
-            case 'chat-alwaysOnTop':
-              _settings.chat.alwaysOnTop = this.checked;
-              break;
-            case 'chat-alwaysOnTopClient':
-              _settings.chat.alwaysOnTopClient = this.checked;
-              break;
-            case 'chat-captureLines':
-              _settings.chat.captureLines = this.checked;
-              $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
-
-              $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
-              $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
-              break;
-            case 'chat-captureReviews':
-              _settings.chat.captureReviews = this.checked;
-              break;
-            case 'chat-captureTells':
-              _settings.chat.captureTells = this.checked;
-              break;
-            case 'chat-captureTalk':
-              _settings.chat.captureTalk = this.checked;
-              break;
-            case "chat-persistent":
-              _settings.chat.persistent = this.checked;
-              break;
-            case "mapper-persistent":
-              _settings.mapper.persistent = this.checked;
-              break;
-            case 'mapper-alwaysOnTop':
-              _settings.mapper.alwaysOnTop = this.checked;
-              break;
-            case 'mapper-alwaysOnTopClient':
-              _settings.mapper.alwaysOnTopClient = this.checked;
-              break;
-            case 'mapper-importTypeReplace':
-              _settings.mapper.importType = 1;
-              break;
-            case 'mapper-importTypMerge':
-              _settings.mapper.importType = 0;
-              break;
-            case 'MapperSplitArea':
-              _settings.mapper.split = this.checked;
-              break;
-            case 'mapFollow':
-              _settings.mapper.follow = this.checked;
-              break;
-            case 'mapEnabled':
-              _settings.mapper.enabled = this.checked;
-              break;
-            case 'MapperFillWalls':
-              _settings.mapper.fill = this.checked;
-              break;
-            case 'mapLegend':
-              _settings.mapper.legend = this.checked;
-              break;
-            case 'mapper-memory':
-              _settings.mapper.memory = this.checked;
-              if (this.checked) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
-                  type: 'warning',
-                  title: 'Warning',
-                  message: 'If client or OS crash, all in memory data will be lost and not saved to disk'
-                });
-              }
-              break;
-            case 'backup-save-settings':
-            case 'backup-save-profiles':
-            case 'backup-save-map':
-              _settings.backupSave = 0;
-              if ($('#backup-save-map').prop('checked'))
-                _settings.backupSave |= 2;
-              if ($('#backup-save-profiles').prop('checked'))
-                _settings.backupSave |= 4;
-              if ($('#backup-save-settings').prop('checked'))
-                _settings.backupSave |= 8;
-              break;
-            case 'backup-load-settings':
-            case 'backup-load-profiles':
-            case 'backup-load-map':
-              _settings.backupLoad = 0;
-              if ($('#backup-load-map').prop('checked'))
-                _settings.backupLoad |= 2;
-              if ($('#backup-load-profiles').prop('checked'))
-                _settings.backupLoad |= 4;
-              if ($('#backup-load-settings').prop('checked'))
-                _settings.backupLoad |= 8;
-              break;
-            case 'displaySplit':
-              _settings.display.split = this.checked;
-              break;
-            default:
-              var id = $(this).attr('id').split("-");
-              if (id.length == 2)
-                _settings[id[0]][id[1]] = this.checked;
-              else
-                _settings[id[0]] = this.checked;
-              break;
-          }
-        });
-
-        $('input[type="radio"]').change(function () {
-          switch ($(this).attr('id')) {
-            case 'newlineShortcut-0':
-              if (this.checked)
-                _settings.newlineShortcut = 0;
-              break;
-            case 'newlineShortcut-1':
-              if (this.checked)
-                _settings.newlineShortcut = 1;
-              break;
-            case 'newlineShortcut-2':
-              if (this.checked)
-                _settings.newlineShortcut = 2;
-              break;
-            case 'newlineShortcut-4':
-              if (this.checked)
-                _settings.newlineShortcut = 4;
-              break;
-            case 'newlineShortcut-8':
-              if (this.checked)
-                _settings.newlineShortcut = 8;
-              break;
-            case 'chat-selective':
-              _settings.chat.captureAllLines = !this.checked;
-              $("#chat-lines").prop('readonly', !_settings.chat.captureLines || !this.checked);
-              break;
-            case 'chat-captureAllLines':
-              _settings.chat.captureAllLines = this.checked;
-              $("#chat-lines").prop('readonly', !_settings.chat.captureLines || this.checked);
-              break;
-          }
-        });
-
-        $('input[type="text"]').change(function () {
-          _settings[$(this).attr('id')] = $(this).val();
-        });
-        $('input[type="number"]').change(function () {
-          if ($(this).attr('id') == 'mapper-memorySavePeriod')
-            _settings.mapper.memorySavePeriod = parseInt($(this).val(), 10);
-          else
-            _settings[$(this).attr('id')] = parseInt($(this).val(), 10);
-        });
-        $('input[type="color"]').change(function () {
-          var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
-          var color = new RGBColor($(this).val());
-          if (color.ok)
-            _settings.colors[idx] = color.toRGB();;
-        });
-
-        $('.selectpicker').change(function () {
-          if ($(this).attr('id') == 'colorScheme')
-            return;
-          _settings[$(this).attr('id')] = $(this).val();
-        });
-      }
-
-      function LoadColors() {
-        $("#colorScheme").val("0");
-        var colors = _settings.colors;
-        var _colors = Settings.getColors();
-        var c;
-        for (c = 0; c < 16; c++)
-          setColor("color" + c, colors[c] || _colors[c]);
-        for (c = 256; c < 280; c++)
-          setColor("color" + c, colors[c] || _colors[c]);
-
-      }
-
-      function resetSettings() {
-        _settings = new Settings();
-        loadSettings();
-      }
-
-      function setColor(id, color) {
-        if (!color || typeof color === "undefined" || color.length === 0) {
-          $("#" + id).val("");
-        }
-        else {
-          var color = new RGBColor(color);
-          if (!color.ok)
-            $("#" + id).val("");
-          else
-            $("#" + id).val(color.toHex());
-        }
-      }
-
-      function updateScheme(idx) {
-        switch (idx) {
-          case 1://Classic
-            setColor("color0", "rgb(0,0,0)"); //black fore
-            setColor("color1", "rgb(128, 0, 0)");//red fore
-            setColor("color2", "rgb(0, 128, 0)");//green fore
-            setColor("color3", "rgb(128, 128, 0)");//yellow fore
-            setColor("color4", "rgb(0, 0, 128)");//blue fore
-            setColor("color5", "rgb(128, 0, 128)");//magenta fore
-            setColor("color6", "rgb(0, 128, 128)");//cyan fore
-            setColor("color7", "rgb(192, 192, 192)");//white fore
-            setColor("color8", "rgb(128, 128, 128)");//black  bold
-            setColor("color9", "rgb(255, 0, 0)"); //Red bold
-            setColor("color10", "rgb(0, 255, 0)"); //green bold
-            setColor("color11", "rgb(255, 255, 0)");//yellow bold
-            setColor("color12", "rgb(0, 0, 255)");//blue bold
-            setColor("color13", "rgb(255, 0, 255)");//magenta bold
-            setColor("color14", "rgb(0, 255, 255)");//cyan bold
-            setColor("color15", "rgb(255, 255, 255)");//white bold
-            setColor("color256", "rgb(0, 0, 0)");//black faint
-            setColor("color257", "rgb(118, 0, 0)");//red  faint
-            setColor("color258", "rgb(0, 108, 0)");//green faint
-            setColor("color259", "rgb(145, 136, 0)");//yellow faint
-            setColor("color260", "rgb(0, 0, 108)");//blue faint
-            setColor("color261", "rgb(108, 0, 108)");//magenta faint
-            setColor("color262", "rgb(0, 108, 108)");//cyan faint
-            setColor("color263", "rgb(160, 160, 160)");//white faint	   	    
-            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
-            setColor("color265", "rgb(128, 0, 0)");//red back
-            setColor("color266", "rgb(0, 128, 0)");//greenback
-            setColor("color267", "rgb(128, 128, 0)");//yellow back
-            setColor("color268", "rgb(0, 0, 128)");//blue back
-            setColor("color269", "rgb(128, 0, 128)");//magenta back
-            setColor("color270", "rgb(0, 128, 128)");//cyan back
-            setColor("color271", "rgb(192, 192, 192)");//white back		
-            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
-            setColor("color273", "rgb(0, 255, 255)");//iceMudInfoText
-            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
-            setColor("color275", "rgb(255, 255, 0)");//LocalEchoText
-            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
-            setColor("color277", "rgb(192, 192, 192)");//DefaultFore	 	    
-            setColor("color278", "rgb(128, 0, 0)");//ErrorFore
-            setColor("color279", "rgb(192, 192, 192)");//ErrorBack          
+      $('input[type="checkbox"]').change(function () {
+        switch ($(this).attr('id')) {
+          case 'chat-alwaysOnTop':
+            _settings.chat.alwaysOnTop = this.checked;
             break;
-          case 2://VGA
-            setColor("color0", "rgb(0,0,0)"); //black fore
-            setColor("color1", "rgb(170, 0, 0)");//red fore
-            setColor("color2", "rgb(0, 170, 0)");//green fore
-            setColor("color3", "rgb(170, 85, 0)");//yellow fore
-            setColor("color4", "rgb(0, 0, 170)");//blue fore
-            setColor("color5", "rgb(170, 0, 170)");//magenta fore
-            setColor("color6", "rgb(0, 170, 170)");//cyan fore
-            setColor("color7", "rgb(170, 170, 170)");//white fore
-            setColor("color8", "rgb(85, 85, 85)");//black  bold
-            setColor("color9", "rgb(255, 85, 85)"); //Red bold
-            setColor("color10", "rgb(85, 255, 85)"); //green bold
-            setColor("color11", "rgb(255, 255, 85)");//yellow bold
-            setColor("color12", "rgb(85, 85, 255)");//blue bold
-            setColor("color13", "rgb(255, 85, 255)");//magenta bold
-            setColor("color14", "rgb(85, 255, 255)");//cyan bold
-            setColor("color15", "rgb(255, 255, 255)");//white bold
-            setColor("color256", "rgb(0,0,0)");
-            setColor("color257", "rgb(119,0,0)");
-            setColor("color258", "rgb(0,119,0)");
-            setColor("color259", "rgb(119,60,0)");
-            setColor("color260", "rgb(0,0,119)");
-            setColor("color261", "rgb(119,0,119)");
-            setColor("color262", "rgb(0,119,119)");
-            setColor("color263", "rgb(119,119,119)");
-            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
-            setColor("color265", "rgb(170, 0, 0)");//red back
-            setColor("color266", "rgb(0, 170, 0)");//greenback
-            setColor("color267", "rgb(170, 85, 0)");//yellow back
-            setColor("color268", "rgb(0, 0, 170)");//blue back
-            setColor("color269", "rgb(170, 0, 170)");//magenta back
-            setColor("color270", "rgb(0, 170, 170)");//cyan back
-            setColor("color271", "rgb(170, 170, 170)");//white back		
-            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
-            setColor("color273", "rgb(85, 255, 255)");//iceMudInfoText
-            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
-            setColor("color275", "rgb(255, 255, 85)");//LocalEchoText
-            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
-            setColor("color277", "rgb(170, 170, 170)");//DefaultFore    	
-            setColor("color278", "rgb(170, 0, 0)");//ErrorFore
-            setColor("color279", "rgb(170, 170, 170)");//ErrorBack
+          case 'chat-alwaysOnTopClient':
+            _settings.chat.alwaysOnTopClient = this.checked;
             break;
-          case 3://Terminal.app
-            setColor("color0", "rgb(0,0,0)"); //black fore
-            setColor("color1", "rgb(194, 54, 33)");//red fore
-            setColor("color2", "rgb(37, 188, 36)");//green fore
-            setColor("color3", "rgb(173, 173, 39)");//yellow fore
-            setColor("color4", "rgb(73, 46, 225)");//blue fore
-            setColor("color5", "rgb(211, 56, 211)");//magenta fore
-            setColor("color6", "rgb(51, 187, 200)");//cyan fore
-            setColor("color7", "rgb(203, 204, 205)");//white fore
-            setColor("color8", "rgb(129, 131, 131)");//black  bold
-            setColor("color9", "rgb(252,57,31)"); //Red bold
-            setColor("color10", "rgb(49, 231, 34)"); //green bold
-            setColor("color11", "rgb(234, 236, 35)");//yellow bold
-            setColor("color12", "rgb(88, 51, 255)");//blue bold
-            setColor("color13", "rgb(249, 53, 248)");//magenta bold
-            setColor("color14", "rgb(20, 240, 240)");//cyan bold
-            setColor("color15", "rgb(233, 235, 235)");//white bold
-            setColor("color256", "rgb(0,0,0)");
-            setColor("color257", "rgb(136,38,24)");
-            setColor("color258", "rgb(26,132,26)");
-            setColor("color259", "rgb(122,122,28)");
-            setColor("color260", "rgb(52,33,158)");
-            setColor("color261", "rgb(148,40,148)");
-            setColor("color262", "rgb(36,131,140)");
-            setColor("color263", "rgb(143,143,144)");
-            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
-            setColor("color265", "rgb(194, 54, 33)");//red back
-            setColor("color266", "rgb(37, 188, 36)");//greenback
-            setColor("color267", "rgb(173, 173, 39)");//yellow back
-            setColor("color268", "rgb(73, 46, 225)");//blue back
-            setColor("color269", "rgb(211, 56, 211)");//magenta back
-            setColor("color270", "rgb(51, 187, 200)");//cyan back
-            setColor("color271", "rgb(203, 204, 205)");//white back		    
-            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
-            setColor("color273", "rgb(20, 240, 240)");//iceMudInfoText
-            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
-            setColor("color275", "rgb(234, 236, 35)");//LocalEchoText
-            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
-            setColor("color277", "rgb(203, 204, 205)");//DefaultFore	 	
-            setColor("color278", "rgb(194, 54, 33)");//ErrorFore
-            setColor("color279", "rgb(203, 204, 205)");//ErrorBack    	
+          case 'chat-captureLines':
+            _settings.chat.captureLines = this.checked;
+            $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
+
+            $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
+            $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
             break;
-          case 4://PuTTY
-            setColor("color0", "rgb(0,0,0)"); //black fore
-            setColor("color1", "rgb(187, 0, 0)");//red fore
-            setColor("color2", "rgb(0, 187, 0)");//green fore
-            setColor("color3", "rgb(187, 187, 0)");//yellow fore
-            setColor("color4", "rgb(0, 0, 187)");//blue fore
-            setColor("color5", "rgb(187, 0, 187)");//magenta fore
-            setColor("color6", "rgb(0, 187, 187)");//cyan fore
-            setColor("color7", "rgb(187, 187, 187)");//white fore
-            setColor("color8", "rgb(85, 85, 85)");//black  bold
-            setColor("color9", "rgb(255, 85, 85)"); //Red bold
-            setColor("color10", "rgb(85, 255, 85)"); //green bold
-            setColor("color11", "rgb(255, 255, 85)");//yellow bold
-            setColor("color12", "rgb(85, 85, 255)");//blue bold
-            setColor("color13", "rgb(255, 85, 255)");//magenta bold
-            setColor("color14", "rgb(85, 255, 255)");//cyan bold
-            setColor("color15", "rgb(255, 255, 255)");//white bold
-            setColor("color256", "rgb(0,0,0)");
-            setColor("color257", "rgb(131,0,0)");
-            setColor("color258", "rgb(0,131,0)");
-            setColor("color259", "rgb(131,131,0)");
-            setColor("color260", "rgb(0,0,131)");
-            setColor("color261", "rgb(131,0,131)");
-            setColor("color262", "rgb(0,131,131)");
-            setColor("color263", "rgb(131,131,131)");
-            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
-            setColor("color265", "rgb(187, 0, 0)");//red back
-            setColor("color266", "rgb(0, 187, 0)");//greenback
-            setColor("color267", "rgb(187, 187, 0)");//yellow back
-            setColor("color268", "rgb(0, 0, 187)");//blue back
-            setColor("color269", "rgb(187, 0, 187)");//magenta back
-            setColor("color270", "rgb(0, 187, 187)");//cyan back
-            setColor("color271", "rgb(187, 187, 187)");//white back		
-            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
-            setColor("color273", "rgb(85, 255, 255)");//iceMudInfoText
-            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
-            setColor("color275", "rgb(255, 255, 85)");//LocalEchoText
-            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
-            setColor("color277", "rgb(187, 187, 187)");//DefaultFore	 	 
-            setColor("color278", "rgb(187, 0, 0)");//ErrorFore
-            setColor("color279", "rgb(187, 187, 187)");//ErrorBack    	   
+          case 'chat-captureReviews':
+            _settings.chat.captureReviews = this.checked;
             break;
-          case 5://mIRC
-            setColor("color0", "rgb(0,0,0)"); //black fore
-            setColor("color1", "rgb(127, 0, 0)");//red fore
-            setColor("color2", "rgb(0, 147, 0)");//green fore
-            setColor("color3", "rgb(252, 127, 0)");//yellow fore
-            setColor("color4", "rgb(0, 0, 127)");//blue fore
-            setColor("color5", "rgb(156, 0, 156)");//magenta fore
-            setColor("color6", "rgb(0, 147, 147)");//cyan fore
-            setColor("color7", "rgb(210, 210, 210)");//white fore
-            setColor("color8", "rgb(127, 127, 127)");//black  bold
-            setColor("color9", "rgb(255, 0, 0)"); //Red bold
-            setColor("color10", "rgb(0, 252, 0)"); //green bold
-            setColor("color11", "rgb(255, 255, 0)");//yellow bold
-            setColor("color12", "rgb(0, 0, 252)");//blue bold
-            setColor("color13", "rgb(255, 0, 255)");//magenta bold
-            setColor("color14", "rgb(0, 255, 255)");//cyan bold
-            setColor("color15", "rgb(255, 255, 255)");//white bold
-            setColor("color256", "rgb(0,0,0)");
-            setColor("color257", "rgb(89,0,0)");
-            setColor("color258", "rgb(0,103,0)");
-            setColor("color259", "rgb(177,89,0)");
-            setColor("color260", "rgb(0,0,89)");
-            setColor("color261", "rgb(110,0,110)");
-            setColor("color262", "rgb(0,103,103)");
-            setColor("color263", "rgb(147,147,147)");
-            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
-            setColor("color265", "rgb(127, 0, 0)");//red back
-            setColor("color266", "rgb(0, 147, 0)");//greenback
-            setColor("color267", "rgb(252, 127, 0)");//yellow back
-            setColor("color268", "rgb(0, 0, 127)");//blue back
-            setColor("color269", "rgb(156, 0, 156)");//magenta back
-            setColor("color270", "rgb(0, 147, 147)");//cyan back
-            setColor("color271", "rgb(210, 210, 210)");//white back		
-            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
-            setColor("color273", "rgb(0, 255, 255)");//iceMudInfoText
-            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
-            setColor("color275", "rgb(255, 255, 0)");//LocalEchoText
-            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
-            setColor("color277", "rgb(210, 210, 210)");//DefaultFore	 
-            setColor("color278", "rgb(127, 0, 0)");//ErrorFore
-            setColor("color279", "rgb(210, 210, 210)");//ErrorBack    	    	
+          case 'chat-captureTells':
+            _settings.chat.captureTells = this.checked;
             break;
-          case 6://xterm
-            setColor("color0", "rgb(0,0,0)"); //black fore
-            setColor("color1", "rgb(205, 0, 0)");//red fore
-            setColor("color2", "rgb(0, 205, 0)");//green fore
-            setColor("color3", "rgb(205, 205, 0)");//yellow fore
-            setColor("color4", "rgb(0, 0, 238)");//blue fore
-            setColor("color5", "rgb(205, 0, 205)");//magenta fore
-            setColor("color6", "rgb(0, 205, 205)");//cyan fore
-            setColor("color7", "rgb(229, 229, 229)");//white fore
-            setColor("color8", "rgb(127, 127, 127)");//black  bold
-            setColor("color9", "rgb(255, 0, 0)"); //Red bold
-            setColor("color10", "rgb(0, 255, 0)"); //green bold
-            setColor("color11", "rgb(255, 255, 0)");//yellow bold
-            setColor("color12", "rgb(92, 92, 255)");//blue bold
-            setColor("color13", "rgb(255, 0, 255)");//magenta bold
-            setColor("color14", "rgb(0, 255, 255)");//cyan bold
-            setColor("color15", "rgb(255, 255, 255)");//white bold
-            setColor("color256", "rgb(0,0,0)");
-            setColor("color257", "rgb(144,0,0)");
-            setColor("color258", "rgb(0,144,0)");
-            setColor("color259", "rgb(144,144,0)");
-            setColor("color260", "rgb(0,0,167)");
-            setColor("color261", "rgb(144,0,144)");
-            setColor("color262", "rgb(0,144,144)");
-            setColor("color263", "rgb(161,161,161)");
-            setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
-            setColor("color265", "rgb(205, 0, 0)");//red back
-            setColor("color266", "rgb(0, 205, 0)");//greenback
-            setColor("color267", "rgb(205, 205, 0)");//yellow back
-            setColor("color268", "rgb(0, 0, 238)");//blue back
-            setColor("color269", "rgb(205, 0, 205)");//magenta back
-            setColor("color270", "rgb(0, 205, 205)");//cyan back
-            setColor("color271", "rgb(229, 229, 229)");//white back		
-            setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
-            setColor("color273", "rgb(0, 255, 255)");//iceMudInfoText
-            setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
-            setColor("color275", "rgb(255, 255, 0)");//LocalEchoText
-            setColor("color276", "rgb(0, 0, 0)");//DefaultBack
-            setColor("color277", "rgb(229, 229, 229)");//DefaultFore	 	 
-            setColor("color278", "rgb(205, 0, 0)");//ErrorFore
-            setColor("color279", "rgb(229, 229, 229)");//ErrorBack    	    	   
+          case 'chat-captureTalk':
+            _settings.chat.captureTalk = this.checked;
+            break;
+          case "chat-persistent":
+            _settings.chat.persistent = this.checked;
+            break;
+          case "mapper-persistent":
+            _settings.mapper.persistent = this.checked;
+            break;
+          case 'mapper-alwaysOnTop':
+            _settings.mapper.alwaysOnTop = this.checked;
+            break;
+          case 'mapper-alwaysOnTopClient':
+            _settings.mapper.alwaysOnTopClient = this.checked;
+            break;
+          case 'mapper-importTypeReplace':
+            _settings.mapper.importType = 1;
+            break;
+          case 'mapper-importTypMerge':
+            _settings.mapper.importType = 0;
+            break;
+          case 'MapperSplitArea':
+            _settings.mapper.split = this.checked;
+            break;
+          case 'mapFollow':
+            _settings.mapper.follow = this.checked;
+            break;
+          case 'mapEnabled':
+            _settings.mapper.enabled = this.checked;
+            break;
+          case 'MapperFillWalls':
+            _settings.mapper.fill = this.checked;
+            break;
+          case 'mapLegend':
+            _settings.mapper.legend = this.checked;
+            break;
+          case 'mapper-memory':
+            _settings.mapper.memory = this.checked;
+            if (this.checked) {
+              dialog.showMessageBox(remote.getCurrentWindow(), {
+                type: 'warning',
+                title: 'Warning',
+                message: 'If client or OS crash, all in memory data will be lost and not saved to disk'
+              });
+            }
+            break;
+          case 'logWhat-html':
+          case 'logWhat-text':
+          case 'logWhat-raw':
+            _settings.logWhat = 0;
+            if ($('#logWhat-html').prop('checked'))
+              _settings.logWhat |= 1;
+            if ($('#logWhat-text').prop('checked'))
+              _settings.logWhat |= 2;
+            if ($('#logWhat-raw').prop('checked'))
+              _settings.logWhat |= 4;
+            break;
+          case 'backup-save-settings':
+          case 'backup-save-profiles':
+          case 'backup-save-map':
+            _settings.backupSave = 0;
+            if ($('#backup-save-map').prop('checked'))
+              _settings.backupSave |= 2;
+            if ($('#backup-save-profiles').prop('checked'))
+              _settings.backupSave |= 4;
+            if ($('#backup-save-settings').prop('checked'))
+              _settings.backupSave |= 8;
+            break;
+          case 'backup-load-settings':
+          case 'backup-load-profiles':
+          case 'backup-load-map':
+            _settings.backupLoad = 0;
+            if ($('#backup-load-map').prop('checked'))
+              _settings.backupLoad |= 2;
+            if ($('#backup-load-profiles').prop('checked'))
+              _settings.backupLoad |= 4;
+            if ($('#backup-load-settings').prop('checked'))
+              _settings.backupLoad |= 8;
+            break;
+          case 'displaySplit':
+            _settings.display.split = this.checked;
             break;
           default:
-            var _colors = Settings.getColors();
-            var c;
-            for (c = 0; c < 16; c++)
-              setColor("color" + c, _colors[c]);
-            for (c = 256; c < 280; c++)
-              setColor("color" + c, _colors[c]);
+            var id = $(this).attr('id').split("-");
+            if (id.length == 2)
+              _settings[id[0]][id[1]] = this.checked;
+            else
+              _settings[id[0]] = this.checked;
             break;
         }
+      });
+
+      $('input[type="radio"]').change(function () {
+        switch ($(this).attr('id')) {
+          case 'newlineShortcut-0':
+            if (this.checked)
+              _settings.newlineShortcut = 0;
+            break;
+          case 'newlineShortcut-1':
+            if (this.checked)
+              _settings.newlineShortcut = 1;
+            break;
+          case 'newlineShortcut-2':
+            if (this.checked)
+              _settings.newlineShortcut = 2;
+            break;
+          case 'newlineShortcut-4':
+            if (this.checked)
+              _settings.newlineShortcut = 4;
+            break;
+          case 'newlineShortcut-8':
+            if (this.checked)
+              _settings.newlineShortcut = 8;
+            break;
+          case 'chat-selective':
+            _settings.chat.captureAllLines = !this.checked;
+            $("#chat-lines").prop('readonly', !_settings.chat.captureLines || !this.checked);
+            break;
+          case 'chat-captureAllLines':
+            _settings.chat.captureAllLines = this.checked;
+            $("#chat-lines").prop('readonly', !_settings.chat.captureLines || this.checked);
+            break;
+        }
+      });
+
+      $('input[type="text"]').change(function () {
+        _settings[$(this).attr('id')] = $(this).val();
+      });
+      $('input[type="number"]').change(function () {
+        if ($(this).attr('id') == 'mapper-memorySavePeriod')
+          _settings.mapper.memorySavePeriod = parseInt($(this).val(), 10);
+        else
+          _settings[$(this).attr('id')] = parseInt($(this).val(), 10);
+      });
+      $('input[type="color"]').change(function () {
+        var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
+        var color = new RGBColor($(this).val());
+        if (color.ok)
+          _settings.colors[idx] = color.toRGB();;
+      });
+
+      $('.selectpicker').change(function () {
+        if ($(this).attr('id') == 'colorScheme')
+          return;
+        _settings[$(this).attr('id')] = $(this).val();
+      });
+    }
+
+    function LoadColors() {
+      $("#colorScheme").val("0");
+      var colors = _settings.colors;
+      var _colors = Settings.getColors();
+      var c;
+      for (c = 0; c < 16; c++)
+        setColor("color" + c, colors[c] || _colors[c]);
+      for (c = 256; c < 280; c++)
+        setColor("color" + c, colors[c] || _colors[c]);
+
+    }
+
+    function resetSettings() {
+      _settings = new Settings();
+      loadSettings();
+    }
+
+    function setColor(id, color) {
+      if (!color || typeof color === "undefined" || color.length === 0) {
+        $("#" + id).val("");
       }
-
-      function saveSettings() {
-        _settings.chat.lines = $("#chat-lines").val().split(',');
-        _settings.save(remote.getGlobal('settingsFile'));
-        ipcRenderer.send('reload-options');
-        window.close()
+      else {
+        var color = new RGBColor(color);
+        if (!color.ok)
+          $("#" + id).val("");
+        else
+          $("#" + id).val(color.toHex());
       }
-    </script>
-  </head>
+    }
 
-  <body>
-    <div class="dialog-body">
+    function updateScheme(idx) {
+      switch (idx) {
+        case 1://Classic
+          setColor("color0", "rgb(0,0,0)"); //black fore
+          setColor("color1", "rgb(128, 0, 0)");//red fore
+          setColor("color2", "rgb(0, 128, 0)");//green fore
+          setColor("color3", "rgb(128, 128, 0)");//yellow fore
+          setColor("color4", "rgb(0, 0, 128)");//blue fore
+          setColor("color5", "rgb(128, 0, 128)");//magenta fore
+          setColor("color6", "rgb(0, 128, 128)");//cyan fore
+          setColor("color7", "rgb(192, 192, 192)");//white fore
+          setColor("color8", "rgb(128, 128, 128)");//black  bold
+          setColor("color9", "rgb(255, 0, 0)"); //Red bold
+          setColor("color10", "rgb(0, 255, 0)"); //green bold
+          setColor("color11", "rgb(255, 255, 0)");//yellow bold
+          setColor("color12", "rgb(0, 0, 255)");//blue bold
+          setColor("color13", "rgb(255, 0, 255)");//magenta bold
+          setColor("color14", "rgb(0, 255, 255)");//cyan bold
+          setColor("color15", "rgb(255, 255, 255)");//white bold
+          setColor("color256", "rgb(0, 0, 0)");//black faint
+          setColor("color257", "rgb(118, 0, 0)");//red  faint
+          setColor("color258", "rgb(0, 108, 0)");//green faint
+          setColor("color259", "rgb(145, 136, 0)");//yellow faint
+          setColor("color260", "rgb(0, 0, 108)");//blue faint
+          setColor("color261", "rgb(108, 0, 108)");//magenta faint
+          setColor("color262", "rgb(0, 108, 108)");//cyan faint
+          setColor("color263", "rgb(160, 160, 160)");//white faint	   	    
+          setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+          setColor("color265", "rgb(128, 0, 0)");//red back
+          setColor("color266", "rgb(0, 128, 0)");//greenback
+          setColor("color267", "rgb(128, 128, 0)");//yellow back
+          setColor("color268", "rgb(0, 0, 128)");//blue back
+          setColor("color269", "rgb(128, 0, 128)");//magenta back
+          setColor("color270", "rgb(0, 128, 128)");//cyan back
+          setColor("color271", "rgb(192, 192, 192)");//white back		
+          setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+          setColor("color273", "rgb(0, 255, 255)");//iceMudInfoText
+          setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+          setColor("color275", "rgb(255, 255, 0)");//LocalEchoText
+          setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+          setColor("color277", "rgb(192, 192, 192)");//DefaultFore	 	    
+          setColor("color278", "rgb(128, 0, 0)");//ErrorFore
+          setColor("color279", "rgb(192, 192, 192)");//ErrorBack          
+          break;
+        case 2://VGA
+          setColor("color0", "rgb(0,0,0)"); //black fore
+          setColor("color1", "rgb(170, 0, 0)");//red fore
+          setColor("color2", "rgb(0, 170, 0)");//green fore
+          setColor("color3", "rgb(170, 85, 0)");//yellow fore
+          setColor("color4", "rgb(0, 0, 170)");//blue fore
+          setColor("color5", "rgb(170, 0, 170)");//magenta fore
+          setColor("color6", "rgb(0, 170, 170)");//cyan fore
+          setColor("color7", "rgb(170, 170, 170)");//white fore
+          setColor("color8", "rgb(85, 85, 85)");//black  bold
+          setColor("color9", "rgb(255, 85, 85)"); //Red bold
+          setColor("color10", "rgb(85, 255, 85)"); //green bold
+          setColor("color11", "rgb(255, 255, 85)");//yellow bold
+          setColor("color12", "rgb(85, 85, 255)");//blue bold
+          setColor("color13", "rgb(255, 85, 255)");//magenta bold
+          setColor("color14", "rgb(85, 255, 255)");//cyan bold
+          setColor("color15", "rgb(255, 255, 255)");//white bold
+          setColor("color256", "rgb(0,0,0)");
+          setColor("color257", "rgb(119,0,0)");
+          setColor("color258", "rgb(0,119,0)");
+          setColor("color259", "rgb(119,60,0)");
+          setColor("color260", "rgb(0,0,119)");
+          setColor("color261", "rgb(119,0,119)");
+          setColor("color262", "rgb(0,119,119)");
+          setColor("color263", "rgb(119,119,119)");
+          setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+          setColor("color265", "rgb(170, 0, 0)");//red back
+          setColor("color266", "rgb(0, 170, 0)");//greenback
+          setColor("color267", "rgb(170, 85, 0)");//yellow back
+          setColor("color268", "rgb(0, 0, 170)");//blue back
+          setColor("color269", "rgb(170, 0, 170)");//magenta back
+          setColor("color270", "rgb(0, 170, 170)");//cyan back
+          setColor("color271", "rgb(170, 170, 170)");//white back		
+          setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+          setColor("color273", "rgb(85, 255, 255)");//iceMudInfoText
+          setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+          setColor("color275", "rgb(255, 255, 85)");//LocalEchoText
+          setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+          setColor("color277", "rgb(170, 170, 170)");//DefaultFore    	
+          setColor("color278", "rgb(170, 0, 0)");//ErrorFore
+          setColor("color279", "rgb(170, 170, 170)");//ErrorBack
+          break;
+        case 3://Terminal.app
+          setColor("color0", "rgb(0,0,0)"); //black fore
+          setColor("color1", "rgb(194, 54, 33)");//red fore
+          setColor("color2", "rgb(37, 188, 36)");//green fore
+          setColor("color3", "rgb(173, 173, 39)");//yellow fore
+          setColor("color4", "rgb(73, 46, 225)");//blue fore
+          setColor("color5", "rgb(211, 56, 211)");//magenta fore
+          setColor("color6", "rgb(51, 187, 200)");//cyan fore
+          setColor("color7", "rgb(203, 204, 205)");//white fore
+          setColor("color8", "rgb(129, 131, 131)");//black  bold
+          setColor("color9", "rgb(252,57,31)"); //Red bold
+          setColor("color10", "rgb(49, 231, 34)"); //green bold
+          setColor("color11", "rgb(234, 236, 35)");//yellow bold
+          setColor("color12", "rgb(88, 51, 255)");//blue bold
+          setColor("color13", "rgb(249, 53, 248)");//magenta bold
+          setColor("color14", "rgb(20, 240, 240)");//cyan bold
+          setColor("color15", "rgb(233, 235, 235)");//white bold
+          setColor("color256", "rgb(0,0,0)");
+          setColor("color257", "rgb(136,38,24)");
+          setColor("color258", "rgb(26,132,26)");
+          setColor("color259", "rgb(122,122,28)");
+          setColor("color260", "rgb(52,33,158)");
+          setColor("color261", "rgb(148,40,148)");
+          setColor("color262", "rgb(36,131,140)");
+          setColor("color263", "rgb(143,143,144)");
+          setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+          setColor("color265", "rgb(194, 54, 33)");//red back
+          setColor("color266", "rgb(37, 188, 36)");//greenback
+          setColor("color267", "rgb(173, 173, 39)");//yellow back
+          setColor("color268", "rgb(73, 46, 225)");//blue back
+          setColor("color269", "rgb(211, 56, 211)");//magenta back
+          setColor("color270", "rgb(51, 187, 200)");//cyan back
+          setColor("color271", "rgb(203, 204, 205)");//white back		    
+          setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+          setColor("color273", "rgb(20, 240, 240)");//iceMudInfoText
+          setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+          setColor("color275", "rgb(234, 236, 35)");//LocalEchoText
+          setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+          setColor("color277", "rgb(203, 204, 205)");//DefaultFore	 	
+          setColor("color278", "rgb(194, 54, 33)");//ErrorFore
+          setColor("color279", "rgb(203, 204, 205)");//ErrorBack    	
+          break;
+        case 4://PuTTY
+          setColor("color0", "rgb(0,0,0)"); //black fore
+          setColor("color1", "rgb(187, 0, 0)");//red fore
+          setColor("color2", "rgb(0, 187, 0)");//green fore
+          setColor("color3", "rgb(187, 187, 0)");//yellow fore
+          setColor("color4", "rgb(0, 0, 187)");//blue fore
+          setColor("color5", "rgb(187, 0, 187)");//magenta fore
+          setColor("color6", "rgb(0, 187, 187)");//cyan fore
+          setColor("color7", "rgb(187, 187, 187)");//white fore
+          setColor("color8", "rgb(85, 85, 85)");//black  bold
+          setColor("color9", "rgb(255, 85, 85)"); //Red bold
+          setColor("color10", "rgb(85, 255, 85)"); //green bold
+          setColor("color11", "rgb(255, 255, 85)");//yellow bold
+          setColor("color12", "rgb(85, 85, 255)");//blue bold
+          setColor("color13", "rgb(255, 85, 255)");//magenta bold
+          setColor("color14", "rgb(85, 255, 255)");//cyan bold
+          setColor("color15", "rgb(255, 255, 255)");//white bold
+          setColor("color256", "rgb(0,0,0)");
+          setColor("color257", "rgb(131,0,0)");
+          setColor("color258", "rgb(0,131,0)");
+          setColor("color259", "rgb(131,131,0)");
+          setColor("color260", "rgb(0,0,131)");
+          setColor("color261", "rgb(131,0,131)");
+          setColor("color262", "rgb(0,131,131)");
+          setColor("color263", "rgb(131,131,131)");
+          setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+          setColor("color265", "rgb(187, 0, 0)");//red back
+          setColor("color266", "rgb(0, 187, 0)");//greenback
+          setColor("color267", "rgb(187, 187, 0)");//yellow back
+          setColor("color268", "rgb(0, 0, 187)");//blue back
+          setColor("color269", "rgb(187, 0, 187)");//magenta back
+          setColor("color270", "rgb(0, 187, 187)");//cyan back
+          setColor("color271", "rgb(187, 187, 187)");//white back		
+          setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+          setColor("color273", "rgb(85, 255, 255)");//iceMudInfoText
+          setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+          setColor("color275", "rgb(255, 255, 85)");//LocalEchoText
+          setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+          setColor("color277", "rgb(187, 187, 187)");//DefaultFore	 	 
+          setColor("color278", "rgb(187, 0, 0)");//ErrorFore
+          setColor("color279", "rgb(187, 187, 187)");//ErrorBack    	   
+          break;
+        case 5://mIRC
+          setColor("color0", "rgb(0,0,0)"); //black fore
+          setColor("color1", "rgb(127, 0, 0)");//red fore
+          setColor("color2", "rgb(0, 147, 0)");//green fore
+          setColor("color3", "rgb(252, 127, 0)");//yellow fore
+          setColor("color4", "rgb(0, 0, 127)");//blue fore
+          setColor("color5", "rgb(156, 0, 156)");//magenta fore
+          setColor("color6", "rgb(0, 147, 147)");//cyan fore
+          setColor("color7", "rgb(210, 210, 210)");//white fore
+          setColor("color8", "rgb(127, 127, 127)");//black  bold
+          setColor("color9", "rgb(255, 0, 0)"); //Red bold
+          setColor("color10", "rgb(0, 252, 0)"); //green bold
+          setColor("color11", "rgb(255, 255, 0)");//yellow bold
+          setColor("color12", "rgb(0, 0, 252)");//blue bold
+          setColor("color13", "rgb(255, 0, 255)");//magenta bold
+          setColor("color14", "rgb(0, 255, 255)");//cyan bold
+          setColor("color15", "rgb(255, 255, 255)");//white bold
+          setColor("color256", "rgb(0,0,0)");
+          setColor("color257", "rgb(89,0,0)");
+          setColor("color258", "rgb(0,103,0)");
+          setColor("color259", "rgb(177,89,0)");
+          setColor("color260", "rgb(0,0,89)");
+          setColor("color261", "rgb(110,0,110)");
+          setColor("color262", "rgb(0,103,103)");
+          setColor("color263", "rgb(147,147,147)");
+          setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+          setColor("color265", "rgb(127, 0, 0)");//red back
+          setColor("color266", "rgb(0, 147, 0)");//greenback
+          setColor("color267", "rgb(252, 127, 0)");//yellow back
+          setColor("color268", "rgb(0, 0, 127)");//blue back
+          setColor("color269", "rgb(156, 0, 156)");//magenta back
+          setColor("color270", "rgb(0, 147, 147)");//cyan back
+          setColor("color271", "rgb(210, 210, 210)");//white back		
+          setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+          setColor("color273", "rgb(0, 255, 255)");//iceMudInfoText
+          setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+          setColor("color275", "rgb(255, 255, 0)");//LocalEchoText
+          setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+          setColor("color277", "rgb(210, 210, 210)");//DefaultFore	 
+          setColor("color278", "rgb(127, 0, 0)");//ErrorFore
+          setColor("color279", "rgb(210, 210, 210)");//ErrorBack    	    	
+          break;
+        case 6://xterm
+          setColor("color0", "rgb(0,0,0)"); //black fore
+          setColor("color1", "rgb(205, 0, 0)");//red fore
+          setColor("color2", "rgb(0, 205, 0)");//green fore
+          setColor("color3", "rgb(205, 205, 0)");//yellow fore
+          setColor("color4", "rgb(0, 0, 238)");//blue fore
+          setColor("color5", "rgb(205, 0, 205)");//magenta fore
+          setColor("color6", "rgb(0, 205, 205)");//cyan fore
+          setColor("color7", "rgb(229, 229, 229)");//white fore
+          setColor("color8", "rgb(127, 127, 127)");//black  bold
+          setColor("color9", "rgb(255, 0, 0)"); //Red bold
+          setColor("color10", "rgb(0, 255, 0)"); //green bold
+          setColor("color11", "rgb(255, 255, 0)");//yellow bold
+          setColor("color12", "rgb(92, 92, 255)");//blue bold
+          setColor("color13", "rgb(255, 0, 255)");//magenta bold
+          setColor("color14", "rgb(0, 255, 255)");//cyan bold
+          setColor("color15", "rgb(255, 255, 255)");//white bold
+          setColor("color256", "rgb(0,0,0)");
+          setColor("color257", "rgb(144,0,0)");
+          setColor("color258", "rgb(0,144,0)");
+          setColor("color259", "rgb(144,144,0)");
+          setColor("color260", "rgb(0,0,167)");
+          setColor("color261", "rgb(144,0,144)");
+          setColor("color262", "rgb(0,144,144)");
+          setColor("color263", "rgb(161,161,161)");
+          setColor("color264", "rgb(0, 0, 0)"); //BackgroundBlack
+          setColor("color265", "rgb(205, 0, 0)");//red back
+          setColor("color266", "rgb(0, 205, 0)");//greenback
+          setColor("color267", "rgb(205, 205, 0)");//yellow back
+          setColor("color268", "rgb(0, 0, 238)");//blue back
+          setColor("color269", "rgb(205, 0, 205)");//magenta back
+          setColor("color270", "rgb(0, 205, 205)");//cyan back
+          setColor("color271", "rgb(229, 229, 229)");//white back		
+          setColor("color272", "rgb(0,0,0)"); //iceMudInfoBackground
+          setColor("color273", "rgb(0, 255, 255)");//iceMudInfoText
+          setColor("color274", "rgb(0,0,0)"); //LocalEchoBackground
+          setColor("color275", "rgb(255, 255, 0)");//LocalEchoText
+          setColor("color276", "rgb(0, 0, 0)");//DefaultBack
+          setColor("color277", "rgb(229, 229, 229)");//DefaultFore	 	 
+          setColor("color278", "rgb(205, 0, 0)");//ErrorFore
+          setColor("color279", "rgb(229, 229, 229)");//ErrorBack    	    	   
+          break;
+        default:
+          var _colors = Settings.getColors();
+          var c;
+          for (c = 0; c < 16; c++)
+            setColor("color" + c, _colors[c]);
+          for (c = 256; c < 280; c++)
+            setColor("color" + c, _colors[c]);
+          break;
+      }
+    }
 
-      <!-- Nav tabs -->
-      <ul class="nav nav-tabs" role="tablist" style="background-color: #F5F5F5;box-shadow: inset 0 -1px 0 #fff;">
-        <li role="presentation" class="active"><a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a></li>
-        <li role="presentation"><a href="#display" aria-controls="display" role="tab" data-toggle="tab">Display</a></li>
-        <li role="presentation"><a href="#colors" aria-controls="colors" role="tab" data-toggle="tab">Colors</a></li>
-        <li role="presentation"><a href="#command" aria-controls="command" role="tab" data-toggle="tab">Command Line</a></li>
-        <li role="presentation"><a href="#logging" aria-controls="logging" role="tab" data-toggle="tab">Logging</a></li>
-        <li role="presentation"><a href="#telnet" aria-controls="telnet" role="tab" data-toggle="tab">Telnet</a></li>
-        <li role="presentation"><a href="#mapper" aria-controls="mapper" role="tab" data-toggle="tab">Mapper</a></li>
-        <li role="presentation"><a href="#chat" aria-controls="chat" role="tab" data-toggle="tab">Chat</a></li>
-        <li role="presentation"><a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab">Advanced</a></li>
-      </ul>
+    function saveSettings() {
+      _settings.chat.lines = $("#chat-lines").val().split(',');
+      _settings.save(remote.getGlobal('settingsFile'));
+      ipcRenderer.send('reload-options');
+      window.close()
+    }
+  </script>
+</head>
 
-      <!-- Tab panes -->
-      <div class="tab-content">
-        <div role="tabpanel" class="container tab-pane fade in active" id="general">
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
+<body>
+  <div class="dialog-body">
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist" style="background-color: #F5F5F5;box-shadow: inset 0 -1px 0 #fff;">
+      <li role="presentation" class="active"><a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a></li>
+      <li role="presentation"><a href="#display" aria-controls="display" role="tab" data-toggle="tab">Display</a></li>
+      <li role="presentation"><a href="#colors" aria-controls="colors" role="tab" data-toggle="tab">Colors</a></li>
+      <li role="presentation"><a href="#command" aria-controls="command" role="tab" data-toggle="tab">Command Line</a></li>
+      <li role="presentation"><a href="#logging" aria-controls="logging" role="tab" data-toggle="tab">Logging</a></li>
+      <li role="presentation"><a href="#telnet" aria-controls="telnet" role="tab" data-toggle="tab">Telnet</a></li>
+      <li role="presentation"><a href="#mapper" aria-controls="mapper" role="tab" data-toggle="tab">Mapper</a></li>
+      <li role="presentation"><a href="#chat" aria-controls="chat" role="tab" data-toggle="tab">Chat</a></li>
+      <li role="presentation"><a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab">Advanced</a></li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+      <div role="tabpanel" class="container tab-pane fade in active" id="general">
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
           <input type="checkbox" id="autoConnect" />
           Auto connect on load
           </label>
-          </div>
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
           <input type="checkbox" id="autoCreateCharacter" />
           Auto create character
           </label>
-          </div>
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
           <input type="checkbox" id="lagMeter" />
           Show lagmeter
           </label>
-          </div>
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
           <input type="checkbox" id="showCharacterManager" />
           Show character manager on load
           </label>
-          </div>
+        </div>
 
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
           <input type="checkbox" id="spellchecking" />
           Enable spellchecking
           </label>
-          </div>
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
           <input type="checkbox" id="editorPersistent" />
          Persistent advanced editor
           </label>
-          </div>
-          <div class="col-sm-6 form-group">
-            <label class="control-label">Theme
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">Theme
               <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
             </label>
-          </div>
-
-
-
         </div>
-        <div role="tabpanel" class="tab-pane fade" id="display">
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label class="control-label">Font<br>
+
+
+
+      </div>
+      <div role="tabpanel" class="tab-pane fade" id="display">
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label class="control-label">Font<br>
               <select id="font" class="form-control selectpicker" data-container="body" data-width="250px">
                 <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
                 <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
@@ -770,82 +785,82 @@
                 <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>           
               </select>
             </label>
-            </div>
-            <div class="form-group">
-              <label class="control-label">Font size
+          </div>
+          <div class="form-group">
+            <label class="control-label">Font size
               <input type="text" class="form-control" id="fontSize" style="width: 252px" />
               </label>
-            </div>
-            <div class="form-group">
-              <label class="control-label">Font sample
+          </div>
+          <div class="form-group">
+            <label class="control-label">Font sample
             <div id="font-sample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;width: 280px">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
             </label>
-            </div>
+          </div>
 
-            <div class="form-group">
-              <label class="control-label">
+          <div class="form-group">
+            <label class="control-label">
           <input type="checkbox" id="flashing" />
           Enable flashing text
-          </label>
-            </div>
-
-          </div>
-
-          <div class="col-sm-4 form-group">
-            <label class="control-label">
-          <input type="checkbox" id="AutoCopySelectedToClipboard" />
-          Auto copy selected to clipboard
-          </label>
-          </div>
-
-          <div class="col-sm-4 form-group">
-            <label class="control-label">
-          <input type="checkbox" id="commandEcho" />
-          Echo commands
-          </label>
-          </div>
-
-          <div class="col-sm-4 form-group">
-            <label class="control-label">
-          <input type="checkbox" id="enableURLDetection" />
-          Enable URL detection
-          </label>
-          </div>
-
-          <div class="col-sm-4 form-group">
-            <label class="control-label">
-          <input type="checkbox" id="CommandonClick" />
-          Focus command input on click
-          </label>
-          </div>
-
-          <div class="col-sm-4 form-group">
-            <label class="control-label">
-          <input type="checkbox" id="displaySplit" />
-          Split scroll
-          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
-          </label>
-          </div>
-
-          <div class="col-sm-4 form-group">
-            <label class="control-label">
-          <input type="checkbox" id="display-splitLive" />
-          Split scroll live update
-          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
-          </label>
-          </div>          
-
-          <div class="col-sm-4 form-group">
-            <label class="control-label">
-          Buffer size
-          <input type="number" id="bufferSize" class="form-control" min="100" max="1000000"/>
           </label>
           </div>
 
         </div>
-        <div role="tabpanel" class="tab-pane fade" id="colors">
-          <div class="col-sm-4 form-group">
-            <label>Color scheme 
+
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="AutoCopySelectedToClipboard" />
+          Auto copy selected to clipboard
+          </label>
+        </div>
+
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="commandEcho" />
+          Echo commands
+          </label>
+        </div>
+
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="enableURLDetection" />
+          Enable URL detection
+          </label>
+        </div>
+
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="CommandonClick" />
+          Focus command input on click
+          </label>
+        </div>
+
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="displaySplit" />
+          Split scroll
+          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
+          </label>
+        </div>
+
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+          <input type="checkbox" id="display-splitLive" />
+          Split scroll live update
+          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
+          </label>
+        </div>
+
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+          Buffer size
+          <input type="number" id="bufferSize" class="form-control" min="100" max="1000000"/>
+          </label>
+        </div>
+
+      </div>
+      <div role="tabpanel" class="tab-pane fade" id="colors">
+        <div class="col-sm-4 form-group">
+          <label>Color scheme 
 				<select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" onchange="updateScheme(this.options.selectedIndex)" data-width="auto">
 					<option value="0">Default</option>
 					<option>Classic</option>
@@ -855,107 +870,106 @@
 					<option>mIRC</option>
 					<option>xterm</option>
 				</select></label>
-
-            <div class="col-sm-12 form-group" style="text-align:center">
-              <div>
-                <div class="col-sm-4"></div>
-                <div class="col-sm-4">Fore</div>
-                <div class="col-sm-4">Back</div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Default</div>
-                <div class="col-sm-4"><input type="color" class="form-control" id="color277"></div>
-                <div class="col-sm-4"><input type="color" class="form-control" id="color276"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Echo</div>
-                <div class="col-sm-4"><input type="color" class="form-control" id="color275"></div>
-                <div class="col-sm-4"><input type="color" class="form-control" id="color274"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Info</div>
-                <div class="col-sm-4"><input type="color" class="form-control" id="color273"></div>
-                <div class="col-sm-4"><input type="color" class="form-control" id="color272"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Error</div>
-                <div class="col-sm-4"><input type="color" class="form-control" id="color278"></div>
-                <div class="col-sm-4"><input type="color" class="form-control" id="color279"></div>
-              </div>
+          <div class="col-sm-12 form-group" style="text-align:center">
+            <div>
+              <div class="col-sm-4"></div>
+              <div class="col-sm-4">Fore</div>
+              <div class="col-sm-4">Back</div>
             </div>
-          </div>
-          <div class="col-sm-8 form-group">
-            <div class="col-sm-12 form-group" style="text-align:center">
-              <div>
-                <div class="col-sm-4"></div>
-                <div class="col-sm-2">Fore</div>
-                <div class="col-sm-2">Back</div>
-                <div class="col-sm-2">Bold</div>
-                <div class="col-sm-2">Faint</div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Black</div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color0"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color264"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color8"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color256"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Red</div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color1"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color265"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color9"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color257"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Green</div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color2"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color266"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color10"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color258"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Yellow</div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color3"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color267"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color11"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color259"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Blue</div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color4"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color268"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color12"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color260"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Magenta</div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color5"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color269"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color13"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color261"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">Cyan</div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color6"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color270"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color14"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color262"></div>
-              </div>
-              <div>
-                <div class="col-sm-4" style="text-align:left">White</div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color7"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color271"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color15"></div>
-                <div class="col-sm-2"><input type="color" class="form-control" id="color263"></div>
-              </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Default</div>
+              <div class="col-sm-4"><input type="color" class="form-control" id="color277"></div>
+              <div class="col-sm-4"><input type="color" class="form-control" id="color276"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Echo</div>
+              <div class="col-sm-4"><input type="color" class="form-control" id="color275"></div>
+              <div class="col-sm-4"><input type="color" class="form-control" id="color274"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Info</div>
+              <div class="col-sm-4"><input type="color" class="form-control" id="color273"></div>
+              <div class="col-sm-4"><input type="color" class="form-control" id="color272"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Error</div>
+              <div class="col-sm-4"><input type="color" class="form-control" id="color278"></div>
+              <div class="col-sm-4"><input type="color" class="form-control" id="color279"></div>
             </div>
           </div>
         </div>
-        <div role="tabpanel" class="tab-pane fade" id="command">
-          <div class="col-sm-5">
-            <div class="form-group">
-              <label class="control-label">Font<br>
+        <div class="col-sm-8 form-group">
+          <div class="col-sm-12 form-group" style="text-align:center">
+            <div>
+              <div class="col-sm-4"></div>
+              <div class="col-sm-2">Fore</div>
+              <div class="col-sm-2">Back</div>
+              <div class="col-sm-2">Bold</div>
+              <div class="col-sm-2">Faint</div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Black</div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color0"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color264"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color8"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color256"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Red</div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color1"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color265"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color9"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color257"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Green</div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color2"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color266"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color10"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color258"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Yellow</div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color3"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color267"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color11"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color259"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Blue</div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color4"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color268"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color12"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color260"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Magenta</div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color5"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color269"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color13"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color261"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">Cyan</div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color6"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color270"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color14"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color262"></div>
+            </div>
+            <div>
+              <div class="col-sm-4" style="text-align:left">White</div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color7"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color271"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color15"></div>
+              <div class="col-sm-2"><input type="color" class="form-control" id="color263"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div role="tabpanel" class="tab-pane fade" id="command">
+        <div class="col-sm-5">
+          <div class="form-group">
+            <label class="control-label">Font<br>
               <select id="cmdfont" class="form-control selectpicker" data-container="body" data-width="250px">
                 <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
                 <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
@@ -972,131 +986,155 @@
                 <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
               </select>
             </label>
-            </div>
-            <div class="form-group">
-              <label class="control-label">Font size
+          </div>
+          <div class="form-group">
+            <label class="control-label">Font size
               <input type="text" class="form-control" id="cmdfontSize" style="width: 252px" />
               </label>
-            </div>
-            <div class="form-group">
-              <label class="control-label">Font sample
+          </div>
+          <div class="form-group">
+            <label class="control-label">Font sample
             <div id="cmd-font-sample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;width: 280px">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
             </label>
-            </div>
-
           </div>
 
-          <div class="col-sm-3 form-group">
-            <label class="control-label">
+        </div>
+
+        <div class="col-sm-3 form-group">
+          <label class="control-label">
           <input type="checkbox" id="keepLastCommand" />
           Keep last command
           </label>
-          </div>
+        </div>
 
-          <div class="col-sm-3 form-group">
-            <label class="control-label">
+        <div class="col-sm-3 form-group">
+          <label class="control-label">
           History size
           <input type="number" id="commandHistorySize" class="form-control" min="1" max="2000" style="width: 100px"/>
           </label>
-          </div>
+        </div>
 
-          <div class="col-sm-3 form-group">
-            <label class="control-label">
+        <div class="col-sm-3 form-group">
+          <label class="control-label">
           Command stacking
           <div class="input-group"  style="width: 40px">
           <input type="text" id="commandStackingChar" class="form-control" style="width: 40px" size="1" maxlength ="1"/>
           <div class="input-group-addon"><label><input type="checkbox" id="commandStacking" /> Enable</label></div>
-        </div>
-        </label>
       </div>
+      </label>
+    </div>
 
-      <div class="col-sm-3 form-group">
-        <label class="control-label">
+    <div class="col-sm-3 form-group">
+      <label class="control-label">
           Speedpaths
           <div class="input-group"  style="width: 40px">
             <input type="text" id="speedpathsChar" class="form-control" style="width: 40px" size="1" maxlength ="1"/>
             <div class="input-group-addon" style="border-left: 0px"><label><input type="checkbox" id="enableSpeedpaths" /> Enable</label></div>
-      <div class="input-group-addon"><label><input type="checkbox" id="parseSpeedpaths" /> Parse</label></div>
-    </div>
-    </label>
-    </div>
+    <div class="input-group-addon"><label><input type="checkbox" id="parseSpeedpaths" /> Parse</label></div>
+  </div>
+  </label>
+  </div>
 
-    <div class="col-sm-3 form-group">
-      <label class="control-label">
+  <div class="col-sm-3 form-group">
+    <label class="control-label">
           <input type="checkbox" id="parseSingleQuotes" />
           Parse single quotes as string 
           </label>
-    </div>
+  </div>
 
-    <div class="col-sm-3 form-group">
-      <label class="control-label">
+  <div class="col-sm-3 form-group">
+    <label class="control-label">
           <input type="checkbox" id="parseDoubleQuotes" />
           Parse double quotes as string
           </label>
-    </div>
+  </div>
 
-    <div class="col-sm-12 form-group">
-      <label class="control-label">Newline shotcut</label>
-      <div class="btn-group" data-toggle="buttons">
-        <label class="btn btn-default">
+  <div class="col-sm-12 form-group">
+    <label class="control-label">Newline shotcut</label>
+    <div class="btn-group" data-toggle="buttons">
+      <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-0"> None
             </label>
-        <label class="btn btn-default">
+      <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-1"> Ctrl + Enter
             </label>
-        <label class="btn btn-default">
+      <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-2"> Shift + Enter
             </label>
-        <label class="btn btn-default">
+      <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-4"> (Ctrl | Shift) + Enter
             </label>
-        <label class="btn btn-default">
+      <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-8"> Ctrl + Shift + Enter
             </label>
 
-      </div>
     </div>
-    </div>
-    <div role="tabpanel" class="tab-pane fade" id="logging">
+  </div>
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="logging">
 
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="logEnabled" />
           Enable logging
           </label>
-      </div>
+    </div>
 
 
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="logPrepend" />
           Pre-pend current buffer to log
           </label>
-      </div>
+    </div>
 
 
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="logOffline" />
           Enable logging of offline text
           </label>
-      </div>
+    </div>
 
 
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="logUniqueOnConnect" />
           Create log for every connection
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="logEnabled" />
           Log gagged lines
           </label>
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">Log what</label>
+      <div class="btn-group" data-toggle="buttons">
+        <label class="btn btn-default btn-xs">
+              <input type="checkbox" id="logWhat-html"> HTML
+            </label>
+        <label class="btn btn-default btn-xs active">
+              <input type="checkbox" id="logWhat-text"> Text
+            </label>
+        <label class="btn btn-default btn-xs active">
+              <input type="checkbox" id="logWhat-raw"> Raw
+            </label>
       </div>
-      <div class="col-sm-12 form-group">
-        <label class="control-label" style="width:100%">          
+      <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">If all are disabled will default to text</span>
+    </div>
+
+    <div class="col-sm-12 form-group">
+      <label class="control-label" style="width:100%">          
+          Date/time format
+          <input type="text" id="logTimeFormat" style="width:100%" class="form-control"/>
+          </label>
+          <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
+    </div>
+
+    <div class="col-sm-12 form-group">
+      <label class="control-label" style="width:100%">          
           Save path
           <div class="input-group">
           <input type="text" id="logPath" style="width:100%" class="form-control"/>
@@ -1106,57 +1144,57 @@
                   </button>
           </div>
           </label>
-      </div>
-
     </div>
-    <div role="tabpanel" class="tab-pane fade" id="mapper">
-      <div class="col-sm-4 form-group">
-        <label class="control-label">
+
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="mapper">
+    <div class="col-sm-4 form-group">
+      <label class="control-label">
           <input type="checkbox" id="showMapper" />
           Open on load
           </label>
-      </div>
-      <div class="col-sm-4 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-4 form-group">
+      <label class="control-label">
           <input type="checkbox" id="mapEnabled" />
           Enable mapper
           </label>
-      </div>
+    </div>
 
-      <div class="col-sm-4 form-group">
-        <label class="control-label">
+    <div class="col-sm-4 form-group">
+      <label class="control-label">
           <input type="checkbox" id="mapFollow" />
           Follow player
           </label>
-      </div>
-      <div class="col-sm-4 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-4 form-group">
+      <label class="control-label">
           <input type="checkbox" id="mapLegend" />
           Show legend
           </label>
-      </div>
-      <div class="col-sm-4 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-4 form-group">
+      <label class="control-label">
           <input type="checkbox" id="MapperSplitArea" />
           Split areas
           </label>
-      </div>
-      <div class="col-sm-4 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-4 form-group">
+      <label class="control-label">
           <input type="checkbox" id="MapperFillWalls" />
           Display walls
           </label>
-      </div>
-      <div class="col-sm-12 form-group" style="margin:0;padding:0">
-        <div class="col-sm-4 form-group">
-          <label class="control-label">
+    </div>
+    <div class="col-sm-12 form-group" style="margin:0;padding:0">
+      <div class="col-sm-4 form-group">
+        <label class="control-label">
           <input type="checkbox" id="mapper-memory" />
           Load in memory
           <!--span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Requires restart</span-->
           </label>
-        </div>
-        <div class="col-sm-4  form-group">
-          <label class="control-label">
+      </div>
+      <div class="col-sm-4  form-group">
+        <label class="control-label">
 <!--span class="help-block" style="float:right;font-size: 0.8em;margin:0;padding:0">Requires restart</span-->
           Save period
           <div class="input-group">
@@ -1164,251 +1202,251 @@
            <div class="input-group-addon">ms</div>
             </div>
           </label>
-        </div>
-        <div class="col-sm-4 form-group">
-          <label class="control-label">
+      </div>
+      <div class="col-sm-4 form-group">
+        <label class="control-label">
           <input type="checkbox" id="mapper-persistent" />
           Persistent
           </label>
-        </div>
       </div>
+    </div>
 
-      <div class="col-sm-12 form-group" style="margin:0;padding:0">
-        <div class="col-sm-6 form-group">
-          <label class="control-label">
+    <div class="col-sm-12 form-group" style="margin:0;padding:0">
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
           <input type="checkbox" id="mapper-alwaysOnTopClient" />
           Always on top of the main window
           <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
           </label>
-        </div>
-        <div class="col-sm-6 form-group">
-          <label class="control-label">
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
           <input type="checkbox" id="mapper-alwaysOnTop" />
           Always on top of all windows
           </label>
-        </div>
       </div>
-      <div class="col-sm-12 form-group">
-        <div class="col-sm-4 form-group">
-          <label class="control-label">Default Import Type</label>
-          <div class="btn-group" data-toggle="buttons">
-            <label class="btn btn-default">
+    </div>
+    <div class="col-sm-12 form-group">
+      <div class="col-sm-4 form-group">
+        <label class="control-label">Default Import Type</label>
+        <div class="btn-group" data-toggle="buttons">
+          <label class="btn btn-default">
               <input type="radio" name="mapper-importType" id="mapper-importTypeMerge"> Merge
             </label>
-            <label class="btn btn-default active">
+          <label class="btn btn-default active">
               <input type="radio" name="mapper-importType" id="mapper-importTypeReplace" checked> Replace
             </label>
-          </div>
         </div>
-        <div class="col-sm-4 form-group">
-          <label class="control-label">
+      </div>
+      <div class="col-sm-4 form-group">
+        <label class="control-label">
             Delay between directions
             <div class="input-group">
               <input type="number" id="commandDelay" class="form-control"/>
               <div class="input-group-addon">ms</div>
             </div>
             </label>
-        </div>
+      </div>
 
-        <div class="form-group">
-          <label class="col-sm-4 control-label">
+      <div class="form-group">
+        <label class="col-sm-4 control-label">
             Directions to send
             <input type="number" id="commandDelayCount" class="form-control"/>
             </label>
-        </div>
       </div>
     </div>
-    <div role="tabpanel" class="tab-pane fade" id="chat">
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="chat">
 
-      <div class="col-sm-12 form-group" style="margin:0;padding:0">
-        <div class="col-sm-6 form-group">
-          <label class="control-label">
+    <div class="col-sm-12 form-group" style="margin:0;padding:0">
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
           <input type="checkbox" id="chat-alwaysOnTopClient" />
           Always on top of the main window
           <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
           </label>
-        </div>
-        <div class="col-sm-6 form-group">
-          <label class="control-label">
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
           <input type="checkbox" id="chat-alwaysOnTop" />
           Always on top of all windows
           </label>
-        </div>
       </div>
-      <div class="col-sm-12 form-group" style="margin:0;padding:0">
-        <div class="col-sm-6 form-group">
-          <label class="control-label">
+    </div>
+    <div class="col-sm-12 form-group" style="margin:0;padding:0">
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
           <input type="checkbox" id="chat-captureTells" />
           Capture tells          
           <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Tell and emoteto</span>
           </label>
-        </div>
-        <div class="col-sm-6 form-group">
-          <label class="control-label">
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
           <input type="checkbox" id="chat-captureTalk" />
           Capture talk
           <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Say, yell, whisper and speak</span>
           </label>
-        </div>
       </div>
-      <div class="col-sm-12 form-group" style="margin:0;padding:0">
-        <div class="col-sm-6 form-group">
-          <label class="control-label">
+    </div>
+    <div class="col-sm-12 form-group" style="margin:0;padding:0">
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
           <input type="checkbox" id="chat-captureReviews" />
           Capture reviews
           <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Captures based on enabled captures</span>
           </label>
-        </div>
-        <div class="col-sm-6 form-group">
-          <label class="control-label">
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">
           <input type="checkbox" id="chat-persistent" />
           Persistent
           </label>
-        </div>
       </div>
+    </div>
 
-      <div class="col-sm-12 form-group" style="margin:0;padding:0">
-        <div class="col-sm-3 form-group">
-          <label class="control-label">
+    <div class="col-sm-12 form-group" style="margin:0;padding:0">
+      <div class="col-sm-3 form-group">
+        <label class="control-label">
           <input type="checkbox" id="chat-captureLines" />
           Capture lines          
           </label><br>
-          <label class="control-label">
+        <label class="control-label">
           <input type="radio" name="lines" id="chat-captureAllLines" />
           All
           </label><br>
-          <label class="control-label">
+        <label class="control-label">
       <input type="radio" name="lines" id="chat-selective" />
           Selective          
           </label>
-        </div>
-        <div class="col-sm-9 form-group">
-          <div class="form-group">
-            <label class="control-label" style="width: 100%">Selective Lines
+      </div>
+      <div class="col-sm-9 form-group">
+        <div class="form-group">
+          <label class="control-label" style="width: 100%">Selective Lines
               <textarea class="form-control" id="chat-lines" style="width: 100%"></textarea>
               <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Case sensitive and separate each name with a comma(,) for example: Chat,Rp</span>
               </label>
-          </div>
         </div>
       </div>
-
     </div>
-    <div role="tabpanel" class="tab-pane fade" id="telnet">
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="telnet">
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="enableMCCP" />
           MUD Compression Protocol (MCCP)
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="enableUTF8" />
           UTF-8
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="enableMXP" />
           MUD eXtension Protocol (MXP)
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="enableEcho" />
           Echo
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="enableMSP" />
           MUD Sound Protocol (MSP)
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="notifyMSPPlay" />
           Display Notification on MSP Play
           </label>
-      </div>
     </div>
-    <div role="tabpanel" class="container tab-pane fade in" id="advanced">
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+  </div>
+  <div role="tabpanel" class="container tab-pane fade in" id="advanced">
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="dev" />
           Connect to development
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="enablePing" />
           Enable GMCP ping for lagmeter
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="showScriptErrors" />
           Show script errors
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="enableDebug" />
           Enable debug
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="logErrors" />
           Log errors
           </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
+    </div>
+    <div class="col-sm-6 form-group">
+      <label class="control-label">
           <input type="checkbox" id="allowNegativeNumberNeeded" />
           Allow negative number for
           experience needed 
           </label>
-      </div>
+    </div>
 
-      <div class="col-sm-12 form-group">
-        <div class="col-sm-6 form-group">
-          <label class="control-label">Backup save</label>
-          <div class="btn-group" data-toggle="buttons">
-            <label class="btn btn-default">
+    <div class="col-sm-12 form-group">
+      <div class="col-sm-6 form-group">
+        <label class="control-label">Backup save</label>
+        <div class="btn-group" data-toggle="buttons">
+          <label class="btn btn-default">
               <input type="checkbox" id="backup-save-settings"> Settings
             </label>
-            <label class="btn btn-default active">
+          <label class="btn btn-default active">
               <input type="checkbox" id="backup-save-profiles"> Profiles
             </label>
-            <label class="btn btn-default active">
+          <label class="btn btn-default active">
               <input type="checkbox" id="backup-save-map"> Map
             </label>
-          </div>
         </div>
-        <div class="col-sm-6 form-group">
-          <label class="control-label">Backup load</label>
-          <div class="btn-group" data-toggle="buttons">
-            <label class="btn btn-default">
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="control-label">Backup load</label>
+        <div class="btn-group" data-toggle="buttons">
+          <label class="btn btn-default">
               <input type="checkbox" id="backup-load-settings"> Settings
             </label>
-            <label class="btn btn-default active">
+          <label class="btn btn-default active">
               <input type="checkbox" id="backup-load-profiles"> Profiles
             </label>
-            <label class="btn btn-default active">
+          <label class="btn btn-default active">
               <input type="checkbox" id="backup-load-map"> Map
             </label>
-          </div>
         </div>
       </div>
     </div>
-    </div>
+  </div>
+  </div>
 
-    </div>
-    <div class="dialog-footer">
-      <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
-      <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
-      <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
-    </div>
-  </body>
+  </div>
+  <div class="dialog-footer">
+    <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
+    <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
+    <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
+  </div>
+</body>
 
 </html>

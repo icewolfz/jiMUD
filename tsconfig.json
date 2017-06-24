@@ -8,7 +8,10 @@
         "noImplicitAny": false,
         "allowJs": true,
         "outDir": "./out",
-        "rootDir": "./src/ts",
+        "rootDirs": [
+            "./src/common",
+            "./src/workers"
+        ],
         "newLine": "LF",
         "checkJs": true
     },
@@ -18,7 +21,8 @@
         "./src/**/*.js",
         "./lib/**/*.js",
         "./_bak/**/*.js",
-        "./out/**/*.js"
+        "./out/**/*.js",
+        "./src/worker/**/*.*"
     ],
     "include": [
         "./src/**/*.ts"

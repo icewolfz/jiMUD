@@ -1,34 +1,8 @@
 //cSpell:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //cSpell:ignore emoteto, emotetos
+import { NewLineType, Log, BackupSelection } from "./types"
 const path = require('path');
 const fs = require('fs');
-
-export interface WindowState {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	fullscreen: boolean;
-	maximized: boolean;
-	devTools: boolean;
-}
-
-export enum BackupSelection {
-	None = 0,
-	Map = 2,
-	Profiles = 4,
-	Settings = 8,
-	All = Map | Profiles | Settings
-}
-
-
-export enum NewLineType {
-	None = 0,
-	Ctrl = 1,
-	Shift = 2,
-	CtrlOrShift = 4,
-	CtrlAndShift = 8
-}
 
 export class Mapper {
 	public enabled: boolean = true;
@@ -173,6 +147,7 @@ export class Settings {
 	public logOffline: boolean = false;
 	public logPrepend: boolean = false;
 	public logGagged: boolean = false;
+	public logTimeFormat: string = "YYYYMMDD-HHmmss";
 	public notifyMSPPlay: boolean = false;
 	public bufferSize: number = 5000;
 	public commandHistorySize: number = 20;
@@ -183,7 +158,7 @@ export class Settings {
 	public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
 	public commandStacking: boolean = true;
-	public htmlLog: boolean = true;
+	public logWhat: Log = Log.Html;
 	public keepLastCommand: boolean = true;
 	public enableMXP: boolean = true;
 	public enableMSP: boolean = true;

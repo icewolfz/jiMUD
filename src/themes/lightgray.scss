@@ -7,13 +7,12 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background-color: #{$panelBackground};
 }
 
-#display-container {
+#display {
     left: 34px;
     right: 165px;
     top: 2px;
     bottom: 29px;
     border: 1px solid #{$borderColor};
-    padding: 0px;
 }
 
 #display-border {
@@ -74,6 +73,38 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 
 /* Let's get this party started */
+.scroll-track {
+    background-color: #{$panelBackground};
+}
+
+.scroll-thumb {
+    background: #aaa;
+    border: 1px solid #{$borderColor};
+}
+
+.scroll-thumb:hover {
+    background: #e6e6e6;
+}
+
+.scroll-thumb:active {
+    background-color: #848282;
+}
+
+.scroll-corner {
+    background-color: #{$panelBackground};
+}
+
+.scroll-horizontal {
+    border-top: 0px;
+}
+
+.scroll-vertical {
+    border-left: 0px;
+}
+
+.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
+    background: #888;
+}
 
 #display::-webkit-scrollbar,
 #bars::-webkit-scrollbar {
@@ -97,6 +128,17 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     background: #aaa;
     border: 1px solid #{$borderColor};
 }
+
+#display::-webkit-scrollbar-thumb:hover,
+#bars::-webkit-scrollbar-thumb:hover {
+    background: #e6e6e6;
+}
+
+#display::-webkit-scrollbar-thumb:active,
+#bars::-webkit-scrollbar-thumb:active {
+    background: #848282;
+}
+
 
 #display::-webkit-scrollbar-thumb:window-inactive,
 #bars::-webkit-scrollbar-thumb:window-inactive {
@@ -200,13 +242,6 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     color: #fff;
 }
 
-#find-count {
-    width: 75px;
-    font-family: Arial, Helvetica, sans-serif;
-    padding: 4px;
-    text-align: center;
-}
-
 #find-case {
     font-size: 10px;
 }
@@ -218,24 +253,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 .find-highlight {
     border-radius: 4px;
-    background: rgba(51, 153, 255, 0.6);
-    border-bottom: 1px solid #3399ff;
-    border-top: 1px solid #3399ff;
-}
-
-.find-highlight.start,
-.find-highlight.current.start {
-    border-radius: 4px 0px 0px 4px;
-}
-
-.find-highlight.middle,
-.find-highlight.current.middle {
-    border-radius: 0px;
-}
-
-.find-highlight.end,
-.find-highlight.current.end {
-    border-radius: 0px 4px 4px 0px;
+    background: rgb(171, 102, 31);
 }
 
 .find-no-results {
@@ -244,9 +262,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 .find-highlight.current {
     border-radius: 4px;
-    background: rgba(116, 192, 114, 0.6);
-    border-bottom: 1px solid #74C072;
-    border-top: 1px solid #74C072;
+    background: rgb(116, 192, 114);
 }
 
 

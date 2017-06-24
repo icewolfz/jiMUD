@@ -7,7 +7,7 @@ body {
     -webkit-user-select: none;
     user-select: none;
     overflow: hidden;
-    font-size: 0.8em;
+    font-size: 14px;
     height: 100%;
 }
 
@@ -27,15 +27,9 @@ body {
 
 #display {
     position: absolute;
-    z-index: 0;
+    z-index: 2;
     overflow-y: scroll;
-    -webkit-user-select: auto;
-    user-select: auto;
     box-sizing: border-box;
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
     color: #BBBBBB;
     border: 0px solid silver;
     font-family: "Courier New", monospace;
@@ -44,10 +38,43 @@ body {
     background-color: black;
     text-shadow: none;
     padding: 2px;
+    overflow: hidden;
     /*
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);    
     */
+}
+
+#display-view {
+    z-index: 3;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    /*
+    position: relative;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    */
+}
+
+#display-background {
+    top: 0px;
+    z-index: 1;
+    left: 0px;
+    right: 0px;
+    position: absolute;
+    pointer-events: none;
+}
+
+#display-overlay {
+    top: 0px;
+    z-index: 2;
+    left: 0px;
+    right: 0px;
+    position: absolute;
+    pointer-events: none;
 }
 
 #display-split {
@@ -99,6 +126,7 @@ body {
 
 #display-split-frame {
     height: 20%;
+    min-height: 150px;
     position: absolute;
     bottom: 0;
     left: 0;
@@ -106,12 +134,18 @@ body {
     display: none;
     background-color: black;
     overflow: hidden;
+    z-index: 10;
 }
 
 #display-border {
     position: absolute;
     z-index: 1;
     box-sizing: border-box;
+}
+
+.overlay-line {
+    position: absolute;
+    clear: both;
 }
 
 #Character,
@@ -127,6 +161,7 @@ body {
     left: -100px;
     margin: 0px;
     text-decoration: underline overline;
+    line-height: normal;
 }
 
 #command {
@@ -207,6 +242,10 @@ body {
 
 #find-count {
     display: inline-block;
+    width: 100px;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 4px;
+    text-align: center;
 }
 
 #find-selection {
@@ -362,3 +401,42 @@ body {
 
 
 /*end status*/
+
+.find-highlight
+{
+    display: inline-block;
+    height: 100%;
+    pointer-events: none;
+    position: absolute;
+    box-sizing: border-box;
+    white-space: pre;
+    overflow: hidden;
+}
+
+.select-text {
+    background-color: rgb(51, 153, 255);
+    color: rgb(255, 255, 255);
+    display: inline-block;
+    height: 100%;
+    pointer-events: none;
+    position: absolute;
+    box-sizing: border-box;
+    white-space: pre;
+    overflow: hidden;
+}
+
+.select-text.trc, .find-highlight.trc {
+    border-top-right-radius: 4px;
+}
+
+.select-text.tlc, .find-highlight.tlc {
+    border-top-left-radius: 4px;
+}
+
+.select-text.brc, .find-highlight.brc {
+    border-bottom-right-radius: 4px;
+}
+
+.select-text.blc, .find-highlight.blc {
+    border-bottom-left-radius: 4px;
+}
