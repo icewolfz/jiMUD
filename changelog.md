@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.4.0
+##### 0.4.0 2017-06-23
 - **New:**
   - Display control
     - Faster then old system by nearly 50%
