@@ -47,7 +47,7 @@
     "package:linux": "cd dist/ && tar -Jcvf jiMUD_${npm_package_version}_Linux_x64.tar.xz jiMUD-linux-x64 && tar -Jcvf jiMUD_${npm_package_version}_Linux_ia32.tar.xz jiMUD-linux-ia32 && tar -Jcvf jiMUD_${npm_package_version}_Linux_armv7l.tar.xz jiMUD-linux-armv7l && cd ../",
     "package:linux32": "cd dist/ && tar -Jcvf jiMUD_${npm_package_version}_Linux_ia32.tar.xz jiMUD-linux-ia32 && cd ../",
     "package:linux64": "cd dist/ && tar -Jcvf jiMUD_${npm_package_version}_Linux_x64.tar.xz jiMUD-linux-x64 && cd ../",
-    "package:linuxarm": "cd dist/ && tar -Jcvf jiMUD_${npm_package_version}_Linux_armv7l.tar.xz jiMUD-linux-armv7l && cd ../",    
+    "package:linuxarm": "cd dist/ && tar -Jcvf jiMUD_${npm_package_version}_Linux_armv7l.tar.xz jiMUD-linux-armv7l && cd ../",
     "package:linuxwin": "cd dist && \"C:\\Program Files\\7-Zip\\7z.exe\" a -r -mx9 jiMUD_%npm_package_version%_Linux_x64.7z jiMUD-linux-x64 && \"C:\\Program Files\\7-Zip\\7z.exe\" a -r -mx9 jiMUD_%npm_package_version%_Linux_ia32.7z jiMUD-linux-ia32 && \"C:\\Program Files\\7-Zip\\7z.exe\" a -r -mx9 jiMUD_%npm_package_version%_Linux_armv7l.7z jiMUD-linux-armv7l && cd ../",
     "package:linux-other": "npm run package:linux-other32 && npm run package:linux-other64 && npm run package:linux-otherarm",
     "package:linux-other32": "build --pd=dist/jiMUD-linux-ia32/ --l deb AppImage rpm --ia32",
@@ -67,9 +67,9 @@
   "devDependencies": {
     "@types/bootstrap": "^3.3.34",
     "@types/jquery": "^2.0.47",
-    "@types/node": "^7.0.31",
+    "@types/node": "^7.0.32",
     "babel-cli": "^6.24.1",
-    "babili": "^0.1.3",
+    "babili": "^0.1.4",
     "devtron": "^1.4.0",
     "electron": "^1.7.3",
     "electron-builder": "^17.3.1",
@@ -93,6 +93,7 @@
   },
   "dependencies": {
     "buzz": "^1.2.0",
+    "drivelist": "^5.0.22",
     "jquery": "^3.1.1",
     "lz-string": "^1.4.4",
     "moment": "^2.18.1",
