@@ -492,6 +492,7 @@
       client.host = "www.shadowmud.com";
       client.port = client.options.dev ? 1035 : 1030;
       client.telnet.GMCPSupports.push("Room 1");
+      client.telnet.GMCPSupports.push("IED 1");
 
       client.on('profile-updated', (profile) => {
         ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
@@ -623,6 +624,7 @@
         }
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
+        ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: false });
         ipcRenderer.send('set-overlay', 1);
       });
 
@@ -659,6 +661,8 @@
       });
 
       client.on('received-GMCP', (mod, obj) => {
+        if(mod == "IED.init")
+          ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
         ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
       });
 
@@ -1343,6 +1347,11 @@
 
     function showCharacters() {
       window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+    }
+
+    function showImmortalTools() {
+      ipcRenderer.send('show-window', 'immortal', {show:true, file:'ied.html', icon:'ied', alwaysOnTopClient:true});
+      //window.open('ied.html', '', 'backgroundColor=#fff,height=600,width=800,icon=' + path.join(__dirname, '../assets/icons/png/ied.png'));
     }
 
     $(document).ready(init);

@@ -244,7 +244,7 @@ export class Client extends EventEmitter {
                 this.commandInput.focus();
         });
 
-        this.display.on('split-move-done', (h)=> {
+        this.display.on('split-move-done', (h) => {
             this.options.display.splitHeight = h;
             this.saveOptions();
         });
@@ -520,30 +520,32 @@ export class Client extends EventEmitter {
         this.display.append(txt, remote, force);
     }
 
-     error(err) {
+    error(err: any) {
+        console.log(err);
         let msg = "";
         if (err === null || typeof err == "undefined")
-            return;
-        err = { error: err, handled: false };
-        //this.emit('error', err);
-        if (err.handled) return;
-
-        if (err.error === null || typeof err.error == "undefined")
             msg = "Unknown";
-        else if (typeof err.error == "string" && err.error.length === 0)
+        else if (typeof err == "string" && err.length === 0)
             msg = "Unknown";
-        else if (err.error instanceof ReferenceError) {
-            if (err.error.lineNumber)
-                msg = " File: " + err.error.fileName + ", Line: " + err.error.lineNumber + ", " + err.error.message;
+        else if (err.stack)
+            msg += err.stack;
+        /*
+        else if (err instanceof ReferenceError) {
+            if (err.lineNumber)
+                msg = " File: " + err.fileName + ", Line: " + err.lineNumber + ", " + err.message;
             else
-                msg = err.error;
+                msg = err;
         }
-        else if (err.error instanceof Error)
-            msg = err.error.name + " - " + err.error.message;
-        else if (err.error.message)
-            msg = err.error.message;
+        */
+        else if (err instanceof TypeError)
+            msg = err.name + " - " + err.message;
+        else if (err instanceof Error)
+            msg = err.name + " - " + err.message;
+        else if (err.message)
+            msg = err.message;
         else
-            msg = err.error;
+            msg = err;
+
 
         this.echo("Error: " + msg + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
 

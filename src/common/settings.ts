@@ -219,6 +219,10 @@ export class Settings {
 		splitLive: true
 	}
 
+	public extensions = {
+		
+	}
+
 	public backupLoad: BackupSelection = BackupSelection.All;
 	public backupSave: BackupSelection = BackupSelection.All;
 
@@ -257,7 +261,7 @@ export class Settings {
 			if (!data.hasOwnProperty(prop)) {
 				continue;
 			}
-			if (prop == 'mapper' || prop == 'profiles' || prop == 'buttons' || prop == 'chat' || prop == 'find' || prop == 'display') {
+			if (prop == 'extensions' || prop == 'mapper' || prop == 'profiles' || prop == 'buttons' || prop == 'chat' || prop == 'find' || prop == 'display') {
 				for (var prop2 in data[prop]) {
 					if (!data[prop].hasOwnProperty(prop2)) {
 						continue;

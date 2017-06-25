@@ -462,6 +462,16 @@ var menuTemp = [
         accelerator: 'CmdOrCtrl+L'
       },
       {
+        label: '&Immortal tools...',
+        id: 'immortal',
+        click: () => {
+          win.webContents.executeJavaScript('showImmortalTools()');
+        },
+        visible: false,
+        accelerator: 'CmdOrCtrl+I'
+      },
+
+      {
         label: '&Map...',
         click: showMapper,
         accelerator: 'CmdOrCtrl+T'
@@ -1415,6 +1425,8 @@ ipcMain.on('show-window', (event, window, args) => {
     showColor(args);
   else if (windows[window] && windows[window].window)
     showWindow(window, windows[window]);
+  else
+    createNewWindow(window, args);
 });
 
 ipcMain.on('import-map', (event, data) => {
@@ -1965,7 +1977,7 @@ function createNewWindow(name, options) {
   s = loadWindowState(name);
   windows[name] = options;
   windows[name].window = new BrowserWindow({
-    parent: set.windows[name].alwaysOnTopClient ? win : null,
+    parent: windows[name].alwaysOnTopClient ? win : null,
     title: options.title || name,
     x: s.x,
     y: s.y,
@@ -1973,7 +1985,7 @@ function createNewWindow(name, options) {
     height: s.height,
     backgroundColor: options.background || '#000',
     show: false,
-    skipTaskbar: (set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false,
+    skipTaskbar: (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false,
     icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png')
   });
 
@@ -2008,6 +2020,41 @@ function createNewWindow(name, options) {
 
   windows[name].window.on('unmaximize', () => {
     trackWindowState(name, windows[name].window);
+  })
+
+  windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+    event.preventDefault()
+    if (frameName === 'modal') {
+      // open window as modal
+      Object.assign(options, {
+        modal: true,
+        parent: win,
+        movable: false,
+        minimizable: false,
+        maximizable: false,
+        skipTaskbar: true,
+        resizable: false
+      })
+
+      var b = win.getBounds();
+      options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
+      options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
+    }
+    options.show = false;
+    const w = new BrowserWindow(options)
+    if (debug)
+      w.webContents.openDevTools();
+    w.setMenu(null);
+    w.once('ready-to-show', () => {
+      addInputContext(w);
+      w.show();
+    });
+    w.webContents.on('crashed', (event, killed) => {
+      logError(`${url} crashed, killed: ${killed}\n`, true);
+    });
+
+    w.loadURL(url)
+    event.newGuest = w;
   })
 
   if (debug)
@@ -2129,12 +2176,25 @@ function loadCharacters(noLoad) {
 }
 
 function logError(err, skipClient) {
+  var msg = "";
   if (debug)
     console.error(err);
+  if (err.stack)
+    msg = err.stack;
+  else if (err instanceof TypeError)
+    msg = err.name + " - " + err.message;
+  else if (err instanceof Error)
+    msg = err.name + " - " + err.message;
+  else if (err.message)
+    msg = err.message;
+  else
+    msg = err;
+
+
   if (win && !skipClient)
-    win.webContents.send('error', err);
+    win.webContents.send('error', msg);
   else if (set && set.logErrors) {
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + "\n", { flag: 'a' });
-    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), err.toLocaleString() + "\n", { flag: 'a' });
+    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), msg + "\n", { flag: 'a' });
   }
 }
