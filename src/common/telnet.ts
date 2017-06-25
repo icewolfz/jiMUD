@@ -1665,7 +1665,7 @@ export class Telnet extends EventEmitter {
     private _createSocket() {
         var _socket;
         try {
-            _socket = new Socket({ 'allowHalfOpen': true, 'readable': true, 'writable': true });
+            _socket = new Socket({ 'allowHalfOpen': true });
             //_socket.setEncoding('binary');
             _socket.on('close', err => {
                 if (err)
