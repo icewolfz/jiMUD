@@ -1341,7 +1341,8 @@ ipcMain.on('chat', (event, text) => {
 
 ipcMain.on('setting-changed', (event, data) => {
   if (data.type == "mapper" && data.name == "alwaysOnTopClient") {
-    winMap.setParentWindow(data.value ? win : null);
+    if (winMap.setParentWindow)
+      winMap.setParentWindow(data.value ? win : null);
     winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
   }
   if (data.type == "mapper" && data.name == "setAlwaysOnTop") {
@@ -1354,7 +1355,8 @@ ipcMain.on('setting-changed', (event, data) => {
     winMap.webContents.send('setting-changed', data);
 
   if (data.type == "chat" && data.name == "alwaysOnTopClient") {
-    winChat.setParentWindow(data.value ? win : null);
+    if (winChat.setParentWindow)
+      winChat.setParentWindow(data.value ? win : null);
     winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
   }
   if (data.type == "chat" && data.name == "setAlwaysOnTop") {
@@ -1370,10 +1372,12 @@ ipcMain.on('setting-changed', (event, data) => {
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
-    windows[name].window.setParentWindow(set.windows[name].alwaysOnTopClient ? win : null);
+    console.log(windows[name].window);
+    if (windows[name].window.setParentWindow)
+      windows[name].window.setParentWindow(set.windows[name].alwaysOnTopClient ? win : null);
     windows[name].window.setSkipTaskbar((set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false);
     if (windows[name].persistent)
-      createNewWindow(name);
+      createNewWindow(name, windows[name]);
   }
 })
 

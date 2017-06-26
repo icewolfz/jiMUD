@@ -5,6 +5,18 @@ import { parseTemplate } from "./library";
 const fs = require("fs");
 const path = require("path");
 
+export enum CacheType {
+  filename = 0,
+  encoded = 1,
+  create = 2
+}
+
+export enum Echo {
+    none = 0,
+    simple = 1,
+    debug = 2
+}
+
 export class IED extends EventEmitter {
     constructor() {
         super();

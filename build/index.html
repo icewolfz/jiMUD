@@ -661,7 +661,7 @@
       });
 
       client.on('received-GMCP', (mod, obj) => {
-        if(mod == "IED.init")
+        if (mod == "IED.init")
           ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
         ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
       });
@@ -1274,6 +1274,10 @@
         client.options.chat[data.name] = data.value;
         client.saveOptions();
       }
+      else if (data.type == "extensions") {
+        client.options.extensions[data.name] = data.value;
+        client.saveOptions();
+      }
     });
 
     ipcRenderer.on('send-background', (event, command) => {
@@ -1350,7 +1354,7 @@
     }
 
     function showImmortalTools() {
-      ipcRenderer.send('show-window', 'immortal', {show:true, file:'ied.html', icon:'ied', alwaysOnTopClient:true});
+      ipcRenderer.send('show-window', 'immortal', { show: true, file: 'ied.html', icon: 'ied', alwaysOnTopClient: true });
       //window.open('ied.html', '', 'backgroundColor=#fff,height=600,width=800,icon=' + path.join(__dirname, '../assets/icons/png/ied.png'));
     }
 
