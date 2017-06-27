@@ -1293,6 +1293,10 @@ ipcMain.on('send-command', (event, command) => {
   win.webContents.send('send-command', command);
 })
 
+ipcMain.on('send-gmcp', (event, data) => {
+  win.webContents.send('send-gmcp', data);
+})
+
 ipcMain.on('send-raw', (event, raw) => {
   win.webContents.send('send-raw', raw);
 })
@@ -1372,7 +1376,6 @@ ipcMain.on('setting-changed', (event, data) => {
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
-    console.log(windows[name].window);
     if (windows[name].window.setParentWindow)
       windows[name].window.setParentWindow(set.windows[name].alwaysOnTopClient ? win : null);
     windows[name].window.setSkipTaskbar((set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false);

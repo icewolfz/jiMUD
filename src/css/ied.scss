@@ -211,11 +211,11 @@ body {
     white-space:nowrap;
 }
 
-#local-list tr{
+#local-list tr, #remote-list tr {
     height: 20px;
 }
 
-#local-list {
+#local-list, #remote-list {
     height: auto !important;
 }
 
@@ -230,4 +230,16 @@ body {
 
 #local .row, #remote .row {
     margin: 0px;
+}
+
+table.dataTable {
+    outline: none;
+}
+
+table.dataTable tbody>tr.selected, table.dataTable tbody>tr>.selected {
+    /*background-color: #08C;*/
+    background-color: #969696 !important;
+}
+table.dataTable.focused tbody>tr.selected, table.dataTable.focused tbody>tr>.selected {
+    background-color: #08C !important;
 }

@@ -1288,6 +1288,10 @@
       client.sendCommand(command);
     });
 
+    ipcRenderer.on('send-gmcp', (event, data) => {
+      client.sendGMCP(data);
+    });
+
     ipcRenderer.on('send-raw', (event, raw) => {
       client.sendRaw(raw);
     });
