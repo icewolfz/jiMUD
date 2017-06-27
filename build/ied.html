@@ -110,50 +110,75 @@
                     },
                     { type: 'separator' },
                     {
-                        label: '&Backup',
-                        enabled: false,
-                        accelerator: "CmdOrCtrl+B"
-                    },
-                    {
-                        label: '&Rename',
-                        enabled: false,
-                        accelerator: "F2"
-                    },
-                    {
-                        label: '&Delete',
-                        enabled: false,
-                        accelerator: "Delete"
-                    },
-                    {
-                        label: '&Create directory',
-                        accelerator: "CmdOrCtrl+N"
-                    },
-                    { type: 'separator' },
-                    {
-                        label: '&Select all',
-                        enabled: false,
-                        accelerator: "CmdOrCtrl+A"
-                    },
-                    { type: 'separator' },
-                    {
-                        label: '&Open...',
-                        enabled: false,
-                        accelerator: "CmdOrCtrl+O"
-                    },
-                    {
-                        label: 'Open &with...',
-                        enabled: false,
+                        label: '&Local',
+                        enabled: true,
                         submenu: [
                             {
-                                label: '&Default',
-                                //linux - xdg-open /filepath/file.txt
-                                //windows jusy open wiht shell process?
-                                //mac - Open <filename> ?
-                                accelerator: "CmdOrCtrl++Shift+E"
+                                label: '&Rename',
+                                enabled: false
                             },
                             {
-                                label: '&Editor',
+                                label: '&Delete',
+                                enabled: false
                             },
+                            {
+                                label: '&Create directory'
+                            },
+                            { type: 'separator' },
+                            {
+                                label: '&Select all',
+                                enabled: false
+                            },
+                            { type: 'separator' },
+                            {
+                                label: '&Open...',
+                                enabled: false,
+                                accelerator: "CmdOrCtrl+O"
+                            },
+                            {
+                                label: 'Open &with...',
+                                enabled: false,
+                                submenu: [
+                                    {
+                                        label: '&Default',
+                                        //linux - xdg-open /filepath/file.txt
+                                        //windows jusy open wiht shell process?
+                                        //mac - Open <filename> ?
+                                        accelerator: "CmdOrCtrl++Shift+E"
+                                    },
+                                    {
+                                        label: '&Editor',
+                                    },
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        label: '&Remote',
+                        enabled: true,
+                        submenu: [
+                            {
+                                label: '&Backup',
+                                enabled: false,
+                                accelerator: "CmdOrCtrl+B"
+                            },
+                            { type: 'separator' },
+                            {
+                                label: '&Rename',
+                                enabled: false
+                            },
+                            {
+                                label: '&Delete',
+                                enabled: false
+                            },
+                            {
+                                label: '&Create directory'
+                            },
+                            { type: 'separator' },
+                            {
+                                label: '&Select all',
+                                enabled: false
+                            }
                         ]
                     },
                     { type: 'separator' },
@@ -485,6 +510,7 @@
 
         function logMessage(msg) {
             $("#log-view").html($("#log-view").html() + msg.toString() + "<br>");
+            $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
         }
 
         $(document).ready(() => {
@@ -814,12 +840,14 @@
 </head>
 
 <body>
-    <div id="toolbar" class="btn-toolbar" role="toolbar">
+    <div id="main">
+        <div id="local">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <label class="control-label" for="local-path">
+                        Local
         <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick=""><i class="fa fa-refresh"></i></button>
-        <div class="btn-group" role="group">
             <button id="btn-upload" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Upload files" onclick=""><i class="fa fa-upload"></i></button>
-            <button id="btn-download" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files" onclick=""><i class="fa fa-download"></i></button>
-        </div>
         <div class="btn-group" role="group">
             <button id="btn-rename" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick=""><i class="fa fa-i-cursor"></i></button>
             <button id="btn-delete" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick=""><i class="fa fa-times"></i></button>
@@ -827,57 +855,35 @@
         <button id="btn-newfolder" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
             <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                 <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
-                <i class="fa fa-certificate fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
+                <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
             </span>                    
         </button>
-        <!--
-        <div class="btn-group" role="group" id="queue-controls">
-            <button id="btn-restart" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Restart" onclick=""><i class="fa fa-rotate-left"></i></button>
-            <button id="btn-pause" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Pause" onclick="" data-toggle="button"><i class="fa fa-pause"></i></button>
-            <button id="btn-stop" disabled="disabled" type="button" class="btn btn-warning btn-xs" title="Stop" onclick=""><i class="fa fa-stop"></i></button>
-        </div>
-        -->
-
-        <button id="btn-reset" type="button" class="btn btn-warning btn-xs" title="Reset all" onclick=""><i class="fa fa-eject"></i></button>
-
-        <button id="btn-clear" type="button" class="btn btn-default btn-xs" title="Clear log" onclick="">
-            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
-                <i class="fa fa-file-o fa-stack-2x" style="font-size: 1em"></i>
-                <i class="fa fa-times fa-stack-1x" style="font-size: 0.5em;margin-top: 1px;"></i>
-            </span>                    
-        </button>
-        <button id="btn-queue" type="button" class="btn btn-default btn-xs" title="Show queue" onclick="" data-toggle="button"><i class="fa fa-list-alt"></i></button>
-    </div>
-    <div id="main">
-        <div id="local">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <label class="control-label" for="local-path">
-                        Local
+                        
                     </label>
 
                     <span class="path-container">
                     <div class="input-group">
                         <input type="text" id="local-path" class="form-control" />
-                        <span class="input-group-btn" style="width: 17px;">
-                            <button id="button-local" class="btn btn-default dropdown-toggle" style="width:100%;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                        <span class="input-group-btn" style="">
+                            <button id="button-local" class="btn btn-default dropdown-toggle" style="width:17px;min-width:17px;border-radius: 0;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                                 <span class="caret" style="margin-left: -1px;"></span>
                     </button>
                     <ul id="local-navigate" class="dropdown-menu" aria-labelledby="button-local" data-container="body"></ul>
-                    </span>
-                </div>
-                </span>
-                <span class="path-buttons">
-                            <button id="btn-local-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
-                                <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                    <button id="btn-local-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
+                                <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                     <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
                                     <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>
                                 </span>
                 </button>
+                    </span>
+
+                </div>
+                </span>
+                <span class="path-buttons">
                 <button id="btn-sync" type="button" class="btn btn-default btn-xs" title="Sync folders" onclick="toggleSync();"><i class="fa fa-exchange"></i></button>
                 </span>
             </div>
-            <div class="panel-body" style="padding:0px;top:31px;bottom:1px;left:1px;right:5px;position: absolute;">
+            <div class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:5px;position: absolute;">
                 <table tabindex="0" id="local-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
                     <thead>
                         <tr>
@@ -897,30 +903,39 @@
             <div class="panel-heading">
                 <label class="control-label" for="remote-path">
                         Remote
+        <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick=""><i class="fa fa-refresh"></i></button>
+        <button id="btn-download" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files" onclick=""><i class="fa fa-download"></i></button>
+        <div class="btn-group" role="group">
+            <button id="btn-rename" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick=""><i class="fa fa-i-cursor"></i></button>
+            <button id="btn-delete" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick=""><i class="fa fa-times"></i></button>
+        </div>
+        <button id="btn-newfolder" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
+            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
+                <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
+            </span>                    
+        </button>                        
                     </label>
 
                 <span class="path-container">
                     <div class="input-group">
                         <input type="text" id="remote-path" class="form-control" />
-                        <span class="input-group-btn" style="width: 17px;">
-                            <ul id="remote-navigate" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
-                            <button id="button-remote" class="btn btn-default" style="width:100%;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                        <span class="input-group-btn">
+                            <button id="button-remote" class="btn btn-default" style="width: 17px;min-width:17px;border-radius:0;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                                 <span class="caret" style="margin-left: -1px;"></span>
                 </button>
-
-                </span>
-            </div>
-            </span>
-            <span class="path-buttons">
-                            <button id="btn-remote-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
-                                <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                <ul id="remote-navigate" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
+                <button id="btn-remote-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
+                                <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                     <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
                                     <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>
                                 </span>
-            </button>
+                </button>
+                </span>
+            </div>
             </span>
         </div>
-        <div class="panel-body" style="padding:0px;top:31px;bottom:1px;left:1px;right:1px;position: absolute;">
+        <div class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:1px;position: absolute;">
             <table tabindex="0" id="remote-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
                 <thead>
                     <tr>
@@ -942,6 +957,18 @@
         </ul>
         <div class="tab-content" style="padding: 4px;position: absolute;left: 0;right: 0;bottom: 0;top: 46px;">
             <div role="tabpanel" class="tab-pane fade in active" id="queue" style="margin:0 !important;padding:4px;height:100%;">
+                <div id="toolbar" class="btn-toolbar" role="toolbar">
+                    <!--
+        <div class="btn-group" role="group" id="queue-controls">
+            <button id="btn-restart" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Restart" onclick=""><i class="fa fa-rotate-left"></i></button>
+            <button id="btn-pause" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Pause" onclick="" data-toggle="button"><i class="fa fa-pause"></i></button>
+            <button id="btn-stop" disabled="disabled" type="button" class="btn btn-warning btn-xs" title="Stop" onclick=""><i class="fa fa-stop"></i></button>
+        </div>
+        -->
+                    <button id="btn-reset" type="button" class="btn btn-warning btn-xs" title="Reset all" onclick=""><i class="fa fa-eject"></i></button>
+                    <!--button id="btn-queue" type="button" class="btn btn-default btn-xs" title="Show queue" onclick="" data-toggle="button"><i class="fa fa-list-alt"></i></button-->
+                </div>
+                <div style="padding:0px;top:28px;bottom:0px;left:2px;right:2px;position: absolute;">
                 <table id="queue-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0 !important;">
                     <thead>
                         <tr>
@@ -952,9 +979,21 @@
                         </tr>
                     </thead>
                 </table>
+                </div>
             </div>
             <div role="tabpanel" class="tab-pane fade" id="log" style="padding:4px;height:100%;">
-                <pre id="log-view" style="width:100%;height:100%;border:1px solid rgb(221, 221, 221);overflow:auto;"></pre>
+                <div role="tabpanel" class="tab-pane fade in active" id="queue" style="margin:0 !important;padding:4px;height:100%;">
+                    <div id="toolbar-log" class="btn-toolbar" role="toolbar">
+                        <button id="btn-clear" type="button" class="btn btn-default btn-xs" title="Clear log" onclick="">
+            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                <i class="fa fa-file-o fa-stack-2x" style="font-size: 1em"></i>
+                <i class="fa fa-times fa-stack-1x" style="font-size: 0.5em;margin-top: 1px;"></i>
+            </span>                    
+        </button>
+                    </div>
+                    <pre id="log-view" style="position: absolute;top:28px;left:2px;right:2px;bottom:0px;border:1px solid rgb(221, 221, 221);overflow:auto;"></pre>
+
+                </div>
             </div>
         </div>
 </body>
