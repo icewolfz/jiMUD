@@ -24,10 +24,19 @@ export class IED extends EventEmitter {
     constructor(local: string) {
         super();
         this.local = local;
+        this.startWorker();
+    }
+
+    private startWorker() {
+        if (this._worker) {
+            this._worker.terminate();
+            delete this._worker;
+        }
         this._worker = new Worker('./js/IED.background.js');
         this._worker.onmessage = (e) => {
             switch (e.data.event) {
                 case "decoded":
+                    if (!this.active) return;
                     if (e.data.download) {
                         this.active.currentSize += e.data.data.length;
                         try {
@@ -37,8 +46,7 @@ export class IED extends EventEmitter {
                             this.emit('error', err);
                         }
                     }
-                    if (!e.data.last)
-                    {
+                    if (!e.data.last) {
                         this.emit('update', this.active);
                         ipcRenderer.send('send-gmcp', "IED.download.more " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: 'download' }));
                     }
@@ -61,7 +69,6 @@ export class IED extends EventEmitter {
             this.emit('error', e);
         };
     }
-
     public processGMCP(mod: string, obj) {
         var mods = mod.split(".");
         if (mods.length < 2 || mods[0] != "IED") return;
@@ -86,6 +93,11 @@ export class IED extends EventEmitter {
                 this.emit('error', obj);
                 break;
             case 'reset':
+                this.active = null;
+                this._paths = {};
+                this._id = 0;
+                this._gmcp = [];
+                this.startWorker();
                 this.emit('reset');
                 break;
             case 'resolved':

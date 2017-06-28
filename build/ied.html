@@ -568,7 +568,7 @@
                 console.log(err);
             })
             _ied.on('reset', () => {
-
+                queueTable.rows().remove().draw();
             })
             _ied.on('dir', (dir, files) => {
                 updateRemote(dir, files)
@@ -578,7 +578,7 @@
             });
             _ied.on('message', (msg) => {
                 logMessage(msg);
-            })
+            });
             _ied.on('download-finished', (file) => {
                 if (options.openEditor) {
                     if (!options.editor || options.editor.length == 0)
@@ -588,7 +588,34 @@
                         p.unref();
                     }
                 }
-            })
+            });
+            _ied.on('add', (item) => {
+                queueTable.row.add({
+                    "local": item.local,
+                    "direction": item.download ? "<-" : "->",
+                    "remote": item.remote,
+                    "progress": item.percent,
+                    "id": item.ID
+                }).draw();
+            });
+            _ied.on('remove', (item) => {
+                queueTable.rows(function (idx, data, node) {
+                    return data.id == item.ID ?
+                        true : false;
+                }).remove().draw();
+            });
+            _ied.on('update', (item) => {
+                var row = queueTable.row(function (idx, data, node) {
+                    return data.id == item.ID ?
+                        true : false;
+                }).data({
+                    "local": item.local,
+                    "direction": item.download ? "<-" : "->",
+                    "remote": item.remote,
+                    "progress": item.percent,
+                    "id": item.ID
+                }).draw();
+            });
 
             $('#local-list').DataTable({
                 keys: true,
@@ -760,7 +787,29 @@
                 },
                 scrollResize: true,
                 ordering: false,
-                language: { zeroRecords: "", emptyTable: "" }
+                language: { zeroRecords: "", emptyTable: "" },
+                columnDefs: [
+                    {
+                        render: function (data, type, full, meta) {
+                            return `<div class="progressbar"><div class="progressbar-text">${100 * data}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`
+                        },
+                        targets: 3
+                    },
+                    {
+                        width: '30px',
+                        targets: 1
+                    },
+                    {
+                        width: '150px',
+                        targets: 3
+                    }
+                ],
+                columns: [
+                    { data: 'local' },
+                    { data: 'direction', width: '30px' },
+                    { data: 'remote' },
+                    { data: 'progress', width: '150px' }
+                ]
             });
 
 
@@ -780,9 +829,14 @@
                 }
             });
 
+            queueTable.on('user-select', function (e, dt, type, cell, originalEvent) {
+                if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length == 1) {
+                    e.preventDefault();
+                }
+            });
             /*
             $('#local-list tbody').on('click', 'tr', function (e) {
-
+    
             });
             */
 
@@ -905,7 +959,7 @@
 
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
                 var target = $(e.target).attr("href") // activated tab
-                if(target == "#log")
+                if (target == "#log")
                     $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
             });
 
