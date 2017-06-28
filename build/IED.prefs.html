@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Preferences</title>
+    <link rel="shortcut icon" href="../assets/icons/png/preferences.png" />
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/form.css" rel="stylesheet" type="text/css" />
+    <style>
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+    </style>
+    <script>
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-select.min.js"></script>
+    <script>
+        //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        const { parseTemplate } = require('./js/library');
+        const Settings = require('./js/settings').Settings;
+        const { remote, ipcRenderer } = require('electron');
+        const { dialog } = remote;
+        const path = require('path')
+        const fs = require('fs');
+
+        var _settings;
+        if (window.module) module.module;
+        $(window).keydown((event) => {
+            if (event.which == 27)
+                window.close();
+        });
+
+        $(document).ready(() => {
+            if (process.platform === 'win32')
+                $('.win32').css('display', 'inline-block');
+            else
+                $('.win32').css('display', 'none');
+            _settings = Settings.load(remote.getGlobal('settingsFile'));
+            loadSettings();
+            $("#btn-editor").on('click', () => {
+                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                    defaultPath: path.dirname($("#editor").val()),
+                    filters: process.platform === 'win32' ? [
+                        { name: 'Programs (*.exe, *.com)', extensions: ['exe', 'com', 'com'] },
+                        { name: 'All files (*.*)', extensions: ['*'] },
+                    ]
+                        :
+                        [
+                            { name: 'All files (*.*)', extensions: ['*'] },
+                        ]
+                },
+                    function (fileNames) {
+                        if (fileNames === undefined) {
+                            return;
+                        }
+                        $("#editor").val(fileNames[0]);
+                        _settings.extensions["IED"].editor = fileNames[0];
+                    });
+            });
+        });
+
+        function loadSettings() {
+            if (!_settings.extensions["IED"])
+                _settings.extensions["IED"] = {
+                    'local': '',
+                    'remote': '',
+                    'editor': '',
+                    'bufferSize': 0,
+                    'openEditor': true,
+                    'queueSize': 250,
+                    'localSize': 400,
+                    'syncFolders': true,
+                    'showQueue': true,
+                    'showHidden': false,
+                    'uploadOnChange': false
+                };
+
+            $('input[type="checkbox"]').change(function () {
+                switch ($(this).attr('id')) {
+                    default:
+                        _settings.extensions["IED"][$(this).attr('id')] = this.checked;
+                        break;
+                }
+            });
+            $('input[type="text"]').change(function () {
+                _settings.extensions["IED"][$(this).attr('id')] = $(this).val();
+            });
+            $('input[type="number"]').change(function () {
+                _settings.extensions["IED"][$(this).attr('id')] = parseInt($(this).val(), 10);
+            });
+            $('.selectpicker').change(function () {
+                _settings.extensions["IED"][$(this).attr('id')] = $(this).val();
+            });
+        }
+
+        function resetSettings() {
+            _settings.extensions["IED"] = {
+                'local': '',
+                'remote': '',
+                'editor': '',
+                'bufferSize': 0,
+                'openEditor': true,
+                'queueSize': 250,
+                'localSize': 400,
+                'syncFolders': true,
+                'showQueue': true,
+                'showHidden': false,
+                'uploadOnChange': false
+            };
+            loadSettings();
+        }
+
+        function saveSettings() {
+            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'IED', value: _settings.extensions["IED"] });
+            window.close()
+        }
+    </script>
+</head>
+
+<body>
+    <div class="dialog-body">
+        <div class="col-sm-6 form-group">
+            <label class="control-label">
+                <input type="checkbox" id="openEditor" /> Open file in editor
+            </label>
+        </div>
+        <div class="col-sm-6 form-group">
+            <label class="control-label">
+                <input type="checkbox" id="syncFolders" /> Sync folders while browsing
+            </label>
+        </div>
+        <div class="col-sm-6 form-group">
+            <label class="control-label">
+                <input type="checkbox" id="showQueue" /> Show queue and log
+            </label>
+        </div>
+        <div class="col-sm-6 form-group">
+            <label class="control-label">
+                <input type="checkbox" id="showHidden" /> Show hidden files
+            </label>
+        </div>
+        <div class="col-sm-6 form-group">
+            <label class="control-label">
+                <input type="checkbox" id="uploadOnChange" /> Upload files when changed
+            </label>
+        </div>
+        <div class="col-sm-6form-group">
+            <label class="control-label">Buffer Size
+                <br>
+                <select id="bufferSize" class="form-control selectpicker" data-container="body" data-width="250px">
+                    <option value="0">Default</option>
+                    <option value="128">128</option>
+                    <option value="256">256</option>
+                    <option value="512">512</option>
+                    <option value="1024">1024</option>
+                    <option value="2048">2048</option>
+                    <option value="4092">4092</option>
+                </select>
+            </label>
+        </div>
+        <div class="col-sm-12 form-group">
+            <label class="control-label" style="width:100%">
+                Path to editor
+                <div class="input-group">
+                    <input type="text" id="editor" style="width:100%" class="form-control" />
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="btn-editor">
+                            &hellip;
+                        </button>
+                </div>
+            </label>
+        </div>
+    </div>
+    <div class="dialog-footer">
+        <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
+        <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
+        <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
+    </div>
+</body>
+
+</html>

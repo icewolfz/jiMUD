@@ -4,6 +4,8 @@
   - Immortal tools
     - Download files and open in an editor
     - Upload files
+- **Fixed:**
+  - Preferences: Log path browse button now works
 ##### 0.4.0 2017-06-23
 - **New:**
   - Display control

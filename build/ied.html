@@ -23,7 +23,7 @@
     <script src="../lib/datatables.scrollResize.js" type="text/javascript"></script>
     <script>
         //cSpell:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
-        const { IED, CacheType, Echo, fileInfo } = require('./js/ied');
+        const { IED, fileInfo } = require('./js/ied');
         const { remote, ipcRenderer, shell } = require('electron');
         const { app, nativeImage, dialog, Menu, MenuItem } = remote;
         const { parseTemplate } = require('./js/library');
@@ -351,9 +351,13 @@
             });
         }());
 
-        function loadOptions() {
-            var set = Settings.load(remote.getGlobal('settingsFile'));
-            options = set.extensions["IED"];
+        function loadOptions(data) {
+            if (!data) {
+                var set = Settings.load(remote.getGlobal('settingsFile'));
+                options = set.extensions["IED"];
+            }
+            else
+                options = data;
             if (!options) {
                 options = {
                     'local': '',
@@ -361,13 +365,10 @@
                     'editor': '',
                     'bufferSize': 0,
                     'openEditor': true,
-                    'deleteLocal': false,
-                    'cacheType': CacheType.create,
                     'queueSize': 250,
                     'localSize': 400,
                     'syncFolders': true,
                     'showQueue': true,
-                    'echo': Echo.none,
                     'showHidden': false,
                     'uploadOnChange': false
                 };
@@ -1019,6 +1020,11 @@
         ipcRenderer.on('reload-options', (event) => {
             loadOptions()
         });
+
+        ipcRenderer.on('setting-changed', (event, data) => {
+            if (data.type == "extensions" && data.name == "IED")
+                loadOptions(data.value);
+        })
     </script>
 </head>
 

@@ -24,7 +24,7 @@
   <script src="../lib/bootstrap-select.min.js"></script>
   <script>
     //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-    const { parseTemplate } = require('./js/library');
+    const { parseTemplate, templatePath } = require('./js/library');
     const Settings = require('./js/settings').Settings;
     const { remote, ipcRenderer } = require('electron');
     const { dialog } = remote;
@@ -70,6 +70,19 @@
 
       $("#colorScheme").parent().find('.dropdown-menu.inner li').click(() => {
         $("#colorScheme").change();
+      });
+      $("#btn-logPath").on('click', () => {
+        dialog.showOpenDialog(remote.getCurrentWindow(), {
+          defaultPath: parseTemplate($("#logPath").val()),
+          properties: ['openDirectory', 'createDirectory']
+        },
+          function (fileNames) {
+            if (fileNames === undefined) {
+              return;
+            }
+            _settings.logPath = templatePath(fileNames[0]);
+            $("#logPath").val(_settings.logPath);
+          });
       });
     });
 
@@ -705,15 +718,33 @@
 
     <!-- Nav tabs -->
     <ul class="nav nav-tabs" role="tablist" style="background-color: #F5F5F5;box-shadow: inset 0 -1px 0 #fff;">
-      <li role="presentation" class="active"><a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a></li>
-      <li role="presentation"><a href="#display" aria-controls="display" role="tab" data-toggle="tab">Display</a></li>
-      <li role="presentation"><a href="#colors" aria-controls="colors" role="tab" data-toggle="tab">Colors</a></li>
-      <li role="presentation"><a href="#command" aria-controls="command" role="tab" data-toggle="tab">Command Line</a></li>
-      <li role="presentation"><a href="#logging" aria-controls="logging" role="tab" data-toggle="tab">Logging</a></li>
-      <li role="presentation"><a href="#telnet" aria-controls="telnet" role="tab" data-toggle="tab">Telnet</a></li>
-      <li role="presentation"><a href="#mapper" aria-controls="mapper" role="tab" data-toggle="tab">Mapper</a></li>
-      <li role="presentation"><a href="#chat" aria-controls="chat" role="tab" data-toggle="tab">Chat</a></li>
-      <li role="presentation"><a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab">Advanced</a></li>
+      <li role="presentation" class="active">
+        <a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a>
+      </li>
+      <li role="presentation">
+        <a href="#display" aria-controls="display" role="tab" data-toggle="tab">Display</a>
+      </li>
+      <li role="presentation">
+        <a href="#colors" aria-controls="colors" role="tab" data-toggle="tab">Colors</a>
+      </li>
+      <li role="presentation">
+        <a href="#command" aria-controls="command" role="tab" data-toggle="tab">Command Line</a>
+      </li>
+      <li role="presentation">
+        <a href="#logging" aria-controls="logging" role="tab" data-toggle="tab">Logging</a>
+      </li>
+      <li role="presentation">
+        <a href="#telnet" aria-controls="telnet" role="tab" data-toggle="tab">Telnet</a>
+      </li>
+      <li role="presentation">
+        <a href="#mapper" aria-controls="mapper" role="tab" data-toggle="tab">Mapper</a>
+      </li>
+      <li role="presentation">
+        <a href="#chat" aria-controls="chat" role="tab" data-toggle="tab">Chat</a>
+      </li>
+      <li role="presentation">
+        <a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab">Advanced</a>
+      </li>
     </ul>
 
     <!-- Tab panes -->
@@ -721,45 +752,39 @@
       <div role="tabpanel" class="container tab-pane fade in active" id="general">
         <div class="col-sm-6 form-group">
           <label class="control-label">
-          <input type="checkbox" id="autoConnect" />
-          Auto connect on load
+            <input type="checkbox" id="autoConnect" /> Auto connect on load
           </label>
         </div>
         <div class="col-sm-6 form-group">
           <label class="control-label">
-          <input type="checkbox" id="autoCreateCharacter" />
-          Auto create character
+            <input type="checkbox" id="autoCreateCharacter" /> Auto create character
           </label>
         </div>
         <div class="col-sm-6 form-group">
           <label class="control-label">
-          <input type="checkbox" id="lagMeter" />
-          Show lagmeter
+            <input type="checkbox" id="lagMeter" /> Show lagmeter
           </label>
         </div>
         <div class="col-sm-6 form-group">
           <label class="control-label">
-          <input type="checkbox" id="showCharacterManager" />
-          Show character manager on load
+            <input type="checkbox" id="showCharacterManager" /> Show character manager on load
           </label>
         </div>
 
         <div class="col-sm-6 form-group">
           <label class="control-label">
-          <input type="checkbox" id="spellchecking" />
-          Enable spellchecking
+            <input type="checkbox" id="spellchecking" /> Enable spellchecking
           </label>
         </div>
         <div class="col-sm-6 form-group">
           <label class="control-label">
-          <input type="checkbox" id="editorPersistent" />
-         Persistent advanced editor
+            <input type="checkbox" id="editorPersistent" /> Persistent advanced editor
           </label>
         </div>
         <div class="col-sm-6 form-group">
           <label class="control-label">Theme
-              <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
-            </label>
+            <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
+          </label>
         </div>
 
 
@@ -768,7 +793,8 @@
       <div role="tabpanel" class="tab-pane fade" id="display">
         <div class="col-sm-4">
           <div class="form-group">
-            <label class="control-label">Font<br>
+            <label class="control-label">Font
+              <br>
               <select id="font" class="form-control selectpicker" data-container="body" data-width="250px">
                 <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
                 <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
@@ -782,94 +808,88 @@
                 <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
                 <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
                 <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
-                <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>           
+                <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
               </select>
             </label>
           </div>
           <div class="form-group">
             <label class="control-label">Font size
               <input type="text" class="form-control" id="fontSize" style="width: 252px" />
-              </label>
+            </label>
           </div>
           <div class="form-group">
             <label class="control-label">Font sample
-            <div id="font-sample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;width: 280px">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+              <div id="font-sample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;width: 280px">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
             </label>
           </div>
 
           <div class="form-group">
             <label class="control-label">
-          <input type="checkbox" id="flashing" />
-          Enable flashing text
-          </label>
+              <input type="checkbox" id="flashing" /> Enable flashing text
+            </label>
           </div>
 
         </div>
 
         <div class="col-sm-4 form-group">
           <label class="control-label">
-          <input type="checkbox" id="AutoCopySelectedToClipboard" />
-          Auto copy selected to clipboard
+            <input type="checkbox" id="AutoCopySelectedToClipboard" /> Auto copy selected to clipboard
           </label>
         </div>
 
         <div class="col-sm-4 form-group">
           <label class="control-label">
-          <input type="checkbox" id="commandEcho" />
-          Echo commands
+            <input type="checkbox" id="commandEcho" /> Echo commands
           </label>
         </div>
 
         <div class="col-sm-4 form-group">
           <label class="control-label">
-          <input type="checkbox" id="enableURLDetection" />
-          Enable URL detection
+            <input type="checkbox" id="enableURLDetection" /> Enable URL detection
           </label>
         </div>
 
         <div class="col-sm-4 form-group">
           <label class="control-label">
-          <input type="checkbox" id="CommandonClick" />
-          Focus command input on click
+            <input type="checkbox" id="CommandonClick" /> Focus command input on click
           </label>
         </div>
 
         <div class="col-sm-4 form-group">
           <label class="control-label">
-          <input type="checkbox" id="displaySplit" />
-          Split scroll
-          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
+            <input type="checkbox" id="displaySplit" /> Split scroll
+            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
           </label>
         </div>
 
         <div class="col-sm-4 form-group">
           <label class="control-label">
-          <input type="checkbox" id="display-splitLive" />
-          Split scroll live update
-          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
+            <input type="checkbox" id="display-splitLive" /> Split scroll live update
+            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
           </label>
         </div>
 
         <div class="col-sm-4 form-group">
           <label class="control-label">
-          Buffer size
-          <input type="number" id="bufferSize" class="form-control" min="100" max="1000000"/>
+            Buffer size
+            <input type="number" id="bufferSize" class="form-control" min="100" max="1000000" />
           </label>
         </div>
 
       </div>
       <div role="tabpanel" class="tab-pane fade" id="colors">
         <div class="col-sm-4 form-group">
-          <label>Color scheme 
-				<select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" onchange="updateScheme(this.options.selectedIndex)" data-width="auto">
-					<option value="0">Default</option>
-					<option>Classic</option>
-          <option>VGA</option>
-					<option>Terminal.app</option>
-					<option>PuTTY</option>
-					<option>mIRC</option>
-					<option>xterm</option>
-				</select></label>
+          <label>Color scheme
+            <select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" onchange="updateScheme(this.options.selectedIndex)" data-width="auto">
+              <option value="0">Default</option>
+              <option>Classic</option>
+              <option>VGA</option>
+              <option>Terminal.app</option>
+              <option>PuTTY</option>
+              <option>mIRC</option>
+              <option>xterm</option>
+            </select>
+          </label>
           <div class="col-sm-12 form-group" style="text-align:center">
             <div>
               <div class="col-sm-4"></div>
@@ -878,23 +898,39 @@
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Default</div>
-              <div class="col-sm-4"><input type="color" class="form-control" id="color277"></div>
-              <div class="col-sm-4"><input type="color" class="form-control" id="color276"></div>
+              <div class="col-sm-4">
+                <input type="color" class="form-control" id="color277">
+              </div>
+              <div class="col-sm-4">
+                <input type="color" class="form-control" id="color276">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Echo</div>
-              <div class="col-sm-4"><input type="color" class="form-control" id="color275"></div>
-              <div class="col-sm-4"><input type="color" class="form-control" id="color274"></div>
+              <div class="col-sm-4">
+                <input type="color" class="form-control" id="color275">
+              </div>
+              <div class="col-sm-4">
+                <input type="color" class="form-control" id="color274">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Info</div>
-              <div class="col-sm-4"><input type="color" class="form-control" id="color273"></div>
-              <div class="col-sm-4"><input type="color" class="form-control" id="color272"></div>
+              <div class="col-sm-4">
+                <input type="color" class="form-control" id="color273">
+              </div>
+              <div class="col-sm-4">
+                <input type="color" class="form-control" id="color272">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Error</div>
-              <div class="col-sm-4"><input type="color" class="form-control" id="color278"></div>
-              <div class="col-sm-4"><input type="color" class="form-control" id="color279"></div>
+              <div class="col-sm-4">
+                <input type="color" class="form-control" id="color278">
+              </div>
+              <div class="col-sm-4">
+                <input type="color" class="form-control" id="color279">
+              </div>
             </div>
           </div>
         </div>
@@ -909,59 +945,123 @@
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Black</div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color0"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color264"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color8"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color256"></div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color0">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color264">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color8">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color256">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Red</div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color1"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color265"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color9"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color257"></div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color1">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color265">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color9">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color257">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Green</div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color2"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color266"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color10"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color258"></div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color2">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color266">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color10">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color258">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Yellow</div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color3"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color267"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color11"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color259"></div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color3">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color267">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color11">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color259">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Blue</div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color4"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color268"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color12"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color260"></div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color4">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color268">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color12">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color260">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Magenta</div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color5"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color269"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color13"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color261"></div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color5">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color269">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color13">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color261">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">Cyan</div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color6"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color270"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color14"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color262"></div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color6">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color270">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color14">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color262">
+              </div>
             </div>
             <div>
               <div class="col-sm-4" style="text-align:left">White</div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color7"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color271"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color15"></div>
-              <div class="col-sm-2"><input type="color" class="form-control" id="color263"></div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color7">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color271">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color15">
+              </div>
+              <div class="col-sm-2">
+                <input type="color" class="form-control" id="color263">
+              </div>
             </div>
           </div>
         </div>
@@ -969,7 +1069,8 @@
       <div role="tabpanel" class="tab-pane fade" id="command">
         <div class="col-sm-5">
           <div class="form-group">
-            <label class="control-label">Font<br>
+            <label class="control-label">Font
+              <br>
               <select id="cmdfont" class="form-control selectpicker" data-container="body" data-width="250px">
                 <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
                 <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
@@ -990,11 +1091,11 @@
           <div class="form-group">
             <label class="control-label">Font size
               <input type="text" class="form-control" id="cmdfontSize" style="width: 252px" />
-              </label>
+            </label>
           </div>
           <div class="form-group">
             <label class="control-label">Font sample
-            <div id="cmd-font-sample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;width: 280px">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+              <div id="cmd-font-sample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;width: 280px">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
             </label>
           </div>
 
@@ -1002,444 +1103,415 @@
 
         <div class="col-sm-3 form-group">
           <label class="control-label">
-          <input type="checkbox" id="keepLastCommand" />
-          Keep last command
+            <input type="checkbox" id="keepLastCommand" /> Keep last command
           </label>
         </div>
 
         <div class="col-sm-3 form-group">
           <label class="control-label">
-          History size
-          <input type="number" id="commandHistorySize" class="form-control" min="1" max="2000" style="width: 100px"/>
+            History size
+            <input type="number" id="commandHistorySize" class="form-control" min="1" max="2000" style="width: 100px" />
           </label>
         </div>
 
         <div class="col-sm-3 form-group">
           <label class="control-label">
-          Command stacking
-          <div class="input-group"  style="width: 40px">
-          <input type="text" id="commandStackingChar" class="form-control" style="width: 40px" size="1" maxlength ="1"/>
-          <div class="input-group-addon"><label><input type="checkbox" id="commandStacking" /> Enable</label></div>
-      </div>
-      </label>
-    </div>
-
-    <div class="col-sm-3 form-group">
-      <label class="control-label">
-          Speedpaths
-          <div class="input-group"  style="width: 40px">
-            <input type="text" id="speedpathsChar" class="form-control" style="width: 40px" size="1" maxlength ="1"/>
-            <div class="input-group-addon" style="border-left: 0px"><label><input type="checkbox" id="enableSpeedpaths" /> Enable</label></div>
-    <div class="input-group-addon"><label><input type="checkbox" id="parseSpeedpaths" /> Parse</label></div>
-  </div>
-  </label>
-  </div>
-
-  <div class="col-sm-3 form-group">
-    <label class="control-label">
-          <input type="checkbox" id="parseSingleQuotes" />
-          Parse single quotes as string 
+            Command stacking
+            <div class="input-group" style="width: 40px">
+              <input type="text" id="commandStackingChar" class="form-control" style="width: 40px" size="1" maxlength="1" />
+              <div class="input-group-addon">
+                <label>
+                  <input type="checkbox" id="commandStacking" /> Enable</label>
+              </div>
+            </div>
           </label>
-  </div>
+        </div>
 
-  <div class="col-sm-3 form-group">
-    <label class="control-label">
-          <input type="checkbox" id="parseDoubleQuotes" />
-          Parse double quotes as string
+        <div class="col-sm-3 form-group">
+          <label class="control-label">
+            Speedpaths
+            <div class="input-group" style="width: 40px">
+              <input type="text" id="speedpathsChar" class="form-control" style="width: 40px" size="1" maxlength="1" />
+              <div class="input-group-addon" style="border-left: 0px">
+                <label>
+                  <input type="checkbox" id="enableSpeedpaths" /> Enable</label>
+              </div>
+              <div class="input-group-addon">
+                <label>
+                  <input type="checkbox" id="parseSpeedpaths" /> Parse</label>
+              </div>
+            </div>
           </label>
-  </div>
+        </div>
 
-  <div class="col-sm-12 form-group">
-    <label class="control-label">Newline shotcut</label>
-    <div class="btn-group" data-toggle="buttons">
-      <label class="btn btn-default">
+        <div class="col-sm-3 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="parseSingleQuotes" /> Parse single quotes as string
+          </label>
+        </div>
+
+        <div class="col-sm-3 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="parseDoubleQuotes" /> Parse double quotes as string
+          </label>
+        </div>
+
+        <div class="col-sm-12 form-group">
+          <label class="control-label">Newline shotcut</label>
+          <div class="btn-group" data-toggle="buttons">
+            <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-0"> None
             </label>
-      <label class="btn btn-default">
+            <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-1"> Ctrl + Enter
             </label>
-      <label class="btn btn-default">
+            <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-2"> Shift + Enter
             </label>
-      <label class="btn btn-default">
+            <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-4"> (Ctrl | Shift) + Enter
             </label>
-      <label class="btn btn-default">
+            <label class="btn btn-default">
               <input type="radio" name="newlineShortcut" id="newlineShortcut-8"> Ctrl + Shift + Enter
             </label>
 
-    </div>
-  </div>
-  </div>
-  <div role="tabpanel" class="tab-pane fade" id="logging">
+          </div>
+        </div>
+      </div>
+      <div role="tabpanel" class="tab-pane fade" id="logging">
 
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="logEnabled" />
-          Enable logging
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="logEnabled" /> Enable logging
           </label>
-    </div>
+        </div>
 
 
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="logPrepend" />
-          Pre-pend current buffer to log
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="logPrepend" /> Pre-pend current buffer to log
           </label>
-    </div>
+        </div>
 
 
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="logOffline" />
-          Enable logging of offline text
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="logOffline" /> Enable logging of offline text
           </label>
-    </div>
+        </div>
 
 
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="logUniqueOnConnect" />
-          Create log for every connection
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="logUniqueOnConnect" /> Create log for every connection
           </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="logEnabled" />
-          Log gagged lines
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="logEnabled" /> Log gagged lines
           </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">Log what</label>
-      <div class="btn-group" data-toggle="buttons">
-        <label class="btn btn-default btn-xs">
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">Log what</label>
+          <div class="btn-group" data-toggle="buttons">
+            <label class="btn btn-default btn-xs">
               <input type="checkbox" id="logWhat-html"> HTML
             </label>
-        <label class="btn btn-default btn-xs active">
+            <label class="btn btn-default btn-xs active">
               <input type="checkbox" id="logWhat-text"> Text
             </label>
-        <label class="btn btn-default btn-xs active">
+            <label class="btn btn-default btn-xs active">
               <input type="checkbox" id="logWhat-raw"> Raw
             </label>
-      </div>
-      <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">If all are disabled will default to text</span>
-    </div>
+          </div>
+          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">If all are disabled will default to text</span>
+        </div>
 
-    <div class="col-sm-12 form-group">
-      <label class="control-label" style="width:100%">          
-          Date/time format
-          <input type="text" id="logTimeFormat" style="width:100%" class="form-control"/>
+        <div class="col-sm-12 form-group">
+          <label class="control-label" style="width:100%">
+            Date/time format
+            <input type="text" id="logTimeFormat" style="width:100%" class="form-control" />
           </label>
           <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
-    </div>
-
-    <div class="col-sm-12 form-group">
-      <label class="control-label" style="width:100%">          
-          Save path
-          <div class="input-group">
-          <input type="text" id="logPath" style="width:100%" class="form-control"/>
-          <span class="input-group-btn">
-                  <button class = "btn btn-default" type = "button">
-                     &hellip;
-                  </button>
-          </div>
-          </label>
-    </div>
-
-  </div>
-  <div role="tabpanel" class="tab-pane fade" id="mapper">
-    <div class="col-sm-4 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="showMapper" />
-          Open on load
-          </label>
-    </div>
-    <div class="col-sm-4 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="mapEnabled" />
-          Enable mapper
-          </label>
-    </div>
-
-    <div class="col-sm-4 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="mapFollow" />
-          Follow player
-          </label>
-    </div>
-    <div class="col-sm-4 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="mapLegend" />
-          Show legend
-          </label>
-    </div>
-    <div class="col-sm-4 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="MapperSplitArea" />
-          Split areas
-          </label>
-    </div>
-    <div class="col-sm-4 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="MapperFillWalls" />
-          Display walls
-          </label>
-    </div>
-    <div class="col-sm-12 form-group" style="margin:0;padding:0">
-      <div class="col-sm-4 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="mapper-memory" />
-          Load in memory
-          <!--span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Requires restart</span-->
-          </label>
-      </div>
-      <div class="col-sm-4  form-group">
-        <label class="control-label">
-<!--span class="help-block" style="float:right;font-size: 0.8em;margin:0;padding:0">Requires restart</span-->
-          Save period
-          <div class="input-group">
-          <input type="number" id="mapper-memorySavePeriod" class="form-control" min="60000"/>
-           <div class="input-group-addon">ms</div>
-            </div>
-          </label>
-      </div>
-      <div class="col-sm-4 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="mapper-persistent" />
-          Persistent
-          </label>
-      </div>
-    </div>
-
-    <div class="col-sm-12 form-group" style="margin:0;padding:0">
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="mapper-alwaysOnTopClient" />
-          Always on top of the main window
-          <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
-          </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="mapper-alwaysOnTop" />
-          Always on top of all windows
-          </label>
-      </div>
-    </div>
-    <div class="col-sm-12 form-group">
-      <div class="col-sm-4 form-group">
-        <label class="control-label">Default Import Type</label>
-        <div class="btn-group" data-toggle="buttons">
-          <label class="btn btn-default">
-              <input type="radio" name="mapper-importType" id="mapper-importTypeMerge"> Merge
-            </label>
-          <label class="btn btn-default active">
-              <input type="radio" name="mapper-importType" id="mapper-importTypeReplace" checked> Replace
-            </label>
         </div>
-      </div>
-      <div class="col-sm-4 form-group">
-        <label class="control-label">
-            Delay between directions
+
+        <div class="col-sm-12 form-group">
+          <label class="control-label" style="width:100%">
+            Save path
             <div class="input-group">
-              <input type="number" id="commandDelay" class="form-control"/>
-              <div class="input-group-addon">ms</div>
+              <input type="text" id="logPath" style="width:100%" class="form-control" />
+              <span class="input-group-btn">
+                <button class="btn btn-default" type="button" id="btn-logPath">
+                  &hellip;
+                </button>
             </div>
+          </label>
+        </div>
+
+      </div>
+      <div role="tabpanel" class="tab-pane fade" id="mapper">
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="showMapper" /> Open on load
+          </label>
+        </div>
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="mapEnabled" /> Enable mapper
+          </label>
+        </div>
+
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="mapFollow" /> Follow player
+          </label>
+        </div>
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="mapLegend" /> Show legend
+          </label>
+        </div>
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="MapperSplitArea" /> Split areas
+          </label>
+        </div>
+        <div class="col-sm-4 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="MapperFillWalls" /> Display walls
+          </label>
+        </div>
+        <div class="col-sm-12 form-group" style="margin:0;padding:0">
+          <div class="col-sm-4 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="mapper-memory" /> Load in memory
+              <!--span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Requires restart</span-->
             </label>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label">
-            Directions to send
-            <input type="number" id="commandDelayCount" class="form-control"/>
+          </div>
+          <div class="col-sm-4  form-group">
+            <label class="control-label">
+              <!--span class="help-block" style="float:right;font-size: 0.8em;margin:0;padding:0">Requires restart</span-->
+              Save period
+              <div class="input-group">
+                <input type="number" id="mapper-memorySavePeriod" class="form-control" min="60000" />
+                <div class="input-group-addon">ms</div>
+              </div>
             </label>
-      </div>
-    </div>
-  </div>
-  <div role="tabpanel" class="tab-pane fade" id="chat">
+          </div>
+          <div class="col-sm-4 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="mapper-persistent" /> Persistent
+            </label>
+          </div>
+        </div>
 
-    <div class="col-sm-12 form-group" style="margin:0;padding:0">
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="chat-alwaysOnTopClient" />
-          Always on top of the main window
-          <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
-          </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="chat-alwaysOnTop" />
-          Always on top of all windows
-          </label>
-      </div>
-    </div>
-    <div class="col-sm-12 form-group" style="margin:0;padding:0">
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="chat-captureTells" />
-          Capture tells          
-          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Tell and emoteto</span>
-          </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="chat-captureTalk" />
-          Capture talk
-          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Say, yell, whisper and speak</span>
-          </label>
-      </div>
-    </div>
-    <div class="col-sm-12 form-group" style="margin:0;padding:0">
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="chat-captureReviews" />
-          Capture reviews
-          <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Captures based on enabled captures</span>
-          </label>
-      </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="chat-persistent" />
-          Persistent
-          </label>
-      </div>
-    </div>
-
-    <div class="col-sm-12 form-group" style="margin:0;padding:0">
-      <div class="col-sm-3 form-group">
-        <label class="control-label">
-          <input type="checkbox" id="chat-captureLines" />
-          Capture lines          
-          </label><br>
-        <label class="control-label">
-          <input type="radio" name="lines" id="chat-captureAllLines" />
-          All
-          </label><br>
-        <label class="control-label">
-      <input type="radio" name="lines" id="chat-selective" />
-          Selective          
-          </label>
-      </div>
-      <div class="col-sm-9 form-group">
-        <div class="form-group">
-          <label class="control-label" style="width: 100%">Selective Lines
-              <textarea class="form-control" id="chat-lines" style="width: 100%"></textarea>
-              <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Case sensitive and separate each name with a comma(,) for example: Chat,Rp</span>
+        <div class="col-sm-12 form-group" style="margin:0;padding:0">
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="mapper-alwaysOnTopClient" /> Always on top of the main window
+              <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="mapper-alwaysOnTop" /> Always on top of all windows
+            </label>
+          </div>
+        </div>
+        <div class="col-sm-12 form-group">
+          <div class="col-sm-4 form-group">
+            <label class="control-label">Default Import Type</label>
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-default">
+                <input type="radio" name="mapper-importType" id="mapper-importTypeMerge"> Merge
               </label>
-        </div>
-      </div>
-    </div>
+              <label class="btn btn-default active">
+                <input type="radio" name="mapper-importType" id="mapper-importTypeReplace" checked> Replace
+              </label>
+            </div>
+          </div>
+          <div class="col-sm-4 form-group">
+            <label class="control-label">
+              Delay between directions
+              <div class="input-group">
+                <input type="number" id="commandDelay" class="form-control" />
+                <div class="input-group-addon">ms</div>
+              </div>
+            </label>
+          </div>
 
-  </div>
-  <div role="tabpanel" class="tab-pane fade" id="telnet">
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="enableMCCP" />
-          MUD Compression Protocol (MCCP)
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="enableUTF8" />
-          UTF-8
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="enableMXP" />
-          MUD eXtension Protocol (MXP)
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="enableEcho" />
-          Echo
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="enableMSP" />
-          MUD Sound Protocol (MSP)
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="notifyMSPPlay" />
-          Display Notification on MSP Play
-          </label>
-    </div>
-  </div>
-  <div role="tabpanel" class="container tab-pane fade in" id="advanced">
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="dev" />
-          Connect to development
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="enablePing" />
-          Enable GMCP ping for lagmeter
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="showScriptErrors" />
-          Show script errors
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="enableDebug" />
-          Enable debug
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="logErrors" />
-          Log errors
-          </label>
-    </div>
-    <div class="col-sm-6 form-group">
-      <label class="control-label">
-          <input type="checkbox" id="allowNegativeNumberNeeded" />
-          Allow negative number for
-          experience needed 
-          </label>
-    </div>
+          <div class="form-group">
+            <label class="col-sm-4 control-label">
+              Directions to send
+              <input type="number" id="commandDelayCount" class="form-control" />
+            </label>
+          </div>
+        </div>
+      </div>
+      <div role="tabpanel" class="tab-pane fade" id="chat">
 
-    <div class="col-sm-12 form-group">
-      <div class="col-sm-6 form-group">
-        <label class="control-label">Backup save</label>
-        <div class="btn-group" data-toggle="buttons">
-          <label class="btn btn-default">
-              <input type="checkbox" id="backup-save-settings"> Settings
+        <div class="col-sm-12 form-group" style="margin:0;padding:0">
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="chat-alwaysOnTopClient" /> Always on top of the main window
+              <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
             </label>
-          <label class="btn btn-default active">
-              <input type="checkbox" id="backup-save-profiles"> Profiles
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="chat-alwaysOnTop" /> Always on top of all windows
             </label>
-          <label class="btn btn-default active">
-              <input type="checkbox" id="backup-save-map"> Map
+          </div>
+        </div>
+        <div class="col-sm-12 form-group" style="margin:0;padding:0">
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="chat-captureTells" /> Capture tells
+              <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Tell and emoteto</span>
             </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="chat-captureTalk" /> Capture talk
+              <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Say, yell, whisper and speak</span>
+            </label>
+          </div>
+        </div>
+        <div class="col-sm-12 form-group" style="margin:0;padding:0">
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="chat-captureReviews" /> Capture reviews
+              <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Captures based on enabled captures</span>
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="chat-persistent" /> Persistent
+            </label>
+          </div>
+        </div>
+
+        <div class="col-sm-12 form-group" style="margin:0;padding:0">
+          <div class="col-sm-3 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="chat-captureLines" /> Capture lines
+            </label>
+            <br>
+            <label class="control-label">
+              <input type="radio" name="lines" id="chat-captureAllLines" /> All
+            </label>
+            <br>
+            <label class="control-label">
+              <input type="radio" name="lines" id="chat-selective" /> Selective
+            </label>
+          </div>
+          <div class="col-sm-9 form-group">
+            <div class="form-group">
+              <label class="control-label" style="width: 100%">Selective Lines
+                <textarea class="form-control" id="chat-lines" style="width: 100%"></textarea>
+                <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Case sensitive and separate each name with a comma(,) for example: Chat,Rp</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div role="tabpanel" class="tab-pane fade" id="telnet">
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="enableMCCP" /> MUD Compression Protocol (MCCP)
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="enableUTF8" /> UTF-8
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="enableMXP" /> MUD eXtension Protocol (MXP)
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="enableEcho" /> Echo
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="enableMSP" /> MUD Sound Protocol (MSP)
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="notifyMSPPlay" /> Display Notification on MSP Play
+          </label>
         </div>
       </div>
-      <div class="col-sm-6 form-group">
-        <label class="control-label">Backup load</label>
-        <div class="btn-group" data-toggle="buttons">
-          <label class="btn btn-default">
-              <input type="checkbox" id="backup-load-settings"> Settings
-            </label>
-          <label class="btn btn-default active">
-              <input type="checkbox" id="backup-load-profiles"> Profiles
-            </label>
-          <label class="btn btn-default active">
-              <input type="checkbox" id="backup-load-map"> Map
-            </label>
+      <div role="tabpanel" class="container tab-pane fade in" id="advanced">
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="dev" /> Connect to development
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="enablePing" /> Enable GMCP ping for lagmeter
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="showScriptErrors" /> Show script errors
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="enableDebug" /> Enable debug
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="logErrors" /> Log errors
+          </label>
+        </div>
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="allowNegativeNumberNeeded" /> Allow negative number for experience needed
+          </label>
+        </div>
+
+        <div class="col-sm-12 form-group">
+          <div class="col-sm-6 form-group">
+            <label class="control-label">Backup save</label>
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-default">
+                <input type="checkbox" id="backup-save-settings"> Settings
+              </label>
+              <label class="btn btn-default active">
+                <input type="checkbox" id="backup-save-profiles"> Profiles
+              </label>
+              <label class="btn btn-default active">
+                <input type="checkbox" id="backup-save-map"> Map
+              </label>
+            </div>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">Backup load</label>
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-default">
+                <input type="checkbox" id="backup-load-settings"> Settings
+              </label>
+              <label class="btn btn-default active">
+                <input type="checkbox" id="backup-load-profiles"> Profiles
+              </label>
+              <label class="btn btn-default active">
+                <input type="checkbox" id="backup-load-map"> Map
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  </div>
 
   </div>
   <div class="dialog-footer">

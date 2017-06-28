@@ -2035,7 +2035,7 @@ function createNewWindow(name, options) {
       // open window as modal
       Object.assign(options, {
         modal: true,
-        parent: win,
+        parent: windows[name].window,
         movable: false,
         minimizable: false,
         maximizable: false,
@@ -2043,7 +2043,7 @@ function createNewWindow(name, options) {
         resizable: false
       })
 
-      var b = win.getBounds();
+      var b = windows[name].window.getBounds();
       options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
       options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
     }
