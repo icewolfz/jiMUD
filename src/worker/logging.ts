@@ -92,7 +92,6 @@ let logging: boolean = false;
 let currentFile: string = "";
 
 self.addEventListener('message', (e: MessageEvent) => {
-    postMessage({ event: 'debug', args: e.data });
     if (!e.data) return;
     switch (e.data.action) {
         case 'options':

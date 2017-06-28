@@ -1,61 +1,61 @@
 export interface Point {
-    x: number;
-    y: number;
+  x: number;
+  y: number;
 }
 
 export interface DisplayOptions extends ParserOptions {
-    enableSplit?: boolean;
-    enableSplitLive?: boolean;
+  enableSplit?: boolean;
+  enableSplitLive?: boolean;
 }
 
 export interface OverlayRange {
-    start: Point;
-    end: Point;
+  start: Point;
+  end: Point;
 }
 
 export interface LogOptions {
-    path?: string;
-    offline?: boolean;
-    gagged?: boolean;
-    enabled?: boolean;
-    unique?: boolean;
-    prepend?: boolean;
-    name?: string;
-    what?: Log;
-    debug?: boolean;
+  path?: string;
+  offline?: boolean;
+  gagged?: boolean;
+  enabled?: boolean;
+  unique?: boolean;
+  prepend?: boolean;
+  name?: string;
+  what?: Log;
+  debug?: boolean;
 }
 
 export interface WindowState {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	fullscreen: boolean;
-	maximized: boolean;
-	devTools: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fullscreen: boolean;
+  maximized: boolean;
+  devTools: boolean;
 }
 
 export enum BackupSelection {
-	None = 0,
-	Map = 2,
-	Profiles = 4,
-	Settings = 8,
-	All = Map | Profiles | Settings
+  None = 0,
+  Map = 2,
+  Profiles = 4,
+  Settings = 8,
+  All = Map | Profiles | Settings
 }
 
 export enum NewLineType {
-	None = 0,
-	Ctrl = 1,
-	Shift = 2,
-	CtrlOrShift = 4,
-	CtrlAndShift = 8
+  None = 0,
+  Ctrl = 1,
+  Shift = 2,
+  CtrlOrShift = 4,
+  CtrlAndShift = 8
 }
 
 export enum Log {
-	None = 0,
-	Html = 1,
-	Text = 2,
-	Raw = 4
+  None = 0,
+  Html = 1,
+  Text = 2,
+  Raw = 4
 }
 
 export enum FormatType {
@@ -148,11 +148,52 @@ export interface ParserOptions {
 }
 
 export class Size {
-	public width: number = 0;
-	public height: number = 0;
+  public width: number = 0;
+  public height: number = 0;
 
-	constructor(width: number, height: number) {
-		this.width = width;
-		this.height = height;
-	}
+  constructor(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+  }
 }
+
+export enum CacheType {
+  filename = 0,
+  encoded = 1,
+  create = 2
+}
+
+export enum Echo {
+  none = 0,
+  simple = 1,
+  debug = 2
+}
+
+export interface FileInfo {
+  date?: Date,
+  hidden?: boolean,
+  path: string,
+  name: string,
+  type: string,
+  size: number
+}
+
+export enum IEDError {
+  RESET = 1,
+  USERRESET = 2,
+  DL_USERABORT = 3,
+  DL_NOTSTART = 4,
+  DL_TOOMANY = 5,
+  DL_INPROGRESS = 6,
+  DL_UNKNOWN = 7,
+  UL_USERABORT = 8,
+  UL_BADENCODE = 9,
+  UL_TOOLARGE = 10,
+  UL_FAILWRITE = 11,
+  UL_UNKNOWN = 12,
+  UL_INVALIDFILE = 13,
+  UL_INVALIDPATH = 14,
+  DL_INVALIDFILE = 15,
+  DL_INVALIDPATH = 16
+}
+

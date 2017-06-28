@@ -1,4 +1,9 @@
 ## Changelog
+##### 0.4.1
+- **New:**
+  - Immortal tools
+    - Download files and open in an editor
+    - Upload files
 ##### 0.4.0 2017-06-23
 - **New:**
   - Display control

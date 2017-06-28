@@ -24,17 +24,19 @@
     <script>
         //cSpell:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
         const { IED, CacheType, Echo, fileInfo } = require('./js/ied');
-        const { remote, ipcRenderer } = require('electron');
+        const { remote, ipcRenderer, shell } = require('electron');
         const { app, nativeImage, dialog, Menu, MenuItem } = remote;
         const { parseTemplate } = require('./js/library');
         const { Settings } = require('./js/settings');
         const fs = require('fs');
+        const child_process = require('child_process');
         const path = require('path');
         const drivelist = require('drivelist');
         const moment = require('moment');
 
         var _ied, options, dropdownMenu;
         var _local = {}, _remote = {};
+        var localTable, remoteTable, queueTable;
 
         var menu = [
             {
@@ -106,17 +108,22 @@
                     { type: 'separator' },
                     {
                         label: '&Editor',
-                        accelerator: "CmdOrCtrl+E"
+                        accelerator: "CmdOrCtrl+E",
+                        click: () => {
+                            shell.openItem(options.editor);
+                        }
                     },
                     { type: 'separator' },
                     {
                         label: '&Local',
                         enabled: true,
                         submenu: [
+                            /*
                             {
                                 label: '&Rename',
                                 enabled: false
                             },
+                            */
                             {
                                 label: '&Delete',
                                 enabled: false
@@ -127,29 +134,41 @@
                             { type: 'separator' },
                             {
                                 label: '&Select all',
-                                enabled: false
                             },
+                            { type: 'separator' },
+                            {
+                                label: '&Reveal in explorer...',
+                                enabled: false,
+                                accelerator: "CmdOrCtrl+X",
+                                click: () => {
+                                    var data = localTable.rows({ selected: true }).data().pluck('path');
+                                    for (var d = 0, dl = data.length; d < dl; d++)
+                                        shell.showItemInFolder(data[d]);
+                                }
+                            },
+
                             { type: 'separator' },
                             {
                                 label: '&Open...',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+O"
+                                accelerator: "CmdOrCtrl+O",
+                                click: () => {
+                                    var data = localTable.rows({ selected: true }).data().pluck('path');
+                                    for (var d = 0, dl = data.length; d < dl; d++)
+                                        openItem(data[d]);
+                                }
                             },
                             {
-                                label: 'Open &with...',
+                                label: 'Open &with editor...',
                                 enabled: false,
-                                submenu: [
-                                    {
-                                        label: '&Default',
-                                        //linux - xdg-open /filepath/file.txt
-                                        //windows jusy open wiht shell process?
-                                        //mac - Open <filename> ?
-                                        accelerator: "CmdOrCtrl++Shift+E"
-                                    },
-                                    {
-                                        label: '&Editor',
-                                    },
-                                ]
+                                accelerator: "CmdOrCtrl++Shift+E",
+                                click: () => {
+                                    var data = localTable.rows({ selected: true }).data().pluck('path');
+                                    for (var d = 0, dl = data.length; d < dl; d++) {
+                                        p = child_process.spawn(options.editor, [data[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                                        p.unref();
+                                    }
+                                }
                             }
                         ]
                     },
@@ -163,10 +182,12 @@
                                 accelerator: "CmdOrCtrl+B"
                             },
                             { type: 'separator' },
+                            /*
                             {
                                 label: '&Rename',
                                 enabled: false
                             },
+                            */
                             {
                                 label: '&Delete',
                                 enabled: false
@@ -177,7 +198,6 @@
                             { type: 'separator' },
                             {
                                 label: '&Select all',
-                                enabled: false
                             }
                         ]
                     },
@@ -198,9 +218,14 @@
                         click: () => { toggleSync(); }
                     },
                     { type: 'separator' },
+                    {
+                        role: 'toggledevtools'
+                    },
+                    { type: 'separator' },
                     { label: 'Preferences...' },
                 ]
             },
+
         ];
         var menubar = Menu.buildFromTemplate(menu);
         remote.getCurrentWindow().setMenu(menubar);
@@ -323,7 +348,8 @@
                     'syncFolders': true,
                     'showQueue': true,
                     'echo': Echo.none,
-                    'showHidden': false
+                    'showHidden': false,
+                    'uploadOnChange': false
                 };
                 saveOptions();
             }
@@ -332,9 +358,11 @@
                 $("#btn-sync").addClass("active")
             else
                 $('#btn-sync').removeClass('active');
+            updateMenuItem({ menu: 'edit|editor', enabled: options.editor && options.editor.length > 0 });
         }
 
         function saveOptions() {
+            _ied.local = options.local;
             ipcRenderer.send('setting-changed', { type: 'extensions', name: 'IED', value: options });
         }
 
@@ -437,12 +465,8 @@
                 }
             });
 
-            var table = $('#local-list').DataTable();
-
-            table.rows().remove().draw();
-            table.rows.add(all).draw();
-
-
+            localTable.rows().remove().draw();
+            localTable.rows.add(all).draw();
             $("#btn-local-up").prop('disabled', path.dirname(p) == p || path.dirname == path.join(p, path.sep));
         }
 
@@ -502,9 +526,8 @@
                 else
                     $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`)
             }
-            var table = $('#remote-list').DataTable();
-            table.rows().remove().draw();
-            table.rows.add(all).draw();
+            remoteTable.rows().remove().draw();
+            remoteTable.rows.add(all).draw();
             $("#btn-remote-up").prop('disabled', path.dirname(p) == p || path.dirname == path.join(p, path.sep));
         }
 
@@ -513,10 +536,34 @@
             $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
         }
 
+        function updateActions(table, where) {
+            var data = table.rows({ selected: true }).data().pluck('size');
+            var enabled = data.length != 0;
+            for (var d = 0; d < data.length; d++) {
+                if (data[d] == -2) {
+                    enabled = false;
+                }
+            }
+            $("#btn-rename-" + where).prop('disabled', !enabled);
+            $("#btn-delete-" + where).prop('disabled', !enabled);
+            //updateMenuItem({ menu: 'edit|' + where + '|rename', enabled: enabled });
+            updateMenuItem({ menu: 'edit|' + where + '|delete', enabled: enabled });
+            if (where == "local") {
+                $("#btn-upload-" + where).prop('disabled', !enabled);
+                updateMenuItem({ menu: 'edit|' + where + '|reveal in explorer...', enabled: data.length != 0 });
+                updateMenuItem({ menu: 'edit|' + where + '|open...', enabled: enabled });
+                updateMenuItem({ menu: 'edit|' + where + '|open with editor...', enabled: enabled && options.editor && options.editor.length > 0 });
+            }
+            else {
+                $("#btn-download-" + where).prop('disabled', !enabled);
+                updateMenuItem({ menu: 'edit|' + where + '|backup', enabled: enabled });
+            }
+        }
+
         $(document).ready(() => {
 
             loadOptions();
-            _ied = new IED();
+            _ied = new IED(options.local);
             _ied.on('error', (err) => {
                 console.log(err);
             })
@@ -532,11 +579,19 @@
             _ied.on('message', (msg) => {
                 logMessage(msg);
             })
+            _ied.on('download-finished', (file) => {
+                if (options.openEditor) {
+                    if (!options.editor || options.editor.length == 0)
+                        openItem(file);
+                    else {
+                        p = child_process.spawn(options.editor, [file], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                        p.unref();
+                    }
+                }
+            })
 
             $('#local-list').DataTable({
-                keys: {
-                    blurable: false
-                },
+                keys: true,
                 paging: false,
                 select: {
                     style: 'os',
@@ -614,9 +669,7 @@
                 ]
             });
             $('#remote-list').DataTable({
-                keys: {
-                    blurable: false
-                },
+                keys: true,
                 paging: false,
                 select: {
                     style: 'os',
@@ -710,20 +763,60 @@
                 language: { zeroRecords: "", emptyTable: "" }
             });
 
-            $('#local-list').DataTable().on('user-select', function (e, dt, type, cell, originalEvent) {
+
+            localTable = $('#local-list').DataTable();
+            remoteTable = $('#remote-list').DataTable();
+            queueTable = $('#queue-list').DataTable();
+
+            localTable.on('user-select', function (e, dt, type, cell, originalEvent) {
                 if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length == 1) {
                     e.preventDefault();
                 }
             });
 
-            $('#remote-list').DataTable().on('user-select', function (e, dt, type, cell, originalEvent) {
+            remoteTable.on('user-select', function (e, dt, type, cell, originalEvent) {
                 if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length == 1) {
                     e.preventDefault();
+                }
+            });
+
+            /*
+            $('#local-list tbody').on('click', 'tr', function (e) {
+
+            });
+            */
+
+            $('#local-list tbody').on('contextmenu', 'tr', function (e) {
+                console.log(e);
+                console.log(localTable.row(this).data());
+            });
+
+            localTable.on('select', function (e, dt, type, indexes) {
+                if (type === 'row') {
+                    updateActions(localTable, "local");
+                }
+            });
+
+            localTable.on('deselect', function (e, dt, type, indexes) {
+                if (type === 'row') {
+                    updateActions(localTable, "local");
+                }
+            });
+
+            remoteTable.on('select', function (e, dt, type, indexes) {
+                if (type === 'row') {
+                    updateActions(remoteTable, "remote");
+                }
+            });
+
+            remoteTable.on('deselect', function (e, dt, type, indexes) {
+                if (type === 'row') {
+                    updateActions(remoteTable, "remote");
                 }
             });
 
             $('#local-list tbody').on('dblclick', 'tr', function () {
-                var data = $('#local-list').DataTable().row(this).data();
+                var data = localTable.row(this).data();
                 if (data.size == -2) {
                     if (options.syncFolders) {
                         if (_remote[data.name] && path.basename(options.remote) == path.basename(options.local))
@@ -734,7 +827,7 @@
             });
 
             $('#remote-list tbody').on('dblclick', 'tr', function () {
-                var data = $('#remote-list').DataTable().row(this).data();
+                var data = remoteTable.row(this).data();
                 if (data.size == -2) {
                     if (options.syncFolders) {
                         if (_local[data.name] && path.basename(options.remote) == path.basename(options.remote))
@@ -810,6 +903,11 @@
                     $("#remote-path").val(options.remote);
             });
 
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                var target = $(e.target).attr("href") // activated tab
+                if(target == "#log")
+                    $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
+            });
 
             $(window).on('resize', () => {
                 var h = $("#main").outerHeight() + $("#bottom").outerHeight() - 40;
@@ -829,7 +927,18 @@
             saveOptions();
         }
 
+        function openItem(path) {
+            if (!path || path.length == 0) return;
+            shell.openItem(path)
+            //linux - xdg-open /filepath/file.txt
+            //windows jusy open wiht shell process?
+            //mac - Open <filename> ?
+
+
+        }
+
         ipcRenderer.on('GMCP-received', (event, data) => {
+            console.log(data.mod);
             _ied.processGMCP(data.mod, data.obj);
         });
 
@@ -846,114 +955,140 @@
                 <div class="panel-heading">
                     <label class="control-label" for="local-path">
                         Local
-        <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick=""><i class="fa fa-refresh"></i></button>
-            <button id="btn-upload" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Upload files" onclick=""><i class="fa fa-upload"></i></button>
-        <div class="btn-group" role="group">
-            <button id="btn-rename" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick=""><i class="fa fa-i-cursor"></i></button>
-            <button id="btn-delete" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick=""><i class="fa fa-times"></i></button>
-        </div>
-        <button id="btn-newfolder" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
-            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
-                <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
-                <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
-            </span>                    
-        </button>
-                        
+                        <button id="btn-refresh-local" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="updateLocal();">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                        <button id="btn-upload-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Upload files" onclick="">
+                            <i class="fa fa-upload"></i>
+                        </button>
+                        <div class="btn-group" role="group">
+                            <!--
+                            <button id="btn-rename-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
+                                <i class="fa fa-i-cursor"></i>
+                            </button>
+                            -->
+                            <button id="btn-delete-local" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                        <button id="btn-newfolder-local" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
+                            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                                <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
+                                <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
+                            </span>
+                        </button>
+
                     </label>
 
                     <span class="path-container">
-                    <div class="input-group">
-                        <input type="text" id="local-path" class="form-control" />
-                        <span class="input-group-btn" style="">
-                            <button id="button-local" class="btn btn-default dropdown-toggle" style="width:17px;min-width:17px;border-radius: 0;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                <span class="caret" style="margin-left: -1px;"></span>
-                    </button>
-                    <ul id="local-navigate" class="dropdown-menu" aria-labelledby="button-local" data-container="body"></ul>
-                    <button id="btn-local-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
-                                <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
-                                    <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
-                                    <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>
-                                </span>
-                </button>
-                    </span>
+                        <div class="input-group">
+                            <input type="text" id="local-path" class="form-control" />
+                            <span class="input-group-btn">
+                                <button id="button-local" class="btn btn-default dropdown-toggle" style="width:17px;min-width:17px;border-radius: 0;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <span class="caret" style="margin-left: -1px;"></span>
+                                </button>
+                                <ul id="local-navigate" class="dropdown-menu" aria-labelledby="button-local" data-container="body"></ul>
+                                <button id="btn-local-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
+                                    <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                                        <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
+                                        <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>
+                                    </span>
+                                </button>
+                            </span>
 
+                        </div>
+                    </span>
+                    <span class="path-buttons">
+                        <button id="btn-sync" type="button" class="btn btn-default btn-xs" title="Sync folders" onclick="toggleSync();">
+                            <i class="fa fa-exchange"></i>
+                        </button>
+                    </span>
                 </div>
-                </span>
-                <span class="path-buttons">
-                <button id="btn-sync" type="button" class="btn btn-default btn-xs" title="Sync folders" onclick="toggleSync();"><i class="fa fa-exchange"></i></button>
-                </span>
+                <div class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:5px;position: absolute;">
+                    <table tabindex="0" id="local-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Size</th>
+                                <th>Type</th>
+                                <th>Date Modified</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
             </div>
-            <div class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:5px;position: absolute;">
-                <table tabindex="0" id="local-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Size</th>
-                            <th>Type</th>
-                            <th>Date Modified</th>
-                        </tr>
-                    </thead>
-                </table>
-            </div>
+            <div id="drag-bar"></div>
         </div>
-        <div id="drag-bar"></div>
-    </div>
-    <div id="remote">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <label class="control-label" for="remote-path">
+        <div id="remote">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <label class="control-label" for="remote-path">
                         Remote
-        <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick=""><i class="fa fa-refresh"></i></button>
-        <button id="btn-download" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files" onclick=""><i class="fa fa-download"></i></button>
-        <div class="btn-group" role="group">
-            <button id="btn-rename" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick=""><i class="fa fa-i-cursor"></i></button>
-            <button id="btn-delete" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick=""><i class="fa fa-times"></i></button>
-        </div>
-        <button id="btn-newfolder" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
-            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
-                <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
-                <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
-            </span>                    
-        </button>                        
+                        <button id="btn-refresh-remote" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="_ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                        <button id="btn-download-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files" onclick="">
+                            <i class="fa fa-download"></i>
+                        </button>
+                        <div class="btn-group" role="group">
+                            <!--
+                            <button id="btn-rename-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
+                                <i class="fa fa-i-cursor"></i>
+                            </button>
+                            -->
+                            <button id="btn-delete-remote" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                        <button id="btn-newfolder-remote" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
+                            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                                <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
+                                <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
+                            </span>
+                        </button>
                     </label>
 
-                <span class="path-container">
-                    <div class="input-group">
-                        <input type="text" id="remote-path" class="form-control" />
-                        <span class="input-group-btn">
-                            <button id="button-remote" class="btn btn-default" style="width: 17px;min-width:17px;border-radius:0;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                <span class="caret" style="margin-left: -1px;"></span>
-                </button>
-                <ul id="remote-navigate" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
-                <button id="btn-remote-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
-                                <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
-                                    <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
-                                    <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>
-                                </span>
-                </button>
-                </span>
+                    <span class="path-container">
+                        <div class="input-group">
+                            <input type="text" id="remote-path" class="form-control" />
+                            <span class="input-group-btn">
+                                <button id="button-remote" class="btn btn-default" style="width: 17px;min-width:17px;border-radius:0;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <span class="caret" style="margin-left: -1px;"></span>
+                                </button>
+                                <ul id="remote-navigate" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
+                                <button id="btn-remote-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
+                                    <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                                        <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
+                                        <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>
+                                    </span>
+                                </button>
+                            </span>
+                        </div>
+                    </span>
+                </div>
+                <div class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:1px;position: absolute;">
+                    <table tabindex="0" id="remote-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Size</th>
+                                <th>Type</th>
+                                <th>Date Modified</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
             </div>
-            </span>
         </div>
-        <div class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:1px;position: absolute;">
-            <table tabindex="0" id="remote-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Size</th>
-                        <th>Type</th>
-                        <th>Date Modified</th>
-                    </tr>
-                </thead>
-            </table>
-        </div>
-    </div>
-    </div>
     </div>
     <div id="bottom">
         <ul class="nav nav-tabs" role="tablist" style="background-color: #F5F5F5;box-shadow: inset 0 -1px 0 #fff;">
-            <li role="presentation" class="active"><a href="#queue" aria-controls="queue" role="tab" data-toggle="tab">Queue</a></li>
-            <li role="presentation"><a href="#log" aria-controls="log" role="tab" data-toggle="tab">Log</a></li>
+            <li role="presentation" class="active">
+                <a href="#queue" aria-controls="queue" role="tab" data-toggle="tab">Queue</a>
+            </li>
+            <li role="presentation">
+                <a href="#log" aria-controls="log" role="tab" data-toggle="tab">Log</a>
+            </li>
         </ul>
         <div class="tab-content" style="padding: 4px;position: absolute;left: 0;right: 0;bottom: 0;top: 46px;">
             <div role="tabpanel" class="tab-pane fade in active" id="queue" style="margin:0 !important;padding:4px;height:100%;">
@@ -965,34 +1100,35 @@
             <button id="btn-stop" disabled="disabled" type="button" class="btn btn-warning btn-xs" title="Stop" onclick=""><i class="fa fa-stop"></i></button>
         </div>
         -->
-                    <button id="btn-reset" type="button" class="btn btn-warning btn-xs" title="Reset all" onclick=""><i class="fa fa-eject"></i></button>
+                    <button id="btn-reset" type="button" class="btn btn-warning btn-xs" title="Reset all" onclick="">
+                        <i class="fa fa-eject"></i>
+                    </button>
                     <!--button id="btn-queue" type="button" class="btn btn-default btn-xs" title="Show queue" onclick="" data-toggle="button"><i class="fa fa-list-alt"></i></button-->
                 </div>
                 <div style="padding:0px;top:28px;bottom:0px;left:2px;right:2px;position: absolute;">
-                <table id="queue-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0 !important;">
-                    <thead>
-                        <tr>
-                            <th>Local</th>
-                            <th>&lt;-&gt;</th>
-                            <th>Remote</th>
-                            <th>Progress</th>
-                        </tr>
-                    </thead>
-                </table>
+                    <table id="queue-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0 !important;">
+                        <thead>
+                            <tr>
+                                <th>Local</th>
+                                <th>&lt;-&gt;</th>
+                                <th>Remote</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
             <div role="tabpanel" class="tab-pane fade" id="log" style="padding:4px;height:100%;">
                 <div role="tabpanel" class="tab-pane fade in active" id="queue" style="margin:0 !important;padding:4px;height:100%;">
                     <div id="toolbar-log" class="btn-toolbar" role="toolbar">
                         <button id="btn-clear" type="button" class="btn btn-default btn-xs" title="Clear log" onclick="">
-            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
-                <i class="fa fa-file-o fa-stack-2x" style="font-size: 1em"></i>
-                <i class="fa fa-times fa-stack-1x" style="font-size: 0.5em;margin-top: 1px;"></i>
-            </span>                    
-        </button>
+                            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                                <i class="fa fa-file-o fa-stack-2x" style="font-size: 1em"></i>
+                                <i class="fa fa-times fa-stack-1x" style="font-size: 0.5em;margin-top: 1px;"></i>
+                            </span>
+                        </button>
                     </div>
                     <pre id="log-view" style="position: absolute;top:28px;left:2px;right:2px;bottom:0px;border:1px solid rgb(221, 221, 221);overflow:auto;"></pre>
-
                 </div>
             </div>
         </div>
