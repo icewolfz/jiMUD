@@ -87,8 +87,11 @@ export class IED extends EventEmitter {
                     case IEDError.DL_UNKNOWN:
                     case IEDError.DL_USERABORT:
                         this.removeActive();
-                        this.emit('message', "Download aborted: " + obj.path + "/" + obj.file);
+                        this.emit('message', `Download aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
                         break
+                    case IEDError.RESET:
+                        this.emit('message', "Server reset: " + obj.msg);
+                        break;
                 }
                 this.emit('error', obj);
                 break;
@@ -289,6 +292,13 @@ export class IED extends EventEmitter {
             else
                 this.emit('message', "Upload queried: " + this.active.remote);
         }
+    }
+
+    public reset() {
+        ipcRenderer.send('send-gmcp', "IED.reset " + JSON.stringify({ msg: 'Requested reset' }));
+        this._id++;
+        this.emit('message', "Requesting reset");
+
     }
 }
 

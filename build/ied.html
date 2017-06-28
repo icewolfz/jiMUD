@@ -87,9 +87,7 @@
                     {
                         label: '&Reset all',
                         accelerator: "CmdOrCtrl+R",
-                        click: () => {
-
-                        }
+                        click: () => { _ied.reset(); }
                     },
                     { type: 'separator' },
                     {
@@ -124,17 +122,23 @@
                                 enabled: false
                             },
                             */
+                            /*
                             {
                                 label: '&Delete',
                                 enabled: false
                             },
+                            */
+                            /*
                             {
                                 label: '&Create directory'
                             },
-                            { type: 'separator' },
+                            */
+                            //{ type: 'separator' },
+                            /*
                             {
                                 label: '&Select all',
                             },
+                            */
                             { type: 'separator' },
                             {
                                 label: '&Reveal in explorer...',
@@ -176,34 +180,45 @@
                         label: '&Remote',
                         enabled: true,
                         submenu: [
+                            /*
                             {
                                 label: '&Backup',
                                 enabled: false,
                                 accelerator: "CmdOrCtrl+B"
                             },
-                            { type: 'separator' },
+                            */
+                            //{ type: 'separator' },
                             /*
                             {
                                 label: '&Rename',
                                 enabled: false
                             },
                             */
+                            /*
                             {
                                 label: '&Delete',
                                 enabled: false
                             },
+                            */
+                            /*
                             {
                                 label: '&Create directory'
                             },
-                            { type: 'separator' },
+                            */
+                            //{ type: 'separator' },
+                            /*
                             {
                                 label: '&Select all',
                             }
+                            */
                         ]
                     },
                     { type: 'separator' },
                     {
-                        label: '&Clear log...'
+                        label: '&Clear log...',
+                        click: () => {
+                            $("#log-view").html('');
+                        }
                     }
                 ]
             },
@@ -222,7 +237,12 @@
                         role: 'toggledevtools'
                     },
                     { type: 'separator' },
-                    { label: 'Preferences...' },
+                    {
+                        label: 'Preferences...',
+                        click: () => {
+                            window.open('IED.prefs.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                        }
+                    },
                 ]
             },
 
@@ -1015,23 +1035,24 @@
                         <button id="btn-upload-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Upload files" onclick="">
                             <i class="fa fa-upload"></i>
                         </button>
-                        <div class="btn-group" role="group">
-                            <!--
+                        <!--
+                        <div class="btn-group" role="group">                            
                             <button id="btn-rename-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
                                 <i class="fa fa-i-cursor"></i>
-                            </button>
-                            -->
+                            </button>                            
                             <button id="btn-delete-local" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="">
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
+                        -->
+                        <!--
                         <button id="btn-newfolder-local" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
                             <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                 <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
                                 <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
                             </span>
                         </button>
-
+                        -->
                     </label>
 
                     <span class="path-container">
@@ -1084,22 +1105,25 @@
                         <button id="btn-download-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files" onclick="">
                             <i class="fa fa-download"></i>
                         </button>
+                        <!--
                         <div class="btn-group" role="group">
-                            <!--
+                            
                             <button id="btn-rename-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
                                 <i class="fa fa-i-cursor"></i>
                             </button>
-                            -->
                             <button id="btn-delete-remote" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="">
                                 <i class="fa fa-times"></i>
-                            </button>
+                            </button> 
                         </div>
+                        -->
+                        <!--
                         <button id="btn-newfolder-remote" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
                             <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                 <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
                                 <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
                             </span>
                         </button>
+                        -->
                     </label>
 
                     <span class="path-container">
@@ -1154,7 +1178,7 @@
             <button id="btn-stop" disabled="disabled" type="button" class="btn btn-warning btn-xs" title="Stop" onclick=""><i class="fa fa-stop"></i></button>
         </div>
         -->
-                    <button id="btn-reset" type="button" class="btn btn-warning btn-xs" title="Reset all" onclick="">
+                    <button id="btn-reset" type="button" class="btn btn-warning btn-xs" title="Reset all" onclick="_ied.reset();">
                         <i class="fa fa-eject"></i>
                     </button>
                     <!--button id="btn-queue" type="button" class="btn btn-default btn-xs" title="Show queue" onclick="" data-toggle="button"><i class="fa fa-list-alt"></i></button-->
@@ -1175,7 +1199,7 @@
             <div role="tabpanel" class="tab-pane fade" id="log" style="padding:4px;height:100%;">
                 <div role="tabpanel" class="tab-pane fade in active" id="queue" style="margin:0 !important;padding:4px;height:100%;">
                     <div id="toolbar-log" class="btn-toolbar" role="toolbar">
-                        <button id="btn-clear" type="button" class="btn btn-default btn-xs" title="Clear log" onclick="">
+                        <button id="btn-clear" type="button" class="btn btn-default btn-xs" title="Clear log" onclick="$('#log-view').html('');">
                             <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                 <i class="fa fa-file-o fa-stack-2x" style="font-size: 1em"></i>
                                 <i class="fa fa-times fa-stack-1x" style="font-size: 0.5em;margin-top: 1px;"></i>
