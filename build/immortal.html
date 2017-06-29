@@ -56,9 +56,7 @@
                         label: '&Download',
                         accelerator: "CmdOrCtrl+D",
                         enabled: false,
-                        click: () => {
-
-                        }
+                        click: download
                     },
                     { type: 'separator' },
                     /*
@@ -147,7 +145,7 @@
                                 label: '&Select all',
                             },
                             */
-                            { type: 'separator' },
+                            //{ type: 'separator' },
                             {
                                 label: '&Reveal in explorer...',
                                 enabled: false,
@@ -376,7 +374,9 @@
                     'syncFolders': true,
                     'showQueue': true,
                     'showHidden': false,
-                    'uploadOnChange': false
+                    'uploadOnChange': false,
+                    'debug':false,
+                    'logErrors':false
                 };
                 saveOptions();
             }
@@ -424,7 +424,7 @@
                     file = IED.getFileInfo(path.join(p, dir[d]));
                 }
                 catch (error) {
-                    console.log(error);
+                    logError(error);
                     continue;
                 }
                 if (file.hidden && !options.showhidden)
@@ -575,27 +575,41 @@
             $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
         }
 
+        function logError(error) {
+            if (options.debug)
+                console.log(err);
+            if (options.logErrors) {
+                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), "Immortal Tools: " + new Date().toLocaleString() + "\n", { flag: 'a' });
+                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), error + "\n", { flag: 'a' });
+            }
+        }
+
         function updateActions(table, where) {
             var data = table.rows({ selected: true }).data().pluck('size');
             var enabled = data.length != 0;
+            var dirs = 0;
             for (var d = 0; d < data.length; d++) {
                 if (data[d] == -2) {
-                    enabled = false;
+                    dirs++;
                 }
             }
+            enabled = dirs != data.length;
             $("#btn-rename-" + where).prop('disabled', !enabled);
             $("#btn-delete-" + where).prop('disabled', !enabled);
             //updateMenuItem({ menu: 'edit|' + where + '|rename', enabled: enabled });
-            updateMenuItem({ menu: 'edit|' + where + '|delete', enabled: enabled });
+            //updateMenuItem({ menu: 'edit|' + where + '|delete', enabled: enabled });
             if (where == "local") {
                 $("#btn-upload-" + where).prop('disabled', !enabled);
+                updateMenuItem({ menu: 'file|upload', enabled: enabled });
                 updateMenuItem({ menu: 'edit|' + where + '|reveal in explorer...', enabled: data.length != 0 });
                 updateMenuItem({ menu: 'edit|' + where + '|open...', enabled: enabled });
                 updateMenuItem({ menu: 'edit|' + where + '|open with editor...', enabled: enabled && options.editor && options.editor.length > 0 });
+
             }
             else {
                 $("#btn-download-" + where).prop('disabled', !enabled);
-                updateMenuItem({ menu: 'edit|' + where + '|backup', enabled: enabled });
+                updateMenuItem({ menu: 'file|download', enabled: enabled });
+                //updateMenuItem({ menu: 'edit|' + where + '|backup', enabled: enabled });
             }
         }
 
@@ -800,7 +814,7 @@
             _ied.on('error', (err) => {
                 if (err.code == IEDError.USERRESET)
                     logMessage(err.msg);
-                console.log(err);
+                logError(error);
             })
             _ied.on('reset', () => {
                 queueTable.rows().remove().draw();
@@ -825,7 +839,6 @@
                 }
             });
             _ied.on('add', (item) => {
-                console.log(item);
                 queueTable.row.add({
                     "local": item.local,
                     "direction": item.download ? "<-" : "->",
@@ -881,8 +894,9 @@
             */
 
             $('#local-list tbody').on('contextmenu', 'tr', function (e) {
-                console.log(e);
-                console.log(localTable.row(this).data());
+                //TODO add contest menu for local list
+                //console.log(e);
+                //console.log(localTable.row(this).data());
             });
 
             localTable.on('select', function (e, dt, type, indexes) {
@@ -914,21 +928,18 @@
                 localTable.rows().deselect();
                 var row = localTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; })
                 //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollHeight - (row.index() * $(row.node()).outerHeight());
-                if(!row || row.length === 0) return;
+                if (!row || row.length === 0) return;
                 var top = row.node().offsetTop;
                 var sTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop;
                 var sHeight = $("#local-list_wrapper .dataTables_scrollBody")[0].clientHeight;
-                console.log(top);
-                console.log(sTop);
-                console.log(sHeight);
-                if(top < sTop || top + 31 >= sTop+sHeight)
-                    $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = top;                
+                if (top < sTop || top + 31 >= sTop + sHeight)
+                    $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = top;
                 //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = row.node().offsetTop;
                 //row.node().scrollIntoView();
                 //$("body")[0].scrollTop = 0
                 row.select();
                 clearTimeout(keyclearID);
-                keyclearID = setTimeout(()=> {
+                keyclearID = setTimeout(() => {
                     key = "";
                 }, 500);
             });
@@ -936,17 +947,17 @@
                 key += e.key;
                 remoteTable.rows().deselect();
                 var row = remoteTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; })
-                if(!row || row.length === 0) return;
+                if (!row || row.length === 0) return;
                 var top = row.node().offsetTop;
                 var sTop = $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop;
                 var sHeight = $("#remote-list_wrapper .dataTables_scrollBody")[0].clientHeight;
-                if(top < sTop || top + 31 >= sTop+sHeight)
+                if (top < sTop || top + 31 >= sTop + sHeight)
                     $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = top;
                 //row.node().scrollIntoView();
                 //$("body")[0].scrollTop = 0
                 row.select();
                 clearTimeout(keyclearID);
-                keyclearID = setTimeout(()=> {
+                keyclearID = setTimeout(() => {
                     key = "";
                 }, 500);
             });
@@ -1054,13 +1065,6 @@
                     $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
             });
 
-            $("#btn-download-remote").on("click", () => {
-                var data = remoteTable.rows({ selected: true }).data().pluck('path');
-                for (var d = 0, dl = data.length; d < dl; d++)
-                    _ied.download(data[d]);
-
-            });
-
             $(window).on('resize', () => {
                 var h = $("#main").outerHeight() - 40;
                 if (options.showQueue)
@@ -1108,8 +1112,18 @@
 
         }
 
+        function download() {
+            var data = remoteTable.rows({ selected: true }).data();
+            for (var d = 0, dl = data.length; d < dl; d++) {
+                if (data[d].size == -2)
+                    continue;
+                _ied.download(data[d].path);
+            }
+        }
+
         ipcRenderer.on('GMCP-received', (event, data) => {
-            console.log(data.mod);
+            if (options.debug)
+                console.log(data.mod);
             _ied.processGMCP(data.mod, data.obj);
         });
 
@@ -1204,7 +1218,7 @@
                         <button id="btn-refresh-remote" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="_ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);">
                             <i class="fa fa-refresh"></i>
                         </button>
-                        <button id="btn-download-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files">
+                        <button id="btn-download-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files" onclick="download()">
                             <i class="fa fa-download"></i>
                         </button>
                         <!--

@@ -152,7 +152,9 @@
                     'syncFolders': true,
                     'showQueue': true,
                     'showHidden': false,
-                    'uploadOnChange': false
+                    'uploadOnChange': false,
+                    'debug':false,
+                    'logErrors':false
                 };
 
             $("#openEditor").prop('checked', _settings.extensions["immortal"].openEditor);
@@ -160,6 +162,9 @@
             $("#showQueue").prop('checked', _settings.extensions["immortal"].showQueue);
             $("#showHidden").prop('checked', _settings.extensions["immortal"].showHidden);
             $("#uploadOnChange").prop('checked', _settings.extensions["immortal"].uploadOnChange);
+
+            $("#debug").prop('checked', _settings.extensions["immortal"].debug);
+            $("#logErrors").prop('checked', _settings.extensions["immortal"].logErrors);
 
             $('#bufferSize').val(_settings.extensions["immortal"].bufferSize);
             $('#bufferSize').selectpicker('render');
@@ -185,7 +190,9 @@
                 'syncFolders': true,
                 'showQueue': true,
                 'showHidden': false,
-                'uploadOnChange': false
+                'uploadOnChange': false,
+                    'debug':false,
+                    'logErrors':false
             };
             _settings.windows["immortal"].persistent = false;
             _settings.windows["immortal"].alwaysOnTopClient = true;
@@ -259,6 +266,16 @@
                         </select>
                     </label>
                 </div>
+                <div class="col-xs-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="debug" /> Enable debugging
+                    </label>
+                </div>
+                <div class="col-xs-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="logErrors" /> Log errors
+                    </label>
+                </div>                                
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editorTab">
                 <div class="col-xs-6 form-group">
