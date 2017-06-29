@@ -925,10 +925,10 @@
 
             $("#local-list").on('keypress', function (e) {
                 key += e.key;
-                localTable.rows().deselect();
                 var row = localTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; })
                 //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollHeight - (row.index() * $(row.node()).outerHeight());
                 if (!row || row.length === 0) return;
+                localTable.rows().deselect();
                 var top = row.node().offsetTop;
                 var sTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop;
                 var sHeight = $("#local-list_wrapper .dataTables_scrollBody")[0].clientHeight;
@@ -945,9 +945,9 @@
             });
             $("#remote-list").on('keypress', function (e) {
                 key += e.key;
-                remoteTable.rows().deselect();
                 var row = remoteTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; })
                 if (!row || row.length === 0) return;
+                remoteTable.rows().deselect();
                 var top = row.node().offsetTop;
                 var sTop = $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop;
                 var sHeight = $("#remote-list_wrapper .dataTables_scrollBody")[0].clientHeight;
