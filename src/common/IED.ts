@@ -16,12 +16,21 @@ export class IED extends EventEmitter {
     private _paths = {};
     private _id: number = 0;
     private _gmcp = [];
+    private _temp: boolean = true;
 
     public local;
     public remote;
     public queue: Item[] = [];
     public active: Item;
     public bufferSize: number = 0;
+
+    get useTemp(): boolean { return this._temp; }
+    set useTemp(value: boolean) {
+        if(value === this._temp) return;
+        this._temp = value;
+        for(var q = 0, ql = this.queue.length; q< ql; q++)
+            this.queue[q].tmp = this._temp;
+    }
 
     constructor(local: string, remote: string) {
         super();
@@ -265,6 +274,7 @@ export class IED extends EventEmitter {
                 item = new Item('download:' + this._id);
                 this._id++;
             }
+            item.tmp = this._temp;
             item.download = true;
             item.remote = file;
             if (this._paths[tag]) {
@@ -300,6 +310,7 @@ export class IED extends EventEmitter {
                 item.local = file;
                 item.remote = path.join(this.remote, path.basename(file));
             }
+            item.tmp = this._temp;
             item.info = IED.getFileInfo(item.local);
             item.totalSize = item.info.size;
             this.addItem(item);

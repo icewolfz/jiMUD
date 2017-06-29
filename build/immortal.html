@@ -380,7 +380,8 @@
                     'showHidden': false,
                     'uploadOnChange': false,
                     'debug': false,
-                    'logErrors': false
+                    'logErrors': false,
+                    'tempFile':true
                 };
                 saveOptions();
             }
@@ -408,6 +409,7 @@
                 _ied.local = options.local;
                 _ied.remote = options.remote;
                 _ied.bufferSize = options.bufferSize;
+                _ied.useTemp = options.tempFile;
             }
             ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: options });
         }
@@ -819,6 +821,7 @@
             loadOptions();
             _ied = new IED(options.local, options.remote);
             _ied.bufferSize = options.bufferSize;
+            _ied.useTemp = options.tempFile;
             _ied.on('error', (err) => {
                 if (err.code == IEDError.USERRESET)
                     logMessage(err.msg);

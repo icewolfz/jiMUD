@@ -153,8 +153,9 @@
                     'showQueue': true,
                     'showHidden': false,
                     'uploadOnChange': false,
-                    'debug':false,
-                    'logErrors':false
+                    'debug': false,
+                    'logErrors': false,
+                    'tempFile': true
                 };
 
             $("#openEditor").prop('checked', _settings.extensions["immortal"].openEditor);
@@ -162,6 +163,7 @@
             $("#showQueue").prop('checked', _settings.extensions["immortal"].showQueue);
             $("#showHidden").prop('checked', _settings.extensions["immortal"].showHidden);
             $("#uploadOnChange").prop('checked', _settings.extensions["immortal"].uploadOnChange);
+            $("#tempFile").prop('checked', _settings.extensions["immortal"].tempFile);
 
             $("#debug").prop('checked', _settings.extensions["immortal"].debug);
             $("#logErrors").prop('checked', _settings.extensions["immortal"].logErrors);
@@ -191,8 +193,9 @@
                 'showQueue': true,
                 'showHidden': false,
                 'uploadOnChange': false,
-                    'debug':false,
-                    'logErrors':false
+                'debug': false,
+                'logErrors': false,
+                'tempFile': true
             };
             _settings.windows["immortal"].persistent = false;
             _settings.windows["immortal"].alwaysOnTopClient = true;
@@ -253,6 +256,12 @@
                     </label>
                 </div>
                 <div class="col-xs-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="tempFile" /> Use temporary file when downloading
+                        <span class="help-block" style="display:none;font-size: 0.8em;margin:0;padding:0">Prepends file with a .tmp until completed</span>
+                    </label>
+                </div>
+                <div class="col-xs-6 form-group">
                     <label class="control-label">Buffer Size
                         <br>
                         <select id="bufferSize" class="form-control selectpicker" data-container="body" data-width="250px">
@@ -275,7 +284,7 @@
                     <label class="control-label">
                         <input type="checkbox" id="logErrors" /> Log errors
                     </label>
-                </div>                                
+                </div>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editorTab">
                 <div class="col-xs-6 form-group">
