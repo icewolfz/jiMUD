@@ -239,18 +239,18 @@ table.dataTable {
     outline: none;
 }
 
-#local-list table.dataTable tbody > tr.selected,
-#local-list table.dataTable tbody > tr > .selected,
-#remote-list table.dataTable tbody > tr.selected,
-#remote-list table.dataTable tbody > tr > .selected {
+#local-list.table.dataTable tbody > tr.selected,
+#local-list.table.dataTable tbody > tr > .selected,
+#remote-list.table.dataTable tbody > tr.selected,
+#remote-list.table.dataTable tbody > tr > .selected {
     /*background-color: #08C;*/
     background-color: #969696 !important;
 }
 
-#local-list table.dataTable.focused tbody > tr.selected,
-#local-list table.dataTable.focused tbody > tr > .selected,
-#remote-list table.dataTable.focused tbody > tr.selected,
-#remote-list table.dataTable.focused tbody > tr > .selected {
+#local-list.table.dataTable.focused tbody > tr.selected,
+#local-list.table.dataTable.focused tbody > tr > .selected,
+#remote-list.table.dataTable.focused tbody > tr.selected,
+#remote-list.table.dataTable.focused tbody > tr > .selected {
     background-color: #08C !important;
 }
 

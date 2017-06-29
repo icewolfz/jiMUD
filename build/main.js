@@ -1396,7 +1396,8 @@ ipcMain.on('setting-changed', (event, data) => {
         windows[name].persistent = data.value.persistent;
         windows[name].alwaysOnTop = data.value.alwaysOnTop;
       }
-
+      if (windows[name].window)
+        windows[name].window.webContents.send('setting-changed', data);
       if (windows[name].window.setParentWindow)
         windows[name].window.setParentWindow(set.windows[name].alwaysOnTopClient ? win : null);
       windows[name].window.setSkipTaskbar((set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false);

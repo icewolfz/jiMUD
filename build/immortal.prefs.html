@@ -104,18 +104,18 @@
                     case 'alwaysOnTop':
                         break;
                     default:
-                        _settings.extensions["IED"][$(this).attr('id')] = this.checked;
+                        _settings.extensions["immortal"][$(this).attr('id')] = this.checked;
                         break;
                 }
             });
             $('input[type="text"]').change(function () {
-                _settings.extensions["IED"][$(this).attr('id')] = $(this).val();
+                _settings.extensions["immortal"][$(this).attr('id')] = $(this).val();
             });
             $('input[type="number"]').change(function () {
-                _settings.extensions["IED"][$(this).attr('id')] = parseInt($(this).val(), 10);
+                _settings.extensions["immortal"][$(this).attr('id')] = parseInt($(this).val(), 10);
             });
             $('.selectpicker').change(function () {
-                _settings.extensions["IED"][$(this).attr('id')] = $(this).val();
+                _settings.extensions["immortal"][$(this).attr('id')] = $(this).val();
             });
             $("#btn-editor").on('click', () => {
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
@@ -134,14 +134,14 @@
                             return;
                         }
                         $("#editor").val(fileNames[0]);
-                        _settings.extensions["IED"].editor = fileNames[0];
+                        _settings.extensions["immortal"].editor = fileNames[0];
                     });
             });
         });
 
         function loadSettings() {
-            if (!_settings.extensions["IED"])
-                _settings.extensions["IED"] = {
+            if (!_settings.extensions["immortal"])
+                _settings.extensions["immortal"] = {
                     'local': '',
                     'remote': '',
                     'editor': '',
@@ -155,17 +155,17 @@
                     'uploadOnChange': false
                 };
 
-            $("#openEditor").prop('checked', _settings.extensions["IED"].openEditor);
-            $("#syncFolders").prop('checked', _settings.extensions["IED"].syncFolders);
-            $("#showQueue").prop('checked', _settings.extensions["IED"].showQueue);
-            $("#showHidden").prop('checked', _settings.extensions["IED"].showHidden);
-            $("#uploadOnChange").prop('checked', _settings.extensions["IED"].uploadOnChange);
+            $("#openEditor").prop('checked', _settings.extensions["immortal"].openEditor);
+            $("#syncFolders").prop('checked', _settings.extensions["immortal"].syncFolders);
+            $("#showQueue").prop('checked', _settings.extensions["immortal"].showQueue);
+            $("#showHidden").prop('checked', _settings.extensions["immortal"].showHidden);
+            $("#uploadOnChange").prop('checked', _settings.extensions["immortal"].uploadOnChange);
 
-            $('#bufferSize').val(_settings.extensions["IED"].bufferSize);
+            $('#bufferSize').val(_settings.extensions["immortal"].bufferSize);
             $('#bufferSize').selectpicker('render');
             $('#bufferSize').change();
 
-            $('#editor').val(_settings.extensions["IED"].editor);
+            $('#editor').val(_settings.extensions["immortal"].editor);
 
             $("#persistent").prop('checked', _settings.windows["immortal"].persistent);
             $("#alwaysOnTopClient").prop('checked', _settings.windows["immortal"].alwaysOnTopClient);
@@ -174,7 +174,7 @@
         }
 
         function resetSettings() {
-            _settings.extensions["IED"] = {
+            _settings.extensions["immortal"] = {
                 'local': '',
                 'remote': '',
                 'editor': '',
@@ -194,7 +194,7 @@
         }
 
         function saveSettings() {
-            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'IED', value: _settings.extensions["IED"] });
+            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: _settings.extensions["immortal"] });
             ipcRenderer.send('setting-changed', {
                 type: 'windows',
                 name: 'immortal',

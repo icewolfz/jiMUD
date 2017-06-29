@@ -24,6 +24,7 @@
     <script>
         //cSpell:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
         const { IED, fileInfo } = require('./js/ied');
+        const { IEDError } = require('./js/types');
         const { remote, ipcRenderer, shell } = require('electron');
         const { app, nativeImage, dialog, Menu, MenuItem } = remote;
         const { parseTemplate } = require('./js/library');
@@ -36,7 +37,7 @@
 
         var _ied, options, dropdownMenu;
         var _local = {}, _remote = {};
-        var localTable, remoteTable, queueTable;
+        var localTable, remoteTable, queueTable, key = '', keyclearID;
 
         var menu = [
             {
@@ -359,7 +360,7 @@
         function loadOptions(data) {
             if (!data) {
                 var set = Settings.load(remote.getGlobal('settingsFile'));
-                options = set.extensions["IED"];
+                options = set.extensions["immortal"];
             }
             else
                 options = data;
@@ -399,8 +400,9 @@
         }
 
         function saveOptions() {
-            _ied.local = options.local;
-            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'IED', value: options });
+            if (_ied)
+                _ied.local = options.local;
+            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: options });
         }
 
         function updateLocal(p) {
@@ -773,7 +775,7 @@
                 columnDefs: [
                     {
                         render: function (data, type, full, meta) {
-                            return `<div class="progressbar"><div class="progressbar-text">${100 * data}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`
+                            return `<div class="progressbar"><div class="progressbar-text">${Math.round(100 * data)}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`
                         },
                         targets: 3
                     },
@@ -796,6 +798,8 @@
             loadOptions();
             _ied = new IED(options.local);
             _ied.on('error', (err) => {
+                if (err.code == IEDError.USERRESET)
+                    logMessage(err.msg);
                 console.log(err);
             })
             _ied.on('reset', () => {
@@ -821,6 +825,7 @@
                 }
             });
             _ied.on('add', (item) => {
+                console.log(item);
                 queueTable.row.add({
                     "local": item.local,
                     "direction": item.download ? "<-" : "->",
@@ -836,7 +841,7 @@
                 }).remove().draw();
             });
             _ied.on('update', (item) => {
-                var row = queueTable.row(function (idx, data, node) {
+                queueTable.row(function (idx, data, node) {
                     return data.id == item.ID ?
                         true : false;
                 }).data({
@@ -847,7 +852,6 @@
                     "id": item.ID
                 }).draw();
             });
-
 
             localTable = $('#local-list').DataTable();
             remoteTable = $('#remote-list').DataTable();
@@ -905,6 +909,52 @@
                 }
             });
 
+            $("#local-list").on('keypress', function (e) {
+                key += e.key;
+                localTable.rows().deselect();
+                var row = localTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; })
+                //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollHeight - (row.index() * $(row.node()).outerHeight());
+                if(!row || row.length === 0) return;
+                var top = row.node().offsetTop;
+                var sTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop;
+                var sHeight = $("#local-list_wrapper .dataTables_scrollBody")[0].clientHeight;
+                console.log(top);
+                console.log(sTop);
+                console.log(sHeight);
+                if(top < sTop || top + 31 >= sTop+sHeight)
+                    $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = top;                
+                //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = row.node().offsetTop;
+                //row.node().scrollIntoView();
+                //$("body")[0].scrollTop = 0
+                row.select();
+                clearTimeout(keyclearID);
+                keyclearID = setTimeout(()=> {
+                    key = "";
+                }, 500);
+            });
+            $("#remote-list").on('keypress', function (e) {
+                key += e.key;
+                remoteTable.rows().deselect();
+                var row = remoteTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; })
+                if(!row || row.length === 0) return;
+                var top = row.node().offsetTop;
+                var sTop = $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop;
+                var sHeight = $("#remote-list_wrapper .dataTables_scrollBody")[0].clientHeight;
+                if(top < sTop || top + 31 >= sTop+sHeight)
+                    $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = top;
+                //row.node().scrollIntoView();
+                //$("body")[0].scrollTop = 0
+                row.select();
+                clearTimeout(keyclearID);
+                keyclearID = setTimeout(()=> {
+                    key = "";
+                }, 500);
+            });
+
+
+            //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop
+
+
             $('#local-list tbody').on('dblclick', 'tr', function () {
                 var data = localTable.row(this).data();
                 if (data.size == -2) {
@@ -913,6 +963,9 @@
                             _ied.getDir(options.remote + "/" + data.name, true);
                     }
                     updateLocal(data.path);
+                }
+                else {
+                    //UPLOAD
                 }
             });
 
@@ -925,6 +978,8 @@
                     }
                     _ied.getDir(data.path, true);
                 }
+                else
+                    _ied.download(data.path);
             });
 
             $("#local-list").on('focus', () => {
@@ -999,6 +1054,13 @@
                     $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
             });
 
+            $("#btn-download-remote").on("click", () => {
+                var data = remoteTable.rows({ selected: true }).data().pluck('path');
+                for (var d = 0, dl = data.length; d < dl; d++)
+                    _ied.download(data[d]);
+
+            });
+
             $(window).on('resize', () => {
                 var h = $("#main").outerHeight() - 40;
                 if (options.showQueue)
@@ -1056,7 +1118,7 @@
         });
 
         ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type == "extensions" && data.name == "IED")
+            if (data.type == "extensions" && data.name == "immortal")
                 loadOptions(data.value);
         })
     </script>
@@ -1142,7 +1204,7 @@
                         <button id="btn-refresh-remote" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="_ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);">
                             <i class="fa fa-refresh"></i>
                         </button>
-                        <button id="btn-download-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files" onclick="">
+                        <button id="btn-download-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files">
                             <i class="fa fa-download"></i>
                         </button>
                         <!--

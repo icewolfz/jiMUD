@@ -46,8 +46,8 @@ export class IED extends EventEmitter {
                             this.emit('error', err);
                         }
                     }
+                    this.emit('update', this.active);
                     if (!e.data.last) {
-                        this.emit('update', this.active);
                         ipcRenderer.send('send-gmcp', "IED.download.more " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: 'download' }));
                     }
                     else {
@@ -91,6 +91,21 @@ export class IED extends EventEmitter {
                         break
                     case IEDError.RESET:
                         this.emit('message', "Server reset: " + obj.msg);
+                        this.active = null;
+                        this._paths = {};
+                        this._id = 0;
+                        this._gmcp = [];
+                        this.startWorker();
+                        this.emit('reset');
+                        break;
+                    case IEDError.USERRESET:
+                        this.emit('message', obj.msg);
+                        this.active = null;
+                        this._paths = {};
+                        this._id = 0;
+                        this._gmcp = [];
+                        this.startWorker();
+                        this.emit('reset');    
                         break;
                 }
                 this.emit('error', obj);
@@ -182,7 +197,13 @@ export class IED extends EventEmitter {
 
     public download(file, resolve?: boolean, tag?: string) {
         if (!resolve) {
-            let item = new Item(tag || file);
+            let item;
+            if (tag)
+                item = new Item(tag);
+            else {
+                item = new Item('download:' + this._id);
+                this._id++;
+            }
             item.download = true;
             item.remote = file;
             if (this._paths[tag]) {
@@ -347,7 +368,7 @@ export class Item {
     }
 
     get percent(): number {
-        return this.totalSize ? Math.round(this.currentSize / this.totalSize) : 0
+        return this.totalSize ? (Math.round(this.currentSize / this.totalSize * 100) / 100) : 0
     }
 
     public read(size: number, callback);
