@@ -6,6 +6,7 @@
     - Upload files
 - **Fixed:**
   - Preferences: Log path browse button now works
+  - Triggers where trigger on raw line instead of text
 ##### 0.4.0 2017-06-23
 - **New:**
   - Display control

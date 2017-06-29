@@ -875,6 +875,9 @@ function createWindow() {
           windows[name].window.webContents.executeJavaScript('closing();');
           windows[name].window.webContents.executeJavaScript('closed();');
           set.windows[name] = getWindowState(name, windows[name].window);
+          set.windows[name].persistent = windows[name].persistent;
+          set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
+          set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
           windows[name].window.destroy();
         }
         logError(`Client unresponsive, closed.\n`, true);
@@ -950,6 +953,9 @@ function createWindow() {
         continue;
       windows[name].window.webContents.executeJavaScript('closed();');
       set.windows[name] = getWindowState(name, windows[name].window);
+      set.windows[name].persistent = windows[name].persistent;
+      set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
+      set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
       windows[name].window.destroy();
     }
     set.save(global.settingsFile);
@@ -991,6 +997,13 @@ function createWindow() {
       showChat();
     else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
       createChat();
+    for (var name in set.windows) {
+      if (set.windows[name].show)
+        showWindow(name, set.windows[name]);
+      else if (set.windows[name].persistent)
+        createNewWindow(name, set.windows[name]);
+    }
+
   })
 
   win.on('close', (e) => {
@@ -1373,15 +1386,23 @@ ipcMain.on('setting-changed', (event, data) => {
     if (data.value)
       createChat();
   }
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    if (windows[name].window.setParentWindow)
-      windows[name].window.setParentWindow(set.windows[name].alwaysOnTopClient ? win : null);
-    windows[name].window.setSkipTaskbar((set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false);
-    if (windows[name].persistent)
-      createNewWindow(name, windows[name]);
-  }
+  if (data.type == "windows")
+    for (var name in windows) {
+      if (!windows.hasOwnProperty(name) || !windows[name].window)
+        continue;
+
+      if (name == data.name) {
+        windows[name].alwaysOnTopClient = data.value.alwaysOnTopClient;
+        windows[name].persistent = data.value.persistent;
+        windows[name].alwaysOnTop = data.value.alwaysOnTop;
+      }
+
+      if (windows[name].window.setParentWindow)
+        windows[name].window.setParentWindow(set.windows[name].alwaysOnTopClient ? win : null);
+      windows[name].window.setSkipTaskbar((set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false);
+      if (windows[name].persistent)
+        createNewWindow(name, windows[name]);
+    }
 })
 
 ipcMain.on('GMCP-received', (event, data) => {
@@ -2088,6 +2109,9 @@ function createNewWindow(name, options) {
   windows[name].window.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, windows[name].window);
+    set.windows[name].persistent = windows[name].persistent;
+    set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
+    set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
     set.windows[name].show = false;
     set.save(global.settingsFile);
     if (windows[name].persistent) {

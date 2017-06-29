@@ -2,7 +2,7 @@
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { parseTemplate } from "./library";
-import { FileInfo, CacheType, Echo, IEDError } from "./types";
+import { FileInfo, IEDError } from "./types";
 const fs = require("fs");
 const path = require("path");
 const fswin = require('../../lib/fswin');

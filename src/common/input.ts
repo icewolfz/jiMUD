@@ -61,7 +61,7 @@ export class input extends EventEmitter {
         });
 
         this.client.on('add-line', (data) => {
-            this.ExecuteTriggers(0, data.raw, data.fragment, false);
+            this.ExecuteTriggers(0, data.line, data.fragment, false);
         });
 
         this.client.commandInput.keyup((event) => {

@@ -91,6 +91,13 @@
                     },
                     { type: 'separator' },
                     {
+                        label: 'Preferences...',
+                        click: () => {
+                            window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=270,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                        }
+                    },
+                    { type: 'separator' },
+                    {
                         label: '&Close',
                         click: () => { window.close(); }
                     }
@@ -225,24 +232,22 @@
             {
                 label: '&View',
                 submenu: [
-                    { label: '&Show quere', type: 'checkbox' },
+                    {
+                        label: '&Show queue and log',
+                        type: 'checkbox',
+                        accelerator: "CmdOrCtrl+Q",
+                        click: () => { toggleQueue(); }
+                    },
                     {
                         label: 'Sync folders',
                         type: 'checkbox',
-                        accelerator: "CmdOrCtrl++Shift+S",
+                        accelerator: "CmdOrCtrl+Shift+S",
                         click: () => { toggleSync(); }
                     },
                     { type: 'separator' },
                     {
                         role: 'toggledevtools'
-                    },
-                    { type: 'separator' },
-                    {
-                        label: 'Preferences...',
-                        click: () => {
-                            window.open('IED.prefs.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
-                        }
-                    },
+                    }
                 ]
             },
 
@@ -380,6 +385,17 @@
             else
                 $('#btn-sync').removeClass('active');
             updateMenuItem({ menu: 'edit|editor', enabled: options.editor && options.editor.length > 0 });
+            updateMenuItem({ menu: 'view|show queue and log', checked: options.showQueue });
+            if (options.showQueue) {
+                $("#btn-queue").addClass("active");
+                $("#bottom").css('display', '');
+                $("#main").css('bottom', options.queueSize + 'px');
+            }
+            else {
+                $('#btn-queue').removeClass('active');
+                $("#bottom").css('display', 'none');
+                $("#main").css('bottom', '4px');
+            }
         }
 
         function saveOptions() {
@@ -583,61 +599,6 @@
 
         $(document).ready(() => {
 
-            loadOptions();
-            _ied = new IED(options.local);
-            _ied.on('error', (err) => {
-                console.log(err);
-            })
-            _ied.on('reset', () => {
-                queueTable.rows().remove().draw();
-            })
-            _ied.on('dir', (dir, files) => {
-                updateRemote(dir, files)
-            });
-            _ied.on('resolved', (dir, tag) => {
-                logMessage("Resolved: " + dir);
-            });
-            _ied.on('message', (msg) => {
-                logMessage(msg);
-            });
-            _ied.on('download-finished', (file) => {
-                if (options.openEditor) {
-                    if (!options.editor || options.editor.length == 0)
-                        openItem(file);
-                    else {
-                        p = child_process.spawn(options.editor, [file], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
-                        p.unref();
-                    }
-                }
-            });
-            _ied.on('add', (item) => {
-                queueTable.row.add({
-                    "local": item.local,
-                    "direction": item.download ? "<-" : "->",
-                    "remote": item.remote,
-                    "progress": item.percent,
-                    "id": item.ID
-                }).draw();
-            });
-            _ied.on('remove', (item) => {
-                queueTable.rows(function (idx, data, node) {
-                    return data.id == item.ID ?
-                        true : false;
-                }).remove().draw();
-            });
-            _ied.on('update', (item) => {
-                var row = queueTable.row(function (idx, data, node) {
-                    return data.id == item.ID ?
-                        true : false;
-                }).data({
-                    "local": item.local,
-                    "direction": item.download ? "<-" : "->",
-                    "remote": item.remote,
-                    "progress": item.percent,
-                    "id": item.ID
-                }).draw();
-            });
-
             $('#local-list').DataTable({
                 keys: true,
                 paging: false,
@@ -832,6 +793,60 @@
                     { data: 'progress', width: '150px' }
                 ]
             });
+            loadOptions();
+            _ied = new IED(options.local);
+            _ied.on('error', (err) => {
+                console.log(err);
+            })
+            _ied.on('reset', () => {
+                queueTable.rows().remove().draw();
+            })
+            _ied.on('dir', (dir, files) => {
+                updateRemote(dir, files)
+            });
+            _ied.on('resolved', (dir, tag) => {
+                logMessage("Resolved: " + dir);
+            });
+            _ied.on('message', (msg) => {
+                logMessage(msg);
+            });
+            _ied.on('download-finished', (file) => {
+                if (options.openEditor) {
+                    if (!options.editor || options.editor.length == 0)
+                        openItem(file);
+                    else {
+                        p = child_process.spawn(options.editor, [file], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                        p.unref();
+                    }
+                }
+            });
+            _ied.on('add', (item) => {
+                queueTable.row.add({
+                    "local": item.local,
+                    "direction": item.download ? "<-" : "->",
+                    "remote": item.remote,
+                    "progress": item.percent,
+                    "id": item.ID
+                }).draw();
+            });
+            _ied.on('remove', (item) => {
+                queueTable.rows(function (idx, data, node) {
+                    return data.id == item.ID ?
+                        true : false;
+                }).remove().draw();
+            });
+            _ied.on('update', (item) => {
+                var row = queueTable.row(function (idx, data, node) {
+                    return data.id == item.ID ?
+                        true : false;
+                }).data({
+                    "local": item.local,
+                    "direction": item.download ? "<-" : "->",
+                    "remote": item.remote,
+                    "progress": item.percent,
+                    "id": item.ID
+                }).draw();
+            });
 
 
             localTable = $('#local-list').DataTable();
@@ -985,7 +1000,9 @@
             });
 
             $(window).on('resize', () => {
-                var h = $("#main").outerHeight() + $("#bottom").outerHeight() - 40;
+                var h = $("#main").outerHeight() - 40;
+                if (options.showQueue)
+                    h += $("#bottom").outerHeight();
                 $("#local-navigate").css("max-height", h + "px");
                 $("#remote-navigate").css("max-height", h + "px");
             });
@@ -1000,6 +1017,23 @@
             else
                 $('#btn-sync').removeClass('active');
             saveOptions();
+        }
+
+        function toggleQueue() {
+            options.showQueue = !options.showQueue;
+            updateMenuItem({ menu: 'view|show queue and log', checked: options.showQueue });
+            if (options.showQueue) {
+                $("#btn-queue").addClass("active");
+                $("#bottom").css('display', '');
+                $("#main").css('bottom', options.queueSize + 'px');
+            }
+            else {
+                $('#btn-queue').removeClass('active');
+                $("#bottom").css('display', 'none');
+                $("#main").css('bottom', '2px');
+            }
+            saveOptions();
+            $(window).trigger('resize');
         }
 
         function openItem(path) {
@@ -1187,7 +1221,6 @@
                     <button id="btn-reset" type="button" class="btn btn-warning btn-xs" title="Reset all" onclick="_ied.reset();">
                         <i class="fa fa-eject"></i>
                     </button>
-                    <!--button id="btn-queue" type="button" class="btn btn-default btn-xs" title="Show queue" onclick="" data-toggle="button"><i class="fa fa-list-alt"></i></button-->
                 </div>
                 <div style="padding:0px;top:28px;bottom:0px;left:2px;right:2px;position: absolute;">
                     <table id="queue-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0 !important;">

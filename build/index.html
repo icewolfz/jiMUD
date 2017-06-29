@@ -661,8 +661,7 @@
       });
 
       client.on('received-GMCP', (mod, obj) => {
-        if (mod == "IED.init")
-        {
+        if (mod == "IED.init") {
           ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
           $("#immortal").css('display', "block");
         }
@@ -1281,6 +1280,14 @@
         client.options.extensions[data.name] = data.value;
         client.saveOptions();
       }
+      else if (data.type == "windows") {
+        if(!client.options.windows[data.name])
+          client.options.windows[data.name] = {};
+        client.options.windows[data.name].alwaysOnTopClient = data.value.alwaysOnTopClient;
+        client.options.windows[data.name].persistent = data.value.persistent;
+        client.options.windows[data.name].alwaysOnTop = data.value.alwaysOnTop;
+        client.saveOptions();
+      }
     });
 
     ipcRenderer.on('send-background', (event, command) => {
@@ -1361,7 +1368,7 @@
     }
 
     function showImmortalTools() {
-      ipcRenderer.send('show-window', 'immortal', { show: true, file: 'ied.html', icon: 'ied', alwaysOnTopClient: true });
+      ipcRenderer.send('show-window', 'immortal', { show: true, file: 'ied.html', icon: 'ied', alwaysOnTopClient: client.options.windows['immortal'].alwaysOnTopClient });
       //window.open('ied.html', '', 'backgroundColor=#fff,height=600,width=800,icon=' + path.join(__dirname, '../assets/icons/png/ied.png'));
     }
 
@@ -1405,7 +1412,7 @@
     </a>
     <a href="javascript:void(0)" title="Immortal Tools" id="immortal" class="button" onclick="showImmortalTools()" style="display: none">
       <i class="fa fa-code-fork"></i>
-    </a>    
+    </a>
     <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
       <i class="fa fa-gears"></i>
     </a>
