@@ -1,4 +1,4 @@
-//cSpell:words fswin
+//cSpell:words fswin, chunksize
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { parseTemplate } from "./library";
@@ -18,12 +18,15 @@ export class IED extends EventEmitter {
     private _gmcp = [];
 
     public local;
+    public remote;
     public queue: Item[] = [];
     public active: Item;
+    public bufferSize: number = 0;
 
-    constructor(local: string) {
+    constructor(local: string, remote: string) {
         super();
         this.local = local;
+        this.remote = remote;
         this.startWorker();
     }
 
@@ -34,9 +37,9 @@ export class IED extends EventEmitter {
         }
         this._worker = new Worker('./js/IED.background.js');
         this._worker.onmessage = (e) => {
+            if (!this.active) return;
             switch (e.data.event) {
                 case "decoded":
-                    if (!this.active) return;
                     if (e.data.download) {
                         this.active.currentSize += e.data.data.length;
                         try {
@@ -48,12 +51,13 @@ export class IED extends EventEmitter {
                     }
                     this.emit('update', this.active);
                     if (!e.data.last) {
-                        ipcRenderer.send('send-gmcp', "IED.download.more " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: 'download' }));
+                        ipcRenderer.send('send-gmcp', "IED.download.more " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
                     }
                     else {
                         try {
                             this.active.moveFinal();
                             this.emit('download-finished', this.active.local);
+                            this.emit('message', "Download complete: " + this.active.local);
                         }
                         catch (err) {
                             this.emit('error', err);
@@ -62,6 +66,15 @@ export class IED extends EventEmitter {
                     }
                     break;
                 case "encoded":
+                    ipcRenderer.send('send-gmcp', "IED.upload.chunk " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, data: e.data.data, last: e.data.last }));
+                    if (e.data.last) {
+                        this.emit('upload-finished', this.active.remote);
+                        this.emit('message', "Upload complete: " + this.active.remote);
+                        this.removeActive();
+                    }
+                    else {
+                        this.emit('update', this.active);
+                    }
                     break;
             }
         }
@@ -69,6 +82,7 @@ export class IED extends EventEmitter {
             this.emit('error', e);
         };
     }
+
     public processGMCP(mod: string, obj) {
         var mods = mod.split(".");
         if (mods.length < 2 || mods[0] != "IED") return;
@@ -86,6 +100,8 @@ export class IED extends EventEmitter {
                     case IEDError.DL_TOOMANY:
                     case IEDError.DL_UNKNOWN:
                     case IEDError.DL_USERABORT:
+                    case IEDError.DL_INVALIDFILE:
+                    case IEDError.DL_INVALIDPATH:
                         this.removeActive();
                         this.emit('message', `Download aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
                         break
@@ -105,8 +121,18 @@ export class IED extends EventEmitter {
                         this._id = 0;
                         this._gmcp = [];
                         this.startWorker();
-                        this.emit('reset');    
+                        this.emit('reset');
                         break;
+                    case IEDError.UL_USERABORT:
+                    case IEDError.UL_BADENCODE:
+                    case IEDError.UL_TOOLARGE:
+                    case IEDError.UL_FAILWRITE:
+                    case IEDError.UL_UNKNOWN:
+                    case IEDError.UL_INVALIDFILE:
+                    case IEDError.UL_INVALIDPATH:
+                        this.removeActive();
+                        this.emit('message', `Upload aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
+                        break
                 }
                 this.emit('error', obj);
                 break;
@@ -124,8 +150,11 @@ export class IED extends EventEmitter {
                     case "browse":
                         this.getDir(obj.path, true);
                         break;
-                    case "download":
-                        this.download(obj.path + "/" + obj.file, false, obj.tag);
+                    default:
+                        if (obj.tag && obj.tag.startsWith('download:'))
+                            this.download(obj.path + "/" + obj.file, false, obj.tag);
+                        else if (obj.tag && obj.tag.startsWith('upload:'))
+                            this.upload(obj.path + "/" + obj.file, false, obj.tag);
                         break;
                 }
                 break;
@@ -142,7 +171,7 @@ export class IED extends EventEmitter {
                 files.push.apply(files, obj.files || []);
                 if (!obj.last) {
                     this._data[obj.tag || "dir"] = files;
-                    ipcRenderer.send('send-gmcp', "IED.dir.more " + JSON.stringify({ path: obj.path, tag: 'browse' }));
+                    ipcRenderer.send('send-gmcp', "IED.dir.more " + JSON.stringify({ path: obj.path, tag: obj.tag || "dir" }));
                 }
                 else {
                     delete this._data[obj.tag || "dir"];
@@ -173,6 +202,38 @@ export class IED extends EventEmitter {
                     }
                 }
                 break;
+            case 'upload':
+                if (mods.length > 2) {
+                    switch (mods[2]) {
+                        case "request":
+                            let data;
+                            let size = obj.chunksize;
+                            if (this.bufferSize > 0 && this.bufferSize < size)
+                                size = this.bufferSize;
+                            try {
+                                data = this.active.read(size);
+                            }
+                            catch (err) {
+                                this.emit('error', err);
+                                return;
+                            }
+                            this.active.currentSize += data.length;
+                            this.active.chunks++;
+                            this._worker.postMessage({
+                                action: 'encode',
+                                file: obj.path + "/" + obj.file,
+                                download: false,
+                                last: (data.length < size || this.active.currentSize == this.active.totalSize),
+                                data: data
+                            });
+                            if (data.length < size || this.active.currentSize == this.active.totalSize)
+                                this.emit('message', "Upload last chunk: " + obj.path + "/" + obj.file);
+                            else
+                                this.emit('message', "Upload chunk " + this.active.chunks + ": " + obj.path + "/" + obj.file);
+                            break;
+                    }
+                    break;
+                }
         }
         this._gmcp.shift();
         if (this._gmcp.length > 0) {
@@ -217,6 +278,35 @@ export class IED extends EventEmitter {
         else {
             this._paths["download:" + this._id] = this.local;
             ipcRenderer.send('send-gmcp', "IED.resolve " + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'download:' + this._id }));
+            this._id++;
+            this.emit('message', "Resolving: " + file);
+        }
+    }
+
+    public upload(file, resolve?: boolean, tag?: string) {
+        if (!resolve) {
+            let item;
+            if (tag)
+                item = new Item(tag);
+            else {
+                item = new Item('upload:' + this._id);
+                this._id++;
+            }
+            if (this._paths[tag]) {
+                item.local = this._paths[tag];
+                item.remote = file;
+            }
+            else {
+                item.local = file;
+                item.remote = path.join(this.remote, path.basename(file));
+            }
+            item.info = IED.getFileInfo(item.local);
+            item.totalSize = item.info.size;
+            this.addItem(item);
+        }
+        else {
+            this._paths["upload:" + this._id] = file;
+            ipcRenderer.send('send-gmcp', "IED.resolve " + JSON.stringify({ path: this.remote, file: path.basename(file), tag: 'upload:' + this._id }));
             this._id++;
             this.emit('message', "Resolving: " + file);
         }
@@ -371,7 +461,7 @@ export class Item {
         return this.totalSize ? (Math.round(this.currentSize / this.totalSize * 100) / 100) : 0
     }
 
-    public read(size: number, callback);
+    public read(size: number, callback?: any);
     public read(position: number, size?: any, callback?: any) {
         if (size === undefined) {
             size = position;

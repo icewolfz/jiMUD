@@ -93,6 +93,7 @@
   },
   "dependencies": {
     "buzz": "^1.2.0",
+    "chokidar": "^1.7.0",
     "drivelist": "^5.0.22",
     "jquery": "^3.1.1",
     "lz-string": "^1.4.4",

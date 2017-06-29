@@ -39,6 +39,10 @@
         var _local = {}, _remote = {};
         var localTable, remoteTable, queueTable, key = '', keyclearID;
 
+//https://github.com/paulmillr/chokidar
+//folder watcher for options.local, setup to remove when updatelocal called, then resetup as needd
+//figure out a way to track downloaded files to allow for upload on change system
+
         var menu = [
             {
                 label: '&File',
@@ -375,8 +379,8 @@
                     'showQueue': true,
                     'showHidden': false,
                     'uploadOnChange': false,
-                    'debug':false,
-                    'logErrors':false
+                    'debug': false,
+                    'logErrors': false
                 };
                 saveOptions();
             }
@@ -400,8 +404,11 @@
         }
 
         function saveOptions() {
-            if (_ied)
+            if (_ied) {
                 _ied.local = options.local;
+                _ied.remote = options.remote;
+                _ied.bufferSize = options.bufferSize;
+            }
             ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: options });
         }
 
@@ -810,7 +817,8 @@
                 ]
             });
             loadOptions();
-            _ied = new IED(options.local);
+            _ied = new IED(options.local, options.remote);
+            _ied.bufferSize = options.bufferSize;
             _ied.on('error', (err) => {
                 if (err.code == IEDError.USERRESET)
                     logMessage(err.msg);
@@ -829,6 +837,11 @@
                 logMessage(msg);
             });
             _ied.on('download-finished', (file) => {
+                //Update local list if file was uploaded to current local
+                if (path.dirname(file) == options.local) {
+                    //TODO add or update local view
+                }
+
                 if (options.openEditor) {
                     if (!options.editor || options.editor.length == 0)
                         openItem(file);
@@ -838,6 +851,12 @@
                     }
                 }
             });
+            _ied.on('upload-finished', (file) => {
+                //only update if current remote is the same path as file
+                if (path.dirname(file) == options.remote) {
+                    //TODO add or update remote view
+                }
+            })
             _ied.on('add', (item) => {
                 queueTable.row.add({
                     "local": item.local,
