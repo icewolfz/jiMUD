@@ -1264,67 +1264,92 @@
             var log = console.log.bind(console);
             var ready = false;
             watcher
-                .on('error', error => log(`Watcher error: ${error}`))
+                .on('error', error => {
+                    if (options.debug)
+                        log(`Watcher error: ${error}`)
+                    logMessage(`Watcher error: ${error}`);
+                })
                 .on('ready', () => {
-                    log('Initial scan complete. Ready for changes')
+                    if (options.debug)
+                        log('Initial scan complete. Ready for changes')
                     ready = true;
                 })
                 .on('addDir', (path, stats) => {
-                    log(`Directory ${path} has been added`)
-                    if(!ready) return;
-                    if (path == options.local) return;
-                    try {
-                        file = IED.getFileInfo(path);
-                    }
-                    catch (error) {
-                        logError(error);
-                        return;
-                    }
-                    if (file.hidden && !options.showhidden)
-                        return;
-                    _local[file.name] = file;
-                    localTable.row.add(_local[file.name]).draw();
+                    if (options.debug)
+                        log(`Directory ${path} has been added`)
+                    if (ready && path != options.local)
+                        addLocalFile(path);
                 })
                 .on('unlinkDir', p => {
-                    log(`Directory ${p} has been removed`)
-                    if(!ready) return;
-                    var row = localTable.row(function (idx, data, node) {
-                        return data.name == path.basename(p) ?
-                            true : false;
-                    });
-                    row.remove().draw();
-                    delete _local[path.basename(p)];
+                    if (options.debug)
+                        log(`Directory ${p} has been removed`)
+                    if (ready) removeLocalFile(p);
                 })
                 .on('add', (path, stats) => {
-                    log(`File ${path} has been added`)
-                    if(!ready) return;
-                    if (path == options.local) return;
-                    try {
-                        file = IED.getFileInfo(path);
-                    }
-                    catch (error) {
-                        logError(error);
-                        return;
-                    }
-                    if (file.hidden && !options.showhidden)
-                        return;
-                    _local[file.name] = file;
-                    localTable.row.add(_local[file.name]).draw();
+                    if (options.debug)
+                        log(`File ${path} has been added`)
+                    if (ready && path != options.local)
+                        addLocalFile(path);
                 })
-                .on('change', (path, stats) => log(`File ${path} has been changed`))
+                .on('change', (path, stats) => {
+                    if (options.debug)
+                        log(`File ${path} has been changed`)
+                    updateLocalFile(path);
+                })
                 .on('unlink', p => {
-                    log(`File ${p} has been removed`)
-                    if(!ready) return;
-                    var row = localTable.row(function (idx, data, node) {
-                        return data.name == path.basename(p) ?
-                            true : false;
-                    });
-                    row.remove().draw();
-                    delete _local[path.basename(p)];
-                })             
+                    if (options.debug)
+                        log(`File ${p} has been removed`)
+                    if (ready)
+                        removeLocalFile(p);
+                })
                 .on('raw', (event, path, details) => {
-                log('Raw event info:', event, path, details);
+                    if (options.debug)
+                        log('Raw event info:', event, path, details);
+                });
+        }
+
+        function updateLocalFile(p) {
+            try {
+                file = IED.getFileInfo(path);
+            }
+            catch (error) {
+                logError(error);
+                return;
+            }
+            if (file.hidden && !options.showhidden) {
+                if (_local[file.name])
+                    removeLocalFile(file.path);
+                return;
+            }
+
+            localTable.row(function (idx, data, node) {
+                return data.name == path.basename(p) ?
+                    true : false;
+            }).data(file).draw();
+        }
+
+        function removeLocalFile(p) {
+            var row = localTable.row(function (idx, data, node) {
+                return data.name == path.basename(p) ?
+                    true : false;
             });
+            row.remove().draw();
+            delete _local[path.basename(p)];
+
+        }
+
+        function addLocalFile(path) {
+            try {
+                file = IED.getFileInfo(path);
+            }
+            catch (error) {
+                logError(error);
+                return;
+            }
+            if (file.hidden && !options.showhidden)
+                return;
+            _local[file.name] = file;
+            localTable.row.add(_local[file.name]).draw();
         }
 
         ipcRenderer.on('GMCP-received', (event, data) => {
