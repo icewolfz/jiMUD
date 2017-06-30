@@ -2,7 +2,7 @@
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { parseTemplate } from "./library";
-import { FileInfo, IEDError } from "./types";
+import { FileInfo, IEDError, IEDCmdStatus } from "./types";
 const fs = require("fs");
 const path = require("path");
 const fswin = require('../../lib/fswin');
@@ -26,9 +26,9 @@ export class IED extends EventEmitter {
 
     get useTemp(): boolean { return this._temp; }
     set useTemp(value: boolean) {
-        if(value === this._temp) return;
+        if (value === this._temp) return;
         this._temp = value;
-        for(var q = 0, ql = this.queue.length; q< ql; q++)
+        for (var q = 0, ql = this.queue.length; q < ql; q++)
             this.queue[q].tmp = this._temp;
     }
 
@@ -65,8 +65,9 @@ export class IED extends EventEmitter {
                     else {
                         try {
                             this.active.moveFinal();
-                            this.emit('download-finished', this.active.local);
-                            this.emit('message', "Download complete: " + this.active.local);
+                            this.active.info = IED.getFileInfo(this.active.local);
+                            this.emit('download-finished', this.active);
+                            this.emit('message', "Download complete: " + this.active);
                         }
                         catch (err) {
                             this.emit('error', err);
@@ -75,9 +76,9 @@ export class IED extends EventEmitter {
                     }
                     break;
                 case "encoded":
-                    ipcRenderer.send('send-gmcp', "IED.upload.chunk " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, data: e.data.data, last: e.data.last }));
+                    ipcRenderer.send('send-gmcp', "IED.upload.chunk " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, data: e.data.data, last: e.data.last ? 1 : 0 }));
                     if (e.data.last) {
-                        this.emit('upload-finished', this.active.remote);
+                        this.emit('upload-finished', this.active);
                         this.emit('message', "Upload complete: " + this.active.remote);
                         this.removeActive();
                     }
@@ -104,6 +105,7 @@ export class IED extends EventEmitter {
         switch (mods[1]) {
             case "error":
                 switch (obj.code) {
+                    case IEDError.DL_INVALIDFMT:
                     case IEDError.DL_INPROGRESS:
                     case IEDError.DL_NOTSTART:
                     case IEDError.DL_TOOMANY:
@@ -116,22 +118,15 @@ export class IED extends EventEmitter {
                         break
                     case IEDError.RESET:
                         this.emit('message', "Server reset: " + obj.msg);
-                        this.active = null;
-                        this._paths = {};
-                        this._id = 0;
-                        this._gmcp = [];
-                        this.startWorker();
+                        this.clear();
                         this.emit('reset');
                         break;
                     case IEDError.USERRESET:
                         this.emit('message', obj.msg);
-                        this.active = null;
-                        this._paths = {};
-                        this._id = 0;
-                        this._gmcp = [];
-                        this.startWorker();
+                        this.clear();
                         this.emit('reset');
                         break;
+                    case IEDError.UL_INVALIDFMT:
                     case IEDError.UL_USERABORT:
                     case IEDError.UL_BADENCODE:
                     case IEDError.UL_TOOLARGE:
@@ -146,11 +141,7 @@ export class IED extends EventEmitter {
                 this.emit('error', obj);
                 break;
             case 'reset':
-                this.active = null;
-                this._paths = {};
-                this._id = 0;
-                this._gmcp = [];
-                this.startWorker();
+this.clear();
                 this.emit('reset');
                 break;
             case 'resolved':
@@ -170,10 +161,12 @@ export class IED extends EventEmitter {
             case 'dir':
                 if (!obj) {
                     this.emit('error', { msg: 'Getting Directory: no data found' })
+                    this.nextGMCP();
                     return;
                 }
                 else if (!obj.files) {
                     this.emit('error', { path: obj.path, tag: obj.tag, msg: "Getting Directory: no files found" });
+                    this.nextGMCP();
                     return;
                 }
                 let files = this._data[obj.tag || "dir"] || [];
@@ -199,6 +192,7 @@ export class IED extends EventEmitter {
                         case "chunk":
                             if (!this.active) {
                                 this.emit('error', 'Download chunk error');
+                                this.nextGMCP();
                                 return;
                             }
                             this.active.chunks++;
@@ -224,6 +218,7 @@ export class IED extends EventEmitter {
                             }
                             catch (err) {
                                 this.emit('error', err);
+                                this.nextGMCP();
                                 return;
                             }
                             this.active.currentSize += data.length;
@@ -244,6 +239,10 @@ export class IED extends EventEmitter {
                     break;
                 }
         }
+        this.nextGMCP();
+    }
+
+    private nextGMCP() {
         this._gmcp.shift();
         if (this._gmcp.length > 0) {
             var iTmp = this._gmcp.shift();
@@ -308,7 +307,7 @@ export class IED extends EventEmitter {
             }
             else {
                 item.local = file;
-                item.remote = path.join(this.remote, path.basename(file));
+                item.remote = this.remote + "/" + path.basename(file);
             }
             item.tmp = this._temp;
             item.info = IED.getFileInfo(item.local);
@@ -323,12 +322,14 @@ export class IED extends EventEmitter {
         }
     }
 
-    public static isHidden(p) {
+    public static isHidden(p, skipwin?: boolean) {
         const basename = path.basename(p);
         var dirname = path.dirname(p);
         if (dirname === ".") dirname = "";
         if (basename[0] == ".")
             return true;
+        if (skipwin)
+            return false;
         if (IED.windows) {
             var a = fswin.getAttributesSync(p);
             if (!a) return false;
@@ -353,9 +354,7 @@ export class IED extends EventEmitter {
         }
         info.size = stat.size;
         info.date = stat.mtime;
-        if (IED.isHidden(info.path)) {
-            info.hidden = true;
-        }
+        info.hidden = IED.isHidden(info.path);
         if (stat.isDirectory()) {
             info.type = "Directory";
             info.size = -2;
@@ -379,6 +378,7 @@ export class IED extends EventEmitter {
     public removeActive() {
         if (this.active) {
             this.emit('remove', this.active);
+            this.active.clean();
             this.active = null;
         }
         if (this.queue.length > 0) {
@@ -421,6 +421,15 @@ export class IED extends EventEmitter {
         this._id++;
         this.emit('message', "Requesting reset");
 
+    }
+
+    public clear() {
+        this.active.clean();
+        this.active = null;
+        this._paths = {};
+        this._id = 0;
+        this._gmcp = [];
+        this.startWorker();
     }
 }
 
@@ -485,12 +494,16 @@ export class Item {
         }
         if (!this.stream)
             this.stream = fs.openSync(this._local, "r+");
-        let buffer, br;
-        if (position + size > this.totalSize)
-            br = fs.readSync(this.stream, buffer, position, this.totalSize - position);
-        else
-            br = fs.readSync(this.stream, buffer, position, size);
-        return buffer;
+        let buffer: Buffer, br;
+        if (position + size > this.totalSize) {
+            buffer = new Buffer(this.totalSize - position);
+            br = fs.readSync(this.stream, buffer, 0, this.totalSize - position, position);
+        }
+        else {
+            buffer = new Buffer(size);
+            br = fs.readSync(this.stream, buffer, 0, size, position);
+        }
+        return buffer.toString();;
     }
 
     public write(data: string) {

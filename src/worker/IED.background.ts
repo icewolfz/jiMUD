@@ -40,8 +40,9 @@ function encode(data: string) {
         i = data.charCodeAt(d);
         if (i <= 32 || i >= 127 || c == '@' || c == '^' || c == '\\' || c == '/') {
             c = i.toString(16);
-            if (c.length < 10)
+            if (c.length == 1)
                 c = "0" + c;
+            c = "@"+c;
         }
         encoded.push(c);
     }

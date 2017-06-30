@@ -39,9 +39,11 @@
         var _local = {}, _remote = {};
         var localTable, remoteTable, queueTable, key = '', keyclearID;
 
-//https://github.com/paulmillr/chokidar
-//folder watcher for options.local, setup to remove when updatelocal called, then resetup as needd
-//figure out a way to track downloaded files to allow for upload on change system
+
+
+        //https://github.com/paulmillr/chokidar
+        //folder watcher for options.local, setup to remove when updatelocal called, then resetup as needd
+        //figure out a way to track downloaded files to allow for upload on change system
 
         var menu = [
             {
@@ -96,7 +98,7 @@
                     {
                         label: 'Preferences...',
                         click: () => {
-                            window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=270,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                            window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=300,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                         }
                     },
                     { type: 'separator' },
@@ -304,7 +306,6 @@
             tItem.position = item.position;
         }
 
-
         (function () {
             function fileSort(a, b) {
                 if (_local[a].size == -2 && _local[b].size != -2)
@@ -313,7 +314,6 @@
                     return 1;
                 return a.localeCompare(b);
             }
-
 
             function rfileSort(a, b) {
                 if (_remote[a].size == -2 && _remote[b].size != -2)
@@ -357,7 +357,60 @@
                 },
 
             });
+
+            jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function (data) {
+                var matches = data.match(/^(\d+(?:\.\d+)?)\s*([a-z]+)/i);
+                var multipliers;
+
+                if (process.platform === 'darwin')
+                    multipliers = {
+                        b: 1,
+                        bytes: 1,
+                        kb: 1000,
+                        kib: 1024,
+                        mb: 1000000,
+                        mib: 1048576,
+                        gb: 1000000000,
+                        gib: 1073741824,
+                        tb: 1000000000000,
+                        tib: 1099511627776,
+                        pb: 1000000000000000,
+                        pib: 1125899906842624
+                    };
+                else
+                    multipliers = {
+                        b: 1,
+                        bytes: 1,
+                        kb: 1024,
+                        kib: 1024,
+                        mb: 1048576,
+                        mib: 1048576,
+                        gb: 1073741824,
+                        gib: 1073741824,
+                        tb: 1099511627776,
+                        tib: 1099511627776,
+                        pb: 1125899906842624,
+                        pib: 1125899906842624
+                    };
+
+                if (matches) {
+                    var multiplier = multipliers[matches[2].toLowerCase()];
+                    return parseFloat(matches[1]) * multiplier;
+                } else {
+                    return -1;
+                };
+            };
         }());
+
+        function formatSize(size) {
+            if (size >= 1073741824)
+                return Math.round(size / 1073741824).toLocaleString() + " GB";
+            else if (size >= 1048576)
+                return Math.round(size / 1048576).toLocaleString() + " MB";
+            else if (size >= 1024)
+                return Math.round(size / 1024).toLocaleString() + " KB";
+            return size + " B";
+        }
 
         function loadOptions(data) {
             if (!data) {
@@ -381,7 +434,7 @@
                     'uploadOnChange': false,
                     'debug': false,
                     'logErrors': false,
-                    'tempFile':true
+                    'tempFile': true
                 };
                 saveOptions();
             }
@@ -533,12 +586,15 @@
                     path: (p == "/" ? "" : p) + "/" + dir[d].file,
                     size: dir[d].size,
                     type: path.extname(dir[d].file),
-                    date: dir[d].date * 1000
+                    date: dir[d].date * 1000,
+                    hidden: IED.isHidden((p == "/" ? "" : p) + "/" + dir[d].file, true)
                 }
                 if (file.size == -2) {
                     file.type = "Directory";
                     dirs.push(file);
                 }
+                if (file.hidden && !options.showhidden)
+                    continue;
                 all.push(file);
                 _remote[file.name] = file;
             }
@@ -580,16 +636,29 @@
         }
 
         function logMessage(msg) {
+            if (!msg) return;
             $("#log-view").html($("#log-view").html() + msg.toString() + "<br>");
             $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
         }
 
         function logError(error) {
+            if (!error) return;
+            var msg;
+            if (error.stack)
+                msg = error.stack;
+            else if (error instanceof TypeError)
+                msg = error.name + " - " + error.message;
+            else if (error instanceof Error)
+                msg = error.name + " - " + error.message;
+            else if (error.message)
+                msg = error.message;
+            else
+                msg = error;
             if (options.debug)
-                console.log(err);
+                console.log(error);
             if (options.logErrors) {
                 fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), "Immortal Tools: " + new Date().toLocaleString() + "\n", { flag: 'a' });
-                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), error + "\n", { flag: 'a' });
+                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), msg + "\n", { flag: 'a' });
             }
         }
 
@@ -675,16 +744,12 @@
                         render: function (data, type, full, meta) {
                             if (data == -2)
                                 return '';
-                            return data;
+                            return formatSize(data);
                         },
                         targets: 1
                     },
                     {
-                        render: function (data, type, full, meta) {
-                            if (data == -2)
-                                return '';
-                            return data;
-                        },
+                        type: 'file-size',
                         targets: 1
                     },
                     {
@@ -725,6 +790,7 @@
                         type: 'rfile',
                         targets: 0,
                         createdCell: function (td, cellData, rowData, row, col) {
+                            console.log(rowData);
                             if (rowData.size == -2) {
                                 $(td).prepend('<i class="fa fa-folder-o" style="margin-right: 2px"></i>');
                             }
@@ -753,17 +819,13 @@
                         render: function (data, type, full, meta) {
                             if (data == -2)
                                 return '';
-                            return data;
+                            return formatSize(data);
                         },
                         targets: 1
                     },
                     {
-                        render: function (data, type, full, meta) {
-                            if (data == -2)
-                                return '';
-                            return data;
-                        },
-                        targets: 1
+                        type: 'file-size',
+                        targets: 2
                     },
                     {
                         type: "moment",
@@ -822,10 +884,22 @@
             _ied = new IED(options.local, options.remote);
             _ied.bufferSize = options.bufferSize;
             _ied.useTemp = options.tempFile;
-            _ied.on('error', (err) => {
-                if (err.code == IEDError.USERRESET)
-                    logMessage(err.msg);
-                logError(error);
+            _ied.on('error', (error) => {
+                var msg;
+                if (error.stack)
+                    msg = error.stack;
+                else if (error instanceof TypeError)
+                    msg = error.name + " - " + error.message;
+                else if (err instanceof Error)
+                    msg = error.name + " - " + error.message;
+                else if (error.message)
+                    msg = error.message;
+                else if (err.msg)
+                    msg = err.msg;
+                else
+                    msg = error;
+                logMessage(msg);
+                logError(msg);
             })
             _ied.on('reset', () => {
                 queueTable.rows().remove().draw();
@@ -839,27 +913,7 @@
             _ied.on('message', (msg) => {
                 logMessage(msg);
             });
-            _ied.on('download-finished', (file) => {
-                //Update local list if file was uploaded to current local
-                if (path.dirname(file) == options.local) {
-                    //TODO add or update local view
-                }
 
-                if (options.openEditor) {
-                    if (!options.editor || options.editor.length == 0)
-                        openItem(file);
-                    else {
-                        p = child_process.spawn(options.editor, [file], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
-                        p.unref();
-                    }
-                }
-            });
-            _ied.on('upload-finished', (file) => {
-                //only update if current remote is the same path as file
-                if (path.dirname(file) == options.remote) {
-                    //TODO add or update remote view
-                }
-            })
             _ied.on('add', (item) => {
                 queueTable.row.add({
                     "local": item.local,
@@ -874,6 +928,43 @@
                     return data.id == item.ID ?
                         true : false;
                 }).remove().draw();
+                if (item.download) {
+                    //Update local list if file was uploaded to current local
+                    if (path.dirname(item.local) == options.local) {
+                        //TODO update locla, probabaly should beab leto do in folder watcher
+                    }
+
+                    if (options.openEditor) {
+                        if (!options.editor || options.editor.length == 0)
+                            openItem(item.local);
+                        else {
+                            p = child_process.spawn(options.editor, [item.local], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                            p.unref();
+                        }
+                    }
+                }
+                else {
+                    //only update if current remote is the same path as file
+                    if (path.dirname(item.remote) == options.remote) {
+                        var row = remoteTable.row(function (idx, data, node) {
+                            return data.name == path.basename(item.remote) ?
+                                true : false;
+                        });
+                        _remote[path.basename(item.remote)] = {
+                            name: path.basename(item.remote),
+                            path: item.remote,
+                            size: item.totalSize,
+                            type: path.extname(item.remote),
+                            date: new Date().getTime(),
+                            hidden: IED.isHidden(item.remote, true)
+                        };
+                        if (_remote[path.basename(item.remote)].hidden && !options.showHidden)
+                            return;
+                        if (row && row.length == 1)
+                            row.remove();
+                        remoteTable.row.add(_remote[path.basename(item.remote)]).draw();
+                    }
+                }
             });
             _ied.on('update', (item) => {
                 queueTable.row(function (idx, data, node) {
@@ -997,9 +1088,8 @@
                     }
                     updateLocal(data.path);
                 }
-                else {
-                    //UPLOAD
-                }
+                else
+                    _ied.upload(data.path);
             });
 
             $('#remote-list tbody').on('dblclick', 'tr', function () {
@@ -1143,8 +1233,17 @@
             }
         }
 
+        function upload() {
+            var data = localTable.rows({ selected: true }).data();
+            for (var d = 0, dl = data.length; d < dl; d++) {
+                if (data[d].size == -2)
+                    continue;
+                _ied.upload(data[d].path);
+            }
+        }
+
         ipcRenderer.on('GMCP-received', (event, data) => {
-            if (options.debug)
+            if (options && options.debug)
                 console.log(data.mod);
             _ied.processGMCP(data.mod, data.obj);
         });
@@ -1170,7 +1269,7 @@
                         <button id="btn-refresh-local" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="updateLocal();">
                             <i class="fa fa-refresh"></i>
                         </button>
-                        <button id="btn-upload-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Upload files" onclick="">
+                        <button id="btn-upload-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Upload files" onclick="upload()">
                             <i class="fa fa-upload"></i>
                         </button>
                         <!--
