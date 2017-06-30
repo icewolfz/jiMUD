@@ -35,11 +35,12 @@
         const drivelist = require('drivelist');
         const moment = require('moment');
 
+        var chokidar = require('chokidar');
+
         var _ied, options, dropdownMenu;
         var _local = {}, _remote = {};
         var localTable, remoteTable, queueTable, key = '', keyclearID;
-
-
+        var watcher;
 
         //https://github.com/paulmillr/chokidar
         //folder watcher for options.local, setup to remove when updatelocal called, then resetup as needd
@@ -472,6 +473,7 @@
                 p = options.local || app.getPath('downloads');
             else if (!fs.existsSync(p))
                 p = app.getPath('downloads');
+            createWatcher();
             options.local = p;
             saveOptions();
             var parts = p.split(path.sep);
@@ -1185,6 +1187,11 @@
                 $("#remote-navigate").css("max-height", h + "px");
             });
             $(window).trigger('resize');
+
+            window.onbeforeunload = function () {
+                if (watcher)
+                    watcher.close();
+            };
         });
 
         function toggleSync() {
@@ -1240,6 +1247,84 @@
                     continue;
                 _ied.upload(data[d].path);
             }
+        }
+
+        function closing() {
+            if (watcher)
+                watcher.close();
+        }
+
+        function createWatcher() {
+            watcher = chokidar.watch(options.local, {
+                persistent: true,
+                depth: 0
+            });
+
+            // Something to use when events are received.
+            var log = console.log.bind(console);
+            var ready = false;
+            watcher
+                .on('error', error => log(`Watcher error: ${error}`))
+                .on('ready', () => {
+                    log('Initial scan complete. Ready for changes')
+                    ready = true;
+                })
+                .on('addDir', (path, stats) => {
+                    log(`Directory ${path} has been added`)
+                    if(!ready) return;
+                    if (path == options.local) return;
+                    try {
+                        file = IED.getFileInfo(path);
+                    }
+                    catch (error) {
+                        logError(error);
+                        return;
+                    }
+                    if (file.hidden && !options.showhidden)
+                        return;
+                    _local[file.name] = file;
+                    localTable.row.add(_local[file.name]).draw();
+                })
+                .on('unlinkDir', p => {
+                    log(`Directory ${p} has been removed`)
+                    if(!ready) return;
+                    var row = localTable.row(function (idx, data, node) {
+                        return data.name == path.basename(p) ?
+                            true : false;
+                    });
+                    row.remove().draw();
+                    delete _local[path.basename(p)];
+                })
+                .on('add', (path, stats) => {
+                    log(`File ${path} has been added`)
+                    if(!ready) return;
+                    if (path == options.local) return;
+                    try {
+                        file = IED.getFileInfo(path);
+                    }
+                    catch (error) {
+                        logError(error);
+                        return;
+                    }
+                    if (file.hidden && !options.showhidden)
+                        return;
+                    _local[file.name] = file;
+                    localTable.row.add(_local[file.name]).draw();
+                })
+                .on('change', (path, stats) => log(`File ${path} has been changed`))
+                .on('unlink', p => {
+                    log(`File ${p} has been removed`)
+                    if(!ready) return;
+                    var row = localTable.row(function (idx, data, node) {
+                        return data.name == path.basename(p) ?
+                            true : false;
+                    });
+                    row.remove().draw();
+                    delete _local[path.basename(p)];
+                })             
+                .on('raw', (event, path, details) => {
+                log('Raw event info:', event, path, details);
+            });
         }
 
         ipcRenderer.on('GMCP-received', (event, data) => {
