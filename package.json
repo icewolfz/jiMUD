@@ -100,6 +100,7 @@
     "moment": "^2.18.1",
     "rgbcolor": "^1.0.0",
     "spellchecker": "^3.3.1",
-    "sqlite3": "^3.1.8"
+    "sqlite3": "^3.1.8",
+    "tmp": "0.0.31"
   }
 }

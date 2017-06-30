@@ -166,6 +166,12 @@ export interface FileInfo {
   size: number
 }
 
+export enum TempType {
+  none = 0,
+  extension = 1,
+  file = 2
+}
+
 export enum IEDError {
   RESET = 1,
   USERRESET = 2,

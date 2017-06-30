@@ -1404,6 +1404,13 @@ ipcMain.on('setting-changed', (event, data) => {
       if (windows[name].persistent)
         createNewWindow(name, windows[name]);
     }
+  if (data.type == "extensions")
+    for (var name in windows) {
+      if (!windows.hasOwnProperty(name) || !windows[name].window)
+        continue;
+      if (windows[name].window)
+        windows[name].window.webContents.send('setting-changed', data);
+    }
 })
 
 ipcMain.on('GMCP-received', (event, data) => {

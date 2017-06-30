@@ -2,12 +2,12 @@
 import EventEmitter = require('events');
 import { Client } from "./client";
 import { parseTemplate } from "./library";
-import { FileInfo, IEDError, IEDCmdStatus } from "./types";
+import { FileInfo, IEDError, IEDCmdStatus, TempType } from "./types";
 const fs = require("fs");
 const path = require("path");
 const fswin = require('../../lib/fswin');
+const tmp = require("tmp");
 const { ipcRenderer } = require('electron');
-
 
 export class IED extends EventEmitter {
     public static windows = process.platform.indexOf("win") === 0;
@@ -16,7 +16,7 @@ export class IED extends EventEmitter {
     private _paths = {};
     private _id: number = 0;
     private _gmcp = [];
-    private _temp: boolean = true;
+    private _temp: TempType = TempType.extension;
 
     public local;
     public remote;
@@ -24,8 +24,8 @@ export class IED extends EventEmitter {
     public active: Item;
     public bufferSize: number = 0;
 
-    get useTemp(): boolean { return this._temp; }
-    set useTemp(value: boolean) {
+    get useTemp(): TempType { return this._temp; }
+    set useTemp(value: TempType) {
         if (value === this._temp) return;
         this._temp = value;
         for (var q = 0, ql = this.queue.length; q < ql; q++)
@@ -141,7 +141,7 @@ export class IED extends EventEmitter {
                 this.emit('error', obj);
                 break;
             case 'reset':
-this.clear();
+                this.clear();
                 this.emit('reset');
                 break;
             case 'resolved':
@@ -451,6 +451,8 @@ export interface FileInfo {
 
 export class Item {
     private _local: string = "";
+    private _tmp: TempType = TempType.extension;
+    private _tmpObj;
     private append = false;
     private stream;
 
@@ -461,13 +463,29 @@ export class Item {
     public waiting: boolean = false;
     public download: boolean = false;
     public ID: string = "";
-    public tmp: boolean = true;
     public state: ItemState = ItemState.stopped;
     public chunks: number = 0;
 
     constructor(id: string, download?: boolean) {
         this.ID = id;
         this.download = download;
+    }
+
+    get tmp(): TempType { return this._tmp; }
+    set tmp(value: TempType) {
+        if (value != this._tmp) {
+            if (this._tmp == TempType.file && this._tmpObj) {
+                this._tmpObj.removeCallback();
+                this._tmpObj = null;
+            }
+            this._tmp = value;
+            if (value == TempType.file)
+                this._tmpObj = tmp.fileSync({prefix: 'jiMUD-'});
+        }
+    }
+
+    get temp(): string {
+        return this._tmpObj ? this._tmpObj.name : null;
     }
 
     get local(): string { return this._local; }
@@ -508,7 +526,9 @@ export class Item {
 
     public write(data: string) {
         if (!this.stream) {
-            if (this.tmp)
+            if (this.tmp == TempType.file && this._tmpObj)
+                this.stream = fs.openSync(this._tmpObj.name, this.append ? "a" : "w");
+            else if (this.tmp == TempType.extension)
                 this.stream = fs.openSync(this._local + ".tmp", this.append ? "a" : "w");
             else
                 this.stream = fs.openSync(this._local, this.append ? "a" : "w");
@@ -519,7 +539,12 @@ export class Item {
 
     public moveFinal() {
         this.clean();
-        if (this.tmp)
+        if (this.tmp == TempType.file && this._tmpObj) {
+            fs.renameSync(this._tmpObj.name, this._local);
+            this._tmpObj.removeCallback();
+            this._tmpObj = null;
+        }
+        else if (this.tmp == TempType.extension)
             fs.renameSync(this._local + ".tmp", this._local)
         this.append = true;
     }

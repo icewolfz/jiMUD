@@ -23,8 +23,8 @@
     <script src="../lib/datatables.scrollResize.js" type="text/javascript"></script>
     <script>
         //cSpell:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
-        const { IED, fileInfo } = require('./js/ied');
-        const { IEDError } = require('./js/types');
+        const { IED, fileInfo, } = require('./js/ied');
+        const { IEDError, TempType } = require('./js/types');
         const { remote, ipcRenderer, shell } = require('electron');
         const { app, nativeImage, dialog, Menu, MenuItem } = remote;
         const { parseTemplate } = require('./js/library');
@@ -40,7 +40,7 @@
         var _ied, options, dropdownMenu;
         var _local = {}, _remote = {};
         var localTable, remoteTable, queueTable, key = '', keyclearID;
-        var watcher;
+        var watcher, _downloads = {};
 
         //https://github.com/paulmillr/chokidar
         //folder watcher for options.local, setup to remove when updatelocal called, then resetup as needd
@@ -435,7 +435,7 @@
                     'uploadOnChange': false,
                     'debug': false,
                     'logErrors': false,
-                    'tempFile': true
+                    'tempFile': TempType.extension
                 };
                 saveOptions();
             }
@@ -917,6 +917,13 @@
             });
 
             _ied.on('add', (item) => {
+                if (item.download) {
+                    _downloads[item.local] = true;
+                    if (item.tmp == TempType.file && item.temp.length > 0)
+                        _downloads[item.temp] = true;
+                    else if (item.tmp == TempType.extension)
+                        _downloads[item.local + ".tmp"] = true;
+                }
                 queueTable.row.add({
                     "local": item.local,
                     "direction": item.download ? "<-" : "->",
@@ -932,10 +939,6 @@
                 }).remove().draw();
                 if (item.download) {
                     //Update local list if file was uploaded to current local
-                    if (path.dirname(item.local) == options.local) {
-                        //TODO update locla, probabaly should beab leto do in folder watcher
-                    }
-
                     if (options.openEditor) {
                         if (!options.editor || options.editor.length == 0)
                             openItem(item.local);
@@ -944,6 +947,11 @@
                             p.unref();
                         }
                     }
+                    delete _downloads[item.local];
+                    if (item.tmp == TempType.file && item.temp.length > 0)
+                        delete _downloads[item.temp];
+                    else if (item.tmp == TempType.extension)
+                        delete _downloads[item.local + ".tmp"];
                 }
                 else {
                     //only update if current remote is the same path as file
@@ -1224,11 +1232,6 @@
         function openItem(path) {
             if (!path || path.length == 0) return;
             shell.openItem(path)
-            //linux - xdg-open /filepath/file.txt
-            //windows jusy open wiht shell process?
-            //mac - Open <filename> ?
-
-
         }
 
         function download() {
@@ -1326,6 +1329,10 @@
                 return data.name == path.basename(p) ?
                     true : false;
             }).data(file).draw();
+            if (options.debug)
+                console.log(_downloads[path]);
+            if (!_downloads[path] && options.uploadOnChange)
+                _ied.upload(path);
         }
 
         function removeLocalFile(p) {
@@ -1335,7 +1342,6 @@
             });
             row.remove().draw();
             delete _local[path.basename(p)];
-
         }
 
         function addLocalFile(path) {
@@ -1350,6 +1356,10 @@
                 return;
             _local[file.name] = file;
             localTable.row.add(_local[file.name]).draw();
+            if (options.debug)
+                console.log(_downloads[path]);
+            if (!_downloads[path] && options.uploadOnChange)
+                _ied.upload(path);
         }
 
         ipcRenderer.on('GMCP-received', (event, data) => {
