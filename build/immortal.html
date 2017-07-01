@@ -38,9 +38,10 @@
         var chokidar = require('chokidar');
 
         var _ied, options, dropdownMenu;
-        var _local = {}, _remote = {};
+        var _local = {}, _remote = {}, _downloads = {};
+        var info = { localdirs: 0, localfiles: 0, remotedirs: 0, remotefiles: 0, uploads: 0, downloads: 0 }
         var localTable, remoteTable, queueTable, key = '', keyclearID;
-        var watcher, _downloads = {};
+        var watcher;
 
         //https://github.com/paulmillr/chokidar
         //folder watcher for options.local, setup to remove when updatelocal called, then resetup as needd
@@ -113,8 +114,12 @@
                 label: '&Edit',
                 submenu: [
                     {
-                        label: '&Refresh',
-                        accelerator: "F5"
+                        label: '&Refresh all',
+                        accelerator: "F5",
+                        click: () => {
+                            updateLocal();
+                            _ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);
+                        }
                     },
                     { type: 'separator' },
                     {
@@ -129,6 +134,13 @@
                         label: '&Local',
                         enabled: true,
                         submenu: [
+                            {
+                                label: '&Refresh',
+                                click: () => {
+                                    updateLocal();
+                                }
+                            },
+                            { type: 'separator' },
                             /*
                             {
                                 label: '&Rename',
@@ -192,7 +204,13 @@
                     {
                         label: '&Remote',
                         enabled: true,
-                        submenu: [
+                        submenu: [{
+                            label: '&Refresh',
+                            click: () => {
+                                _ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);
+                            }
+                        },
+                            //{ type: 'separator' },                            
                             /*
                             {
                                 label: '&Backup',
@@ -449,12 +467,12 @@
             if (options.showQueue) {
                 $("#btn-queue").addClass("active");
                 $("#bottom").css('display', '');
-                $("#main").css('bottom', options.queueSize + 'px');
+                $("#main").css('bottom', (options.queueSize + 26) + 'px');
             }
             else {
                 $('#btn-queue').removeClass('active');
                 $("#bottom").css('display', 'none');
-                $("#main").css('bottom', '4px');
+                $("#main").css('bottom', '28px');
             }
         }
 
@@ -498,7 +516,8 @@
                 all.push(file);
                 _local[file.name] = file;
             }
-
+            info.localdirs = dirs.length;
+            info.localfiles = all.length - dirs.length;
             $("#local-path").val(p);
             $("#local-navigate").empty();
             drivelist.list((error, drives) => {
@@ -571,6 +590,7 @@
             localTable.rows().remove().draw();
             localTable.rows.add(all).draw();
             $("#btn-local-up").prop('disabled', path.dirname(p) == p || path.dirname == path.join(p, path.sep));
+            updateStatus();
         }
 
         function updateRemote(p, dir) {
@@ -582,6 +602,8 @@
             if (p.endsWith('/'))
                 parts.pop();
             _remote = {};
+            info.remotedirs = 0;
+            info.remotefiles = 0;
             for (var d = 0, dl = dir.length; d < dl; d++) {
                 file = {
                     name: path.basename(dir[d].file),
@@ -591,14 +613,19 @@
                     date: dir[d].date * 1000,
                     hidden: IED.isHidden((p == "/" ? "" : p) + "/" + dir[d].file, true)
                 }
+                if (file.hidden && !options.showhidden)
+                    continue;
                 if (file.size == -2) {
                     file.type = "Directory";
                     dirs.push(file);
+                    info.remotedirs++;
                 }
-                if (file.hidden && !options.showhidden)
-                    continue;
+                else
+                    info.remotefiles++;
+
                 all.push(file);
                 _remote[file.name] = file;
+                updateStatus();
             }
             $("#remote-path").val(p);
             var paths = [];
@@ -691,6 +718,7 @@
                 updateMenuItem({ menu: 'file|download', enabled: enabled });
                 //updateMenuItem({ menu: 'edit|' + where + '|backup', enabled: enabled });
             }
+            updateStatus();
         }
 
         $(document).ready(() => {
@@ -923,7 +951,11 @@
                         _downloads[item.temp] = true;
                     else if (item.tmp == TempType.extension)
                         _downloads[item.local + ".tmp"] = true;
+                    info.downloads++;
                 }
+                else
+                    info.uploads++;
+                updateStatus();
                 queueTable.row.add({
                     "local": item.local,
                     "direction": item.download ? "<-" : "->",
@@ -952,6 +984,7 @@
                         delete _downloads[item.temp];
                     else if (item.tmp == TempType.extension)
                         delete _downloads[item.local + ".tmp"];
+                    info.downloads--;
                 }
                 else {
                     //only update if current remote is the same path as file
@@ -972,8 +1005,13 @@
                             return;
                         if (row && row.length == 1)
                             row.remove();
+                        else
+                            info.remotefiles++;
                         remoteTable.row.add(_remote[path.basename(item.remote)]).draw();
+                        info.uploads--;
                     }
+                    info.downloads--;
+                    updateStatus();
                 }
             });
             _ied.on('update', (item) => {
@@ -1202,6 +1240,47 @@
             };
         });
 
+        function updateStatus() {
+            var tmp = [];
+            if (info.localfiles)
+                tmp.push(`Local files: ${info.localfiles}`);
+            if (info.localdirs)
+                tmp.push(`Local folders: ${info.localdirs}`);
+            var size = 0;
+            var data = localTable.rows({ selected: true }).data();
+            data.map(function (key, index) {
+                if (data[index].size > 0)
+                    size += data[index].size;
+            });
+            if (size)
+                tmp.push(`Local selected: ${formatSize(size)}`);
+            $("#localInfo").text(tmp.join(", "));
+
+            tmp = [];
+            if (info.remotefiles)
+                tmp.push(`Remote files: ${info.remotefiles}`);
+            if (info.remotedirs)
+                tmp.push(`Remote folders: ${info.remotedirs}`);
+
+            size = 0;
+            data = remoteTable.rows({ selected: true }).data();
+            data.map(function (key, index) {
+                if (data[index].size > 0)
+                    size += data[index].size;
+            });
+            if (size)
+                tmp.push(`Remote selected: ${formatSize(size)}`);
+            $("#remoteInfo").text(tmp.join(", "));
+
+
+            tmp = [];
+            if (info.uploads)
+                tmp.push(`Uploads: ${info.uploads}`);
+            if (info.downloads)
+                tmp.push(`Downloads: ${info.downloads}`);
+            $("#queueInfo").text(tmp.join(", "));
+        }
+
         function toggleSync() {
             options.syncFolders = !options.syncFolders;
             updateMenuItem({ menu: 'view|sync folders', checked: options.syncFolders });
@@ -1223,7 +1302,7 @@
             else {
                 $('#btn-queue').removeClass('active');
                 $("#bottom").css('display', 'none');
-                $("#main").css('bottom', '2px');
+                $("#main").css('bottom', '28px');
             }
             saveOptions();
             $(window).trigger('resize');
@@ -1324,14 +1403,13 @@
                     removeLocalFile(file.path);
                 return;
             }
-
             localTable.row(function (idx, data, node) {
                 return data.name == path.basename(p) ?
                     true : false;
             }).data(file).draw();
             if (options.debug)
                 console.log(_downloads[path]);
-            if (!_downloads[path] && options.uploadOnChange)
+            if (file.size != -2 && !_downloads[path] && options.uploadOnChange)
                 _ied.upload(path);
         }
 
@@ -1341,7 +1419,12 @@
                     true : false;
             });
             row.remove().draw();
+            if (_local[path.basename(p)].size == -2)
+                info.localdirs--;
+            else
+                info.localfiles--;
             delete _local[path.basename(p)];
+            updateStatus();
         }
 
         function addLocalFile(path) {
@@ -1354,12 +1437,17 @@
             }
             if (file.hidden && !options.showhidden)
                 return;
+            if (file.size == -2)
+                info.localdirs++;
+            else
+                info.localfiles++;
             _local[file.name] = file;
             localTable.row.add(_local[file.name]).draw();
             if (options.debug)
                 console.log(_downloads[path]);
-            if (!_downloads[path] && options.uploadOnChange)
+            if (file.size != -2 && !_downloads[path] && options.uploadOnChange)
                 _ied.upload(path);
+            updateStatus();
         }
 
         ipcRenderer.on('GMCP-received', (event, data) => {
@@ -1562,10 +1650,16 @@
                             </span>
                         </button>
                     </div>
-                    <pre id="log-view" style="position: absolute;top:28px;left:2px;right:2px;bottom:0px;border:1px solid rgb(221, 221, 221);overflow:auto;"></pre>
+                    <pre id="log-view" style="margin: 0;position: absolute;top:28px;left:2px;right:2px;bottom:0px;border:1px solid rgb(221, 221, 221);overflow:auto;"></pre>
                 </div>
             </div>
         </div>
+    </div>
+    <div id="status" class="btn-toolbar" role="toolbar">
+        <span id="localInfo" style="width:33%"></span>
+        <span id="queueInfo"></span>
+        <span id="remoteInfo" style="width:33%;float:right;"></span>
+    </div>
 </body>
 
 </html>

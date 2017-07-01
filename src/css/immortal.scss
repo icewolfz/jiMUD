@@ -31,19 +31,29 @@ body {
 
 #main {
     top: 0px;
-    bottom: 250px;
+    bottom: 276px;
     left: 0;
     right: 0;
     position: absolute;
 }
 
 #bottom {
-    bottom: 0px;
+    bottom: 28px;
     left: 0;
     right: 0;
     position: absolute;
     height: 250px;
     padding-top: 4px;
+}
+
+#status {
+    height: 26px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    position: absolute;
+    border-top: 1px solid rgb(221, 221, 221);
 }
 
 #drag-bar {
