@@ -35,6 +35,7 @@ body {
     left: 0;
     right: 0;
     position: absolute;
+    cursor: default;
 }
 
 #bottom {
@@ -44,6 +45,7 @@ body {
     position: absolute;
     height: 250px;
     padding-top: 4px;
+    cursor: default;
 }
 
 #status {
@@ -54,6 +56,7 @@ body {
     top: auto;
     position: absolute;
     border-top: 1px solid rgb(221, 221, 221);
+    cursor: default;
 }
 
 #drag-bar {

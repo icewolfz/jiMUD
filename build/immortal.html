@@ -43,10 +43,6 @@
         var localTable, remoteTable, queueTable, key = '', keyclearID;
         var watcher;
 
-        //https://github.com/paulmillr/chokidar
-        //folder watcher for options.local, setup to remove when updatelocal called, then resetup as needd
-        //figure out a way to track downloaded files to allow for upload on change system
-
         var menu = [
             {
                 label: '&File',
@@ -491,8 +487,8 @@
                 p = options.local || app.getPath('downloads');
             else if (!fs.existsSync(p))
                 p = app.getPath('downloads');
-            createWatcher();
             options.local = p;
+            createWatcher();
             saveOptions();
             var parts = p.split(path.sep);
             if (p.endsWith(path.sep))
@@ -1337,6 +1333,8 @@
         }
 
         function createWatcher() {
+            if (watcher)
+                watcher.close();
             watcher = chokidar.watch(options.local, {
                 persistent: true,
                 depth: 0
@@ -1392,25 +1390,32 @@
 
         function updateLocalFile(p) {
             try {
-                file = IED.getFileInfo(path);
+                file = IED.getFileInfo(p);
             }
             catch (error) {
                 logError(error);
                 return;
             }
             if (file.hidden && !options.showhidden) {
-                if (_local[file.name])
+                if (_local[file.name]) {
                     removeLocalFile(file.path);
+                    info.localfies--;
+                }
                 return;
             }
-            localTable.row(function (idx, data, node) {
+
+            var row = localTable.row(function (idx, data, node) {
                 return data.name == path.basename(p) ?
                     true : false;
-            }).data(file).draw();
+            });
+            _local[file.name] = file;
+            if (row && row.length == 1)
+                row.remove();
+            localTable.row.add(_local[file.name]).draw();
             if (options.debug)
-                console.log(_downloads[path]);
-            if (file.size != -2 && !_downloads[path] && options.uploadOnChange)
-                _ied.upload(path);
+                console.log(_downloads[p]);
+            if (file.size != -2 && !_downloads[p] && options.uploadOnChange)
+                _ied.upload(p);
         }
 
         function removeLocalFile(p) {
@@ -1656,9 +1661,9 @@
         </div>
     </div>
     <div id="status" class="btn-toolbar" role="toolbar">
-        <span id="localInfo" style="width:33%"></span>
-        <span id="queueInfo"></span>
-        <span id="remoteInfo" style="width:33%;float:right;"></span>
+        <div id="localInfo" style="width:33%;display:inline-block;"></div>
+        <div id="queueInfo" style="display:inline-block;"></div>
+        <div id="remoteInfo" style="width:33%;float:right;display:inline-block;"></div>
     </div>
 </body>
 
