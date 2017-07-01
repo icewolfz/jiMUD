@@ -4,6 +4,8 @@
   - Immortal tools
     - Download files and open in an editor
     - Upload files
+- **Change:**
+  - Updated to electron 1.7.4 beta
 - **Fixed:**
   - Preferences: Log path browse button now works
   - Triggers where trigger on raw line instead of text
