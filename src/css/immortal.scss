@@ -255,7 +255,9 @@ table.dataTable {
 #local-list.table.dataTable tbody > tr.selected,
 #local-list.table.dataTable tbody > tr > .selected,
 #remote-list.table.dataTable tbody > tr.selected,
-#remote-list.table.dataTable tbody > tr > .selected {
+#remote-list.table.dataTable tbody > tr > .selected,
+#queue-list.table.dataTable tbody > tr.selected,
+#queue-list.table.dataTable tbody > tr > .selected {
     /*background-color: #08C;*/
     background-color: #969696 !important;
 }
@@ -263,7 +265,9 @@ table.dataTable {
 #local-list.table.dataTable.focused tbody > tr.selected,
 #local-list.table.dataTable.focused tbody > tr > .selected,
 #remote-list.table.dataTable.focused tbody > tr.selected,
-#remote-list.table.dataTable.focused tbody > tr > .selected {
+#remote-list.table.dataTable.focused tbody > tr > .selected,
+#queue-list.table.dataTable.focused tbody > tr.selected,
+#queue-list.table.dataTable.focused tbody > tr > .selected {
     background-color: #08C !important;
 }
 

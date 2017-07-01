@@ -119,19 +119,11 @@
                     },
                     { type: 'separator' },
                     {
-                        label: '&Editor',
-                        accelerator: "CmdOrCtrl+E",
-                        click: () => {
-                            shell.openItem(options.editor);
-                        }
-                    },
-                    { type: 'separator' },
-                    {
                         label: '&Local',
-                        enabled: true,
                         submenu: [
                             {
                                 label: '&Refresh',
+                                accelerator: "CmdOrCtrl+F5",
                                 click: () => {
                                     updateLocal();
                                 }
@@ -140,27 +132,30 @@
                             /*
                             {
                                 label: '&Rename',
-                                enabled: false
+                                enabled: false,
+                                accelerator: "CmdOrCtrl+F2",
                             },
                             */
-                            /*
                             {
                                 label: '&Delete',
-                                enabled: false
+                                enabled: false,
+                                accelerator: "CmdOrCtrl+Delete",
                             },
-                            */
                             /*
                             {
-                                label: '&Create directory'
+                                label: '&Create directory',
+                                accelerator: "CmdOrCtrl+N",
                             },
                             */
-                            //{ type: 'separator' },
-                            /*
+                            { type: 'separator' },
                             {
                                 label: '&Select all',
+                                accelerator: "CmdOrCtrl+A",
+                                click: () => {
+                                    localTable.rows().select();
+                                }
                             },
-                            */
-                            //{ type: 'separator' },
+                            { type: 'separator' },
                             {
                                 label: '&Reveal in explorer...',
                                 enabled: false,
@@ -200,43 +195,49 @@
                     {
                         label: '&Remote',
                         enabled: true,
-                        submenu: [{
-                            label: '&Refresh',
-                            click: () => {
-                                _ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);
-                            }
-                        },
-                            //{ type: 'separator' },                            
+                        submenu: [
+                            {
+                                label: '&Refresh',
+                                accelerator: "CmdOrCtrl+Shift+F5",
+                                click: () => {
+                                    if ($("#remote-list").hasClass("focused"))
+                                        _ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);
+                                }
+                            },
+                            { type: 'separator' },
+                            /*
+                            {
+                                label: '&Rename',
+                                enabled: false,
+                                accelerator: "CmdOrCtrl+ShiftF2",
+                            },
+                            */
+                            {
+                                label: '&Delete',
+                                enabled: false,
+                                accelerator: "CmdOrCtrl+ShiftDelete",
+                            },
+                            /*
+                            {
+                                label: '&Create directory',
+                                accelerator: "CmdOrCtrl+N",
+                            },
+                            */
+                            { type: 'separator' },
+                            {
+                                label: '&Select all',
+                                accelerator: "CmdOrCtrl+Shift+A",
+                                click: () => {
+                                    remoteTable.rows().select();
+                                }
+                            },
+                            //{ type: 'separator' },
                             /*
                             {
                                 label: '&Backup',
                                 enabled: false,
                                 accelerator: "CmdOrCtrl+B"
                             },
-                            */
-                            //{ type: 'separator' },
-                            /*
-                            {
-                                label: '&Rename',
-                                enabled: false
-                            },
-                            */
-                            /*
-                            {
-                                label: '&Delete',
-                                enabled: false
-                            },
-                            */
-                            /*
-                            {
-                                label: '&Create directory'
-                            },
-                            */
-                            //{ type: 'separator' },
-                            /*
-                            {
-                                label: '&Select all',
-                            }
                             */
                         ]
                     },
@@ -263,6 +264,14 @@
                         type: 'checkbox',
                         accelerator: "CmdOrCtrl+Shift+S",
                         click: () => { toggleSync(); }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Editor',
+                        accelerator: "CmdOrCtrl+E",
+                        click: () => {
+                            shell.openItem(options.editor);
+                        }
                     },
                     { type: 'separator' },
                     {
@@ -687,33 +696,68 @@
             }
         }
 
-        function updateActions(table, where) {
-            var data = table.rows({ selected: true }).data().pluck('size');
-            var enabled = data.length != 0;
+
+        function updateMenu() {
+            var remote = $("#remote-list").hasClass("focused");
+            var local = $("#local-list").hasClass("focused");
+            var queue = $("#queue-list").hasClass("focused");
+            var either = remote || local;
+            var localFilesOnly = false;
+            var localFoldersOnly = false;
+            var localSelected = false;
+            var remoteFilesOnly = false;
+            var remoteFoldersOnly = false;
+            var remoteSelected = false;
+            var queueSelected = false;
+
+            var data = localTable.rows({ selected: true }).data().pluck('size');
+            localSelected = data.length != 0;
             var dirs = 0;
             for (var d = 0; d < data.length; d++) {
                 if (data[d] == -2) {
                     dirs++;
                 }
             }
-            enabled = dirs != data.length;
-            $("#btn-rename-" + where).prop('disabled', !enabled);
-            $("#btn-delete-" + where).prop('disabled', !enabled);
-            //updateMenuItem({ menu: 'edit|' + where + '|rename', enabled: enabled });
-            //updateMenuItem({ menu: 'edit|' + where + '|delete', enabled: enabled });
-            if (where == "local") {
-                $("#btn-upload-" + where).prop('disabled', !enabled);
-                updateMenuItem({ menu: 'file|upload', enabled: enabled });
-                updateMenuItem({ menu: 'edit|' + where + '|reveal in explorer...', enabled: data.length != 0 });
-                updateMenuItem({ menu: 'edit|' + where + '|open...', enabled: enabled });
-                updateMenuItem({ menu: 'edit|' + where + '|open with editor...', enabled: enabled && options.editor && options.editor.length > 0 });
+            localFilesOnly = dirs != data.length;
+            localFoldersOnly = dirs == data.length;
 
+            data = remoteTable.rows({ selected: true }).data().pluck('size');
+            remoteSelected = data.length != 0;
+            dirs = 0;
+            for (var d = 0; d < data.length; d++) {
+                if (data[d] == -2) {
+                    dirs++;
+                }
             }
-            else {
-                $("#btn-download-" + where).prop('disabled', !enabled);
-                updateMenuItem({ menu: 'file|download', enabled: enabled });
-                //updateMenuItem({ menu: 'edit|' + where + '|backup', enabled: enabled });
-            }
+            remoteFilesOnly = dirs != data.length;
+            remoteFoldersOnly = dirs == data.length;
+
+            data = remoteTable.rows({ selected: true }).data();
+            var queueSelected = data.length != 0;
+
+            updateMenuItem({ menu: 'file|upload', enabled: localSelected });
+
+            updateMenuItem({ menu: 'file|download', enabled: remoteSelected });
+            //updateMenuItem({ menu: 'edit|local|rename', enabled: localSelected });
+            updateMenuItem({ menu: 'edit|local|delete', enabled: localSelected });
+
+            updateMenuItem({ menu: 'edit|local|reveal in explorer...', enabled: localSelected });
+            updateMenuItem({ menu: 'edit|local|open...', enabled: localSelected });
+            updateMenuItem({ menu: 'edit|local|open with editor...', enabled: localSelected && options.editor && options.editor.length > 0 });
+
+            //updateMenuItem({ menu: 'edit|remote|rename', enabled: remoteSelected });
+            updateMenuItem({ menu: 'edit|remote|delete', enabled: remoteSelected });
+            //updateMenuItem({ menu: 'edit|remote|backup', enabled: remoteSelected });
+
+
+
+            $("#btn-rename-local").prop('disabled', !localSelected);
+            $("#btn-delete-local").prop('disabled', !localSelected);
+            $("#btn-upload-local").prop('disabled', !localSelected);
+
+            $("#btn-rename-remote").prop('disabled', !remoteSelected);
+            $("#btn-delete-remote").prop('disabled', !remoteSelected);
+            $("#btn-upload-remote").prop('disabled', !remoteSelected);
             updateStatus();
         }
 
@@ -1058,25 +1102,25 @@
 
             localTable.on('select', function (e, dt, type, indexes) {
                 if (type === 'row') {
-                    updateActions(localTable, "local");
+                    updateMenu();
                 }
             });
 
             localTable.on('deselect', function (e, dt, type, indexes) {
                 if (type === 'row') {
-                    updateActions(localTable, "local");
+                    updateMenu();
                 }
             });
 
             remoteTable.on('select', function (e, dt, type, indexes) {
                 if (type === 'row') {
-                    updateActions(remoteTable, "remote");
+                    updateMenu();
                 }
             });
 
             remoteTable.on('deselect', function (e, dt, type, indexes) {
                 if (type === 'row') {
-                    updateActions(remoteTable, "remote");
+                    updateMenu();
                 }
             });
 
@@ -1152,10 +1196,21 @@
             $("#local-list").on('focus', () => {
                 $("#local-list").addClass('focused');
                 $("#remote-list").removeClass('focused');
+                $("#queue-list").removeClass('focused');
+                updateMenu();
+
             });
             $("#remote-list").on('focus', () => {
                 $("#local-list").removeClass('focused');
                 $("#remote-list").addClass('focused');
+                $("#queue-list").removeClass('focused');
+                updateMenu();
+            })
+            $("#queue-list").on('focus', () => {
+                $("#local-list").removeClass('focused');
+                $("#remote-list").removeClass('focused');
+                $("#queue-list").addClass('focused');
+                updateMenu();
             })
             updateLocal(options.local);
             if (!options.remote || options.remote.length === 0)
@@ -1219,6 +1274,59 @@
                 var target = $(e.target).attr("href") // activated tab
                 if (target == "#log")
                     $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
+            });
+
+            $(document).keydown((event) => {
+
+                //event.altKey, event.ctrlKey, event.shiftKey, event.metaKey
+
+                switch (event.which) {
+                    /*
+                    case 113: //f2
+                        if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
+                            console.log("Rename");
+                            event.preventDefault();
+                        }
+                        break;
+                        */
+                    case 116: //f5
+                        if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
+                            if ($("#local-list").hasClass("focused"))
+                                updateLocal();
+                            else if ($("#remote-list").hasClass("focused"))
+                                _ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);
+
+                            event.preventDefault();
+                        }
+                        break;
+                    /*
+                case 46:
+                    if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
+                        console.log("Delete");
+                        event.preventDefault();
+                    }
+                    break;
+                    */
+                    case 65://select all, hack as menu acceleartor doenst work
+                        if (!event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
+                            //if ($("#local-list").hasClass("focused"))
+                                localTable.rows().select();
+                            //else if ($("#remote-list").hasClass("focused"))
+                                //remoteTable.rows().select();
+                            //else if ($("#queue-list").hasClass("focused"))
+                                //queueTable.rows().select();
+                            event.preventDefault();
+                        }
+                        break;
+                    /*
+                case 78:
+                    if (!event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
+                        console.log("New folder");
+                        event.preventDefault();
+                    }
+                    break;
+                    */
+                }
             });
 
             $(window).on('resize', () => {
@@ -1485,16 +1593,17 @@
                         <button id="btn-upload-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Upload files" onclick="upload()">
                             <i class="fa fa-upload"></i>
                         </button>
-                        <!--
-                        <div class="btn-group" role="group">                            
+                        <div class="btn-group" role="group">
+                            <!--
                             <button id="btn-rename-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
                                 <i class="fa fa-i-cursor"></i>
                             </button>                            
+                            -->
                             <button id="btn-delete-local" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="">
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
-                        -->
+
                         <!--
                         <button id="btn-newfolder-local" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
                             <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
@@ -1555,17 +1664,17 @@
                         <button id="btn-download-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Download files" onclick="download()">
                             <i class="fa fa-download"></i>
                         </button>
-                        <!--
+
                         <div class="btn-group" role="group">
-                            
+                            <!--    
                             <button id="btn-rename-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
                                 <i class="fa fa-i-cursor"></i>
                             </button>
+                            -->
                             <button id="btn-delete-remote" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="">
                                 <i class="fa fa-times"></i>
-                            </button> 
+                            </button>
                         </div>
-                        -->
                         <!--
                         <button id="btn-newfolder-remote" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
                             <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
@@ -1633,7 +1742,7 @@
                     </button>
                 </div>
                 <div style="padding:0px;top:28px;bottom:0px;left:2px;right:2px;position: absolute;">
-                    <table id="queue-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0 !important;">
+                    <table tabindex="0" id="queue-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0 !important;">
                         <thead>
                             <tr>
                                 <th>Local</th>
@@ -1662,8 +1771,8 @@
     </div>
     <div id="status" class="btn-toolbar" role="toolbar">
         <div id="localInfo" style="width:33%;display:inline-block;"></div>
-        <div id="queueInfo" style="display:inline-block;"></div>
-        <div id="remoteInfo" style="width:33%;float:right;display:inline-block;"></div>
+        <div id="queueInfo" style="width:33%;display:inline-block;"></div>
+        <div id="remoteInfo" style="width:33%;display:inline-block;"></div>
     </div>
 </body>
 
