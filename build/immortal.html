@@ -42,7 +42,7 @@
         var info = { localdirs: 0, localfiles: 0, remotedirs: 0, remotefiles: 0, uploads: 0, downloads: 0 }
         var localTable, remoteTable, queueTable, key = '', keyclearID;
         var watcher;
-        var dragging = false, btnDragging = false;
+        var dragging = false, btmDragging = false;
 
         var menu = [
             {
@@ -465,14 +465,11 @@
                 };
                 saveOptions();
             }
-            if (options.localSize > 200) {
-                $('#local').css("width", options.localSize);
-                $('#remote').css("left", options.localSize);
-                if (localTable)
-                    localTable.draw();
-                if (remoteTable)
-                    remoteTable.draw();
-            }
+            $('#local').css("width", options.localSize);
+            $('#remote').css("left", options.localSize);
+
+            $('#bottom').css("height", options.queueSize);
+            $('#main').css("bottom", options.queueSize);
 
             updateMenuItem({ menu: 'view|sync folders', checked: options.syncFolders });
             if (options.syncFolders)
@@ -491,6 +488,12 @@
                 $("#bottom").css('display', 'none');
                 $("#main").css('bottom', '28px');
             }
+            if (localTable)
+                localTable.draw();
+            if (remoteTable)
+                remoteTable.draw();
+            if (queueTable)
+                queueTable.draw();
         }
 
         function saveOptions() {
@@ -1368,13 +1371,32 @@
                 });
             });
 
-            $(window).on('resize', () => {
-                var h = $("#main").outerHeight() - 40;
-                if (options.showQueue)
-                    h += $("#bottom").outerHeight();
-                $("#local-navigate").css("max-height", h + "px");
-                $("#remote-navigate").css("max-height", h + "px");
+            $('#btm-drag-bar').mousedown(function (e) {
+                e.preventDefault();
+                btmDragging = true;
+                var main = $('#bottom');
+                var ghostBar = $('<div>',
+                    {
+                        id: 'btm-ghost-bar',
+                        css: {
+                            width: main.outerWidth(),
+                            top: main.offset().top,
+                            left: main.offset().left
+                        }
+                    }).appendTo('body');
 
+                $(document).mousemove(function (e) {
+                    console.log(`Drag y: ${e.pageY}`);
+                    if (e.pageY < 199)
+                        ghostBar.css("top", 199);
+                    else if (e.pageY > document.body.clientHeight - 200)
+                        ghostBar.css("top", document.body.clientHeight - 200);
+                    else
+                        ghostBar.css("top", e.pageY);
+                });
+            });
+
+            $(window).on('resize', () => {
                 if ($('#remote').outerWidth() < 300 && $("#local").outerWidth() > 202) {
                     $('#local').css("width", document.body.clientWidth - 300);
                     $('#remote').css("left", document.body.clientWidth - 300);
@@ -1383,6 +1405,23 @@
                     options.localSize = document.body.clientWidth - 300;
                     saveOptions();
                 }
+
+                if ($('#bottom').outerHeight() < 200 && $("#main").outerHeight() > 202) {
+                    options.queueSize = 200;
+                    $('#bottom').css("height", options.queueSize);
+                    $('#main').css("bottom", options.queueSize);
+                    localTable.draw();
+                    remoteTable.draw();
+                    queueTable.draw();
+                    saveOptions();
+                }
+
+                var h = $("#main").outerHeight() - 40;
+                if (options.showQueue)
+                    h += $("#bottom").outerHeight();
+                $("#local-navigate").css("max-height", h + "px");
+                $("#remote-navigate").css("max-height", h + "px");
+
             });
 
             $(document).mouseup(function (e) {
@@ -1392,7 +1431,7 @@
                         $('#remote').css("left", 202);
                         options.localSize = 202;
                     }
-                    else if (e.pageX > document.body.clientWidth - 200) {
+                    else if (e.pageX > document.body.clientWidth - 300) {
                         $('#local').css("width", document.body.clientWidth - 300);
                         $('#remote').css("left", document.body.clientWidth - 300);
                         options.localSize = document.body.clientWidth - 300;
@@ -1408,6 +1447,25 @@
                     $('#ghost-bar').remove();
                     $(document).unbind('mousemove');
                     dragging = false;
+                }
+                else if (btmDragging) {
+                    console.log(e.pageY);
+                    if (e.pageY < 226)
+                        options.queueSize = document.body.clientHeight - 202;
+                    else if (e.pageY > document.body.clientHeight - 200)
+                        options.queueSize = 200;
+                    else
+                        options.queueSize = document.body.clientHeight - e.pageY + 2;
+                    options.queueSize -= 26;
+                    $('#bottom').css("height", options.queueSize);
+                    $('#main').css("bottom", options.queueSize);
+                    localTable.draw();
+                    remoteTable.draw();
+                    queueTable.draw();
+                    saveOptions();
+                    $('#btm-ghost-bar').remove();
+                    $(document).unbind('mousemove');
+                    btmDragging = false;
                 }
             });
 
