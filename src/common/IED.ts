@@ -150,6 +150,9 @@ export class IED extends EventEmitter {
                     case "browse":
                         this.getDir(obj.path, true);
                         break;
+                    case "delete":
+                        this.deleteFile(obj.path + "/" + obj.file);
+                        break;
                     default:
                         if (obj.tag && obj.tag.startsWith('download:'))
                             this.download(obj.path + "/" + obj.file, false, obj.tag);
@@ -238,6 +241,10 @@ export class IED extends EventEmitter {
                     }
                     break;
                 }
+            case "cmd":
+                if (mods.length > 2 && mods[2] == "status")
+                    this.emit('cmd', obj);
+                break;
         }
         this.nextGMCP();
     }
@@ -319,6 +326,18 @@ export class IED extends EventEmitter {
             ipcRenderer.send('send-gmcp', "IED.resolve " + JSON.stringify({ path: this.remote, file: path.basename(file), tag: 'upload:' + this._id }));
             this._id++;
             this.emit('message', "Resolving: " + file);
+        }
+    }
+
+    public deleteFile(file, resolve?: boolean) {
+        if (resolve) {
+            delete this._data["delete"];
+            ipcRenderer.send('send-gmcp', "IED.resolve " + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'delete' }));
+            this.emit('message', "Resolving: " + file);
+        }
+        else {
+            ipcRenderer.send('send-gmcp', "IED.cmd " + JSON.stringify({ cmd: "rm", path: path.dirname(file), file: path.basename(file), tag: 'delete' }));
+            this.emit('message', "Deleting: " + file);
         }
     }
 
@@ -480,7 +499,7 @@ export class Item {
             }
             this._tmp = value;
             if (value == TempType.file)
-                this._tmpObj = tmp.fileSync({prefix: 'jiMUD-'});
+                this._tmpObj = tmp.fileSync({ prefix: 'jiMUD-' });
         }
     }
 

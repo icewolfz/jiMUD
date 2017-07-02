@@ -255,6 +255,8 @@ export class Client extends EventEmitter {
             this.commandInput = command;
 
         this.MSP = new MSP();
+        this.MSP.forcedDefaultMusicURL = "";
+        this.MSP.forcedDefaultSoundURL = "";
         this.MSP.on('playing', (data) => {
             if (this.enableDebug) this.debug('MSP ' + (data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration);
             if (!this.options.notifyMSPPlay) return;

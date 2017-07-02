@@ -24,7 +24,7 @@
     <script>
         //cSpell:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
         const { IED, fileInfo, } = require('./js/ied');
-        const { IEDError, TempType } = require('./js/types');
+        const { IEDError, TempType, IEDCmdStatus } = require('./js/types');
         const { remote, ipcRenderer, shell } = require('electron');
         const { app, nativeImage, dialog, Menu, MenuItem } = remote;
         const { parseTemplate } = require('./js/library');
@@ -140,6 +140,7 @@
                                 label: '&Delete',
                                 enabled: false,
                                 accelerator: "CmdOrCtrl+Delete",
+                                click: deleteLocal
                             },
                             /*
                             {
@@ -1050,7 +1051,6 @@
                         remoteTable.row.add(_remote[path.basename(item.remote)]).draw();
                         info.uploads--;
                     }
-                    info.downloads--;
                     updateStatus();
                 }
             });
@@ -1065,6 +1065,32 @@
                     "progress": item.percent,
                     "id": item.ID
                 }).draw();
+            });
+
+            _ied.on('cmd', (data) => {
+                if (data.cmd == "rm") {
+                    if (data.code == IEDCmdStatus.success) {
+                        logMessage(`Deleted: ${obj.path}/${obj.file}`);
+
+                        var row = remoteTable.row(function (idx, data, node) {
+                            return data.name == path.basename(data.file) ?
+                                true : false;
+                        });
+                        delete _remote[data.file];
+                        if (row && row.length == 1)
+                            row.remove();
+                        info.remotefiles--;
+                        updateStatus();
+                    }
+                    else {
+                        logMessage(`Failed to delete: ${obj.path}/${obj.file}`);
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: "Could not delete",
+                            message: "Could not delete: " + obj.path + "/" + obj.file,
+                        });
+                    }
+                }
             });
 
             localTable = $('#local-list').DataTable();
@@ -1299,22 +1325,25 @@
                             event.preventDefault();
                         }
                         break;
-                    /*
-                case 46:
-                    if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
-                        console.log("Delete");
-                        event.preventDefault();
-                    }
-                    break;
-                    */
+                    case 46:
+                        if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
+                            if ($("#local-list").hasClass("focused"))
+                                deleteLocal()
+                            else if ($("#remote-list").hasClass("focused"))
+                                deleteRemote()
+                            //else if ($("#queue-list").hasClass("focused"))
+                            //queueTable.rows().select();                            
+                            event.preventDefault();
+                        }
+                        break;
                     case 65://select all, hack as menu acceleartor doenst work
                         if (!event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
                             //if ($("#local-list").hasClass("focused"))
-                                localTable.rows().select();
+                            localTable.rows().select();
                             //else if ($("#remote-list").hasClass("focused"))
-                                //remoteTable.rows().select();
+                            //remoteTable.rows().select();
                             //else if ($("#queue-list").hasClass("focused"))
-                                //queueTable.rows().select();
+                            //queueTable.rows().select();
                             event.preventDefault();
                         }
                         break;
@@ -1561,6 +1590,28 @@
             if (file.size != -2 && !_downloads[path] && options.uploadOnChange)
                 _ied.upload(path);
             updateStatus();
+        }
+
+        function deleteLocal() {
+            var data = localTable.rows({ selected: true }).data().pluck('path');
+            for (var d = 0, dl = data.length; d < dl; d++)
+                shell.moveItemToTrash(data[d]);
+        }
+
+        function deleteRemote() {
+            var data = localTable.rows({ selected: true }).data();
+            dialog.showMessageBox(remote.getCurrentWindow(), {
+                type: 'warning',
+                title: "Delete?",
+                message: data.length > 1 ? "Delete remote files?" : "Delete remote file: " + data[0].name + "?",
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+            }, (response) => {
+                if (response == 0) {
+                    for (var d = 0, dl = data.length; d < dl; d++)
+                        _ied.deleteFile(data[d].path);
+                }
+            })
         }
 
         ipcRenderer.on('GMCP-received', (event, data) => {
