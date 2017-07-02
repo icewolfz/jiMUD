@@ -42,6 +42,7 @@
         var info = { localdirs: 0, localfiles: 0, remotedirs: 0, remotefiles: 0, uploads: 0, downloads: 0 }
         var localTable, remoteTable, queueTable, key = '', keyclearID;
         var watcher;
+        var dragging = false, btnDragging = false;
 
         var menu = [
             {
@@ -216,7 +217,8 @@
                             {
                                 label: '&Delete',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+ShiftDelete",
+                                accelerator: "CmdOrCtrl+Shift+Delete",
+                                click: deleteRemote
                             },
                             /*
                             {
@@ -463,6 +465,15 @@
                 };
                 saveOptions();
             }
+            if (options.localSize > 200) {
+                $('#local').css("width", options.localSize);
+                $('#remote').css("left", options.localSize);
+                if (localTable)
+                    localTable.draw();
+                if (remoteTable)
+                    remoteTable.draw();
+            }
+
             updateMenuItem({ menu: 'view|sync folders', checked: options.syncFolders });
             if (options.syncFolders)
                 $("#btn-sync").addClass("active")
@@ -758,7 +769,7 @@
 
             $("#btn-rename-remote").prop('disabled', !remoteSelected);
             $("#btn-delete-remote").prop('disabled', !remoteSelected);
-            $("#btn-upload-remote").prop('disabled', !remoteSelected);
+            $("#btn-download-remote").prop('disabled', !remoteSelected);
             updateStatus();
         }
 
@@ -861,7 +872,6 @@
                         type: 'rfile',
                         targets: 0,
                         createdCell: function (td, cellData, rowData, row, col) {
-                            console.log(rowData);
                             if (rowData.size == -2) {
                                 $(td).prepend('<i class="fa fa-folder-o" style="margin-right: 2px"></i>');
                             }
@@ -961,12 +971,12 @@
                     msg = error.stack;
                 else if (error instanceof TypeError)
                     msg = error.name + " - " + error.message;
-                else if (err instanceof Error)
+                else if (error instanceof Error)
                     msg = error.name + " - " + error.message;
                 else if (error.message)
                     msg = error.message;
-                else if (err.msg)
-                    msg = err.msg;
+                else if (error.msg)
+                    msg = error.msg;
                 else
                     msg = error;
                 logMessage(msg);
@@ -988,9 +998,7 @@
             _ied.on('add', (item) => {
                 if (item.download) {
                     _downloads[item.local] = true;
-                    if (item.tmp == TempType.file && item.temp.length > 0)
-                        _downloads[item.temp] = true;
-                    else if (item.tmp == TempType.extension)
+                    if (item.tmp == TempType.extension)
                         _downloads[item.local + ".tmp"] = true;
                     info.downloads++;
                 }
@@ -1020,11 +1028,6 @@
                             p.unref();
                         }
                     }
-                    delete _downloads[item.local];
-                    if (item.tmp == TempType.file && item.temp.length > 0)
-                        delete _downloads[item.temp];
-                    else if (item.tmp == TempType.extension)
-                        delete _downloads[item.local + ".tmp"];
                     info.downloads--;
                 }
                 else {
@@ -1067,18 +1070,18 @@
                 }).draw();
             });
 
-            _ied.on('cmd', (data) => {
-                if (data.cmd == "rm") {
-                    if (data.code == IEDCmdStatus.success) {
+            _ied.on('cmd', (obj) => {
+                if (obj.cmd == "rm") {
+                    if (obj.code == IEDCmdStatus.success) {
                         logMessage(`Deleted: ${obj.path}/${obj.file}`);
 
                         var row = remoteTable.row(function (idx, data, node) {
-                            return data.name == path.basename(data.file) ?
+                            return data.name == obj.file ?
                                 true : false;
                         });
-                        delete _remote[data.file];
+                        delete _remote[obj.file];
                         if (row && row.length == 1)
-                            row.remove();
+                            row.remove().draw();
                         info.remotefiles--;
                         updateStatus();
                     }
@@ -1114,11 +1117,6 @@
                     e.preventDefault();
                 }
             });
-            /*
-            $('#local-list tbody').on('click', 'tr', function (e) {
-    
-            });
-            */
 
             $('#local-list tbody').on('contextmenu', 'tr', function (e) {
                 //TODO add contest menu for local list
@@ -1189,10 +1187,6 @@
                 }, 500);
             });
 
-
-            //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop
-
-
             $('#local-list tbody').on('dblclick', 'tr', function () {
                 var data = localTable.row(this).data();
                 if (data.size == -2) {
@@ -1262,10 +1256,6 @@
                 updateLocal($("#local-path").val());
             });
             $('#local-path').keyup(function (e) {
-                if (e.which == 13) {
-                    //updateLocal($("#local-path").val());
-                    //return false;
-                }
                 if (e.which == 27)
                     $("#local-path").val(options.local);
             });
@@ -1288,10 +1278,6 @@
                 _ied.getDir($("#remote-path").val());
             });
             $('#remote-path').keyup(function (e) {
-                if (e.which == 13) {
-                    //_ied.getDir($("#remote-path").val());
-                    //return false;
-                }
                 if (e.which == 27)
                     $("#remote-path").val(options.remote);
             });
@@ -1358,13 +1344,73 @@
                 }
             });
 
+            $('#drag-bar').mousedown(function (e) {
+                e.preventDefault();
+                dragging = true;
+                var main = $('#remote');
+                var ghostBar = $('<div>',
+                    {
+                        id: 'ghost-bar',
+                        css: {
+                            height: main.outerHeight(),
+                            top: main.offset().top,
+                            left: main.offset().left - 3
+                        }
+                    }).appendTo('body');
+
+                $(document).mousemove(function (e) {
+                    if (e.pageX < 199)
+                        ghostBar.css("left", 199);
+                    else if (e.pageX > document.body.clientWidth - 300)
+                        ghostBar.css("left", document.body.clientWidth - 300);
+                    else
+                        ghostBar.css("left", e.pageX);
+                });
+            });
+
             $(window).on('resize', () => {
                 var h = $("#main").outerHeight() - 40;
                 if (options.showQueue)
                     h += $("#bottom").outerHeight();
                 $("#local-navigate").css("max-height", h + "px");
                 $("#remote-navigate").css("max-height", h + "px");
+
+                if ($('#remote').outerWidth() < 300 && $("#local").outerWidth() > 202) {
+                    $('#local').css("width", document.body.clientWidth - 300);
+                    $('#remote').css("left", document.body.clientWidth - 300);
+                    localTable.draw();
+                    remoteTable.draw();
+                    options.localSize = document.body.clientWidth - 300;
+                    saveOptions();
+                }
             });
+
+            $(document).mouseup(function (e) {
+                if (dragging) {
+                    if (e.pageX < 200) {
+                        $('#local').css("width", 202);
+                        $('#remote').css("left", 202);
+                        options.localSize = 202;
+                    }
+                    else if (e.pageX > document.body.clientWidth - 200) {
+                        $('#local').css("width", document.body.clientWidth - 300);
+                        $('#remote').css("left", document.body.clientWidth - 300);
+                        options.localSize = document.body.clientWidth - 300;
+                    }
+                    else {
+                        $('#local').css("width", e.pageX + 2);
+                        $('#remote').css("left", e.pageX + 2);
+                        options.localSize = e.pageX + 2;
+                    }
+                    localTable.draw();
+                    remoteTable.draw();
+                    saveOptions();
+                    $('#ghost-bar').remove();
+                    $(document).unbind('mousemove');
+                    dragging = false;
+                }
+            });
+
             $(window).trigger('resize');
 
             window.onbeforeunload = function () {
@@ -1553,6 +1599,9 @@
                 console.log(_downloads[p]);
             if (file.size != -2 && !_downloads[p] && options.uploadOnChange)
                 _ied.upload(p);
+
+            if (_downloads[p])
+                delete _downloads[p];
         }
 
         function removeLocalFile(p) {
@@ -1589,6 +1638,8 @@
                 console.log(_downloads[path]);
             if (file.size != -2 && !_downloads[path] && options.uploadOnChange)
                 _ied.upload(path);
+            if (_downloads[path])
+                delete _downloads[path];
             updateStatus();
         }
 
@@ -1599,7 +1650,7 @@
         }
 
         function deleteRemote() {
-            var data = localTable.rows({ selected: true }).data();
+            var data = remoteTable.rows({ selected: true }).data();
             dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'warning',
                 title: "Delete?",
@@ -1617,7 +1668,8 @@
         ipcRenderer.on('GMCP-received', (event, data) => {
             if (options && options.debug)
                 console.log(data.mod);
-            _ied.processGMCP(data.mod, data.obj);
+            if (_ied)
+                _ied.processGMCP(data.mod, data.obj);
         });
 
         ipcRenderer.on('reload-options', (event) => {
@@ -1650,7 +1702,7 @@
                                 <i class="fa fa-i-cursor"></i>
                             </button>                            
                             -->
-                            <button id="btn-delete-local" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="">
+                            <button id="btn-delete-local" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="deleteLocal()">
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
@@ -1722,7 +1774,7 @@
                                 <i class="fa fa-i-cursor"></i>
                             </button>
                             -->
-                            <button id="btn-delete-remote" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="">
+                            <button id="btn-delete-remote" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="deleteRemote()">
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
@@ -1770,6 +1822,7 @@
         </div>
     </div>
     <div id="bottom">
+        <div id="btm-drag-bar"></div>
         <ul class="nav nav-tabs" role="tablist" style="background-color: #F5F5F5;box-shadow: inset 0 -1px 0 #fff;">
             <li role="presentation" class="active">
                 <a href="#queue" aria-controls="queue" role="tab" data-toggle="tab">Queue</a>

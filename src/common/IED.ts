@@ -443,8 +443,11 @@ export class IED extends EventEmitter {
     }
 
     public clear() {
-        this.active.clean();
-        this.active = null;
+        if(this.active)
+        {
+            this.active.clean();
+            this.active = null;
+        }
         this._paths = {};
         this._id = 0;
         this._gmcp = [];

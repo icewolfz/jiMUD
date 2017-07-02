@@ -65,6 +65,10 @@ body {
     float: right;
     width: 3px;
     cursor: col-resize;
+    position: absolute;
+    top: 0px;
+    right: 0;
+    bottom: 0;
 }
 
 #ghost-bar {
@@ -73,6 +77,23 @@ body {
     opacity: 0.5;
     position: absolute;
     cursor: col-resize;
+    z-index: 999;
+}
+
+#btm-drag-bar {
+    background-color: transparent;
+    height: 3px;
+    float: left;
+    width: 100%;
+    cursor: row-resize;
+}
+
+#btm-ghost-bar {
+    height: 3px;
+    background-color: #000;
+    opacity: 0.5;
+    position: absolute;
+    cursor: row-resize;
     z-index: 999;
 }
 
@@ -143,7 +164,6 @@ body {
 }
 
 #local {
-    min-width: 50%;
     position: absolute;
     left: 0;
     top: 0;
@@ -156,7 +176,6 @@ body {
 }
 
 #remote {
-    min-width: 50%;
     position: absolute;
     right: 0;
     top: 0;
