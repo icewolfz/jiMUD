@@ -64,7 +64,6 @@ body {
 #drag-bar {
     background-color: transparent;
     height: 100%;
-    float: right;
     width: 3px;
     cursor: col-resize;
     position: absolute;
@@ -85,9 +84,12 @@ body {
 #btm-drag-bar {
     background-color: transparent;
     height: 3px;
-    float: left;
     width: 100%;
     cursor: row-resize;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;    
 }
 
 #btm-ghost-bar {
