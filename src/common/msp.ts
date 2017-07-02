@@ -101,7 +101,7 @@ class SoundState extends EventEmitter {
     open() {
         this.close();
         this.sound = new buzz.sound(this.url + this._file);
-        this.sound.bind("play", (e) => {
+        this.sound.bind("loadeddata", (e) => {
             this.emit('playing', { file: this._file, sound: this.sound, state: this, duration:buzz.toTimer(this.sound.getDuration()) });
         });
         this.emit('opened');

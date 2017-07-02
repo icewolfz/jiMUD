@@ -260,6 +260,7 @@ export class Client extends EventEmitter {
         this.MSP.on('playing', (data) => {
             if (this.enableDebug) this.debug('MSP ' + (data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration);
             if (!this.options.notifyMSPPlay) return;
+            console.log(data);
             this.echo((data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
         });
         this.MSP.on('error', (err) => {
