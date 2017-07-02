@@ -25,7 +25,7 @@
         //cSpell:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
         const { IED, fileInfo, } = require('./js/ied');
         const { IEDError, TempType, IEDCmdStatus } = require('./js/types');
-        const { remote, ipcRenderer, shell } = require('electron');
+        const { remote, ipcRenderer, shell, clipboard } = require('electron');
         const { app, nativeImage, dialog, Menu, MenuItem } = remote;
         const { parseTemplate } = require('./js/library');
         const { Settings } = require('./js/settings');
@@ -53,9 +53,7 @@
                         label: '&Upload',
                         accelerator: "CmdOrCtrl+U",
                         enabled: false,
-                        click: () => {
-
-                        }
+                        click: upload
                     },
                     {
                         label: '&Download',
@@ -130,6 +128,13 @@
                                 }
                             },
                             { type: 'separator' },
+                            {
+                                label: '&Copy full path',
+                                click: () => {
+                                    var selected = localTable.rows({ selected: true }).data().pluck('path');
+                                    clipboard.writeText(selected.join('\n'), 'selection');
+                                }
+                            },
                             /*
                             {
                                 label: '&Rename',
@@ -207,6 +212,13 @@
                                 }
                             },
                             { type: 'separator' },
+                            {
+                                label: '&Copy full path',
+                                click: () => {
+                                    var selected = remoteTable.rows({ selected: true }).data().pluck('path');
+                                    clipboard.writeText(selected.join('\n'), 'selection');
+                                }
+                            },
                             /*
                             {
                                 label: '&Rename',
@@ -246,7 +258,7 @@
                     },
                     { type: 'separator' },
                     {
-                        label: '&Clear log...',
+                        label: '&Clear log',
                         click: () => {
                             $("#log-view").html('');
                         }
@@ -751,7 +763,6 @@
             var queueSelected = data.length != 0;
 
             updateMenuItem({ menu: 'file|upload', enabled: localSelected });
-
             updateMenuItem({ menu: 'file|download', enabled: remoteSelected });
             //updateMenuItem({ menu: 'edit|local|rename', enabled: localSelected });
             updateMenuItem({ menu: 'edit|local|delete', enabled: localSelected });
@@ -1122,9 +1133,102 @@
             });
 
             $('#local-list tbody').on('contextmenu', 'tr', function (e) {
-                //TODO add contest menu for local list
-                //console.log(e);
-                //console.log(localTable.row(this).data());
+                event.preventDefault();
+                event.stopPropagation();
+                event.cancelBubble = true;
+
+                if (!$(this).hasClass('selected')) {
+                    localTable.rows().deselect();
+                    localTable.row(this).select();
+                }
+                showLocalContextMenu();
+            });
+
+            $('#local-list-container').on('contextmenu', function (e) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.cancelBubble = true;
+                showLocalContextMenu();
+            });
+
+            $('#remote-list tbody').on('contextmenu', 'tr', function (e) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.cancelBubble = true;
+
+                if (!$(this).hasClass('selected')) {
+                    remoteTable.rows().deselect();
+                    remoteTable.row(this).select();
+                }
+                showRemoteContextMenu();
+            });
+
+            $('#remote-list-container').on('contextmenu', function (e) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.cancelBubble = true;
+                showRemoteContextMenu();
+            });
+
+            $('#queue-list tbody').on('contextmenu', 'tr', function (e) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.cancelBubble = true;
+
+                if (!$(this).hasClass('selected')) {
+                    remoteTable.rows().deselect();
+                    remoteTable.row(this).select();
+                }
+                var c = new Menu();
+                //pause,restart,stop
+                //c.append(new MenuItem({ type: 'separator' }));
+                c.append(new MenuItem({
+                    label: 'Reset',
+                    click: () => {
+                        _ied.reset();
+                    }
+                }));
+                c.popup(remote.getCurrentWindow(), { async: true });
+            });
+
+            $('#queue-list-container').on('contextmenu', function (e) {
+                var c = new Menu();
+                c.append(new MenuItem({
+                    label: 'Reset',
+                    click: () => {
+                        _ied.reset();
+                    }
+                }));
+                c.popup(remote.getCurrentWindow(), { async: true });
+            });
+
+            $("#log-view").on('contextmenu', function (e) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.cancelBubble = true;
+                var c = new Menu();
+                if (window.getSelection().type == "Range") {
+                    c.append(new MenuItem({ role: 'copy' }));
+                    c.append(new MenuItem({ type: 'separator' }));
+                }
+                c.append(new MenuItem({
+                    label: 'Clear log',
+                    click: () => {
+                        $("#log-view").html('');
+                    }
+                }));
+                c.append(new MenuItem({ type: 'separator' }));
+                c.append(new MenuItem({
+                    label: 'Select all',
+                    click: () => {
+                        selection = window.getSelection();
+                        range = document.createRange();
+                        range.selectNodeContents($("#log-view")[0]);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                }));
+                c.popup(remote.getCurrentWindow(), { async: true });
             });
 
             localTable.on('select', function (e, dt, type, indexes) {
@@ -1477,6 +1581,157 @@
             };
         });
 
+        function showLocalContextMenu() {
+            var selected = localTable.rows({ selected: true }).data().pluck('size');
+            var dirs = 0;
+            for (var d = 0; d < selected.length; d++) {
+                if (selected[d] == -2) {
+                    dirs++;
+                }
+            }
+            dirs = dirs == selected.length
+
+            var c = new Menu();
+            c.append(new MenuItem({
+                label: 'Refresh',
+                click: () => {
+                    updateLocal();
+                }
+            }));
+            if (selected.length) {
+                c.append(new MenuItem({ type: 'separator' }));
+                if (!dirs) {
+                    c.append(new MenuItem({
+                        label: 'Upload',
+                        click: upload
+                    }));
+                    c.append(new MenuItem({ type: 'separator' }));
+                }
+                c.append(new MenuItem({
+                    label: 'Copy full path',
+                    click: () => {
+                        var selected = localTable.rows({ selected: true }).data().pluck('path');
+                        clipboard.writeText(selected.join('\n'), 'selection');
+                    }
+                }));
+                /*
+                c.append(new MenuItem({
+                    label: 'Rename',
+                }));
+                */
+                c.append(new MenuItem({
+                    label: 'Delete',
+                    click: deleteLocal
+                }));
+                /*
+                c.append(new MenuItem({
+                    label: 'Create directory',
+                }));
+                */
+            }
+            c.append(new MenuItem({ type: 'separator' }));
+            c.append(new MenuItem({
+                label: 'Select all',
+                click: () => {
+                    localTable.rows().select();
+                }
+            }));
+            if (selected.length) {
+                c.append(new MenuItem({ type: 'separator' }));
+                c.append(new MenuItem({
+                    label: 'Reveal in explorer...',
+                    click: () => {
+                        {
+                            var selected = localTable.rows({ selected: true }).data().pluck('path');
+                            for (var d = 0, dl = selected.length; d < dl; d++)
+                                shell.showItemInFolder(selected[d]);
+                        }
+                    }
+                }));
+                if (!dirs) {
+                    c.append(new MenuItem({ type: 'separator' }));
+                    c.append(new MenuItem({
+                        label: 'Open...',
+                        click: () => {
+                            var selected = localTable.rows({ selected: true }).data().pluck('path');
+                            for (var d = 0, dl = selected.length; d < dl; d++)
+                                openItem(selected[d]);
+                        }
+                    }));
+                    if (options.editor && options.editor.length > 0)
+                        c.append(new MenuItem({
+                            label: 'Open with editor...',
+                            click: () => {
+                                var selected = localTable.rows({ selected: true }).data().pluck('path');
+                                for (var d = 0, dl = selected.length; d < dl; d++) {
+                                    p = child_process.spawn(options.editor, [selected[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                                    p.unref();
+                                }
+                            }
+                        }));
+                }
+            }
+            c.popup(remote.getCurrentWindow(), { async: true });
+        }
+
+        function showRemoteContextMenu() {
+            var selected = remoteTable.rows({ selected: true }).data().pluck('size');
+            var dirs = 0;
+            for (var d = 0; d < selected.length; d++) {
+                if (selected[d] == -2) {
+                    dirs++;
+                }
+            }
+            dirs = dirs == selected.length
+
+            var c = new Menu();
+            c.append(new MenuItem({
+                label: 'Refresh',
+                click: () => {
+                    _ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);
+                }
+            }));
+            if (selected.length > 0) {
+                c.append(new MenuItem({ type: 'separator' }));
+                if (!dirs) {
+                    c.append(new MenuItem({
+                        label: 'Download',
+                        click: download
+                    }));
+                    c.append(new MenuItem({ type: 'separator' }));
+                }
+                c.append(new MenuItem({
+                    label: 'Copy full path',
+                    click: () => {
+                        var selected = remoteTable.rows({ selected: true }).data().pluck('path');
+                        clipboard.writeText(selected.join('\n'), 'selection');
+                    }
+                }));
+                /*
+                c.append(new MenuItem({
+                    label: 'Rename',
+                }));
+                */
+                c.append(new MenuItem({
+                    label: 'Delete',
+                    click: deleteRemote
+                }));
+                /*
+                c.append(new MenuItem({
+                    label: 'Create directory',
+                }));
+                */
+            }
+            c.append(new MenuItem({ type: 'separator' }));
+            c.append(new MenuItem({
+                label: 'Select all',
+                click: () => {
+                    remoteTable.rows().select();
+                }
+            }));
+            c.popup(remote.getCurrentWindow(), { async: true });
+        }
+
         function updateStatus() {
             var tmp = [];
             if (info.localfiles)
@@ -1799,7 +2054,7 @@
                         </button>
                     </span>
                 </div>
-                <div class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:5px;position: absolute;">
+                <div id="local-list-container" class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:5px;position: absolute;">
                     <table tabindex="0" id="local-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
                         <thead>
                             <tr>
@@ -1864,7 +2119,7 @@
                         </div>
                     </span>
                 </div>
-                <div class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:1px;position: absolute;">
+                <div id="remote-list-container" class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:1px;position: absolute;">
                     <table tabindex="0" id="remote-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
                         <thead>
                             <tr>
@@ -1903,7 +2158,7 @@
                         <i class="fa fa-eject"></i>
                     </button>
                 </div>
-                <div style="padding:0px;top:28px;bottom:0px;left:2px;right:2px;position: absolute;">
+                <div id="queue-list-container" style="padding:0px;top:28px;bottom:0px;left:2px;right:2px;position: absolute;">
                     <table tabindex="0" id="queue-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0 !important;">
                         <thead>
                             <tr>
@@ -1926,7 +2181,7 @@
                             </span>
                         </button>
                     </div>
-                    <pre id="log-view" style="margin: 0;position: absolute;top:28px;left:2px;right:2px;bottom:0px;border:1px solid rgb(221, 221, 221);overflow:auto;"></pre>
+                    <pre id="log-view"></pre>
                 </div>
             </div>
         </div>

@@ -5,6 +5,7 @@
     - Download files and open in an editor
     - Upload files
     - Delete files, local files moved to trash, remote deleted permanently 
+  - Paste special, allows pasting text with different modifiers like adding post/pre fixes to each line
 - **Change:**
   - Updated to electron 1.7.4 beta
 - **Fixed:**
