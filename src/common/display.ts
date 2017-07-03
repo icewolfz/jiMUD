@@ -907,8 +907,10 @@ export class Display extends EventEmitter {
                 html[l] = t[0].outerHTML;
             }
             */
+            this.rebuildLines();
             //update view to display any line height changes
-            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update);
+            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
+            this.updateWindow();
         }
         let pc = window.getComputedStyle(this._el);
         let padding = [
@@ -1891,6 +1893,16 @@ export class Display extends EventEmitter {
         return [`<span class="line" data-index="${idx}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
     }
 
+    public rebuildLines() {
+        var t;
+
+        for (var l = 0, ll = this.lines.length; l < ll; l++) {
+            t = this.createLine(l);
+            this._viewLines[l] = t[0];
+            this._backgroundLines[l] = t[1];
+        }
+    }
+
     public scrollDisplay() {
         if (this.split) {
             if (this.split.shown)
@@ -2011,8 +2023,8 @@ export class ScrollBar extends EventEmitter {
     private _scrollOffset: number = 0;
     private _thumbSize: number = 0;
     private _trackSize: number = 0;
-    private _ratio:number = 0;
-    private _ratio2:number = 0;
+    private _ratio: number = 0;
+    private _ratio2: number = 0;
 
     private _lastMouse: MouseEvent;
     public _type: ScrollType = ScrollType.vertical;
@@ -2188,14 +2200,12 @@ export class ScrollBar extends EventEmitter {
             this._thumbSize = 20;
         this.thumb.style[this._type === ScrollType.horizontal ? "width" : "height"] = this._thumbSize + "px";
         this._maxDrag = this._trackSize - this._thumbSize;
-        if(this._maxDrag < 0)
-        {
+        if (this._maxDrag < 0) {
             this._maxDrag = 0;
             this._ratio = 1;
             this._ratio2 = 1;
         }
-        else
-        {
+        else {
             this._ratio = (this._contentSize - this._parentSize) / (this._maxDrag);
             this._ratio2 = (this._maxDrag) / (this._contentSize - this._parentSize);
         }
@@ -2267,12 +2277,12 @@ export class ScrollBar extends EventEmitter {
         if (p < 0 || this._maxDrag < 0)
             p = 0;
         else if (p > this._maxDrag)
-            p = this._maxDrag; 
-        
+            p = this._maxDrag;
+
         this.thumb.style[this._type === ScrollType.horizontal ? "left" : "top"] = p + "px";
         this.state.dragPosition = p;
         this._position = Math.ceil(p * this._ratio);
-        if(this._position < 0)
+        if (this._position < 0)
             this._position = 0;
         this.update();
         this.emit('scroll', this.position);
