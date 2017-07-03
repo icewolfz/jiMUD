@@ -168,6 +168,17 @@ export class IED extends EventEmitter {
                     case "delete":
                         this.deleteFile(obj.path + "/" + obj.file);
                         break;
+                    case "rename":
+                        ipcRenderer.send('send-gmcp', "IED.resolve " + JSON.stringify({ path: path.dirname(this._data["rename"]), file: path.basename(this._data["rename"]), tag: 'rename2' }));
+                        this.emit('message', "Resolving: " + this._data["rename"]);
+                        this._data["rename"] = obj.path + "/" + obj.file;
+                        break;
+                    case "rename2":
+                        this.rename(this._data["rename"], obj.path + "/" + obj.file);
+                        break;
+                    case "mkdir":
+                        this.makeDirectory(obj.path + "/" + obj.file);
+                        break;
                     default:
                         if (obj.tag && obj.tag.startsWith('download:'))
                             this.download(obj.path + "/" + obj.file, false, obj.tag);
@@ -346,13 +357,35 @@ export class IED extends EventEmitter {
 
     public deleteFile(file, resolve?: boolean) {
         if (resolve) {
-            delete this._data["delete"];
             ipcRenderer.send('send-gmcp', "IED.resolve " + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'delete' }));
             this.emit('message', "Resolving: " + file);
         }
         else {
             ipcRenderer.send('send-gmcp', "IED.cmd " + JSON.stringify({ cmd: "rm", path: path.dirname(file), file: path.basename(file), tag: 'delete' }));
             this.emit('message', "Deleting: " + file);
+        }
+    }
+
+    public rename(file, file2, resolve?: boolean) {
+        if (resolve) {
+            this._data["rename"] = file2;
+            ipcRenderer.send('send-gmcp', "IED.resolve " + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'rename' }));
+            this.emit('message', "Resolving: " + file);
+        }
+        else {
+            ipcRenderer.send('send-gmcp', "IED.cmd " + JSON.stringify({ cmd: "mv", path: path.dirname(file), file: path.basename(file), path2: path.dirname(file2), file2: path.basename(file2), tag: 'rename' }));
+            this.emit('message', "Renaming: " + file + " to " + file2);
+        }
+    }
+
+    public makeDirectory(file, resolve?: boolean) {
+        if (resolve) {
+            ipcRenderer.send('send-gmcp', "IED.resolve " + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'mkdir' }));
+            this.emit('message', "Resolving: " + file);
+        }
+        else {
+            ipcRenderer.send('send-gmcp', "IED.cmd " + JSON.stringify({ cmd: "mkdir", path: path.dirname(file), tag: 'mkdir' }));
+            this.emit('message', "Creating directory: " + file);
         }
     }
 
