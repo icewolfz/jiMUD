@@ -50,7 +50,7 @@ export class IED extends EventEmitter {
             this._worker.terminate();
             delete this._worker;
         }
-        this._worker = new Worker('./js/IED.background.js');
+        this._worker = new Worker('./js/ied.background.js');
         this._worker.onmessage = (e) => {
             if (!this.active) return;
             switch (e.data.event) {
