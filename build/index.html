@@ -1374,7 +1374,7 @@
     }
 
     function showImmortalTools() {
-      ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: client.options.windows['immortal'].alwaysOnTopClient });
+      ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: client.options.windows['immortal'] ? client.options.windows['immortal'].alwaysOnTopClient : true });
       //window.open('immortal.html', '', 'backgroundColor=#fff,height=600,width=800,icon=' + path.join(__dirname, '../assets/icons/png/ied.png'));
     }
 
