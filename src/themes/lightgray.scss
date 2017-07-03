@@ -104,6 +104,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 
 .scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
     background: #888;
+    border: 0px;
 }
 
 #display::-webkit-scrollbar,

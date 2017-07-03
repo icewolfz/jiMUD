@@ -1,4 +1,8 @@
 ## Changelog
+##### 0.4.2
+- **Fixed:**
+  - An issue with scroll bars inner borders when nothing to scroll
+  - Default and clean theme background colors now correctly black
 ##### 0.4.1 2017-07-03
 - **New:**
   - Immortal tools

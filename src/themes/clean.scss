@@ -1,6 +1,11 @@
 $images: "./../../assets";
 $borderColor: "#908271";
 $color: "wheat";
+
+body {
+    background-color:black;
+}
+
 #display {
     left: 36px;
     right: 170px;
@@ -102,6 +107,7 @@ $color: "wheat";
 
 .scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
     background: rgba(51, 48, 43, 0.4);
+    border: 0px;
 }
 
 #display::-webkit-scrollbar,
