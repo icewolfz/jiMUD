@@ -335,6 +335,10 @@ body {
     float: right;
 }
 
+#experience div span:nth-child(2) {
+    text-align: right;
+}
+
 #bars {
     position: absolute;
     overflow: auto;

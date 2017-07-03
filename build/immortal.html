@@ -1504,8 +1504,6 @@
                 if ($('#remote').outerWidth() < 300 && $("#local").outerWidth() > 202) {
                     $('#local').css("width", document.body.clientWidth - 300);
                     $('#remote').css("left", document.body.clientWidth - 300);
-                    localTable.draw();
-                    remoteTable.draw();
                     options.localSize = document.body.clientWidth - 300;
                     saveOptions();
                 }
@@ -1514,9 +1512,6 @@
                     options.queueSize = 200;
                     $('#bottom').css("height", options.queueSize);
                     $('#main').css("bottom", options.queueSize);
-                    localTable.draw();
-                    remoteTable.draw();
-                    queueTable.draw();
                     saveOptions();
                 }
 
@@ -1525,6 +1520,9 @@
                     h += $("#bottom").outerHeight();
                 $("#local-navigate").css("max-height", h + "px");
                 $("#remote-navigate").css("max-height", h + "px");
+                localTable.draw();
+                remoteTable.draw();
+                queueTable.draw();
 
             });
 
