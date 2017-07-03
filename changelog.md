@@ -13,6 +13,7 @@
   - Triggers where trigger on raw line instead of text
   - MSP: fixed an issue with mal-formed urls breaking streaming sound
   - MSP: fixed playing notification message not displaying duration dime
+  - Fixed issues with paste menu item not pasting into command input
 ##### 0.4.0 2017-06-23
 - **New:**
   - Display control

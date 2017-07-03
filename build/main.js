@@ -145,11 +145,24 @@ var menuTemp = [
         role: 'copy'
       },
       {
-        role: 'paste'
+        label: 'Paste',
+        accelerator: 'CmdOrCtrl+V',
+        click: () => {
+          win.webContents.executeJavaScript('paste()');
+        }
       },
+      {
+        label: 'Paste special',
+        accelerator: 'CmdOrCtrl+Shift+V',
+        click: () => {
+          win.webContents.executeJavaScript('pasteSpecial()');
+        }
+      },
+      /*
       {
         role: 'pasteandmatchstyle'
       },
+      */
       {
         role: 'delete'
       },

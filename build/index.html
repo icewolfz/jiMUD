@@ -9,6 +9,9 @@
   <link href="css/monsters.css" rel="stylesheet" type="text/css" />
   <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" />
   <link href="css/theme.css" rel="stylesheet" type="text/css" />
+  <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+
   <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css">
   <script>
     if (typeof module === 'object') { window.module = module; module = undefined; }
@@ -452,6 +455,10 @@
             c.append(new MenuItem({ type: 'separator' }));
           if (window.$selected && window.$selected != "") {
             c.append(new MenuItem({ role: 'copy' }));
+          }
+          if (window.$copied.length) {
+            c.append(new MenuItem({ label: 'Paste', click: paste }));
+            c.append(new MenuItem({ label: 'Paste special', click: () => { pasteSpecial(); } }));
           }
           c.append(new MenuItem({ label: 'Select All', click: selectAll }));
           c.append(new MenuItem({ type: 'separator' }));
@@ -987,6 +994,7 @@
           { role: 'cut' },
           { role: 'copy' },
           { role: 'paste' },
+          { label: 'Paste special', click: () => { pasteSpecial(); } },
           { type: 'separator' },
           { role: 'selectall' },
         ])
@@ -1281,7 +1289,7 @@
         client.saveOptions();
       }
       else if (data.type == "windows") {
-        if(!client.options.windows[data.name])
+        if (!client.options.windows[data.name])
           client.options.windows[data.name] = {};
         client.options.windows[data.name].alwaysOnTopClient = data.value.alwaysOnTopClient;
         client.options.windows[data.name].persistent = data.value.persistent;
@@ -1376,6 +1384,70 @@
 
     function toggleLogging() {
       _logger.postMessage({ action: 'toggle' });
+    }
+
+    function pasteSpecial(noDialog) {
+      if (clipboard.readText().length == 0)
+        return;
+      if (!noDialog) {
+        $('#pasteSpecial-prefix').prop('disabled', !client.options.pasteSpecialPrefixEnabled);
+        $('#pasteSpecial-postfix').prop('disabled', !client.options.pasteSpecialPostfixEnabled);
+        $('#pasteSpecial-prefix').val(client.options.pasteSpecialPrefix);
+        $('#pasteSpecial-postfix').val(client.options.pasteSpecialPostfix);
+        $('#pasteSpecial-prefix-enable').prop('checked', client.options.pasteSpecialPrefixEnabled);
+        $('#pasteSpecial-postfix-enable').prop('checked', client.options.pasteSpecialPostfixEnabled);
+        $("#pasteSpecial")[0].showModal();
+      }
+      else
+        pasteSpecialOk(true);
+    }
+
+    function pasteSpecialOk(noDialog) {
+      if (!noDialog) {
+        client.options.pasteSpecialPrefix = $('#pasteSpecial-prefix').val();
+        client.options.pasteSpecialPostfix = $('#pasteSpecial-postfix').val();
+        client.options.pasteSpecialPrefixEnabled = $('#pasteSpecial-prefix-enable').prop('checked');
+        client.options.pasteSpecialPostfixEnabled = $('#pasteSpecial-postfix-enable').prop('checked');
+        client.saveOptions();
+        $('#pasteSpecial')[0].close();
+      }
+      var post = client.options.pasteSpecialPostfixEnabled ? client.options.pasteSpecialPostfix : 0;
+      var pre = client.options.pasteSpecialPrefixEnabled ? client.options.pasteSpecialPrefix : 0;
+
+      //changed while in dialog so bail
+      if (clipboard.readText().length == 0)
+        return;
+      var txt = clipboard.readText().replace(/\r/, '');
+
+      if (pre && pre.length && post && post.length)
+        txt = pre + txt.replace(/\n/g, `${post}\n${pre}`) + post;
+      else if (pre && pre.length)
+        txt = pre + txt.replace(/\n/g, `\n${pre}`);
+      else if (post && post.length)
+        txt = txt.replace(/\n/g, `${post}\n`) + post;
+      if (client.commandInput[0].selectionStart || client.commandInput[0].selectionStart == '0') {
+        var startPos = client.commandInput[0].selectionStart;
+        var endPos = client.commandInput[0].selectionEnd;
+        client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
+          + txt
+          + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
+      } else {
+        client.commandInput[0].value += txt;
+      }
+    }
+
+    function paste() {
+      if (clipboard.readText().length == 0)
+        return;
+      if (client.commandInput[0].selectionStart || client.commandInput[0].selectionStart == '0') {
+        var startPos = client.commandInput[0].selectionStart;
+        var endPos = client.commandInput[0].selectionEnd;
+        client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
+          + clipboard.readText()
+          + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
+      } else {
+        client.commandInput[0].value += clipboard.readText();
+      }
     }
   </script>
 </head>
@@ -1536,6 +1608,34 @@
       <progress max="100"></progress>
     </div>
   </dialog>
+  <dialog id="pasteSpecial" style="z-index:1000;height:215px;width:350px;">
+    <div class="dialog-body">
+      <div class="form-group">
+        <label class="control-label" for="pasteSpecial-prefix">Prefix</label>
+        <div class="input-group">
+          <input id="pasteSpecial-prefix" class="form-control">
+          <div class="input-group-addon">
+            <input type="checkbox" id="pasteSpecial-prefix-enable" checked="checked" onclick="$('#pasteSpecial-prefix').prop('disabled', !$(this).prop('checked'));" />
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="control-label" for="pasteSpecial-postfix">Postfix</label>
+        <div class="input-group">
+          <input id="pasteSpecial-postfix" class="form-control">
+          <div class="input-group-addon">
+            <input type="checkbox" id="pasteSpecial-postfix-enable" checked="checked" onclick="$('#pasteSpecial-postfix').prop('disabled', !$(this).prop('checked'));" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button style="float: left" type="button" class="btn btn-default" onclick="$('#pasteSpecial-prefix').prop('disabled', false);$('#pasteSpecial-postfix').prop('disabled', false);$('#pasteSpecial-prefix').val('');$('#pasteSpecial-postfix').val('');$('#pasteSpecial-prefix-enable').prop('checked', true);$('#pasteSpecial-postfix-enable').prop('checked', true);">Reset</button>
+      <button style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();">Cancel</button>
+      <button style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
+    </div>
+  </dialog>
+
 </body>
 
 </html>

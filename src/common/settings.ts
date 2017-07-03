@@ -220,7 +220,7 @@ export class Settings {
 	}
 
 	public extensions = {
-		
+
 	}
 
 	public backupLoad: BackupSelection = BackupSelection.All;
@@ -242,6 +242,11 @@ export class Settings {
 	public showButtonBar: boolean = true;
 	public allowNegativeNumberNeeded = false;
 	public spellchecking: boolean = true;
+
+	public pasteSpecialPrefix: string = "";
+	public pasteSpecialPostfix: string = "";
+	public pasteSpecialPrefixEnabled: boolean = true;
+	public pasteSpecialPostfixEnabled: boolean = true;
 
 	static load(file) {
 		if (!fs.existsSync(file))
