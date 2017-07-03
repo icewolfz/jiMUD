@@ -206,10 +206,12 @@ export enum IEDError {
   INVALIDFILE = 31,
   CMD_NOEXIST = 32,
   CMD_DIRECTORY = 33,
-  CMD_EXIST = 34
+  CMD_EXIST = 34,
+  CMD_UNKNOWN = 35
 }
 
 export enum IEDCmdStatus {
   denied = 0,
-  success = 1
+  success = 1,
+  failed = 2
 }
