@@ -245,8 +245,10 @@ export class Settings {
 
 	public pasteSpecialPrefix: string = "";
 	public pasteSpecialPostfix: string = "";
+	public pasteSpecialReplace: string = "";
 	public pasteSpecialPrefixEnabled: boolean = true;
 	public pasteSpecialPostfixEnabled: boolean = true;
+	public pasteSpecialReplaceEnabled: boolean = true;
 
 	static load(file) {
 		if (!fs.existsSync(file))

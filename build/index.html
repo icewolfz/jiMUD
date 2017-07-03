@@ -468,8 +468,6 @@
             }
           }));
         }
-
-
         if (c.items.length > 0)
           c.popup(remote.getCurrentWindow());
       }, false);
@@ -1396,6 +1394,11 @@
         $('#pasteSpecial-postfix').val(client.options.pasteSpecialPostfix);
         $('#pasteSpecial-prefix-enable').prop('checked', client.options.pasteSpecialPrefixEnabled);
         $('#pasteSpecial-postfix-enable').prop('checked', client.options.pasteSpecialPostfixEnabled);
+
+        $('#pasteSpecial-replace').val(client.options.pasteSpecialReplace);
+        $('#pasteSpecial-replace').prop('disabled', !client.options.pasteSpecialReplaceEnabled);
+        $('#pasteSpecial-replace-enable').prop('checked', client.options.pasteSpecialReplaceEnabled);
+
         $("#pasteSpecial")[0].showModal();
       }
       else
@@ -1408,16 +1411,24 @@
         client.options.pasteSpecialPostfix = $('#pasteSpecial-postfix').val();
         client.options.pasteSpecialPrefixEnabled = $('#pasteSpecial-prefix-enable').prop('checked');
         client.options.pasteSpecialPostfixEnabled = $('#pasteSpecial-postfix-enable').prop('checked');
+
+        client.options.pasteSpecialReplace = $('#pasteSpecial-replace').val();
+        client.options.pasteSpecialReplaceEnabled = $('#pasteSpecial-replace-enable').prop('checked');
+
         client.saveOptions();
         $('#pasteSpecial')[0].close();
       }
       var post = client.options.pasteSpecialPostfixEnabled ? client.options.pasteSpecialPostfix : 0;
       var pre = client.options.pasteSpecialPrefixEnabled ? client.options.pasteSpecialPrefix : 0;
+      var replace = client.options.pasteSpecialReplaceEnabled ? client.options.pasteSpecialReplace : 0;
 
       //changed while in dialog so bail
       if (clipboard.readText().length == 0)
         return;
       var txt = clipboard.readText().replace(/\r/, '');
+
+      if (replace && replace.length)
+        txt = txt.replace(/\n/g, replace);
 
       if (pre && pre.length && post && post.length)
         txt = pre + txt.replace(/\n/g, `${post}\n${pre}`) + post;
@@ -1608,8 +1619,17 @@
       <progress max="100"></progress>
     </div>
   </dialog>
-  <dialog id="pasteSpecial" style="z-index:1000;height:215px;width:350px;">
+  <dialog id="pasteSpecial" style="z-index:1000;height:285px;width:350px;">
     <div class="dialog-body">
+      <div class="form-group">
+        <label class="control-label" for="pasteSpecial-replace">Replace with</label>
+        <div class="input-group">
+          <input id="pasteSpecial-replace" class="form-control">
+          <div class="input-group-addon">
+            <input type="checkbox" id="pasteSpecial-replace-enable" checked="checked" onclick="$('#pasteSpecial-replace').prop('disabled', !$(this).prop('checked'));" />
+          </div>
+        </div>
+      </div>
       <div class="form-group">
         <label class="control-label" for="pasteSpecial-prefix">Prefix</label>
         <div class="input-group">
@@ -1630,12 +1650,11 @@
       </div>
     </div>
     <div class="dialog-footer">
-      <button style="float: left" type="button" class="btn btn-default" onclick="$('#pasteSpecial-prefix').prop('disabled', false);$('#pasteSpecial-postfix').prop('disabled', false);$('#pasteSpecial-prefix').val('');$('#pasteSpecial-postfix').val('');$('#pasteSpecial-prefix-enable').prop('checked', true);$('#pasteSpecial-postfix-enable').prop('checked', true);">Reset</button>
+      <button style="float: left" type="button" class="btn btn-default" onclick="$('#pasteSpecial-replace').prop('disabled', false);$('#pasteSpecial-replace-enable').prop('checked', true);$('#pasteSpecial-replace').val('');$('#pasteSpecial-prefix').prop('disabled', false);$('#pasteSpecial-postfix').prop('disabled', false);$('#pasteSpecial-prefix').val('');$('#pasteSpecial-postfix').val('');$('#pasteSpecial-prefix-enable').prop('checked', true);$('#pasteSpecial-postfix-enable').prop('checked', true);">Reset</button>
       <button style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();">Cancel</button>
       <button style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
     </div>
   </dialog>
-
 </body>
 
 </html>
