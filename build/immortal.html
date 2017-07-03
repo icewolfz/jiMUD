@@ -1833,7 +1833,8 @@
                 watcher.close();
             watcher = chokidar.watch(options.local, {
                 persistent: true,
-                depth: 0
+                depth: 0,
+                ignoreInitial: true
             });
 
             // Something to use when events are received.
