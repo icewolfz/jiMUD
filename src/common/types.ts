@@ -205,7 +205,8 @@ export enum IEDError {
   INVALIDPATH = 30,
   INVALIDFILE = 31,
   CMD_NOEXIST = 32,
-  CMD_DIRECTORY = 33
+  CMD_DIRECTORY = 33,
+  CMD_EXIST = 34
 }
 
 export enum IEDCmdStatus {

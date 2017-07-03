@@ -143,6 +143,15 @@ export class IED extends EventEmitter {
                         this.removeActive();
                         this.emit('message', `Upload aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
                         break
+                    case IEDError.CMD_EXIST:
+                        this.emit('message', `File or directory already exist: '${obj.path}/${obj.file}`);
+                        break;
+                    case IEDError.CMD_DIRECTORY:
+                        this.emit('message', `File is a directory: '${obj.path}/${obj.file}`);
+                        break;
+                    case IEDError.CMD_NOEXIST:
+                        this.emit('message', `File or directory does not exist: '${obj.path}/${obj.file}`);
+                        break;
                 }
                 this.emit('error', obj);
                 break;
@@ -449,8 +458,7 @@ export class IED extends EventEmitter {
     }
 
     public clear() {
-        if(this.active)
-        {
+        if (this.active) {
             this.active.clean();
             this.active = null;
         }
