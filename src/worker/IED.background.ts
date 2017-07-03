@@ -1,3 +1,9 @@
+/**
+ * IED decode/encoder
+ * 
+ * Encode/decode text blocks in background thread
+ * @arthur William
+ */
 self.addEventListener('message', (e: MessageEvent) => {
     if (!e.data) return;
     switch (e.data.action) {

@@ -1,3 +1,9 @@
+/**
+ * IED
+ * 
+ * send and receive IED gmcp protocol
+ * @arthur William
+ */
 //cSpell:words fswin, chunksize
 import EventEmitter = require('events');
 import { Client } from "./client";
