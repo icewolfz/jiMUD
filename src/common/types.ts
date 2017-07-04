@@ -207,7 +207,10 @@ export enum IEDError {
   CMD_NOEXIST = 32,
   CMD_DIRECTORY = 33,
   CMD_EXIST = 34,
-  CMD_UNKNOWN = 35
+  CMD_UNKNOWN = 35,
+  UL_TOOMANY = 36,
+  UL_INPROGRESS = 37,
+  CMD_FILE = 38
 }
 
 export enum IEDCmdStatus {

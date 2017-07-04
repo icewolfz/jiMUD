@@ -1106,6 +1106,40 @@
                         });
                     }
                 }
+                else if (obj.cmd == "mv") {
+                    if (obj.code == IEDCmdStatus.success) {
+                        logMessage(`Renamed ${obj.path}/${obj.file} to ${obj.path2}/${obj.file2}`);
+
+                        var row = remoteTable.row(function (idx, data, node) {
+                            return data.name == obj.file ?
+                                true : false;
+                        });
+                        _remote[obj.file2] = _remote[obj.file];
+                        delete _remote[obj.file];
+                        if (row && row.length == 1)
+                            row.remove();
+
+                        //update old data to new data
+                        _remote[obj.file2].name = obj.file2;
+                        _remote[obj.file2].path = obj.path2 + "/" + obj.file2;
+                        _remote[obj.file2].hidden = IED.isHidden(_remote[obj.file2].path, true);
+
+                        if (_remote[obj.file2].hidden && !options.showHidden) {
+                            info.remotefiles--;
+                            return;
+                        }
+                        remoteTable.row.add(_remote[obj.file2]).draw();
+                        updateStatus();
+                    }
+                    else {
+                        logMessage(`Failed to rename: ${obj.path}/${obj.file}`);
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: "Could not rename",
+                            message: "Could not rename: " + obj.file,
+                        });
+                    }
+                }
             });
 
             localTable = $('#local-list').DataTable();
@@ -1967,8 +2001,10 @@
                 defaultId: 1,
             }, (response) => {
                 if (response == 0) {
-                    for (var d = 0, dl = data.length; d < dl; d++)
-                        _ied.deleteFile(data[d].path);
+                    for (var d = 0, dl = data.length; d < dl; d++) {
+                        if (data.size != -2)
+                            _ied.deleteFile(data[d].path);
+                    }
                 }
             })
         }

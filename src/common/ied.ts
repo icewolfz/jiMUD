@@ -140,6 +140,8 @@ export class IED extends EventEmitter {
                     case IEDError.UL_UNKNOWN:
                     case IEDError.UL_INVALIDFILE:
                     case IEDError.UL_INVALIDPATH:
+                    case IEDError.UL_TOOMANY:
+                    case IEDError.UL_INPROGRESS:
                         this.removeActive();
                         this.emit('message', `Upload aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
                         break
@@ -151,6 +153,9 @@ export class IED extends EventEmitter {
                         break;
                     case IEDError.CMD_NOEXIST:
                         this.emit('message', `File or directory does not exist: '${obj.path}/${obj.file}`);
+                        break;
+                    case IEDError.CMD_FILE:
+                        this.emit('message', `File not a directory: '${obj.path}/${obj.file}`);
                         break;
                 }
                 this.emit('error', obj);
@@ -269,7 +274,7 @@ export class IED extends EventEmitter {
                 }
             case "cmd":
                 if (mods.length > 2 && mods[2] == "status")
-                    this.emit('cmd', obj);
+                    this.emit('cmd', obj);                
                 break;
         }
         this.nextGMCP();

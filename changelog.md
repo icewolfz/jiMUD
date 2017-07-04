@@ -9,6 +9,7 @@
   - When font/font size are changed it needs to rebuild lines to correctly calculate widths
   - Update window event is not fired when font/font size changed so NAWS did not send new screen sizes
   - Font sample displays no longer cover other preferences when font is larger then width or cause other sizing issues.
+  - Immortal tools: fixed remote delete trying to delete folders
 ##### 0.4.1 2017-07-03
 - **New:**
   - Immortal tools
