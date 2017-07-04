@@ -135,13 +135,12 @@
                                     clipboard.writeText(selected.join('\n'), 'selection');
                                 }
                             },
-                            /*
                             {
                                 label: '&Rename',
                                 enabled: false,
                                 accelerator: "CmdOrCtrl+F2",
+                                click: renameLocal
                             },
-                            */
                             {
                                 label: '&Delete',
                                 enabled: false,
@@ -219,13 +218,12 @@
                                     clipboard.writeText(selected.join('\n'), 'selection');
                                 }
                             },
-                            /*
                             {
                                 label: '&Rename',
                                 enabled: false,
                                 accelerator: "CmdOrCtrl+ShiftF2",
+                                click: renameRemote
                             },
-                            */
                             {
                                 label: '&Delete',
                                 enabled: false,
@@ -764,14 +762,14 @@
 
             updateMenuItem({ menu: 'file|upload', enabled: localSelected });
             updateMenuItem({ menu: 'file|download', enabled: remoteSelected });
-            //updateMenuItem({ menu: 'edit|local|rename', enabled: localSelected });
+            updateMenuItem({ menu: 'edit|local|rename', enabled: localSelected });
             updateMenuItem({ menu: 'edit|local|delete', enabled: localSelected });
 
             updateMenuItem({ menu: 'edit|local|reveal in explorer...', enabled: localSelected });
             updateMenuItem({ menu: 'edit|local|open...', enabled: localSelected });
             updateMenuItem({ menu: 'edit|local|open with editor...', enabled: localSelected && options.editor && options.editor.length > 0 });
 
-            //updateMenuItem({ menu: 'edit|remote|rename', enabled: remoteSelected });
+            updateMenuItem({ menu: 'edit|remote|rename', enabled: remoteSelected });
             updateMenuItem({ menu: 'edit|remote|delete', enabled: remoteSelected });
             //updateMenuItem({ menu: 'edit|remote|backup', enabled: remoteSelected });
 
@@ -1400,14 +1398,15 @@
                 //event.altKey, event.ctrlKey, event.shiftKey, event.metaKey
 
                 switch (event.which) {
-                    /*
                     case 113: //f2
                         if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
-                            console.log("Rename");
                             event.preventDefault();
+                            if ($("#local-list").hasClass("focused"))
+                                renameLocal();
+                            else if ($("#remote-list").hasClass("focused"))
+                                renameRemote();
                         }
                         break;
-                        */
                     case 116: //f5
                         if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
                             if ($("#local-list").hasClass("focused"))
@@ -1551,7 +1550,6 @@
                     dragging = false;
                 }
                 else if (btmDragging) {
-                    console.log(e.pageY);
                     if (e.pageY < 226)
                         options.queueSize = document.body.clientHeight - 202;
                     else if (e.pageY > document.body.clientHeight - 200)
@@ -1612,11 +1610,10 @@
                         clipboard.writeText(selected.join('\n'), 'selection');
                     }
                 }));
-                /*
                 c.append(new MenuItem({
                     label: 'Rename',
+                    click: renameLocal
                 }));
-                */
                 c.append(new MenuItem({
                     label: 'Delete',
                     click: deleteLocal
@@ -1705,11 +1702,10 @@
                         clipboard.writeText(selected.join('\n'), 'selection');
                     }
                 }));
-                /*
                 c.append(new MenuItem({
                     label: 'Rename',
+                    click: renameRemote
                 }));
-                */
                 c.append(new MenuItem({
                     label: 'Delete',
                     click: deleteRemote
@@ -1977,6 +1973,153 @@
             })
         }
 
+        function renameLocal() {
+            var selected = localTable.rows({ selected: true });
+            if (!selected || selected.length === 0) return;
+            var el = $(selected.nodes()[0].children[0]);
+            el.css('position', 'relative');
+            var editor = $('<input class="form-control" style="position: absolute;top:0;left:0;right:0;bottom:0;width:auto;margin:0;height: auto;"/>');
+            editor.selected = selected;
+            editor.data = selected.data()[0];
+            editor.original = editor.data.name;
+            editor.update = function () {
+                if (!_local[editor.val()])
+                    fs.renameSync(editor.data.path, path.join(path.dirname(editor.data.path), editor.val()));
+                else if (editor.val() != editor.data.name) {
+                    var i = 1;
+                    var ext = path.extname(editor.val());
+                    var o = path.basename(editor.val(), ext);
+
+                    var n = o + ` (${i})` + ext;
+                    while (_local[n]) {
+                        i++;
+                        n = o + ` (${i})` + ext;
+                    }
+                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'warning',
+                        title: "Rename file?",
+                        message: `Do you want to rename "${editor.original}" to "${n}"?`,
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                        detail: 'There is already a file with the same name in this location.',
+                    });
+                    if (response == 0) {
+                        fs.renameSync(editor.data.path, path.join(path.dirname(editor.data.path), n));
+                    }
+                }
+                editor.close();
+            }
+            editor.close = function (e) {
+                if (e && e.target == editor[0])
+                    return;
+                $(window).off('click', editor.update);
+                editor.remove();
+                editor = null;
+            }
+            editor.on('blur', editor.close);
+            editor.on('click', function (e) {
+                e.preventDefault();
+                e.cancelBubble = true;
+            });
+            editor.on('keypress', function (event) {
+                event.cancelable = true;
+                event.stopPropagation();
+            })
+            editor.on('keydown', (event) => {
+                if (event.which == 27)
+                    editor.close();
+                else if (event.which == 13)
+                    editor.update();
+                event.cancelBubble = true;
+                event.stopPropagation();
+            });
+
+            $(window).on('click', editor.update);
+            el.append(editor);
+            editor.val(selected.data()[0].name);
+            editor.focus();
+
+            editor[0].selectionStart = 0;
+            if (editor.val().lastIndexOf(".") === -1)
+                editor[0].selectionEnd = editor.val().length - 1;
+            else
+                editor[0].selectionEnd = editor.val().lastIndexOf(".");
+
+        }
+
+        function renameRemote() {
+            var selected = remoteTable.rows({ selected: true });
+            if (!selected || selected.length === 0) return;
+            var el = $(selected.nodes()[0].children[0]);
+            el.css('position', 'relative');
+            var editor = $('<input class="form-control" style="position: absolute;top:0;left:0;right:0;bottom:0;width:auto;margin:0;height: auto;"/>');
+            editor.selected = selected;
+            editor.data = selected.data()[0];
+            editor.original = editor.data.name;
+            editor.update = function () {
+                if (!_remote[editor.val()])
+                    _ied.rename(editor.data.path, path.dirname(editor.data.path) + "/" + editor.val());
+                else if (editor.val() != editor.data.name) {
+                    var i = 1;
+                    var ext = path.extname(editor.val());
+                    var o = path.basename(editor.val(), ext);
+
+                    var n = o + ` (${i})` + ext;
+                    while (_remote[n]) {
+                        i++;
+                        n = o + ` (${i})` + ext;
+                    }
+                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'warning',
+                        title: "Rename file?",
+                        message: `Do you want to rename "${editor.original}" to "${n}"?`,
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                        detail: 'There is already a file with the same name in this location.',
+                    });
+                    if (response == 0) {
+                        _ied.rename(editor.data.path, path.join(path.dirname(editor.data.path), n));
+                    }
+                }
+                editor.close();
+            }
+            editor.close = function (e) {
+                if (e && e.target == editor[0])
+                    return;
+                $(window).off('click', editor.update);
+                editor.remove();
+                editor = null;
+            }
+            editor.on('blur', editor.close);
+            editor.on('click', function (e) {
+                e.preventDefault();
+                e.cancelBubble = true;
+            });
+            editor.on('keypress', function (event) {
+                event.cancelable = true;
+                event.stopPropagation();
+            })
+            editor.on('keydown', (event) => {
+                if (event.which == 27)
+                    editor.close();
+                else if (event.which == 13)
+                    editor.update();
+                event.cancelBubble = true;
+                event.stopPropagation();
+            });
+
+            $(window).on('click', editor.update);
+            el.append(editor);
+            editor.val(selected.data()[0].name);
+            editor.focus();
+
+            editor[0].selectionStart = 0;
+            if (editor.val().lastIndexOf(".") === -1)
+                editor[0].selectionEnd = editor.val().length - 1;
+            else
+                editor[0].selectionEnd = editor.val().lastIndexOf(".");
+        }
+
         ipcRenderer.on('GMCP-received', (event, data) => {
             if (options && options.debug)
                 console.log(data.mod);
@@ -2009,11 +2152,9 @@
                             <i class="fa fa-upload"></i>
                         </button>
                         <div class="btn-group" role="group">
-                            <!--
                             <button id="btn-rename-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
                                 <i class="fa fa-i-cursor"></i>
-                            </button>                            
-                            -->
+                            </button>
                             <button id="btn-delete-local" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="deleteLocal()">
                                 <i class="fa fa-times"></i>
                             </button>
@@ -2081,11 +2222,9 @@
                         </button>
 
                         <div class="btn-group" role="group">
-                            <!--    
                             <button id="btn-rename-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
                                 <i class="fa fa-i-cursor"></i>
                             </button>
-                            -->
                             <button id="btn-delete-remote" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="deleteRemote()">
                                 <i class="fa fa-times"></i>
                             </button>

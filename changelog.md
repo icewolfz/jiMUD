@@ -1,5 +1,8 @@
 ## Changelog
 ##### 0.4.2
+- **New:**
+  - Immortal tools:
+    - Rename local and remote files
 - **Fixed:**
   - An issue with scroll bars inner borders when nothing to scroll
   - Default and clean theme background colors now correctly black
