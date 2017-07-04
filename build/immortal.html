@@ -2012,109 +2012,40 @@
         function renameLocal() {
             var selected = localTable.rows({ selected: true });
             if (!selected || selected.length === 0) return;
-            var el = $(selected.nodes()[0].children[0]);
-            el.css('position', 'relative');
-            var editor = $('<input class="form-control" style="position: absolute;top:0;left:0;right:0;bottom:0;width:auto;margin:0;height: auto;"/>');
-            editor.selected = selected;
-            editor.data = selected.data()[0];
-            editor.original = editor.data.name;
-            editor.update = function () {
-                if (!_local[editor.val()])
-                    fs.renameSync(editor.data.path, path.join(path.dirname(editor.data.path), editor.val()));
-                else if (editor.val() != editor.data.name) {
-                    var i = 1;
-                    var ext = path.extname(editor.val());
-                    var o = path.basename(editor.val(), ext);
-
-                    var n = o + ` (${i})` + ext;
-                    while (_local[n]) {
-                        i++;
-                        n = o + ` (${i})` + ext;
-                    }
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
-                        type: 'warning',
-                        title: "Rename file?",
-                        message: `Do you want to rename "${editor.original}" to "${n}"?`,
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1,
-                        detail: 'There is already a file with the same name in this location.',
-                    });
-                    if (response == 0) {
-                        fs.renameSync(editor.data.path, path.join(path.dirname(editor.data.path), n));
-                    }
-                }
-                editor.close();
-            }
-            editor.close = function (e) {
-                if (e && e.target == editor[0])
-                    return;
-                $(window).off('click', editor.update);
-                editor.remove();
-                editor = null;
-            }
-            editor.on('blur', editor.close);
-            editor.on('click', function (e) {
-                e.preventDefault();
-                e.cancelBubble = true;
-            });
-            editor.on('keypress', function (event) {
-                event.cancelable = true;
-                event.stopPropagation();
+            rename(selected, _locate, (o, n) => {
+                fs.renameSync(o, path.join(path.dirname(o), n));
             })
-            editor.on('keydown', (event) => {
-                if (event.which == 27)
-                    editor.close();
-                else if (event.which == 13)
-                    editor.update();
-                event.cancelBubble = true;
-                event.stopPropagation();
-            });
-
-            $(window).on('click', editor.update);
-            el.append(editor);
-            editor.val(selected.data()[0].name);
-            editor.focus();
-
-            editor[0].selectionStart = 0;
-            if (editor.val().lastIndexOf(".") === -1)
-                editor[0].selectionEnd = editor.val().length - 1;
-            else
-                editor[0].selectionEnd = editor.val().lastIndexOf(".");
-
         }
 
         function renameRemote() {
             var selected = remoteTable.rows({ selected: true });
             if (!selected || selected.length === 0) return;
-            var el = $(selected.nodes()[0].children[0]);
+            rename(selected, _remote, (o, n) => {
+                _ied.rename(o, path.dirname(o) + "/" + n);
+            })
+        }
+
+        function rename(rows, list, callback) {
+            var el = $(rows.nodes()[0].children[0]);
             el.css('position', 'relative');
             var editor = $('<input class="form-control" style="position: absolute;top:0;left:0;right:0;bottom:0;width:auto;margin:0;height: auto;"/>');
-            editor.selected = selected;
-            editor.data = selected.data()[0];
-            editor.original = editor.data.name;
+            editor.path = rows.data()[0].path
+            editor.original = rows.data()[0].name;
             editor.update = function () {
-                if (!_remote[editor.val()])
-                    _ied.rename(editor.data.path, path.dirname(editor.data.path) + "/" + editor.val());
-                else if (editor.val() != editor.data.name) {
-                    var i = 1;
-                    var ext = path.extname(editor.val());
-                    var o = path.basename(editor.val(), ext);
-
-                    var n = o + ` (${i})` + ext;
-                    while (_remote[n]) {
-                        i++;
-                        n = o + ` (${i})` + ext;
-                    }
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                if (!list[editor.val()]) {
+                    if (callback) callback(editor.path, editor.val());
+                }
+                else if (editor.val() != editor.original) {
+                    var n = getNewName(editor.val(), list);
+                    if (dialog.showMessageBox(remote.getCurrentWindow(), {
                         type: 'warning',
                         title: "Rename file?",
                         message: `Do you want to rename "${editor.original}" to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
                         detail: 'There is already a file with the same name in this location.',
-                    });
-                    if (response == 0) {
-                        _ied.rename(editor.data.path, path.join(path.dirname(editor.data.path), n));
+                    }) == 0 && callback) {
+                        callback(editor.path, n);
                     }
                 }
                 editor.close();
@@ -2146,7 +2077,7 @@
 
             $(window).on('click', editor.update);
             el.append(editor);
-            editor.val(selected.data()[0].name);
+            editor.val(editor.original);
             editor.focus();
 
             editor[0].selectionStart = 0;
@@ -2156,6 +2087,18 @@
                 editor[0].selectionEnd = editor.val().lastIndexOf(".");
         }
 
+        function getNewName(name, list) {
+            var i = 1;
+            var ext = path.extname(name);
+            var o = path.basename(name, ext);
+            if (!list) list = _local;
+            var n = o + ` (${i})` + ext;
+            while (list[n]) {
+                i++;
+                n = o + ` (${i})` + ext;
+            }
+            return n;
+        }
         ipcRenderer.on('GMCP-received', (event, data) => {
             if (options && options.debug)
                 console.log(data.mod);
