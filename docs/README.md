@@ -59,11 +59,14 @@ Basic questions answered about jiMUD
 - [Customizing](customizing.md)
 - [Assets](assets.md)
 - [Mapper](mapper.md)
+- [Immortal Tools](immortal.md)
 
 ## Known Issues
 - Command input
   - Spell checking will not check for errors until a space or newline is entered, or when the command box is refocused, you may right click any word at any point to get a forced list of suggested corrections.
   - Text selection may be lost when other controls are given focus
+- Immortal tools
+  - Dragging multiple files and dropping outside to other applications will only drop the first file, all others ignored. This is a limitation of electron drag and drop support, until it is added it can not be supported outside of application  
 - Advanced editor 
   - Paste may lose some colors/background colors on pasted, this is a bug in TinyMCE editor
   - When apply styles to all text some styles may get stuck  

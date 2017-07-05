@@ -4,7 +4,8 @@
   - Immortal tools:
     - Rename local and remote files
     - Make new folders local and remote
-    - Drag and drop support to upload/dl files
+    - Drag and drop support to ul/dl files
+  - Immortal doc file
 - **Fixed:**
   - An issue with scroll bars inner borders when nothing to scroll
   - Default and clean theme background colors now correctly black
