@@ -44,6 +44,7 @@
         var localTable, remoteTable, queueTable, key = '', keyClearID;
         var watcher;
         var dragging = false, btmDragging = false;
+        var _localDrag, _remoteDrag;
 
         var menu = [
             {
@@ -1561,7 +1562,6 @@
                     }).appendTo('body');
 
                 $(document).mousemove(function (e) {
-                    console.log(`Drag y: ${e.pageY}`);
                     if (e.pageY < 199)
                         ghostBar.css("top", 199);
                     else if (e.pageY > document.body.clientHeight - 200)
@@ -1732,19 +1732,37 @@
                     event.dataTransfer.effectAllowed = "copy";
                     type = 2;
                 }
-                for (var f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
-                    if (event.dataTransfer.files[f].path == options.local) continue;
-                    if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {                        
-                        _ied.download(event.dataTransfer.files[f].path.substring(8));
+                if (_localDrag) {
+                    for (var f = 0, fl = _localDrag.length; f < fl; f++) {
+                        if (type === 1) {
+                            fs.moveSync(_localDrag[f], path.join(options.local, getNewName(path.basename(_localDrag[f]), _local)));
+                        }
+                        else if (type == 2) {
+                            fs.copySync(_localDrag[f], path.join(options.local, getNewName(path.basename(_localDrag[f]), _local)));
+                        }
                     }
-                    else if (type === 1) {
-                        if (path.dirname(event.dataTransfer.files[f].path) == options.local) continue;
-                        fs.moveSync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
-                    }
-                    else if (type == 2) {
-                        fs.copySync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
-                    }
+                    _localDrag = 0;
                 }
+                else if (_remoteDrag) {
+                    for (var f = 0, fl = _remoteDrag.length; f < fl; f++) {
+                        _ied.download(_remoteDrag[f]);
+                    }
+                    _remoteDrag = 0;
+                }
+                else
+                    for (var f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
+                        if (event.dataTransfer.files[f].path == options.local) continue;
+                        if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
+                            _ied.download(event.dataTransfer.files[f].path.substring(8));
+                        }
+                        else if (type === 1) {
+                            if (path.dirname(event.dataTransfer.files[f].path) == options.local) continue;
+                            fs.moveSync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
+                        }
+                        else if (type == 2) {
+                            fs.copySync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
+                        }
+                    }
             }
 
             $("#remote")[0].ondragenter = (event) => {
@@ -1779,21 +1797,32 @@
 
             $("#remote")[0].ondrop = (event) => {
                 event.preventDefault();
-                for (var f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
-                    if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) continue;
-                    if (event.dataTransfer.files[f].size < 1) {
-                        try {
-                            stat = fs.statSync(info.path);
+                if (_localDrag) {
+                    for (var f = 0, fl = _localDrag.length; f < fl; f++) {
+                        if (_local[path.basename(_localDrag[f])].size == -2) continue;
+                        _ied.upload(_localDrag[f]);
+                    }
+                    _localDrag = 0;
+                }
+                else if (_remoteDrag) {
+                    _remoteDrag = 0;
+                }
+                else
+                    for (var f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
+                        if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) continue;
+                        if (event.dataTransfer.files[f].size < 1) {
+                            try {
+                                stat = fs.statSync(info.path);
+                            }
+                            catch (error) {
+                                throw error;
+                            }
+                            if (!stat.isDirectory())
+                                _ied.upload(event.dataTransfer.files[f].path);
                         }
-                        catch (error) {
-                            throw error;
-                        }
-                        if (!stat.isDirectory())
+                        else
                             _ied.upload(event.dataTransfer.files[f].path);
                     }
-                    else
-                        _ied.upload(event.dataTransfer.files[f].path);
-                }
 
             }
 
@@ -1803,8 +1832,12 @@
                 var files = [];
                 for (var s = 0, sl = selected.length; s < sl; s++)
                     files.push(selected[s]);
-                if (files.length > 0)
+                _localDrag = 0;
+                _remoteDrag = 0;
+                if (files.length > 0) {
+                    _localDrag = files;
                     ipcRenderer.send('ondragstart', files);
+                }
             }
 
             $("#remote-list")[0].ondragstart = (event) => {
@@ -1815,8 +1848,12 @@
                     if (selected[s].size == -2) continue;
                     files.push("jiMUD://" + selected[s].path);
                 }
-                if (files.length > 0)
+                _localDrag = 0;
+                _remoteDrag = 0;
+                if (files.length > 0) {
+                    _localDrag = files;
                     ipcRenderer.send('ondragstart', files, path.join(__dirname, '../assets/icons/png/drag2.png'));
+                }
             }
 
             $(window).trigger('resize');
