@@ -274,7 +274,7 @@ export class IED extends EventEmitter {
                 }
             case "cmd":
                 if (mods.length > 2 && mods[2] == "status")
-                    this.emit('cmd', obj);                
+                    this.emit('cmd', obj);
                 break;
         }
         this.nextGMCP();
@@ -445,6 +445,12 @@ export class IED extends EventEmitter {
         if (IED.windows)
             return file.replace(/[^0-9a-zA-Z^&'@\{\}\[\],$=!#\(\)%.+~_\s.-]/g, '_');
         return file.replace(/[/\0]/g, '_');
+    }
+
+    public static invalidFile(file: string) {
+        if (IED.windows)
+            return file.match(/[^0-9a-zA-Z^&'@\{\}\[\],$=!#\(\)%.+~_\s.-]/g);
+        return file.match(/[/\0]/g);
     }
 
     public removeActive() {

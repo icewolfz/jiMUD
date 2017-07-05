@@ -22,7 +22,8 @@
     <script src="../lib/datatables.min.js" type="text/javascript"></script>
     <script src="../lib/datatables.scrollresize.js" type="text/javascript"></script>
     <script>
-        //cSpell:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
+        //cSpell:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
+        //cSpell:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
         const { IED, fileInfo, } = require('./js/ied');
         const { IEDError, TempType, IEDCmdStatus } = require('./js/types');
         const { remote, ipcRenderer, shell, clipboard } = require('electron');
@@ -39,8 +40,8 @@
 
         var _ied, options, dropdownMenu;
         var _local = {}, _remote = {}, _downloads = {};
-        var info = { localdirs: 0, localfiles: 0, remotedirs: 0, remotefiles: 0, uploads: 0, downloads: 0 }
-        var localTable, remoteTable, queueTable, key = '', keyclearID;
+        var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0 }
+        var localTable, remoteTable, queueTable, key = '', keyClearID;
         var watcher;
         var dragging = false, btmDragging = false;
 
@@ -147,12 +148,11 @@
                                 accelerator: "CmdOrCtrl+Delete",
                                 click: deleteLocal
                             },
-                            /*
                             {
-                                label: '&Create directory',
+                                label: '&New directory',
                                 accelerator: "CmdOrCtrl+N",
+                                click: newFolderLocal
                             },
-                            */
                             { type: 'separator' },
                             {
                                 label: '&Select all',
@@ -230,12 +230,11 @@
                                 accelerator: "CmdOrCtrl+Shift+Delete",
                                 click: deleteRemote
                             },
-                            /*
                             {
-                                label: '&Create directory',
-                                accelerator: "CmdOrCtrl+N",
+                                label: '&New directory',
+                                accelerator: "CmdOrCtrl+Shift+N",
+                                click: newFolderRemote
                             },
-                            */
                             { type: 'separator' },
                             {
                                 label: '&Select all',
@@ -352,7 +351,7 @@
                 return a.localeCompare(b);
             }
 
-            function rfileSort(a, b) {
+            function rFileSort(a, b) {
                 if (_remote[a].size == -2 && _remote[b].size != -2)
                     return -1;
                 if (_remote[a].size != -2 && _remote[b].size == -2)
@@ -369,12 +368,12 @@
                     return fileSort(a, b) * -1;
                 },
 
-                "rfile-asc": function (a, b) {
-                    return rfileSort(a, b);
+                "rFile-asc": function (a, b) {
+                    return rFileSort(a, b);
                 },
 
-                "rfile-desc": function (a, b) {
-                    return rfileSort(a, b) * -1;
+                "rFile-desc": function (a, b) {
+                    return rFileSort(a, b) * -1;
                 },
 
                 "moment-asc": function (a, b) {
@@ -546,8 +545,8 @@
                 all.push(file);
                 _local[file.name] = file;
             }
-            info.localdirs = dirs.length;
-            info.localfiles = all.length - dirs.length;
+            info.localDirs = dirs.length;
+            info.localFiles = all.length - dirs.length;
             $("#local-path").val(p);
             $("#local-navigate").empty();
             drivelist.list((error, drives) => {
@@ -632,8 +631,8 @@
             if (p.endsWith('/'))
                 parts.pop();
             _remote = {};
-            info.remotedirs = 0;
-            info.remotefiles = 0;
+            info.remoteDirs = 0;
+            info.remoteFiles = 0;
             for (var d = 0, dl = dir.length; d < dl; d++) {
                 file = {
                     name: path.basename(dir[d].file),
@@ -648,10 +647,10 @@
                 if (file.size == -2) {
                     file.type = "Directory";
                     dirs.push(file);
-                    info.remotedirs++;
+                    info.remoteDirs++;
                 }
                 else
-                    info.remotefiles++;
+                    info.remoteFiles++;
 
                 all.push(file);
                 _remote[file.name] = file;
@@ -791,8 +790,7 @@
                 keys: true,
                 paging: false,
                 select: {
-                    style: 'os',
-                    //blurable: true
+                    style: 'os'
                 },
                 searching: false,
                 info: false,
@@ -865,8 +863,7 @@
                 keys: true,
                 paging: false,
                 select: {
-                    style: 'os',
-                    //blurable: true
+                    style: 'os'
                 },
                 searching: false,
                 info: false,
@@ -881,7 +878,7 @@
                 autoWidth: false,
                 columnDefs: [
                     {
-                        type: 'rfile',
+                        type: 'rFile',
                         targets: 0,
                         createdCell: function (td, cellData, rowData, row, col) {
                             if (rowData.size == -2) {
@@ -1057,12 +1054,14 @@
                             date: new Date().getTime(),
                             hidden: IED.isHidden(item.remote, true)
                         };
-                        if (_remote[path.basename(item.remote)].hidden && !options.showHidden)
+                        if (_remote[path.basename(item.remote)].hidden && !options.showHidden) {
+                            delete _remote[path.basename(item.remote)];
                             return;
+                        }
                         if (row && row.length == 1)
                             row.remove();
                         else
-                            info.remotefiles++;
+                            info.remoteFiles++;
                         remoteTable.row.add(_remote[path.basename(item.remote)]).draw();
                         info.uploads--;
                     }
@@ -1094,7 +1093,7 @@
                         delete _remote[obj.file];
                         if (row && row.length == 1)
                             row.remove().draw();
-                        info.remotefiles--;
+                        info.remoteFiles--;
                         updateStatus();
                     }
                     else {
@@ -1125,7 +1124,8 @@
                         _remote[obj.file2].hidden = IED.isHidden(_remote[obj.file2].path, true);
 
                         if (_remote[obj.file2].hidden && !options.showHidden) {
-                            info.remotefiles--;
+                            delete _remote[obj.file2];
+                            info.remoteFiles--;
                             return;
                         }
                         remoteTable.row.add(_remote[obj.file2]).draw();
@@ -1136,6 +1136,42 @@
                         dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'error',
                             title: "Could not rename",
+                            message: "Could not rename: " + obj.file,
+                        });
+                    }
+                }
+                else if (obj.cmd == "mkdir") {
+                    if (obj.code == IEDCmdStatus.success) {
+                        logMessage(`Created directory ${obj.path}/${obj.file}`);
+
+                        var row = remoteTable.row(function (idx, data, node) {
+                            return data.name == path.basename(obj.path + "/" + obj.file) ?
+                                true : false;
+                        });
+                        _remote[obj.file] = {
+                            name: obj.file,
+                            path: obj.path + "/" + obj.file,
+                            size: -2,
+                            type: "Directory",
+                            date: new Date().getTime(),
+                            hidden: IED.isHidden(obj.path + "/" + obj.file, true)
+                        };
+                        if (_remote[obj.file].hidden && !options.showHidden) {
+                            delete _remote[obj.file];
+                            return;
+                        }
+                        if (row && row.length == 1)
+                            row.remove();
+                        else
+                            info.remoteDirs++;
+                        remoteTable.row.add(_remote[obj.file]).draw();
+                        updateStatus();
+                    }
+                    else {
+                        logMessage(`Failed to create directory: ${obj.path}/${obj.file}`);
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: "Could not create directory",
                             message: "Could not rename: " + obj.file,
                         });
                     }
@@ -1302,8 +1338,8 @@
                 //row.node().scrollIntoView();
                 //$("body")[0].scrollTop = 0
                 row.select();
-                clearTimeout(keyclearID);
-                keyclearID = setTimeout(() => {
+                clearTimeout(keyClearID);
+                keyClearID = setTimeout(() => {
                     key = "";
                 }, 500);
             });
@@ -1320,8 +1356,8 @@
                 //row.node().scrollIntoView();
                 //$("body")[0].scrollTop = 0
                 row.select();
-                clearTimeout(keyclearID);
-                keyclearID = setTimeout(() => {
+                clearTimeout(keyClearID);
+                keyClearID = setTimeout(() => {
                     key = "";
                 }, 500);
             });
@@ -1462,7 +1498,7 @@
                             event.preventDefault();
                         }
                         break;
-                    case 65://select all, hack as menu acceleartor doenst work
+                    case 65://select all, hack as menu accelerator doesn't work
                         if (!event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
                             //if ($("#local-list").hasClass("focused"))
                             localTable.rows().select();
@@ -1652,12 +1688,11 @@
                     label: 'Delete',
                     click: deleteLocal
                 }));
-                /*
-                c.append(new MenuItem({
-                    label: 'Create directory',
-                }));
-                */
             }
+            c.append(new MenuItem({
+                label: 'New directory',
+                click: newFolderLocal
+            }));
             c.append(new MenuItem({ type: 'separator' }));
             c.append(new MenuItem({
                 label: 'Select all',
@@ -1744,12 +1779,11 @@
                     label: 'Delete',
                     click: deleteRemote
                 }));
-                /*
-                c.append(new MenuItem({
-                    label: 'Create directory',
-                }));
-                */
             }
+            c.append(new MenuItem({
+                label: 'New directory',
+                click: newFolderRemote
+            }));
             c.append(new MenuItem({ type: 'separator' }));
             c.append(new MenuItem({
                 label: 'Select all',
@@ -1762,10 +1796,10 @@
 
         function updateStatus() {
             var tmp = [];
-            if (info.localfiles)
-                tmp.push(`Local files: ${info.localfiles}`);
-            if (info.localdirs)
-                tmp.push(`Local folders: ${info.localdirs}`);
+            if (info.localFiles)
+                tmp.push(`Local files: ${info.localFiles}`);
+            if (info.localDirs)
+                tmp.push(`Local folders: ${info.localDirs}`);
             var size = 0;
             var data = localTable.rows({ selected: true }).data();
             data.map(function (key, index) {
@@ -1777,10 +1811,10 @@
             $("#localInfo").text(tmp.join(", "));
 
             tmp = [];
-            if (info.remotefiles)
-                tmp.push(`Remote files: ${info.remotefiles}`);
-            if (info.remotedirs)
-                tmp.push(`Remote folders: ${info.remotedirs}`);
+            if (info.remoteFiles)
+                tmp.push(`Remote files: ${info.remoteFiles}`);
+            if (info.remoteDirs)
+                tmp.push(`Remote folders: ${info.remoteDirs}`);
 
             size = 0;
             data = remoteTable.rows({ selected: true }).data();
@@ -1924,7 +1958,7 @@
             if (file.hidden && !options.showhidden) {
                 if (_local[file.name]) {
                     removeLocalFile(file.path);
-                    info.localfies--;
+                    info.localFiles--;
                 }
                 return;
             }
@@ -1953,9 +1987,9 @@
             });
             row.remove().draw();
             if (_local[path.basename(p)].size == -2)
-                info.localdirs--;
+                info.localDirs--;
             else
-                info.localfiles--;
+                info.localFiles--;
             delete _local[path.basename(p)];
             updateStatus();
         }
@@ -1971,9 +2005,9 @@
             if (file.hidden && !options.showhidden)
                 return;
             if (file.size == -2)
-                info.localdirs++;
+                info.localDirs++;
             else
-                info.localfiles++;
+                info.localFiles++;
             _local[file.name] = file;
             localTable.row.add(_local[file.name]).draw();
             if (options.debug)
@@ -2009,10 +2043,77 @@
             })
         }
 
+        function newFolderLocal() {
+            $("#newFolder").data("type", "local");
+            $("#newFolderLabel").text("New local folder");
+            $("#newFolder-name").val(getNewName("New Folder", _local));
+            $("#newFolder")[0].showModal();
+        }
+
+        function newFolderRemote() {
+            $("#newFolder").data("type", "remote");
+            $("#newFolderLabel").text("New remote folder");
+            $("#newFolder-name").val(getNewName("New Folder", _remote));
+            $("#newFolder")[0].showModal();
+        }
+
+        function newFolderOk() {
+            var n = $("#newFolder-name").val();
+            if (!n || n.length === 0) {
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'error',
+                    title: "Name required",
+                    message: "You must supply a valid name!"
+                })
+                return;
+            }
+            if (IED.invalidFile(n)) {
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'error',
+                    title: "Invalid folder name",
+                    message: "The name you supplied contains invalid characters!"
+                })
+                return;
+            }
+            if ($("#newFolder").data("type") == "local") {
+                if (_local[n]) {
+                    var n = getNewName(n, _local);
+                    if (dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'warning',
+                        title: "File or folder exist?",
+                        message: `Do you want to rename to "${n}"?`,
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                        detail: 'There is already a file or folder with the same name in this location.',
+                    }) != 0) {
+                        return;
+                    }
+                }
+                fs.mkdirSync(path.join(options.local, n));
+            }
+            else if ($("#newFolder").data("type") == "remote") {
+                if (_remote[n]) {
+                    var n = getNewName(n, _remote);
+                    if (dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'warning',
+                        title: "File or folder exist?",
+                        message: `Do you want to rename to "${n}"?`,
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                        detail: 'There is already a file or folder with the same name in this location.',
+                    }) != 0) {
+                        return;
+                    }
+                }
+                _ied.makeDirectory(options.remote + "/" + n);
+            }
+            $("#newFolder")[0].close();
+        }
+
         function renameLocal() {
             var selected = localTable.rows({ selected: true });
             if (!selected || selected.length === 0) return;
-            rename(selected, _locate, (o, n) => {
+            rename(selected, _local, (o, n) => {
                 fs.renameSync(o, path.join(path.dirname(o), n));
             })
         }
@@ -2088,6 +2189,7 @@
         }
 
         function getNewName(name, list) {
+            if (!list[name]) return name;
             var i = 1;
             var ext = path.extname(name);
             var o = path.basename(name, ext);
@@ -2138,15 +2240,12 @@
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
-
-                        <!--
-                        <button id="btn-newfolder-local" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
+                        <button id="btn-newFolder-local" type="button" class="btn btn-default btn-xs" title="New directory" onclick="newFolderLocal()">
                             <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                 <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
                                 <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
                             </span>
                         </button>
-                        -->
                     </label>
 
                     <span class="path-container">
@@ -2208,14 +2307,12 @@
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
-                        <!--
-                        <button id="btn-newfolder-remote" type="button" class="btn btn-default btn-xs" title="Create directory" onclick="">
+                        <button id="btn-newFolder-remote" type="button" class="btn btn-default btn-xs" title="New directory" onclick="newFolderRemote()">
                             <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                 <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
                                 <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
                             </span>
                         </button>
-                        -->
                     </label>
 
                     <span class="path-container">
@@ -2308,6 +2405,18 @@
         <div id="queueInfo" style="width:33%;display:inline-block;"></div>
         <div id="remoteInfo" style="width:33%;display:inline-block;"></div>
     </div>
+    <dialog id="newFolder" style="z-index:1000;height:150px;width:350px;">
+        <div class="dialog-body">
+            <div class="form-group">
+                <label class="control-label" for="newFolder-name" id="newFolderLabel">New folder</label>
+                <input id="newFolder-name" class="form-control">
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button style="float: right" type="button" class="btn btn-default" onclick="$('#newFolder')[0].close();">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-primary" onclick="newFolderOk()">Ok</button>
+        </div>
+    </dialog>
 </body>
 
 </html>
