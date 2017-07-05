@@ -30,7 +30,7 @@
         const { app, nativeImage, dialog, Menu, MenuItem } = remote;
         const { parseTemplate } = require('./js/library');
         const { Settings } = require('./js/settings');
-        const fs = require('fs');
+        const fs = require('fs-extra');
         const child_process = require('child_process');
         const path = require('path');
         const drivelist = require('drivelist');
@@ -1641,6 +1641,184 @@
                 }
             });
 
+            window.ondragover = window.ondragenter = window.ondrop = (e) => {
+                e.dataTransfer.effectAllowed = "none";
+                e.dataTransfer.dropEffect = "none";
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            }
+
+            $("#bottom")[0].ondragover = document.ondragover = document.ondrop = (ev) => {
+                ev.preventDefault();
+                ev.dataTransfer.effectAllowed = "none";
+                ev.dataTransfer.dropEffect = "none";
+                ev.cancelBubble = true;
+                ev.stopPropagation();
+                return false;
+            }
+
+            $("#bottom")[0].ondrop = document.ondrop = document.body.ondrop = (ev) => {
+                ev.preventDefault();
+                ev.dataTransfer.effectAllowed = "none";
+                ev.dataTransfer.dropEffect = "none";
+                ev.cancelBubble = true;
+                ev.stopPropagation();
+                return false;
+            }
+
+            $("#local")[0].ondragenter = (event) => {
+                event.preventDefault();
+                event.cancelBubble = true;
+                event.stopPropagation();
+                if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
+                    if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path == options.local || path.dirname(event.dataTransfer.files[0].path) == options.local)) {
+                        event.dataTransfer.dropEffect = "none";
+                        event.dataTransfer.effectAllowed = "none";
+                    }
+                    else {
+                        event.dataTransfer.dropEffect = "move";
+                        event.dataTransfer.effectAllowed = "move";
+                    }
+                }
+                else {
+                    event.dataTransfer.dropEffect = "copy";
+                    event.dataTransfer.effectAllowed = "copy";
+                }
+
+                return false;
+            }
+
+            $("#local")[0].ondragover = (event) => {
+                event.preventDefault();
+                event.cancelBubble = true;
+                event.stopPropagation();
+                if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
+                    if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path == options.local || path.dirname(event.dataTransfer.files[0].path) == options.local)) {
+                        event.dataTransfer.dropEffect = "none";
+                        event.dataTransfer.effectAllowed = "none";
+                    }
+                    else {
+                        event.dataTransfer.dropEffect = "move";
+                        event.dataTransfer.effectAllowed = "move";
+                    }
+                }
+                else {
+                    event.dataTransfer.dropEffect = "copy";
+                    event.dataTransfer.effectAllowed = "copy";
+                }
+
+                return false;
+            }
+
+            $("#local")[0].ondrop = (event) => {
+                event.preventDefault();
+                event.cancelBubble = true;
+                event.stopPropagation();
+                var type = 0;
+                if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
+                    if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path == options.local || path.dirname(event.dataTransfer.files[0].path) == options.local)) {
+                        event.dataTransfer.dropEffect = "none";
+                        event.dataTransfer.effectAllowed = "none";
+                    }
+                    else {
+                        event.dataTransfer.dropEffect = "move";
+                        event.dataTransfer.effectAllowed = "move";
+                        type = 1;
+                    }
+                }
+                else {
+                    event.dataTransfer.dropEffect = "copy";
+                    event.dataTransfer.effectAllowed = "copy";
+                    type = 2;
+                }
+                for (var f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
+                    if (event.dataTransfer.files[f].path == options.local) continue;
+                    if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {                        
+                        _ied.download(event.dataTransfer.files[f].path.substring(8));
+                    }
+                    else if (type === 1) {
+                        if (path.dirname(event.dataTransfer.files[f].path) == options.local) continue;
+                        fs.moveSync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
+                    }
+                    else if (type == 2) {
+                        fs.copySync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
+                    }
+                }
+            }
+
+            $("#remote")[0].ondragenter = (event) => {
+                if (event.dataTransfer.files.length && event.dataTransfer.files[0].path.startsWith("jiMUD://")) {
+                    event.dataTransfer.dropEffect = "none";
+                    event.dataTransfer.effectAllowed = "none";
+                }
+                else {
+                    event.dataTransfer.dropEffect = "copy";
+                    event.dataTransfer.effectAllowed = "copy";
+                }
+                event.preventDefault();
+                event.cancelBubble = true;
+                event.stopPropagation();
+                return false;
+            }
+
+            $("#remote")[0].ondragover = (event) => {
+                if (event.dataTransfer.files.length && event.dataTransfer.files[0].path.startsWith("jiMUD://")) {
+                    event.dataTransfer.dropEffect = "none";
+                    event.dataTransfer.effectAllowed = "none";
+                }
+                else {
+                    event.dataTransfer.dropEffect = "copy";
+                    event.dataTransfer.effectAllowed = "copy";
+                }
+                event.preventDefault();
+                event.cancelBubble = true;
+                event.stopPropagation();
+                return false;
+            }
+
+            $("#remote")[0].ondrop = (event) => {
+                event.preventDefault();
+                for (var f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
+                    if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) continue;
+                    if (event.dataTransfer.files[f].size < 1) {
+                        try {
+                            stat = fs.statSync(info.path);
+                        }
+                        catch (error) {
+                            throw error;
+                        }
+                        if (!stat.isDirectory())
+                            _ied.upload(event.dataTransfer.files[f].path);
+                    }
+                    else
+                        _ied.upload(event.dataTransfer.files[f].path);
+                }
+
+            }
+
+            $("#local-list")[0].ondragstart = (event) => {
+                event.preventDefault();
+                var selected = localTable.rows({ selected: true }).data().pluck('path');
+                var files = [];
+                for (var s = 0, sl = selected.length; s < sl; s++)
+                    files.push(selected[s]);
+                if (files.length > 0)
+                    ipcRenderer.send('ondragstart', files);
+            }
+
+            $("#remote-list")[0].ondragstart = (event) => {
+                event.preventDefault();
+                var selected = remoteTable.rows({ selected: true }).data();
+                var files = [];
+                for (var s = 0, sl = selected.length; s < sl; s++) {
+                    if (selected[s].size == -2) continue;
+                    files.push("jiMUD://" + selected[s].path);
+                }
+                if (files.length > 0)
+                    ipcRenderer.send('ondragstart', files, path.join(__dirname, '../assets/icons/png/drag2.png'));
+            }
+
             $(window).trigger('resize');
 
             window.onbeforeunload = function () {
@@ -2281,7 +2459,7 @@
                     </span>
                 </div>
                 <div id="local-list-container" class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:5px;position: absolute;">
-                    <table tabindex="0" id="local-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
+                    <table tabindex="0" id="local-list" draggable="true" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
                         <thead>
                             <tr>
                                 <th>Name</th>
@@ -2342,7 +2520,7 @@
                     </span>
                 </div>
                 <div id="remote-list-container" class="panel-body" style="padding:0px;top:61px;bottom:1px;left:1px;right:1px;position: absolute;">
-                    <table tabindex="0" id="remote-list" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
+                    <table tabindex="0" id="remote-list" draggable="true" class="table table-striped table-hover table-condensed" style="width: 100%;height: 100%;padding:0px;margin:0px !important;">
                         <thead>
                             <tr>
                                 <th>Name</th>

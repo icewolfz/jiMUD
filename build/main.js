@@ -1497,6 +1497,13 @@ ipcMain.on('reload-characters', (event) => {
   loadCharacters(true);
 });
 
+ipcMain.on('ondragstart', (event, files, icon) => {
+  if(!files || files.length == 0) return;
+  event.sender.startDrag({
+    files: files,
+    icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
+  })
+})
 
 function updateMenuItem(args) {
   var item, i = 0, ic, items;
