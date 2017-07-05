@@ -1498,11 +1498,22 @@ ipcMain.on('reload-characters', (event) => {
 });
 
 ipcMain.on('ondragstart', (event, files, icon) => {
-  if(!files || files.length == 0) return;
-  event.sender.startDrag({
-    files: files,
-    icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
-  })
+  if (!files || files.length == 0) return;
+  if (typeof (files) === "string")
+    event.sender.startDrag({
+      file: files,
+      icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
+    })
+  else if (files.length == 1)
+    event.sender.startDrag({
+      file: files[0],
+      icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
+    })
+  else
+    event.sender.startDrag({
+      files: files,
+      icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
+    })
 })
 
 function updateMenuItem(args) {
