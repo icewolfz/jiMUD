@@ -389,7 +389,7 @@ export class IED extends EventEmitter {
             this.emit('message', "Resolving: " + file);
         }
         else {
-            ipcRenderer.send('send-gmcp', "IED.cmd " + JSON.stringify({ cmd: "mkdir", path: path.dirname(file), tag: 'mkdir' }));
+            ipcRenderer.send('send-gmcp', "IED.cmd " + JSON.stringify({ cmd: "mkdir", path: file, tag: 'mkdir' }));
             this.emit('message', "Creating directory: " + file);
         }
     }

@@ -136,6 +136,7 @@
                                     clipboard.writeText(selected.join('\n'), 'selection');
                                 }
                             },
+                            { type: 'separator' },
                             {
                                 label: '&Rename',
                                 enabled: false,
@@ -218,6 +219,7 @@
                                     clipboard.writeText(selected.join('\n'), 'selection');
                                 }
                             },
+                            { type: 'separator' },
                             {
                                 label: '&Rename',
                                 enabled: false,
@@ -1142,37 +1144,37 @@
                 }
                 else if (obj.cmd == "mkdir") {
                     if (obj.code == IEDCmdStatus.success) {
-                        logMessage(`Created directory ${obj.path}/${obj.file}`);
-
+                        logMessage(`Created directory ${obj.path}`);
+                        var name = path.basename(obj.path);
                         var row = remoteTable.row(function (idx, data, node) {
-                            return data.name == path.basename(obj.path + "/" + obj.file) ?
+                            return data.name == name ?
                                 true : false;
                         });
-                        _remote[obj.file] = {
-                            name: obj.file,
-                            path: obj.path + "/" + obj.file,
+                        _remote[name] = {
+                            name: name,
+                            path: name,
                             size: -2,
                             type: "Directory",
                             date: new Date().getTime(),
-                            hidden: IED.isHidden(obj.path + "/" + obj.file, true)
+                            hidden: IED.isHidden(obj.path, true)
                         };
-                        if (_remote[obj.file].hidden && !options.showHidden) {
-                            delete _remote[obj.file];
+                        if (_remote[name].hidden && !options.showHidden) {
+                            delete _remote[name];
                             return;
                         }
                         if (row && row.length == 1)
                             row.remove();
                         else
                             info.remoteDirs++;
-                        remoteTable.row.add(_remote[obj.file]).draw();
+                        remoteTable.row.add(_remote[name]).draw();
                         updateStatus();
                     }
                     else {
-                        logMessage(`Failed to create directory: ${obj.path}/${obj.file}`);
+                        logMessage(`Failed to create directory: ${obj.path}}`);
                         dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'error',
                             title: "Could not create directory",
-                            message: "Could not rename: " + obj.file,
+                            message: "Could not create: " + path.basename(obj.path),
                         });
                     }
                 }
@@ -1680,6 +1682,7 @@
                         clipboard.writeText(selected.join('\n'), 'selection');
                     }
                 }));
+                c.append(new MenuItem({ type: 'separator' }));
                 c.append(new MenuItem({
                     label: 'Rename',
                     click: renameLocal
@@ -1771,6 +1774,7 @@
                         clipboard.writeText(selected.join('\n'), 'selection');
                     }
                 }));
+                c.append(new MenuItem({ type: 'separator' }));
                 c.append(new MenuItem({
                     label: 'Rename',
                     click: renameRemote
@@ -2047,6 +2051,8 @@
             $("#newFolder").data("type", "local");
             $("#newFolderLabel").text("New local folder");
             $("#newFolder-name").val(getNewName("New Folder", _local));
+            $("#newFolder-name")[0].selectionStart = 0;
+            $("#newFolder-name")[0].selectionEnd = $("#newFolder-name").val().length;
             $("#newFolder")[0].showModal();
         }
 
@@ -2054,6 +2060,8 @@
             $("#newFolder").data("type", "remote");
             $("#newFolderLabel").text("New remote folder");
             $("#newFolder-name").val(getNewName("New Folder", _remote));
+            $("#newFolder-name")[0].selectionStart = 0;
+            $("#newFolder-name")[0].selectionEnd = $("#newFolder-name").val().length;
             $("#newFolder")[0].showModal();
         }
 
