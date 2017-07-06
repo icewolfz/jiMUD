@@ -1923,7 +1923,7 @@
                 _localDrag = 0;
                 _remoteDrag = 0;
                 if (files.length > 0) {
-                    _localDrag = files;
+                    _remoteDrag = files;
                     ipcRenderer.send('ondragstart', files, path.join(__dirname, '../assets/icons/png/drag2.png'));
                 }
             }
