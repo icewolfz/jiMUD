@@ -608,7 +608,7 @@ export class Item {
     public waiting: boolean = false;
     public download: boolean = false;
     public ID: string = "";
-    public state: ItemState = ItemState.stopped;
+    public state: ItemState = ItemState.working;
     public chunks: number = 0;
 
     constructor(id: string, download?: boolean) {
