@@ -335,15 +335,15 @@
           $("#reNotes").val(room.Notes || room.notes);
           if (!room.Details && room.details)
             room.Details = room.details;
-          $("#reDDock").prop('checked', (room.Details & RoomDetails.Dock) == RoomDetails.Dock);
-          $("#reDPier").prop('checked', (room.Details & RoomDetails.Pier) == RoomDetails.Pier);
-          $("#reDBank").prop('checked', (room.Details & RoomDetails.Bank) == RoomDetails.Bank);
-          $("#reDShop").prop('checked', (room.Details & RoomDetails.Shop) == RoomDetails.Shop);
-          $("#reDHospital").prop('checked', (room.Details & RoomDetails.Hospital) == RoomDetails.Hospital);
-          $("#reDBar").prop('checked', (room.Details & RoomDetails.Bar) == RoomDetails.Bar);
-          $("#reDRestaurant").prop('checked', (room.Details & RoomDetails.Restaurant) == RoomDetails.Restaurant);
-          $("#reDWaterSource").prop('checked', (room.Details & RoomDetails.WaterSource) == RoomDetails.WaterSource);
-          $("#reDTrainer").prop('checked', (room.Details & RoomDetails.Trainer) == RoomDetails.Trainer);
+          $("#reDDock").prop('checked', (room.Details & RoomDetails.Dock) === RoomDetails.Dock);
+          $("#reDPier").prop('checked', (room.Details & RoomDetails.Pier) === RoomDetails.Pier);
+          $("#reDBank").prop('checked', (room.Details & RoomDetails.Bank) === RoomDetails.Bank);
+          $("#reDShop").prop('checked', (room.Details & RoomDetails.Shop) === RoomDetails.Shop);
+          $("#reDHospital").prop('checked', (room.Details & RoomDetails.Hospital) === RoomDetails.Hospital);
+          $("#reDBar").prop('checked', (room.Details & RoomDetails.Bar) === RoomDetails.Bar);
+          $("#reDRestaurant").prop('checked', (room.Details & RoomDetails.Restaurant) === RoomDetails.Restaurant);
+          $("#reDWaterSource").prop('checked', (room.Details & RoomDetails.WaterSource) === RoomDetails.WaterSource);
+          $("#reDTrainer").prop('checked', (room.Details & RoomDetails.Trainer) === RoomDetails.Trainer);
         }
       });
 
@@ -363,7 +363,7 @@
       });
 
       mapper.on('setting-changed', (setting, value) => {
-        if (setting == 'active') {
+        if (setting === 'active') {
           $("#select-area").val(mapper.active.area);
           $("#MapLevel").val(mapper.active.z);
           $("#MapZone").val(mapper.active.zone);
@@ -502,7 +502,7 @@
               buttons: ['Yes', 'No'],
               defaultId: 1,
             }, (response) => {
-              if (response == 0)
+              if (response === 0)
                 mapper.clearSelectedRoom()
             })
           }
@@ -517,7 +517,7 @@
               buttons: ['Yes', 'No'],
               defaultId: 1,
             }, (response) => {
-              if (response == 0)
+              if (response === 0)
                 mapper.clearRoom()
             })
           }
@@ -533,7 +533,7 @@
               buttons: ['Yes', 'No'],
               defaultId: 1,
             }, (response) => {
-              if (response == 0)
+              if (response === 0)
                 mapper.clearArea()
             })
           }
@@ -548,7 +548,7 @@
               buttons: ['Yes', 'No'],
               defaultId: 1,
             }, (response) => {
-              if (response == 0)
+              if (response === 0)
                 mapper.clearAll()
             })
           }
@@ -580,7 +580,7 @@
                   return;
                 }
                 mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
-                  if (!rooms || rooms.length == 0) {
+                  if (!rooms || rooms.length === 0) {
                     dialog.showMessageBox(remote.getCurrentWindow(), {
                       type: 'error',
                       title: 'Error generating',

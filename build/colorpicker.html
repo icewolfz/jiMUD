@@ -309,7 +309,7 @@
             function setColor(c) { color = c; }
 
             $(window).keydown((event) => {
-                if (event.which == 27)
+                if (event.which === 27)
                     window.close();
             });
 
@@ -323,14 +323,14 @@
             });
 
             function colorCell(color, idx) {
-                var cell = '<td class="mce-grid-cell' + (color == "transparent" ? ' mce-colorbtn-trans' : '') + '">'
+                var cell = '<td class="mce-grid-cell' + (color === "transparent" ? ' mce-colorbtn-trans' : '') + '">'
                 cell += '<div id="' + idx + '"'
                 cell += ' data-mce-color="' + color + '"'
                 cell += ' role="option"'
                 cell += ' tabIndex="-1"'
-                cell += ' style="background-color: ' + (color == "transparent" ? color : '#' + color) + '"'
+                cell += ' style="background-color: ' + (color === "transparent" ? color : '#' + color) + '"'
                 cell += ' title="' + idx + ", " + colorNames[idx] + '">'
-                if (color == "transparent") cell += '&#215;'
+                if (color === "transparent") cell += '&#215;'
                 cell += '</div>'
                 cell += '</td>'
                 return cell;
@@ -381,7 +381,7 @@
 
                 for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
                     html += colorCell(_ColorTable[c], _ColorTable[c + 1]);
-                    if (c / 2 % 6 == 5)
+                    if (c / 2 % 6 === 5)
                         html += '<td class="mce-grid-cell"></td>'
                 }
                 html += '<td class="mce-grid-cell"></td>'
@@ -420,7 +420,7 @@
                                 html2 += colorCell(color, idx);
 
                         }
-                        if (g == 2)
+                        if (g === 2)
                             html += "</tr>"
                         else if (g < 3)
                             html += '<td class="mce-grid-cell"></td>'
@@ -447,9 +447,9 @@
                     else
                         color = "mono" + (r - 232);
                     html += colorCell(g, color);
-                    if (r == 237 || r == 249)
+                    if (r === 237 || r === 249)
                         html += '<td class="mce-grid-cell"></td>'
-                    if (r == 243)
+                    if (r === 243)
                         html += "</tr><tr>"
                 }
 

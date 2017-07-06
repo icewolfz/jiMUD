@@ -85,7 +85,7 @@
         extra = "?" + x + "," + y;
       }
 
-      if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) == "[object Array]") {
+      if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) === "[object Array]") {
         var menu = new Menu();
         var item;
         for (var i = 0, il = url.length; i < il; i++) {
@@ -291,13 +291,13 @@
     }
 
     function buildMenu(name, context) {
-      if (!name || context.length == 0)
+      if (!name || context.length === 0)
         return [];
       var items = [];
       for (var x = 0, xl = context.length; x < xl; x++) {
         if (!context[x].enabled || context[x].parent != name) continue;
         var menu;
-        if (context[x].caption == "-")
+        if (context[x].caption === "-")
           menu = { type: 'separator' };
         else {
           menu = {};
@@ -431,7 +431,7 @@
           for (var x = 0, xl = context.length; x < xl; x++) {
             if (!context[x].enabled || context[x].parent) continue;
             var menu;
-            if (context[x].caption == "-")
+            if (context[x].caption === "-")
               menu = { type: 'separator' };
             else {
               menu = {};
@@ -474,7 +474,7 @@
 
       ['cut', 'copy', 'paste'].forEach(function (event) {
         document.addEventListener(event, function (e) {
-          if (document.activeElement && (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA")) {
+          if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
 
             if ($(document.activeElement).val().length > 0 || !client.display.hasSelection)
               return;
@@ -508,7 +508,7 @@
       });
       client.on('add-line', (data) => {
         var res;
-        if (_captures.length == 0) return;
+        if (_captures.length === 0) return;
         //custom capture to ignore who list
         res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.line);
         if (res && res.length > 0) {
@@ -552,7 +552,7 @@
           return;
         }
         //review requires 1 extra capture to get the current date/time
-        if (captureReview == -1) {
+        if (captureReview === -1) {
           ipcRenderer.send('chat', data);
           data.gagged = true;
           captureReview = 0;
@@ -666,7 +666,7 @@
       });
 
       client.on('received-GMCP', (mod, obj) => {
-        if (mod == "IED.init") {
+        if (mod === "IED.init") {
           ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
           $("#immortal").css('display', "block");
         }
@@ -1093,7 +1093,7 @@
           ret = item.value;
           break;
       }
-      if (ret == null)
+      if (ret === null)
         return true;
       if (item.send) {
         if (!ret.endsWith("\n"))
@@ -1132,7 +1132,7 @@
           ret = button.value;
           break;
       }
-      if (ret == null)
+      if (ret === null)
         return true;
       if (button.send) {
         if (!ret.endsWith("\n"))
@@ -1276,25 +1276,25 @@
     });
 
     ipcRenderer.on('setting-changed', (event, data) => {
-      if (data.type == "mapper") {
+      if (data.type === "mapper") {
         client.options.mapper[data.name] = data.value;
         client.saveOptions();
       }
-      else if (data.type == "profiles") {
+      else if (data.type === "profiles") {
         client.options.profiles[data.name] = data.value;
-        if (data.name == "enabled")
+        if (data.name === "enabled")
           updateMenu();
         client.saveOptions();
       }
-      else if (data.type == "chat") {
+      else if (data.type === "chat") {
         client.options.chat[data.name] = data.value;
         client.saveOptions();
       }
-      else if (data.type == "extensions") {
+      else if (data.type === "extensions") {
         client.options.extensions[data.name] = data.value;
         client.saveOptions();
       }
-      else if (data.type == "windows") {
+      else if (data.type === "windows") {
         if (!client.options.windows[data.name])
           client.options.windows[data.name] = {};
         client.options.windows[data.name].alwaysOnTopClient = data.value.alwaysOnTopClient;
@@ -1393,7 +1393,7 @@
     }
 
     function pasteSpecial(noDialog) {
-      if (clipboard.readText().length == 0)
+      if (clipboard.readText().length === 0)
         return;
       if (!noDialog) {
         $('#pasteSpecial-prefix').prop('disabled', !client.options.pasteSpecialPrefixEnabled);
@@ -1431,7 +1431,7 @@
       var replace = client.options.pasteSpecialReplaceEnabled ? client.options.pasteSpecialReplace : 0;
 
       //changed while in dialog so bail
-      if (clipboard.readText().length == 0)
+      if (clipboard.readText().length === 0)
         return;
       var txt = clipboard.readText().replace(/\r/, '');
 
@@ -1444,7 +1444,7 @@
         txt = pre + txt.replace(/\n/g, `\n${pre}`);
       else if (post && post.length)
         txt = txt.replace(/\n/g, `${post}\n`) + post;
-      if (client.commandInput[0].selectionStart || client.commandInput[0].selectionStart == '0') {
+      if (client.commandInput[0].selectionStart || client.commandInput[0].selectionStart === '0') {
         var startPos = client.commandInput[0].selectionStart;
         var endPos = client.commandInput[0].selectionEnd;
         client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
@@ -1456,9 +1456,9 @@
     }
 
     function paste() {
-      if (clipboard.readText().length == 0)
+      if (clipboard.readText().length === 0)
         return;
-      if (client.commandInput[0].selectionStart || client.commandInput[0].selectionStart == '0') {
+      if (client.commandInput[0].selectionStart || client.commandInput[0].selectionStart === '0') {
         var startPos = client.commandInput[0].selectionStart;
         var endPos = client.commandInput[0].selectionEnd;
         client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)

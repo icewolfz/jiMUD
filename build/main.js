@@ -678,7 +678,7 @@ function showHelpWindow(url, title) {
     return;
   }
   s = loadWindowState('help')
-  if (!title || title.length == 0)
+  if (!title || title.length === 0)
     title = "Help";
   winHelp = new BrowserWindow({
     parent: win,
@@ -741,7 +741,7 @@ function showHelpWindow(url, title) {
 function createMenu() {
   var profiles;
   for (var m = 0; m < menuTemp.length; m++) {
-    if (menuTemp[m].id == "profiles") {
+    if (menuTemp[m].id === "profiles") {
       profiles = menuTemp[m];
       break;
     }
@@ -763,7 +763,7 @@ function createMenu() {
     var files = fs.readdirSync(p);
     for (var i = 0; i < files.length; i++) {
       if (path.extname(files[i]) === ".json") {
-        if (files[i].toLowerCase() == "default.json")
+        if (files[i].toLowerCase() === "default.json")
           continue;
         profiles.submenu.push(
           {
@@ -1135,7 +1135,7 @@ app.on('activate', () => {
 
 ipcMain.on('reload', (event, char) => {
   //already loaded so no need to reload
-  if (char == global.character)
+  if (char === global.character)
     return;
   reload = char;
   win.close();
@@ -1145,7 +1145,7 @@ ipcMain.on('load-default', (event) => {
   //already loaded so no need to switch
   sf = parseTemplate(path.join("{data}", "settings.json"));
   mf = parseTemplate(path.join("{data}", "map.sqlite"));
-  if (sf == global.settingsFile && mf == global.mapFile)
+  if (sf === global.settingsFile && mf === global.mapFile)
     return;
   win.webContents.send('load-default', char);
   global.settingsFile = sf;
@@ -1187,7 +1187,7 @@ ipcMain.on('load-default', (event) => {
 
 ipcMain.on('load-char', (event, char) => {
   //already loaded so no need to switch
-  if (char == global.character)
+  if (char === global.character)
     return;
   loadCharacter(char);
   set = settings.Settings.load(global.settingsFile);
@@ -1370,12 +1370,12 @@ ipcMain.on('chat', (event, text) => {
 })
 
 ipcMain.on('setting-changed', (event, data) => {
-  if (data.type == "mapper" && data.name == "alwaysOnTopClient") {
+  if (data.type === "mapper" && data.name === "alwaysOnTopClient") {
     if (winMap.setParentWindow)
       winMap.setParentWindow(data.value ? win : null);
     winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
   }
-  if (data.type == "mapper" && data.name == "setAlwaysOnTop") {
+  if (data.type === "mapper" && data.name === "setAlwaysOnTop") {
     winMap.setAlwaysOnTop(data.value);
     winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
   }
@@ -1384,27 +1384,27 @@ ipcMain.on('setting-changed', (event, data) => {
   if (winMap && event.sender != winMap.webContents)
     winMap.webContents.send('setting-changed', data);
 
-  if (data.type == "chat" && data.name == "alwaysOnTopClient") {
+  if (data.type === "chat" && data.name === "alwaysOnTopClient") {
     if (winChat.setParentWindow)
       winChat.setParentWindow(data.value ? win : null);
     winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
   }
-  if (data.type == "chat" && data.name == "setAlwaysOnTop") {
+  if (data.type === "chat" && data.name === "setAlwaysOnTop") {
     winChat.setAlwaysOnTop(data.value);
     winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
   }
-  if (data.type == "mapper" && data.name == "enabled" && !winMap && data.value)
+  if (data.type === "mapper" && data.name === "enabled" && !winMap && data.value)
     createMapper();
-  if (!winChat && data.type == "chat" && (data.name == 'captureTells' || data.name == 'captureTalk' || data.name == 'captureLines')) {
+  if (!winChat && data.type === "chat" && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines')) {
     if (data.value)
       createChat();
   }
-  if (data.type == "windows")
+  if (data.type === "windows")
     for (var name in windows) {
       if (!windows.hasOwnProperty(name) || !windows[name].window)
         continue;
 
-      if (name == data.name) {
+      if (name === data.name) {
         windows[name].alwaysOnTopClient = data.value.alwaysOnTopClient;
         windows[name].persistent = data.value.persistent;
         windows[name].alwaysOnTop = data.value.alwaysOnTop;
@@ -1417,7 +1417,7 @@ ipcMain.on('setting-changed', (event, data) => {
       if (windows[name].persistent)
         createNewWindow(name, windows[name]);
     }
-  if (data.type == "extensions")
+  if (data.type === "extensions")
     for (var name in windows) {
       if (!windows.hasOwnProperty(name) || !windows[name].window)
         continue;
@@ -1460,17 +1460,17 @@ ipcMain.on('set-progress', (event, args) => {
 });
 
 ipcMain.on('show-window', (event, window, args) => {
-  if (window == "prefs")
+  if (window === "prefs")
     showPrefs();
-  else if (window == "mapper")
+  else if (window === "mapper")
     showMapper();
-  else if (window == "editor")
+  else if (window === "editor")
     showEditor();
-  else if (window == "profiles")
+  else if (window === "profiles")
     showProfiles();
-  else if (window == "chat")
+  else if (window === "chat")
     showChat();
-  else if (window == "color")
+  else if (window === "color")
     showColor(args);
   else if (windows[window] && windows[window].window)
     showWindow(window, windows[window]);
@@ -1508,13 +1508,13 @@ ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
 });
 
 ipcMain.on('ondragstart', (event, files, icon) => {
-  if (!files || files.length == 0) return;
+  if (!files || files.length === 0) return;
   if (typeof (files) === "string")
     event.sender.startDrag({
       file: files,
       icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
     })
-  else if (files.length == 1)
+  else if (files.length === 1)
     event.sender.startDrag({
       file: files[0],
       icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
@@ -1529,7 +1529,7 @@ ipcMain.on('ondragstart', (event, files, icon) => {
 function updateMenuItem(args) {
   var item, i = 0, ic, items;
   var tItem, tItems;
-  if (!menubar || args == null || args.menu == null) return;
+  if (!menubar || args === null || args.menu === null) return;
 
   if (!Array.isArray(args.menu))
     args.menu = args.menu.split('|');
@@ -1537,10 +1537,10 @@ function updateMenuItem(args) {
   items = menubar.items;
   tItems = menuTemp;
   for (i = 0; i < args.menu.length; i++) {
-    if (!items || items.length == 0) break;
+    if (!items || items.length === 0) break;
     for (m = 0; m < items.length; m++) {
       if (!items[m].id) continue;
-      if (items[m].id == args.menu[i]) {
+      if (items[m].id === args.menu[i]) {
         item = items[m];
         tItem = tItems[m];
         if (item.submenu) {

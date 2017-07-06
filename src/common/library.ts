@@ -15,7 +15,7 @@ export function FilterArrayByKeyValue(array, k, v) {
 	let res = [];
 	if (!array || array.length === 0) return res;
 	for (let i = 0, al = array.length; i < al; i++) {
-		if (array[i]["enabled"] && array[i][k] == v)
+		if (array[i]["enabled"] && array[i][k] === v)
 			res.push(array[i]);
 	}
 	if (res.length <= 1) return res;
@@ -502,18 +502,18 @@ Object.prototype.toType = function(this, obj) {
 */
 
 String.prototype.splice = function (this: string, idx: number, s: string, rem?: number) {
-	if (typeof rem == "undefined") rem = 0;
+	if (typeof rem === "undefined") rem = 0;
 	return (this.slice(0, idx) + s + this.slice(idx + Math.abs(rem)));
 };
 
 String.prototype.paddingLeft = function (this: string, paddingValue: (string | number)) {
-	if (typeof paddingValue == 'number')
+	if (typeof paddingValue === 'number')
 		paddingValue = " ".repeat(paddingValue);
 	return String(paddingValue + this).slice(-paddingValue.length);
 }
 
 String.prototype.paddingRight = function (this: string, paddingValue: (string | number)) {
-	if (typeof paddingValue == 'number') {
+	if (typeof paddingValue === 'number') {
 		if (paddingValue <= this.length) return this;
 		paddingValue = " ".repeat(paddingValue - this.length);
 		return this + paddingValue;
@@ -631,7 +631,7 @@ export function getScrollBarWidth(el) {
 	el.style.overflowX = '';
 
 	let w2 = inner.offsetWidth;
-	if (w1 == w2) w2 = el.clientWidth;
+	if (w1 === w2) w2 = el.clientWidth;
 
 	el.removeChild(inner);
 
@@ -657,7 +657,7 @@ export function getScrollBarHeight(el) {
 	el.style.overflowX = '';
 
 	let w2 = inner.offsetHeight;
-	if (w1 == w2) w2 = el.clientHeight;
+	if (w1 === w2) w2 = el.clientHeight;
 
 	el.removeChild(inner);
 
@@ -687,8 +687,8 @@ export function getScrollBarSize(el) {
 
 	let w2 = inner.offsetWidth;
 	let h2 = inner.offsetHeight;
-	if (w1 == w2) w2 = el.clientWidth;
-	if (h1 == h2) h2 = el.clientHeight;
+	if (w1 === w2) w2 = el.clientWidth;
+	if (h1 === h2) h2 = el.clientHeight;
 
 	el.removeChild(inner);
 

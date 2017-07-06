@@ -87,7 +87,7 @@
         var _settings;
         if (window.module) module.module;
         $(window).keydown((event) => {
-            if (event.which == 27)
+            if (event.which === 27)
                 window.close();
         });
 
@@ -182,9 +182,9 @@
             $("#showHidden").prop('checked', _settings.extensions["immortal"].showHidden);
             $("#uploadOnChange").prop('checked', _settings.extensions["immortal"].uploadOnChange);
 
-            $('#tempFile-none').prop('checked', _settings.extensions["immortal"].tempFile == TempType.none);
-            $('#tempFile-extension').prop('checked', _settings.extensions["immortal"].tempFile == TempType.extension);
-            $('#tempFile-file').prop('checked', _settings.extensions["immortal"].tempFile == TempType.file);
+            $('#tempFile-none').prop('checked', _settings.extensions["immortal"].tempFile === TempType.none);
+            $('#tempFile-extension').prop('checked', _settings.extensions["immortal"].tempFile === TempType.extension);
+            $('#tempFile-file').prop('checked', _settings.extensions["immortal"].tempFile === TempType.file);
 
             $("#debug").prop('checked', _settings.extensions["immortal"].debug);
             $("#logErrors").prop('checked', _settings.extensions["immortal"].logErrors);

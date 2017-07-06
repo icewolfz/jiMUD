@@ -217,7 +217,7 @@
                                 click: () => {
                                     var selected = remoteTable.rows({ selected: true }).data();
                                     if (!selected.length) return;
-                                    if (selected[0].size == -2)
+                                    if (selected[0].size === -2)
                                         ipcRenderer.send('send-command', `cd ${selected[0].path}`);
                                     else
                                         ipcRenderer.send('send-command', `cd ${path.dirname(selected[0].path)}`);
@@ -337,7 +337,7 @@
         function updateMenuItem(args) {
             var item, i = 0, ic, items;
             var tItem, tItems;
-            if (args == null || args.menu == null) return;
+            if (args === null || args.menu === null) return;
 
             if (!Array.isArray(args.menu))
                 args.menu = args.menu.split('|');
@@ -345,9 +345,9 @@
             items = menubar.items;
             tItems = menu;
             for (i = 0; i < args.menu.length; i++) {
-                if (!items || items.length == 0) break;
+                if (!items || items.length === 0) break;
                 for (m = 0; m < items.length; m++) {
-                    if (items[m].id == args.menu[i] || items[m].label.toLowerCase().replace(/&/g, '') == args.menu[i].toLowerCase()) {
+                    if (items[m].id === args.menu[i] || items[m].label.toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
                         item = items[m];
                         tItem = tItems[m];
                         if (item.submenu) {
@@ -382,17 +382,17 @@
 
         (function () {
             function fileSort(a, b) {
-                if (_local[a].size == -2 && _local[b].size != -2)
+                if (_local[a].size === -2 && _local[b].size != -2)
                     return -1;
-                if (_local[a].size != -2 && _local[b].size == -2)
+                if (_local[a].size != -2 && _local[b].size === -2)
                     return 1;
                 return a.localeCompare(b);
             }
 
             function rFileSort(a, b) {
-                if (_remote[a].size == -2 && _remote[b].size != -2)
+                if (_remote[a].size === -2 && _remote[b].size != -2)
                     return -1;
-                if (_remote[a].size != -2 && _remote[b].size == -2)
+                if (_remote[a].size != -2 && _remote[b].size === -2)
                     return 1;
                 return a.localeCompare(b);
             }
@@ -554,7 +554,7 @@
         }
 
         function updateLocal(p) {
-            if (!p || p.length == 0)
+            if (!p || p.length === 0)
                 p = options.local || app.getPath('downloads');
             else if (!fs.existsSync(p))
                 p = app.getPath('downloads');
@@ -578,7 +578,7 @@
                 }
                 if (file.hidden && !options.showhidden)
                     continue;
-                if (file.size == -2)
+                if (file.size === -2)
                     dirs.push(file);
                 all.push(file);
                 _local[file.name] = file;
@@ -605,14 +605,14 @@
                             c = "";
                             for (var pt = 0, pl = sd.length; pt < pl; pt++) {
                                 c = path.join(c, sd[pt], path.sep);
-                                if (c.toLowerCase() == parts[0].toLowerCase() + path.sep) {
+                                if (c.toLowerCase() === parts[0].toLowerCase() + path.sep) {
                                     found = true;
-                                    if (pt == 0)
-                                        paths.push({ drive: true, path: c, name: sd[pt], count: pt, open: parts.length == 1 });
+                                    if (pt === 0)
+                                        paths.push({ drive: true, path: c, name: sd[pt], count: pt, open: parts.length === 1 });
                                     else
-                                        paths.push({ path: c, name: sd[pt], count: pt, open: parts.length == 1 });
+                                        paths.push({ path: c, name: sd[pt], count: pt, open: parts.length === 1 });
                                 }
-                                else if (pt == 0)
+                                else if (pt === 0)
                                     paths.push({ drive: true, path: c, name: sd[pt], count: pt });
                                 else
                                     paths.push({ path: c, name: sd[pt], count: pt });
@@ -625,7 +625,7 @@
                 c = found ? c = path.join(parts[0], path.sep) : "";
                 for (var pt = found ? 1 : 0, pl = parts.length; pt < pl; pt++) {
                     c = path.join(c, parts[pt], path.sep);
-                    if (pt == pl - 1)
+                    if (pt === pl - 1)
                         paths.push({ path: c, name: parts[pt], count: pt, open: true });
                     else
                         paths.push({ path: c, name: parts[pt], count: pt });
@@ -656,7 +656,7 @@
 
             localTable.rows().remove().draw();
             localTable.rows.add(all).draw();
-            $("#btn-local-up").prop('disabled', path.dirname(p) == p || path.dirname == path.join(p, path.sep));
+            $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
             updateStatus();
         }
 
@@ -674,15 +674,15 @@
             for (var d = 0, dl = dir.length; d < dl; d++) {
                 file = {
                     name: path.basename(dir[d].file),
-                    path: (p == "/" ? "" : p) + "/" + dir[d].file,
+                    path: (p === "/" ? "" : p) + "/" + dir[d].file,
                     size: dir[d].size,
                     type: path.extname(dir[d].file),
                     date: dir[d].date * 1000,
-                    hidden: IED.isHidden((p == "/" ? "" : p) + "/" + dir[d].file, true)
+                    hidden: IED.isHidden((p === "/" ? "" : p) + "/" + dir[d].file, true)
                 }
                 if (file.hidden && !options.showhidden)
                     continue;
-                if (file.size == -2) {
+                if (file.size === -2) {
                     file.type = "Directory";
                     dirs.push(file);
                     info.remoteDirs++;
@@ -699,10 +699,10 @@
             var c = [];
             for (var pt = 0, pl = parts.length; pt < pl; pt++) {
                 c.push(parts[pt]);
-                if (pt == 0)
-                    paths.push({ path: "/", name: "/", count: pt, open: pt == pl - 1 });
+                if (pt === 0)
+                    paths.push({ path: "/", name: "/", count: pt, open: pt === pl - 1 });
                 else
-                    paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt == pl - 1 });
+                    paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
             }
             for (var d = 0, dl = dirs.length; d < dl; d++) {
                 paths.push({ path: dirs[d].path, name: dirs[d].name, count: pt });
@@ -728,7 +728,7 @@
             }
             remoteTable.rows().remove().draw();
             remoteTable.rows.add(all).draw();
-            $("#btn-remote-up").prop('disabled', path.dirname(p) == p || path.dirname == path.join(p, path.sep));
+            $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
 
         function logMessage(msg) {
@@ -776,23 +776,23 @@
             localSelected = data.length != 0;
             var dirs = 0;
             for (var d = 0; d < data.length; d++) {
-                if (data[d] == -2) {
+                if (data[d] === -2) {
                     dirs++;
                 }
             }
             localFilesOnly = dirs != data.length;
-            localFoldersOnly = dirs == data.length;
+            localFoldersOnly = dirs === data.length;
 
             data = remoteTable.rows({ selected: true }).data().pluck('size');
             remoteSelected = data.length != 0;
             dirs = 0;
             for (var d = 0; d < data.length; d++) {
-                if (data[d] == -2) {
+                if (data[d] === -2) {
                     dirs++;
                 }
             }
             remoteFilesOnly = dirs != data.length;
-            remoteFoldersOnly = dirs == data.length;
+            remoteFoldersOnly = dirs === data.length;
 
             data = queueTable.rows({ selected: true }).data();
             var queueSelected = data.length != 0;
@@ -861,7 +861,7 @@
                         type: 'file',
                         targets: 0,
                         createdCell: function (td, cellData, rowData, row, col) {
-                            if (rowData.size == -2) {
+                            if (rowData.size === -2) {
                                 $(td).prepend('<i class="fa fa-folder-o" style="margin-right: 2px"></i>');
                             }
                             else {
@@ -887,7 +887,7 @@
                     },
                     {
                         render: function (data, type, full, meta) {
-                            if (data == -2)
+                            if (data === -2)
                                 return '';
                             return formatSize(data);
                         },
@@ -934,7 +934,7 @@
                         type: 'rFile',
                         targets: 0,
                         createdCell: function (td, cellData, rowData, row, col) {
-                            if (rowData.size == -2) {
+                            if (rowData.size === -2) {
                                 $(td).prepend('<i class="fa fa-folder-o" style="margin-right: 2px"></i>');
                             }
                             else {
@@ -960,7 +960,7 @@
                     },
                     {
                         render: function (data, type, full, meta) {
-                            if (data == -2)
+                            if (data === -2)
                                 return '';
                             return formatSize(data);
                         },
@@ -1005,7 +1005,7 @@
                         type: 'file',
                         targets: 0,
                         render: function (data, type, full, meta) {
-                            if (full.state == ItemState.paused) {
+                            if (full.state === ItemState.paused) {
                                 return '<i class="fa fa-pause" style="width:12px; margin-right: 2px"></i>' + data;
                             }
                             return '<i class="fa fa-play" style="width:12px; margin-right: 2px"></i>' + data;
@@ -1070,7 +1070,7 @@
             _ied.on('add', (item) => {
                 if (item.download) {
                     _downloads[item.local] = true;
-                    if (item.tmp == TempType.extension)
+                    if (item.tmp === TempType.extension)
                         _downloads[item.local + ".tmp"] = true;
                     info.downloads++;
                 }
@@ -1088,14 +1088,14 @@
             });
             _ied.on('remove', (item) => {
                 queueTable.rows(function (idx, data, node) {
-                    return data.id == item.ID ?
+                    return data.id === item.ID ?
                         true : false;
                 }).remove().draw();
 
                 if (item.download) {
                     //Update local list if file was uploaded to current local
-                    if (item.state == ItemState.done && options.openEditor) {
-                        if (!options.editor || options.editor.length == 0)
+                    if (item.state === ItemState.done && options.openEditor) {
+                        if (!options.editor || options.editor.length === 0)
                             openItem(item.local);
                         else {
                             p = child_process.spawn(options.editor, [item.local], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
@@ -1106,9 +1106,9 @@
                 }
                 else {
                     //only update if current remote is the same path as file
-                    if (item.state == ItemState.done && path.dirname(item.remote) == options.remote) {
+                    if (item.state === ItemState.done && path.dirname(item.remote) === options.remote) {
                         var row = remoteTable.row(function (idx, data, node) {
-                            return data.name == path.basename(item.remote) ?
+                            return data.name === path.basename(item.remote) ?
                                 true : false;
                         });
                         _remote[path.basename(item.remote)] = {
@@ -1123,7 +1123,7 @@
                             delete _remote[path.basename(item.remote)];
                             return;
                         }
-                        if (row && row.length == 1)
+                        if (row && row.length === 1)
                             row.remove();
                         else
                             info.remoteFiles++;
@@ -1137,7 +1137,7 @@
             });
             _ied.on('update', (item) => {
                 queueTable.row(function (idx, data, node) {
-                    return data.id == item.ID ?
+                    return data.id === item.ID ?
                         true : false;
                 }).data({
                     "local": item.local,
@@ -1150,16 +1150,16 @@
             });
 
             _ied.on('cmd', (obj) => {
-                if (obj.cmd == "rm") {
-                    if (obj.code == IEDCmdStatus.success) {
+                if (obj.cmd === "rm") {
+                    if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Deleted: ${obj.path}/${obj.file}`);
 
                         var row = remoteTable.row(function (idx, data, node) {
-                            return data.name == obj.file ?
+                            return data.name === obj.file ?
                                 true : false;
                         });
                         delete _remote[obj.file];
-                        if (row && row.length == 1)
+                        if (row && row.length === 1)
                             row.remove().draw();
                         info.remoteFiles--;
                         updateStatus();
@@ -1173,17 +1173,17 @@
                         });
                     }
                 }
-                else if (obj.cmd == "mv") {
-                    if (obj.code == IEDCmdStatus.success) {
+                else if (obj.cmd === "mv") {
+                    if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Renamed ${obj.path}/${obj.file} to ${obj.path2}/${obj.file2}`);
 
                         var row = remoteTable.row(function (idx, data, node) {
-                            return data.name == obj.file ?
+                            return data.name === obj.file ?
                                 true : false;
                         });
                         _remote[obj.file2] = _remote[obj.file];
                         delete _remote[obj.file];
-                        if (row && row.length == 1)
+                        if (row && row.length === 1)
                             row.remove();
 
                         //update old data to new data
@@ -1208,12 +1208,12 @@
                         });
                     }
                 }
-                else if (obj.cmd == "mkdir") {
-                    if (obj.code == IEDCmdStatus.success) {
+                else if (obj.cmd === "mkdir") {
+                    if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Created directory ${obj.path}`);
                         var name = path.basename(obj.path);
                         var row = remoteTable.row(function (idx, data, node) {
-                            return data.name == name ?
+                            return data.name === name ?
                                 true : false;
                         });
                         _remote[name] = {
@@ -1228,7 +1228,7 @@
                             delete _remote[name];
                             return;
                         }
-                        if (row && row.length == 1)
+                        if (row && row.length === 1)
                             row.remove();
                         else
                             info.remoteDirs++;
@@ -1251,19 +1251,19 @@
             queueTable = $('#queue-list').DataTable();
 
             localTable.on('user-select', function (e, dt, type, cell, originalEvent) {
-                if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length == 1) {
+                if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length === 1) {
                     e.preventDefault();
                 }
             });
 
             remoteTable.on('user-select', function (e, dt, type, cell, originalEvent) {
-                if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length == 1) {
+                if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length === 1) {
                     e.preventDefault();
                 }
             });
 
             queueTable.on('user-select', function (e, dt, type, cell, originalEvent) {
-                if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length == 1) {
+                if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length === 1) {
                     e.preventDefault();
                 }
             });
@@ -1330,7 +1330,7 @@
                 event.stopPropagation();
                 event.cancelBubble = true;
                 var c = new Menu();
-                if (window.getSelection().type == "Range") {
+                if (window.getSelection().type === "Range") {
                     c.append(new MenuItem({ role: 'copy' }));
                     c.append(new MenuItem({ type: 'separator' }));
                 }
@@ -1431,9 +1431,9 @@
 
             $('#local-list tbody').on('dblclick', 'tr', function () {
                 var data = localTable.row(this).data();
-                if (data.size == -2) {
+                if (data.size === -2) {
                     if (options.syncFolders) {
-                        if (_remote[data.name] && path.basename(options.remote) == path.basename(options.local))
+                        if (_remote[data.name] && path.basename(options.remote) === path.basename(options.local))
                             _ied.getDir(options.remote + "/" + data.name, true);
                     }
                     updateLocal(data.path);
@@ -1444,9 +1444,9 @@
 
             $('#remote-list tbody').on('dblclick', 'tr', function () {
                 var data = remoteTable.row(this).data();
-                if (data.size == -2) {
+                if (data.size === -2) {
                     if (options.syncFolders) {
-                        if (_local[data.name] && path.basename(options.remote) == path.basename(options.remote))
+                        if (_local[data.name] && path.basename(options.remote) === path.basename(options.remote))
                             updateLocal(path.join(options.local, data.name));
                     }
                     _ied.getDir(data.path, true);
@@ -1457,7 +1457,7 @@
 
             $('#queue-list tbody').on('dblclick', 'tr', function () {
                 var data = queueTable.row(this).data();
-                if (data.state == ItemState.paused)
+                if (data.state === ItemState.paused)
                     _ied.startItem(data.id);
                 else
                     _ied.pauseItem(data.id);
@@ -1490,7 +1490,7 @@
 
             $("#btn-local-up").on('click', () => {
                 if (options.syncFolders) {
-                    if (path.basename(options.remote) == path.basename(options.local))
+                    if (path.basename(options.remote) === path.basename(options.local))
                         _ied.getDir(path.dirname(options.remote), true);
                 }
                 updateLocal(path.dirname($("#local-path").val()));
@@ -1506,14 +1506,14 @@
                 updateLocal($("#local-path").val());
             });
             $('#local-path').keyup(function (e) {
-                if (e.which == 27)
+                if (e.which === 27)
                     $("#local-path").val(options.local);
             });
 
             $("#btn-remote-up").on('click', () => {
                 _ied.getDir(path.dirname($("#remote-path").val()), true);
                 if (options.syncFolders) {
-                    if (path.basename(options.remote) == path.basename(options.local))
+                    if (path.basename(options.remote) === path.basename(options.local))
                         updateLocal(path.dirname(options.local));
                 }
             })
@@ -1528,13 +1528,13 @@
                 _ied.getDir($("#remote-path").val());
             });
             $('#remote-path').keyup(function (e) {
-                if (e.which == 27)
+                if (e.which === 27)
                     $("#remote-path").val(options.remote);
             });
 
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
                 var target = $(e.target).attr("href") // activated tab
-                if (target == "#log")
+                if (target === "#log")
                     $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
             });
 
@@ -1744,7 +1744,7 @@
                 event.cancelBubble = true;
                 event.stopPropagation();
                 if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
-                    if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path == options.local || path.dirname(event.dataTransfer.files[0].path) == options.local)) {
+                    if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path === options.local || path.dirname(event.dataTransfer.files[0].path) === options.local)) {
                         event.dataTransfer.dropEffect = "none";
                         event.dataTransfer.effectAllowed = "none";
                     }
@@ -1766,7 +1766,7 @@
                 event.cancelBubble = true;
                 event.stopPropagation();
                 if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
-                    if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path == options.local || path.dirname(event.dataTransfer.files[0].path) == options.local)) {
+                    if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path === options.local || path.dirname(event.dataTransfer.files[0].path) === options.local)) {
                         event.dataTransfer.dropEffect = "none";
                         event.dataTransfer.effectAllowed = "none";
                     }
@@ -1789,7 +1789,7 @@
                 event.stopPropagation();
                 var type = 0;
                 if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
-                    if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path == options.local || path.dirname(event.dataTransfer.files[0].path) == options.local)) {
+                    if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path === options.local || path.dirname(event.dataTransfer.files[0].path) === options.local)) {
                         event.dataTransfer.dropEffect = "none";
                         event.dataTransfer.effectAllowed = "none";
                     }
@@ -1809,7 +1809,7 @@
                         if (type === 1) {
                             fs.moveSync(_localDrag[f], path.join(options.local, getNewName(path.basename(_localDrag[f]), _local)));
                         }
-                        else if (type == 2) {
+                        else if (type === 2) {
                             fs.copySync(_localDrag[f], path.join(options.local, getNewName(path.basename(_localDrag[f]), _local)));
                         }
                     }
@@ -1823,15 +1823,15 @@
                 }
                 else
                     for (var f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
-                        if (event.dataTransfer.files[f].path == options.local) continue;
+                        if (event.dataTransfer.files[f].path === options.local) continue;
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             _ied.download(event.dataTransfer.files[f].path.substring(8));
                         }
                         else if (type === 1) {
-                            if (path.dirname(event.dataTransfer.files[f].path) == options.local) continue;
+                            if (path.dirname(event.dataTransfer.files[f].path) === options.local) continue;
                             fs.moveSync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
                         }
-                        else if (type == 2) {
+                        else if (type === 2) {
                             fs.copySync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
                         }
                     }
@@ -1871,7 +1871,7 @@
                 event.preventDefault();
                 if (_localDrag) {
                     for (var f = 0, fl = _localDrag.length; f < fl; f++) {
-                        if (_local[path.basename(_localDrag[f])].size == -2) continue;
+                        if (_local[path.basename(_localDrag[f])].size === -2) continue;
                         _ied.upload(_localDrag[f]);
                     }
                     _localDrag = 0;
@@ -1917,7 +1917,7 @@
                 var selected = remoteTable.rows({ selected: true }).data();
                 var files = [];
                 for (var s = 0, sl = selected.length; s < sl; s++) {
-                    if (selected[s].size == -2) continue;
+                    if (selected[s].size === -2) continue;
                     files.push("jiMUD://" + selected[s].path);
                 }
                 _localDrag = 0;
@@ -1940,11 +1940,11 @@
             var selected = localTable.rows({ selected: true }).data().pluck('size');
             var dirs = 0;
             for (var d = 0; d < selected.length; d++) {
-                if (selected[d] == -2) {
+                if (selected[d] === -2) {
                     dirs++;
                 }
             }
-            dirs = dirs == selected.length
+            dirs = dirs === selected.length
 
             var c = new Menu();
             c.append(new MenuItem({
@@ -2032,11 +2032,11 @@
             var selected = remoteTable.rows({ selected: true }).data().pluck('size');
             var dirs = 0;
             for (var d = 0; d < selected.length; d++) {
-                if (selected[d] == -2) {
+                if (selected[d] === -2) {
                     dirs++;
                 }
             }
-            dirs = dirs == selected.length
+            dirs = dirs === selected.length
 
             var c = new Menu();
             c.append(new MenuItem({
@@ -2064,7 +2064,7 @@
                     click: () => {
                         var selected = remoteTable.rows({ selected: true }).data();
                         if (!selected.length) return;
-                        if (selected[0].size == -2)
+                        if (selected[0].size === -2)
                             ipcRenderer.send('send-command', `cd ${selected[0].path}`);
                         else
                             ipcRenderer.send('send-command', `cd ${path.dirname(selected[0].path)}`);
@@ -2218,14 +2218,14 @@
         }
 
         function openItem(path) {
-            if (!path || path.length == 0) return;
+            if (!path || path.length === 0) return;
             shell.openItem(path)
         }
 
         function download() {
             var data = remoteTable.rows({ selected: true }).data();
             for (var d = 0, dl = data.length; d < dl; d++) {
-                if (data[d].size == -2)
+                if (data[d].size === -2)
                     continue;
                 _ied.download(data[d].path);
             }
@@ -2234,7 +2234,7 @@
         function upload() {
             var data = localTable.rows({ selected: true }).data();
             for (var d = 0, dl = data.length; d < dl; d++) {
-                if (data[d].size == -2)
+                if (data[d].size === -2)
                     continue;
                 _ied.upload(data[d].path);
             }
@@ -2319,11 +2319,11 @@
             }
 
             var row = localTable.row(function (idx, data, node) {
-                return data.name == path.basename(p) ?
+                return data.name === path.basename(p) ?
                     true : false;
             });
             _local[file.name] = file;
-            if (row && row.length == 1)
+            if (row && row.length === 1)
                 row.remove();
             localTable.row.add(_local[file.name]).draw();
             if (options.debug)
@@ -2337,11 +2337,11 @@
 
         function removeLocalFile(p) {
             var row = localTable.row(function (idx, data, node) {
-                return data.name == path.basename(p) ?
+                return data.name === path.basename(p) ?
                     true : false;
             });
             row.remove().draw();
-            if (_local[path.basename(p)].size == -2)
+            if (_local[path.basename(p)].size === -2)
                 info.localDirs--;
             else
                 info.localFiles--;
@@ -2359,7 +2359,7 @@
             }
             if (file.hidden && !options.showhidden)
                 return;
-            if (file.size == -2)
+            if (file.size === -2)
                 info.localDirs++;
             else
                 info.localFiles++;
@@ -2389,7 +2389,7 @@
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
             }, (response) => {
-                if (response == 0) {
+                if (response === 0) {
                     for (var d = 0, dl = data.length; d < dl; d++) {
                         if (data.size != -2)
                             _ied.deleteFile(data[d].path);
@@ -2434,7 +2434,7 @@
                 })
                 return;
             }
-            if ($("#newFolder").data("type") == "local") {
+            if ($("#newFolder").data("type") === "local") {
                 if (_local[n]) {
                     var n = getNewName(n, _local);
                     if (dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2450,7 +2450,7 @@
                 }
                 fs.mkdirSync(path.join(options.local, n));
             }
-            else if ($("#newFolder").data("type") == "remote") {
+            else if ($("#newFolder").data("type") === "remote") {
                 if (_remote[n]) {
                     var n = getNewName(n, _remote);
                     if (dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2504,14 +2504,14 @@
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
                         detail: 'There is already a file with the same name in this location.',
-                    }) == 0 && callback) {
+                    }) === 0 && callback) {
                         callback(editor.path, n);
                     }
                 }
                 editor.close();
             }
             editor.close = function (e) {
-                if (e && e.target == editor[0])
+                if (e && e.target === editor[0])
                     return;
                 $(window).off('click', editor.update);
                 editor.remove();
@@ -2527,9 +2527,9 @@
                 event.stopPropagation();
             })
             editor.on('keydown', (event) => {
-                if (event.which == 27)
+                if (event.which === 27)
                     editor.close();
-                else if (event.which == 13)
+                else if (event.which === 13)
                     editor.update();
                 event.cancelBubble = true;
                 event.stopPropagation();
@@ -2578,10 +2578,10 @@
         }
 
         function doCommand(cmd, noExt) {
-            if (!cmd || cmd.length == 0) return;
+            if (!cmd || cmd.length === 0) return;
             var selected = remoteTable.rows({ selected: true }).data();
             for (var s = 0, sl = selected.length; s < sl; s++) {
-                if (selected[s].size == -2) continue;
+                if (selected[s].size === -2) continue;
                 if (noExt) {
                     var name = path.basename(selected[s].name, selected[s].type);
                     ipcRenderer.send('send-command', `${cmd} ${options.remote}/${name}`);
@@ -2592,10 +2592,10 @@
         }
 
         function doCommandFirst(cmd) {
-            if (!cmd || cmd.length == 0) return;
+            if (!cmd || cmd.length === 0) return;
             var selected = remoteTable.rows({ selected: true }).data();
             for (var s = 0, sl = selected.length; s < sl; s++) {
-                if (selected[s].size == -2) continue;
+                if (selected[s].size === -2) continue;
                 ipcRenderer.send('send-command', `${cmd} ${selected[s].path}`);
                 break;
             }
@@ -2629,7 +2629,7 @@
         });
 
         ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type == "extensions" && data.name == "immortal")
+            if (data.type === "extensions" && data.name === "immortal")
                 loadOptions(data.value);
         })
     </script>

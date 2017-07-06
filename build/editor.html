@@ -65,9 +65,9 @@
                             fore = $(this).parent().css('color');
                             back = $(this).parent().css('background-color');
                         }
-                        if (back == "black")
+                        if (back === "black")
                             back = ""
-                        if (fore == "rgba(0, 0, 0, 0)")
+                        if (fore === "rgba(0, 0, 0, 0)")
                             fore = "black";
                         $(this).css('color', fore);
                         $(this).css('background-color', back);
@@ -91,9 +91,9 @@
                             back = $(this).parent().css('color');
                             fore = $(this).parent().css('background-color');
                         }
-                        if (back == "rgba(0, 0, 0, 0)")
+                        if (back === "rgba(0, 0, 0, 0)")
                             back = "black";
-                        if (fore == "rgba(0, 0, 0, 0)")
+                        if (fore === "rgba(0, 0, 0, 0)")
                             fore = "black";
                         if ($(this).children().length) {
                             clearReverse($(this).children(), true);
@@ -183,7 +183,7 @@
                                 data = data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;');
                                 data = data.replace(/(?:\r\n|\r|\n)/g, '<br/>');
                                 var content = tinymce.activeEditor.getContent({ format: 'text' });
-                                if (content == "\n") {
+                                if (content === "\n") {
                                     tinymce.activeEditor.undoManager.transact(function () {
                                         tinymce.activeEditor.setContent(data);
                                     });
@@ -216,34 +216,34 @@
                 for (var e = 0, el = els.length; e < el; e++) {
                     $el = $(els[e]);
                     tag = $el.prop("tagName");
-                    if (tag == "EM" || tag == "I")
+                    if (tag === "EM" || tag === "I")
                         tag = "ITALIC";
-                    else if (tag == "STRONG" || tag == "B")
+                    else if (tag === "STRONG" || tag === "B")
                         tag = "BOLD";
                     if (!tag)
                         stack.push('"' + $el.text() + '"');
-                    else if (tag == "SPAN") {
+                    else if (tag === "SPAN") {
                         if (els[e].className != "") {
                             tag = els[e].className.toUpperCase().split(/\s+/g);
                             var t, tl = tag.length;
                             for (t = 0; t < tl; t++) {
-                                if (tag[t] == "NOFLASH")
+                                if (tag[t] === "NOFLASH")
                                     stack.push("FLASH");
                                 else if (tag[t].length > 0)
                                     stack.push(tag[t]);
                             }
                             stack = stack.concat(buildHTMLStack($el.contents()));
                             for (t = 0; t < tl; t++) {
-                                if (tag[t] == "NOFLASH")
+                                if (tag[t] === "NOFLASH")
                                     stack.push("FLASH");
                                 else if (tag[t].length > 0)
                                     stack.push("/" + tag[t]);
                             }
                             continue;
                         }
-                        else if ($el.css('text-decoration') == "line-through")
+                        else if ($el.css('text-decoration') === "line-through")
                             tag = "STRIKEOUT"
-                        else if ($el.css('text-decoration') == "underline")
+                        else if ($el.css('text-decoration') === "underline")
                             tag = "UNDERLINE";
                         else if ($el.data('mce-style')) {
                             tag = $el.data('mce-style').toUpperCase().split(";");
@@ -501,7 +501,7 @@
                     }
 
                     function buttonColorClick(evt) {
-                        if (evt.color == 'transparent')
+                        if (evt.color === 'transparent')
                             this.removeFormat(evt.format);
                         else
                             this.applyFormat(evt.format, evt.color);
@@ -1046,7 +1046,7 @@
             });
 
             ipcRenderer.on('set-color', (event, type, color) => {
-                if (color == 'transparent')
+                if (color === 'transparent')
                     tinymce.activeEditor.plugins["shadowmud"].removeFormat(type);
                 else
                     tinymce.activeEditor.plugins["shadowmud"].applyFormat(type, "#" + color);

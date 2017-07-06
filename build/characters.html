@@ -38,7 +38,7 @@
             var changed = 0;
 
             $(window).keydown((event) => {
-                if (event.which == 27) {
+                if (event.which === 27) {
                     if ($("#get-name")[0].open)
                         $("#get-name")[0].close();
                     else
@@ -121,7 +121,7 @@
                         $('#get-name-value').focus();
                         return;
                     }
-                    if ($('#get-name').data('type') == 1 && $('#get-name-value').val().toLowerCase() == $('#get-name').data('name')) {
+                    if ($('#get-name').data('type') === 1 && $('#get-name-value').val().toLowerCase() === $('#get-name').data('name')) {
                         p.addClass("has-error");
                         p.addClass("has-feedback");
                         p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Current name</small>");
@@ -142,7 +142,7 @@
                 })
 
                 $("#get-name-value").keypress(function (event) {
-                    if (event.which == 13)
+                    if (event.which === 13)
                         $("#get-name-ok").click();
                 })
             });
@@ -159,7 +159,7 @@
                     characters.characters[current].map = v;
                     changed++;
                 }
-                if (current == characters.load) {
+                if (current === characters.load) {
                     if (!$("#auto-load").prop('checked')) {
                         characters.load = 0;
                         changed++;
@@ -173,7 +173,7 @@
 
             function saveCharacters() {
                 updateCurrent();
-                if (changed == 0) return;
+                if (changed === 0) return;
                 changed = 0;
                 fs.writeFileSync(charactersFile, JSON.stringify(characters));
                 ipcRenderer.send('reload-characters');
@@ -188,7 +188,7 @@
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
                     }, (response) => {
-                        if (response == 0)
+                        if (response === 0)
                             loadCharacters();
                     });
                 }
@@ -231,7 +231,7 @@
                 }).text(name);
                 item.data('name', name);
                 item.on('click', function () {
-                    if (current == $(this).data('name')) return;
+                    if (current === $(this).data('name')) return;
                     updateCurrent();
                     $('.list-group-item').removeClass('selected');
                     $(this).addClass('selected');
@@ -244,7 +244,7 @@
                     $("#character-editor button").prop('disabled', false);
                     $("#settings").val(characters.characters[current].settings);
                     $("#map").val(characters.characters[current].map);
-                    $("#auto-load").prop('checked', current == characters.load);
+                    $("#auto-load").prop('checked', current === characters.load);
                     $("#title").text(name);
                 });
                 item.on('dblclick', function () {
@@ -274,7 +274,7 @@
             }
 
             function validName(name) {
-                if (!name || name.length == 0)
+                if (!name || name.length === 0)
                     return false;
                 if (!name.match(/^[a-zA-Z0-9]+$/g))
                     return false;
@@ -331,7 +331,7 @@
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
                         });
-                        if (response == 0) {
+                        if (response === 0) {
                             var d = Settings.load(parseTemplate(path.join("{data}", "settings.json")));
                             d.save(sf);
                         }
@@ -349,7 +349,7 @@
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
                         });
-                        if (response == 0) {
+                        if (response === 0) {
                             if (fs.existsSync(parseTemplate(path.join("{data}", "map.sqlite"))))
                                 copyFile(parseTemplate(path.join("{data}", "map.sqlite")), sf);
                             else
@@ -379,7 +379,7 @@
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
                         });
-                        if (response == 0) {
+                        if (response === 0) {
                             var d = new Settings();
                             d.save(sf);
                         }
@@ -397,7 +397,7 @@
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
                         });
-                        if (response == 0) {
+                        if (response === 0) {
                             fs.closeSync(fs.openSync(sf, 'w'));
                         }
                     }
@@ -425,7 +425,7 @@
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
                         });
-                        if (response == 0)
+                        if (response === 0)
                             fs.renameSync(f, sf);
                     }
                     else
@@ -440,7 +440,7 @@
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
                         });
-                        if (response == 0) {
+                        if (response === 0) {
                             fs.renameSync(f, sf);
                         }
                     }
@@ -450,7 +450,7 @@
                     delete characters.characters[oldName];
                     $('#character-' + oldName).remove();
                     createItem(name);
-                    if (current == oldName) {
+                    if (current === oldName) {
                         clearEditor();
                         $('#character-' + name).click();
                     }
@@ -486,7 +486,7 @@
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
                         });
-                        if (response == 0)
+                        if (response === 0)
                             copyFile(f, sf);
                     }
                     else
@@ -501,7 +501,7 @@
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
                         });
-                        if (response == 0) {
+                        if (response === 0) {
                             if (fs.existsSync(f))
                                 copyFile(f, sf);
                             else
@@ -530,18 +530,18 @@
                     defaultId: 1,
                 });
 
-                if (response == 0) {
+                if (response === 0) {
                     sf = parseTemplate(characters.characters[name].settings);
                     if (fs.existsSync(sf))
                         shell.moveItemToTrash(sf);
                     sf = parseTemplate(characters.characters[name].map);
                     if (fs.existsSync(sf))
                         shell.moveItemToTrash(sf);
-                    if (characters.load == name)
+                    if (characters.load === name)
                         characters.load = 0;
                     delete characters.characters[name];
                     $('#character-' + name).remove();
-                    if (current == name)
+                    if (current === name)
                         clearEditor();
                     changed++;
                     saveCharacters();
@@ -559,7 +559,7 @@
                     buttons: ['Yes', 'No'],
                     defaultId: 1,
                 });
-                if (response == 0)
+                if (response === 0)
                     ipcRenderer.send('load-char', name);
             }
 
@@ -571,20 +571,20 @@
                     buttons: ['Yes', 'No'],
                     defaultId: 1,
                 });
-                if (response == 0)
+                if (response === 0)
                     ipcRenderer.send('load-default', name);
             }
 
             function showGetName(name, val, type, callback) {
-                if (typeof name == "function") {
+                if (typeof name === "function") {
                     callback = name;
                     name = undefined;
                 }
-                else if (typeof val == "function") {
+                else if (typeof val === "function") {
                     callback = val;
                     val = undefined;
                 }
-                else if (typeof type == "function") {
+                else if (typeof type === "function") {
                     callback = type;
                     type = undefined;
                 }

@@ -34,6 +34,7 @@ export class Backup extends EventEmitter {
         this.client = client;
         this.client.telnet.GMCPSupports.push('Client 1');
 
+        /*
         this.client.on('connected', () => {
             this.reset();
         });
@@ -41,6 +42,7 @@ export class Backup extends EventEmitter {
         this.client.on('closed', () => {
             this.reset();
         });
+        */
 
         this.client.on('received-GMCP', (mod, obj) => {
             if (mod.toLowerCase() !== 'client') return;
@@ -72,9 +74,9 @@ export class Backup extends EventEmitter {
     }
 
     public save(version?: number) {
-        let _db = new sqlite3.Database(this.mapFile);
-        _db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID", (err, rows) => {
-            let data = {
+        const _db = new sqlite3.Database(this.mapFile);
+        _db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID', (err, rows) => {
+            const data = {
                 version: version,
                 profiles: this.client.profiles.clone(2),
                 settings: {
@@ -135,21 +137,22 @@ export class Backup extends EventEmitter {
                 map: {}
             };
 
-            let rooms = {};
+            const rooms = {};
             if (rows) {
-                let rl = rows.length;
+                const rl = rows.length;
                 for (let r = 0; r < rl; r++) {
                     if (rooms[rows[r].ID]) {
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
-                        }
+                        };
                     }
                     else {
                         rooms[rows[r].ID] = { num: rows[r].ID };
-                        for (let prop in rows[r]) {
-                            if (prop == "ID")
+                        let prop;
+                        for (prop in rows[r]) {
+                            if (prop === 'ID')
                                 continue;
                             if (!rows[r].hasOwnProperty(prop)) {
                                 continue;
@@ -161,16 +164,16 @@ export class Backup extends EventEmitter {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
-                        }
+                        };
                     }
                 }
             }
             data.map = rooms;
-            if ((this.saveSelection & BackupSelection.Map) != BackupSelection.Map)
+            if ((this.saveSelection & BackupSelection.Map) !== BackupSelection.Map)
                 delete data.map;
-            if ((this.saveSelection & BackupSelection.Profiles) != BackupSelection.Profiles)
+            if ((this.saveSelection & BackupSelection.Profiles) !== BackupSelection.Profiles)
                 delete data.profiles;
-            if ((this.saveSelection & BackupSelection.Settings) != BackupSelection.Settings)
+            if ((this.saveSelection & BackupSelection.Settings) !== BackupSelection.Settings)
                 delete data.settings;
             let jData = JSON.stringify(data);
             jData = LZString.compressToEncodedURIComponent(jData);
@@ -181,7 +184,7 @@ export class Backup extends EventEmitter {
         });
     }
 
-    abort(err?) {
+    public abort(err?) {
         this.emit('abort', err);
         this._save = 0;
         this._abort = true;
@@ -190,13 +193,13 @@ export class Backup extends EventEmitter {
             url: this.URL,
             data:
             {
-                'user': this._user,
-                'a': 'abort'
+                user: this._user,
+                a: 'abort'
             }
         });
     }
 
-    close() {
+    public close() {
         this.emit('close');
         this._save = 0;
         this._abort = false;
@@ -205,22 +208,22 @@ export class Backup extends EventEmitter {
             url: this.URL,
             data:
             {
-                'user': this._user,
-                'a': 'done'
+                user: this._user,
+                a: 'done'
             }
         });
     }
 
-    getChunk() {
+    public getChunk() {
         $.ajax(
             {
                 type: 'POST',
                 url: this.URL,
                 data:
                 {
-                    'user': this._user,
-                    'a': 'get',
-                    'c': ++this._save[1]
+                    user: this._user,
+                    a: 'get',
+                    c: ++this._save[1]
                 },
                 dataType: 'json',
                 success: (data) => {
@@ -231,8 +234,8 @@ export class Backup extends EventEmitter {
                         this.abort(data.error);
                     else {
                         this._save[1] = data.chunk || 0;
-                        this._save[3] += data.data || "";
-                        this.emit('progress', (this._save[1] + 1) / this._save[0] * 100)
+                        this._save[3] += data.data || '';
+                        this.emit('progress', (this._save[1] + 1) / this._save[0] * 100);
                         if (this._save[1] >= this._save[0] - 1)
                             this.finishLoad();
                         else
@@ -245,31 +248,31 @@ export class Backup extends EventEmitter {
             });
     }
 
-    saveChunk() {
+    public saveChunk() {
         $.ajax(
             {
                 type: 'POST',
                 url: this.URL,
                 data:
                 {
-                    'user': this._user,
-                    'a': 'save',
-                    'data': this._save[0].shift(),
-                    'append': (this._save[1] > 0 ? 1 : 0)
+                    user: this._user,
+                    a: 'save',
+                    data: this._save[0].shift(),
+                    append: (this._save[1] > 0 ? 1 : 0)
                 },
                 dataType: 'json',
                 success: (data) => {
                     if (!data)
                         this.abort();
-                    else if (data.msg !== "Successfully saved")
-                        this.abort(data.msg || "Error");
+                    else if (data.msg !== 'Successfully saved')
+                        this.abort(data.msg || 'Error');
                     else if (this._save[0].length > 0) {
-                        this.emit('progress', this._save[1] / this._save[3] * 100)
+                        this.emit('progress', this._save[1] / this._save[3] * 100);
                         this._save[1]++;
                         this.saveChunk();
                     }
                     else {
-                        if (typeof (this._save[2]) === "function") this._save[2]();
+                        if (typeof (this._save[2]) === 'function') this._save[2]();
                         this.close();
                     }
                 },
@@ -279,24 +282,28 @@ export class Backup extends EventEmitter {
             });
     }
 
-    reset() {
+    /*
+    public reset() {
 
     }
+    */
 
-    finishLoad() {
+    public finishLoad() {
         let data = LZString.decompressFromEncodedURIComponent(this._save[3]);
         data = JSON.parse(data);
-        if (data.version == 2) {
-            if (data.map && (this.loadSelection & BackupSelection.Map) == BackupSelection.Map)
+        if (data.version === 2) {
+            if (data.map && (this.loadSelection & BackupSelection.Map) === BackupSelection.Map)
                 this.emit('import-map', data.map);
 
-            if (data.profiles && (this.loadSelection & BackupSelection.Profiles) == BackupSelection.Profiles) {
-                let profiles = new ProfileCollection();
-                let keys = Object.keys(data.profiles);
-                let n, k = 0, kl = keys.length;
+            if (data.profiles && (this.loadSelection & BackupSelection.Profiles) === BackupSelection.Profiles) {
+                const profiles = new ProfileCollection();
+                const keys = Object.keys(data.profiles);
+                const kl = keys.length;
+                let n;
+                let k = 0;
                 for (; k < kl; k++) {
                     n = keys[k];
-                    let p = new Profile(n);
+                    const p = new Profile(n);
                     p.priority = data.profiles[keys[k]].priority;
                     p.enabled = data.profiles[keys[k]].enabled ? true : false;
                     p.enableMacros = data.profiles[keys[k]].enableMacros ? true : false;
@@ -373,7 +380,7 @@ export class Backup extends EventEmitter {
                     }
                     profiles.add(p);
                 }
-                let pf = path.join(parseTemplate("{data}"), "profiles");
+                const pf = path.join(parseTemplate('{data}'), 'profiles');
                 if (!fs.existsSync(pf))
                     fs.mkdirSync(pf);
                 profiles.save(pf);
@@ -381,7 +388,7 @@ export class Backup extends EventEmitter {
                 this.emit('imported-profiles');
             }
 
-            if ((this.loadSelection & BackupSelection.Settings) != BackupSelection.Settings) {
+            if ((this.loadSelection & BackupSelection.Settings) !== BackupSelection.Settings) {
                 this.client.options.mapper.enabled = data.settings.mapEnabled ? true : false;
                 this.client.options.mapper.follow = data.settings.mapFollow ? true : false;
                 this.client.options.mapper.legend = data.settings.legend ? true : false;
@@ -418,7 +425,6 @@ export class Backup extends EventEmitter {
                 this.client.options.enableSpeedpaths = data.settings.enableSpeedpaths ? true : false;
                 this.client.options.parseSpeedpaths = data.settings.parseSpeedpaths ? true : false;
 
-
                 this.client.options.parseDoubleQuotes = data.settings.parseDoubleQuotes ? true : false;
                 this.client.options.logUniqueOnConnect = data.settings.logUniqueOnConnect ? true : false;
                 this.client.options.enableURLDetection = data.settings.enableURLDetection ? true : false;
@@ -444,7 +450,6 @@ export class Backup extends EventEmitter {
                 this.client.options.showMapper = data.settings.MapperOpen ? true : false;
                 this.client.options.showCharacterManager = data.settings.showCharacterManager ? true : false;
                 this.client.options.logErrors = data.settings.showCharacterManager ? true : false;
-
 
                 this.client.clearTriggerCache();
                 this.client.saveOptions();

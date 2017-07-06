@@ -19,12 +19,12 @@ self.addEventListener('message', (e: MessageEvent) => {
 
 function decode(data: string) {
     let decoded: string[], c;
-    if (!data || data.length == 0)
+    if (!data || data.length === 0)
         return "";
     decoded = [];
     for (let d = 0, dl = data.length; d < dl; d++) {
         c = data.charAt(d);
-        if (c == '@') {
+        if (c === '@') {
             decoded.push(String.fromCharCode(parseInt(data.substr(d + 1, 2), 16)));
             d += 2;
         }
@@ -37,16 +37,16 @@ function decode(data: string) {
 
 function encode(data: string) {
     let encoded: string[], c, i;
-    if (!data || data.length == 0)
+    if (!data || data.length === 0)
         return "";
 
     encoded = [];
     for (let d = 0, dl = data.length; d < dl; d++) {
         c = data.charAt(d);
         i = data.charCodeAt(d);
-        if (i <= 32 || i >= 127 || c == '@' || c == '^' || c == '\\' || c == '/') {
+        if (i <= 32 || i >= 127 || c === '@' || c === '^' || c === '\\' || c === '/') {
             c = i.toString(16);
-            if (c.length == 1)
+            if (c.length === 1)
                 c = "0" + c;
             c = "@"+c;
         }

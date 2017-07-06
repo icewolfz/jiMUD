@@ -15,15 +15,13 @@ const { version } = require("../../package.json");
 const path = require('path');
 const fs = require("fs");
 
-
 export class Client extends EventEmitter {
-    private lineID = ".line";
+    private lineID = '.line';
     private _enableDebug: boolean = false;
     private _input: input;
     private _auto: NodeJS.Timer = null;
     private _autoError: boolean = false;
     private _settingsFile: string = parseTemplate(path.join('{data}', 'settings.json'));
-
 
     public MSP: MSP;
 
@@ -54,14 +52,14 @@ export class Client extends EventEmitter {
     }
 
     get enabledProfiles(): string[] {
-        if (this.options.profiles.enabled.length == 0) {
+        if (this.options.profiles.enabled.length === 0) {
             let a = [];
             for (let profile in this.profiles.items) {
                 if (!this.profiles.items.hasOwnProperty(profile)) continue;
                 if (this.profiles.items[profile].enabled)
                     a.push(profile);
             }
-            if (a.length == 0)
+            if (a.length === 0)
                 a.push("default");
             this.options.profiles.enabled = a;
             this.saveOptions();
@@ -70,7 +68,7 @@ export class Client extends EventEmitter {
     }
 
     set settingsFile(val: string) {
-        if (this._settingsFile != val) {
+        if (this._settingsFile !== val) {
             this._settingsFile = val;
             this.loadOptions();
         }
@@ -83,12 +81,12 @@ export class Client extends EventEmitter {
         let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
-            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableAliases)
+            if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableAliases)
                 return [];
             return this.profiles.items[keys[0]].aliases;
         }
         for (; k < kl; k++) {
-            if (this.enabledProfiles.indexOf(keys[k]) == -1 || !this.profiles.items[keys[k]].enableAliases || this.profiles.items[keys[k]].aliases.length === 0)
+            if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableAliases || this.profiles.items[keys[k]].aliases.length === 0)
                 continue;
             tmp = tmp.concat(this.profiles.items[keys[k]].aliases);
         }
@@ -100,7 +98,7 @@ export class Client extends EventEmitter {
         let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
-            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableMacros)
+            if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableMacros)
                 return [];
             return this.profiles.items[keys[0]].macros;
         }
@@ -117,12 +115,12 @@ export class Client extends EventEmitter {
         let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
-            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableTriggers)
+            if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableTriggers)
                 return [];
             return this.profiles.items[keys[0]].triggers;
         }
         for (; k < kl; k++) {
-            if (this.enabledProfiles.indexOf(keys[k]) == -1 || !this.profiles.items[keys[k]].enableTriggers || this.profiles.items[keys[k]].triggers.length === 0)
+            if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableTriggers || this.profiles.items[keys[k]].triggers.length === 0)
                 continue;
             tmp = tmp.concat(this.profiles.items[keys[k]].triggers);
         }
@@ -134,12 +132,12 @@ export class Client extends EventEmitter {
         let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
-            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableButtons)
+            if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableButtons)
                 return [];
             return this.profiles.items[keys[0]].buttons;
         }
         for (; k < kl; k++) {
-            if (this.enabledProfiles.indexOf(keys[k]) == -1 || !this.profiles.items[keys[k]].enableButtons || this.profiles.items[keys[k]].buttons.length === 0)
+            if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableButtons || this.profiles.items[keys[k]].buttons.length === 0)
                 continue;
             tmp = tmp.concat(this.profiles.items[keys[k]].buttons);
         }
@@ -151,12 +149,12 @@ export class Client extends EventEmitter {
         let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
-            if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableContexts)
+            if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableContexts)
                 return [];
             return this.profiles.items[keys[0]].contexts;
         }
         for (; k < kl; k++) {
-            if (this.enabledProfiles.indexOf(keys[k]) == -1 || !this.profiles.items[keys[k]].enableContexts || this.profiles.items[keys[k]].contexts.length === 0)
+            if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableContexts || this.profiles.items[keys[k]].contexts.length === 0)
                 continue;
             tmp = tmp.concat(this.profiles.items[keys[k]].contexts);
         }
@@ -673,7 +671,7 @@ export class Client extends EventEmitter {
             else
                 this.echo("\n");
         }
-    };
+    }
 
     get scrollLock(): boolean {
         return this._input.scrollLock;
@@ -706,11 +704,11 @@ export class Client extends EventEmitter {
         this.telnet.connect();
         this.emit("connect");
         this.commandInput.focus();
-    };
+    }
 
     receivedData(data) {
         this.telnet.receivedData(data);
-    };
+    }
 
     notify(title: string, message: string) {
         if (this.enableDebug) {
@@ -732,8 +730,7 @@ export class Client extends EventEmitter {
         this._input.clearTriggerCache();
     }
 
-
     beep() {
         require('electron').shell.beep();
-    };
+    }
 }
