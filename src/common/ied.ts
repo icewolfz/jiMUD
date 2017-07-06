@@ -88,7 +88,7 @@ export class IED extends EventEmitter {
                     if (e.data.last) {
                         this.active.state = ItemState.done;
                         this.emit('upload-finished', this.active);
-                        this.emit('message', "Upload complete: " + this.active.remote);                        
+                        this.emit('message', "Upload complete: " + this.active.remote);
                         this.removeActive();
                     }
                     else {
@@ -248,31 +248,7 @@ export class IED extends EventEmitter {
                 if (mods.length > 2) {
                     switch (mods[2]) {
                         case "request":
-                            let data;
-                            let size = obj.chunksize;
-                            if (this.bufferSize > 0 && this.bufferSize < size)
-                                size = this.bufferSize;
-                            try {
-                                data = this.active.read(size);
-                            }
-                            catch (err) {
-                                this.emit('error', err);
-                                this.nextGMCP();
-                                return;
-                            }
-                            this.active.currentSize += data.length;
-                            this.active.chunks++;
-                            this._worker.postMessage({
-                                action: 'encode',
-                                file: obj.path + "/" + obj.file,
-                                download: false,
-                                last: (data.length < size || this.active.currentSize == this.active.totalSize),
-                                data: data
-                            });
-                            if (data.length < size || this.active.currentSize == this.active.totalSize)
-                                this.emit('message', "Upload last chunk: " + obj.path + "/" + obj.file);
-                            else
-                                this.emit('message', "Upload chunk " + this.active.chunks + ": " + obj.path + "/" + obj.file);
+                            this.uploadChunk(obj);
                             break;
                     }
                     break;
@@ -478,7 +454,7 @@ export class IED extends EventEmitter {
         this.queue.push(item);
         if (!this.active)
             this.nextItem();
-        else {            
+        else {
             if (item.download)
                 this.emit('message', "Download queried: " + this.active.remote);
             else
@@ -527,6 +503,14 @@ export class IED extends EventEmitter {
         this.nextItem();
     }
 
+    public getItem(id) {
+        for (var q = 0, ql = this.queue.length; q < ql; q++) {
+            if (this.queue[q].ID == id)
+                return this.queue[q];
+        }
+        return null;
+    }
+
     public removeItem(id) {
         var q, ql;
         if (this.active && this.active.ID == id) {
@@ -535,13 +519,11 @@ export class IED extends EventEmitter {
         }
         for (q = 0, ql = this.queue.length; q < ql; q++) {
             if (this.queue[q].ID == id) {
-                if (this.queue[q].download)
-                {
+                if (this.queue[q].download) {
                     ipcRenderer.send('send-gmcp', "IED.download.abort " + JSON.stringify({ path: path.dirname(this.queue[q].remote), file: path.basename(this.queue[q].remote), tag: this.queue[q].ID }));
                     this.emit('message', "Download request abort: " + this.queue[q].remote);
                 }
-                else
-                {
+                else {
                     ipcRenderer.send('send-gmcp', "IED.upload.abort " + JSON.stringify({ path: path.dirname(this.queue[q].remote), file: path.basename(this.queue[q].remote), tag: this.queue[q].ID }));
                     this.emit('message', "Upload request abort: " + this.queue[q].remote);
                 }
@@ -567,14 +549,57 @@ export class IED extends EventEmitter {
         }
         if (!this.active) return;
         if (this.active.download) {
-            ipcRenderer.send('send-gmcp', "IED.download " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
-            this.emit('message', "Download start: " + this.active.remote);
+            if (!this.active.inProgress) {
+                this.active.inProgress = true;
+                ipcRenderer.send('send-gmcp', "IED.download " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
+                this.emit('message', "Download start: " + this.active.remote);
+            }
+            else {
+                ipcRenderer.send('send-gmcp', "IED.download.more " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
+                this.emit('message', "Download resume: " + this.active.remote);
+            }
+        }
+        if (this.active.inProgress) {
+            this.uploadChunk(this.active.obj);
         }
         else {
+            this.active.inProgress = true;
             ipcRenderer.send('send-gmcp', "IED.upload " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, size: this.active.totalSize }));
             this.emit('message', "Upload start: " + this.active.remote);
         }
+    }
 
+    public uploadChunk(obj) {
+        let data;
+        let size = obj.chunksize;
+        let item = this.getItem(obj.tag);
+        if(!item) return;
+        if(item.state != ItemState.working)
+            return;
+        item.obj = obj;
+        if (this.bufferSize > 0 && this.bufferSize < size)
+            size = this.bufferSize;
+        try {
+            data = item.read(size);
+        }
+        catch (err) {
+            this.emit('error', err);
+            this.nextGMCP();
+            return;
+        }
+        item.currentSize += data.length;
+        item.chunks++;
+        this._worker.postMessage({
+            action: 'encode',
+            file: obj.path + "/" + obj.file,
+            download: false,
+            last: (data.length < size || item.currentSize == item.totalSize),
+            data: data
+        });
+        if (data.length < size || item.currentSize == item.totalSize)
+            this.emit('message', "Upload last chunk: " + obj.path + "/" + obj.file);
+        else
+            this.emit('message', "Upload chunk " + item.chunks + ": " + obj.path + "/" + obj.file);
     }
 }
 
@@ -601,6 +626,7 @@ export class Item {
     private append = false;
     private stream;
 
+    public obj;
     public remote: string = "";
     public info: FileInfo;
     public totalSize: number = 0;
@@ -609,6 +635,7 @@ export class Item {
     public download: boolean = false;
     public ID: string = "";
     public state: ItemState = ItemState.working;
+    public inProgress = false;
     public chunks: number = 0;
 
     constructor(id: string, download?: boolean) {
@@ -644,17 +671,8 @@ export class Item {
         return this.totalSize ? (Math.round(this.currentSize / this.totalSize * 100) / 100) : 0
     }
 
-    public read(size: number, callback?: any);
-    public read(position: number, size?: any, callback?: any) {
-        if (size === undefined) {
-            size = position;
-            position = this.currentSize;
-        }
-        if (typeof size === "function") {
-            callback = size;
-            size = position;
-            position = this.currentSize;
-        }
+    public read(size: number, callback?: any) {
+        var position = this.currentSize;
         if (!this.stream)
             this.stream = fs.openSync(this._local, "r+");
         let buffer: Buffer, br;
@@ -666,7 +684,7 @@ export class Item {
             buffer = new Buffer(size);
             br = fs.readSync(this.stream, buffer, 0, size, position);
         }
-        return buffer.toString();;
+        return buffer.toString();
     }
 
     public write(data: string) {
