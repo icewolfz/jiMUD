@@ -23,6 +23,7 @@ export class IED extends EventEmitter {
     private _id: number = 0;
     private _gmcp = [];
     private _temp: TempType = TempType.extension;
+    private _activeIdx: number = -1;
 
     public local;
     public remote;
@@ -69,6 +70,7 @@ export class IED extends EventEmitter {
                         ipcRenderer.send('send-gmcp', "IED.download.more " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
                     }
                     else {
+                        this.active.state = ItemState.done;
                         try {
                             this.active.moveFinal();
                             this.active.info = IED.getFileInfo(this.active.local);
@@ -84,8 +86,9 @@ export class IED extends EventEmitter {
                 case "encoded":
                     ipcRenderer.send('send-gmcp', "IED.upload.chunk " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, data: e.data.data, last: e.data.last ? 1 : 0 }));
                     if (e.data.last) {
+                        this.active.state = ItemState.done;
                         this.emit('upload-finished', this.active);
-                        this.emit('message', "Upload complete: " + this.active.remote);
+                        this.emit('message', "Upload complete: " + this.active.remote);                        
                         this.removeActive();
                     }
                     else {
@@ -119,7 +122,8 @@ export class IED extends EventEmitter {
                     case IEDError.DL_USERABORT:
                     case IEDError.DL_INVALIDFILE:
                     case IEDError.DL_INVALIDPATH:
-                        this.removeActive();
+                        if (this.active && this.active.ID == obj.tag)
+                            this.removeActive();
                         this.emit('message', `Download aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
                         break
                     case IEDError.RESET:
@@ -142,7 +146,8 @@ export class IED extends EventEmitter {
                     case IEDError.UL_INVALIDPATH:
                     case IEDError.UL_TOOMANY:
                     case IEDError.UL_INPROGRESS:
-                        this.removeActive();
+                        if (this.active && this.active.ID == obj.tag)
+                            this.removeActive();
                         this.emit('message', `Upload aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
                         break
                     case IEDError.CMD_EXIST:
@@ -455,38 +460,25 @@ export class IED extends EventEmitter {
 
     public removeActive() {
         if (this.active) {
+            if (this.active.state != ItemState.done && this.active.download)
+                ipcRenderer.send('send-gmcp', "IED.download.abort " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
+            else if (this.active.state != ItemState.done)
+                ipcRenderer.send('send-gmcp', "IED.upload.abort " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
             this.emit('remove', this.active);
             this.active.clean();
             this.active = null;
+            this.queue.splice(this._activeIdx, 1);
+            this._activeIdx = -1;
         }
-        if (this.queue.length > 0) {
-            this.active = this.queue.shift();
-            if (this.active.download) {
-                ipcRenderer.send('send-gmcp', "IED.download " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: 'download' }));
-                this.emit('message', "Download start: " + this.active.remote);
-            }
-            else {
-                ipcRenderer.send('send-gmcp', "IED.upload " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: 'upload', size: this.active.totalSize }));
-                this.emit('message', "Upload start: " + this.active.remote);
-            }
-        }
+        this.nextItem();
     }
 
     public addItem(item) {
         this.emit('add', item);
-        if (!this.active) {
-            this.active = item;
-            if (item.download) {
-                ipcRenderer.send('send-gmcp', "IED.download " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: 'download' }));
-                this.emit('message', "Download start: " + this.active.remote);
-            }
-            else {
-                ipcRenderer.send('send-gmcp', "IED.upload " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: 'upload', size: this.active.totalSize }));
-                this.emit('message', "Upload start: " + this.active.remote);
-            }
-        }
-        else {
-            this.queue.push(item);
+        this.queue.push(item);
+        if (!this.active)
+            this.nextItem();
+        else {            
             if (item.download)
                 this.emit('message', "Download queried: " + this.active.remote);
             else
@@ -498,18 +490,91 @@ export class IED extends EventEmitter {
         ipcRenderer.send('send-gmcp', "IED.reset " + JSON.stringify({ msg: 'Requested reset' }));
         this._id++;
         this.emit('message', "Requesting reset");
-
     }
 
     public clear() {
         if (this.active) {
             this.active.clean();
             this.active = null;
+            this._activeIdx = -1;
         }
+        this.queue = [];
         this._paths = {};
         this._id = 0;
         this._gmcp = [];
         this.startWorker();
+    }
+
+    public startItem(id) {
+        for (var q = 0, ql = this.queue.length; q < ql; q++) {
+            if (this.queue[q].ID == id) {
+                this.queue[q].state = ItemState.working;
+                this.emit('update', this.queue[q]);
+                break;
+            }
+        }
+        this.nextItem();
+    }
+
+    public pauseItem(id) {
+        for (var q = 0, ql = this.queue.length; q < ql; q++) {
+            if (this.queue[q].ID == id) {
+                this.queue[q].state = ItemState.paused;
+                this.emit('update', this.queue[q]);
+                break;
+            }
+        }
+        this.nextItem();
+    }
+
+    public removeItem(id) {
+        var q, ql;
+        if (this.active && this.active.ID == id) {
+            this.removeActive();
+            return;
+        }
+        for (q = 0, ql = this.queue.length; q < ql; q++) {
+            if (this.queue[q].ID == id) {
+                if (this.queue[q].download)
+                {
+                    ipcRenderer.send('send-gmcp', "IED.download.abort " + JSON.stringify({ path: path.dirname(this.queue[q].remote), file: path.basename(this.queue[q].remote), tag: this.queue[q].ID }));
+                    this.emit('message', "Download request abort: " + this.queue[q].remote);
+                }
+                else
+                {
+                    ipcRenderer.send('send-gmcp', "IED.upload.abort " + JSON.stringify({ path: path.dirname(this.queue[q].remote), file: path.basename(this.queue[q].remote), tag: this.queue[q].ID }));
+                    this.emit('message', "Upload request abort: " + this.queue[q].remote);
+                }
+                this.emit('remove', this.queue[q]);
+                this.queue.splice(q, 1);
+                if (q >= this._activeIdx)
+                    this._activeIdx--;
+                break;
+            }
+        }
+        this.nextItem();
+    }
+
+    public nextItem() {
+        //already working on an item so just bail
+        if (this.active && this.active.state == ItemState.working) return;
+        this.active = null;
+        this._activeIdx = -1;
+        for (var q = 0, ql = this.queue.length; q < ql; q++) {
+            if (this.queue[q].state != ItemState.working) continue;
+            this.active = this.queue[q];
+            this._activeIdx = q;
+        }
+        if (!this.active) return;
+        if (this.active.download) {
+            ipcRenderer.send('send-gmcp', "IED.download " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
+            this.emit('message', "Download start: " + this.active.remote);
+        }
+        else {
+            ipcRenderer.send('send-gmcp', "IED.upload " + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, size: this.active.totalSize }));
+            this.emit('message', "Upload start: " + this.active.remote);
+        }
+
     }
 }
 

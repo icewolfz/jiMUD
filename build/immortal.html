@@ -24,7 +24,7 @@
     <script>
         //cSpell:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //cSpell:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
-        const { IED, fileInfo, } = require('./js/ied');
+        const { IED, fileInfo, ItemState } = require('./js/ied');
         const { IEDError, TempType, IEDCmdStatus } = require('./js/types');
         const { remote, ipcRenderer, shell, clipboard } = require('electron');
         const { app, nativeImage, dialog, Menu, MenuItem } = remote;
@@ -64,30 +64,22 @@
                         click: download
                     },
                     { type: 'separator' },
-                    /*
                     {
-                        label: 'R&estart',
+                        label: '&Start',
                         enabled: false,
-                        click: () => {
-
-                        }
+                        click: queueStart
                     },
                     {
                         label: '&Pause',
                         enabled: false,
-                        click: () => {
-
-                        }
+                        click: queuePause
                     },
                     {
                         label: '&Stop',
                         enabled: false,
-                        click: () => {
-
-                        }
+                        click: queueStop
                     },
                     { type: 'separator' },
-                    */
                     {
                         label: '&Reset all',
                         accelerator: "CmdOrCtrl+R",
@@ -759,11 +751,16 @@
             remoteFilesOnly = dirs != data.length;
             remoteFoldersOnly = dirs == data.length;
 
-            data = remoteTable.rows({ selected: true }).data();
+            data = queueTable.rows({ selected: true }).data();
             var queueSelected = data.length != 0;
 
             updateMenuItem({ menu: 'file|upload', enabled: localSelected });
             updateMenuItem({ menu: 'file|download', enabled: remoteSelected });
+
+            updateMenuItem({ menu: 'file|start', enabled: queueSelected });
+            updateMenuItem({ menu: 'file|pause', enabled: queueSelected });
+            updateMenuItem({ menu: 'file|stop', enabled: queueSelected });
+
             updateMenuItem({ menu: 'edit|local|rename', enabled: localSelected });
             updateMenuItem({ menu: 'edit|local|delete', enabled: localSelected });
 
@@ -784,6 +781,10 @@
             $("#btn-rename-remote").prop('disabled', !remoteSelected);
             $("#btn-delete-remote").prop('disabled', !remoteSelected);
             $("#btn-download-remote").prop('disabled', !remoteSelected);
+
+            $("#btn-start").prop('disabled', !queueSelected);
+            $("#btn-pause").prop('disabled', !queueSelected);
+            $("#btn-stop").prop('disabled', !queueSelected);
             updateStatus();
         }
 
@@ -952,6 +953,16 @@
                 language: { zeroRecords: "", emptyTable: "" },
                 columnDefs: [
                     {
+                        type: 'file',
+                        targets: 0,
+                        render: function (data, type, full, meta) {
+                            if (full.state == ItemState.paused) {
+                                return '<i class="fa fa-pause" style="width:12px; margin-right: 2px"></i>' + data;
+                            }
+                            return '<i class="fa fa-play" style="width:12px; margin-right: 2px"></i>' + data;
+                        }
+                    },
+                    {
                         render: function (data, type, full, meta) {
                             return `<div class="progressbar"><div class="progressbar-text">${Math.round(100 * data)}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`
                         },
@@ -1022,7 +1033,8 @@
                     "direction": item.download ? "<-" : "->",
                     "remote": item.remote,
                     "progress": item.percent,
-                    "id": item.ID
+                    "id": item.ID,
+                    "state": item.state
                 }).draw();
             });
             _ied.on('remove', (item) => {
@@ -1030,9 +1042,10 @@
                     return data.id == item.ID ?
                         true : false;
                 }).remove().draw();
+
                 if (item.download) {
                     //Update local list if file was uploaded to current local
-                    if (options.openEditor) {
+                    if (item.state == ItemState.done && options.openEditor) {
                         if (!options.editor || options.editor.length == 0)
                             openItem(item.local);
                         else {
@@ -1044,7 +1057,7 @@
                 }
                 else {
                     //only update if current remote is the same path as file
-                    if (path.dirname(item.remote) == options.remote) {
+                    if (item.state == ItemState.done && path.dirname(item.remote) == options.remote) {
                         var row = remoteTable.row(function (idx, data, node) {
                             return data.name == path.basename(item.remote) ?
                                 true : false;
@@ -1068,6 +1081,8 @@
                         remoteTable.row.add(_remote[path.basename(item.remote)]).draw();
                         info.uploads--;
                     }
+                    else
+                        info.uploads--;
                     updateStatus();
                 }
             });
@@ -1080,7 +1095,8 @@
                     "direction": item.download ? "<-" : "->",
                     "remote": item.remote,
                     "progress": item.percent,
-                    "id": item.ID
+                    "id": item.ID,
+                    "state": item.state
                 }).draw();
             });
 
@@ -1247,30 +1263,17 @@
                 event.cancelBubble = true;
 
                 if (!$(this).hasClass('selected')) {
-                    remoteTable.rows().deselect();
-                    remoteTable.row(this).select();
+                    queueTable.rows().deselect();
+                    queueTable.row(this).select();
                 }
-                var c = new Menu();
-                //pause,restart,stop
-                //c.append(new MenuItem({ type: 'separator' }));
-                c.append(new MenuItem({
-                    label: 'Reset',
-                    click: () => {
-                        _ied.reset();
-                    }
-                }));
-                c.popup(remote.getCurrentWindow(), { async: true });
+                showQueueContextMenu();
             });
 
             $('#queue-list-container').on('contextmenu', function (e) {
-                var c = new Menu();
-                c.append(new MenuItem({
-                    label: 'Reset',
-                    click: () => {
-                        _ied.reset();
-                    }
-                }));
-                c.popup(remote.getCurrentWindow(), { async: true });
+                event.preventDefault();
+                event.stopPropagation();
+                event.cancelBubble = true;
+                showQueueContextMenu();
             });
 
             $("#log-view").on('contextmenu', function (e) {
@@ -1321,6 +1324,18 @@
             });
 
             remoteTable.on('deselect', function (e, dt, type, indexes) {
+                if (type === 'row') {
+                    updateMenu();
+                }
+            });
+
+            queueTable.on('select', function (e, dt, type, indexes) {
+                if (type === 'row') {
+                    updateMenu();
+                }
+            });
+
+            queueTable.on('deselect', function (e, dt, type, indexes) {
                 if (type === 'row') {
                     updateMenu();
                 }
@@ -1390,6 +1405,14 @@
                 else
                     _ied.download(data.path);
             });
+
+            $('#queue-list tbody').on('dblclick', 'tr', function () {
+                var data = queueTable.row(this).data();
+                if(data.state == ItemState.paused)
+                    _ied.startItem(data.id);
+                else
+                    _ied.pauseItem(data.id);
+            });            
 
             $("#local-list").on('focus', () => {
                 $("#local-list").addClass('focused');
@@ -2013,6 +2036,33 @@
             c.popup(remote.getCurrentWindow(), { async: true });
         }
 
+        function showQueueContextMenu() {
+            var selected = queueTable.rows({ selected: true }).data();
+            var c = new Menu();
+            if (selected.length > 0) {
+                c.append(new MenuItem({
+                    label: 'Start',
+                    click: queueStart
+                }));
+                c.append(new MenuItem({
+                    label: 'Pause',
+                    click: queuePause
+                }));
+                c.append(new MenuItem({
+                    label: 'Stop',
+                    click: queueStop
+                }));
+                c.append(new MenuItem({ type: 'separator' }));
+            }
+            c.append(new MenuItem({
+                label: 'Reset',
+                click: () => {
+                    _ied.reset();
+                }
+            }));
+            c.popup(remote.getCurrentWindow(), { async: true });
+        }
+
         function updateStatus() {
             var tmp = [];
             if (info.localFiles)
@@ -2424,6 +2474,23 @@
             }
             return n;
         }
+
+        function queueStart() {
+            var selected = queueTable.rows({ selected: true }).data().pluck("id");
+            for (var q = 0, ql = selected.length; q < ql; q++)
+                _ied.startItem(selected[q]);
+        }
+        function queuePause() {
+            var selected = queueTable.rows({ selected: true }).data().pluck("id");
+            for (var q = 0, ql = selected.length; q < ql; q++)
+                _ied.pauseItem(selected[q]);
+        }
+        function queueStop() {
+            var selected = queueTable.rows({ selected: true }).data().pluck("id");
+            for (var q = 0, ql = selected.length; q < ql; q++)
+                _ied.removeItem(selected[q]);
+        }
+
         ipcRenderer.on('GMCP-received', (event, data) => {
             if (options && options.debug)
                 console.log(data.mod);
@@ -2584,13 +2651,17 @@
         <div class="tab-content" style="padding: 4px;position: absolute;left: 0;right: 0;bottom: 0;top: 46px;">
             <div role="tabpanel" class="tab-pane fade in active" id="queue" style="margin:0 !important;padding:4px;height:100%;">
                 <div id="toolbar" class="btn-toolbar" role="toolbar">
-                    <!--
-        <div class="btn-group" role="group" id="queue-controls">
-            <button id="btn-restart" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Restart" onclick=""><i class="fa fa-rotate-left"></i></button>
-            <button id="btn-pause" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Pause" onclick="" data-toggle="button"><i class="fa fa-pause"></i></button>
-            <button id="btn-stop" disabled="disabled" type="button" class="btn btn-warning btn-xs" title="Stop" onclick=""><i class="fa fa-stop"></i></button>
-        </div>
-        -->
+                    <div class="btn-group" role="group" id="queue-controls">
+                        <button id="btn-start" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Start" onclick="queueStart()">
+                            <i class="fa fa-play"></i>
+                        </button>
+                        <button id="btn-pause" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Pause" onclick="queuePause()" data-toggle="button">
+                            <i class="fa fa-pause"></i>
+                        </button>
+                        <button id="btn-stop" disabled="disabled" type="button" class="btn btn-warning btn-xs" title="Stop" onclick="queueStop()">
+                            <i class="fa fa-stop"></i>
+                        </button>
+                    </div>
                     <button id="btn-reset" type="button" class="btn btn-warning btn-xs" title="Reset all" onclick="_ied.reset();">
                         <i class="fa fa-eject"></i>
                     </button>
