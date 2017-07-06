@@ -1497,6 +1497,16 @@ ipcMain.on('reload-characters', (event) => {
   loadCharacters(true);
 });
 
+ipcMain.on('profile-item-added', (event, type, profile, item) => {
+  if (winProfiles)
+    winProfiles.webContents.send('profile-item-added', type, profile, item);
+});
+
+ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
+  if (winProfiles)
+    winProfiles.webContents.send('profile-item-removed', type, profile, idx);
+});
+
 ipcMain.on('ondragstart', (event, files, icon) => {
   if (!files || files.length == 0) return;
   if (typeof (files) === "string")

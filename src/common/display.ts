@@ -373,10 +373,9 @@ export class Display extends EventEmitter {
             this._el.classList.remove('animate');
             let bar = this._HScroll.visible;
             this.trimLines();
-            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd);
+            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
             if (bar != this._HScroll.visible)
                 this.updateWindow();
-            //TODO split screen support
             this.emit('parse-done');
             //re-enable animation so they are all synced
             this._el.classList.add('animate');
@@ -1034,10 +1033,9 @@ export class Display extends EventEmitter {
             this._el.classList.remove('animate');
             let bar = this._HScroll.visible;
             this.trimLines();
-            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd);
+            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
             if (bar != this._HScroll.visible)
                 this.updateWindow();
-            //TODO split screen support
             //re-enable animation so they are all synced
             this._el.classList.add('animate');
         }

@@ -439,10 +439,8 @@ export class input extends EventEmitter {
                         }
                         if (!f) {
                             tmp = new Alias(n, args);
-                            items.push(f);
-                            //TODO when profile manager added add code to update loaded profiles
-                            //if (_dlgPro && !_dlgPro.dialog("options").closed)
-                            //AddItem('Alias', 'aliases', f, items.length - 1, this.client.activeProfile.name);
+                            items.push(tmp);
+                            this.emit('item-added', 'alias', this.client.activeProfile.name, tmp);
                             this.client.echo("Alias '" + n + "' added.", -7, -8, true, true);
                         }
                         this.client.activeProfile.aliases = items;
@@ -482,9 +480,7 @@ export class input extends EventEmitter {
                     else {
                         this.client.echo("Alias '" + items[n].pattern + "' removed.", -7, -8, true, true);
                         items.splice(n, 1);
-                        //TODO update once profile manager is created to ensure interface is updated
-                        //if (_dlgPro && !_dlgPro.dialog("options").closed)
-                        //DeleteItem('Alias', 'aliases', n, this.client.activeProfile.name);
+                        this.emit('item-removed', 'alias', this.client.activeProfile.name, n);
                         this.client.activeProfile.aliases = items;
                         this.client.saveProfile(this.client.activeProfile.name);
                     }

@@ -3383,3 +3383,13 @@ ipcRenderer.on('change-options', (event, file) => {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
 });
+
+ipcRenderer.on('profile-item-added', (event, type, profile, item) => {
+    filesChanged = true;
+    $('#btn-refresh').addClass('btn-warning');
+});
+
+ipcRenderer.on('profile-item-removed', (event, type, profile, idx) => {
+    filesChanged = true;
+    $('#btn-refresh').addClass('btn-warning');
+});

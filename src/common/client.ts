@@ -273,6 +273,14 @@ export class Client extends EventEmitter {
             this.emit('scroll-lock', lock);
         });
 
+        this._input.on('item-added', (type, profile, item) => {
+            this.emit('item-added', type, profile, item);
+        });
+    
+        this._input.on('item-removed', (type, profile, idx) => {
+            this.emit('item-removed', type, profile, idx);
+        });
+
         this.commandInput.val("");
         this.commandInput.focus();
 

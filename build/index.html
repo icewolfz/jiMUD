@@ -673,6 +673,14 @@
         ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
       });
 
+      client.on('item-added', (type, profile, item) => {
+        ipcRenderer.send('profile-item-added', type, profile, item);
+      });
+
+      client.on('item-removed', (type, profile, idx) => {
+        ipcRenderer.send('profile-item-removed', type, profile, idx);
+      });
+
       if (client.options.autoConnect)
         setTimeout(function () { client.connect(); }, 600);
 
