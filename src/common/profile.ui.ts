@@ -8,18 +8,18 @@ const path = require('path');
 const fs = require("fs");
 //const trash = require('trash');
 
-declare var ace;
+declare let ace;
 
-var profiles = new ProfileCollection();
-var currentProfile;
-var currentNode;
-var watcher;
-var filesChanged = false;
-var _clip, _pUndo;
-var _undo = [], _redo = [];
-var _remove = [], _enabled = [];
-var _never = true;
-var _close, _loading = 0;
+let profiles = new ProfileCollection();
+let currentProfile;
+let currentNode;
+let watcher;
+let filesChanged = false;
+let _clip, _pUndo;
+let _undo = [], _redo = [];
+let _remove = [], _enabled = [];
+let _never = true;
+let _close, _loading = 0;
 
 enum UpdateState {
     NoChange,
@@ -30,7 +30,7 @@ enum UpdateState {
 function addInputContext() {
     window.addEventListener('contextmenu', (e) => {
         e.preventDefault()
-        var inputMenu = Menu.buildFromTemplate([
+        let inputMenu = Menu.buildFromTemplate([
             {
                 label: 'Undo',
                 click: () => { doUndo() },
@@ -57,7 +57,7 @@ function profileID(name) {
 }
 
 export function AddNewItem() {
-    var t
+    let t
     if (currentNode) {
         currentNode.state.selected = false;
         t = "profile";
@@ -94,18 +94,18 @@ export function AddNewItem() {
 }
 
 function AddNewProfile(d?: Boolean) {
-    var i = profiles.length;
-    var n = "NewProfile" + i;
+    let i = profiles.length;
+    let n = "NewProfile" + i;
     while (profiles.contains(n)) {
         i++;
         n = "NewProfile" + i;
     }
-    var p = new Profile(n);
+    let p = new Profile(n);
     if (!d) p.macros = [];
     profiles.add(p);
-    var txt = n;
+    let txt = n;
     n = n.toLowerCase();
-    var node = {
+    let node = {
         text: txt,
         id: 'Profile' + profileID(n),
         state: {
@@ -191,12 +191,12 @@ export function RunTester() {
                 $('#trigger-test-results').val("%0 : " + $("#trigger-test-text").val() + "\n");
         }
         else {
-            var re = new RegExp($('#trigger-pattern').val(), 'g');
-            var res = re.exec($("#trigger-test-text").val());
+            let re = new RegExp($('#trigger-pattern').val(), 'g');
+            let res = re.exec($("#trigger-test-text").val());
             if (res === null || res.length === 0)
                 $('#trigger-test-results').val("Pattern doesn't Match!");
             else {
-                var r = "";
+                let r = "";
                 for (i = 0; i < res.length; i++) {
                     r += "%" + i + " : " + res[i] + "\n";
                 }
@@ -217,13 +217,13 @@ function clearTriggerTester() {
 }
 
 export function UpdateButtonSample() {
-    var button = $("#button-sample");
+    let button = $("#button-sample");
     if ($("#button-stretch").prop('checked'))
         button.addClass('button-stretch');
     else
         button.removeClass('button-stretch')
     button.prop('title', $('#button-caption').val());
-    var icon = $('#button-icon').val();
+    let icon = $('#button-icon').val();
     if (icon.startsWith("fa-"))
         button.html('<i class="fa ' + icon + '"></i>');
     else if (icon.startsWith("gi-"))
@@ -239,9 +239,9 @@ export function UpdateButtonSample() {
 }
 
 export function UpdateContextSample() {
-    var button = $("#context-sample");
+    let button = $("#context-sample");
     button.prop('title', $('#context-caption').val());
-    var icon = $('#context-icon').val();
+    let icon = $('#context-icon').val();
     if (icon.length > 0)
         button.html('<img src="' + nativeImage.createFromPath(parseTemplate(icon)).toDataURL() + '" />');
     else
@@ -271,7 +271,7 @@ export function openImage(field?, callback?) {
 function MacroKeys(item) {
     if (item.key === 0)
         return "None";
-    var d = [];
+    let d = [];
     if ((item.modifiers & MacroModifiers.Ctrl) == MacroModifiers.Ctrl)
         d.push("Ctrl");
     if ((item.modifiers & MacroModifiers.Alt) == MacroModifiers.Alt)
@@ -299,7 +299,7 @@ function clearButton(id) {
 function GetDisplay(arr) {
     if (arr.displaytype == 1) {
         /*jslint evil: true */
-        var f = new Function("item", arr.display);
+        let f = new Function("item", arr.display);
         return f(arr);
     }
     if ($.isFunction(arr.display))
@@ -317,10 +317,10 @@ function addItem(type: string, key: string, item, idx?: number, profile?: Profil
     if (!idx && typeof idx !== "number")
         idx = profile[key].length;
     type = type.toLowerCase();
-    var n = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + key + "$", 'id']);
+    let n = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + key + "$", 'id']);
     $('#profile-tree').treeview('expandNode', [n, { levels: 1, silent: false }]);
     profile[key][idx] = item;
-    var nodes = [newItemNode(item, idx, type, profile)];
+    let nodes = [newItemNode(item, idx, type, profile)];
     $('#profile-tree').treeview('addNode', [nodes, n, false, { silent: false }]);
     $('#profile-tree').treeview('selectNode', [nodes, { silent: false }]);
     if (!customUndo)
@@ -328,9 +328,9 @@ function addItem(type: string, key: string, item, idx?: number, profile?: Profil
 }
 
 export function UpdateEnabled() {
-    var t = "profile";
+    let t = "profile";
     if (!currentNode.dataAttr.type) {
-        var parent = $('#profile-tree').treeview('getParents', currentNode)[0];
+        let parent = $('#profile-tree').treeview('getParents', currentNode)[0];
         t = parent.dataAttr.type;
     }
     else
@@ -342,7 +342,7 @@ export function UpdateEnabled() {
         case "buttons":
         case "contexts":
         case "profile":
-            var parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(currentProfile.name) + "$", 'id']);
+            let parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(currentProfile.name) + "$", 'id']);
             if (!$("#editor-enabled").prop("checked") && _enabled.indexOf(currentProfile.name.toLowerCase()) != -1) {
                 _enabled = _enabled.filter(function (a) { return a !== currentProfile.name.toLowerCase() });
                 if (_enabled.length == 0) {
@@ -410,14 +410,14 @@ function UpdateItemNode(item, updateNode?) {
         updateNode = currentNode;
     else if (typeof updateNode == 'string')
         updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode + "$", 'id'])[0];
-    var selected = updateNode.state.selected || updateNode.id == currentNode.id;
+    let selected = updateNode.state.selected || updateNode.id == currentNode.id;
     //clone node
-    var newNode = cloneNode(updateNode);
+    let newNode = cloneNode(updateNode);
     //only text or check state effect node
     newNode.text = GetDisplay(item);
     newNode.state.checked = item.enabled;
     //re-find node just in case
-    //var node = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + "$", 'id'])[0];
+    //let node = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + "$", 'id'])[0];
     $('#profile-tree').treeview('updateNode', [updateNode, newNode]);
     if (selected) {
         updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + "$", 'id'])[0];
@@ -457,7 +457,7 @@ export function UpdateEditorMode(type) {
 }
 
 function UpdateMacro(customUndo?: boolean): UpdateState {
-    var data: any = UpdateItem(currentProfile.macros[currentNode.dataAttr.index], 'macro', { key: true });
+    let data: any = UpdateItem(currentProfile.macros[currentNode.dataAttr.index], 'macro', { key: true });
     if (currentProfile.macros[currentNode.dataAttr.index].key != parseInt($("#macro-key").data('key'), 10)) {
         if (!data) data = {};
         data.key = currentProfile.macros[currentNode.dataAttr.index].key;
@@ -479,7 +479,7 @@ function UpdateMacro(customUndo?: boolean): UpdateState {
 }
 
 function UpdateAlias(customUndo?: boolean): UpdateState {
-    var data: any = UpdateItem(currentProfile.aliases[currentNode.dataAttr.index]);
+    let data: any = UpdateItem(currentProfile.aliases[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.aliases[currentNode.dataAttr.index]);
         $("#editor-title").text("Alias: " + GetDisplay(currentProfile.aliases[currentNode.dataAttr.index]));
@@ -491,7 +491,7 @@ function UpdateAlias(customUndo?: boolean): UpdateState {
 }
 
 function UpdateTrigger(customUndo?: boolean): UpdateState {
-    var data: any = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
+    let data: any = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index]);
         $("#editor-title").text("Trigger: " + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]))
@@ -503,7 +503,7 @@ function UpdateTrigger(customUndo?: boolean): UpdateState {
 }
 
 function UpdateButton(customUndo?: boolean): UpdateState {
-    var data: any = UpdateItem(currentProfile.buttons[currentNode.dataAttr.index]);
+    let data: any = UpdateItem(currentProfile.buttons[currentNode.dataAttr.index]);
     if (data) {
         UpdateButtonSample();
         UpdateItemNode(currentProfile.buttons[currentNode.dataAttr.index]);
@@ -516,7 +516,7 @@ function UpdateButton(customUndo?: boolean): UpdateState {
 }
 
 function UpdateContext(customUndo?: boolean): UpdateState {
-    var data: any = UpdateItem(currentProfile.contexts[currentNode.dataAttr.index]);
+    let data: any = UpdateItem(currentProfile.contexts[currentNode.dataAttr.index]);
     if (data) {
         UpdateContextSample();
         UpdateItemNode(currentProfile.contexts[currentNode.dataAttr.index]);
@@ -529,8 +529,8 @@ function UpdateContext(customUndo?: boolean): UpdateState {
 }
 
 function UpdateItem(item, type?, options?) {
-    var changed = 0;
-    var data: any = {};
+    let changed = 0;
+    let data: any = {};
     if (typeof type === "object") {
         options = type;
         type = getType(item);
@@ -544,11 +544,11 @@ function UpdateItem(item, type?, options?) {
         changed++;
         item.enabled = $("#editor-enabled").prop("checked");
     }
-    for (var prop in item) {
+    for (let prop in item) {
         if (!item.hasOwnProperty(prop) || prop == "enabled") {
             continue;
         }
-        var id = "#" + type + "-" + prop;
+        let id = "#" + type + "-" + prop;
         if ($(id).length === 0 || options[prop])
             continue;
         else if ($(id).hasClass('selectpicker')) {
@@ -573,7 +573,7 @@ function UpdateItem(item, type?, options?) {
             }
         }
         else if (editors[type + '-' + prop]) {
-            var val = getEditorValue(type + '-' + prop, item.style);
+            let val = getEditorValue(type + '-' + prop, item.style);
             if (item[prop] != val) {
                 data[prop] = item[prop];
                 changed++;
@@ -600,20 +600,20 @@ function UpdateProfileNode(profile?) {
         profile = profiles.items[profile]
     if (currentProfile.name == profile.name)
         $("#editor-title").text("Profile: " + profile.name);
-    var val = profile.name;
-    var node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + "$", 'id'])[0];
-    var selected = node.state.selected
-    var expanded = node.state.expanded
-    var newNode = newProfileNode(profile);
+    let val = profile.name;
+    let node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + "$", 'id'])[0];
+    let selected = node.state.selected
+    let expanded = node.state.expanded
+    let newNode = newProfileNode(profile);
     //Rebuild child nodes based on current expand state and to update incase of name change
-    for (var n = 0, nl = node.nodes.length; n < nl; n++) {
+    for (let n = 0, nl = node.nodes.length; n < nl; n++) {
         if (node.nodes[n].length > 0) {
             if (!node.nodes[n].lazyLoad) {
                 newNode.nodes[n].lazyLoad = false;
-                var key = newNode.nodes[n].dataAttr.type;
+                let key = newNode.nodes[n].dataAttr.type;
                 if (!newNode.nodes[n].nodes)
                     newNode.nodes[n].nodes = []
-                for (var c = 0, cl = node.nodes[n].nodes.length; c < cl; c++) {
+                for (let c = 0, cl = node.nodes[n].nodes.length; c < cl; c++) {
                     newNode.nodes[n].nodes.push(newItemNode(profile[key][c]));
                 }
             }
@@ -641,7 +641,7 @@ function newItemNode(item, idx?: number, type?: string, profile?) {
         type = getType(item);
     else
         type = type.toLowerCase();
-    var key = getKey(type);
+    let key = getKey(type);
     if (!idx && typeof idx !== "number")
         idx = profiles.items[profile][key].length;
 
@@ -665,8 +665,8 @@ function newProfileNode(profile?) {
     else if (typeof profile === "string")
         profile = profiles.items[profile];
     if (!profile) return null;
-    var id = "Profile" + profileID(profile.name);
-    var key = profile.name.toLowerCase();
+    let id = "Profile" + profileID(profile.name);
+    let key = profile.name.toLowerCase();
     return {
         text: profile.name,
         id: id,
@@ -755,18 +755,16 @@ function cleanNode(node) {
     delete node.$el;
     if (!node.nodes)
         return node;
-    for (var n = 0, nl = node.nodes.length; n < nl; n++)
+    for (let n = 0, nl = node.nodes.length; n < nl; n++)
         node.nodes[n] = cleanNode(node.nodes[n]);
     return node;
 }
 
 function UpdateProfile(customUndo?: boolean): UpdateState {
-    var data: any = {};
-    var changed = 0;
-    var val;
-
-    var val = $("#profile-name").val();
-    var e = _enabled.indexOf(currentProfile.name.toLowerCase()) != -1;
+    let data: any = {};
+    let changed = 0;
+    let val = $("#profile-name").val();
+    let e = _enabled.indexOf(currentProfile.name.toLowerCase()) != -1;
 
     if (val != currentProfile.name) {
         data.name = val;
@@ -790,10 +788,10 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         profiles.add(currentProfile);
         $("#editor-title").text("Profile: " + currentProfile.name);
 
-        var selected = currentNode.state.selected
-        var expanded = currentNode.state.expanded
+        let selected = currentNode.state.selected
+        let expanded = currentNode.state.expanded
 
-        var node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + "$", 'id'])[0];
+        let node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + "$", 'id'])[0];
         $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
         node = $('#profile-tree').treeview('findNodes', ['^Profile' + val + "$", 'id'])[0];
         if (selected) {
@@ -898,7 +896,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
 
 export function updateProfileChecks() {
     _pUndo = true;
-    var val = profileID(currentProfile.name);
+    let val = profileID(currentProfile.name);
 
     if ($("#profile-enableAliases").prop("checked"))
         $("#profile-tree").treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + "aliases$", 'id']), { silent: true }]);
@@ -925,18 +923,18 @@ export function updateProfileChecks() {
 }
 
 function nodeCheckChanged(event, node) {
-    var changed = 1;
-    var data: any = {};
+    let changed = 1;
+    let data: any = {};
     if (!node) return;
-    var t = "profile";
+    let t = "profile";
     if (!node.dataAttr.type)
         t = $('#profile-tree').treeview('getParents', node)[0].dataAttr.type;
     else
         t = node.dataAttr.type;
-    var profile = profiles.items[node.dataAttr.profile];
+    let profile = profiles.items[node.dataAttr.profile];
     switch (t) {
         case "profile":
-            var e = _enabled.indexOf(node.dataAttr.profile) != -1;
+            let e = _enabled.indexOf(node.dataAttr.profile) != -1;
             if (!node.state.checked && e) {
                 _enabled = _enabled.filter(function (a) { return a !== node.dataAttr.profile });
                 if (_enabled.length == 0) {
@@ -1029,8 +1027,8 @@ function nodeCheckChanged(event, node) {
 
 function resetClip() {
     if (_clip && _clip.data.length > 0 && _clip.action == 2) {
-        for (var i = 0, il = _clip.data.length; i < il; i++) {
-            var nodes = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(_clip.profile) + _clip.key + _clip.data[i], 'id']);
+        for (let i = 0, il = _clip.data.length; i < il; i++) {
+            let nodes = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(_clip.profile) + _clip.key + _clip.data[i], 'id']);
             nodes[0].$el.css('opacity', '');
         }
     }
@@ -1040,7 +1038,7 @@ function resetClip() {
 function canPaste() {
     if (_clip) {
         if (_clip.data.length === 1 && _clip.type == "macro") {
-            var r = FilterArrayByKeyValue(currentProfile.macros, "key", _clip.data[0].key);
+            let r = FilterArrayByKeyValue(currentProfile.macros, "key", _clip.data[0].key);
             r = FilterArrayByKeyValue(r, "modifiers", _clip.data[0].modifiers);
             if (r.length == 0)
                 return true;
@@ -1091,8 +1089,8 @@ function getKey(type: string) {
 
 function addProfile(profile: Profile, noSort?: boolean) {
     profiles.add(profile);
-    var n = profile.name;
-    var ln = n.toLowerCase();
+    let n = profile.name;
+    let ln = n.toLowerCase();
     _remove = _remove.filter(function (a) { return a !== n });
     _enabled = _enabled.filter(function (a) { return a !== n });
     $('#profile-tree').treeview('addNode', [newProfileNode(profile), false, false]);
@@ -1103,22 +1101,22 @@ function addProfile(profile: Profile, noSort?: boolean) {
 export function doUndo() {
     if (_undo.length == 0)
         return;
-    var action = _undo.pop();
+    let action = _undo.pop();
 
     _pUndo = true;
     if (currentNode.id != action.data) {
-        var s = $('#profile-tree').treeview('findNodes', ['^' + action.node + "$", 'id'])
+        let s = $('#profile-tree').treeview('findNodes', ['^' + action.node + "$", 'id'])
         if (s.length > 0)
             $('#profile-tree').treeview('selectNode', s);
     }
     switch (action.action) {
         case 'add':
             if (action.type == "profile") {
-                for (var p = 0, pl = action.item.length; p < pl; p++) {
+                for (let p = 0, pl = action.item.length; p < pl; p++) {
                     DeleteProfile(action.item[p], true);
                 }
                 if (action.replaced && action.replaced.length > 0) {
-                    for (var p = 0, pl = action.replaced.length; p < pl; p++)
+                    for (let p = 0, pl = action.replaced.length; p < pl; p++)
                         addProfile(action.replaced[p], true);
                 }
                 sortTree();
@@ -1133,9 +1131,9 @@ export function doUndo() {
                 insertItem(action.type, action.data.key, action.item, action.data.idx, profiles.items[action.data.profile], true);
             break;
         case 'update':
-            var current = {}
+            let current = {}
             if (action.type == "profile") {
-                for (var prop in action.data) {
+                for (let prop in action.data) {
                     if (!action.data.hasOwnProperty(prop)) {
                         continue;
                     }
@@ -1149,7 +1147,7 @@ export function doUndo() {
                     profiles.items[action.profile][prop] = action.data[prop];
                 }
                 UpdateProfileNode(profiles.items[action.profile]);
-                var t = currentNode.dataAttr.type;
+                let t = currentNode.dataAttr.type;
                 if (t == "profile" || t == "aliases" || t == "triggers" || t == "buttons" || t == "macros" || t == "contexts") {
                     UpdateEditor("profile", currentProfile, {
                         post: () => {
@@ -1175,8 +1173,8 @@ export function doUndo() {
                 }
             }
             else {
-                var key = getKey(action.type);
-                for (var prop in action.data) {
+                let key = getKey(action.type);
+                for (let prop in action.data) {
                     if (!action.data.hasOwnProperty(prop)) {
                         continue;
                     }
@@ -1207,12 +1205,12 @@ export function doUndo() {
             action.data = current;
             break;
         case 'group':
-            var i, il, item;
+            let i, il, item;
             if (action.add.length > 0) {
                 for (i = 0, il = action.add.length; i < il; i++) {
                     item = action.add[i];
                     if (item.type == "profile") {
-                        for (var p = 0, pl = item.item.length; p < pl; p++)
+                        for (let p = 0, pl = item.item.length; p < pl; p++)
                             DeleteProfile(profiles.items[item.item[p]], true);
                     }
                     else
@@ -1230,14 +1228,14 @@ export function doUndo() {
             }
             break;
         case 'reset':
-            var name = action.profile.name.toLowerCase();
-            var id = profileID(action.profile.name);
-            var oldProfile = profiles.items[name];
+            let name = action.profile.name.toLowerCase();
+            let id = profileID(action.profile.name);
+            let oldProfile = profiles.items[name];
             profiles.items[name] = action.profile;
-            var node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(id) + "$", 'id'])[0];
-            var newNode = newProfileNode(action.profile);
-            var selected = node.state.selected
-            var expanded = node.state.expanded
+            let node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(id) + "$", 'id'])[0];
+            let newNode = newProfileNode(action.profile);
+            let selected = node.state.selected
+            let expanded = node.state.expanded
             $('#profile-tree').treeview('updateNode', [node, newNode]);
             //re-select node to get the new object for proper data
             node = $('#profile-tree').treeview('findNodes', ['^' + newNode.id + "$", 'id'])[0];
@@ -1260,11 +1258,11 @@ export function doUndo() {
 export function doRedo() {
     if (_redo.length == 0)
         return;
-    var action = _redo.pop();
+    let action = _redo.pop();
 
     _pUndo = true;
     if (currentNode.id != action.data) {
-        var s = $('#profile-tree').treeview('findNodes', ['^' + action.node + "$", 'id'])
+        let s = $('#profile-tree').treeview('findNodes', ['^' + action.node + "$", 'id'])
         if (s.length > 0)
             $('#profile-tree').treeview('selectNode', s);
     }
@@ -1272,10 +1270,10 @@ export function doRedo() {
         case 'add':
             if (action.type == "profile") {
                 if (action.replaced && action.replaced.length > 0) {
-                    for (var p = 0, pl = action.replaced.length; p < pl; p++)
+                    for (let p = 0, pl = action.replaced.length; p < pl; p++)
                         DeleteProfile(action.replaced[p], true);
                 }
-                for (var p = 0, pl = action.item.length; p < pl; p++) {
+                for (let p = 0, pl = action.item.length; p < pl; p++) {
                     addProfile(action.item[p], true);
                 }
                 sortTree();
@@ -1290,9 +1288,9 @@ export function doRedo() {
                 DeleteItem(action.type, action.data.key, action.data.idx, profiles.items[action.data.profile], true);
             break;
         case 'update':
-            var current = {}
+            let current = {}
             if (action.type == "profile") {
-                for (var prop in action.data) {
+                for (let prop in action.data) {
                     if (!action.data.hasOwnProperty(prop)) {
                         continue;
                     }
@@ -1306,7 +1304,7 @@ export function doRedo() {
                     profiles.items[action.profile][prop] = action.data[prop];
                 }
                 UpdateProfileNode(profiles.items[action.profile]);
-                var t = currentNode.dataAttr.type;
+                let t = currentNode.dataAttr.type;
                 if (t == "profile" || t == "aliases" || t == "triggers" || t == "buttons" || t == "macros" || t == "contexts") {
                     UpdateEditor("profile", currentProfile, {
                         post: () => {
@@ -1332,8 +1330,8 @@ export function doRedo() {
                 }
             }
             else {
-                var key = getKey(action.type);
-                for (var prop in action.data) {
+                let key = getKey(action.type);
+                for (let prop in action.data) {
                     if (!action.data.hasOwnProperty(prop)) {
                         continue;
                     }
@@ -1364,12 +1362,12 @@ export function doRedo() {
             action.data = current;
             break;
         case 'group':
-            var i, il, item;
+            let i, il, item;
             if (action.delete.length > 0) {
                 for (i = 0, il = action.add.length; i < il; i++) {
                     item = action.add[i];
                     if (item.type == "profile") {
-                        for (var p = 0, pl = item.item.length; p < pl; p++)
+                        for (let p = 0, pl = item.item.length; p < pl; p++)
                             DeleteProfile(profiles.items[item.item[p]], true);
                     }
                     else
@@ -1386,14 +1384,14 @@ export function doRedo() {
                 }
             }
         case 'reset':
-            var name = action.profile.name.toLowerCase();
-            var id = profileID(action.profile.name);
-            var oldProfile = profiles.items[name];
+            let name = action.profile.name.toLowerCase();
+            let id = profileID(action.profile.name);
+            let oldProfile = profiles.items[name];
             profiles.items[name] = action.profile;
-            var node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(id) + "$", 'id'])[0];
-            var newNode = newProfileNode(action.profile);
-            var selected = node.state.selected
-            var expanded = node.state.expanded
+            let node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(id) + "$", 'id'])[0];
+            let newNode = newProfileNode(action.profile);
+            let selected = node.state.selected
+            let expanded = node.state.expanded
             $('#profile-tree').treeview('updateNode', [node, newNode]);
             //re-select node to get the new object for proper data
             node = $('#profile-tree').treeview('findNodes', ['^' + newNode.id + "$", 'id'])[0];
@@ -1414,14 +1412,14 @@ export function doRedo() {
 }
 
 export function doCut(node?) {
-    var data;
+    let data;
     if (!node) {
         node = currentNode;
         if (!node) return;
     }
     resetClip();
-    var profile = profiles.items[node.dataAttr.profile];
-    var t = "profile", nodes;
+    let profile = profiles.items[node.dataAttr.profile];
+    let t = "profile", nodes;
     if (!node.dataAttr.type)
         t = node.text.toLowerCase();
     else
@@ -1429,11 +1427,11 @@ export function doCut(node?) {
     switch (t) {
         case "aliases":
             data = [];
-            for (var i = 0, il = profile.aliases.length; i < il; i++)
+            for (let i = 0, il = profile.aliases.length; i < il; i++)
                 data.push(i);
             _clip = { type: "alias", data: data, key: "aliases" };
             nodes = $('#profile-tree').treeview('findNodes', ['^' + node.id + '[0-9]+', 'id']);
-            for (var n = 0, nl = nodes.length; n < nl; n++)
+            for (let n = 0, nl = nodes.length; n < nl; n++)
                 nodes[n].$el.css('opacity', '0.5');
             break;
         case "alias":
@@ -1442,11 +1440,11 @@ export function doCut(node?) {
             break;
         case "macros":
             data = [];
-            for (var i = 0, il = profile.macros.length; i < il; i++)
+            for (let i = 0, il = profile.macros.length; i < il; i++)
                 data.push(i);
             _clip = { type: "macro", data: data, key: "macros" };
             nodes = $('#profile-tree').treeview('findNodes', ['^' + node.id + '[0-9]+', 'id']);
-            for (var n = 0, nl = nodes.length; n < nl; n++)
+            for (let n = 0, nl = nodes.length; n < nl; n++)
                 nodes[n].$el.css('opacity', '0.5');
             break;
         case "macro":
@@ -1455,11 +1453,11 @@ export function doCut(node?) {
             break;
         case "triggers":
             data = [];
-            for (var i = 0, il = profile.triggers.length; i < il; i++)
+            for (let i = 0, il = profile.triggers.length; i < il; i++)
                 data.push(i);
             _clip = { type: "trigger", data: data, key: "triggers" };
             nodes = $('#profile-tree').treeview('findNodes', ['^' + node.id + '[0-9]+', 'id']);
-            for (var n = 0, nl = nodes.length; n < nl; n++)
+            for (let n = 0, nl = nodes.length; n < nl; n++)
                 nodes[n].$el.css('opacity', '0.5');
             break;
         case "trigger":
@@ -1468,11 +1466,11 @@ export function doCut(node?) {
             break;
         case "buttons":
             data = [];
-            for (var i = 0, il = profile.buttons.length; i < il; i++)
+            for (let i = 0, il = profile.buttons.length; i < il; i++)
                 data.push(i);
             _clip = { type: "button", data: data, key: "buttons" };
             nodes = $('#profile-tree').treeview('findNodes', ['^' + node.id + '[0-9]+', 'id']);
-            for (var n = 0, nl = nodes.length; n < nl; n++)
+            for (let n = 0, nl = nodes.length; n < nl; n++)
                 nodes[n].$el.css('opacity', '0.5');
             break;
         case "button":
@@ -1481,11 +1479,11 @@ export function doCut(node?) {
             break;
         case "contexts":
             data = [];
-            for (var i = 0, il = profile.contexts.length; i < il; i++)
+            for (let i = 0, il = profile.contexts.length; i < il; i++)
                 data.push(i);
             _clip = { type: "context", data: data, key: "contexts" };
             nodes = $('#profile-tree').treeview('findNodes', ['^' + node.id + '[0-9]+', 'id']);
-            for (var n = 0, nl = nodes.length; n < nl; n++)
+            for (let n = 0, nl = nodes.length; n < nl; n++)
                 nodes[n].$el.css('opacity', '0.5');
             break;
         case "context":
@@ -1501,14 +1499,14 @@ export function doCut(node?) {
 }
 
 export function doCopy(node?) {
-    var data;
+    let data;
     if (!node) {
         node = currentNode;
         if (!node) return;
     }
     resetClip();
-    var t = "profile", nodes;
-    var profile = profiles.items[node.dataAttr.profile];
+    let t = "profile", nodes;
+    let profile = profiles.items[node.dataAttr.profile];
     if (!node.dataAttr.type)
         t = node.text.toLowerCase();
     else
@@ -1523,7 +1521,7 @@ export function doCopy(node?) {
             break;
         case "aliases":
             data = [];
-            for (var i = 0, il = profile.aliases.length; i < il; i++)
+            for (let i = 0, il = profile.aliases.length; i < il; i++)
                 data.push(profile.aliases[i].clone());
             _clip = { type: "alias", data: data, key: "aliases" };
             break;
@@ -1532,7 +1530,7 @@ export function doCopy(node?) {
             break;
         case "macros":
             data = [];
-            for (var i = 0, il = profile.macros.length; i < il; i++)
+            for (let i = 0, il = profile.macros.length; i < il; i++)
                 data.push(profile.macros[i].clone());
             _clip = { type: "macro", data: data, key: "macros" };
             break;
@@ -1541,7 +1539,7 @@ export function doCopy(node?) {
             break;
         case "triggers":
             data = [];
-            for (var i = 0, il = profile.triggers.length; i < il; i++)
+            for (let i = 0, il = profile.triggers.length; i < il; i++)
                 data.push(profile.triggers[i].clone());
             _clip = { type: "trigger", data: data, key: "triggers" };
             break;
@@ -1550,7 +1548,7 @@ export function doCopy(node?) {
             break;
         case "buttons":
             data = [];
-            for (var i = 0, il = profile.buttons.length; i < il; i++)
+            for (let i = 0, il = profile.buttons.length; i < il; i++)
                 data.push(profile.buttons[i].clone());
             _clip = { type: "button", data: data, key: "buttons" };
             break;
@@ -1559,7 +1557,7 @@ export function doCopy(node?) {
             break;
         case "contexts":
             data = [];
-            for (var i = 0, il = profile.contexts.length; i < il; i++)
+            for (let i = 0, il = profile.contexts.length; i < il; i++)
                 data.push(profile.contexts[i].clone());
             _clip = { type: "context", data: data, key: "contexts" };
             break;
@@ -1580,11 +1578,11 @@ export function doPaste(node?) {
         node = currentNode;
         if (!node) return;
     }
-    var _paste = { action: 'group', add: [], delete: [] };
-    var profile = profiles.items[node.dataAttr.profile];
-    var source = profiles.items[_clip.profile];
-    var item;
-    for (var i = 0, il = _clip.data.length; i < il; i++) {
+    let _paste = { action: 'group', add: [], delete: [] };
+    let profile = profiles.items[node.dataAttr.profile];
+    let source = profiles.items[_clip.profile];
+    let item;
+    for (let i = 0, il = _clip.data.length; i < il; i++) {
         if (_clip.action == 1)
             item = _clip.data[i].clone();
         else
@@ -1594,7 +1592,7 @@ export function doPaste(node?) {
     }
 
     if (_clip.action == 2) {
-        for (var i = 0, il = _clip.data.length; i < il; i++) {
+        for (let i = 0, il = _clip.data.length; i < il; i++) {
             item = source[_clip.key][_clip.data[i]].clone();
             _paste.delete.push({ type: _clip.type, item: item.clone(), data: { type: _clip.type, key: _clip.key, item: item, idx: _clip.data[i], profile: source.name.toLowerCase() } });
             DeleteItem(_clip.type, _clip.key, _clip.data[i], source, true);
@@ -1606,7 +1604,7 @@ export function doPaste(node?) {
 }
 
 export function doDelete(node?) {
-    var t
+    let t
     if (!node) {
         node = currentNode;
         if (!node) return;
@@ -1657,7 +1655,7 @@ export function doDelete(node?) {
 function updateCurrent(): UpdateState {
     if (currentNode && _loading == 0) {
         //currentNode.state.selected = false;
-        var t = "profile";
+        let t = "profile";
         if (!currentNode.dataAttr.type)
             t = $('#profile-tree').treeview('getParents', currentNode)[0].dataAttr.type;
         else
@@ -1704,7 +1702,7 @@ function buildTreeview(data) {
         onNodeUnchecked: nodeCheckChanged,
         onNodeChecked: nodeCheckChanged,
         onNodeSelected: function (event, node) {
-            var t
+            let t
             if (updateCurrent() == UpdateState.Error && currentNode) {
                 $('#profile-tree').treeview('selectNode', [currentNode, { silent: true }]);
                 return;
@@ -1773,9 +1771,9 @@ function buildTreeview(data) {
 
         },
         lazyLoad: function (node, add) {
-            var parent = $('#profile-tree').treeview('getParents', node)[0];
-            var nodes = [];
-            var item, n, t, i, il = profiles.items[parent.dataAttr.profile][node.text.toLowerCase()].length;
+            let parent = $('#profile-tree').treeview('getParents', node)[0];
+            let nodes = [];
+            let item, n, t, i, il = profiles.items[parent.dataAttr.profile][node.text.toLowerCase()].length;
             if (node.text == "Aliases")
                 t = "alias";
             else
@@ -1793,7 +1791,7 @@ function buildTreeview(data) {
         data: data,
         onInitialized: function (event, nodes) {
             if (!currentNode) {
-                var nodes = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
+                let nodes = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
                 $('#profile-tree').treeview('expandNode', [nodes]);
                 $('#profile-tree').treeview('selectNode', [nodes]);
             }
@@ -1802,9 +1800,9 @@ function buildTreeview(data) {
 }
 
 function getProfileData() {
-    var data = [];
+    let data = [];
 
-    for (var profile in profiles.items) {
+    for (let profile in profiles.items) {
         if (!profiles.items.hasOwnProperty(profile) || profile == 'default') continue;
         data.push(newProfileNode(profile));
     }
@@ -1815,11 +1813,11 @@ function getProfileData() {
 }
 
 function loadOptions() {
-    var options = Settings.load(remote.getGlobal('settingsFile'));
+    let options = Settings.load(remote.getGlobal('settingsFile'));
     _never = options.profiles.askoncancel;
     _enabled = options.profiles.enabled;
 
-    var theme = parseTemplate(options.theme) + ".css";
+    let theme = parseTemplate(options.theme) + ".css";
     if (!fs.existsSync(theme))
         theme = parseTemplate(path.join("{themes}", "default")) + ".css";
     if ($("#theme").attr('href') != theme)
@@ -1837,13 +1835,13 @@ function loadOptions() {
 }
 
 function setAdvancedPanel(id, state) {
-    var cState = $("#" + id + "-editor .btn-adv").data("open");
+    let cState = $("#" + id + "-editor .btn-adv").data("open");
     if (cState != state)
         $("#context-editor .btn-adv").click();
 }
 
 export function init() {
-    var p = path.join(parseTemplate("{data}"), "profiles");
+    let p = path.join(parseTemplate("{data}"), "profiles");
     if (!fs.existsSync(p)) {
         profiles.add(Profile.Default);
     }
@@ -1863,9 +1861,9 @@ export function init() {
         event.preventDefault();
         event.stopPropagation();
         event.cancelBubble = true;
-        var nodeId = $(event.target).closest('li.list-group-item').attr('data-nodeId');
-        var nodes = $('#profile-tree').treeview('findNodes', ['^' + nodeId + '$', 'nodeId']);
-        var c = new Menu();
+        let nodeId = $(event.target).closest('li.list-group-item').attr('data-nodeId');
+        let nodes = $('#profile-tree').treeview('findNodes', ['^' + nodeId + '$', 'nodeId']);
+        let c = new Menu();
         if (!nodes || nodes.length == 0) {
             c.append(new MenuItem({
                 label: 'Add empty profile', click() {
@@ -1879,12 +1877,12 @@ export function init() {
             }));
         }
         else {
-            var t = "profile";
+            let t = "profile";
             if (!nodes[0].dataAttr.type)
                 t = $('#profile-tree').treeview('getParents', nodes[0])[0].dataAttr.type;
             else
                 t = nodes[0].dataAttr.type;
-            var profile = profiles.items[nodes[0].dataAttr.profile];
+            let profile = profiles.items[nodes[0].dataAttr.profile];
 
             switch (t) {
                 case "profile":
@@ -2190,8 +2188,8 @@ export function init() {
         e.preventDefault();
 
         dragging = true;
-        var main = $('#content');
-        var ghostBar = $('<div>',
+        let main = $('#content');
+        let ghostBar = $('<div>',
             {
                 id: 'ghost-bar',
                 css: {
@@ -2245,9 +2243,9 @@ export function init() {
 
     $("#btn-add-dropdown").click(function () {
         $(this).addClass('open');
-        var pos = $(this).offset();
-        var x = Math.floor(pos.left);
-        var y = Math.floor(pos.top + $(this).outerHeight() + 2);
+        let pos = $(this).offset();
+        let x = Math.floor(pos.left);
+        let y = Math.floor(pos.top + $(this).outerHeight() + 2);
         const addMenu = new Menu();
         addMenu.append(new MenuItem({
             label: 'Add empty profile', click() {
@@ -2309,8 +2307,8 @@ export function init() {
     $("#macro-key").keyup(function (e) {
         e.preventDefault();
         e.stopPropagation();
-        var c = [];
-        var mod = MacroModifiers.None;
+        let c = [];
+        let mod = MacroModifiers.None;
 
         if (e.ctrlKey) {
             c.push("Ctrl");
@@ -2343,13 +2341,13 @@ export function init() {
     })
 
     $(".btn-adv").click(function () {
-        var editor = $(this).closest('.panel-body').attr('id');
-        var state = $(this).data("open");
+        let editor = $(this).closest('.panel-body').attr('id');
+        let state = $(this).data("open");
         state = !state;
         $(this).data("open", state);
-        var panel = $(this).closest(".panel-body");
-        var icon = $(this).find("i");
-        var panels = panel.find(".panel-adv-body");
+        let panel = $(this).closest(".panel-body");
+        let icon = $(this).find("i");
+        let panels = panel.find(".panel-adv-body");
 
         if (state) {
             panels.css('display', 'table-row');
@@ -2393,7 +2391,7 @@ export function init() {
     window.onbeforeunload = function () {
         if (close || _never || (_undo.length == 0 && updateCurrent() == UpdateState.NoChange))
             return;
-        var choice = dialog.showMessageBox(
+        let choice = dialog.showMessageBox(
             remote.getCurrentWindow(),
             {
                 type: 'warning',
@@ -2455,9 +2453,9 @@ export function init() {
 
     $("#export").click(function () {
         $(this).addClass('open');
-        var pos = $(this).offset();
-        var x = Math.floor(pos.left);
-        var y = Math.floor(pos.top + $(this).outerHeight() + 2);
+        let pos = $(this).offset();
+        let x = Math.floor(pos.left);
+        let y = Math.floor(pos.top + $(this).outerHeight() + 2);
         const exportmenu = new Menu();
         exportmenu.append(new MenuItem({
             label: 'Export current...', click() {
@@ -2474,7 +2472,7 @@ export function init() {
                         if (fileName === undefined) {
                             return;
                         }
-                        var data = {
+                        let data = {
                             version: 2,
                             profiles: {}
                         }
@@ -2499,7 +2497,7 @@ export function init() {
                         if (fileName === undefined) {
                             return;
                         }
-                        var data = {
+                        let data = {
                             version: 2,
                             profiles: profiles.clone(2)
                         }
@@ -2540,24 +2538,24 @@ function sortFiles(a, b, p) {
 }
 
 function sortTree() {
-    var data = [];
+    let data = [];
 
-    for (var profile in profiles.items) {
+    for (let profile in profiles.items) {
         if (!profiles.items.hasOwnProperty(profile) || profile == 'default') continue;
-        var n = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile) + "$", 'id']);
+        let n = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile) + "$", 'id']);
         data.push(cleanNode(n[0]));
     }
     data.sort(function (a, b) { return a.text.localeCompare(b.text); });
-    var n = $("#profile-tree").treeview('findNodes', ["^Profiledefault$", 'id']);
+    let n = $("#profile-tree").treeview('findNodes', ["^Profiledefault$", 'id']);
     if (n.length > 0)
         data.unshift(cleanNode(n[0]));
     buildTreeview(data);
 }
 
 function loadActions(p, root) {
-    var files = fs.readdirSync(p);
+    let files = fs.readdirSync(p);
     files.sort(function (a, b) { return sortFiles(a, b, p) });
-    for (var f = 0, fl = files.length; f < fl; f++) {
+    for (let f = 0, fl = files.length; f < fl; f++) {
         if (fs.lstatSync(path.join(p, files[f])).isDirectory())
             loadActions(path.join(p, files[f]), path.join(root, files[f]));
         else {
@@ -2588,7 +2586,7 @@ export function doRefresh() {
                 resetUndo();
                 profiles = new ProfileCollection();
                 $('#btn-refresh').removeClass('btn-warning');
-                var p = path.join(parseTemplate("{data}"), "profiles");
+                let p = path.join(parseTemplate("{data}"), "profiles");
                 if (!fs.existsSync(p)) {
                     profiles.add(Profile.Default);
                 }
@@ -2603,7 +2601,7 @@ export function doRefresh() {
                         $('#btn-refresh').addClass('btn-warning');
                     });
                 }
-                var options = Settings.load(remote.getGlobal('settingsFile'));
+                let options = Settings.load(remote.getGlobal('settingsFile'));
                 _enabled = options.profiles.enabled;
                 buildTreeview(getProfileData());
             }
@@ -2613,7 +2611,7 @@ export function doRefresh() {
         resetUndo();
         profiles = new ProfileCollection();
         $('#btn-refresh').removeClass('btn-warning');
-        var p = path.join(parseTemplate("{data}"), "profiles");
+        let p = path.join(parseTemplate("{data}"), "profiles");
         if (!fs.existsSync(p)) {
             profiles.add(Profile.Default);
         }
@@ -2628,14 +2626,14 @@ export function doRefresh() {
                 $('#btn-refresh').addClass('btn-warning');
             });
         }
-        var options = Settings.load(remote.getGlobal('settingsFile'));
+        let options = Settings.load(remote.getGlobal('settingsFile'));
         _enabled = options.profiles.enabled;
         buildTreeview(getProfileData());
     }
 }
 
 function profileCopyName(name) {
-    var i = 0, n = name;
+    let i = 0, n = name;
     while (profiles.contains(n)) {
         if (i === 0)
             n = name + " Copy";
@@ -2659,7 +2657,7 @@ function importProfiles() {
             if (fileNames === undefined || fileNames.length == 0) {
                 return;
             }
-            for (var f = 0, fl = fileNames.length; f < fl; f++)
+            for (let f = 0, fl = fileNames.length; f < fl; f++)
                 fs.readFile(fileNames[f], (err, data) => {
                     if (err) throw err;
                     data = JSON.parse(data);
@@ -2672,24 +2670,24 @@ function importProfiles() {
                         return;
                     }
                     ipcRenderer.send('set-progress', { value: 0.5, options: { mode: 'indeterminate' } });
-                    var all = 0;
+                    let all = 0;
                     if (data.profiles) {
-                        var names = [];
-                        var _replace = [];
-                        var keys = Object.keys(data.profiles);
-                        var n, k = 0, kl = keys.length;
-                        var item: (Alias | Button | Macro | Trigger | Context);
+                        let names = [];
+                        let _replace = [];
+                        let keys = Object.keys(data.profiles);
+                        let n, k = 0, kl = keys.length;
+                        let item: (Alias | Button | Macro | Trigger | Context);
                         for (; k < kl; k++) {
-                            var p = new Profile(keys[k]);
+                            let p = new Profile(keys[k]);
                             p.priority = data.profiles[keys[k]].priority;
                             //p.enabled = data.profiles[keys[k]].enabled;
                             p.enableMacros = data.profiles[keys[k]].enableMacros;
                             p.enableTriggers = data.profiles[keys[k]].enableTriggers;
                             p.enableAliases = data.profiles[keys[k]].enableAliases;
                             p.enableContexts = data.profiles[keys[k]].enableContexts;
-                            var l = data.profiles[keys[k]].macros.length;
+                            let l = data.profiles[keys[k]].macros.length;
                             if (l > 0) {
-                                for (var m = 0; m < l; m++) {
+                                for (let m = 0; m < l; m++) {
                                     item = new Macro(data.profiles[keys[k]].macros[m]);
                                     item.notes = data.profiles[keys[k]].macros[m].notes || '';
                                     p.macros.push(item);
@@ -2698,7 +2696,7 @@ function importProfiles() {
 
                             l = data.profiles[keys[k]].aliases.length;
                             if (l > 0) {
-                                for (var m = 0; m < l; m++) {
+                                for (let m = 0; m < l; m++) {
                                     item = new Alias(data.profiles[keys[k]].aliases[m]);
                                     item.notes = data.profiles[keys[k]].aliases[m].notes || '';
                                     p.aliases.push(item);
@@ -2707,7 +2705,7 @@ function importProfiles() {
 
                             l = data.profiles[keys[k]].triggers.length;
                             if (l > 0) {
-                                for (var m = 0; m < l; m++) {
+                                for (let m = 0; m < l; m++) {
                                     item = new Trigger();
                                     item.pattern = data.profiles[keys[k]].triggers[m].pattern;
                                     item.value = data.profiles[keys[k]].triggers[m].value;
@@ -2728,7 +2726,7 @@ function importProfiles() {
                             if (data.profiles[keys[k]].buttons) {
                                 l = data.profiles[keys[k]].buttons.length;
                                 if (l > 0) {
-                                    for (var m = 0; m < l; m++) {
+                                    for (let m = 0; m < l; m++) {
                                         item = new Button(data.profiles[keys[k]].buttons[m]);
                                         p.buttons.push(item);
                                     }
@@ -2737,7 +2735,7 @@ function importProfiles() {
                             if (data.profiles[keys[k]].contexts) {
                                 l = data.profiles[keys[k]].contexts.length;
                                 if (l > 0) {
-                                    for (var m = 0; m < l; m++) {
+                                    for (let m = 0; m < l; m++) {
                                         item = new Context(data.profiles[keys[k]].contexts[m]);
                                         p.contexts.push(item);
                                     }
@@ -2751,7 +2749,7 @@ function importProfiles() {
                                     if (p.enabled)
                                         _enabled.push(p.name.toLowerCase());
                                     names.push(p.clone());
-                                    var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(p.name) + '$', 'id']);
+                                    let nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(p.name) + '$', 'id']);
                                     $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
                                     $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                 }
@@ -2766,7 +2764,7 @@ function importProfiles() {
                                     $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                 }
                                 else if (all != 4) {
-                                    var response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                                    let response = dialog.showMessageBox(remote.getCurrentWindow(), {
                                         type: 'question',
                                         title: 'Profiles already exists',
                                         message: 'Profile named \'' + p.name + '\' exist, replace?',
@@ -2781,7 +2779,7 @@ function importProfiles() {
                                             _enabled.push(p.name.toLowerCase());
 
                                         names.push(p.clone());
-                                        var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(p.name) + '$', 'id']);
+                                        let nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(p.name) + '$', 'id']);
                                         $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
                                         $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                     }
@@ -2817,7 +2815,7 @@ function importProfiles() {
 
 function trashProfiles(p) {
     if (_remove.length > 0) {
-        for (var r = 0, rl = _remove.length; r < rl; r++) {
+        for (let r = 0, rl = _remove.length; r < rl; r++) {
             shell.moveItemToTrash(path.join(p, _remove[r] + ".json"));
         }
     }
@@ -2835,12 +2833,12 @@ export function saveProfiles() {
             defaultId: 1,
         }, (response) => {
             if (response == 0) {
-                var p = path.join(parseTemplate("{data}"), "profiles");
+                let p = path.join(parseTemplate("{data}"), "profiles");
                 if (!fs.existsSync(p))
                     fs.mkdirSync(p);
                 profiles.save(p);
                 trashProfiles(p);
-                var options = Settings.load(remote.getGlobal('settingsFile'));
+                let options = Settings.load(remote.getGlobal('settingsFile'));
                 options.profiles.enabled = _enabled;
                 options.save(remote.getGlobal('settingsFile'));
                 ipcRenderer.send('reload-profiles');
@@ -2848,13 +2846,13 @@ export function saveProfiles() {
             }
         })
     else {
-        var p = path.join(parseTemplate("{data}"), "profiles");
+        let p = path.join(parseTemplate("{data}"), "profiles");
         if (!fs.existsSync(p))
             fs.mkdirSync(p);
         profiles.save(p);
         trashProfiles(p);
 
-        var options = Settings.load(remote.getGlobal('settingsFile'));
+        let options = Settings.load(remote.getGlobal('settingsFile'));
         options.profiles.enabled = _enabled;
         options.save(remote.getGlobal('settingsFile'));
 
@@ -2872,23 +2870,23 @@ function clearChanges() {
     $('#btn-refresh').removeClass('btn-warning');
 }
 
-var editors = {};
-var aceTooltip;
+let editors = {};
+let aceTooltip;
 
 function initEditor(id) {
     _pUndo = true;
-    var textarea = $('#' + id).hide();
+    let textarea = $('#' + id).hide();
     $('#' + id + '-editor').css('display', 'block');
     ace.require("ace/ext/language_tools");
     editors[id] = ace.edit(id + "-editor");
-    var session = editors[id].getSession();
+    let session = editors[id].getSession();
     editors[id].$blockScrolling = Infinity;
     editors[id].getSelectedText = function () {
         return this.session.getTextRange(this.getSelectionRange());
     };
 
     if (!aceTooltip) {
-        var Tooltip = ace.require("ace/tooltip").Tooltip;
+        let Tooltip = ace.require("ace/tooltip").Tooltip;
         aceTooltip = new Tooltip($("#content")[0]);
     }
 
@@ -2959,18 +2957,18 @@ function initEditor(id) {
     });
 
     editors[id].on("mousemove", function (e) {
-        var pos = e.getDocumentPosition();
-        var fold = e.editor.getSession().getFoldAt(pos.row, pos.column, 1);
+        let pos = e.getDocumentPosition();
+        let fold = e.editor.getSession().getFoldAt(pos.row, pos.column, 1);
         if (fold) {
-            var t = e.editor.getSession().getDocument().getTextRange(fold.range).replace(/^\n+|\s+$/g, '');
-            var s = t.split(/\n/);
+            let t = e.editor.getSession().getDocument().getTextRange(fold.range).replace(/^\n+|\s+$/g, '');
+            let s = t.split(/\n/);
             if (s.length > 10) {
                 t = s.slice(0, 10).join("\n").replace(/\s+$/g, '') + "\n...";
             }
-            var h = $(window).height();
-            var th = aceTooltip.getHeight();
-            var x = e.clientX + 32;
-            var y = e.clientY;
+            let h = $(window).height();
+            let th = aceTooltip.getHeight();
+            let x = e.clientX + 32;
+            let y = e.clientY;
             if (y + th > h)
                 y = y - th;
             aceTooltip.show(t, x, y);
@@ -2982,8 +2980,8 @@ function initEditor(id) {
     });
     _pUndo = false;
 }
-var i = 0;
-var dragging = false;
+let i = 0;
+let dragging = false;
 
 function resetUndo() {
     _undo = [];
@@ -3021,11 +3019,11 @@ function DeleteProfile(profile, customUndo?: boolean) {
     _remove.push(profile.name);
     if (!customUndo)
         pushUndo({ action: 'delete', type: 'profile', item: profile });
-    var nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + '$', 'id']);
+    let nodes = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + '$', 'id']);
     $('#profile-tree').treeview('removeNode', [nodes, { silent: false }]);
     if (profile.name == currentProfile.name) {
         if (profile.name.toLowerCase() == "default") {
-            for (var l = 0, ll = profiles.keys.length; l < ll; l++) {
+            for (let l = 0, ll = profiles.keys.length; l < ll; l++) {
                 if (profiles.keys[l] == "default") continue;
                 $('#profile-tree').treeview('selectNode', [$("#profile-tree").treeview('findNodes', ["^Profile" + profiles.keys[l] + "$", 'id'])]);
                 break;
@@ -3047,10 +3045,10 @@ function DeleteItems(type, key, profile) {
         defaultId: 1,
     }, (response) => {
         if (response == 0) {
-            var _u = { action: 'group', add: [], delete: [] };
-            var n = $("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + key, 'id']);
+            let _u = { action: 'group', add: [], delete: [] };
+            let n = $("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + key, 'id']);
             $('#profile-tree').treeview('expandNode', [n, { levels: 1, silent: true }]);
-            for (var i = profile[key].length - 1; i >= 0; i--) {
+            for (let i = profile[key].length - 1; i >= 0; i--) {
                 _u.delete.unshift({ type: type, item: profile[key][i].clone(), data: { type: type, key: key, item: profile[key][i].clone(), idx: i, profile: profile.name.toLowerCase() } });
                 DeleteItem(type, key, i, profile, true);
             }
@@ -3074,7 +3072,7 @@ function DeleteItemConfirm(type, key, idx, profile) {
 }
 
 function DeleteItem(type: string, key: string, idx: number, profile?: Profile, customUndo?: boolean) {
-    var il, i, node, newNode, selected, item, name;
+    let il, i, node, newNode, selected, item, name;
     if (!profile) profile = currentProfile;
     if (!customUndo)
         pushUndo({ action: 'delete', type: type, data: { key: key, idx: idx, profile: profile.name.toLowerCase() }, item: profile[key][idx] });
@@ -3084,7 +3082,6 @@ function DeleteItem(type: string, key: string, idx: number, profile?: Profile, c
         currentNode = null;
     $('#profile-tree').treeview('removeNode', [node, { silent: true }]);
     profile[key].splice(idx, 1);
-    var selected;
     if ((il = profile[key].length) > 0) {
         for (i = idx; i < il; i++) {
             node = $("#profile-tree").treeview('findNodes', ["Profile" + name + key + (i + 1), 'id']);
@@ -3100,7 +3097,7 @@ function DeleteItem(type: string, key: string, idx: number, profile?: Profile, c
             }
         }
         if (selected) {
-            var node = $('#profile-tree').treeview('findNodes', ['^' + selected + "$", 'id'])[0];
+            let node = $('#profile-tree').treeview('findNodes', ['^' + selected + "$", 'id'])[0];
             currentNode = node[0];
             $('#profile-tree').treeview('selectNode', [node]);
         }
@@ -3137,10 +3134,10 @@ export function doImport(node) {
         node = currentNode;
         if (!node) return;
     }
-    var profile = profiles.items[node.dataAttr.profile];
-    var m = Profile.DefaultMacros;
-    var _import = { action: 'group', add: [], delete: [] };
-    for (var i = 0, il = m.length; i < il; i++) {
+    let profile = profiles.items[node.dataAttr.profile];
+    let m = Profile.DefaultMacros;
+    let _import = { action: 'group', add: [], delete: [] };
+    for (let i = 0, il = m.length; i < il; i++) {
         _import.add.push({ type: "macro", item: m[i].clone(), data: { type: "macro", key: "macros", item: m[i].clone(), id: profile["macros"].length, profile: profile.name.toLowerCase() } });
         addItem("macro", "macros", m[i], profile["macros"].length, profile, true);
     }
@@ -3152,7 +3149,7 @@ export function doReset(node) {
         node = currentNode;
         if (!node) return;
     }
-    var profile = profiles.items[node.dataAttr.profile];
+    let profile = profiles.items[node.dataAttr.profile];
     dialog.showMessageBox(remote.getCurrentWindow(), {
         type: 'warning',
         title: 'Reset ' + profile.name,
@@ -3162,8 +3159,8 @@ export function doReset(node) {
     }, (response) => {
         if (response == 0) {
             pushUndo({ action: 'reset', type: "profile", profile: profile.clone() });
-
-            var n = $("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + 'macros[0-9]+', 'id']);
+            let o;
+            let n = $("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + 'macros[0-9]+', 'id']);
             n = n.concat($("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + 'triggers[0-9]+', 'id']));
             n = n.concat($("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + 'buttons[0-9]+', 'id']));
             n = n.concat($("#profile-tree").treeview('findNodes', ["Profile" + profileID(profile.name) + 'aliases[0-9]+', 'id']));
@@ -3195,7 +3192,7 @@ export function doReset(node) {
                     checked: profile.enableMacros
                 }
             };
-            var o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'macros$', 'id']);
+            o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'macros$', 'id']);
             $('#profile-tree').treeview('updateNode', [o[0], n]);
 
             n = {
@@ -3210,7 +3207,7 @@ export function doReset(node) {
                     checked: profile.enableTriggers
                 }
             };
-            var o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'triggers$', 'id']);
+            o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'triggers$', 'id']);
             $('#profile-tree').treeview('updateNode', [o[0], n]);
             n = {
                 text: 'Buttons',
@@ -3224,7 +3221,7 @@ export function doReset(node) {
                     checked: profile.enableButtons
                 }
             };
-            var o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'buttons$', 'id']);
+            o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'buttons$', 'id']);
             $('#profile-tree').treeview('updateNode', [o[0], n]);
 
             n = {
@@ -3239,7 +3236,7 @@ export function doReset(node) {
                     checked: profile.enableContexts
                 }
             };
-            var o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'contexts$', 'id']);
+            o = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + 'contexts$', 'id']);
             $('#profile-tree').treeview('updateNode', [o[0], n]);
 
             profile.aliases = [];
@@ -3288,11 +3285,11 @@ function UpdateEditor(editor, item, options?) {
     $("#editor-enabled").prop("checked", item.enabled);
     if (typeof options['pre'] == "function")
         options['pre']();
-    for (var prop in item) {
+    for (let prop in item) {
         if (!item.hasOwnProperty(prop)) {
             continue;
         }
-        var id = "#" + editor + "-" + prop;
+        let id = "#" + editor + "-" + prop;
         if (typeof options[prop] == "function") {
             options[prop](item, prop, $(id));
         }
@@ -3341,13 +3338,13 @@ function insertItem(type: string, key: string, item, idx: number, profile?: Prof
     currentNode = null;
     type = type.toLowerCase();
     //fine parent node
-    var n = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + key + "$", 'id']);
+    let n = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + key + "$", 'id']);
     $('#profile-tree').treeview('expandNode', [n, { levels: 1, silent: false }]);
     //create new node to be inserted
-    var nodes = [newItemNode(item, idx, type, profile)];
-    var node, newNode, remove = [];
+    let nodes = [newItemNode(item, idx, type, profile)];
+    let node, newNode, remove = [];
     //loop current nodes to grab data and update indexes
-    for (var i = idx, il = profile[key].length; i < il; i++) {
+    for (let i = idx, il = profile[key].length; i < il; i++) {
         //Find old node
         node = $("#profile-tree").treeview('findNodes', ["^Profile" + profileID(profile.name) + key + i + "$", 'id'])[0];
         //Push to remove it

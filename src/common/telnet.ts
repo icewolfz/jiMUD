@@ -364,7 +364,7 @@ export class Telnet extends EventEmitter {
      */
     //this.processData = function(data) { return data; };
     processData(data) {
-        var len: number, _sb;
+        let len: number, _sb;
         if (data === null)
             return data;
         data = this._decompressData(data);
@@ -379,21 +379,21 @@ export class Telnet extends EventEmitter {
             _sb = [];
             len = data.length;
         }
-        var state: number = 0, pState: number = 0;
-        var processed: (Buffer | any[]) = [];
+        let state: number = 0, pState: number = 0;
+        let processed: (Buffer | any[]) = [];
 
-        var ga: boolean = this.prompt;
-        var verb: number = 0;
-        var option: number = 0;
-        var msdp_val: string = "";
-        var msdp_var: string = "";
-        var _MSSP;
-        var i: number = 0, ne: number;
-        var idx: number = 0;
-        var tmp: (string | boolean) = "";
+        let ga: boolean = this.prompt;
+        let verb: number = 0;
+        let option: number = 0;
+        let msdp_val: string = "";
+        let msdp_var: string = "";
+        let _MSSP;
+        let i: number = 0, ne: number;
+        let idx: number = 0;
+        let tmp: (string | boolean) = "";
         //reset for new state
         this.prompt = false;
-        var debugOp = "";
+        let debugOp = "";
         try {
             for (; idx < len; idx++) {
                 i = data[idx];
@@ -1529,8 +1529,8 @@ export class Telnet extends EventEmitter {
     updateWindow(w, h) {
         if (h < 1 || w < 1 || !this.connected || !this.server.NAWS) return;
         try {
-            var w1, w2, h1, h2;
-            var mf = Math.floor;
+            let w1, w2, h1, h2;
+            let mf = Math.floor;
             w1 = mf(w / 256);
             if (w1 > 256)
                 w1 = 255;
@@ -1636,8 +1636,8 @@ export class Telnet extends EventEmitter {
      */
     private _escapeData(data) {
         if (data === null || typeof data == "undefined") return data;
-        var dl, ba;
-        var idx = 0;
+        let dl, ba;
+        let idx = 0;
         if (!Buffer.isBuffer(data) && !Array.isArray(data))
             data = Buffer.from(data);
         dl = data.length;
@@ -1663,7 +1663,7 @@ export class Telnet extends EventEmitter {
      * @returns {object} returns the socket object
      */
     private _createSocket() {
-        var _socket;
+        let _socket;
         try {
             _socket = new Socket({ 'allowHalfOpen': true });
             //_socket.setEncoding('binary');
@@ -1722,19 +1722,19 @@ export class Telnet extends EventEmitter {
     * @returns {object} returns null
     */
     private _fireReceiveOption(option, verb, val) {
-        var data: TelnetOption = { telnet: this, option: option, verb: 250, value: val, handled: false };
+        let data: TelnetOption = { telnet: this, option: option, verb: 250, value: val, handled: false };
         this.emit('received-option', data);
         return data.handled;
     }
 
     private _fireReceiveMSDP(msdp_var, msdp_val) {
-        var data = { telnet: this, variable: msdp_var, value: msdp_val, handled: false };
+        let data = { telnet: this, variable: msdp_var, value: msdp_val, handled: false };
         this.emit('received-MSDP', data);
         return data.handled;
     }
 
     private _fireReceiveGMCP(val) {
-        var data = { telnet: this, value: val, handled: false };
+        let data = { telnet: this, value: val, handled: false };
         this.emit('received-GMCP', data);
         return data.handled;
     }

@@ -85,21 +85,21 @@ export class Status extends EventEmitter {
                     this.updateXP();
                     break;
                 case 'omud.ac':
-                    for (var limb in obj) {
+                    for (let limb in obj) {
                         if (!obj.hasOwnProperty(limb)) continue;
                         this.setLimbAC(limb, obj[limb]);
                         this.updateLimb(limb);
                     }
                     break;
                 case 'omud.limb':
-                    for (var limb in obj) {
+                    for (let limb in obj) {
                         if (!obj.hasOwnProperty(limb)) continue;
                         this.setLimbHealth(limb, obj[limb]);
                         this.updateLimb(limb);
                     }
                     break;
                 case 'omud.weapons':
-                    for (var limb in obj) {
+                    for (let limb in obj) {
                         if (!obj.hasOwnProperty(limb)) continue;
                         this.setWeapon(limb, obj[limb]);
                     }
@@ -184,7 +184,7 @@ export class Status extends EventEmitter {
     }
 
     private livingClass(obj, prefix?: string) {
-        var cls = [];
+        let cls = [];
         if (!prefix) prefix = "";
         if (obj.class && obj.class.length > 0)
             cls.push(prefix + this.sanitizeID(obj.class));
@@ -202,7 +202,7 @@ export class Status extends EventEmitter {
     setWeapon(limb, weapon) {
         limb = limb.replace(/\s/g, "");
         limb = limb.toLowerCase();
-        var eLimb = $(document.getElementById(limb + "weapon"));
+        let eLimb = $(document.getElementById(limb + "weapon"));
         if (!eLimb || eLimb.length == 0)
             return;
         eLimb.removeClass(function (index, className) {
@@ -309,7 +309,7 @@ export class Status extends EventEmitter {
             }
         }
         else {
-            var v = 100;
+            let v = 100;
             if (this.info["hpmax"] !== 0 && !isNaN(this.info["hpmax"]))
                 v *= this.info["hp"] / this.info["hpmax"];
             if (v > 90) {
@@ -362,7 +362,7 @@ export class Status extends EventEmitter {
             limb = "rightfoot";
         else if (limb == "lefthoof")
             limb = "leftfoot";
-        var eLimb = $(document.getElementById(limb));
+        let eLimb = $(document.getElementById(limb));
         if (!eLimb || eLimb.length == 0)
             return;
         eLimb.removeClass(function (index, className) {
@@ -415,7 +415,7 @@ export class Status extends EventEmitter {
     }
 
     updateStatus() {
-        var limb;
+        let limb;
         if (this._ac)
             for (limb in this.infoAC)
                 this.updateLimb(limb);
@@ -484,11 +484,11 @@ export class Status extends EventEmitter {
     }
 
     updateBar(id: string, value: number, max?: number, text?: string) {
-        var bar = $(id);
+        let bar = $(id);
         if (bar.length == 0)
             return;
         else {
-            var p = 100;
+            let p = 100;
             if (max !== 0)
                 p = value / max * 100;
             $(id + " .progressbar-value").css('width', (100 - p));
@@ -497,12 +497,12 @@ export class Status extends EventEmitter {
     }
 
     createBar(parent, id, label, value, max, icon?, order?) {
-        var p = 100;
+        let p = 100;
         if (max !== 0)
             p = value / max * 100;
         p = Math.floor(p);
         id = id.replace(' ', '');
-        var bar: any = $("#" + id);
+        let bar: any = $("#" + id);
         if (bar.length == 0) {
             if (!icon)
                 icon = label.replace(/\d+$/, "").trim().replace(' ', '-');
@@ -528,18 +528,18 @@ export class Status extends EventEmitter {
     }
 
     removeBar(id) {
-        var p = $(id).parent();
+        let p = $(id).parent();
         $(id).remove();
         this.sortBars(p);
     }
 
     sortBars(p) {
-        var listItems = p.children('div').get();
+        let listItems = p.children('div').get();
         listItems.sort(function (a, b) {
-            //var compA = $(a).text().toUpperCase();
-            //var compB = $(b).text().toUpperCase();
-            var compA = $(a).data('order');
-            var compB = $(b).data('order');
+            //let compA = $(a).text().toUpperCase();
+            //let compB = $(b).text().toUpperCase();
+            let compA = $(a).data('order');
+            let compB = $(b).data('order');
             return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
         });
         $.each(listItems, function (idx, itm) { p.append(itm); });
@@ -548,7 +548,7 @@ export class Status extends EventEmitter {
     updateLagMeter(lag: number, force?: boolean) {
         if (!this.lagMeter || this.lagMeter.length == 0) return
         if (!this.client.options.lagMeter && !force) return;
-        var p = 100;
+        let p = 100;
         p = lag / 200 * 100;
         if (p > 100) p = 100;
 
@@ -567,7 +567,7 @@ export class Status extends EventEmitter {
             $("#status-border").css("display", "");
         }
         else {
-            var w = $("#status-border").outerWidth()
+            let w = $("#status-border").outerWidth()
             $("#status").css("visibility", "hidden");
             $("#status").css("display", "none");
             $("#status-border").css("visibility", "hidden");
@@ -578,7 +578,7 @@ export class Status extends EventEmitter {
             return;
         }
 
-        var top = 0, eTop;
+        let top = 0, eTop;
         $("#body").css('top', '');
         $("#experience").css('top', '');
         $("#bars").css('top', '');

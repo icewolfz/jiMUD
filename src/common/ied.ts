@@ -35,7 +35,7 @@ export class IED extends EventEmitter {
     set useTemp(value: TempType) {
         if (value === this._temp) return;
         this._temp = value;
-        for (var q = 0, ql = this.queue.length; q < ql; q++)
+        for (let q = 0, ql = this.queue.length; q < ql; q++)
             this.queue[q].tmp = this._temp;
     }
 
@@ -103,7 +103,7 @@ export class IED extends EventEmitter {
     }
 
     public processGMCP(mod: string, obj) {
-        var mods = mod.split(".");
+        let mods = mod.split(".");
         if (mods.length < 2 || mods[0] != "IED") return;
         if (this._gmcp.length > 0) {
             this._gmcp.push([mod, obj]);
@@ -264,7 +264,7 @@ export class IED extends EventEmitter {
     private nextGMCP() {
         this._gmcp.shift();
         if (this._gmcp.length > 0) {
-            var iTmp = this._gmcp.shift();
+            let iTmp = this._gmcp.shift();
             setTimeout(() => {
                 this.processGMCP(iTmp[0], iTmp[1]);
             }, 0);
@@ -377,14 +377,14 @@ export class IED extends EventEmitter {
 
     public static isHidden(p, skipwin?: boolean) {
         const basename = path.basename(p);
-        var dirname = path.dirname(p);
+        let dirname = path.dirname(p);
         if (dirname === ".") dirname = "";
         if (basename[0] == ".")
             return true;
         if (skipwin)
             return false;
         if (IED.windows) {
-            var a = fswin.getAttributesSync(p);
+            let a = fswin.getAttributesSync(p);
             if (!a) return false;
             return a.IS_HIDDEN;
         }
@@ -482,7 +482,7 @@ export class IED extends EventEmitter {
     }
 
     public startItem(id) {
-        for (var q = 0, ql = this.queue.length; q < ql; q++) {
+        for (let q = 0, ql = this.queue.length; q < ql; q++) {
             if (this.queue[q].ID == id) {
                 this.queue[q].state = ItemState.working;
                 this.emit('update', this.queue[q]);
@@ -493,7 +493,7 @@ export class IED extends EventEmitter {
     }
 
     public pauseItem(id) {
-        for (var q = 0, ql = this.queue.length; q < ql; q++) {
+        for (let q = 0, ql = this.queue.length; q < ql; q++) {
             if (this.queue[q].ID == id) {
                 this.queue[q].state = ItemState.paused;
                 this.emit('update', this.queue[q]);
@@ -504,7 +504,7 @@ export class IED extends EventEmitter {
     }
 
     public getItem(id) {
-        for (var q = 0, ql = this.queue.length; q < ql; q++) {
+        for (let q = 0, ql = this.queue.length; q < ql; q++) {
             if (this.queue[q].ID == id)
                 return this.queue[q];
         }
@@ -512,7 +512,7 @@ export class IED extends EventEmitter {
     }
 
     public removeItem(id) {
-        var q, ql;
+        let q, ql;
         if (this.active && this.active.ID == id) {
             this.removeActive();
             return;
@@ -542,7 +542,7 @@ export class IED extends EventEmitter {
         if (this.active && this.active.state == ItemState.working) return;
         this.active = null;
         this._activeIdx = -1;
-        for (var q = 0, ql = this.queue.length; q < ql; q++) {
+        for (let q = 0, ql = this.queue.length; q < ql; q++) {
             if (this.queue[q].state != ItemState.working) continue;
             this.active = this.queue[q];
             this._activeIdx = q;
@@ -672,7 +672,7 @@ export class Item {
     }
 
     public read(size: number, callback?: any) {
-        var position = this.currentSize;
+        let position = this.currentSize;
         if (!this.stream)
             this.stream = fs.openSync(this._local, "r+");
         let buffer: Buffer, br;

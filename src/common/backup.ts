@@ -1,13 +1,13 @@
 //cSpell:words vscroll, hscroll, Commandon, cmdfont, isdoor, isclosed, triggernewline, triggerprompt
 import EventEmitter = require('events');
-import { Client } from "./client";
-import { parseTemplate } from "./library";
-import { BackupSelection, Log } from "./types";
+import { Client } from './client';
+import { parseTemplate } from './library';
+import { BackupSelection, Log } from './types';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
-const fs = require("fs");
-const path = require("path");
-const sqlite3 = require("sqlite3");
-const LZString = require("lz-string");
+const fs = require('fs');
+const path = require('path');
+const sqlite3 = require('sqlite3');
+const LZString = require('lz-string');
 
 export class Backup extends EventEmitter {
     private client: Client = null;
@@ -16,23 +16,23 @@ export class Backup extends EventEmitter {
     private _action;
     private _save;
 
-    public mapFile = path.join(parseTemplate("{data}"), "map.sqlite");
+    public mapFile: string = path.join(parseTemplate('{data}'), 'map.sqlite');
 
     public loadSelection: BackupSelection = BackupSelection.All;
     public saveSelection: BackupSelection = BackupSelection.All;
 
     get URL(): string {
-        if (this.client.port == 1035)
-            return "http://shadowmud.com:1132/client";
-        return "http://shadowmud.com:1130/client";
+        if (this.client.port === 1035)
+            return 'http://shadowmud.com:1132/client';
+        return 'http://shadowmud.com:1130/client';
     }
 
     constructor(client: Client, map?: string) {
         super();
         if (!client)
-            throw "Invalid client!";
+            throw new Error('Invalid client!');
         this.client = client;
-        this.client.telnet.GMCPSupports.push("Client 1");
+        this.client.telnet.GMCPSupports.push('Client 1');
 
         this.client.on('connected', () => {
             this.reset();
@@ -43,25 +43,25 @@ export class Backup extends EventEmitter {
         });
 
         this.client.on('received-GMCP', (mod, obj) => {
-            if (mod.toLowerCase() != "client") return;
+            if (mod.toLowerCase() !== 'client') return;
             switch (obj.action) {
-                case "save":
+                case 'save':
                     if (this._abort) return;
                     this._user = obj.user;
                     this._action = obj.action;
-                    this.emit('progress-start', "Saving data");
+                    this.emit('progress-start', 'Saving data');
                     this._abort = false;
                     this.save(2);
                     break;
-                case "load":
+                case 'load':
                     this._abort = false;
                     this._user = obj.user;
                     this._action = obj.action;
-                    this.emit('progress-start', "Loading data");
-                    this._save = [obj.chunks, obj.chunk, obj.size, ""];
+                    this.emit('progress-start', 'Loading data');
+                    this._save = [obj.chunks, obj.chunk, obj.size, ''];
                     this.getChunk();
                     break;
-                case "error":
+                case 'error':
                     this.emit('error', obj.error);
                     this.abort();
                     break;
@@ -71,10 +71,10 @@ export class Backup extends EventEmitter {
             this.mapFile = map;
     }
 
-    save(version?: number) {
-        var _db = new sqlite3.Database(this.mapFile);
+    public save(version?: number) {
+        let _db = new sqlite3.Database(this.mapFile);
         _db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID", (err, rows) => {
-            var data = {
+            let data = {
                 version: version,
                 profiles: this.client.profiles.clone(2),
                 settings: {
@@ -135,10 +135,10 @@ export class Backup extends EventEmitter {
                 map: {}
             };
 
-            var rooms = {};
+            let rooms = {};
             if (rows) {
-                var rl = rows.length;
-                for (var r = 0; r < rl; r++) {
+                let rl = rows.length;
+                for (let r = 0; r < rl; r++) {
                     if (rooms[rows[r].ID]) {
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: rows[r].DestID,
@@ -148,7 +148,7 @@ export class Backup extends EventEmitter {
                     }
                     else {
                         rooms[rows[r].ID] = { num: rows[r].ID };
-                        for (var prop in rows[r]) {
+                        for (let prop in rows[r]) {
                             if (prop == "ID")
                                 continue;
                             if (!rows[r].hasOwnProperty(prop)) {
@@ -172,7 +172,7 @@ export class Backup extends EventEmitter {
                 delete data.profiles;
             if ((this.saveSelection & BackupSelection.Settings) != BackupSelection.Settings)
                 delete data.settings;
-            var jData = JSON.stringify(data);
+            let jData = JSON.stringify(data);
             jData = LZString.compressToEncodedURIComponent(jData);
             this._save = [jData.match(/((\S|\s|.){1,20000})/g), 0, 0];
             this._save[3] = this._save[0].length;
@@ -284,29 +284,29 @@ export class Backup extends EventEmitter {
     }
 
     finishLoad() {
-        var data = LZString.decompressFromEncodedURIComponent(this._save[3]);
+        let data = LZString.decompressFromEncodedURIComponent(this._save[3]);
         data = JSON.parse(data);
         if (data.version == 2) {
             if (data.map && (this.loadSelection & BackupSelection.Map) == BackupSelection.Map)
                 this.emit('import-map', data.map);
 
             if (data.profiles && (this.loadSelection & BackupSelection.Profiles) == BackupSelection.Profiles) {
-                var profiles = new ProfileCollection();
-                var keys = Object.keys(data.profiles);
-                var n, k = 0, kl = keys.length;
+                let profiles = new ProfileCollection();
+                let keys = Object.keys(data.profiles);
+                let n, k = 0, kl = keys.length;
                 for (; k < kl; k++) {
                     n = keys[k];
-                    var p = new Profile(n);
+                    let p = new Profile(n);
                     p.priority = data.profiles[keys[k]].priority;
                     p.enabled = data.profiles[keys[k]].enabled ? true : false;
                     p.enableMacros = data.profiles[keys[k]].enableMacros ? true : false;
                     p.enableTriggers = data.profiles[keys[k]].enableTriggers ? true : false;
                     p.enableAliases = data.profiles[keys[k]].enableAliases ? true : false;
                     p.macros = [];
-                    var l = data.profiles[keys[k]].macros.length;
-                    var item;
+                    let l = data.profiles[keys[k]].macros.length;
+                    let item;
                     if (l > 0) {
-                        for (var m = 0; m < l; m++) {
+                        for (let m = 0; m < l; m++) {
                             item = new Macro();
                             item.key = data.profiles[keys[k]].macros[m].key;
                             item.value = data.profiles[keys[k]].macros[m].value;
@@ -325,7 +325,7 @@ export class Backup extends EventEmitter {
 
                     l = data.profiles[keys[k]].aliases.length;
                     if (l > 0) {
-                        for (var m = 0; m < l; m++) {
+                        for (let m = 0; m < l; m++) {
                             item = new Alias();
                             item.pattern = data.profiles[keys[k]].aliases[m].pattern;
                             item.value = data.profiles[keys[k]].aliases[m].value;
@@ -344,7 +344,7 @@ export class Backup extends EventEmitter {
 
                     l = data.profiles[keys[k]].triggers.length;
                     if (l > 0) {
-                        for (var m = 0; m < l; m++) {
+                        for (let m = 0; m < l; m++) {
                             item = new Trigger();
                             item.pattern = data.profiles[keys[k]].triggers[m].pattern;
                             item.value = data.profiles[keys[k]].triggers[m].value;
@@ -365,7 +365,7 @@ export class Backup extends EventEmitter {
                     if (data.profiles[keys[k]].buttons) {
                         l = data.profiles[keys[k]].buttons.length;
                         if (l > 0) {
-                            for (var m = 0; m < l; m++) {
+                            for (let m = 0; m < l; m++) {
                                 item = new Button(data.profiles[keys[k]].buttons[m]);
                                 p.triggers.push(item);
                             }
@@ -373,7 +373,7 @@ export class Backup extends EventEmitter {
                     }
                     profiles.add(p);
                 }
-                var pf = path.join(parseTemplate("{data}"), "profiles");
+                let pf = path.join(parseTemplate("{data}"), "profiles");
                 if (!fs.existsSync(pf))
                     fs.mkdirSync(pf);
                 profiles.save(pf);

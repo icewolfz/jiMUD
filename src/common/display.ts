@@ -105,7 +105,7 @@ export class Display extends EventEmitter {
 
     get enableSplit(): boolean { return this.split === null; }
     set enableSplit(value: boolean) {
-        var id = this._el.id;
+        let id = this._el.id;
         if (!this.split && value) {
             this.split = document.createElement('div');
             this.split.id = id + '-split-frame';
@@ -139,7 +139,7 @@ export class Display extends EventEmitter {
                     let start = this.split._viewRange.start;
                     let end = this.split._viewRange.end;
                     let mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
-                    for (var l = 0, ll = lines.length; l < ll; l++) {
+                    for (let l = 0, ll = lines.length; l < ll; l++) {
                         lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
                         bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
                     }
@@ -183,7 +183,7 @@ export class Display extends EventEmitter {
                     this.split.ghostBar.style.top = (this._el.clientHeight - 150 - 4 - this._HScroll.size) + "px";
                 else
                     this.split.ghostBar.style.top = (e.pageY - 4) + "px";
-                var h;
+                let h;
                 if (this.splitLive) {
                     if (e.pageY < 20)
                         h = this._el.clientHeight - 20 + 4;//TODO change the 4 to calculate split bar height
@@ -201,7 +201,7 @@ export class Display extends EventEmitter {
 
             this.split.moveDone = (e) => {
                 if (this.split.ghostBar) {
-                    var h;
+                    let h;
                     if (e.pageY < 20)
                         h = this._el.clientHeight - 20 + 4 - this._HScroll.size;//TODO change the 4 to calculate split bar height
                     else if (e.pageY > this._el.clientHeight - 150 - this._HScroll.size)
@@ -395,14 +395,14 @@ export class Display extends EventEmitter {
             if (e.buttons && e.button == 0) {
                 e.preventDefault();
                 e.cancelBubble = true;
-                var os = this._os;
+                let os = this._os;
                 if (e.pageX - os.left > this._el.clientWidth)
                     return;
                 if (e.pageY - os.top > this._el.clientHeight)
                     return;
                 this._currentSelection.drag = true;
                 if (e.shiftKey) {
-                    var o = this._currentSelection.end;
+                    let o = this._currentSelection.end;
                     this._currentSelection.end = this.getLineOffset(e);
                     this.emit('selection-start');
                     //this.updateSelectionRange(o);
@@ -420,7 +420,7 @@ export class Display extends EventEmitter {
 
         this._el.addEventListener('dblclick', (e) => {
             if (this.lines.length === 0) return;
-            var o = this.getLineOffset(e);
+            let o = this.getLineOffset(e);
             if (o.y >= 0 && o.y < this.lines.length) {
                 let line = this.lines[o.y];
                 let len = line.length;
@@ -432,7 +432,7 @@ export class Display extends EventEmitter {
                             break;
                     }
                     sPos++;
-                    var ll = line.length;
+                    let ll = line.length;
                     while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
                         ePos++;
                     }
@@ -455,7 +455,7 @@ export class Display extends EventEmitter {
         this._el.addEventListener('click', (e) => {
             if (this.lines.length === 0) return;
             if (e.detail === 3) {
-                var o = this.getLineOffset(e);
+                let o = this.getLineOffset(e);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     this._currentSelection = {
                         start: { x: 0, y: o.y },
@@ -540,7 +540,7 @@ export class Display extends EventEmitter {
         this._el.addEventListener('contextmenu', (e: ContextEvent) => {
             let word: string = '', line: string = '', url: string = '';
             if (this.lines.length > 0) {
-                var o = this.getLineOffset(e);
+                let o = this.getLineOffset(e);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     line = this.lines[o.y];
                     let len = line.length;
@@ -552,7 +552,7 @@ export class Display extends EventEmitter {
                                 break;
                         }
                         sPos++;
-                        var ll = line.length;
+                        let ll = line.length;
                         while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
                             ePos++;
                         }
@@ -590,7 +590,7 @@ export class Display extends EventEmitter {
         window.addEventListener('mousemove', (e) => {
             this._lastMouse = e;
             if (this._currentSelection.drag) {
-                var o = this._currentSelection.end;
+                let o = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-changed');
                 //this.updateSelectionRange(o);
@@ -604,7 +604,7 @@ export class Display extends EventEmitter {
                 clearInterval(this._currentSelection.scrollTimer);
                 this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
-                var o = this._currentSelection.end;
+                let o = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-done');
                 //this.updateSelectionRange(o);
@@ -951,7 +951,7 @@ export class Display extends EventEmitter {
         let lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
         let bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
         let start = this._viewRange.start;
-        for (var l = 0, ll = lines.length; l < ll; l++) {
+        for (let l = 0, ll = lines.length; l < ll; l++) {
             lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
             bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
         }
@@ -1004,7 +1004,7 @@ export class Display extends EventEmitter {
     }
 
     addParserLine(data: ParserLine, noUpdate?: boolean) {
-        var t;
+        let t;
         this.emit('add-line', data);
         if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined")
             return;
@@ -1130,7 +1130,7 @@ export class Display extends EventEmitter {
         if (this._maxLines == -1)
             return;
         if (this.lines.length > this._maxLines) {
-            var amt = this.lines.length - this._maxLines
+            let amt = this.lines.length - this._maxLines
             this.lines.splice(0, amt);
             this.rawLines.splice(0, amt);
             this.lineFormats.splice(0, amt);
@@ -1190,8 +1190,8 @@ export class Display extends EventEmitter {
     private getLineOffset(e) {
         if (this.lines.length === 0)
             return { x: 0, y: 0 }
-        var os = this._os;
-        var y = (e.pageY - os.top);
+        let os = this._os;
+        let y = (e.pageY - os.top);
         if (this.split && this.split.shown) {
             if (y >= this._VScroll.track.clientHeight - this.split.clientHeight)
                 y += this._VScroll.scrollSize;
@@ -1202,13 +1202,13 @@ export class Display extends EventEmitter {
             y += this._VScroll.position;
         y = Math.floor(y / this._charHeight);
 
-        var x = (e.pageX - os.left) + this._HScroll.position;
+        let x = (e.pageX - os.left) + this._HScroll.position;
         x = Math.floor(x / this._charWidth);
         return { x: x, y: y };
     }
 
     private offset(elt) {
-        var rect = elt.getBoundingClientRect(), bodyElt = document.body;
+        let rect = elt.getBoundingClientRect(), bodyElt = document.body;
         return {
             top: rect.top + bodyElt.scrollTop,
             left: rect.left + bodyElt.scrollLeft
@@ -1223,13 +1223,13 @@ export class Display extends EventEmitter {
     }
 
     addOverlays(ranges: OverlayRange[], cls?: string, type?: string) {
-        var s, e, sL, eL, c, w, range;
+        let s, e, sL, eL, c, w, range;
         if (!type)
             type = "default";
         if (!cls || cls.length === 0)
             cls = "overlay-default";
         this._overlays[type] = [];
-        for (var r = 0, rl = ranges.length; r < rl; r++) {
+        for (let r = 0, rl = ranges.length; r < rl; r++) {
             range = ranges[r];
             if (range.start.y > range.end.y) {
                 sL = range.end.y;
@@ -1264,7 +1264,7 @@ export class Display extends EventEmitter {
                 this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls} trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`);
                 continue;
             }
-            var len = this.lines.length;
+            let len = this.lines.length;
 
             if (sL < 0)
                 sL = 0;
@@ -1363,8 +1363,8 @@ export class Display extends EventEmitter {
     }
 
     private updateSelection() {
-        var sel = this._currentSelection;
-        var s, e, sL, eL, c, parts, w;
+        let sel = this._currentSelection;
+        let s, e, sL, eL, c, parts, w;
         this._overlays.selection = [];
         if (sel.start.y > sel.end.y) {
             sL = sel.end.y;
@@ -1398,7 +1398,7 @@ export class Display extends EventEmitter {
             this.doUpdate(UpdateType.overlays);
             return;
         }
-        var len = this.lines.length;
+        let len = this.lines.length;
 
         if (sL < 0)
             sL = 0;
@@ -1501,9 +1501,9 @@ export class Display extends EventEmitter {
     }
 
     private updateSelectionRange(end: Point) {
-        var sel = this._currentSelection;
-        var s, e, sL, eL, parts, w;
-        var c, cE;
+        let sel = this._currentSelection;
+        let s, e, sL, eL, parts, w;
+        let c, cE;
         //nothing changed so bail
         if (end.x == sel.end.x && end.y == sel.end.y)
             return;
@@ -1541,7 +1541,7 @@ export class Display extends EventEmitter {
             this.doUpdate(UpdateType.overlays);
             return;
         }
-        var len = this.lines.length;
+        let len = this.lines.length;
 
         if (sL < 0)
             sL = 0;
@@ -1645,15 +1645,15 @@ export class Display extends EventEmitter {
     }
 
     get hasSelection(): boolean {
-        var sel = this._currentSelection;
+        let sel = this._currentSelection;
         if (sel.start.x == sel.end.x && sel.start.y == sel.end.y)
             return false;
         return true;
     }
 
     get selection(): string {
-        var sel = this._currentSelection;
-        var s, e, sL, eL;
+        let sel = this._currentSelection;
+        let s, e, sL, eL;
         if (sel.start.y > sel.end.y) {
             sL = sel.end.y;
             eL = sel.start.y;
@@ -1674,6 +1674,8 @@ export class Display extends EventEmitter {
             e = Math.max(sel.start.x, sel.end.x);
             return this.lines[sel.start.y].substring(s, e);
         }
+        let len = this.lines.length;
+        
         if (sL < 0)
             sL = 0;
         if (eL >= len)
@@ -1682,8 +1684,8 @@ export class Display extends EventEmitter {
             s = 0;
         if (e > this.lines[eL].length)
             e = this.lines[eL].length;
-        var len = this.lines.length;
-        var txt = [this.lines[sL].substring(s)];
+        
+        let txt = [this.lines[sL].substring(s)];
         sL++;
         if (eL - sL > 0)
             txt.push.apply(txt, this.lines.slice(sL, eL));
@@ -1892,9 +1894,9 @@ export class Display extends EventEmitter {
     }
 
     public rebuildLines() {
-        var t;
+        let t;
 
-        for (var l = 0, ll = this.lines.length; l < ll; l++) {
+        for (let l = 0, ll = this.lines.length; l < ll; l++) {
             t = this.createLine(l);
             this._viewLines[l] = t[0];
             this._backgroundLines[l] = t[1];
@@ -2287,7 +2289,7 @@ export class ScrollBar extends EventEmitter {
     }
 
     private elOffset(elt) {
-        var rect = elt.getBoundingClientRect(), bodyElt = document.body;
+        let rect = elt.getBoundingClientRect(), bodyElt = document.body;
         return {
             top: rect.top + bodyElt.scrollTop,
             left: rect.left + bodyElt.scrollLeft

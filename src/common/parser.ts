@@ -333,7 +333,7 @@ export class Parser extends EventEmitter {
   private getColors(mxp?: MXPStyle) {
     if (typeof mxp == "undefined")
       mxp = this.GetCurrentStyle();
-    var f: (string | number), b: (string | number), fc: number = -1, bc: number = -1;
+    let f: (string | number), b: (string | number), fc: number = -1, bc: number = -1;
 
     if (mxp.fore.length > 0) {
       if ((this._CurrentAttributes & FontStyle.Bold) == FontStyle.Bold)
@@ -393,8 +393,8 @@ export class Parser extends EventEmitter {
   }
 
   private getFormatBlock(offset) {
-    var mxp: MXPStyle = this.GetCurrentStyle();
-    var colors = this.getColors(mxp);
+    let mxp: MXPStyle = this.GetCurrentStyle();
+    let colors = this.getColors(mxp);
     return {
       formatType: FormatType.Normal,
       offset: offset,
@@ -413,8 +413,8 @@ export class Parser extends EventEmitter {
   }
 
   private ProcessAnsiColorParams(params: string[]) {
-    var p: number = 0, pl: number = params.length, i: number;
-    var rgb: string;
+    let p: number = 0, pl: number = params.length, i: number;
+    let rgb: string;
     for (; p < pl; p++) {
       i = parseInt(params[p], 10);
       switch (i) {
@@ -631,8 +631,8 @@ export class Parser extends EventEmitter {
   }
 
   private buildColorTable() {
-    var _ColorTable: string[] = [];
-    var r, g, b, idx;
+    let _ColorTable: string[] = [];
+    let r, g, b, idx;
     for (r = 0; r < 6; r++) {
       for (g = 0; g < 6; g++) {
         for (b = 0; b < 6; b++) {
@@ -866,7 +866,7 @@ export class Parser extends EventEmitter {
   };
 
   private AddLine(line: string, raw: string, fragment: boolean, skip: boolean, formats: LineFormat[]) {
-    var data: ParserLine = { raw: raw, line: line, fragment: fragment, gagged: skip, formats: formats };
+    let data: ParserLine = { raw: raw, line: line, fragment: fragment, gagged: skip, formats: formats };
     this.emit('add-line', data)
     this.EndOfLine = !fragment;
   }
@@ -886,9 +886,9 @@ export class Parser extends EventEmitter {
 
   private ClearMXPToTag(tag: MXPTag, custom?: string) {
     if (custom == null) custom = "";
-    var tmp = new MXPStyle();
+    let tmp = new MXPStyle();
     tmp.tag = MXPTag.None;
-    var ml = this.mxpStyles.length - 1;
+    let ml = this.mxpStyles.length - 1;
     for (; ml >= 0; ml--) {
       if (this.mxpStyles[ml].tag != tag && this.mxpStyles[ml].custom != custom)
         tmp = this.mxpStyles.pop();
@@ -903,8 +903,8 @@ export class Parser extends EventEmitter {
   }
 
   private getMXPBlock(tag: string, args, remote): MXPBlock {
-    var tmp, arg, sArg, sArgs, color, x, xl = args.length, e, sl, s;
-    var href = "", hint = "", expire = "", prompt = false;
+    let tmp, arg, sArg, sArgs, color, x, xl = args.length, e, sl, s;
+    let href = "", hint = "", expire = "", prompt = false;
     tag = tag.toUpperCase();
     if (this.enableDebug) {
       this.emit('debug', "MXP Tag: " + tag);
@@ -1987,10 +1987,10 @@ export class Parser extends EventEmitter {
             href = "&text;";
           if (hint.length === 0)
             hint = href;
-          var cmds = href.split("|");
-          var tt: (string | number) = 0;
+          let cmds = href.split("|");
+          let tt: (string | number) = 0;
           if (cmds.length > 1) {
-            var caps = hint.split("|");
+            let caps = hint.split("|");
             if (caps.length == cmds.length + 1) {
               hint = caps[0];
               caps.shift();
@@ -2069,8 +2069,8 @@ export class Parser extends EventEmitter {
           this.ResetMXP();
           return null;
         case "HR":
-          var mxp: MXPStyle = this.GetCurrentStyle();
-          var colors = this.getColors(mxp);
+          let mxp: MXPStyle = this.GetCurrentStyle();
+          let colors = this.getColors(mxp);
           return {
             format: {
               formatType: FormatType.Normal,
@@ -2163,10 +2163,10 @@ export class Parser extends EventEmitter {
   private GetCloseTags(tag) {
     if (typeof tag == "undefined" || tag.length === 0)
       return "";
-    var idx = 0, tl = tag.length;
-    var ts = [], str = [];
-    var c, i;
-    var state = 0;
+    let idx = 0, tl = tag.length;
+    let ts = [], str = [];
+    let c, i;
+    let state = 0;
     for (; idx < tl; idx++) {
       c = tag.charAt(idx);
       switch (state) {
@@ -2204,7 +2204,7 @@ export class Parser extends EventEmitter {
   }
 
   private GetCurrentStyle() {
-    var tmp: MXPStyle;
+    let tmp: MXPStyle;
     if (this.mxpStyles.length === 0)
       this.mxpStyles.push(new MXPStyle(FontStyle.None, "", "", false));
     tmp = this.mxpStyles[this.mxpStyles.length - 1];
@@ -2214,7 +2214,7 @@ export class Parser extends EventEmitter {
   }
 
   private DecreaseColor(clr, p) {
-    var color = new RGBColor(clr);
+    let color = new RGBColor(clr);
     if (!color.ok) return clr;
     color.b -= Math.ceil(color.b * p);
     if (color.b < 0)
@@ -2229,7 +2229,7 @@ export class Parser extends EventEmitter {
   }
 
   private IncreaseColor(clr, p) {
-    var color = new RGBColor(clr);
+    let color = new RGBColor(clr);
     if (!color.ok) return clr;
     color.b += Math.ceil(color.b * p);
     if (color.b > 255)
@@ -2245,14 +2245,14 @@ export class Parser extends EventEmitter {
 
   private MXPCapture(str) {
     if (this.mxpState.capture < 1) return;
-    for (var i = 0, il = this.mxpState.captured.length; i < il; i++)
+    for (let i = 0, il = this.mxpState.captured.length; i < il; i++)
       this.mxpState.captured[i].push(str);
   }
 
   private MXPDeCapture(cnt) {
     if (this.mxpState.capture < 1) return;
-    for (var i = 0, il = this.mxpState.captured.length; i < il; i++) {
-      for (var p = 0; p < cnt; p++)
+    for (let i = 0, il = this.mxpState.captured.length; i < il; i++) {
+      for (let p = 0; p < cnt; p++)
         this.mxpState.captured[i].pop();
     }
   }
@@ -2267,7 +2267,7 @@ export class Parser extends EventEmitter {
    * @returns {String}
    */
   CurrentAnsiCode() {
-    var ansi = "\x1b[";
+    let ansi = "\x1b[";
     if (typeof this._CurrentForeColor === "string")
       ansi += "38;2;" + this._CurrentForeColor;
     else if (this._CurrentForeColor <= -16)
@@ -2310,16 +2310,16 @@ export class Parser extends EventEmitter {
     if (text === null || text.length === 0)
       return text;
     if (remote == null) remote = false;
-    var _TermTitle = "";
-    var _TermTitleType = null;
-    var _AnsiParams = null;
-    var stringBuilder = [];
-    var formatBuilder = [];
-    var rawBuilder = [];
-    var state: ParserState = ParserState.None;
-    var pState: ParserState = ParserState.None;
-    var lineLength = 0;
-    var iTmp, _MXPTag, _MXPEntity, _MXPComment, _MXPArgs, skip = false;
+    let _TermTitle = "";
+    let _TermTitleType = null;
+    let _AnsiParams = null;
+    let stringBuilder = [];
+    let formatBuilder = [];
+    let rawBuilder = [];
+    let state: ParserState = ParserState.None;
+    let pState: ParserState = ParserState.None;
+    let lineLength = 0;
+    let iTmp, _MXPTag, _MXPEntity, _MXPComment, _MXPArgs, skip = false;
 
     //query data in case already parsing
     if (this.parsing.length > 0 && !force) {
@@ -2330,7 +2330,7 @@ export class Parser extends EventEmitter {
     //store remote state as mxp requires it
     //not end of line but text, so fragment, re-get and re-parse to ensure proper triggering
     if (!this.EndOfLine && this.textLength > 0) {
-      var lines = this.display.lines;
+      let lines = this.display.lines;
       if (lines.length > 0) {
         stringBuilder.push(this.display.lines[lines.length - 1]);
         formatBuilder.push.apply(formatBuilder, this.display.lineFormats[lines.length - 1]);
@@ -2346,16 +2346,16 @@ export class Parser extends EventEmitter {
       this._SplitBuffer = "";
     }
 
-    var idx = 0, tl = text.length;
-    var c: string, i: number, e: boolean = this.emulateControlCodes;
-    var d: boolean = this.displayControlCodes;
-    var f: boolean = this.emulateTerminal;
-    var u: boolean = this.enableURLDetection;
-    var s: boolean = this.enableMSP;
-    var lnk = 0, fLnk = 0, lnkOffset = 0;
-    var lLnk = 0;
-    var lNest = null;
-    var p, pl = this.protocols.length;
+    let idx = 0, tl = text.length;
+    let c: string, i: number, e: boolean = this.emulateControlCodes;
+    let d: boolean = this.displayControlCodes;
+    let f: boolean = this.emulateTerminal;
+    let u: boolean = this.enableURLDetection;
+    let s: boolean = this.enableMSP;
+    let lnk = 0, fLnk = 0, lnkOffset = 0;
+    let lLnk = 0;
+    let lNest = null;
+    let p, pl = this.protocols.length;
     try {
       for (idx = 0; idx < tl; idx++) {
         c = text.charAt(idx);
@@ -2395,7 +2395,7 @@ export class Parser extends EventEmitter {
               //we only want the last valid #
               //start as 0 in cause invalid # or code
               _AnsiParams = 0;
-              for (var mt = _MXPTag.length - 1; mt >= 0; mt--) {
+              for (let mt = _MXPTag.length - 1; mt >= 0; mt--) {
                 if (_MXPTag[mt].length > 0) {
                   _AnsiParams = _MXPTag[0];
                   break;
@@ -2423,7 +2423,7 @@ export class Parser extends EventEmitter {
                     this._SplitBuffer += c;
                     break;
                   }
-                  var ct = text.charAt(idx + 1);
+                  let ct = text.charAt(idx + 1);
                   if (ct != '<') {
                     this.mxpState.lineType = lineType.Open;
                     this.mxpState.on = false;
@@ -2484,7 +2484,7 @@ export class Parser extends EventEmitter {
                   stringBuilder = [];
                   rawBuilder = [];
                   formatBuilder = [this.getFormatBlock(lineLength)];
-                  for (var j = 0; j < iTmp; j++) {
+                  for (let j = 0; j < iTmp; j++) {
                     this.AddLine("", "\n", false, false, formatBuilder);
                     this.MXPCapture("\n");
                   }
@@ -2948,7 +2948,7 @@ export class Parser extends EventEmitter {
               rawBuilder.pop();
             }
             else {
-              var si = stringBuilder.length - 1;
+              let si = stringBuilder.length - 1;
               if (lNest.length > 1 && lNest[lNest.length - 1] == c) {
                 lNest.pop();
                 stringBuilder.push(c);
@@ -3086,7 +3086,7 @@ export class Parser extends EventEmitter {
             }
             */
             else if (e && c === '\t') {
-              var _Tab = 8 - lineLength % 8;
+              let _Tab = 8 - lineLength % 8;
               if (_Tab > 0) {
                 stringBuilder.push(Array(_Tab + 1).join(" "));
                 this.MXPCapture(Array(_Tab + 1).join(" "));
@@ -3298,13 +3298,13 @@ export class Parser extends EventEmitter {
               this.mxpState.noBreak = false;
               if (u) {
                 _MXPComment = "";
-                var psk, pFnd = false;
+                let psk, pFnd = false;
                 for (p = 0; p < pl; p++) {
                   if (idx - this.protocols[p].length < 0)
                     continue;
                   psk = false;
-                  var nl = this.protocols[p].length;
-                  for (var n = 0; n < nl; n++) {
+                  let nl = this.protocols[p].length;
+                  for (let n = 0; n < nl; n++) {
                     if (text[idx - (nl - n)] !== this.protocols[p][n]) {
                       psk = true;
                       break;
@@ -3658,8 +3658,8 @@ export class Parser extends EventEmitter {
   };
 
   private parseNext() {
-    var iTmp = this.parsing.shift();
-    var self = this;
+    let iTmp = this.parsing.shift();
+    let self = this;
     return function () { self.parse(iTmp[0], iTmp[1], true); };
   }
 
@@ -3699,7 +3699,7 @@ export class Parser extends EventEmitter {
 
   playBell() {
     if (this.enableBell) {
-      var bell = new buzz.sound(this.bell);
+      let bell = new buzz.sound(this.bell);
       bell.play();
     }
   };

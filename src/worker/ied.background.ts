@@ -22,7 +22,7 @@ function decode(data: string) {
     if (!data || data.length == 0)
         return "";
     decoded = [];
-    for (var d = 0, dl = data.length; d < dl; d++) {
+    for (let d = 0, dl = data.length; d < dl; d++) {
         c = data.charAt(d);
         if (c == '@') {
             decoded.push(String.fromCharCode(parseInt(data.substr(d + 1, 2), 16)));
@@ -41,7 +41,7 @@ function encode(data: string) {
         return "";
 
     encoded = [];
-    for (var d = 0, dl = data.length; d < dl; d++) {
+    for (let d = 0, dl = data.length; d < dl; d++) {
         c = data.charAt(d);
         i = data.charCodeAt(d);
         if (i <= 32 || i >= 127 || c == '@' || c == '^' || c == '\\' || c == '/') {

@@ -6,11 +6,11 @@
 		$.fn.innerText = function (msg) {
 			if (msg) {
 				if (document.body.innerText) {
-					for (var i in this) {
+					for (let i in this) {
 						this[i].innerText = msg;
 					}
 				} else {
-					for (var i in this) {
+					for (let i in this) {
 						this[i].innerHTML.replace(/&lt;br&gt;/gi, "n").replace(/(&lt;([^&gt;]+)&gt;)/gi, "");
 					}
 				}
@@ -26,16 +26,16 @@
 	*/
 
 	$.fn.innerText = function (msg) {
-		var txt = "";
-		for(var i = 0, il = this.length;i < il; i++) {
+		let txt = "";
+		for(let i = 0, il = this.length;i < il; i++) {
 			txt += this[i].innerText || this[i].textContent || "";
 		}
 		return txt;
 	}
 
 	$.fn.textContents = function (msg) {
-		var txt = "";
-		for (var i in this) {
+		let txt = "";
+		for (let i in this) {
 			txt += this[i].textContent || "";
 		}
 		return txt;

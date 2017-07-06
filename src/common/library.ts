@@ -12,9 +12,9 @@ export function SortArrayByPriority(a, b) {
 }
 
 export function FilterArrayByKeyValue(array, k, v) {
-	var res = [];
+	let res = [];
 	if (!array || array.length === 0) return res;
-	for (var i = 0, al = array.length; i < al; i++) {
+	for (let i = 0, al = array.length; i < al; i++) {
 		if (array[i]["enabled"] && array[i][k] == v)
 			res.push(array[i]);
 	}
@@ -35,7 +35,7 @@ export function htmlEntities(str) {
 }
 
 export function stripHTML(html) {
-	var tmp = document.createElement("DIV");
+	let tmp = document.createElement("DIV");
 	tmp.innerHTML = html;
 	return tmp.textContent || tmp.innerText || "";
 }
@@ -79,7 +79,7 @@ export function CharAllowedInURL(chr, proto) {
 		chr === ')'
 	)
 		return !proto;
-	var i = chr.charCodeAt(0);
+	let i = chr.charCodeAt(0);
 	if (i > 64 && i < 91)
 		return true;
 	if (i > 96 && i < 123)
@@ -89,7 +89,7 @@ export function CharAllowedInURL(chr, proto) {
 	return false;
 }
 
-export var keyCodeToChar = {
+export let keyCodeToChar = {
 	3: "Cancel",
 	6: "Help",
 	8: "Backspace",
@@ -267,7 +267,7 @@ export var keyCodeToChar = {
 	253: "Pa1",
 	254: "Win Oem Clear"
 };
-export var keyCharToCode = {
+export let keyCharToCode = {
 	"Cancel": 3,
 	"Help": 6,
 	"Backspace": 8,
@@ -457,7 +457,7 @@ export function setSelectionRange(input, selectionStart, selectionEnd) {
 		input.setSelectionRange(selectionStart, selectionEnd);
 	}
 	else if (input.createTextRange) {
-		var range = input.createTextRange();
+		let range = input.createTextRange();
 		range.collapse(true);
 		range.moveEnd('character', selectionEnd);
 		range.moveStart('character', selectionStart);
@@ -523,8 +523,8 @@ String.prototype.paddingRight = function (this: string, paddingValue: (string | 
 }
 
 export function getTimeSpan(i: number): string {
-	var al;
-	var tmp = [];
+	let al;
+	let tmp = [];
 
 	al = Math.floor(i / (1000 * 60 * 60 * 24));
 	i -= al * (1000 * 60 * 60 * 24);
@@ -562,9 +562,9 @@ export function parseTemplate(str: string, data?) {
 	str = str.replace(/{themes}/g, path.join(__dirname, "..", "themes"));
 	str = str.replace(/{assets}/g, path.join(__dirname, "..", "..", "assets"));
 	if (data) {
-		var keys = Object.keys(data);
-		for (var key in keys) {
-			var regex = new RegExp("{}" + key + "}", "g");
+		let keys = Object.keys(data);
+		for (let key in keys) {
+			let regex = new RegExp("{}" + key + "}", "g");
 			str = str.replace(regex, data[key]);
 		}
 	}
@@ -572,7 +572,7 @@ export function parseTemplate(str: string, data?) {
 }
 
 export function templatePath(p: string) {
-	var paths = [
+	let paths = [
 		'{characters}',
 		'{themes}',
 		'{assets}',
@@ -588,8 +588,8 @@ export function templatePath(p: string) {
 		'{pictures}',
 		'{videos}'
 	]
-	for (var s = 0, sl = paths.length; s < sl; s++) {
-		var t = parseTemplate(paths[s]);
+	for (let s = 0, sl = paths.length; s < sl; s++) {
+		let t = parseTemplate(paths[s]);
 		if (p.startsWith(t))
 			return paths[s] + p.substr(t.length);
 	}
@@ -597,15 +597,15 @@ export function templatePath(p: string) {
 }
 
 export function naturalCompare(a, b) {
-	var ax = [], bx = [];
+	let ax = [], bx = [];
 
 	a.replace(/(\d+)|(\D+)/g, function (_, $1, $2) { ax.push([$1 || Infinity, $2 || ""]) });
 	b.replace(/(\d+)|(\D+)/g, function (_, $1, $2) { bx.push([$1 || Infinity, $2 || ""]) });
 
 	while (ax.length && bx.length) {
-		var an = ax.shift();
-		var bn = bx.shift();
-		var nn = (an[0] - bn[0]) || an[1].localeCompare(bn[1]);
+		let an = ax.shift();
+		let bn = bx.shift();
+		let nn = (an[0] - bn[0]) || an[1].localeCompare(bn[1]);
 		if (nn) return nn;
 	}
 
@@ -614,7 +614,7 @@ export function naturalCompare(a, b) {
 
 export function getScrollBarWidth(el) {
 	if (!el) return 0;
-	var inner = document.createElement('p');
+	let inner = document.createElement('p');
 	inner.style.width = "100%";
 	inner.style.height = "100%";
 	inner.style.position = "absolute";
@@ -626,11 +626,11 @@ export function getScrollBarWidth(el) {
 	el.style.overflowX = 'hidden';
 
 	el.appendChild(inner);
-	var w1 = inner.offsetWidth;
+	let w1 = inner.offsetWidth;
 	el.style.overflowY = '';
 	el.style.overflowX = '';
 
-	var w2 = inner.offsetWidth;
+	let w2 = inner.offsetWidth;
 	if (w1 == w2) w2 = el.clientWidth;
 
 	el.removeChild(inner);
@@ -640,7 +640,7 @@ export function getScrollBarWidth(el) {
 
 export function getScrollBarHeight(el) {
 	if (!el) return 0;
-	var inner = document.createElement('p');
+	let inner = document.createElement('p');
 	inner.style.width = "100%";
 	inner.style.height = "100%";
 	inner.style.position = "absolute";
@@ -652,11 +652,11 @@ export function getScrollBarHeight(el) {
 	el.style.overflowX = 'hidden';
 
 	el.appendChild(inner);
-	var w1 = inner.offsetHeight;
+	let w1 = inner.offsetHeight;
 	el.style.overflowY = '';
 	el.style.overflowX = '';
 
-	var w2 = inner.offsetHeight;
+	let w2 = inner.offsetHeight;
 	if (w1 == w2) w2 = el.clientHeight;
 
 	el.removeChild(inner);
@@ -666,7 +666,7 @@ export function getScrollBarHeight(el) {
 
 export function getScrollBarSize(el) {
 	if (!el) return 0;
-	var inner = document.createElement('p');
+	let inner = document.createElement('p');
 	inner.style.width = "100%";
 	inner.style.height = "100%";
 	inner.style.position = "absolute";
@@ -679,14 +679,14 @@ export function getScrollBarSize(el) {
 
 	el.appendChild(inner);
 
-	var w1 = inner.offsetWidth;
-	var h1 = inner.offsetHeight;
+	let w1 = inner.offsetWidth;
+	let h1 = inner.offsetHeight;
 
 	el.style.overflowY = '';
 	el.style.overflowX = '';
 
-	var w2 = inner.offsetWidth;
-	var h2 = inner.offsetHeight;
+	let w2 = inner.offsetWidth;
+	let h2 = inner.offsetHeight;
 	if (w1 == w2) w2 = el.clientWidth;
 	if (h1 == h2) h2 = el.clientHeight;
 

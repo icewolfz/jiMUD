@@ -175,12 +175,12 @@ export class MSP extends EventEmitter {
      * @returns {Object} return a MUSIC or SOUND argument object
      */
     private getArguments(text: string, type: number) {
-        var e = { off: false, file: "", url: "", volume: 100, repeat: 1, priority: 50, type: "", continue: true };
-        var args = [];
-        var state: number = 0;
-        var str = [];
-        var x: number = 0, xl: number = text.length, c: string;
-        var arg, tmp;
+        let e = { off: false, file: "", url: "", volume: 100, repeat: 1, priority: 50, type: "", continue: true };
+        let args = [];
+        let state: number = 0;
+        let str = [];
+        let x: number = 0, xl: number = text.length, c: string;
+        let arg, tmp;
         for (; x < xl; x++) {
             c = text.charAt(x);
             switch (state) {
@@ -337,7 +337,7 @@ export class MSP extends EventEmitter {
         this.MusicState.volume = data.volume;
         this.MusicState.repeats = data.repeat;
         this.MusicState.continue = data.continue;
-        var old = this.MusicState.file;
+        let old = this.MusicState.file;
 
         if (data.file.lastIndexOf('.') === -1)
             this.MusicState.file = data.file + this.defaultMusicExt;
@@ -386,7 +386,7 @@ export class MSP extends EventEmitter {
         this.SoundState.volume = data.volume;
         this.SoundState.repeats = data.repeat;
         this.SoundState.priority = data.priority;
-        var old = this.SoundState.file;
+        let old = this.SoundState.file;
         if (data.file.lastIndexOf('.') === -1)
             this.SoundState.file = data.file + this.defaultSoundExt;
         else

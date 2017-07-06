@@ -41,8 +41,8 @@ export class Tests extends EventEmitter {
         this.Client = client;
 
         this.TestFunctions["TestList()"] = function () {
-            var sample = "Test functions:\n";
-            for (var t in this.TestFunctions) {
+            let sample = "Test functions:\n";
+            for (let t in this.TestFunctions) {
                 if (!this.TestFunctions.hasOwnProperty(t)) continue;
                 sample += "\t" + t + "\n";
             }
@@ -50,8 +50,8 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestColors()"] = function () {
-            var r;
-            var sample = "Colors and Styles\n-------------------------------------------------------------------------------------------\n";
+            let r;
+            let sample = "Colors and Styles\n-------------------------------------------------------------------------------------------\n";
             for (r = 30; r < 38; r++) {
                 sample += "\x1b[" + r + ";0m" + r + "\x1b[0m ";
                 sample += "\x1b[" + r + ";1mBold\x1b[0m ";
@@ -87,15 +87,15 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestColorsDetails()"] = function () {
-            var sample = "";
+            let sample = "";
             if (this.Client.telnet.prompt)
                 sample = "\n";
             sample += "Table for 16-color terminal escape sequences.\n";
             sample += "\n";
             sample += "Background        | Foreground colors\n";
             sample += "------------------------------------------------------------------------------------\n";
-            for (var bg = 40; bg <= 47; bg++) {
-                for (var a in Ansi) {
+            for (let bg = 40; bg <= 47; bg++) {
+                for (let a in Ansi) {
                     if (typeof Ansi[a] !== 'number') continue;
                     if (a == "Rapid") continue;
                     //-16
@@ -104,7 +104,7 @@ export class Tests extends EventEmitter {
                     else
                         sample += "\x1B[0m " + a.paddingRight(16) + " | ";
                     //-7
-                    for (var fg = 30; fg <= 37; fg++) {
+                    for (let fg = 30; fg <= 37; fg++) {
                         if (a == "None")
                             sample += "\x1B[" + bg + "m\x1B[" + fg + "m " + ("[" + fg + "m").paddingRight(7);
                         else
@@ -137,8 +137,8 @@ export class Tests extends EventEmitter {
         }
 
         this.TestFunctions["TestXTerm()"] = function (title) {
-            var r, g, b, c;
-            var sample = "";
+            let r, g, b, c;
+            let sample = "";
             if (typeof title != 'undefined' && title.length > 0) {
                 sample += "Set Title: ";
                 sample += title;
@@ -175,7 +175,7 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestMXP()"] = function () {
-            var sample = "Text Formatting\n";
+            let sample = "Text Formatting\n";
             sample += "\t\x1B[6z";
             sample += "<!--Test-->&lt;!--Test--&gt;\n";
             sample += "\t<!--Test>-->&lt;!--Test&gt;--&gt;\n";
@@ -237,7 +237,7 @@ export class Tests extends EventEmitter {
             sample += "\t<!ENTITY version \"" + this.Client.version + "\">&lt;!ENTITY version \"" + this.Client.version + "\"&gt;\n";
             sample += "\t&amp;version; = &version;\n";
             sample += "\t&lt;V Hp&gt;<V Hp>100</V>&lt;/VAR&gt; &amp;Hp; = &Hp; &amp;hp; = &hp;\n";
-            sample += "\t&lt;VAR Sp&gt;<VAR Sp>200</VAR>&lt;/VAR&gt; &amp;Sp; = &Sp; &amp;sp; = &sp;\n";
+            sample += "\t&lt;let Sp&gt;<let Sp>200</VAR>&lt;/VAR&gt; &amp;Sp; = &Sp; &amp;sp; = &sp;\n";
             sample += "Image\n";
             sample += "default      <image logo.png URL=\"./../assets/\" w=133 h=40>\n";
             sample += "align left <image logo.png URL=\"./../assets/\" align=left w=133 h=40> align left\n";
@@ -253,18 +253,18 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestSize()"] = function () {
-            var ws = this.Client.WindowSize;
-            var sample = ws.width + "x" + ws.height + " ";
+            let ws = this.Client.WindowSize;
+            let sample = ws.width + "x" + ws.height + " ";
             ws.width -= sample.length;
-            for (var w = 0; w < ws.width; w++)
+            for (let w = 0; w < ws.width; w++)
                 sample += "w";
-            for (var h = 1; h < ws.height; h++)
+            for (let h = 1; h < ws.height; h++)
                 sample += "\n" + h;
             this.Client.print(sample, true);
         };
 
         this.TestFunctions["TestMXPExpire()"] = function () {
-            var sample = "\t\x1B[6z<SEND \"sample\" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND \"sample\" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt>\x1B[0z\n";
+            let sample = "\t\x1B[6z<SEND \"sample\" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND \"sample\" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt>\x1B[0z\n";
             this.Client.print(sample, true);
         };
 
@@ -282,7 +282,7 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestMXPColors()"] = function () {
-            var colors = ["IndianRed", "LightCoral", "Salmon", "DarkSalmon", "LightSalmon",
+            let colors = ["IndianRed", "LightCoral", "Salmon", "DarkSalmon", "LightSalmon",
                 "Crimson", "Red", "FireBrick", "DarkRed", "Pink", "LightPink", "HotPink", "DeepPink",
                 "MediumVioletRed", "PaleVioletRed", "LightSalmon", "Coral", "Tomato", "OrangeRed",
                 "DarkOrange", "Orange", "Gold", "Yellow", "LightYellow", "LemonChiffon",
@@ -306,8 +306,8 @@ export class Tests extends EventEmitter {
                 "Beige", "OldLace", "FloralWhite", "Ivory", "AntiqueWhite", "Linen",
                 "LavenderBlush", "MistyRose", "Gainsboro", "LightGrey", "Silver", "DarkGray",
                 "Gray", "DimGray", "LightSlateGray", "SlateGray", "DarkSlateGray", "Black"];
-            var sample = "\x1B[6z";
-            for (var c = 0, cl = colors.length - 1; c < cl; c++) {
+            let sample = "\x1B[6z";
+            for (let c = 0, cl = colors.length - 1; c < cl; c++) {
                 sample += "" + colors[c] + ": ";
                 sample += Array(22 - colors[c].length).join(" ");
                 sample += "<C " + colors[c] + ">Fore</C> ";
@@ -327,7 +327,7 @@ export class Tests extends EventEmitter {
                 sample += "</C>\n";
             }
             sample += "Black: ";
-            sample += Array(22 - colors[c].length).join(" ");
+            sample += Array(17).join(" ");
             sample += "<C Black silver>Fore</C> ";
             sample += "<C silver Black>Back</C> ";
             sample += "<h><C Black silver>High</C></h> ";
@@ -348,7 +348,7 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestMXPElements()"] = function () {
-            var sample = "\x1B[6z";
+            let sample = "\x1B[6z";
             sample += "Custom Element\n";
             sample += "\t<!ELEMENT help '<send href=\"help &text;\">'>&lt;!ELEMENT help '&lt;send href=\"help &amp;text;\"&gt;'&gt;\n";
             sample += "\t&lt;help&gt;test&lt;/help&gt; = <help>test</help>\n";
@@ -359,7 +359,7 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestMXPLines()"] = function () {
-            var sample = "\x1B[6z";
+            let sample = "\x1B[6z";
             sample += "<!ELEMENT Auction '<FONT COLOR=red>' TAG=20 OPEN>";
             sample += "\x1B[20zA nice shiny sword is being auctioned.\n";
             sample += "\x1B[6z<Auction>Also, a gold ring is being auctioned.</Auction>";
@@ -375,7 +375,7 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestFANSI()"] = function () {
-            var sample = "", i;
+            let sample = "", i;
             sample = String.fromCharCode(1);
             for (i = 3; i <= 6; i++)
                 sample += String.fromCharCode(i);
@@ -386,7 +386,7 @@ export class Tests extends EventEmitter {
             for (i = 127; i <= 254; i++)
                 sample += String.fromCharCode(i);
             sample += "\n";
-            var dcc = this.Client.display.displayControlCodes;
+            let dcc = this.Client.display.displayControlCodes;
             this.Client.display.displayControlCodes = true;
             if (!this.Client.display.emulateTerminal) {
                 this.Client.print(sample, true);
@@ -404,7 +404,7 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestMXP2()"] = function () {
-            var sample = "\x1B[6z";
+            let sample = "\x1B[6z";
             sample += "<!-- Elements to support the Automapper -->";
             sample += "<!ELEMENT RName '<FONT COLOR=Red><B>' FLAG=\"RoomName\">";
             sample += "<!ELEMENT RDesc FLAG='RoomDesc'>";
@@ -441,7 +441,7 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestURLDetect()"] = function () {
-            var sample = "\x1B[0mhttp://www.google.com\n";
+            let sample = "\x1B[0mhttp://www.google.com\n";
             sample += "\thttp://www.google.com\x1B[44m\n";
             sample += "http://www.google.com\n";
             sample += "\ttry this http://www.google.com\n";
@@ -465,8 +465,8 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestXTermRGB()"] = function () {
-            var sample = "";
-            var r, g, b, i = 0;
+            let sample = "";
+            let r, g, b, i = 0;
             for (r = 0; r < 256; r += 16) {
                 for (g = 0; g < 256; g += 16) {
                     for (b = 0; b < 256; b += 16) {
@@ -482,14 +482,14 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions["TestSpeed()"] = function () {
-            var sample = [];
-            for (var i = 0; i < 10; i++) {
-                var start = new Date().getTime();
+            let sample = [];
+            for (let i = 0; i < 10; i++) {
+                let start = new Date().getTime();
                 this.Client.sendCommand("TestMXPColors();TestMXP();TestColors();TestColorsDetails();TestXTerm();TestXTermRGB()");
-                var end = new Date().getTime();
+                let end = new Date().getTime();
                 sample.push(`${i} - ${end - start}`);
             }
             this.Client.print(sample.join("\n") + "\n", true);
-        };      
+        };
     }
 }

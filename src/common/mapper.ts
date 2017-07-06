@@ -293,8 +293,8 @@ export class Mapper extends EventEmitter {
             if (this.drag) {
                 this.MouseDrag.x += this.MousePrev.x - this.Mouse.x;
                 this.MouseDrag.y += this.MousePrev.y - this.Mouse.y;
-                var x = Math.floor(this.MouseDrag.x / 32);
-                var y = Math.floor(this.MouseDrag.y / 32)
+                let x = Math.floor(this.MouseDrag.x / 32);
+                let y = Math.floor(this.MouseDrag.y / 32)
                 if (x > 0 || x < 0 || y < 0 || y > 0) {
                     this.MouseDrag.x -= x * 32;
                     this.MouseDrag.y -= y * 32;
@@ -317,9 +317,9 @@ export class Mapper extends EventEmitter {
             if (!this.MouseDown)
                 this.MouseDown = this.getMapMousePos(event);
             if (this.Mouse.button === 0 && Math.floor(this.Mouse.x / 32) == Math.floor(this.MouseDown.x / 32) && Math.floor(this.Mouse.y / 32) == Math.floor(this.MouseDown.y / 32)) {
-                var x = this.Mouse.x;
-                var y = this.Mouse.y;
-                var i, idx;
+                let x = this.Mouse.x;
+                let y = this.Mouse.y;
+                let i, idx;
                 this.findActiveRoomByCoords(x, y, (room) => {
                     if (this.selected && room && room.ID == this.selected.ID)
                         return;
@@ -348,7 +348,7 @@ export class Mapper extends EventEmitter {
         });
         $(this._canvas).bind("contextmenu", (event) => {
             event.preventDefault();
-            var m = this.getMapMousePos(event);
+            let m = this.getMapMousePos(event);
             this.findActiveRoomByCoords(m.x, m.y, (room) => {
                 this.emit('context-menu', clone(room))
             });
@@ -366,7 +366,7 @@ export class Mapper extends EventEmitter {
     }
 
     getMapMousePos(evt): MouseData {
-        var rect = this._canvas.getBoundingClientRect();
+        let rect = this._canvas.getBoundingClientRect();
         return {
             x: evt.clientX - rect.left,
             y: evt.clientY - rect.top,
@@ -392,13 +392,13 @@ export class Mapper extends EventEmitter {
     }
 
     findActiveRoomByCoords(rx: number, ry: number, callback) {
-        var x = this.vscroll - (this._canvas.width / 32 / 2);
-        var y = this.hscroll - (this._canvas.height / 32 / 2);
-        var z = this.active.z;
-        var area = this.active.area;
-        var zone = this.active.zone;
-        var ox = 15.5;
-        var oy = 15.5;
+        let x = this.vscroll - (this._canvas.width / 32 / 2);
+        let y = this.hscroll - (this._canvas.height / 32 / 2);
+        let z = this.active.z;
+        let area = this.active.area;
+        let zone = this.active.zone;
+        let ox = 15.5;
+        let oy = 15.5;
         if (this._canvas.width % 2 !== 0)
             ox = 15;
         if (this._canvas.height % 2 !== 0)
@@ -450,19 +450,19 @@ export class Mapper extends EventEmitter {
         if (!canvas || !context) return;
 
         this._redraw = true;
-        var x = this.vscroll - (canvas.width / 32 / 2);
-        var y = this.hscroll - (canvas.height / 32 / 2);
-        var z = this.active.z || 0;
-        var area = this.active.area || "";
-        var zone = this.active.zone || 0;
-        var ox = 15.5;
-        var oy = 15.5;
+        let x = this.vscroll - (canvas.width / 32 / 2);
+        let y = this.hscroll - (canvas.height / 32 / 2);
+        let z = this.active.z || 0;
+        let area = this.active.area || "";
+        let zone = this.active.zone || 0;
+        let ox = 15.5;
+        let oy = 15.5;
 
-        var bx = 0;
-        var by = 0;
-        var br = canvas.width;// + bounds.w * (100 / 1.5);
-        var bb = canvas.height;// + bounds.h * (100 / 1.5);
-        var r, cx, cy, room = 0;
+        let bx = 0;
+        let by = 0;
+        let br = canvas.width;// + bounds.w * (100 / 1.5);
+        let bb = canvas.height;// + bounds.h * (100 / 1.5);
+        let r, cx, cy, room = 0;
 
         if (canvas.width % 2 !== 0)
             ox = 15;
@@ -489,10 +489,10 @@ export class Mapper extends EventEmitter {
                 }
                 else
                     context.clearRect(0, 0, canvas.width, canvas.height);
-                var rooms = {};
+                let rooms = {};
                 if (rows) {
-                    var rl = rows.length;
-                    for (var r = 0; r < rl; r++) {
+                    let rl = rows.length;
+                    for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
@@ -510,8 +510,8 @@ export class Mapper extends EventEmitter {
                             }
                         }
                     }
-                    for (var rm in rooms) {
-                        var room = rooms[rm];
+                    for (let rm in rooms) {
+                        let room = rooms[rm];
                         this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, false);
                     }
                 }
@@ -539,10 +539,10 @@ export class Mapper extends EventEmitter {
                 }
                 else
                     context.clearRect(0, 0, canvas.width, canvas.height);
-                var rooms = {};
+                let rooms = {};
                 if (rows) {
-                    var rl = rows.length;
-                    for (var r = 0; r < rl; r++) {
+                    let rl = rows.length;
+                    for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
@@ -560,8 +560,8 @@ export class Mapper extends EventEmitter {
                             }
                         }
                     }
-                    for (var rm in rooms) {
-                        var room = rooms[rm];
+                    for (let rm in rooms) {
+                        let room = rooms[rm];
                         this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, ex);
                     }
                 }
@@ -714,7 +714,7 @@ export class Mapper extends EventEmitter {
         try {
             //this._db.serialize(() => {
             this._db.all("Select * FROM Rooms where ID = '" + data.num + "'", (err, rows) => {
-                var room;
+                let room;
                 if (!rows || rows.length == 0) {
                     room = {
                         area: "",
@@ -804,11 +804,11 @@ export class Mapper extends EventEmitter {
                 room.name = data.name;
                 room.env = data.environment;
                 room.indoors = data.indoors;
-                for (var exit in data.exits)
+                for (let exit in data.exits)
                     room.exits[exit] = data.exits[exit];
                 //start with none
                 room.details = RoomDetails.None;
-                for (var x = 0; x < data.details.length; x++) {
+                for (let x = 0; x < data.details.length; x++) {
                     switch (data.details[x]) {
                         case "dock":
                             room.details |= RoomDetails.Dock;
@@ -894,8 +894,8 @@ export class Mapper extends EventEmitter {
                 this._changed = true;
             });
         this._db.run("Delete From Exits WHERE ID = ?", [room.ID || room.num]);
-        var stmt = this._db.prepare("INSERT INTO Exits VALUES (?, ?, ?, ?, ?)");
-        for (var exit in room.exits) {
+        let stmt = this._db.prepare("INSERT INTO Exits VALUES (?, ?, ?, ?, ?)");
+        for (let exit in room.exits) {
             stmt.run(room.ID, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
         stmt.finalize();
@@ -925,8 +925,8 @@ export class Mapper extends EventEmitter {
                 this._changed = true;
             });
         //this._db.run("Delete From Exits WHERE ID = ?", [room.ID || room.num]);
-        var stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
-        for (var exit in room.exits) {
+        let stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
+        for (let exit in room.exits) {
             stmt.run(room.ID || room.num, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
         stmt.finalize();
@@ -936,7 +936,7 @@ export class Mapper extends EventEmitter {
 
     processGMCP(mod: string, obj) {
         if (!this.enabled) return;
-        var mods = mod.split(".");
+        let mods = mod.split(".");
         if (mods.length < 2 || mods[0] != "Room") return;
         switch (mods[1]) {
             case "Info":
@@ -1048,7 +1048,7 @@ export class Mapper extends EventEmitter {
 
     DrawRoom(ctx, x, y, room, ex) {
         ctx.beginPath();
-        var f = false;
+        let f = false;
         if (room.Background) {
             ctx.fillStyle = room.Background;
             f = true;
@@ -1421,10 +1421,10 @@ export class Mapper extends EventEmitter {
         this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Rooms.ID = $id", {
             $id: id
         }, (err, rows) => {
-            var rooms = {};
+            let rooms = {};
             if (rows) {
-                var rl = rows.length;
-                for (var r = 0; r < rl; r++) {
+                let rl = rows.length;
+                for (let r = 0; r < rl; r++) {
                     if (rooms[rows[r].ID]) {
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: rows[r].DestID,
@@ -1454,10 +1454,10 @@ export class Mapper extends EventEmitter {
                 $zone: zone,
                 $z: level
             }, (err, rows) => {
-                var rooms = {};
+                let rooms = {};
                 if (rows) {
-                    var rl = rows.length;
-                    for (var r = 0; r < rl; r++) {
+                    let rl = rows.length;
+                    for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
@@ -1484,10 +1484,10 @@ export class Mapper extends EventEmitter {
                 $zone: zone,
                 $z: level,
             }, (err, rows) => {
-                var rooms = {};
+                let rooms = {};
                 if (rows) {
-                    var rl = rows.length;
-                    for (var r = 0; r < rl; r++) {
+                    let rl = rows.length;
+                    for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
@@ -1524,9 +1524,9 @@ export class Mapper extends EventEmitter {
         if (this.current.z != destRoom.z)
             return;
         this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
-            var room, id;
-            var roomsC = [];
-            var ox = null, oy = 0, w = 0, h = 0, r, rl = rooms.length, x, y, cx, cy;
+            let room, id;
+            let roomsC = [];
+            let ox = null, oy = 0, w = 0, h = 0, r, rl = rooms.length, x, y, cx, cy;
             for (id in rooms) {
                 room = rooms[id];
                 if (ox === null) {
@@ -1549,7 +1549,7 @@ export class Mapper extends EventEmitter {
 
             w = Math.sqrt(Math.pow(w - ox, 2)) + 1;
             h = Math.sqrt(Math.pow(oy - h, 2)) + 1;
-            var matrix = [];
+            let matrix = [];
 
             for (y = 0; y < h; y++) {
                 matrix[y] = [];
@@ -1582,14 +1582,14 @@ export class Mapper extends EventEmitter {
                 //if (room.exits.down)
                 //matrix[y][x] |= 256;                
             }
-            var grid = new PF.Grid(w, h, matrix);
+            let grid = new PF.Grid(w, h, matrix);
 
-            var finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
+            let finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
             x = (this.current.x - ox);
             y = (this.current.y - oy);
             cx = (destRoom.x - ox);
             cy = (destRoom.y - oy);
-            var path = finder.findPath(x, y, cx, cy, grid);
+            let path = finder.findPath(x, y, cx, cy, grid);
             rl = path.length;
             this.markers = {};
             for (r = 0; r < rl; r++) {
@@ -1628,9 +1628,9 @@ export class Mapper extends EventEmitter {
         if (this.current.z != destRoom.z)
             return;
         this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
-            var room, id;
-            var roomsC = [];
-            var ox = null, oy = 0, w = 0, h = 0, r, rl = rooms.length, x, y, cx, cy, x2, y2, s;
+            let room, id;
+            let roomsC = [];
+            let ox = null, oy = 0, w = 0, h = 0, r, rl = rooms.length, x, y, cx, cy, x2, y2, s;
             for (id in rooms) {
                 room = rooms[id];
                 if (ox === null) {
@@ -1653,7 +1653,7 @@ export class Mapper extends EventEmitter {
 
             w = Math.sqrt(Math.pow(w - ox, 2)) + 1;
             h = Math.sqrt(Math.pow(oy - h, 2)) + 1;
-            var matrix = [];
+            let matrix = [];
 
             for (y = 0; y < h; y++) {
                 matrix[y] = [];
@@ -1686,16 +1686,16 @@ export class Mapper extends EventEmitter {
                 //if (room.exits.down)
                 //matrix[y][x] |= 256;                
             }
-            var grid = new PF.Grid(w, h, matrix);
+            let grid = new PF.Grid(w, h, matrix);
 
-            var finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
+            let finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
             x = (this.current.x - ox);
             y = (this.current.y - oy);
             cx = (destRoom.x - ox);
             cy = (destRoom.y - oy);
-            var path = finder.findPath(x, y, cx, cy, grid);
+            let path = finder.findPath(x, y, cx, cy, grid);
             rl = path.length;
-            var walk = [];
+            let walk = [];
             for (r = 0; r < rl - 1; r++) {
                 x = Math.floor(path[r][0]);
                 y = Math.floor(path[r][1]);
@@ -1725,8 +1725,8 @@ export class Mapper extends EventEmitter {
     };
 
     SendCommands(cmds) {
-        var tmp;
-        var cnt = this.commandDelayCount;
+        let tmp;
+        let cnt = this.commandDelayCount;
         if (cmds.length > cnt) {
             tmp = cmds.slice(cnt);
             cmds = cmds.slice(0, cnt);
@@ -1751,12 +1751,12 @@ export class Mapper extends EventEmitter {
         }
         else {
             this._cancelImport = false;
-            var idx, r, rl;
+            let idx, r, rl;
             this._db.serialize(() => {
                 if (Array.isArray(data)) {
                     rl = data.length;
                     this.emit('import-progress', 0);
-                    var stmt2 = this._db.prepare("INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ");
+                    let stmt2 = this._db.prepare("INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ");
                     idx = 1;
                     for (r = 0; r < rl; r++) {
                         if (this._cancelImport) {
@@ -1794,8 +1794,8 @@ export class Mapper extends EventEmitter {
                                 }
                             });
                         //this._db.run("Delete From Exits WHERE ID = ?", [data[r].ID]);
-                        var stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
-                        for (var exit in data[r].exits) {
+                        let stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
+                        for (let exit in data[r].exits) {
                             stmt.run(data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed,
                                 () => {
                                     if (this._cancelImport) {
@@ -1823,7 +1823,7 @@ export class Mapper extends EventEmitter {
                 }
                 else {
                     this.emit('import-progress', 0);
-                    var stmt2 = this._db.prepare("INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ");
+                    let stmt2 = this._db.prepare("INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ");
                     rl = Object.keys(data).length;
                     idx = 1;
                     for (r in data) {
@@ -1868,8 +1868,8 @@ export class Mapper extends EventEmitter {
                                 }
                             });
                         //this._db.run("Delete From Exits WHERE ID = ?", [data[r].ID]);
-                        var stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
-                        for (var exit in data[r].exits) {
+                        let stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
+                        for (let exit in data[r].exits) {
                             stmt.run([data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed],
                                 () => {
                                     if (this._cancelImport) {
@@ -1905,11 +1905,11 @@ export class Mapper extends EventEmitter {
         this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area", {
             $area: this.active.area || "",
         }, (err, rows) => {
-            var rooms = {};
+            let rooms = {};
             if (rows) {
-                var rl = rows.length;
+                let rl = rows.length;
                 this.emit('import-progress', 0);
-                for (var r = 0; r < rl; r++) {
+                for (let r = 0; r < rl; r++) {
                     if (rooms[rows[r].ID]) {
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: rows[r].DestID,
@@ -1919,7 +1919,7 @@ export class Mapper extends EventEmitter {
                     }
                     else {
                         rooms[rows[r].ID] = { num: rows[r].ID };
-                        for (var prop in rows[r]) {
+                        for (let prop in rows[r]) {
                             if (prop == "ID")
                                 continue;
                             if (!rows[r].hasOwnProperty(prop)) {
@@ -1943,11 +1943,11 @@ export class Mapper extends EventEmitter {
 
     exportAll(file: string) {
         this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID", (err, rows) => {
-            var rooms = {};
+            let rooms = {};
             if (rows) {
-                var rl = rows.length;
+                let rl = rows.length;
                 this.emit('import-progress', 0);
-                for (var r = 0; r < rl; r++) {
+                for (let r = 0; r < rl; r++) {
                     if (rooms[rows[r].ID]) {
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: rows[r].DestID,
@@ -1957,7 +1957,7 @@ export class Mapper extends EventEmitter {
                     }
                     else {
                         rooms[rows[r].ID] = { num: rows[r].ID };
-                        for (var prop in rows[r]) {
+                        for (let prop in rows[r]) {
                             if (prop == "ID")
                                 continue;
                             if (!rows[r].hasOwnProperty(prop)) {
@@ -2050,8 +2050,8 @@ export class Mapper extends EventEmitter {
             y = x.y;
             x = x.x;
         }
-        var ox = this._canvas.width % 2 !== 0 ? 15 : 15.5;
-        var oy = this._canvas.height % 2 !== 0 ? 15 : 15.5;
+        let ox = this._canvas.width % 2 !== 0 ? 15 : 15.5;
+        let oy = this._canvas.height % 2 !== 0 ? 15 : 15.5;
         x = this.vscroll - (this._canvas.width / 32 / 2) + (x - ox) / 32;
         y = this.hscroll - (this._canvas.height / 32 / 2) + (y - oy) / 32;
         x = Math.floor(x);
@@ -2067,8 +2067,8 @@ export class Mapper extends EventEmitter {
             y = x.y;
             x = x.x;
         }
-        var ox = this._canvas.width % 2 !== 0 ? 15 : 15.5;
-        var oy = this._canvas.height % 2 !== 0 ? 15 : 15.5;
+        let ox = this._canvas.width % 2 !== 0 ? 15 : 15.5;
+        let oy = this._canvas.height % 2 !== 0 ? 15 : 15.5;
 
         x = (x - this.vscroll) + (this._canvas.width / 32 / 2);
         y = (y - this.hscroll) + (this._canvas.height / 32 / 2);

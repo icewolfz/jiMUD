@@ -70,7 +70,7 @@ types:
 	4 custom
 	5 combo-box
 */
-export var SettingList: any[] = [
+export let SettingList: any[] = [
 	["bufferSize", 0, 2, 5000],
 	["commandDelay", 0, 2, 500],
 	["commandDelayCount", 0, 2, 5],
@@ -253,7 +253,7 @@ export class Settings {
 	static load(file) {
 		if (!fs.existsSync(file))
 			return new Settings();
-		var data = fs.readFileSync(file, 'utf-8');
+		let data = fs.readFileSync(file, 'utf-8');
 		if (data.length == 0)
 			return new Settings();
 		try {
@@ -262,14 +262,14 @@ export class Settings {
 		catch (e) {
 			return new Settings();
 		}
-		var settings = new Settings();
+		let settings = new Settings();
 
-		for (var prop in data) {
+		for (let prop in data) {
 			if (!data.hasOwnProperty(prop)) {
 				continue;
 			}
 			if (prop == 'extensions' || prop == 'mapper' || prop == 'profiles' || prop == 'buttons' || prop == 'chat' || prop == 'find' || prop == 'display') {
-				for (var prop2 in data[prop]) {
+				for (let prop2 in data[prop]) {
 					if (!data[prop].hasOwnProperty(prop2)) {
 						continue;
 					}
@@ -283,8 +283,8 @@ export class Settings {
 	}
 
 	static getColors() {
-		var _ColorTable = [];
-		var r, g, b, idx;
+		let _ColorTable = [];
+		let r, g, b, idx;
 		for (r = 0; r < 6; r++) {
 			for (g = 0; g < 6; g++) {
 				for (b = 0; b < 6; b++) {

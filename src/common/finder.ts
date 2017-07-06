@@ -163,7 +163,7 @@ export class Finder extends EventEmitter {
 
     show() {
         this._control.slideDown();
-        var sel = this._display.selection;
+        let sel = this._display.selection;
         if (sel.length)
             $("input", this._control).val(sel);
         $("input", this._control).focus().select();
@@ -180,30 +180,30 @@ export class Finder extends EventEmitter {
     }
 
     find(focus?: boolean) {
-        var val = $("input", this._control).val();
+        let val = $("input", this._control).val();
         this.clear();
         if (val.length === 0) {
             $("#find-count", this._control).html("No Results")
             this.emit('found-results', this._results);
             return;
         }
-        //var hs = this._display.text();
-        var pattern;
+        //let hs = this._display.text();
+        let pattern;
         if (this._regex)
             pattern = val;
         else
             pattern = val.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        var re;
+        let re;
         if (this._word)
             pattern = "\\b" + pattern + "\\b";
         if (this._case)
             re = new RegExp(pattern, 'g');
         else
             re = new RegExp(pattern, 'gi');
-        var lines = this._display.lines;
-        var m, id = 0, items;
-        var ranges: OverlayRange[] = [];
-        for (var l = lines.length - 1; l >= 0; l--) {
+        let lines = this._display.lines;
+        let m, id = 0, items;
+        let ranges: OverlayRange[] = [];
+        for (let l = lines.length - 1; l >= 0; l--) {
             items = [];
             while ((m = re.exec(lines[l])) !== null) {
                 id++;
@@ -259,7 +259,7 @@ export class Finder extends EventEmitter {
         this.updateCount();
         this._display.clearOverlay('find-current');
         if (this._results.length > 0) {
-            var r = this._results[idx];
+            let r = this._results[idx];
             this._display.addOverlays([{
                 start: { x: r.index, y: r.line },
                 end: { x: r.index + r.length, y: r.line }

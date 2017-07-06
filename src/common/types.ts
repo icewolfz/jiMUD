@@ -40,7 +40,7 @@ export enum BackupSelection {
   Map = 2,
   Profiles = 4,
   Settings = 8,
-  All = Map | Profiles | Settings
+  All = 14
 }
 
 export enum NewLineType {
@@ -85,8 +85,8 @@ export enum FontStyle {
   Italic = 4,
   Underline = 8,
   Slow = 16, /** @desc Slow blink text combined with slow for final blink  */
-  Rapid = 32,/** @desc Rapid blink text combined with slow for final blink */
-  Inverse = 64,/** @desc reverse back and fore color */
+  Rapid = 32, /** @desc Rapid blink text combined with slow for final blink */
+  Inverse = 64, /** @desc reverse back and fore color */
   Hidden = 128, /** @desc hide text */
   Strikeout = 256,
   DoubleUnderline = 512,
@@ -143,7 +143,7 @@ export interface ParserOptions {
   emulateTerminal?: boolean;
   bell?: string;
   enableBell?: boolean;
-  display?;
+  display?: any;
   enableLinks?: boolean;
 }
 
@@ -158,12 +158,12 @@ export class Size {
 }
 
 export interface FileInfo {
-  date?: Date,
-  hidden?: boolean,
-  path: string,
-  name: string,
-  type: string,
-  size: number
+  date?: Date;
+  hidden?: boolean;
+  path: string;
+  name: string;
+  type: string;
+  size: number;
 }
 
 export enum TempType {

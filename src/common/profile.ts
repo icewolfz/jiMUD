@@ -34,7 +34,7 @@ export function MacroDisplay(item: Macro) {
 			return "None - " + item.name;
 		return "None";
 	}
-	var d = [];
+	let d = [];
 	if ((item.modifiers & MacroModifiers.Ctrl) == MacroModifiers.Ctrl)
 		d.push("Ctrl");
 	if ((item.modifiers & MacroModifiers.Alt) == MacroModifiers.Alt)
@@ -71,7 +71,7 @@ export class Item {
 
 	constructor(data?) {
 		if (typeof data == "object") {
-			for (var prop in data) {
+			for (let prop in data) {
 				if (!data.hasOwnProperty(prop)) {
 					continue;
 				}
@@ -97,7 +97,7 @@ export class Button extends Item {
 		this.caption = "NewButton";
 		this.display = 'caption';
 		if (typeof data == "object") {
-			for (var prop in data) {
+			for (let prop in data) {
 				if (!data.hasOwnProperty(prop)) {
 					continue;
 				}
@@ -123,7 +123,7 @@ export class Macro extends Item {
 		this.display = 'return MacroDisplay(item)';
 		this.displaytype = ItemDisplayType.Function;
 		if (typeof data == "object") {
-			for (var prop in data) {
+			for (let prop in data) {
 				if (!data.hasOwnProperty(prop)) {
 					continue;
 				}
@@ -152,7 +152,7 @@ export class Alias extends Item {
 			this.value = value;
 		this.display = 'pattern';
 		if (typeof pattern == "object") {
-			for (var prop in pattern) {
+			for (let prop in pattern) {
 				if (!pattern.hasOwnProperty(prop)) {
 					continue;
 				}
@@ -177,7 +177,7 @@ export class Trigger extends Item {
 		super(data);
 		this.display = 'pattern';
 		if (typeof data == "object") {
-			for (var prop in data) {
+			for (let prop in data) {
 				if (!data.hasOwnProperty(prop)) {
 					continue;
 				}
@@ -203,7 +203,7 @@ export class Context extends Item {
 		this.caption = "NewContext";
 		this.display = 'caption';
 		if (typeof data == "object") {
-			for (var prop in data) {
+			for (let prop in data) {
 				if (!data.hasOwnProperty(prop)) {
 					continue;
 				}
@@ -254,7 +254,7 @@ export class Profile {
 	}
 
 	static get DefaultMacros(): Macro[] {
-		var data = [
+		let data = [
 			{
 				key: 97,
 				display: "return MacroDisplay(item)",
@@ -400,8 +400,8 @@ export class Profile {
 				notes: ''
 			}
 		];
-		var m: Macro[] = [];
-		for (var d = 0, dl = data.length; d < dl; d++)
+		let m: Macro[] = [];
+		for (let d = 0, dl = data.length; d < dl; d++)
 			m.push(new Macro(data[d]));
 		return m;
 	};
@@ -409,8 +409,8 @@ export class Profile {
 	static load(file: string) {
 		if (!fs.existsSync(file))
 			return null;
-		var profile;
-		var data = fs.readFileSync(file, 'utf-8');
+		let profile;
+		let data = fs.readFileSync(file, 'utf-8');
 		if (data.length == 0)
 			return new Profile(path.basename(file, ".json"));
 		try {
@@ -420,7 +420,7 @@ export class Profile {
 			return new Profile(path.basename(file, ".json"));
 		}
 		profile = new Profile();
-		var prop;
+		let prop;
 		for (prop in data) {
 			if (!data.hasOwnProperty(prop)) {
 				continue;
@@ -430,7 +430,7 @@ export class Profile {
 			profile[prop] = data[prop];
 		}
 
-		var i, il;
+		let i, il;
 		if (data.aliases && data.aliases.length > 0) {
 			il = data.aliases.length;
 			for (i = 0; i < il; i++) {
@@ -476,7 +476,7 @@ export class Profile {
 	}
 
 	clone(version?: number) {
-		var data, i, il;
+		let data, i, il;
 		if (version == 2) {
 			data = {
 				name: this.name,
@@ -571,8 +571,8 @@ export class Profile {
 			return data;
 		}
 		data = clone(this);
-		var profile = new Profile(false)
-		var prop;
+		let profile = new Profile(false)
+		let prop;
 		for (prop in data) {
 			if (!data.hasOwnProperty(prop)) {
 				continue;
@@ -627,8 +627,8 @@ export class ProfileCollection {
 
 	SortByPriority() {
 		this.keys.sort((a, b) => {
-			var ap = this.items[a].priority;
-			var bp = this.items[a].priority;
+			let ap = this.items[a].priority;
+			let bp = this.items[a].priority;
 			if (ap > bp)
 				return -1;
 			if (ap < bp)
@@ -662,7 +662,7 @@ export class ProfileCollection {
 
 	canDisable(profile: any) {
 		if (!profile || this.keys.length == 0) return false;
-		var idx: any;
+		let idx: any;
 		if (<string>(typeof profile) == "Profile")
 			idx = profile.name.toLowerCase();
 		else if (typeof profile == "number") {
@@ -680,10 +680,10 @@ export class ProfileCollection {
 			return false;
 
 		if (!this.items[idx]) return false;
-		var e = !this.items[idx].enabled;
+		let e = !this.items[idx].enabled;
 		if (!e) {
-			var c = false;
-			for (var key in this.items) {
+			let c = false;
+			for (let key in this.items) {
 				if (key == idx) continue;
 				if (this.items[key].enabled) c = true;
 				break;
@@ -696,7 +696,7 @@ export class ProfileCollection {
 
 	toggle(profile: any) {
 		if (!profile || this.keys.length == 0) return false;
-		var idx: any;
+		let idx: any;
 		if (<string>(typeof profile) == "Profile")
 			idx = profile.name.toLowerCase();
 		else if (typeof profile == "number") {
@@ -714,10 +714,10 @@ export class ProfileCollection {
 			return false;
 
 		if (!this.items[idx]) return false;
-		var e = !this.items[idx].enabled;
+		let e = !this.items[idx].enabled;
 		if (!e) {
-			var c = false;
-			for (var key in this.items) {
+			let c = false;
+			for (let key in this.items) {
 				if (key == idx) continue;
 				if (this.items[key].enabled) c = true;
 				break;
@@ -772,21 +772,21 @@ export class ProfileCollection {
 
 	clone(version?: number): ProfileCollection | any {
 		if (version == 2) {
-			var profiles = {};
-			for (var p in this.items)
+			let profiles = {};
+			for (let p in this.items)
 				profiles[this.items[p].name] = this.items[p].clone(2);
 			return profiles;
 		}
-		var pc = new ProfileCollection();
-		for (var p in this.items)
+		let pc = new ProfileCollection();
+		for (let p in this.items)
 			pc.items[this.items[p].name] = this.items[p].clone();
 		pc.update();
 		return pc;
 	}
 
 	load(p) {
-		var files = fs.readdirSync(p);
-		for (var i = 0; i < files.length; i++) {
+		let files = fs.readdirSync(p);
+		for (let i = 0; i < files.length; i++) {
 			if (path.extname(files[i]) === ".json") {
 				this.add(Profile.load(path.join(p, files[i])));
 			}
@@ -794,7 +794,7 @@ export class ProfileCollection {
 	}
 
 	save(p) {
-		for (var profile in this.items) {
+		for (let profile in this.items) {
 			this.items[profile].save(p);
 		}
 	}
@@ -806,7 +806,7 @@ export class ProfileCollection {
 	count(): number { return this.keys.length }
 
 	get active(): Profile {
-		var keys = this.keys;
+		let keys = this.keys;
 		//no profiles, add default and return
 		if (keys.length == 0) {
 			this.add(Profile.Default);
@@ -827,7 +827,7 @@ export class ProfileCollection {
 			return this.items['default'];
 		}
 		//search for first enabled profile
-		for (var key in keys) {
+		for (let key in keys) {
 			if (this.items[key].enabled)
 				return this.items[key];
 		}
@@ -842,8 +842,8 @@ export class ProfileCollection {
 	}
 
 	get aliases(): Alias[] {
-		var keys = this.keys;
-		var tmp = [], k = 0, kl = keys.length;
+		let keys = this.keys;
+		let tmp = [], k = 0, kl = keys.length;
 		if (kl === 0) return [];
 		if (kl === 1) {
 			if (!this.items[keys[0]].enabled || !this.items[keys[0]].enableAliases)
@@ -859,8 +859,8 @@ export class ProfileCollection {
 	}
 
 	get triggers(): Trigger[] {
-		var keys = this.keys;
-		var tmp = [], k = 0, kl = keys.length;
+		let keys = this.keys;
+		let tmp = [], k = 0, kl = keys.length;
 		if (kl === 0) return [];
 		if (kl === 1) {
 			if (!this.items[keys[0]].enabled || !this.items[keys[0]].enableTriggers)
@@ -876,8 +876,8 @@ export class ProfileCollection {
 	}
 
 	get macros(): Macro[] {
-		var keys = this.keys;
-		var tmp = [], k = 0, kl = keys.length;
+		let keys = this.keys;
+		let tmp = [], k = 0, kl = keys.length;
 		if (kl === 0) return [];
 		if (kl === 1) {
 			if (!this.items[keys[0]].enabled || !this.items[keys[0]].enableMacros)
@@ -893,8 +893,8 @@ export class ProfileCollection {
 	}
 
 	get buttons(): Button[] {
-		var keys = this.keys;
-		var tmp = [], k = 0, kl = keys.length;
+		let keys = this.keys;
+		let tmp = [], k = 0, kl = keys.length;
 		if (kl === 0) return [];
 		if (kl === 1) {
 			if (!this.items[keys[0]].enabled || !this.items[keys[0]].enableButtons)
@@ -910,8 +910,8 @@ export class ProfileCollection {
 	}
 
 	get contexts(): Context[] {
-		var keys = this.keys;
-		var tmp = [], k = 0, kl = keys.length;
+		let keys = this.keys;
+		let tmp = [], k = 0, kl = keys.length;
 		if (kl === 0) return [];
 		if (kl === 1) {
 			if (!this.items[keys[0]].enabled || !this.items[keys[0]].enableContexts)
@@ -927,8 +927,8 @@ export class ProfileCollection {
 	}
 
 	get defaultContext(): boolean {
-		var keys = this.keys;
-		var k = 0, kl = keys.length;
+		let keys = this.keys;
+		let k = 0, kl = keys.length;
 		if (kl === 0) return true;
 		if (kl === 1) {
 			if (!this.items[keys[0]].enabled)

@@ -14,10 +14,10 @@
  * @class tinymce.textcolor.Plugin
  * @private
  */
-declare var tinymce;
+declare let tinymce;
 
 tinymce.PluginManager.add('smtextcolor', function (editor, url) {
-    var cols, rows;
+    let cols, rows;
 
     rows = {
         forecolor: editor.settings.forecolor_rows || editor.settings.textcolor_rows || 5,
@@ -29,10 +29,10 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     };
 
     function getCurrentColor(format) {
-        var color;
+        let color;
 
         editor.dom.getParents(editor.selection.getStart(), function (elm) {
-            var value;
+            let value;
 
             if ((value = elm.style[format == 'forecolor' ? 'color' : 'background-color'])) {
                 color = value;
@@ -43,7 +43,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function mapColors(type) {
-        var i, colors = [], colorMap;
+        let i, colors = [], colorMap;
 
         colorMap = [
             "000000", "Black",
@@ -101,12 +101,12 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function renderColorPicker() {
-        var self = this, colors, color, html, last, x, y, i, id = self._id, count = 0, type;
+        let self = this, colors, color, html, last, x, y, i, id = self._id, count = 0, type;
 
         type = self.settings.origin;
 
         function getColorCellHtml(color, title) {
-            var isNoColor = color == 'transparent';
+            let isNoColor = color == 'transparent';
 
             return (
                 '<td class="mce-grid-cell' + (isNoColor ? ' mce-colorbtn-trans' : '') + '">' +
@@ -149,7 +149,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
         }
 
         if (editor.settings.color_picker_callback) {
-            var caption = editor.settings.color_picker_caption || tinymce.translate('Custom...')
+            let caption = editor.settings.color_picker_caption || tinymce.translate('Custom...')
             html += (
                 '<tr>' +
                 '<td colspan="' + cols[type] + '" class="mce-custom-color-btn">' +
@@ -192,7 +192,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function onPanelClick(e) {
-        var buttonCtrl = this.parent(), value, type;
+        let buttonCtrl = this.parent(), value, type;
 
         type = buttonCtrl.settings.origin;
 
@@ -217,8 +217,8 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
             buttonCtrl.hidePanel();
 
             editor.settings.color_picker_callback.call(editor, function (value) {
-                var tableElm = buttonCtrl.panel.getEl().getElementsByTagName('table')[0];
-                var customColorCells, div, i;
+                let tableElm = buttonCtrl.panel.getEl().getElementsByTagName('table')[0];
+                let customColorCells, div, i;
 
                 customColorCells = tinymce.map(tableElm.rows[tableElm.rows.length - 1].childNodes, function (elm) {
                     return elm.firstChild;
@@ -264,7 +264,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function onButtonClick() {
-        var self = this;
+        let self = this;
 
         if (self._color) {
             applyFormat(self.settings.format, self._color);

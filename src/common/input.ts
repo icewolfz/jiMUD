@@ -180,7 +180,7 @@ export class input extends EventEmitter {
     executeScript(txt: string) {
         if (txt == null)
             return txt;
-        var tTxt: string = txt.trim();
+        let tTxt: string = txt.trim();
         if (this._tests.TestFunctions[tTxt]) {
             if (this._tests.TestFunctions[tTxt]) {
                 this._tests.TestFunctions[tTxt].apply(this._tests, []);
@@ -188,15 +188,15 @@ export class input extends EventEmitter {
             }
         }
 
-        var state: number = 0;
-        var idx: number = 0, c: string, r;
-        var tl: number = txt.length;
-        var fun: string = "";
-        var args = [];
-        var arg: string = "";
-        var raw: string;
-        var pd: boolean = this.client.options.parseDoubleQuotes;
-        var ps: boolean = this.client.options.parseSingleQuotes;
+        let state: number = 0;
+        let idx: number = 0, c: string, r;
+        let tl: number = txt.length;
+        let fun: string = "";
+        let args = [];
+        let arg: string = "";
+        let raw: string;
+        let pd: boolean = this.client.options.parseDoubleQuotes;
+        let ps: boolean = this.client.options.parseSingleQuotes;
 
         for (; idx < tl; idx++) {
             c = txt.charAt(idx);
@@ -262,8 +262,8 @@ export class input extends EventEmitter {
     }
 
     executeFunction(fun: string, args, raw: string) {
-        var n, f = false;
-        var items, al, i, tmp;
+        let n, f = false;
+        let items, al, i, tmp;
         switch (fun.toLowerCase()) {
             case "notify":
             case "not":
@@ -733,7 +733,7 @@ export class input extends EventEmitter {
                 this.client.telnet.prompt = false;
                 return null;
         }
-        var data = { name: fun, args: args, raw: raw, handled: false };
+        let data = { name: fun, args: args, raw: raw, handled: false };
         this.client.emit('function', data);
         if (data.handled)
             return null;
@@ -741,24 +741,24 @@ export class input extends EventEmitter {
     }
 
     parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
-        var tl = text.length;
+        let tl = text.length;
         if (text === null || tl === 0)
             return text;
-        var str: string = "";
-        var alias: string = "", AliasesCached;
-        var state = 0;
-        var aliases = this.client.aliases;
-        var stackingChar: string = this.client.options.commandStackingChar;
-        var spChar: string = this.client.options.speedpathsChar;
-        var ePaths: boolean = this.client.options.enableSpeedpaths;
-        var args = [];
-        var arg: string = "";
-        var findAlias: boolean = true;
-        var out: string = "";
-        var a, c: string, al: number;
-        var idx: number = 0, start: boolean = true;
-        var pd: boolean = this.client.options.parseDoubleQuotes;
-        var ps: boolean = this.client.options.parseSingleQuotes;
+        let str: string = "";
+        let alias: string = "", AliasesCached;
+        let state = 0;
+        let aliases = this.client.aliases;
+        let stackingChar: string = this.client.options.commandStackingChar;
+        let spChar: string = this.client.options.speedpathsChar;
+        let ePaths: boolean = this.client.options.enableSpeedpaths;
+        let args = [];
+        let arg: string = "";
+        let findAlias: boolean = true;
+        let out: string = "";
+        let a, c: string, al: number;
+        let idx: number = 0, start: boolean = true;
+        let pd: boolean = this.client.options.parseDoubleQuotes;
+        let ps: boolean = this.client.options.parseSingleQuotes;
 
         if (eAlias == null)
             eAlias = aliases.length > 0;
@@ -773,7 +773,7 @@ export class input extends EventEmitter {
         else
             stacking = stacking && this.client.options.commandStacking;
         //@TODO re-code someday to be part of the parser engine instead of simple regex
-        var copied = clipboard.readText('selection') || '';
+        let copied = clipboard.readText('selection') || '';
         text = text.replace(/(\%|\$)\{copied\}/g, copied);
         text = text.replace(/(\%|\$)\{copied.lower\}/g, copied);
         text = text.replace(/(\%|\$)\{copied.upper\}/g, copied.toUpperCase());
@@ -1021,15 +1021,15 @@ export class input extends EventEmitter {
 
     ParseString(text: string, args, named, append?: boolean) {
         if (text == null) return "";
-        var tl = text.length;
+        let tl = text.length;
         if (tl === 0)
             return "";
-        var str: string = "";
-        var state = 0;
-        var arg: any = "";
-        var _used = 0;
-        var _neg: boolean = false;
-        var idx: number = 0, c: string;
+        let str: string = "";
+        let state = 0;
+        let arg: any = "";
+        let _used = 0;
+        let _neg: boolean = false;
+        let idx: number = 0, c: string;
 
         if (append == null)
             append = true;
@@ -1129,7 +1129,7 @@ export class input extends EventEmitter {
         }
         //ignore args[0] as 0 should be the "original text"
         if (args.length - 1 > 0 && append && _used + 1 < args.length) {
-            var r = false;
+            let r = false;
             if (str.endsWith("\n")) {
                 str = str.substring(0, str.length - 1);
                 r = true;
@@ -1151,19 +1151,19 @@ export class input extends EventEmitter {
         if (append == null) append = false;
         if (str === null || str.length === 0)
             return append ? args : [];
-        var n = str.split(",");
-        var nl = n.length;
-        var al = args.length;
+        let n = str.split(",");
+        let nl = n.length;
+        let al = args.length;
         //no values to process
         if (nl === 0)
             return append ? args : [];
-        var named;
+        let named;
 
         if (append)
             named = args.slice();
         else
             named = [];
-        for (var s = 0; s < nl; s++) {
+        for (let s = 0; s < nl; s++) {
             n[s] = $.trim(n[s]);
             if (n[s].length < 1) continue;
             if (!n[s].match(/[^a-zA-Z0-9_]/g)) continue;
@@ -1176,14 +1176,14 @@ export class input extends EventEmitter {
 
     ExecuteAlias(alias, args) {
         if (!alias.enabled) return;
-        var ret;// = "";
+        let ret;// = "";
         switch (alias.style) {
             case 1:
                 ret = this.parseOutgoing(this.ParseString(alias.value, args, this.GetNamedArguments(alias.params, args), alias.append));
                 break;
             case 2:
                 /*jslint evil: true */
-                var f = new Function("try { " + alias.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
+                let f = new Function("try { " + alias.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
                 ret = f.apply(this.client, this.GetNamedArguments(alias.params, args, alias.append));
                 break;
             default:
@@ -1206,8 +1206,8 @@ export class input extends EventEmitter {
 
     ProcessMacros(keycode, alt, ctrl, shift, meta) {
         //if(!this.client.options.enableMacros) return false;
-        var macros = FilterArrayByKeyValue(this.client.macros, "key", keycode);
-        var m = 0, ml = macros.length;
+        let macros = FilterArrayByKeyValue(this.client.macros, "key", keycode);
+        let m = 0, ml = macros.length;
         for (; m < ml; m++) {
             if (!macros[m].enabled) continue;
             if (alt === ((macros[m].modifiers & MacroModifiers.Alt) != MacroModifiers.Alt)) continue;
@@ -1222,14 +1222,14 @@ export class input extends EventEmitter {
 
     ExecuteMacro(macro) {
         if (!macro.enabled) return false;
-        var ret;// = "";
+        let ret;// = "";
         switch (macro.style) {
             case 1:
                 ret = this.parseOutgoing(macro.value);
                 break;
             case 2:
                 /*jslint evil: true */
-                var f = new Function("try { " + macro.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
+                let f = new Function("try { " + macro.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
                 ret = f.apply(this.client);
                 break;
             default:
@@ -1262,14 +1262,14 @@ export class input extends EventEmitter {
     ProcessPath(str) {
         if (str.length === 0)
             return "";
-        var pPaths: boolean = this.client.options.parseSpeedpaths;
-        var out: string = "";
+        let pPaths: boolean = this.client.options.parseSpeedpaths;
+        let out: string = "";
 
-        var state = 0;
-        var cmd: string = "";
-        var num: string = "";
-        var idx = 0, c: string, i: number, t, p;
-        var tl: number = str.length;
+        let state = 0;
+        let cmd: string = "";
+        let num: string = "";
+        let idx = 0, c: string, i: number, t, p;
+        let tl: number = str.length;
 
         for (; idx < tl; idx++) {
             c = str.charAt(idx);
@@ -1355,7 +1355,7 @@ export class input extends EventEmitter {
             });
             this._TriggerCache.sort(SortArrayByPriority);
         }
-        var t = 0, tl = this._TriggerCache.length;
+        let t = 0, tl = this._TriggerCache.length;
         for (; t < tl; t++) {
             if (this._TriggerCache[t].type !== undefined && this._TriggerCache[t].type != type) continue;
             if (frag && !this._TriggerCache[t].triggerPrompt) continue;
@@ -1369,8 +1369,8 @@ export class input extends EventEmitter {
             }
             else {
                 try {
-                    var re = new RegExp(this._TriggerCache[t].pattern, 'g');
-                    var res = re.exec(raw);
+                    let re = new RegExp(this._TriggerCache[t].pattern, 'g');
+                    let res = re.exec(raw);
                     if (!res || !res.length) continue;
                     if (ret)
                         return this.ExecuteTrigger(this._TriggerCache[t], res, true, t);
@@ -1390,7 +1390,7 @@ export class input extends EventEmitter {
     ExecuteTrigger(trigger, args, r: boolean, idx) {
         if (r == null) r = false;
         if (!trigger.enabled) return "";
-        var ret;// = "";
+        let ret;// = "";
         switch (trigger.style) {
             case 1:
                 ret = this.parseOutgoing(this.ParseString(trigger.value, args, [], false));
@@ -1417,7 +1417,7 @@ export class input extends EventEmitter {
         if (this.client.connected)
             this.client.telnet.sendData(ret);
         if (this.client.telnet.echo && this.client.options.commandEcho) {
-            var delay = function () {
+            let delay = function () {
                 this.client.echo(ret);
             };
             setTimeout(delay, 1);

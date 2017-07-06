@@ -41,9 +41,9 @@ export class Client extends EventEmitter {
     public defaultTitle = 'jiMUD';
 
     set enabledProfiles(value: string[]) {
-        var a = [];
+        let a = [];
         //can only enable profiles that exist, so scan the array for valid profiles
-        for (var v = 0, vl = value.length; v < vl; v++) {
+        for (let v = 0, vl = value.length; v < vl; v++) {
             if (this.profiles.contains(value[v]))
                 a.push(value[v]);
         }
@@ -55,8 +55,8 @@ export class Client extends EventEmitter {
 
     get enabledProfiles(): string[] {
         if (this.options.profiles.enabled.length == 0) {
-            var a = [];
-            for (var profile in this.profiles.items) {
+            let a = [];
+            for (let profile in this.profiles.items) {
                 if (!this.profiles.items.hasOwnProperty(profile)) continue;
                 if (this.profiles.items[profile].enabled)
                     a.push(profile);
@@ -79,8 +79,8 @@ export class Client extends EventEmitter {
     get settingsFile(): string { return this._settingsFile; }
 
     get aliases(): Alias[] {
-        var keys = this.profiles.keys;
-        var tmp = [], k = 0, kl = keys.length;
+        let keys = this.profiles.keys;
+        let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableAliases)
@@ -96,8 +96,8 @@ export class Client extends EventEmitter {
     }
 
     get macros(): Macro[] {
-        var keys = this.profiles.keys;
-        var tmp = [], k = 0, kl = keys.length;
+        let keys = this.profiles.keys;
+        let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableMacros)
@@ -113,8 +113,8 @@ export class Client extends EventEmitter {
     }
 
     get triggers(): Trigger[] {
-        var keys = this.profiles.keys;
-        var tmp = [], k = 0, kl = keys.length;
+        let keys = this.profiles.keys;
+        let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableTriggers)
@@ -130,8 +130,8 @@ export class Client extends EventEmitter {
     }
 
     get buttons(): Button[] {
-        var keys = this.profiles.keys;
-        var tmp = [], k = 0, kl = keys.length;
+        let keys = this.profiles.keys;
+        let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableButtons)
@@ -147,8 +147,8 @@ export class Client extends EventEmitter {
     }
 
     get contexts(): Context[] {
-        var keys = this.profiles.keys;
-        var tmp = [], k = 0, kl = keys.length;
+        let keys = this.profiles.keys;
+        let tmp = [], k = 0, kl = keys.length;
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) == -1 || !this.profiles.items[keys[0]].enableContexts)
@@ -172,7 +172,7 @@ export class Client extends EventEmitter {
     }
 
     loadProfiles() {
-        var p = path.join(parseTemplate("{data}"), "profiles");
+        let p = path.join(parseTemplate("{data}"), "profiles");
         if (!fs.existsSync(p)) {
             this.profiles.add(Profile.Default);
             return;
@@ -185,7 +185,7 @@ export class Client extends EventEmitter {
     }
 
     saveProfiles() {
-        var p = path.join(parseTemplate("{data}"), "profiles");
+        let p = path.join(parseTemplate("{data}"), "profiles");
         if (!fs.existsSync(p))
             fs.mkdirSync(p);
         this.profiles.save(p);
@@ -194,7 +194,7 @@ export class Client extends EventEmitter {
     }
 
     saveProfile(profile: string) {
-        var p = path.join(parseTemplate("{data}"), "profiles");
+        let p = path.join(parseTemplate("{data}"), "profiles");
         if (!fs.existsSync(p))
             fs.mkdirSync(p);
         this.profiles.items[profile].save(p);
@@ -206,7 +206,7 @@ export class Client extends EventEmitter {
         //this.profiles.toggle(profile);
         //this.saveProfile(profile);
         profile = profile.toLowerCase();
-        var p = this.enabledProfiles;
+        let p = this.enabledProfiles;
         if (p.indexOf(profile) == -1) {
             p.push(profile);
         }
@@ -292,7 +292,7 @@ export class Client extends EventEmitter {
             if (err) {
                 if (err.type == "close" && err.code == 1006)
                     return;
-                var msg = [];
+                let msg = [];
                 if (err.type)
                     msg.push(err.type);
                 if (err.text)
@@ -355,8 +355,8 @@ export class Client extends EventEmitter {
         });
 
         this.telnet.on('received-GMCP', (data) => {
-            var val: string = data.value;
-            var mod: string, idx: number = 0, dl: number = val.length, c;
+            let val: string = data.value;
+            let mod: string, idx: number = 0, dl: number = val.length, c;
             if (dl === 0) return;
             for (idx = 0; idx < dl; idx++) {
                 c = val.charAt(idx);
@@ -367,7 +367,7 @@ export class Client extends EventEmitter {
             val = val.substr(idx).trim();
             this.debug("GMCP Module: " + mod);
             this.debug("GMCP Data: " + val);
-            var obj;
+            let obj;
             try {
                 if (val.length > 0)
                     obj = JSON.parse(val);
@@ -463,8 +463,8 @@ export class Client extends EventEmitter {
         this.display.enableMSP = this.options.enableMSP;
 
         if (this.options.colors.length > 0) {
-            var colors = this.options.colors;
-            for (var c = 0, cl = colors.length; c < cl; c++) {
+            let colors = this.options.colors;
+            for (let c = 0, cl = colors.length; c < cl; c++) {
                 if (!colors[c] || colors[c].length === 0) continue;
                 this.display.SetColor(c, colors[c]);
             }
@@ -497,9 +497,9 @@ export class Client extends EventEmitter {
     setOption(name, value) {
         if (name == -1 || name == "-1")
             return;
-        var opt = this.options;
+        let opt = this.options;
         name = name.split(".");
-        for (var o = 0, ol = name.length - 1; o < ol; o++)
+        for (let o = 0, ol = name.length - 1; o < ol; o++)
             opt = opt[name[o]];
         opt[name[name.length - 1]] = value;
         this.saveOptions();
@@ -508,9 +508,9 @@ export class Client extends EventEmitter {
     getOption(name) {
         if (name == -1 || name == "-1")
             return null;
-        var opt = this.options;
+        let opt = this.options;
         name = name.split(".");
-        for (var o = 0, ol = name.length; o < ol; o++)
+        for (let o = 0, ol = name.length; o < ol; o++)
             opt = opt[name[o]];
         return opt;
     }
@@ -578,7 +578,7 @@ export class Client extends EventEmitter {
         if (forceLine == null) forceLine = false;
         if (fore == null) fore = AnsiColorCode.LocalEcho;
         if (back == null) back = AnsiColorCode.LocalEchoBack;
-        var codes = this.display.CurrentAnsiCode() + "\n";
+        let codes = this.display.CurrentAnsiCode() + "\n";
         if (str.endsWith("\n"))
             str = str.substr(0, str.length - 1);
         if (this.telnet.prompt && forceLine)
@@ -615,7 +615,7 @@ export class Client extends EventEmitter {
 
     debug(str: string) {
 
-        var data = { value: str };
+        let data = { value: str };
         this.emit('debug', data);
         if (!this._enableDebug || data === null || typeof data == "undefined" || data.value === null || typeof data.value == "undefined" || data.value.length === 0)
             return;
@@ -633,7 +633,7 @@ export class Client extends EventEmitter {
         }
         if (!txt.endsWith("\n"))
             txt = txt + "\n";
-        var data = { value: txt, handled: false };
+        let data = { value: txt, handled: false };
         this.emit('parse-command', data);
         if (data === null || typeof data == "undefined") return;
         if (data.handled || data.value === null || typeof data.value == "undefined") return;
@@ -661,7 +661,7 @@ export class Client extends EventEmitter {
         }
         if (!txt.endsWith("\n"))
             txt = txt + "\n";
-        var data = { value: txt, handled: false };
+        let data = { value: txt, handled: false };
         this.emit('parse-command', data);
         if (data === null || typeof data == "undefined") return;
         if (data.value === null || typeof data.value == "undefined") return;

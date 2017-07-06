@@ -137,7 +137,7 @@ self.addEventListener('message', (e: MessageEvent) => {
             stop();
             break;
         case 'startInternal':
-            var c = options.unique;
+            let c = options.unique;
             options.unique = false;
             if (!e.data.args)
                 start([], [], [], false);
@@ -153,7 +153,7 @@ self.addEventListener('message', (e: MessageEvent) => {
                 start(e.data.args.lines, e.data.args.raw, e.data.args.formats, e.data.args.fragment);
             break;
         case 'add-line':
-            var data: ParserLine = e.data.args;
+            let data: ParserLine = e.data.args;
             if(data.fragment) return;
             if (!data.gagged || (options.gagged && data.gagged)) {
                 if ((options.what & Log.Html) === Log.Html)
@@ -169,23 +169,7 @@ self.addEventListener('message', (e: MessageEvent) => {
 
 function fileChanged() {
     if ((options.what & Log.Html) === Log.Html) {
-        var f = path.join(options.path, fTimeStamp) + ".htm";
-        buildFilename();
-        if (fs.existsSync(f) && f != currentFile + ".htm")
-            fs.renameSync(f, currentFile);
-        if (options.debug)
-            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
-    }
-    if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
-        var f = path.join(options.path, fTimeStamp) + ".txt";
-        buildFilename();
-        if (fs.existsSync(f) && f != currentFile + ".txt")
-            fs.renameSync(f, currentFile);
-        if (options.debug)
-            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
-    }
-    if ((options.what & Log.Raw) === Log.Raw) {
-        var f = path.join(options.path, fTimeStamp) + ".raw.txt";
+        let f = path.join(options.path, fTimeStamp) + ".raw.txt";
         buildFilename();
         if (fs.existsSync(f) && f != currentFile + ".raw.txt")
             fs.renameSync(f, currentFile);
@@ -272,7 +256,7 @@ function stop() {
 function toggle() {
     options.enabled = !options.enabled;
     postMessage({ event: 'toggled', args: options.enabled });
-    var c = options.unique;
+    let c = options.unique;
     options.unique = false;
     if (options.enabled && !logging)
         postMessage({ event: 'startInternal' });

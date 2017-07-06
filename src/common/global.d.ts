@@ -15,13 +15,13 @@ interface String {
 	paddingRight(paddingvalue:(string|number)): string;
 }
 
-declare var $selected:string;
-declare var $selectedurl:string;
-declare var $selectedline:string;
-declare var $selectedword:string;
-declare var $selurl:string;
-declare var $selline:string;
-declare var $selword:string;
+declare let $selected:string;
+declare let $selectedurl:string;
+declare let $selectedline:string;
+declare let $selectedword:string;
+declare let $selurl:string;
+declare let $selline:string;
+declare let $selword:string;
 
 interface JQuery {
 	hasHorizontalScrollBar():boolean;	
