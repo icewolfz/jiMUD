@@ -36,10 +36,7 @@
             //cSpell:ignore tinymce, rgbcolor, forecolor, colorbtn, colorbutton
             const { remote, ipcRenderer } = require('electron');
             const { Settings } = require('./js/settings');
-            const { stripHTML, htmlEncode, parseTemplate } = require('./js/library');
             const rgbcolor = require("rgbcolor");
-            const fs = require('fs');
-            const path = require('path');
 
             var type = 'forecolor';
             var color = '';
@@ -266,7 +263,6 @@
                 "RGB534": "Pink",
                 "RGB535": "Plum",
                 "RGB540": "Gold",
-                "RGB540": "Golden",
                 "RGB541": "Light Goldenrod",
                 "RGB542": "Light Goldenrod",
                 "RGB543": "Navajo White",
@@ -302,8 +298,7 @@
                 "mono21": "Grey 85",
                 "mono22": "Grey 89",
                 "mono23": "Grey 93"
-            }
-
+            };
 
             function setType(t) { type = t; }
             function setColor(c) { color = c; }
@@ -323,22 +318,22 @@
             });
 
             function colorCell(color, idx) {
-                var cell = '<td class="mce-grid-cell' + (color === "transparent" ? ' mce-colorbtn-trans' : '') + '">'
-                cell += '<div id="' + idx + '"'
-                cell += ' data-mce-color="' + color + '"'
-                cell += ' role="option"'
-                cell += ' tabIndex="-1"'
-                cell += ' style="background-color: ' + (color === "transparent" ? color : '#' + color) + '"'
-                cell += ' title="' + idx + ", " + colorNames[idx] + '">'
-                if (color === "transparent") cell += '&#215;'
-                cell += '</div>'
-                cell += '</td>'
+                var cell = '<td class="mce-grid-cell' + (color === "transparent" ? ' mce-colorbtn-trans' : '') + '">';
+                cell += '<div id="' + idx + '"';
+                cell += ' data-mce-color="' + color + '"';
+                cell += ' role="option"';
+                cell += ' tabIndex="-1"';
+                cell += ' style="background-color: ' + (color === "transparent" ? color : '#' + color) + '"';
+                cell += ' title="' + idx + ", " + colorNames[idx] + '">';
+                if (color === "transparent") cell += '&#215;';
+                cell += '</div>';
+                cell += '</td>';
                 return cell;
             }
 
             function loadColors() {
                 var _dColors = Settings.getColors();
-                var c, color, r, g, b, idx;
+                var c, color, r, g, b, idx, cl;
                 $('body').empty();
                 var _ColorTable = [];
 
@@ -377,17 +372,17 @@
 
 
 
-                html = '<table class="mce-grid mce-grid-border mce-colorbutton-grid" role="list" cellspacing="0"><tbody><tr>';
+                var html = '<table class="mce-grid mce-grid-border mce-colorbutton-grid" role="list" cellspacing="0"><tbody><tr>';
 
-                for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
+                for (c = 0, cl = _ColorTable.length; c < cl; c += 2) {
                     html += colorCell(_ColorTable[c], _ColorTable[c + 1]);
                     if (c / 2 % 6 === 5)
-                        html += '<td class="mce-grid-cell"></td>'
+                        html += '<td class="mce-grid-cell"></td>';
                 }
-                html += '<td class="mce-grid-cell"></td>'
+                html += '<td class="mce-grid-cell"></td>';
                 html += colorCell('transparent', 'No color');
-                html += "</tr><tr><td></td></tr>"
-                html2 = '';
+                html += "</tr><tr><td></td></tr>";
+                var html2 = '';
                 for (r = 0; r < 6; r++) {
                     if (g < 3)
                         html += "<tr>";
@@ -406,12 +401,12 @@
                             c = g * 40 + 55;
                             if (c < 16)
                                 color += "0";
-                            color += c.toString(16)
+                            color += c.toString(16);
                             c = 0;
                             c = b * 40 + 55;
                             if (c < 16)
                                 color += "0";
-                            color += c.toString(16)
+                            color += c.toString(16);
                             color = color.toUpperCase();
 
                             if (g < 3)
@@ -421,11 +416,11 @@
 
                         }
                         if (g === 2)
-                            html += "</tr>"
+                            html += "</tr>";
                         else if (g < 3)
-                            html += '<td class="mce-grid-cell"></td>'
+                            html += '<td class="mce-grid-cell"></td>';
                         else if (g < 5)
-                            html2 += '<td class="mce-grid-cell"></td>'
+                            html2 += '<td class="mce-grid-cell"></td>';
                     }
                     if (g < 3)
                         html += "</tr>";
@@ -433,7 +428,7 @@
                         html2 += "</tr>";
                 }
                 html += html2;
-                html += "<tr><td></td></tr><tr>"
+                html += "<tr><td></td></tr><tr>";
                 for (r = 232; r <= 255; r++)//grayscale
                 {
                     g = (r - 232) * 10 + 8;
@@ -448,9 +443,9 @@
                         color = "mono" + (r - 232);
                     html += colorCell(g, color);
                     if (r === 237 || r === 249)
-                        html += '<td class="mce-grid-cell"></td>'
+                        html += '<td class="mce-grid-cell"></td>';
                     if (r === 243)
-                        html += "</tr><tr>"
+                        html += "</tr><tr>";
                 }
 
                 html += '</tr></tbody></table>';
@@ -458,10 +453,10 @@
 
                 $("div").on('click', function () {
                     console.log($(this));
-                    console.log($(this).data('mce-color'))
+                    console.log($(this).data('mce-color'));
                     ipcRenderer.send('set-color', type, $(this).data('mce-color'));
                     window.close();
-                })
+                });
 
             }
         </script>

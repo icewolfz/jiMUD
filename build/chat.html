@@ -20,22 +20,17 @@
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
     <script>
-        const { shell, clipboard, ipcRenderer, remote } = require('electron');
-        const { dialog, Menu, MenuItem, app } = remote;
-        const { parseTemplate, setSelectionRange } = require("./js/library.js");
+        const { clipboard, ipcRenderer, remote } = require('electron');
+        const { parseTemplate } = require("./js/library.js");
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
         const { AnsiColorCode } = require('./js/ansi');
-        const fs = require('fs');
-        const path = require('path');
-        const { version } = require("../package.json");
-        var options, currentFile, _path, timeStamp = new Date().getTime(), _name;
+        var options;
 
         var display, _logger;
 
         function loadOptions() {
             options = Settings.load(remote.getGlobal('settingsFile'));
-            _path = parseTemplate(options.logPath);
             if (display) {
                 display.updateFont(options.font, options.fontSize);
                 display.maxLines = options.bufferSize;
@@ -86,7 +81,7 @@
                     clipboard.writeText(display.selection, 'selection');
                     display.clearSelection();
                 }
-            })
+            });
             _logger = new Worker("./js/logging.js");
             _logger.onmessage = (e) => {
                 switch (e.data.event) {
@@ -127,14 +122,14 @@
             ['copy'].forEach(function (event) {
                 document.addEventListener(event, function (e) {
                     if (display.hasSelection)
-                        clipboard.writeText(client.display.selection, 'selection');
+                        clipboard.writeText(display.selection, 'selection');
                 });
             });
         });
 
         function doCopy() {
             if (display.hasSelection)
-                clipboard.writeText(gclient.display.selection, 'selection');
+                clipboard.writeText(display.selection, 'selection');
         }
 
         function doFind() {
@@ -148,9 +143,11 @@
             _logger.postMessage({ action: 'add-line', args: data });
         });
 
+        /*
         ipcRenderer.on('chat-done', (event, data) => {
 
         });
+        */
 
         ipcRenderer.on('set-title', (event, title) => {
             if (!options)
@@ -162,7 +159,7 @@
             _logger.postMessage({ action: 'name', args: char });
         });
 
-        ipcRenderer.on('load-default', (event, char) => {
+        ipcRenderer.on('load-default', (event) => {
             _logger.postMessage({ action: 'name', args: '' });
         });
 

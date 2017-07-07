@@ -76,7 +76,9 @@
     "electron-installer-dmg": "^0.2.1",
     "electron-local-crash-reporter": "^1.0.1",
     "electron-packager": "^8.7.0",
-    "electron-rebuild": "^1.5.7"
+    "electron-rebuild": "^1.5.7",
+    "eslint": "^4.1.1",
+    "eslint-plugin-html": "^3.0.0"
   },
   "build": {
     "appId": "jiMUD",

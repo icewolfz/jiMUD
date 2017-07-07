@@ -24,10 +24,10 @@
     <script>
         //cSpell:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //cSpell:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
-        const { IED, fileInfo, ItemState } = require('./js/ied');
-        const { IEDError, TempType, IEDCmdStatus } = require('./js/types');
+        const { IED, ItemState } = require('./js/ied');
+        const { TempType, IEDCmdStatus } = require('./js/types');
         const { remote, ipcRenderer, shell, clipboard } = require('electron');
-        const { app, nativeImage, dialog, Menu, MenuItem } = remote;
+        const { app, dialog, Menu, MenuItem } = remote;
         const { parseTemplate } = require('./js/library');
         const { Settings } = require('./js/settings');
         const fs = require('fs-extra');
@@ -38,9 +38,9 @@
 
         var chokidar = require('chokidar');
 
-        var _ied, options, dropdownMenu;
+        var _ied, options;
         var _local = {}, _remote = {}, _downloads = {};
-        var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0 }
+        var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0 };
         var localTable, remoteTable, queueTable, key = '', keyClearID;
         var watcher;
         var dragging = false, btmDragging = false;
@@ -185,7 +185,7 @@
                                 click: () => {
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
                                     for (var d = 0, dl = data.length; d < dl; d++) {
-                                        p = child_process.spawn(options.editor, [data[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                                        var p = child_process.spawn(options.editor, [data[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
                                         p.unref();
                                     }
                                 }
@@ -335,7 +335,7 @@
         remote.getCurrentWindow().setMenu(menubar);
 
         function updateMenuItem(args) {
-            var item, i = 0, ic, items;
+            var item, i = 0, items;
             var tItem, tItems;
             if (args == null || args.menu == null) return;
 
@@ -346,7 +346,7 @@
             tItems = menu;
             for (i = 0; i < args.menu.length; i++) {
                 if (!items || items.length === 0) break;
-                for (m = 0; m < items.length; m++) {
+                for (var m = 0; m < items.length; m++) {
                     if (items[m].id === args.menu[i] || items[m].label.toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
                         item = items[m];
                         tItem = tItems[m];
@@ -472,7 +472,7 @@
                     return parseFloat(matches[1]) * multiplier;
                 } else {
                     return -1;
-                };
+                }
             };
         }());
 
@@ -520,7 +520,7 @@
 
             updateMenuItem({ menu: 'view|sync folders', checked: options.syncFolders });
             if (options.syncFolders)
-                $("#btn-sync").addClass("active")
+                $("#btn-sync").addClass("active");
             else
                 $('#btn-sync').removeClass('active');
             updateMenuItem({ menu: 'edit|editor', enabled: options.editor && options.editor.length > 0 });
@@ -568,6 +568,7 @@
             var dirs = [];
             var all = [];
             _local = {};
+            var file;
             for (var d = 0, dl = dir.length; d < dl; d++) {
                 try {
                     file = IED.getFileInfo(path.join(p, dir[d]));
@@ -594,16 +595,16 @@
                 }
                 var paths = [];
                 var found = false;
-                var c = '';
+                var c = '', pt, d, dl, pl, cl;
                 if (drives.length > 0) {
-                    for (var d = 0, dl = drives.length; d < dl; d++) {
+                    for (d = 0, dl = drives.length; d < dl; d++) {
                         if (drives[d].mountpoints.length === 0)
                             continue;
                         for (var m = 0, ml = drives[d].mountpoints.length; m < ml; m++) {
                             if (!drives[d].mountpoints[m].path) continue;
                             var sd = drives[d].mountpoints[m].path.split(path.sep);
                             c = '';
-                            for (var pt = 0, pl = sd.length; pt < pl; pt++) {
+                            for (pt = 0, pl = sd.length; pt < pl; pt++) {
                                 c = path.join(c, sd[pt], path.sep);
                                 if (c.toLowerCase() === parts[0].toLowerCase() + path.sep) {
                                     found = true;
@@ -623,14 +624,14 @@
                     }
                 }
                 c = found ? c = path.join(parts[0], path.sep) : '';
-                for (var pt = found ? 1 : 0, pl = parts.length; pt < pl; pt++) {
+                for (pt = found ? 1 : 0, pl = parts.length; pt < pl; pt++) {
                     c = path.join(c, parts[pt], path.sep);
                     if (pt === pl - 1)
                         paths.push({ path: c, name: parts[pt], count: pt, open: true });
                     else
                         paths.push({ path: c, name: parts[pt], count: pt });
                 }
-                for (var d = 0, dl = dirs.length; d < dl; d++) {
+                for (d = 0, dl = dirs.length; d < dl; d++) {
                     paths.push({ path: dirs[d].path, name: dirs[d].name, count: pt });
                 }
 
@@ -642,15 +643,15 @@
                     return 0;
                 });
                 $("#local-navigate").empty();
-                for (var c = 0, cl = paths.length; c < cl; c++) {
+                for (c = 0, cl = paths.length; c < cl; c++) {
                     if (paths[c].drive && paths[c].open)
-                        $("#local-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`)
+                        $("#local-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
                     else if (paths[c].drive)
-                        $("#local-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`)
+                        $("#local-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
                     else if (paths[c].open)
-                        $("#local-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a></li>`)
+                        $("#local-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a></li>`);
                     else
-                        $("#local-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`)
+                        $("#local-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
                 }
             });
 
@@ -671,7 +672,10 @@
             _remote = {};
             info.remoteDirs = 0;
             info.remoteFiles = 0;
-            for (var d = 0, dl = dir.length; d < dl; d++) {
+            var file;
+            var paths = [];
+            var c = [], d, dl, cl;
+            for (d = 0, dl = dir.length; d < dl; d++) {
                 file = {
                     name: path.basename(dir[d].file),
                     path: (p === "/" ? '' : p) + "/" + dir[d].file,
@@ -679,7 +683,7 @@
                     type: path.extname(dir[d].file),
                     date: dir[d].date * 1000,
                     hidden: IED.isHidden((p === "/" ? '' : p) + "/" + dir[d].file, true)
-                }
+                };
                 if (file.hidden && !options.showhidden)
                     continue;
                 if (file.size === -2) {
@@ -695,8 +699,6 @@
                 updateStatus();
             }
             $("#remote-path").val(p);
-            var paths = [];
-            var c = [];
             for (var pt = 0, pl = parts.length; pt < pl; pt++) {
                 c.push(parts[pt]);
                 if (pt === 0)
@@ -704,7 +706,7 @@
                 else
                     paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
             }
-            for (var d = 0, dl = dirs.length; d < dl; d++) {
+            for (d = 0, dl = dirs.length; d < dl; d++) {
                 paths.push({ path: dirs[d].path, name: dirs[d].name, count: pt });
             }
 
@@ -716,15 +718,15 @@
                 return 0;
             });
             $("#remote-navigate").empty();
-            for (var c = 0, cl = paths.length; c < cl; c++) {
+            for (c = 0, cl = paths.length; c < cl; c++) {
                 if (paths[c].drive && paths[c].open)
-                    $("#remote-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`)
+                    $("#remote-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
                 else if (paths[c].drive)
-                    $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`)
+                    $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
                 else if (paths[c].open)
-                    $("#remote-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a></li>`)
+                    $("#remote-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a></li>`);
                 else
-                    $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`)
+                    $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
             }
             remoteTable.rows().remove().draw();
             remoteTable.rows.add(all).draw();
@@ -760,42 +762,47 @@
 
 
         function updateMenu() {
-            var remote = $("#remote-list").hasClass("focused");
-            var local = $("#local-list").hasClass("focused");
-            var queue = $("#queue-list").hasClass("focused");
-            var either = remote || local;
-            var localFilesOnly = false;
-            var localFoldersOnly = false;
+            //var remote = $("#remote-list").hasClass("focused");
+            //var local = $("#local-list").hasClass("focused");
+            //var queue = $("#queue-list").hasClass("focused");
+            //var either = remote || local;
+            //var localFilesOnly = false;
+            //var localFoldersOnly = false;
             var localSelected = false;
-            var remoteFilesOnly = false;
-            var remoteFoldersOnly = false;
+            //var remoteFilesOnly = false;
+            //var remoteFoldersOnly = false;
             var remoteSelected = false;
             var queueSelected = false;
 
             var data = localTable.rows({ selected: true }).data().pluck('size');
             localSelected = data.length != 0;
+            /*
             var dirs = 0;
-            for (var d = 0; d < data.length; d++) {
+            var d, dl;
+            for (d = 0, dl = data.length; d < data.length; d++) {
                 if (data[d] === -2) {
                     dirs++;
                 }
             }
-            localFilesOnly = dirs != data.length;
-            localFoldersOnly = dirs === data.length;
+            */
+            //localFilesOnly = dirs != data.length;
+            //localFoldersOnly = dirs === data.length;
 
             data = remoteTable.rows({ selected: true }).data().pluck('size');
             remoteSelected = data.length != 0;
+            /*
             dirs = 0;
-            for (var d = 0; d < data.length; d++) {
+            for (d = 0; d < data.length; d++) {
                 if (data[d] === -2) {
                     dirs++;
                 }
             }
-            remoteFilesOnly = dirs != data.length;
-            remoteFoldersOnly = dirs === data.length;
+            */
+            //remoteFilesOnly = dirs != data.length;
+            //remoteFoldersOnly = dirs === data.length;
 
             data = queueTable.rows({ selected: true }).data();
-            var queueSelected = data.length != 0;
+            queueSelected = data.length != 0;
 
             updateMenuItem({ menu: 'file|upload', enabled: localSelected });
             updateMenuItem({ menu: 'file|download', enabled: remoteSelected });
@@ -1013,7 +1020,7 @@
                     },
                     {
                         render: function (data, type, full, meta) {
-                            return `<div class="progressbar"><div class="progressbar-text">${Math.round(100 * data)}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`
+                            return `<div class="progressbar"><div class="progressbar-text">${Math.round(100 * data)}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`;
                         },
                         targets: 3
                     },
@@ -1053,12 +1060,12 @@
                     msg = error;
                 logMessage(msg);
                 logError(msg);
-            })
+            });
             _ied.on('reset', () => {
                 queueTable.rows().remove().draw();
-            })
+            });
             _ied.on('dir', (dir, files) => {
-                updateRemote(dir, files)
+                updateRemote(dir, files);
             });
             _ied.on('resolved', (dir, tag) => {
                 logMessage("Resolved: " + dir);
@@ -1098,7 +1105,7 @@
                         if (!options.editor || options.editor.length === 0)
                             openItem(item.local);
                         else {
-                            p = child_process.spawn(options.editor, [item.local], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                            var p = child_process.spawn(options.editor, [item.local], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
                             p.unref();
                         }
                     }
@@ -1150,11 +1157,12 @@
             });
 
             _ied.on('cmd', (obj) => {
+                var row;
                 if (obj.cmd === "rm") {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Deleted: ${obj.path}/${obj.file}`);
 
-                        var row = remoteTable.row(function (idx, data, node) {
+                        row = remoteTable.row(function (idx, data, node) {
                             return data.name === obj.file ?
                                 true : false;
                         });
@@ -1177,7 +1185,7 @@
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Renamed ${obj.path}/${obj.file} to ${obj.path2}/${obj.file2}`);
 
-                        var row = remoteTable.row(function (idx, data, node) {
+                        row = remoteTable.row(function (idx, data, node) {
                             return data.name === obj.file ?
                                 true : false;
                         });
@@ -1212,7 +1220,7 @@
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Created directory ${obj.path}`);
                         var name = path.basename(obj.path);
-                        var row = remoteTable.row(function (idx, data, node) {
+                        row = remoteTable.row(function (idx, data, node) {
                             return data.name === name ?
                                 true : false;
                         });
@@ -1344,8 +1352,8 @@
                 c.append(new MenuItem({
                     label: 'Select all',
                     click: () => {
-                        selection = window.getSelection();
-                        range = document.createRange();
+                        var selection = window.getSelection();
+                        var range = document.createRange();
                         range.selectNodeContents($("#log-view")[0]);
                         selection.removeAllRanges();
                         selection.addRange(range);
@@ -1392,7 +1400,7 @@
 
             $("#local-list").on('keypress', function (e) {
                 key += e.key;
-                var row = localTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; })
+                var row = localTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; });
                 //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollHeight - (row.index() * $(row.node()).outerHeight());
                 if (!row || row.length === 0) return;
                 localTable.rows().deselect();
@@ -1412,7 +1420,7 @@
             });
             $("#remote-list").on('keypress', function (e) {
                 key += e.key;
-                var row = remoteTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; })
+                var row = remoteTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; });
                 if (!row || row.length === 0) return;
                 remoteTable.rows().deselect();
                 var top = row.node().offsetTop;
@@ -1475,13 +1483,13 @@
                 $("#remote-list").addClass('focused');
                 $("#queue-list").removeClass('focused');
                 updateMenu();
-            })
+            });
             $("#queue-list").on('focus', () => {
                 $("#local-list").removeClass('focused');
                 $("#remote-list").removeClass('focused');
                 $("#queue-list").addClass('focused');
                 updateMenu();
-            })
+            });
             updateLocal(options.local);
             if (!options.remote || options.remote.length === 0)
                 _ied.getDir(".");
@@ -1494,13 +1502,13 @@
                         _ied.getDir(path.dirname(options.remote), true);
                 }
                 updateLocal(path.dirname($("#local-path").val()));
-            })
+            });
 
             $("#local-navigate").on('click', (e) => {
                 e.preventDefault();
                 e.cancelBubble = true;
                 updateLocal($(e.target).data('path'));
-            })
+            });
 
             $('#local-path').change(function () {
                 updateLocal($("#local-path").val());
@@ -1516,13 +1524,13 @@
                     if (path.basename(options.remote) === path.basename(options.local))
                         updateLocal(path.dirname(options.local));
                 }
-            })
+            });
 
             $("#remote-navigate").on('click', (e) => {
                 e.preventDefault();
                 e.cancelBubble = true;
                 _ied.getDir($(e.target).data('path'), true);
-            })
+            });
 
             $('#remote-path').change(function () {
                 _ied.getDir($("#remote-path").val());
@@ -1533,7 +1541,7 @@
             });
 
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-                var target = $(e.target).attr("href") // activated tab
+                var target = $(e.target).attr("href"); // activated tab
                 if (target === "#log")
                     $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
             });
@@ -1565,9 +1573,9 @@
                     case 46:
                         if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
                             if ($("#local-list").hasClass("focused"))
-                                deleteLocal()
+                                deleteLocal();
                             else if ($("#remote-list").hasClass("focused"))
-                                deleteRemote()
+                                deleteRemote();
                             //else if ($("#queue-list").hasClass("focused"))
                             //queueTable.rows().select();                            
                             event.preventDefault();
@@ -1719,7 +1727,7 @@
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
-            }
+            };
 
             $("#bottom")[0].ondragover = document.ondragover = document.ondrop = (ev) => {
                 ev.preventDefault();
@@ -1728,7 +1736,7 @@
                 ev.cancelBubble = true;
                 ev.stopPropagation();
                 return false;
-            }
+            };
 
             $("#bottom")[0].ondrop = document.ondrop = document.body.ondrop = (ev) => {
                 ev.preventDefault();
@@ -1737,7 +1745,7 @@
                 ev.cancelBubble = true;
                 ev.stopPropagation();
                 return false;
-            }
+            };
 
             $("#local")[0].ondragenter = (event) => {
                 event.preventDefault();
@@ -1759,7 +1767,7 @@
                 }
 
                 return false;
-            }
+            };
 
             $("#local")[0].ondragover = (event) => {
                 event.preventDefault();
@@ -1781,13 +1789,13 @@
                 }
 
                 return false;
-            }
+            };
 
             $("#local")[0].ondrop = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
-                var type = 0;
+                var type = 0, f, fl;
                 if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
                     if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path === options.local || path.dirname(event.dataTransfer.files[0].path) === options.local)) {
                         event.dataTransfer.dropEffect = "none";
@@ -1805,7 +1813,7 @@
                     type = 2;
                 }
                 if (_localDrag) {
-                    for (var f = 0, fl = _localDrag.length; f < fl; f++) {
+                    for (f = 0, fl = _localDrag.length; f < fl; f++) {
                         if (type === 1) {
                             fs.moveSync(_localDrag[f], path.join(options.local, getNewName(path.basename(_localDrag[f]), _local)));
                         }
@@ -1816,13 +1824,13 @@
                     _localDrag = 0;
                 }
                 else if (_remoteDrag) {
-                    for (var f = 0, fl = _remoteDrag.length; f < fl; f++) {
+                    for (f = 0, fl = _remoteDrag.length; f < fl; f++) {
                         _ied.download(_remoteDrag[f]);
                     }
                     _remoteDrag = 0;
                 }
                 else
-                    for (var f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
+                    for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         if (event.dataTransfer.files[f].path === options.local) continue;
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             _ied.download(event.dataTransfer.files[f].path.substring(8));
@@ -1835,7 +1843,7 @@
                             fs.copySync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
                         }
                     }
-            }
+            };
 
             $("#remote")[0].ondragenter = (event) => {
                 if (event.dataTransfer.files.length && event.dataTransfer.files[0].path.startsWith("jiMUD://")) {
@@ -1850,7 +1858,7 @@
                 event.cancelBubble = true;
                 event.stopPropagation();
                 return false;
-            }
+            };
 
             $("#remote")[0].ondragover = (event) => {
                 if (event.dataTransfer.files.length && event.dataTransfer.files[0].path.startsWith("jiMUD://")) {
@@ -1865,7 +1873,7 @@
                 event.cancelBubble = true;
                 event.stopPropagation();
                 return false;
-            }
+            };
 
             $("#remote")[0].ondrop = (event) => {
                 event.preventDefault();
@@ -1880,11 +1888,11 @@
                     _remoteDrag = 0;
                 }
                 else
-                    for (var f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
+                    for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) continue;
                         if (event.dataTransfer.files[f].size < 1) {
                             try {
-                                stat = fs.statSync(info.path);
+                                var stat = fs.statSync(info.path);
                             }
                             catch (error) {
                                 throw error;
@@ -1895,8 +1903,7 @@
                         else
                             _ied.upload(event.dataTransfer.files[f].path);
                     }
-
-            }
+            };
 
             $("#local-list")[0].ondragstart = (event) => {
                 event.preventDefault();
@@ -1910,7 +1917,7 @@
                     _localDrag = files;
                     ipcRenderer.send('ondragstart', files);
                 }
-            }
+            };
 
             $("#remote-list")[0].ondragstart = (event) => {
                 event.preventDefault();
@@ -1926,7 +1933,7 @@
                     _remoteDrag = files;
                     ipcRenderer.send('ondragstart', files, path.join(__dirname, '../assets/icons/png/drag2.png'));
                 }
-            }
+            };
 
             $(window).trigger('resize');
 
@@ -1944,7 +1951,7 @@
                     dirs++;
                 }
             }
-            dirs = dirs === selected.length
+            dirs = dirs === selected.length;
 
             var c = new Menu();
             c.append(new MenuItem({
@@ -2018,7 +2025,7 @@
                             click: () => {
                                 var selected = localTable.rows({ selected: true }).data().pluck('path');
                                 for (var d = 0, dl = selected.length; d < dl; d++) {
-                                    p = child_process.spawn(options.editor, [selected[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                                    var p = child_process.spawn(options.editor, [selected[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
                                     p.unref();
                                 }
                             }
@@ -2036,7 +2043,7 @@
                     dirs++;
                 }
             }
-            dirs = dirs === selected.length
+            dirs = dirs === selected.length;
 
             var c = new Menu();
             c.append(new MenuItem({
@@ -2194,7 +2201,7 @@
             options.syncFolders = !options.syncFolders;
             updateMenuItem({ menu: 'view|sync folders', checked: options.syncFolders });
             if (options.syncFolders)
-                $("#btn-sync").addClass("active")
+                $("#btn-sync").addClass("active");
             else
                 $('#btn-sync').removeClass('active');
             saveOptions();
@@ -2219,7 +2226,7 @@
 
         function openItem(path) {
             if (!path || path.length === 0) return;
-            shell.openItem(path)
+            shell.openItem(path);
         }
 
         function download() {
@@ -2260,39 +2267,39 @@
             watcher
                 .on('error', error => {
                     if (options.debug)
-                        log(`Watcher error: ${error}`)
+                        log(`Watcher error: ${error}`);
                     logMessage(`Watcher error: ${error}`);
                 })
                 .on('ready', () => {
                     if (options.debug)
-                        log('Initial scan complete. Ready for changes')
+                        log('Initial scan complete. Ready for changes');
                     ready = true;
                 })
                 .on('addDir', (path, stats) => {
                     if (options.debug)
-                        log(`Directory ${path} has been added`)
+                        log(`Directory ${path} has been added`);
                     if (ready && path != options.local)
                         addLocalFile(path);
                 })
                 .on('unlinkDir', p => {
                     if (options.debug)
-                        log(`Directory ${p} has been removed`)
+                        log(`Directory ${p} has been removed`);
                     if (ready) removeLocalFile(p);
                 })
                 .on('add', (path, stats) => {
                     if (options.debug)
-                        log(`File ${path} has been added`)
+                        log(`File ${path} has been added`);
                     if (ready && path != options.local)
                         addLocalFile(path);
                 })
                 .on('change', (path, stats) => {
                     if (options.debug)
-                        log(`File ${path} has been changed`)
+                        log(`File ${path} has been changed`);
                     updateLocalFile(path);
                 })
                 .on('unlink', p => {
                     if (options.debug)
-                        log(`File ${p} has been removed`)
+                        log(`File ${p} has been removed`);
                     if (ready)
                         removeLocalFile(p);
                 })
@@ -2304,7 +2311,7 @@
 
         function updateLocalFile(p) {
             try {
-                file = IED.getFileInfo(p);
+                var file = IED.getFileInfo(p);
             }
             catch (error) {
                 logError(error);
@@ -2351,7 +2358,7 @@
 
         function addLocalFile(path) {
             try {
-                file = IED.getFileInfo(path);
+                var file = IED.getFileInfo(path);
             }
             catch (error) {
                 logError(error);
@@ -2395,7 +2402,7 @@
                             _ied.deleteFile(data[d].path);
                     }
                 }
-            })
+            });
         }
 
         function newFolderLocal() {
@@ -2423,7 +2430,7 @@
                     type: 'error',
                     title: "Name required",
                     message: "You must supply a valid name!"
-                })
+                });
                 return;
             }
             if (IED.invalidFile(n)) {
@@ -2431,12 +2438,12 @@
                     type: 'error',
                     title: "Invalid folder name",
                     message: "The name you supplied contains invalid characters!"
-                })
+                });
                 return;
             }
             if ($("#newFolder").data("type") === "local") {
                 if (_local[n]) {
-                    var n = getNewName(n, _local);
+                    n = getNewName(n, _local);
                     if (dialog.showMessageBox(remote.getCurrentWindow(), {
                         type: 'warning',
                         title: "File or folder exist?",
@@ -2452,7 +2459,7 @@
             }
             else if ($("#newFolder").data("type") === "remote") {
                 if (_remote[n]) {
-                    var n = getNewName(n, _remote);
+                    n = getNewName(n, _remote);
                     if (dialog.showMessageBox(remote.getCurrentWindow(), {
                         type: 'warning',
                         title: "File or folder exist?",
@@ -2474,7 +2481,7 @@
             if (!selected || selected.length === 0) return;
             rename(selected, _local, (o, n) => {
                 fs.renameSync(o, path.join(path.dirname(o), n));
-            })
+            });
         }
 
         function renameRemote() {
@@ -2482,14 +2489,14 @@
             if (!selected || selected.length === 0) return;
             rename(selected, _remote, (o, n) => {
                 _ied.rename(o, path.dirname(o) + "/" + n);
-            })
+            });
         }
 
         function rename(rows, list, callback) {
             var el = $(rows.nodes()[0].children[0]);
             el.css('position', 'relative');
             var editor = $('<input class="form-control" style="position: absolute;top:0;left:0;right:0;bottom:0;width:auto;margin:0;height: auto;"/>');
-            editor.path = rows.data()[0].path
+            editor.path = rows.data()[0].path;
             editor.original = rows.data()[0].name;
             editor.update = function () {
                 if (!list[editor.val()]) {
@@ -2509,14 +2516,14 @@
                     }
                 }
                 editor.close();
-            }
+            };
             editor.close = function (e) {
                 if (e && e.target === editor[0])
                     return;
                 $(window).off('click', editor.update);
                 editor.remove();
                 editor = null;
-            }
+            };
             editor.on('blur', editor.close);
             editor.on('click', function (e) {
                 e.preventDefault();
@@ -2525,7 +2532,7 @@
             editor.on('keypress', function (event) {
                 event.cancelable = true;
                 event.stopPropagation();
-            })
+            });
             editor.on('keydown', (event) => {
                 if (event.which === 27)
                     editor.close();
@@ -2625,13 +2632,13 @@
         });
 
         ipcRenderer.on('reload-options', (event) => {
-            loadOptions()
+            loadOptions();
         });
 
         ipcRenderer.on('setting-changed', (event, data) => {
             if (data.type === "extensions" && data.name === "immortal")
                 loadOptions(data.value);
-        })
+        });
     </script>
 </head>
 

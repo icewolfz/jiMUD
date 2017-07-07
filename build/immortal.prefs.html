@@ -76,13 +76,11 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script>
         //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { parseTemplate } = require('./js/library');
         const { TempType } = require('./js/types');
         const Settings = require('./js/settings').Settings;
         const { remote, ipcRenderer } = require('electron');
         const { dialog } = remote;
-        const path = require('path')
-        const fs = require('fs');
+        const path = require('path');
 
         var _settings;
         if (window.module) module.module;
@@ -236,7 +234,7 @@
                     alwaysOnTop: $("#alwaysOnTop").prop('checked')
                 }
             });
-            window.close()
+            window.close();
         }
     </script>
 </head>

@@ -80,7 +80,7 @@
       const { version } = require("../package.json");
       const { remote } = require('electron');
 
-      function formatBytes(a,b){if(0==a)return"0 Bytes";var c=1e3,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f]}
+      //function formatBytes(a,b){if(0==a)return"0 Bytes";var c=1e3,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f];}
 
       $(document).ready(() => {
         $("#ev").text(process.versions.electron);
@@ -99,7 +99,7 @@
           row += "<td>" + (mi[i].memory.sharedBytes).toLocaleString()  + " K</td>";
           row += "<td>" + (mi[i].memory.workingSetSize).toLocaleString()  + " K</td>";
           row += "<td>" + (mi[i].cpu.percentCPUUsage || 0.0).toFixed(3) + "%</td>";
-          row += "<td>" + mi[i].cpu.idleWakeupsPerSecond + "</td></tr>"
+          row += "<td>" + mi[i].cpu.idleWakeupsPerSecond + "</td></tr>";
           $("#memory tbody").append(row);
           total[0] += mi[i].memory.peakWorkingSetSize;
           total[1] += mi[i].memory.privateBytes;

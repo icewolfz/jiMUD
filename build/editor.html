@@ -22,9 +22,10 @@
             //cSpell:words tinymce
             //cSpell:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
             //cSpell:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime, 
+            /* global tinymce */
             const { remote, ipcRenderer, webFrame } = require('electron');
             const { nativeImage, dialog, Menu, MenuItem } = remote;
-            const { stripHTML, htmlEncode, parseTemplate } = require('./js/library');
+            const { stripHTML, htmlEncode } = require('./js/library');
             const { Settings } = require('./js/settings');
             const rgbcolor = require("rgbcolor");
             const fs = require('fs');
@@ -47,7 +48,7 @@
                 "BOLD MAGENTA": "Magenta",
                 "BOLD CYAN": "Cyan",
                 "BOLD WHITE": "White",
-            }
+            };
 
             function clearReverse(els, c) {
                 els.each(
@@ -66,7 +67,7 @@
                             back = $(this).parent().css('background-color');
                         }
                         if (back === "black")
-                            back = ''
+                            back = '';
                         if (fore === "rgba(0, 0, 0, 0)")
                             fore = "black";
                         $(this).css('color', fore);
@@ -142,7 +143,7 @@
                 if (txt) {
                     ctx.fillStyle = fore || '#333333';
                     //ctx.font = "16px tinymce";
-                    ctx.font = 'bold 20px Helvetica'
+                    ctx.font = 'bold 20px Helvetica';
                     ctx.fillText(txt, 2, 15);
                 }
                 if (border) {
@@ -211,7 +212,7 @@
             //https://www.npmjs.com/package/electron-spell-check-provider
 
             function buildHTMLStack(els) {
-                var tag, $el;
+                var tag, $el, t, tl;
                 var stack = [];
                 for (var e = 0, el = els.length; e < el; e++) {
                     $el = $(els[e]);
@@ -225,7 +226,7 @@
                     else if (tag === "SPAN") {
                         if (els[e].className != '') {
                             tag = els[e].className.toUpperCase().split(/\s+/g);
-                            var t, tl = tag.length;
+                            tl = tag.length;
                             for (t = 0; t < tl; t++) {
                                 if (tag[t] === "NOFLASH")
                                     stack.push("FLASH");
@@ -242,17 +243,17 @@
                             continue;
                         }
                         else if ($el.css('text-decoration') === "line-through")
-                            tag = "STRIKEOUT"
+                            tag = "STRIKEOUT";
                         else if ($el.css('text-decoration') === "underline")
                             tag = "UNDERLINE";
                         else if ($el.data('mce-style')) {
                             tag = $el.data('mce-style').toUpperCase().split(";");
-                            var t, tl = tag.length;
+                            tl = tag.length;
                             for (t = 0; t < tl; t++) {
                                 if (tag[t].endsWith("INHERIT") || tag[t].endsWith("BLACK"))
                                     continue;
                                 tag[t] = tag[t].trim();
-                                tag[t] = tag[t].replace("BACKGROUND:", "BACKGROUND-COLOR:")
+                                tag[t] = tag[t].replace("BACKGROUND:", "BACKGROUND-COLOR:");
                                 if (tag[t].length > 0)
                                     stack.push(tag[t]);
                             }
@@ -273,7 +274,7 @@
                                 tag.push("BACKGROUND-COLOR: " + new rgbcolor($el.css("background-color")).toHex().toUpperCase());
                             if ($el.css("background"))
                                 tag.push("BACKGROUND-COLOR: " + new rgbcolor($el.css("background")).toHex().toUpperCase());
-                            var t, tl = tag.length;
+                            tl = tag.length;
                             for (t = 0; t < tl; t++) {
                                 if (tag[t].length > 0)
                                     stack.push(tag[t].trim());
@@ -300,20 +301,20 @@
             }
 
             function getFormatedText() {
-                var data = buildHTMLStack($("<html>" + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/\<\/div\>\<div\>/g, "<br>") + "</html>"));
+                var data = buildHTMLStack($("<html>" + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, "<br>") + "</html>"));
                 var buffer = [];
                 var codes = [];
-                var color;
+                var color, d, dl, rgb;
                 if (options.enableDebug)
                     ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
-                for (var d = data.length - 1; d >= 0; d--) {
+                for (d = data.length - 1; d >= 0; d--) {
                     if (!data[d].startsWith('"') && data[d] != "BR")
                         data.pop();
                     else
                         break;
                 }
 
-                for (var d = 0, dl = data.length; d < dl; d++) {
+                for (d = 0, dl = data.length; d < dl; d++) {
                     switch (data[d]) {
                         case "BOLD":
                         case "ITALIC":
@@ -356,7 +357,7 @@
                             if (data[d].startsWith("COLOR: #")) {
                                 color = data[d].substr(8);
                                 if (!_colors[color]) {
-                                    var rgb = new rgbcolor(color)
+                                    rgb = new rgbcolor(color);
                                     color = nearestHex(rgb.toHex()).substr(1);
                                 }
                                 color = _colors[color];
@@ -364,7 +365,7 @@
                                 buffer.push("%^" + color + "%^");
                             }
                             else if (data[d].startsWith("COLOR: ")) {
-                                var color = new rgbcolor(data[d].substr(7)).toHex().substr(1);
+                                color = new rgbcolor(data[d].substr(7)).toHex().substr(1);
                                 if (!_colors[color])
                                     color = nearestHex("#" + color).substr(1);
                                 color = _colors[color];
@@ -381,7 +382,7 @@
                             else if (data[d].startsWith("BACKGROUND-COLOR: #")) {
                                 color = data[d].substr(19);
                                 if (!_colors[color]) {
-                                    var rgb = new rgbcolor(color)
+                                    rgb = new rgbcolor(color);
                                     color = nearestHex(rgb.toHex()).substr(1);
                                 }
                                 if (_colors["B" + color])
@@ -393,7 +394,7 @@
                                 buffer.push(color);
                             }
                             else if (data[d].startsWith("BACKGROUND-COLOR: ")) {
-                                var color = new rgbcolor(data[d].substr(18)).toHex().substr(1);
+                                color = new rgbcolor(data[d].substr(18)).toHex().substr(1);
                                 if (!_colors[color])
                                     color = nearestHex("#" + color).substr(1);
                                 if (_colors["B" + color])
@@ -423,7 +424,7 @@
             }
 
             function getHTML() {
-                return tinymce.activeEditor.getContent({ format: 'html' })
+                return tinymce.activeEditor.getContent({ format: 'html' });
             }
 
             //{ color: 'red', hex: '#EA4235', rgb: { r: 234, g: 66, b: 53 } },
@@ -450,7 +451,7 @@
                 var closestHexFromRgb = function (rgbObj) {
                     if (!rgbObj) {
                         throw new Error("The hex you provided is not formatted correctly. Please try in a format such as '#FFF' or '#DDFFDD'.");
-                    };
+                    }
 
                     var minDistance = Number.MAX_SAFE_INTEGER;
                     var nearestHex = null;
@@ -466,13 +467,13 @@
                             minDistance = distance;
                             nearestHex = currentColor.hex;
                         }
-                    };
+                    }
                     return nearestHex;
                 };
 
                 return closestHexFromRgb(hexToRgb(hex));
 
-            };
+            }
 
             function initShadowMUD() {
                 tinymce.PluginManager.add('shadowmud', function (editor, url) {
@@ -488,7 +489,7 @@
                             addReverse($(".reverse", $(editor.getDoc()).contents()));
                             editor.nodeChanged();
                         });
-                    }
+                    };
 
                     this.removeFormat = function (format) {
                         editor.undoManager.transact(function () {
@@ -498,7 +499,7 @@
                             addReverse($(".reverse", $(editor.getDoc()).contents()));
                             editor.nodeChanged();
                         });
-                    }
+                    };
 
                     function buttonColorClick(evt) {
                         if (evt.color === 'transparent')
@@ -595,7 +596,7 @@
                                 format: 'forecolor',
                                 click: buttonColorClick
                             }
-                        ]
+                        ];
                         var bmi = [
                             {
                                 label: 'No color',
@@ -604,7 +605,8 @@
                                 format: 'hilitecolor',
                                 click: buttonColorClick
                             }
-                        ]
+                        ];
+                        var icon;
                         for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
                             //generate icon for the first 16 user definable colors, else use predefined icons
                             //if (c >= 64)
@@ -626,7 +628,7 @@
                                 click: buttonColorClick
                             });
                         }
-                        fmi.push({ type: 'separator' })
+                        fmi.push({ type: 'separator' });
                         fmi.push({
                             label: 'More...',
                             icon: path.join(__dirname, '../assets/icons/png/color.png'),
@@ -634,7 +636,7 @@
                                 ipcRenderer.send('show-window', 'color', { type: 'forecolor', color: '' });
                             }
                         });
-                        bmi.push({ type: 'separator' })
+                        bmi.push({ type: 'separator' });
                         bmi.push({
                             label: 'More...',
                             icon: path.join(__dirname, '../assets/icons/png/color.png'),
@@ -646,7 +648,7 @@
                         cMenu.append(new MenuItem({ label: 'Text color', icon: path.join(__dirname, '../assets/icons/png/forecolor.png'), submenu: fmi }));
                         cMenu.append(new MenuItem({ label: 'Background color', icon: path.join(__dirname, '../assets/icons/png/backcolor.png'), submenu: bmi }));
                         return cMenu;
-                    }
+                    };
 
                     editor.addButton('send', {
                         type: 'splitbutton',
@@ -811,10 +813,11 @@
                             if (options.enableDebug)
                                 ipcRenderer.send('debug', 'Advanced Before Editor PastePreProcess: ' + e.content);
                             clearReverse($(".reverse", $(editor.getDoc()).contents()));
-                            e.content = e.content.replace(/\<\/p>/g, '<br>');
-                            e.content = e.content.replace(/\<\/h[1-6]>/g, '<br>');
-                            e.content = e.content.replace(/\<\/li>/g, '<br>');
-                            var regex = /\<pre(.*?)>((.|\s)*)\<\/pre>/mgi;
+                            e.content = e.content.replace(/<\/p>/g, '<br>');
+                            e.content = e.content.replace(/<\/h[1-6]>/g, '<br>');
+                            e.content = e.content.replace(/<\/li>/g, '<br>');
+                            var regex = /<pre(.*?)>((.|\s)*)<\/pre>/mgi;
+                            var m;
                             while ((m = regex.exec(e.content)) !== null) {
                                 if (m.index === regex.lastIndex) {
                                     regex.lastIndex++;
@@ -840,7 +843,7 @@
 
                 tinymce.activeEditor.on('contextmenu', function (e) {
                     e.preventDefault();
-                    cMenu = tinymce.activeEditor.plugins["shadowmud"].buildMenu()
+                    var cMenu = tinymce.activeEditor.plugins["shadowmud"].buildMenu();
 
                     /*
                                         sel = tinymce.activeEditor.selection.getSel();
@@ -896,7 +899,7 @@
                                 click: function (item) {
                                     tinymce.activeEditor.undoManager.transact(function () {
                                         tinymce.activeEditor.selection.setContent(item.label);
-                                    })
+                                    });
                                 }
                             }));
                     }
@@ -907,7 +910,7 @@
 
             function loadColors() {
                 var _dColors = Settings.getColors();
-                var c, color, r, g, b, idx, _bold = [];
+                var c, color, r, g, b, idx, _bold = [], bl;
                 _ColorTable = [];
                 _colors = {};
 
@@ -987,12 +990,12 @@
                             c = g * 40 + 55;
                             if (c < 16)
                                 color += "0";
-                            color += c.toString(16)
+                            color += c.toString(16);
                             c = 0;
                             c = b * 40 + 55;
                             if (c < 16)
                                 color += "0";
-                            color += c.toString(16)
+                            color += c.toString(16);
                             color = color.toUpperCase();
                             //_ColorTable.push(color);
                             //_ColorTable.push(idx);
@@ -1023,7 +1026,7 @@
                             _colors[g] = "mono" + (r - 232);
                     }
                 }
-                for (var b = 0, bl = _bold.length; b < bl; b++) {
+                for (b = 0, bl = _bold.length; b < bl; b++) {
                     _colors["B" + _bold[b]] = _colors[nearestHex("#" + _bold[b]).substr(1)].toUpperCase();
                 }
                 tinymce.activeEditor.settings.textcolor_map = _ColorTable;
@@ -1035,7 +1038,7 @@
                 $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-size", options.cmdfontSize);
                 $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-family", options.cmdfont + ", monospace");
                 if (tinymce.activeEditor.formatter)
-                    tinymce.activeEditor.formatter.register('flash', { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true })
+                    tinymce.activeEditor.formatter.register('flash', { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true });
                 else
                     tinymce.activeEditor.settings.formats['flash'] = { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true };
                 loadColors();

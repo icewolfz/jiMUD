@@ -1,18 +1,18 @@
 //cSpell:words submenu, pasteandmatchstyle, statusvisible, lagmeter, taskbar, 
 //cSpell:ignore prefs, partyhealth, combathealth
-const { app, BrowserWindow, shell } = require('electron')
-const { dialog, Menu, MenuItem } = require('electron')
-const ipcMain = require('electron').ipcMain
-const path = require('path')
+const { app, BrowserWindow, shell } = require('electron');
+const { dialog, Menu } = require('electron');
+const ipcMain = require('electron').ipcMain;
+const path = require('path');
 const fs = require('fs');
-const url = require('url')
+const url = require('url');
 const settings = require('./js/settings');
 
 //require('electron-local-crash-reporter').start();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winHelp, winWho, winMap, winProfiles, winEditor, winChat
+let win, winWho, winMap, winProfiles, winEditor, winChat;//winHelp
 let set, mapperMax = false, editorMax = false, chatMax = false, debug = false;
 let chatReady = false;
 let reload = null;
@@ -36,10 +36,6 @@ let states = {
 process.on('uncaughtException', (err) => {
   logError(err);
 });
-
-
-
-
 
 var characters;
 
@@ -242,7 +238,7 @@ var menuTemp = [
             label: '&Refresh',
             id: "refresh",
             click: () => {
-              win.webContents.executeJavaScript('client.sendGMCP(\'Core.Hello { "client\": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');');
+              win.webContents.executeJavaScript('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');');
             }
           },
           { type: 'separator' },
@@ -537,31 +533,31 @@ var menuTemp = [
             resizable: false,
             title: 'About jiMUD',
             icon: path.join(__dirname, '../assets/icons/png/64x64.png')
-          })
+          });
           about.webContents.on('crashed', (event, killed) => {
             logError(`About crashed, killed: ${killed}\n`, true);
           });
 
           about.setMenu(null);
           about.on('closed', () => {
-            about = null
-          })
+            about = null;
+          });
 
           // and load the index.html of the app.
           about.loadURL(url.format({
             pathname: path.join(__dirname, 'about.html'),
             protocol: 'file:',
             slashes: true
-          }))
+          }));
 
           about.once('ready-to-show', () => {
-            about.show()
-          })
+            about.show();
+          });
         }
       }
     ]
   }
-]
+];
 
 if (process.platform === 'darwin') {
   menuTemp.unshift({
@@ -596,7 +592,7 @@ if (process.platform === 'darwin') {
         role: 'quit'
       }
     ]
-  })
+  });
   // Edit menu.
   menuTemp[2].submenu.push(
     {
@@ -613,7 +609,7 @@ if (process.platform === 'darwin') {
         }
       ]
     }
-  )
+  );
   // Window menu.
   menuTemp[5].submenu = [
     {
@@ -637,7 +633,7 @@ if (process.platform === 'darwin') {
       label: 'Bring All to Front',
       role: 'front'
     }
-  ]
+  ];
 }
 
 let menubar;
@@ -646,7 +642,7 @@ const selectionMenu = Menu.buildFromTemplate([
   { role: 'copy' },
   { type: 'separator' },
   { role: 'selectall' },
-])
+]);
 
 const inputMenu = Menu.buildFromTemplate([
   { role: 'undo' },
@@ -657,7 +653,7 @@ const inputMenu = Menu.buildFromTemplate([
   { role: 'paste' },
   { type: 'separator' },
   { role: 'selectall' },
-])
+]);
 
 function addInputContext(window) {
   window.webContents.on('context-menu', (e, props) => {
@@ -667,9 +663,10 @@ function addInputContext(window) {
     } else if (selectionText && selectionText.trim() !== '') {
       selectionMenu.popup(window);
     }
-  })
+  });
 }
 
+/*
 function showHelpWindow(url, title) {
   if (winHelp != null) {
     winHelp.title = title;
@@ -677,7 +674,7 @@ function showHelpWindow(url, title) {
     winHelp.show();
     return;
   }
-  s = loadWindowState('help')
+  var s = loadWindowState('help');
   if (!title || title.length === 0)
     title = "Help";
   winHelp = new BrowserWindow({
@@ -689,7 +686,7 @@ function showHelpWindow(url, title) {
     height: s.height,
     backgroundColor: '#000',
     show: false, skipTaskbar: false
-  })
+  });
 
   winHelp.webContents.on('crashed', (event, killed) => {
     logError(`Help crashed, killed: ${killed}\n`, true);
@@ -708,18 +705,18 @@ function showHelpWindow(url, title) {
   winHelp.on('resize', () => {
     if (!winHelp.isMaximized() && !winHelp.isFullScreen())
       trackWindowState('help', winHelp);
-  })
+  });
 
   winHelp.on('move', () => {
     trackWindowState('help', winHelp);
-  })
+  });
 
   winHelp.on('unmaximize', () => {
     trackWindowState('help', winHelp);
-  })
+  });
 
   if (s.devTools)
-    winHelp.webContents.openDevTools()
+    winHelp.webContents.openDevTools();
 
   winHelp.once('ready-to-show', () => {
     addInputContext(winHelp);
@@ -727,16 +724,17 @@ function showHelpWindow(url, title) {
       if (s.maximized)
         winHelp.maximize();
       else
-        winHelp.show()
+        winHelp.show();
     }
-  })
+  });
 
   winHelp.on('close', () => {
     set = settings.Settings.load(global.settingsFile);
     set.windows['help'] = getWindowState('help', winHelp);
     set.save(global.settingsFile);
-  })
+  });
 }
+*/
 
 function createMenu() {
   var profiles;
@@ -756,7 +754,7 @@ function createMenu() {
       click: () => {
         win.webContents.executeJavaScript('client.toggleProfile("default")');
       }
-    })
+    });
 
   var p = path.join(app.getPath('userData'), "profiles");
   if (fs.existsSync(p)) {
@@ -774,7 +772,7 @@ function createMenu() {
             click: (menuItem, browserWindow, event) => {
               win.webContents.executeJavaScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")');
             }
-          })
+          });
       }
     }
   }
@@ -809,7 +807,7 @@ function createWindow() {
   */
   if (!set)
     set = settings.Settings.load(global.settingsFile);
-  s = loadWindowState('main');
+  var s = loadWindowState('main');
   // Create the browser window.
   win = new BrowserWindow({
     title: 'jiMUD',
@@ -823,7 +821,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegrationInWorker: true
     }
-  })
+  });
   if (s.fullscreen)
     win.setFullScreen(s.fullscreen);
   // and load the index.html of the app.
@@ -831,7 +829,7 @@ function createWindow() {
     pathname: path.join(__dirname, 'index.html'),
     protocol: 'file:',
     slashes: true
-  }))
+  }));
 
   createMenu();
   loadMenu();
@@ -839,20 +837,20 @@ function createWindow() {
 
   // Open the DevTools.
   if (s.devTools)
-    win.webContents.openDevTools()
+    win.webContents.openDevTools();
 
   win.on('resize', () => {
     if (!win.isMaximized() && !win.isFullScreen())
       trackWindowState('main', win);
-  })
+  });
 
   win.on('move', () => {
     trackWindowState('main', win);
-  })
+  });
 
   win.on('unmaximize', () => {
     trackWindowState('main', win);
-  })
+  });
 
   win.on('unresponsive', function () {
     dialog.showMessageBox({
@@ -908,7 +906,7 @@ function createWindow() {
   });
 
   win.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
-    event.preventDefault()
+    event.preventDefault();
     if (frameName === 'modal') {
       // open window as modal
       Object.assign(options, {
@@ -919,14 +917,14 @@ function createWindow() {
         maximizable: false,
         skipTaskbar: true,
         resizable: false
-      })
+      });
 
       var b = win.getBounds();
       options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
       options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
     }
     options.show = false;
-    const w = new BrowserWindow(options)
+    const w = new BrowserWindow(options);
     if (debug)
       w.webContents.openDevTools();
     w.setMenu(null);
@@ -938,9 +936,9 @@ function createWindow() {
       logError(`${url} crashed, killed: ${killed}\n`, true);
     });
 
-    w.loadURL(url)
+    w.loadURL(url);
     event.newGuest = w;
-  })
+  });
 
   // Emitted when the window is closed.
   win.on('closed', () => {
@@ -973,7 +971,7 @@ function createWindow() {
     }
     set.save(global.settingsFile);
     win = null;
-  })
+  });
 
   win.once('ready-to-show', () => {
     addInputContext(win);
@@ -995,7 +993,7 @@ function createWindow() {
     if (s.maximized)
       win.maximize();
     else
-      win.show()
+      win.show();
 
     if (set.showMapper)
       showMapper();
@@ -1017,7 +1015,7 @@ function createWindow() {
         createNewWindow(name, set.windows[name]);
     }
 
-  })
+  });
 
   win.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
@@ -1039,7 +1037,7 @@ function createWindow() {
         continue;
       windows[name].window.webContents.executeJavaScript('closing();');
     }
-  })
+  });
 }
 
 
@@ -1107,7 +1105,7 @@ app.on('ready', () => {
       global.profiles = parseTemplate(val.substring(4)).split(',');
   });
   createWindow();
-})
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -1121,17 +1119,17 @@ app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
-})
+});
 
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (win == null) {
-    createWindow()
+    createWindow();
   }
-})
+});
 
 ipcMain.on('reload', (event, char) => {
   //already loaded so no need to reload
@@ -1139,15 +1137,15 @@ ipcMain.on('reload', (event, char) => {
     return;
   reload = char;
   win.close();
-})
+});
 
 ipcMain.on('load-default', (event) => {
   //already loaded so no need to switch
-  sf = parseTemplate(path.join("{data}", "settings.json"));
-  mf = parseTemplate(path.join("{data}", "map.sqlite"));
+  var sf = parseTemplate(path.join("{data}", "settings.json"));
+  var mf = parseTemplate(path.join("{data}", "map.sqlite"));
   if (sf === global.settingsFile && mf === global.mapFile)
     return;
-  win.webContents.send('load-default', char);
+  win.webContents.send('load-default');
   global.settingsFile = sf;
   global.mapFile = mf;
 
@@ -1183,7 +1181,7 @@ ipcMain.on('load-default', (event) => {
     showChat();
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
-})
+});
 
 ipcMain.on('load-char', (event, char) => {
   //already loaded so no need to switch
@@ -1224,7 +1222,7 @@ ipcMain.on('load-char', (event, char) => {
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
 
-})
+});
 
 ipcMain.on('reload-options', () => {
   win.webContents.send('reload-options');
@@ -1272,7 +1270,7 @@ ipcMain.on('set-title', (event, title) => {
       continue;
     windows[name].window.webContents.send('set-title', title);
   }
-})
+});
 
 ipcMain.on('closed', (event) => {
   if (winChat)
@@ -1288,7 +1286,7 @@ ipcMain.on('closed', (event) => {
       continue;
     windows[name].window.webContents.send('closed');
   }
-})
+});
 
 ipcMain.on('connected', (event) => {
   if (winChat)
@@ -1304,7 +1302,7 @@ ipcMain.on('connected', (event) => {
       continue;
     windows[name].window.webContents.send('connected');
   }
-})
+});
 
 ipcMain.on('set-color', (event, type, color) => {
   if (winEditor)
@@ -1313,35 +1311,35 @@ ipcMain.on('set-color', (event, type, color) => {
 
 ipcMain.on('send-background', (event, command) => {
   win.webContents.send('send-background', command);
-})
+});
 
 ipcMain.on('send-command', (event, command) => {
   win.webContents.send('send-command', command);
-})
+});
 
 ipcMain.on('send-gmcp', (event, data) => {
   win.webContents.send('send-gmcp', data);
-})
+});
 
 ipcMain.on('send-raw', (event, raw) => {
   win.webContents.send('send-raw', raw);
-})
+});
 
 ipcMain.on('send', (event, raw) => {
   win.webContents.send('send', raw);
-})
+});
 
 ipcMain.on('log', (event, raw) => {
   console.log(raw);
-})
+});
 
 ipcMain.on('debug', (event, msg) => {
   win.webContents.send('debug', msg);
-})
+});
 
 ipcMain.on('error', (event, err) => {
   win.webContents.send('error', err);
-})
+});
 
 ipcMain.on('reload-profiles', (event) => {
   createMenu();
@@ -1351,7 +1349,7 @@ ipcMain.on('reload-profiles', (event) => {
       continue;
     windows[name].window.webContents.send('reload-profiles');
   }
-})
+});
 
 ipcMain.on('chat', (event, text) => {
   if (!winChat) {
@@ -1365,9 +1363,9 @@ ipcMain.on('chat', (event, text) => {
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
-    windows[name].window.webContents.send('chat', titexttle);
+    windows[name].window.webContents.send('chat', text);
   }
-})
+});
 
 ipcMain.on('setting-changed', (event, data) => {
   if (data.type === "mapper" && data.name === "alwaysOnTopClient") {
@@ -1399,8 +1397,9 @@ ipcMain.on('setting-changed', (event, data) => {
     if (data.value)
       createChat();
   }
+  var name;
   if (data.type === "windows")
-    for (var name in windows) {
+    for (name in windows) {
       if (!windows.hasOwnProperty(name) || !windows[name].window)
         continue;
 
@@ -1418,13 +1417,13 @@ ipcMain.on('setting-changed', (event, data) => {
         createNewWindow(name, windows[name]);
     }
   if (data.type === "extensions")
-    for (var name in windows) {
+    for (name in windows) {
       if (!windows.hasOwnProperty(name) || !windows[name].window)
         continue;
       if (windows[name].window)
         windows[name].window.webContents.send('setting-changed', data);
     }
-})
+});
 
 ipcMain.on('GMCP-received', (event, data) => {
   if (winMap)
@@ -1443,13 +1442,13 @@ ipcMain.on('update-menuitem', (event, args) => {
 ipcMain.on('set-overlay', (event, args) => {
   switch (args) {
     case 1:
-      win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected')
+      win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
       break;
     case 2:
-      win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received text')
+      win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received text');
       break;
     default:
-      win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected')
+      win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
       break;
   }
 });
@@ -1513,21 +1512,21 @@ ipcMain.on('ondragstart', (event, files, icon) => {
     event.sender.startDrag({
       file: files,
       icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
-    })
+    });
   else if (files.length === 1)
     event.sender.startDrag({
       file: files[0],
       icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
-    })
+    });
   else
     event.sender.startDrag({
       files: files,
       icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
-    })
-})
+    });
+});
 
 function updateMenuItem(args) {
-  var item, i = 0, ic, items;
+  var item, i = 0, items;
   var tItem, tItems;
   if (!menubar || args == null || args.menu == null) return;
 
@@ -1538,7 +1537,7 @@ function updateMenuItem(args) {
   tItems = menuTemp;
   for (i = 0; i < args.menu.length; i++) {
     if (!items || items.length === 0) break;
-    for (m = 0; m < items.length; m++) {
+    for (var m = 0; m < items.length; m++) {
       if (!items[m].id) continue;
       if (items[m].id === args.menu[i]) {
         item = items[m];
@@ -1610,13 +1609,13 @@ function loadWindowState(window) {
       y: 0,
       width: 800,
       height: 600
-    }
+    };
   states[window] = {
     x: set.windows[window].x,
     y: set.windows[window].y,
     width: set.windows[window].width,
     height: set.windows[window].height
-  }
+  };
   return set.windows[window];
 }
 
@@ -1673,24 +1672,24 @@ function showPrefs() {
     resizable: false,
     title: 'Preferences',
     icon: path.join(__dirname, '../assets/icons/png/preferences.png')
-  })
+  });
   //pref.webContents.openDevTools()
   pref.setMenu(null);
   pref.on('closed', () => {
-    pref = null
-  })
+    pref = null;
+  });
   pref.loadURL(url.format({
     pathname: path.join(__dirname, 'prefs.html'),
     protocol: 'file:',
     slashes: true
-  }))
+  }));
 
   if (debug)
     pref.webContents.openDevTools();
 
   pref.once('ready-to-show', () => {
-    pref.show()
-  })
+    pref.show();
+  });
 
   pref.webContents.on('crashed', (event, killed) => {
     logError(`Preferences crashed, killed: ${killed}\n`, true);
@@ -1700,7 +1699,7 @@ function showPrefs() {
 
 function createMapper(show) {
   if (winMap) return;
-  s = loadWindowState('mapper')
+  var s = loadWindowState('mapper');
   winMap = new BrowserWindow({
     parent: set.mapper.alwaysOnTopClient ? win : null,
     alwaysOnTop: set.mapper.alwaysOnTop,
@@ -1713,7 +1712,7 @@ function createMapper(show) {
     show: false,
     skipTaskbar: (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false,
     icon: path.join(__dirname, '../assets/icons/png/map.png')
-  })
+  });
 
   if (s.fullscreen)
     winMap.setFullScreen(s.fullscreen);
@@ -1736,18 +1735,18 @@ function createMapper(show) {
   winMap.on('resize', () => {
     if (!winMap.isMaximized() && !winMap.isFullScreen())
       trackWindowState('mapper', winMap);
-  })
+  });
 
   winMap.on('move', () => {
     trackWindowState('mapper', winMap);
-  })
+  });
 
   winMap.on('unmaximize', () => {
     trackWindowState('mapper', winMap);
-  })
+  });
 
   if (debug)
-    winMap.webContents.openDevTools()
+    winMap.webContents.openDevTools();
 
   winMap.once('ready-to-show', () => {
     addInputContext(winMap);
@@ -1755,11 +1754,11 @@ function createMapper(show) {
       if (s.maximized)
         winMap.maximize();
       else
-        winMap.show()
+        winMap.show();
     }
     else
       mapperMax = s.maximized;
-  })
+  });
 
   winMap.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
@@ -1772,7 +1771,7 @@ function createMapper(show) {
       e.preventDefault();
       winMap.hide();
     }
-  })
+  });
 }
 
 function showMapper() {
@@ -1795,7 +1794,7 @@ function showProfiles() {
     winProfiles.show();
     return;
   }
-  s = loadWindowState('profiles');
+  var s = loadWindowState('profiles');
   winProfiles = new BrowserWindow({
     parent: win,
     x: s.x,
@@ -1810,7 +1809,7 @@ function showProfiles() {
     title: 'Profile Manger',
     icon: path.join(__dirname, '../assets/icons/png/profiles.png'),
     show: false
-  })
+  });
 
   winProfiles.webContents.on('crashed', (event, killed) => {
     logError(`Profile manager crashed, killed: ${killed}\n`, true);
@@ -1820,48 +1819,48 @@ function showProfiles() {
     winProfiles.setFullScreen(s.fullscreen);
 
   if (debug)
-    winProfiles.webContents.openDevTools()
+    winProfiles.webContents.openDevTools();
 
   winProfiles.setMenu(null);
   winProfiles.on('closed', () => {
-    winProfiles = null
-  })
+    winProfiles = null;
+  });
   winProfiles.loadURL(url.format({
     pathname: path.join(__dirname, 'profiles.html'),
     protocol: 'file:',
     slashes: true
-  }))
+  }));
   winProfiles.once('ready-to-show', () => {
     //addInputContext(winProfiles);
     if (s.maximized)
       winProfiles.maximize();
     else
       winProfiles.show();
-  })
+  });
 
   winProfiles.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.windows['profiles'] = getWindowState('profiles', winProfiles);
     set.save(global.settingsFile);
-  })
+  });
 
   winProfiles.on('resize', () => {
     if (!winProfiles.isMaximized() && !winProfiles.isFullScreen())
       trackWindowState('profiles', winProfiles);
-  })
+  });
 
   winProfiles.on('move', () => {
     trackWindowState('profiles', winProfiles);
-  })
+  });
 
   winProfiles.on('unmaximize', () => {
     trackWindowState('profiles', winProfiles);
-  })
+  });
 }
 
 function createEditor(show) {
   if (winEditor) return;
-  s = loadWindowState('editor')
+  var s = loadWindowState('editor');
   winEditor = new BrowserWindow({
     parent: win,
     title: 'Advanced Editor',
@@ -1873,7 +1872,7 @@ function createEditor(show) {
     show: false,
     skipTaskbar: false,
     icon: path.join(__dirname, '../assets/icons/png/edit.png')
-  })
+  });
 
   winEditor.webContents.on('crashed', (event, killed) => {
     logError(`Advanced editor crashed, killed: ${killed}\n`, true);
@@ -1896,18 +1895,18 @@ function createEditor(show) {
   winEditor.on('resize', () => {
     if (!winEditor.isMaximized() && !winEditor.isFullScreen())
       trackWindowState('editor', winEditor);
-  })
+  });
 
   winEditor.on('move', () => {
     trackWindowState('editor', winEditor);
-  })
+  });
 
   winEditor.on('unmaximize', () => {
     trackWindowState('editor', winEditor);
-  })
+  });
 
   if (debug)
-    winEditor.webContents.openDevTools()
+    winEditor.webContents.openDevTools();
 
   winEditor.once('ready-to-show', () => {
     addInputContext(winEditor);
@@ -1919,7 +1918,7 @@ function createEditor(show) {
     }
     else
       editorMax = s.maximized;
-  })
+  });
 
   winEditor.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
@@ -1931,7 +1930,7 @@ function createEditor(show) {
       e.preventDefault();
       winEditor.hide();
     }
-  })
+  });
 }
 
 function showEditor() {
@@ -1951,7 +1950,7 @@ function showEditor() {
 
 function createChat(show) {
   if (winChat) return;
-  s = loadWindowState('chat')
+  var s = loadWindowState('chat');
   winChat = new BrowserWindow({
     parent: set.chat.alwaysOnTopClient ? win : null,
     title: 'Chat',
@@ -1966,7 +1965,7 @@ function createChat(show) {
     webPreferences: {
       nodeIntegrationInWorker: true
     }
-  })
+  });
 
   winChat.webContents.on('crashed', (event, killed) => {
     logError(`Chat capture crashed, killed: ${killed}\n`, true);
@@ -1990,18 +1989,18 @@ function createChat(show) {
   winChat.on('resize', () => {
     if (!winChat.isMaximized() && !winChat.isFullScreen())
       trackWindowState('chat', winChat);
-  })
+  });
 
   winChat.on('move', () => {
     trackWindowState('chat', winChat);
-  })
+  });
 
   winChat.on('unmaximize', () => {
     trackWindowState('chat', winChat);
-  })
+  });
 
   if (debug)
-    winChat.webContents.openDevTools()
+    winChat.webContents.openDevTools();
 
   winChat.once('ready-to-show', () => {
     addInputContext(winChat);
@@ -2014,11 +2013,11 @@ function createChat(show) {
     else
       chatMax = s.maximized;
     chatReady = true;
-  })
+  });
 
   winChat.on('closed', () => {
     winChat = null;
-  })
+  });
 
   winChat.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
@@ -2029,7 +2028,7 @@ function createChat(show) {
       e.preventDefault();
       winChat.hide();
     }
-  })
+  });
 }
 
 function showChat() {
@@ -2051,7 +2050,7 @@ function createNewWindow(name, options) {
   if (windows[name] && windows[name].window)
     return;
   if (!options) options = {};
-  s = loadWindowState(name);
+  var s = loadWindowState(name);
   windows[name] = options;
   windows[name].window = new BrowserWindow({
     parent: windows[name].alwaysOnTopClient ? win : null,
@@ -2089,18 +2088,18 @@ function createNewWindow(name, options) {
   windows[name].window.on('resize', () => {
     if (!windows[name].window.isMaximized() && !windows[name].window.isFullScreen())
       trackWindowState(name, windows[name].window);
-  })
+  });
 
   windows[name].window.on('move', () => {
     trackWindowState(name, windows[name].window);
-  })
+  });
 
   windows[name].window.on('unmaximize', () => {
     trackWindowState(name, windows[name].window);
-  })
+  });
 
   windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
-    event.preventDefault()
+    event.preventDefault();
     if (frameName === 'modal') {
       // open window as modal
       Object.assign(options, {
@@ -2111,14 +2110,14 @@ function createNewWindow(name, options) {
         maximizable: false,
         skipTaskbar: true,
         resizable: false
-      })
+      });
 
       var b = windows[name].window.getBounds();
       options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
       options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
     }
     options.show = false;
-    const w = new BrowserWindow(options)
+    const w = new BrowserWindow(options);
     if (debug)
       w.webContents.openDevTools();
     w.setMenu(null);
@@ -2130,12 +2129,12 @@ function createNewWindow(name, options) {
       logError(`${url} crashed, killed: ${killed}\n`, true);
     });
 
-    w.loadURL(url)
+    w.loadURL(url);
     event.newGuest = w;
-  })
+  });
 
   if (debug)
-    windows[name].window.webContents.openDevTools()
+    windows[name].window.webContents.openDevTools();
 
   windows[name].window.once('ready-to-show', () => {
     if (!options.noInput)
@@ -2149,11 +2148,11 @@ function createNewWindow(name, options) {
     else
       windows[name].max = s.maximized;
     windows[name].ready = true;
-  })
+  });
 
   windows[name].window.on('closed', () => {
     windows[name].window = null;
-  })
+  });
 
   windows[name].window.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
@@ -2167,7 +2166,7 @@ function createNewWindow(name, options) {
       e.preventDefault();
       windows[name].window.hide();
     }
-  })
+  });
 }
 
 function showWindow(name, options) {
@@ -2202,20 +2201,20 @@ function showColor(args) {
     title: 'Pick color',
     icon: path.join(__dirname, '../assets/icons/png/color.png'),
     show: false,
-  })
+  });
   cp.webContents.on('crashed', (event, killed) => {
     logError(`Colorpicker crashed, killed: ${killed}\n`, true);
   });
 
   cp.setMenu(null);
   cp.on('closed', () => {
-    cp = null
-  })
+    cp = null;
+  });
   cp.loadURL(url.format({
     pathname: path.join(__dirname, 'colorpicker.html'),
     protocol: 'file:',
     slashes: true
-  }))
+  }));
 
   if (debug)
     cp.webContents.openDevTools();
@@ -2223,7 +2222,7 @@ function showColor(args) {
   cp.once('ready-to-show', () => {
     cp.show();
     cp.webContents.executeJavaScript('setType("' + (args.type || 'forecolor') + '");setColor("' + (args.color || '') + '");');
-  })
+  });
 }
 
 function copyFile(src, dest) {

@@ -36,7 +36,7 @@
     const Backup = require('./js/backup.js').Backup;
     const { Settings } = require('./js/settings');
     const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
-    const { dialog, Menu, MenuItem, app, nativeImage } = remote;
+    const { dialog, Menu, MenuItem, nativeImage } = remote;
     const { parseTemplate, setSelectionRange } = require("./js/library.js");
     const fs = require('fs');
     const path = require('path');
@@ -48,7 +48,6 @@
 
     var client, _status, _backup;
     var _logger;
-    var OoMUD;
     var active = false;
     var capture = 0, captureReview = 0;
     var _captures = [], _captureReviews = [];
@@ -176,43 +175,43 @@
           break;
         case 'lagmeter':
           client.options.lagMeter = !client.options.lagMeter;
-          updateInterface()
+          updateInterface();
           client.saveOptions();
           ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
           break;
         case 'weather':
           client.options.showStatusWeather = !client.options.showStatusWeather;
-          updateInterface()
+          updateInterface();
           client.saveOptions();
           ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'weather'], checked: client.options.showStatusWeather });
           break;
         case 'limbs':
           client.options.showStatusLimbs = !client.options.showStatusLimbs;
-          updateInterface()
+          updateInterface();
           client.saveOptions();
           ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: client.options.showStatusLimbs });
           break;
         case 'health':
           client.options.showStatusHealth = !client.options.showStatusHealth;
-          updateInterface()
+          updateInterface();
           client.saveOptions();
           ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'health'], checked: client.options.showStatusHealth });
           break;
         case 'experience':
           client.options.showStatusExperience = !client.options.showStatusExperience;
-          updateInterface()
+          updateInterface();
           client.saveOptions();
           ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'experience'], checked: client.options.showStatusExperience });
           break;
         case 'partyhealth':
           client.options.showStatusPartyHealth = !client.options.showStatusPartyHealth;
-          updateInterface()
+          updateInterface();
           client.saveOptions();
           ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'partyhealth'], checked: client.options.showStatusPartyHealth });
           break;
         case 'combathealth':
           client.options.showStatusCombatHealth = !client.options.showStatusCombatHealth;
-          updateInterface()
+          updateInterface();
           client.saveOptions();
           ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'combathealth'], checked: client.options.showStatusCombatHealth });
           break;
@@ -389,10 +388,10 @@
           clipboard.writeText(client.display.selection, 'selection');
           client.display.clearSelection();
         }
-      })
+      });
 
       client.display._el.addEventListener('contextmenu', (e) => {
-        e.preventDefault()
+        e.preventDefault();
         window.$selected = client.display.selection;
         window.$copied = clipboard.readText('selection');
         window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
@@ -428,7 +427,8 @@
 
         var context = client.contexts;
         if (context.length > 0) {
-          for (var x = 0, xl = context.length; x < xl; x++) {
+          var xl = context.length;
+          for (x = 0; x < xl; x++) {
             if (!context[x].enabled || context[x].parent) continue;
             var menu;
             if (context[x].caption === "-")
@@ -464,7 +464,7 @@
           c.append(new MenuItem({ type: 'separator' }));
           c.append(new MenuItem({
             label: 'Clear', click: () => {
-              client.clear()
+              client.clear();
             }
           }));
         }
@@ -480,16 +480,14 @@
               return;
           }
           if (client.display.hasSelection > 0)
-            clipboard.writeText(client.display.selection, 'selection')
+            clipboard.writeText(client.display.selection, 'selection');
         });
       });
 
-
-      OoMUD = client;
       window.client = client;
       window.OoMUD = client;
-      window.readClipboard = () => { return clipboard.readText('selection') || '' };
-      window.writeClipboard = (txt) => { clipboard.writeText(txt || '', 'selection') };
+      window.readClipboard = () => { return clipboard.readText('selection') || ''; };
+      window.writeClipboard = (txt) => { clipboard.writeText(txt || '', 'selection'); };
       client.readClipboard = window.readClipboard;
       client.writeClipboard = window.writeClipboard;
 
@@ -507,17 +505,17 @@
         updateMenu();
       });
       client.on('add-line', (data) => {
-        var res;
+        var res, re, c, cl;
         if (_captures.length === 0) return;
         //custom capture to ignore who list
-        res = /^(\-*)\s*\[ .* matching users \]\s*(\-*)$/.exec(data.line);
+        res = /^(-*)\s*\[ .* matching users \]\s*(-*)$/.exec(data.line);
         if (res && res.length > 0) {
           capture = 0;
           _noCapture = true;
           return;
         }
         //end capture blocking for who list
-        res = /^(\-*)\s*\[ .* \]\s*(\-*)$/.exec(data.line);
+        res = /^(-*)\s*\[ .* \]\s*(-*)$/.exec(data.line);
         if (res && res.length > 0) {
           capture = 0;
           _noCapture = false;
@@ -530,9 +528,8 @@
           data.gagged = true;
           return;
         }
-        var res, re;
         //search capture review blocks
-        for (var c = 0, cl = _captureReviews.length; c < cl; c++) {
+        for (c = 0, cl = _captureReviews.length; c < cl; c++) {
           re = new RegExp(_captureReviews[c], 'g');
           res = re.exec(data.line);
           if (!res || res.length === 0)
@@ -559,9 +556,8 @@
           return;
         }
 
-
         //capture lines based on matching regex's
-        for (var c = 0, cl = _captures.length; c < cl; c++) {
+        for (c = 0, cl = _captures.length; c < cl; c++) {
           re = new RegExp(_captures[c], 'g');
           res = re.exec(data.line);
           if (!res || res.length === 0)
@@ -649,12 +645,19 @@
       client.on('connected', () => {
         ipcRenderer.send('connected');
         _logger.postMessage({ action: 'connected', args: client.connected });
-        _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt } });
+        _logger.postMessage({
+          action: 'start', args: {
+            lines: client.display.lines,
+            raw: client.display.rawLines,
+            formats: client.display.lineFormats,
+            fragment: client.display.EndOfLine || client.telnet.prompt
+          }
+        });
       });
 
       client.on('add-line-done', (data) => {
         _logger.postMessage({ action: 'add-line', args: data });
-      })
+      });
 
       client.on('received-data', (data) => {
         if (!active && client.connected)
@@ -808,10 +811,10 @@
             return 'no';
         }
         return;
-      }
+      };
 
       $("#status").on('contextmenu', (e) => {
-        e.preventDefault()
+        e.preventDefault();
         var c = new Menu();
         c.append(new MenuItem({
           label: '&Visible',
@@ -824,7 +827,7 @@
         c.append(new MenuItem({
           label: '&Refresh',
           click: () => {
-            client.sendGMCP('Core.Hello { "client\": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
+            client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
           }
         }));
         c.append(new MenuItem({ type: 'separator' }));
@@ -912,7 +915,7 @@
       });
 
       $("#buttonbar").on('contextmenu', (e) => {
-        e.preventDefault()
+        e.preventDefault();
         var c = new Menu();
         c.append(new MenuItem({
           label: '&Visible',
@@ -1003,7 +1006,7 @@
           { label: 'Paste special', click: () => { pasteSpecial(); } },
           { type: 'separator' },
           { role: 'selectall' },
-        ])
+        ]);
         var word = e.currentTarget.value.substring(e.currentTarget.selectionStart, e.currentTarget.selectionEnd);
         var ol = word.length;
         word = word.trimRight();
@@ -1016,7 +1019,7 @@
           if (words.length > 0)
             inputMenu.insert(0, new MenuItem({ type: 'separator' }));
           var start = e.currentTarget.selectionStart;
-          var end = e.currentTarget.selectionEnd
+          var end = e.currentTarget.selectionEnd;
           for (var w = words.length - 1; w >= 0; w--) {
             inputMenu.insert(0, new MenuItem({
               label: words[w],
@@ -1041,29 +1044,29 @@
       client.display.on('word', () => {
         client.options.find.word = client.display.MatchWord;
         client.saveOptions();
-      })
+      });
       client.display.on('case', () => {
         client.options.find.case = client.display.MatchCase;
         client.saveOptions();
 
-      })
+      });
       client.display.on('reverse', () => {
         client.options.find.reverse = client.display.Reverse;
         client.saveOptions();
-      })
+      });
       client.display.on('regex', () => {
         client.options.find.regex = client.display.RegularExpression;
         client.saveOptions();
-      })
+      });
 
       client.display.on('shown', () => {
         client.options.find.show = true;
         client.saveOptions();
-      })
+      });
       client.display.on('closed', () => {
         client.options.find.show = false;
         client.saveOptions();
-      })
+      });
 
       client.display.MatchCase = client.options.find.case;
       client.display.MatchWord = client.options.find.word;
@@ -1074,7 +1077,7 @@
 
       if (client.options.showCharacterManager)
         showCharacters();
-    };
+    }
 
     function executeContext(item) {
       if (!item) return;
@@ -1264,7 +1267,7 @@
       }
     });
 
-    ipcRenderer.on('load-default', (event, char) => {
+    ipcRenderer.on('load-default', (event) => {
       if (!client.connected) {
         _logger.postMessage({ action: 'name', args: '' });
         $("#character-name").text("&nbsp;");
@@ -1350,7 +1353,7 @@
     });
 
     ipcRenderer.on('reload-options', (event) => {
-      client.loadOptions()
+      client.loadOptions();
       _logger.postMessage({
         action: 'options', args: {
           path: parseTemplate(client.options.logPath),

@@ -29,7 +29,7 @@
     const { remote, ipcRenderer } = require('electron');
     const { dialog } = remote;
     const RGBColor = require('rgbcolor');
-    const path = require('path')
+    const path = require('path');
     const fs = require('fs');
 
     var _settings;
@@ -45,13 +45,13 @@
       else
         $('.win32').css('display', 'none');
       $('#font').change(() => {
-        $("#font-sample").css("font-family", $("#font").val() + ", monospace");
-        $("#font-sample").css("font-size", $("#fontSize").val());
+        $('#font-sample').css('font-family', $('#font').val() + ', monospace');
+        $('#font-sample').css('font-size', $('#fontSize').val());
       });
 
       $('#fontSize').change(() => {
-        $("#font-sample").css("font-family", $("#font").val() + ", monospace");
-        $("#font-sample").css("font-size", $("#fontSize").val());
+        $('#font-sample').css("font-family", $("#font").val() + ", monospace");
+        $('#font-sample').css("font-size", $("#fontSize").val());
       });
 
       $('#cmdfont').change(() => {
@@ -91,7 +91,7 @@
     }
 
     function getThemes(p) {
-      p2 = parseTemplate(p);
+      var p2 = parseTemplate(p);
       if (!fs.existsSync(p2))
         return [];
       var themes = [];
@@ -101,7 +101,7 @@
         themes.push({
           name: path.basename(files[f], path.extname(files[f])),
           path: p
-        })
+        });
       }
       return themes;
     }
@@ -116,7 +116,7 @@
         if (themes[t].path === "{themes}" && themes[t].name === "default") continue;
         $("#theme").append($('<option></option>').val(path.join(themes[t].path, themes[t].name)).html(themes[t].name[0].toUpperCase() + themes[t].name.substr(1)));
       }
-      $("#theme").selectpicker('refresh')
+      $("#theme").selectpicker('refresh');
     }
 
     function loadSettings() {
@@ -399,7 +399,7 @@
         var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
         var color = new RGBColor($(this).val());
         if (color.ok)
-          _settings.colors[idx] = color.toRGB();;
+          _settings.colors[idx] = color.toRGB();
       });
 
       $('.selectpicker').change(function () {
@@ -431,7 +431,7 @@
         $("#" + id).val('');
       }
       else {
-        var color = new RGBColor(color);
+        color = new RGBColor(color);
         if (!color.ok)
           $("#" + id).val('');
         else
@@ -708,7 +708,7 @@
       _settings.chat.lines = $("#chat-lines").val().split(',');
       _settings.save(remote.getGlobal('settingsFile'));
       ipcRenderer.send('reload-options');
-      window.close()
+      window.close();
     }
   </script>
 </head>
