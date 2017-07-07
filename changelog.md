@@ -5,6 +5,7 @@
     - Rename local and remote files
     - Make new folders local and remote
     - Drag and drop support to ul/dl files
+    - Remote command support from menu or context menu for selected items: backup, goto, change to dir, clone, dest, update, renew
   - Immortal doc file
 - **Fixed:**
   - An issue with scroll bars inner borders when nothing to scroll
@@ -15,7 +16,9 @@
   - Immortal tools: fixed remote delete trying to delete folders
   - Fixed a bug in #alias not correctly adding a new alias
   - Fixed a bug with MSP link expiring and nested tags
-  - Profile Manager: Fixed an issue when editing macros and key is always None.
+  - Profile Manager:
+    - Fixed an issue when editing macros and key is always None.
+    - #alias/#unalias notify profile manager directly now notifying that profiles have changed.
   - Minor bug fixes related to cleaning code.
 ##### 0.4.1 2017-07-03
 - **New:**
