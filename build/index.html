@@ -77,7 +77,7 @@
     function doMXPSend(e, el, url, pmt, tt) {
       el = $(el);
       var im = el.find("img[ismap]");
-      var extra = "";
+      var extra = '';
       if (im.length > 0) {
         var offset = im.offset();
         var x = Math.floor(e.clientX - offset.left);
@@ -115,7 +115,7 @@
         setSelectionRange(client.commandInput[0], url.length, url.length);
       }
       else {
-        url = url.replace("&text;", $(el).text()) + extra + "\n";
+        url = url.replace("&text;", $(el).text()) + extra + '\n';
         client.send(url);
         if (client.telnet.echo && client.options.commandEcho)
           client.echo(url);
@@ -453,7 +453,7 @@
         if (client.defaultContext) {
           if (c.items.length > 0)
             c.append(new MenuItem({ type: 'separator' }));
-          if (window.$selected && window.$selected != "") {
+          if (window.$selected && window.$selected != '') {
             c.append(new MenuItem({ role: 'copy' }));
           }
           if (window.$copied.length) {
@@ -625,7 +625,7 @@
       client.on('connecting', () => {
         if (client.options.buttons.connect) {
           $("#connect").css("display", "none");
-          $("#disconnect").css("display", "");
+          $("#disconnect").css("display", '');
         }
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
@@ -635,7 +635,7 @@
 
       client.on('closed', () => {
         if (client.options.buttons.connect) {
-          $("#connect").css("display", "");
+          $("#connect").css("display", '');
           $("#disconnect").css("display", "none");
         }
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
@@ -1079,7 +1079,7 @@
     function executeContext(item) {
       if (!item) return;
       if (!item.enabled) return false;
-      var ret;// = "";
+      var ret;// = '';
       switch (item.style) {
         case 1:
           ret = client.parseOutgoing(item.value);
@@ -1093,11 +1093,11 @@
           ret = item.value;
           break;
       }
-      if (ret === null)
+      if (ret == null)
         return true;
       if (item.send) {
-        if (!ret.endsWith("\n"))
-          ret += "\n";
+        if (!ret.endsWith('\n'))
+          ret += '\n';
         if (item.chain && client.commandInput.val().endsWith(" ")) {
           client.commandInput.val(client.commandInput.val() + ret);
           client.sendCommand();
@@ -1118,7 +1118,7 @@
       if (idx < 0 || idx >= client.buttons.length) return false;
       button = client.buttons[idx];
       if (!button.enabled) return false;
-      var ret;// = "";
+      var ret;// = '';
       switch (button.style) {
         case 1:
           ret = client.parseOutgoing(button.value);
@@ -1132,11 +1132,11 @@
           ret = button.value;
           break;
       }
-      if (ret === null)
+      if (ret == null)
         return true;
       if (button.send) {
-        if (!ret.endsWith("\n"))
-          ret += "\n";
+        if (!ret.endsWith('\n'))
+          ret += '\n';
         if (button.chain && client.commandInput.val().endsWith(" ")) {
           client.commandInput.val(client.commandInput.val() + ret);
           client.sendCommand();
@@ -1266,7 +1266,7 @@
 
     ipcRenderer.on('load-default', (event, char) => {
       if (!client.connected) {
-        _logger.postMessage({ action: 'name', args: "" });
+        _logger.postMessage({ action: 'name', args: '' });
         $("#character-name").text("&nbsp;");
       }
     });

@@ -1,6 +1,6 @@
 /**
  * IED decode/encoder
- * 
+ *
  * Encode/decode text blocks in background thread
  * @arthur William
  */
@@ -8,21 +8,22 @@ self.addEventListener('message', (e: MessageEvent) => {
     if (!e.data) return;
     switch (e.data.action) {
         case 'decode':
-            postMessage({ event: 'decoded', file:e.data.file, data:decode(e.data.data), last:e.data.last, download:e.data.download });
+            postMessage({ event: 'decoded', file: e.data.file, data: decode(e.data.data), last: e.data.last, download: e.data.download });
             break;
         case 'encode':
-            postMessage({ event: 'encoded', file:e.data.file, data:encode(e.data.data), last:e.data.last, download:e.data.download });
+            postMessage({ event: 'encoded', file: e.data.file, data: encode(e.data.data), last: e.data.last, download: e.data.download });
             break;
     }
 }, false);
 
-
 function decode(data: string) {
-    let decoded: string[], c;
+    let decoded: string[];
+    let c;
     if (!data || data.length === 0)
-        return "";
+        return '';
     decoded = [];
-    for (let d = 0, dl = data.length; d < dl; d++) {
+    const dl = data.length;
+    for (let d = 0; d < dl; d++) {
         c = data.charAt(d);
         if (c === '@') {
             decoded.push(String.fromCharCode(parseInt(data.substr(d + 1, 2), 16)));
@@ -36,22 +37,24 @@ function decode(data: string) {
 }
 
 function encode(data: string) {
-    let encoded: string[], c, i;
+    let encoded: string[];
+    let c;
+    let i;
     if (!data || data.length === 0)
-        return "";
+        return '';
 
     encoded = [];
-    for (let d = 0, dl = data.length; d < dl; d++) {
+    const dl = data.length;
+    for (let d = 0; d < dl; d++) {
         c = data.charAt(d);
         i = data.charCodeAt(d);
         if (i <= 32 || i >= 127 || c === '@' || c === '^' || c === '\\' || c === '/') {
             c = i.toString(16);
             if (c.length === 1)
-                c = "0" + c;
-            c = "@"+c;
+                c = '0' + c;
+            c = '@' + c;
         }
         encoded.push(c);
     }
     return encoded.join('');
 }
-

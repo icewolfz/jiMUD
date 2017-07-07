@@ -1,12 +1,12 @@
 //cSpell:ignore pathfinding, vscroll, hscroll, AUTOINCREMENT, Arial, isdoor, isclosed, prevroom, islocked, cmds
 //cSpell:ignore watersource, dirtroad, sanddesert, icesheet, highmountain, pavedroad, rockdesert
 import EventEmitter = require('events');
-import { Size } from "./types";
-import { parseTemplate, clone } from "./library";
-const fs = require("fs");
-const path = require("path");
-const sqlite3 = require("sqlite3");
-const PF = require("./../../lib/pathfinding.js");
+import { Size } from './types';
+import { parseTemplate, clone } from './library';
+const fs = require('fs');
+const path = require('path');
+const sqlite3 = require('sqlite3');
+const PF = require('./../../lib/pathfinding.js');
 
 export enum RoomDetails {
     None = 0,
@@ -113,7 +113,7 @@ export class Mapper extends EventEmitter {
     private hscroll: number = 0;
     private markers = {};
     private _cancelImport: boolean = false;
-    private _mapFile = path.join(parseTemplate("{data}"), "map.sqlite");
+    private _mapFile = path.join(parseTemplate('{data}'), 'map.sqlite');
 
     public current: Room;
     public active: Room;
@@ -130,7 +130,7 @@ export class Mapper extends EventEmitter {
     public _memoryPeriod;
 
     set enabled(value: boolean) {
-        if (this._enabled != value) {
+        if (this._enabled !== value) {
             this._enabled = value;
             this.emit('setting-changed', 'enabled', value);
         }
@@ -138,15 +138,15 @@ export class Mapper extends EventEmitter {
     get enabled(): boolean { return this._enabled; }
 
     get isDirty(): boolean { return this._changed; }
-    set isDirty(value: boolean) { this._changed; }
+    set isDirty(value: boolean) { this._changed = value; }
 
     set mapFile(value: string) {
-        if (value != this._mapFile) {
+        if (value !== this._mapFile) {
             this.save(() => {
                 this._db.close(() => {
                     this._mapFile = value;
                     if (this._memory) {
-                        this._db = new sqlite3.Database(":memory:");
+                        this._db = new sqlite3.Database(':memory:');
                         this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
                     }
                     else
@@ -164,16 +164,16 @@ export class Mapper extends EventEmitter {
             });
         }
     }
-    get mapFile(): string { return this._mapFile }
+    get mapFile(): string { return this._mapFile; }
 
     get memory(): boolean { return this._memory; }
     set memory(value: boolean) {
-        if (this._memory != value) {
+        if (this._memory !== value) {
             this.save(() => {
                 this._db.close(() => {
                     this._memory = value;
                     if (this._memory) {
-                        this._db = new sqlite3.Database(":memory:");
+                        this._db = new sqlite3.Database(':memory:');
                         this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
                     }
                     else
@@ -194,7 +194,7 @@ export class Mapper extends EventEmitter {
 
     get memorySavePeriod(): number { return this._memorySavePeriod; }
     set memorySavePeriod(value: number) {
-        if (value != this._memorySavePeriod) {
+        if (value !== this._memorySavePeriod) {
             clearInterval(this._memoryPeriod);
             if (this._memory)
                 this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
@@ -203,7 +203,7 @@ export class Mapper extends EventEmitter {
     }
 
     set follow(value: boolean) {
-        if (this._follow != value) {
+        if (this._follow !== value) {
             this._follow = value;
             this.emit('setting-changed', 'follow', value);
         }
@@ -211,7 +211,7 @@ export class Mapper extends EventEmitter {
     get follow(): boolean { return this._follow; }
 
     set showLegend(value: boolean) {
-        if (this._showLegend != value) {
+        if (this._showLegend !== value) {
             this._showLegend = value;
             this.draw();
             this.emit('setting-changed', 'legend', value);
@@ -220,7 +220,7 @@ export class Mapper extends EventEmitter {
     get showLegend(): boolean { return this._showLegend; }
 
     set splitArea(value: boolean) {
-        if (this._splitArea != value) {
+        if (this._splitArea !== value) {
             this._splitArea = value;
             this.draw();
             this.emit('setting-changed', 'split', value);
@@ -230,7 +230,7 @@ export class Mapper extends EventEmitter {
     get splitArea(): boolean { return this._splitArea; }
 
     set fillWalls(value: boolean) {
-        if (this._fillWalls != value) {
+        if (this._fillWalls !== value) {
             this._fillWalls = value;
             this.draw();
             this.emit('setting-changed', 'fill', value);
@@ -239,25 +239,25 @@ export class Mapper extends EventEmitter {
 
     get fillWalls(): boolean { return this._fillWalls; }
 
-    createDatabase(prefix?) {
+    public createDatabase(prefix?) {
         if (prefix)
-            prefix += ".";
+            prefix += '.';
         else
-            prefix = "";
+            prefix = '';
         this._db.serialize(() => {
             //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
-            this._db.run("PRAGMA " + prefix + "synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;");
-            this._db.run("CREATE TABLE IF NOT EXISTS " + prefix + "Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)");
-            this._db.run("CREATE TABLE IF NOT EXISTS " + prefix + "Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)");
-            this._db.run("CREATE UNIQUE INDEX IF NOT EXISTS " + prefix + "index_id on Rooms (ID);")
-            this._db.run("CREATE INDEX IF NOT EXISTS " + prefix + "exits_id on Exits (ID);")
+            this._db.run('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
+            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)');
+            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)');
+            this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id on Rooms (ID);');
+            this._db.run('CREATE INDEX IF NOT EXISTS ' + prefix + 'exits_id on Exits (ID);');
             //this._db.run("CREATE TABLE IF NOT EXISTS Areas (ID INTEGER PRIMARY KEY AUTOINCREMENT, Area TEXT)");
         });
     }
 
     constructor(canvas, memory?: boolean, memoryPeriod?: (number | string), map?: string) {
         super();
-        if (typeof memoryPeriod == "string") {
+        if (typeof memoryPeriod === 'string') {
             if (memoryPeriod.length > 0)
                 this._mapFile = memoryPeriod;
         }
@@ -267,12 +267,12 @@ export class Mapper extends EventEmitter {
                 this._mapFile = map;
         }
         this._canvas = canvas;
-        this._context = canvas.getContext("2d");
+        this._context = canvas.getContext('2d');
         //rooms - ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors
         //exits - ID, Exit, DestID
         if (memory) {
             this._memory = memory;
-            this._db = new sqlite3.Database(":memory:");
+            this._db = new sqlite3.Database(':memory:');
             this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
         }
         else
@@ -293,8 +293,8 @@ export class Mapper extends EventEmitter {
             if (this.drag) {
                 this.MouseDrag.x += this.MousePrev.x - this.Mouse.x;
                 this.MouseDrag.y += this.MousePrev.y - this.Mouse.y;
-                let x = Math.floor(this.MouseDrag.x / 32);
-                let y = Math.floor(this.MouseDrag.y / 32)
+                const x = Math.floor(this.MouseDrag.x / 32);
+                const y = Math.floor(this.MouseDrag.y / 32);
                 if (x > 0 || x < 0 || y < 0 || y > 0) {
                     this.MouseDrag.x -= x * 32;
                     this.MouseDrag.y -= y * 32;
@@ -307,21 +307,20 @@ export class Mapper extends EventEmitter {
             this.Mouse = this.getMapMousePos(event);
             this.MouseDown = this.getMapMousePos(event);
             this.MouseDrag.state = true;
-            this.drag = this.MouseDown.button == 0;
+            this.drag = this.MouseDown.button === 0;
             if (this.drag)
-                $(this._canvas).css("cursor", "move");
+                $(this._canvas).css('cursor', 'move');
         });
 
         $(this._canvas).mouseup((event) => {
             this.Mouse = this.getMapMousePos(event);
             if (!this.MouseDown)
                 this.MouseDown = this.getMapMousePos(event);
-            if (this.Mouse.button === 0 && Math.floor(this.Mouse.x / 32) == Math.floor(this.MouseDown.x / 32) && Math.floor(this.Mouse.y / 32) == Math.floor(this.MouseDown.y / 32)) {
-                let x = this.Mouse.x;
-                let y = this.Mouse.y;
-                let i, idx;
+            if (this.Mouse.button === 0 && Math.floor(this.Mouse.x / 32) === Math.floor(this.MouseDown.x / 32) && Math.floor(this.Mouse.y / 32) === Math.floor(this.MouseDown.y / 32)) {
+                const x = this.Mouse.x;
+                const y = this.Mouse.y;
                 this.findActiveRoomByCoords(x, y, (room) => {
-                    if (this.selected && room && room.ID == this.selected.ID)
+                    if (this.selected && room && room.ID === this.selected.ID)
                         return;
                     this.emit('room-before-selected', clone(this.selected));
                     this.selected = room;
@@ -332,7 +331,7 @@ export class Mapper extends EventEmitter {
             }
             this.MouseDrag.state = false;
             this.drag = false;
-            $(this._canvas).css("cursor", "default");
+            $(this._canvas).css('cursor', 'default');
         });
         $(this._canvas).mouseenter((event) => {
             this.Mouse = this.getMapMousePos(event);
@@ -343,14 +342,14 @@ export class Mapper extends EventEmitter {
                 if (!this._redraw)
                     this.draw();
                 this.drag = false;
-                $(this._canvas).css("cursor", "default");
+                $(this._canvas).css('cursor', 'default');
             }
         });
-        $(this._canvas).bind("contextmenu", (event) => {
+        $(this._canvas).bind('contextmenu', (event) => {
             event.preventDefault();
-            let m = this.getMapMousePos(event);
+            const m = this.getMapMousePos(event);
             this.findActiveRoomByCoords(m.x, m.y, (room) => {
-                this.emit('context-menu', clone(room))
+                this.emit('context-menu', clone(room));
             });
             return false;
         });
@@ -365,8 +364,8 @@ export class Mapper extends EventEmitter {
         this.refresh();
     }
 
-    getMapMousePos(evt): MouseData {
-        let rect = this._canvas.getBoundingClientRect();
+    public getMapMousePos(evt): MouseData {
+        const rect = this._canvas.getBoundingClientRect();
         return {
             x: evt.clientX - rect.left,
             y: evt.clientY - rect.top,
@@ -375,7 +374,7 @@ export class Mapper extends EventEmitter {
         };
     }
 
-    scrollBy(x: number, y: number) {
+    public scrollBy(x: number, y: number) {
         this.vscroll += x;
         this.hscroll += y;
         this.draw();
@@ -383,7 +382,7 @@ export class Mapper extends EventEmitter {
         this.emit('setting-changed', 'hscroll', this.hscroll);
     }
 
-    scrollTo(x: number, y: number) {
+    public scrollTo(x: number, y: number) {
         this.vscroll = x;
         this.hscroll = y;
         this.draw();
@@ -391,12 +390,12 @@ export class Mapper extends EventEmitter {
         this.emit('setting-changed', 'hscroll', this.hscroll);
     }
 
-    findActiveRoomByCoords(rx: number, ry: number, callback) {
+    public findActiveRoomByCoords(rx: number, ry: number, callback) {
         let x = this.vscroll - (this._canvas.width / 32 / 2);
         let y = this.hscroll - (this._canvas.height / 32 / 2);
-        let z = this.active.z;
-        let area = this.active.area;
-        let zone = this.active.zone;
+        const z = this.active.z;
+        const area = this.active.area;
+        const zone = this.active.zone;
         let ox = 15.5;
         let oy = 15.5;
         if (this._canvas.width % 2 !== 0)
@@ -409,7 +408,7 @@ export class Mapper extends EventEmitter {
         x = Math.floor(x);
         y = Math.floor(y);
         if (this._splitArea)
-            this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area AND Zone = $zone AND X = $x AND Y = $y AND Z = $z", {
+            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area AND Zone = $zone AND X = $x AND Y = $y AND Z = $z', {
                 $area: area,
                 $zone: zone,
                 $x: x,
@@ -422,9 +421,9 @@ export class Mapper extends EventEmitter {
                     else
                         callback(new Room());
                 }
-            })
+            });
         else
-            this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Zone = $zone AND X = $x AND Y = $y AND Z = $z", {
+            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Zone = $zone AND X = $x AND Y = $y AND Z = $z', {
                 $zone: zone,
                 $x: x,
                 $y: y,
@@ -436,11 +435,11 @@ export class Mapper extends EventEmitter {
                     else
                         callback(new Room());
                 }
-            })
+            });
 
     }
 
-    draw(canvas?, context?, ex?: boolean, callback?) {
+    public draw(canvas?, context?, ex?: boolean, callback?) {
         if (!canvas)
             canvas = this._canvas;
         if (!context)
@@ -450,28 +449,27 @@ export class Mapper extends EventEmitter {
         if (!canvas || !context) return;
 
         this._redraw = true;
-        let x = this.vscroll - (canvas.width / 32 / 2);
-        let y = this.hscroll - (canvas.height / 32 / 2);
-        let z = this.active.z || 0;
-        let area = this.active.area || "";
-        let zone = this.active.zone || 0;
+        const x = this.vscroll - (canvas.width / 32 / 2);
+        const y = this.hscroll - (canvas.height / 32 / 2);
+        const z = this.active.z || 0;
+        const area = this.active.area || '';
+        const zone = this.active.zone || 0;
         let ox = 15.5;
         let oy = 15.5;
 
-        let bx = 0;
-        let by = 0;
-        let br = canvas.width;// + bounds.w * (100 / 1.5);
-        let bb = canvas.height;// + bounds.h * (100 / 1.5);
-        let r, cx, cy, room = 0;
+        const bx = 0;
+        const by = 0;
+        const br = canvas.width; // + bounds.w * (100 / 1.5);
+        const bb = canvas.height; // + bounds.h * (100 / 1.5);
 
         if (canvas.width % 2 !== 0)
             ox = 15;
         if (canvas.height % 2 !== 0)
             oy = 15;
-        context.font = "8pt Arial";
+        context.font = '8pt Arial';
         //this._db.serialize(() => {
         if (this._splitArea) {
-            this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))", {
+            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
                 $area: area,
                 $zone: zone,
                 $x: x,
@@ -484,21 +482,21 @@ export class Mapper extends EventEmitter {
             }, (err, rows) => {
                 context.save();
                 if (ex) {
-                    context.fillStyle = "#eae4d6";
+                    context.fillStyle = '#eae4d6';
                     context.fillRect(0, 0, canvas.width, canvas.height);
                 }
                 else
                     context.clearRect(0, 0, canvas.width, canvas.height);
-                let rooms = {};
+                const rooms = {};
                 if (rows) {
-                    let rl = rows.length;
+                    const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
-                            }
+                            };
                         }
                         else {
                             rooms[rows[r].ID] = clone(rows[r]);
@@ -507,11 +505,13 @@ export class Mapper extends EventEmitter {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
-                            }
+                            };
                         }
                     }
-                    for (let rm in rooms) {
-                        let room = rooms[rm];
+                    let rm;
+                    for (rm in rooms) {
+                        if (!rooms.hasOwnProperty(rm)) continue;
+                        const room = rooms[rm];
                         this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, false);
                     }
                 }
@@ -519,10 +519,10 @@ export class Mapper extends EventEmitter {
                 this.DrawLegend(context, 1, -4, 0);
                 this._redraw = false;
                 if (callback) callback();
-            })
+            });
         }
         else {
-            this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))", {
+            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
                 $zone: zone,
                 $x: x,
                 $y: y,
@@ -534,21 +534,21 @@ export class Mapper extends EventEmitter {
             }, (err, rows) => {
                 context.save();
                 if (ex) {
-                    context.fillStyle = "#eae4d6";
+                    context.fillStyle = '#eae4d6';
                     context.fillRect(0, 0, canvas.width, canvas.height);
                 }
                 else
                     context.clearRect(0, 0, canvas.width, canvas.height);
-                let rooms = {};
+                const rooms = {};
                 if (rows) {
-                    let rl = rows.length;
+                    const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
-                            }
+                            };
                         }
                         else {
                             rooms[rows[r].ID] = clone(rows[r]);
@@ -557,11 +557,13 @@ export class Mapper extends EventEmitter {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
-                            }
+                            };
                         }
                     }
-                    for (let rm in rooms) {
-                        let room = rooms[rm];
+                    let rm;
+                    for (rm in rooms) {
+                        if (!rooms.hasOwnProperty(rm)) continue;
+                        const room = rooms[rm];
                         this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, ex);
                     }
                 }
@@ -569,12 +571,12 @@ export class Mapper extends EventEmitter {
                 this.DrawLegend(context, 1, -4, 0);
                 this._redraw = false;
                 if (callback) callback();
-            })
+            });
         }
     }
 
-    reset(type?) {
-        if (!type || type == 1) {
+    public reset(type?) {
+        if (!type || type === 1) {
             this.current = new Room();
             this.emit('current-room-changed', this.current);
         }
@@ -584,13 +586,13 @@ export class Mapper extends EventEmitter {
         }
     }
 
-    refresh() {
+    public refresh() {
         if (!this._redraw)
             this.draw();
         this.emit('refresh');
     }
 
-    focusCurrentRoom() {
+    public focusCurrentRoom() {
         if (this.current.ID) {
             this.setActive(clone(this.current));
             this.emit('active-room-changed', clone(this.active));
@@ -598,18 +600,16 @@ export class Mapper extends EventEmitter {
         this.focusActiveRoom();
     }
 
-
-    focusActiveRoom() {
+    public focusActiveRoom() {
         this.scrollTo(this.active.x + 2, this.active.y + 2);
     }
 
-
-    setActive(room) {
+    public setActive(room) {
         this.active = room;
         this.emit('active-room-changed', clone(this.active));
     }
 
-    setCurrent(room?: Room) {
+    public setCurrent(room?: Room) {
         this.emit('path-cleared');
         if (!room || !room.ID) room = this.selected;
         this.current = this.sanitizeRoom(clone(room));
@@ -618,15 +618,15 @@ export class Mapper extends EventEmitter {
         this.emit('current-room-changed', this.current);
     }
 
-    setArea(area: string) {
+    public setArea(area: string) {
         this.active.area = area;
-        if (this.current.ID !== null && this.current.area == this.active.area) {
+        if (this.current.ID !== null && this.current.area === this.active.area) {
             this.setActive(this.sanitizeRoom(clone(this.current)));
             this.focusActiveRoom();
             this.emit('setting-changed', 'active', this.active);
         }
         else {
-            this._db.get("SELECT * from Rooms WHERE Area = ? ORDER BY X, Y, Z", [area], (err, row) => {
+            this._db.get('SELECT * from Rooms WHERE Area = ? ORDER BY X, Y, Z', [area], (err, row) => {
                 if (row) {
                     this.active.ID = row.ID;
                     this.active.x = row.X;
@@ -641,36 +641,36 @@ export class Mapper extends EventEmitter {
         }
     }
 
-    setLevel(level: number) {
-        if (level != this.active.z) {
+    public setLevel(level: number) {
+        if (level !== this.active.z) {
             this.active.z = level;
             this.draw();
             this.emit('setting-changed', 'active', this.active);
         }
     }
 
-    setZone(zone: number) {
-        if (zone != this.active.zone) {
+    public setZone(zone: number) {
+        if (zone !== this.active.zone) {
             this.active.zone = zone;
             this.draw();
             this.emit('setting-changed', 'active', this.active);
         }
     }
 
-    removeRoom(room) {
-        this._db.run("DELETE FROM Rooms WHERE ID = ?", [room.ID], () => {
-            this._db.run("Delete From Exits WHERE ID = ?", [room.ID], () => {
+    public removeRoom(room) {
+        this._db.run('DELETE FROM Rooms WHERE ID = ?', [room.ID], () => {
+            this._db.run('Delete From Exits WHERE ID = ?', [room.ID], () => {
                 this.emit('remove-done', room);
-                if (room.ID == this.current.ID) {
+                if (room.ID === this.current.ID) {
                     this.current = new Room();
                     this.emit('current-room-changed', this.current);
                     this.clearPath();
                 }
                 else if (this.markers[room.ID])
                     this.clearPath();
-                if (room.ID == this.active.ID)
+                if (room.ID === this.active.ID)
                     this.setActive(new Room());
-                if (room.ID == this.selected.ID)
+                if (room.ID === this.selected.ID)
                     this.selected = new Room();
                 this.refresh();
                 this._changed = true;
@@ -679,93 +679,93 @@ export class Mapper extends EventEmitter {
 
     }
 
-    clearSelectedRoom() {
+    public clearSelectedRoom() {
         this.removeRoom(this.selected);
     }
 
-    clearRoom() {
+    public clearRoom() {
         this.removeRoom(this.current);
     }
 
-    clearArea() {
-        this._db.run("DELETE FROM Exits WHERE ID in (Select ID from Rooms WHERE Area = ?)", [this.active.area], () => {
-            this._db.run("DELETE FROM Rooms WHERE Area = ?", [this.active.area], () => {
+    public clearArea() {
+        this._db.run('DELETE FROM Exits WHERE ID in (Select ID from Rooms WHERE Area = ?)', [this.active.area], () => {
+            this._db.run('DELETE FROM Rooms WHERE Area = ?', [this.active.area], () => {
                 this.emit('clear-area-done', this.active.area);
                 this.reset();
                 this.refresh();
                 this._changed = true;
-            })
+            });
         });
     }
 
-    clearAll() {
-        this._db.run("DELETE FROM Exits", () => {
-            this._db.run("DELETE FROM Rooms", () => {
+    public clearAll() {
+        this._db.run('DELETE FROM Exits', () => {
+            this._db.run('DELETE FROM Rooms', () => {
                 this.emit('clear-done');
                 this.reset();
                 this.refresh();
                 this.focusActiveRoom();
                 this._changed = true;
-            })
-        })
+            });
+        });
     }
 
-    processData(data) {
+    public processData(data) {
         try {
             //this._db.serialize(() => {
-            this._db.all("Select * FROM Rooms where ID = '" + data.num + "'", (err, rows) => {
+            this._db.all('Select * FROM Rooms where ID = \'' + data.num + '\'', (err, rows) => {
                 let room;
-                if (!rows || rows.length == 0) {
+                if (!rows || rows.length === 0) {
                     room = {
-                        area: "",
+                        area: '',
                         details: 0,
                         exits: {},
-                        name: "",
+                        name: '',
                         num: 0,
-                        env: "",
+                        env: '',
                         x: 0,
                         y: 0,
                         z: 0,
                         zone: 0
-                    }
+                    };
                     if (this.current.ID !== null) {
                         switch (data.prevroom.dir) {
-                            case "west":
+                            case 'west':
                                 room.x--;
                                 break;
-                            case "east":
+                            case 'east':
                                 room.x++;
                                 break;
-                            case "north":
+                            case 'north':
                                 room.y--;
                                 break;
-                            case "south":
+                            case 'south':
                                 room.y++;
                                 break;
-                            case "northeast":
+                            case 'northeast':
                                 room.y--;
                                 room.x++;
                                 break;
-                            case "northwest":
+                            case 'northwest':
                                 room.y--;
                                 room.x--;
                                 break;
-                            case "southeast":
+                            case 'southeast':
                                 room.y++;
                                 room.x++;
                                 break;
-                            case "southwest":
+                            case 'southwest':
                                 room.y++;
                                 room.x--;
                                 break;
-                            case "up":
+                            case 'up':
                                 room.z++;
                                 break;
-                            case "down":
+                            case 'down':
                                 room.z--;
                                 break;
                             //out means you leave a zone
-                            case "out":
+                            case 'out':
                                 room.zone = this.current.zone - 1;
                                 break;
                             //enter or unknown exits new zone
@@ -778,11 +778,11 @@ export class Mapper extends EventEmitter {
                         room.y += this.current.y;
                         room.z += this.current.z;
                     }
-                    if (data.area == this.current.area)
+                    if (data.area === this.current.area)
                         room.zone += this.current.zone;
                     else
                         room.zone += this.getFreeZone(room.x, room.y, room.z, this.current.zone);
-                    this._db.run("INSERT INTO Rooms (ID) values ('" + data.num + "')");
+                    this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
                     this._changed = true;
                 }
                 else {
@@ -797,44 +797,45 @@ export class Mapper extends EventEmitter {
                         y: rows[0].Y,
                         z: rows[0].Z,
                         zone: rows[0].Zone
-                    }
+                    };
                 }
                 room.ID = data.num;
                 room.area = data.area;
                 room.name = data.name;
                 room.env = data.environment;
                 room.indoors = data.indoors;
-                for (let exit in data.exits)
+                let exit;
+                for (exit in data.exits)
                     room.exits[exit] = data.exits[exit];
                 //start with none
                 room.details = RoomDetails.None;
                 for (let x = 0; x < data.details.length; x++) {
                     switch (data.details[x]) {
-                        case "dock":
+                        case 'dock':
                             room.details |= RoomDetails.Dock;
                             break;
-                        case "pier":
+                        case 'pier':
                             room.details |= RoomDetails.Pier;
                             break;
-                        case "bank":
+                        case 'bank':
                             room.details |= RoomDetails.Bank;
                             break;
-                        case "shop":
+                        case 'shop':
                             room.details |= RoomDetails.Shop;
                             break;
-                        case "hospital":
+                        case 'hospital':
                             room.details |= RoomDetails.Hospital;
                             break;
-                        case "bar":
+                        case 'bar':
                             room.details |= RoomDetails.Bar;
                             break;
-                        case "restaurant":
+                        case 'restaurant':
                             room.details |= RoomDetails.Restaurant;
                             break;
-                        case "watersource":
+                        case 'watersource':
                             room.details |= RoomDetails.WaterSource;
                             break;
-                        case "trainer":
+                        case 'trainer':
                             room.details |= RoomDetails.Trainer;
                             break;
                     }
@@ -848,14 +849,14 @@ export class Mapper extends EventEmitter {
                 this.current.z = room.z;
                 this.emit('current-room-changed', this.current);
                 this.current.zone = room.zone;
-                if (this.selected && this.selected.ID == room.ID)
+                if (this.selected && this.selected.ID === room.ID)
                     this.emit('room-selected', clone(room));
                 if (this.follow)
                     this.focusCurrentRoom();
                 else
                     this.setActive(clone(this.current));
                 this.refresh();
-            })
+            });
             //});
         }
         catch (e) {
@@ -863,10 +864,10 @@ export class Mapper extends EventEmitter {
         }
     }
 
-    getFreeZone(x, y, z, zone) {
+    public getFreeZone(x, y, z, zone) {
         if (!zone) zone = 0;
         this._db.serialize(() => {
-            this._db.get("SELECT Zone FROM Rooms WHERE X = " + x + " AND Y = " + y + " AND Z =" + z + " ORDER BY Zone DESC LIMIT 1", function (err, row) {
+            this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
                 if (!row) return 0;
                 return row.Zone + 1;
             });
@@ -874,9 +875,9 @@ export class Mapper extends EventEmitter {
         return zone;
     }
 
-    updateRoom(room) {
+    public updateRoom(room) {
         //this._db.serialize(() => {
-        this._db.run("Update Rooms SET Area = ?, Details = ?, Name = ?, Env = ?, X = ?, Y = ?, Z = ?, Zone = ?, Indoors = ? WHERE ID = ?",
+        this._db.run('Update Rooms SET Area = ?, Details = ?, Name = ?, Env = ?, X = ?, Y = ?, Z = ?, Zone = ?, Indoors = ? WHERE ID = ?',
             [
                 room.Area || room.area,
                 room.Details || room.details || RoomDetails.None,
@@ -887,15 +888,17 @@ export class Mapper extends EventEmitter {
                 room.Z || room.z || 0,
                 room.Zone || room.zone || 0,
                 room.Indoors || room.indoors,
-                room.ID || room.num,
+                room.ID || room.num
             ], (err) => {
                 if (err)
                     this.emit('error', err);
                 this._changed = true;
             });
-        this._db.run("Delete From Exits WHERE ID = ?", [room.ID || room.num]);
-        let stmt = this._db.prepare("INSERT INTO Exits VALUES (?, ?, ?, ?, ?)");
-        for (let exit in room.exits) {
+        this._db.run('Delete From Exits WHERE ID = ?', [room.ID || room.num]);
+        const stmt = this._db.prepare('INSERT INTO Exits VALUES (?, ?, ?, ?, ?)');
+        let exit;
+        for (exit in room.exits) {
+            if (!room.exits.hasOwnProperty(exit)) continue;
             stmt.run(room.ID, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
         stmt.finalize();
@@ -903,8 +906,8 @@ export class Mapper extends EventEmitter {
         //});
     }
 
-    addOrUpdateRoom(room) {
-        this._db.run("INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ",
+    public addOrUpdateRoom(room) {
+        this._db.run('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ',
             [
                 room.ID || room.num,
                 room.Area || room.area,
@@ -925,8 +928,10 @@ export class Mapper extends EventEmitter {
                 this._changed = true;
             });
         //this._db.run("Delete From Exits WHERE ID = ?", [room.ID || room.num]);
-        let stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
-        for (let exit in room.exits) {
+        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
+        let exit;
+        for (exit in room.exits) {
+            if (!room.exits.hasOwnProperty(exit)) continue;
             stmt.run(room.ID || room.num, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
         stmt.finalize();
@@ -934,15 +939,15 @@ export class Mapper extends EventEmitter {
         this._changed = true;
     }
 
-    processGMCP(mod: string, obj) {
+    public processGMCP(mod: string, obj) {
         if (!this.enabled) return;
-        let mods = mod.split(".");
-        if (mods.length < 2 || mods[0] != "Room") return;
+        const mods = mod.split('.');
+        if (mods.length < 2 || mods[0] !== 'Room') return;
         switch (mods[1]) {
-            case "Info":
+            case 'Info':
                 this.processData(obj);
                 break;
-            case "WrongDir":
+            case 'WrongDir':
                 break;
         }
     }
@@ -955,98 +960,97 @@ export class Mapper extends EventEmitter {
         return r;
     }
 
-    DrawLegend(ctx, x, y, nc) {
+    public DrawLegend(ctx, x, y, nc) {
         if (!this._showLegend) return;
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = 'black';
         if (!nc) {
-            ctx.fillStyle = "#eae4d6";
+            ctx.fillStyle = '#eae4d6';
             //ctx.clearRect(x + 30, y + 35, 130, 145);
             ctx.fillRect(x + 30, y + 35, 130, 160);
         }
-        ctx.fillStyle = "black";
+        ctx.fillStyle = 'black';
         ctx.strokeRect(x + 30, y + 35, 130, 160);
-        ctx.font = "italic bold 8pt Georgia";
-        ctx.fillText("Dock", x + 50, y + 50);
-        ctx.fillStyle = "chocolate";
+        ctx.font = 'italic bold 8pt Georgia';
+        ctx.fillText('Dock', x + 50, y + 50);
+        ctx.fillStyle = 'chocolate';
         ctx.beginPath();
         ctx.arc(x + 40, y + 45, 2, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
-        ctx.fillStyle = "black";
-        ctx.fillText("Pier", x + 50, y + 65);
-        ctx.fillStyle = "gray";
+        ctx.fillStyle = 'black';
+        ctx.fillText('Pier', x + 50, y + 65);
+        ctx.fillStyle = 'gray';
         ctx.beginPath();
         ctx.arc(x + 40, y + 60, 2, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
-        ctx.fillStyle = "black";
-        ctx.fillText("Water Source", x + 50, y + 80);
-        ctx.fillStyle = "aqua";
+        ctx.fillStyle = 'black';
+        ctx.fillText('Water Source', x + 50, y + 80);
+        ctx.fillStyle = 'aqua';
         ctx.beginPath();
         ctx.arc(x + 40, y + 75, 2, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
-        ctx.fillStyle = "black";
-        ctx.fillText("Bank", x + 50, y + 95);
-        ctx.font = "8pt Arial";
-        ctx.fillStyle = "goldenrod";
+        ctx.fillStyle = 'black';
+        ctx.fillText('Bank', x + 50, y + 95);
+        ctx.font = '8pt Arial';
+        ctx.fillStyle = 'goldenrod';
         ctx.beginPath();
-        ctx.fillText("$", x + 38, y + 95);
+        ctx.fillText('$', x + 38, y + 95);
         ctx.closePath();
-        ctx.font = "italic bold 8pt Georgia";
-        ctx.fillStyle = "black";
-        ctx.fillText("Shop", x + 50, y + 110);
-        ctx.font = "8pt Arial";
-        ctx.fillStyle = "purple";
+        ctx.font = 'italic bold 8pt Georgia';
+        ctx.fillStyle = 'black';
+        ctx.fillText('Shop', x + 50, y + 110);
+        ctx.font = '8pt Arial';
+        ctx.fillStyle = 'purple';
         ctx.beginPath();
-        ctx.fillText("\u23CF", x + 38, y + 110);
+        ctx.fillText('\u23CF', x + 38, y + 110);
         ctx.closePath();
-        ctx.font = "italic bold 8pt Georgia";
-        ctx.fillStyle = "black";
-        ctx.fillText("Hospital", x + 50, y + 125);
-        ctx.font = "8pt Arial";
-        ctx.fillStyle = "blue";
+        ctx.font = 'italic bold 8pt Georgia';
+        ctx.fillStyle = 'black';
+        ctx.fillText('Hospital', x + 50, y + 125);
+        ctx.font = '8pt Arial';
+        ctx.fillStyle = 'blue';
         ctx.beginPath();
-        ctx.fillText("\u2665", x + 38, y + 125);
+        ctx.fillText('\u2665', x + 38, y + 125);
         ctx.closePath();
-        ctx.font = "italic bold 8pt Georgia";
-        ctx.fillStyle = "black";
-        ctx.fillText("Bar & Restaurant", x + 50, y + 140);
-        ctx.font = "8pt Arial";
-        ctx.fillStyle = "green";
+        ctx.font = 'italic bold 8pt Georgia';
+        ctx.fillStyle = 'black';
+        ctx.fillText('Bar & Restaurant', x + 50, y + 140);
+        ctx.font = '8pt Arial';
+        ctx.fillStyle = 'green';
         ctx.beginPath();
-        ctx.fillText("\u2617", x + 38, y + 140);
+        ctx.fillText('\u2617', x + 38, y + 140);
         ctx.closePath();
-        ctx.font = "italic bold 8pt Georgia";
-        ctx.fillStyle = "black";
-        ctx.fillText("Bar", x + 50, y + 155);
-        ctx.font = "8pt Arial";
-        ctx.fillStyle = "green";
+        ctx.font = 'italic bold 8pt Georgia';
+        ctx.fillStyle = 'black';
+        ctx.fillText('Bar', x + 50, y + 155);
+        ctx.font = '8pt Arial';
+        ctx.fillStyle = 'green';
         ctx.beginPath();
-        ctx.fillText("\u266A", x + 38, y + 155);
+        ctx.fillText('\u266A', x + 38, y + 155);
         ctx.closePath();
-        ctx.font = "italic bold 8pt Georgia";
-        ctx.fillStyle = "black";
-        ctx.fillText("Restaurant", x + 50, y + 170);
-        ctx.font = "8pt Arial";
-        ctx.fillStyle = "green";
+        ctx.font = 'italic bold 8pt Georgia';
+        ctx.fillStyle = 'black';
+        ctx.fillText('Restaurant', x + 50, y + 170);
+        ctx.font = '8pt Arial';
+        ctx.fillStyle = 'green';
         ctx.beginPath();
-        ctx.fillText("\u2616", x + 38, y + 170);
-        ctx.closePath();
-
-        ctx.font = "italic bold 8pt Georgia";
-        ctx.fillStyle = "black";
-        ctx.fillText("Trainer", x + 50, y + 185);
-        ctx.font = "8pt Arial";
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.fillText("\u260D", x + 38, y + 185);
+        ctx.fillText('\u2616', x + 38, y + 170);
         ctx.closePath();
 
+        ctx.font = 'italic bold 8pt Georgia';
+        ctx.fillStyle = 'black';
+        ctx.fillText('Trainer', x + 50, y + 185);
+        ctx.font = '8pt Arial';
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.fillText('\u260D', x + 38, y + 185);
+        ctx.closePath();
 
     }
 
-    DrawRoom(ctx, x, y, room, ex) {
+    public DrawRoom(ctx, x, y, room, ex) {
         ctx.beginPath();
         let f = false;
         if (room.Background) {
@@ -1055,68 +1059,68 @@ export class Mapper extends EventEmitter {
         }
         else if (room.Env) {
             switch (room.Env) {
-                case "wood":
-                    ctx.fillStyle = "#966F33";
+                case 'wood':
+                    ctx.fillStyle = '#966F33';
                     f = true;
                     break;
-                case "jungle":
-                    ctx.fillStyle = "#347C2C";
+                case 'jungle':
+                    ctx.fillStyle = '#347C2C';
                     f = true;
                     break;
-                case "forest":
-                    ctx.fillStyle = "#4E9258";
+                case 'forest':
+                    ctx.fillStyle = '#4E9258';
                     f = true;
                     break;
-                case "grass":
-                case "grassland":
-                case "plains":
-                case "prairie":
-                case "savannah":
-                    ctx.fillStyle = "#4AA02C";
+                case 'grass':
+                case 'grassland':
+                case 'plains':
+                case 'prairie':
+                case 'savannah':
+                    ctx.fillStyle = '#4AA02C';
                     f = true;
                     break;
-                case "desert":
-                case "dirt":
-                case "dirtroad":
-                case "beach":
-                case "sand":
-                case "sanddesert":
-                    ctx.fillStyle = "#C2B280";
+                case 'desert':
+                case 'dirt':
+                case 'dirtroad':
+                case 'beach':
+                case 'sand':
+                case 'sanddesert':
+                    ctx.fillStyle = '#C2B280';
                     f = true;
                     break;
-                case "snow":
-                    ctx.fillStyle = "#F0F8FF";
+                case 'snow':
+                    ctx.fillStyle = '#F0F8FF';
                     f = true;
                     break;
-                case "tundra":
-                case "icesheet":
-                    ctx.fillStyle = "#368BC1";
+                case 'tundra':
+                case 'icesheet':
+                    ctx.fillStyle = '#368BC1';
                     f = true;
                     break;
-                case "underwater":
-                case "water":
-                case "lake":
-                case "river":
-                    ctx.fillStyle = "#EBF4FA";
+                case 'underwater':
+                case 'water':
+                case 'lake':
+                case 'river':
+                    ctx.fillStyle = '#EBF4FA';
                     f = true;
                     break;
-                case "ocean":
-                    ctx.fillStyle = "#C2DFFF";
+                case 'ocean':
+                    ctx.fillStyle = '#C2DFFF';
                     f = true;
                     break;
-                case "bog":
-                case "city":
-                case "cliff":
-                case "cobble":
-                case "farmland":
-                case "highmountain":
-                case "hills":
-                case "mountain":
-                case "pavedroad":
-                case "rockdesert":
-                case "rocky":
-                case "stone":
-                case "swamp":
+                case 'bog':
+                case 'city':
+                case 'cliff':
+                case 'cobble':
+                case 'farmland':
+                case 'highmountain':
+                case 'hills':
+                case 'mountain':
+                case 'pavedroad':
+                case 'rockdesert':
+                case 'rocky':
+                case 'stone':
+                case 'swamp':
                     f = false;
                     break;
                 default:
@@ -1126,7 +1130,7 @@ export class Mapper extends EventEmitter {
         }
         else
             f = false;
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = 'black';
         ctx.lineWidth = 0.6;
         if (!room.Indoors) {
             ctx.arc(x + 16, y + 16, 8.5, 0, Math.PI * 2, false);
@@ -1139,7 +1143,7 @@ export class Mapper extends EventEmitter {
         }
         ctx.closePath();
         ctx.beginPath();
-        ctx.fillStyle = "#cccccc";
+        ctx.fillStyle = '#cccccc';
         if (room.exits.north) {
             ctx.moveTo(x + 16, y);
             ctx.lineTo(x + 16, y + 8);
@@ -1239,8 +1243,8 @@ export class Mapper extends EventEmitter {
         }
         ctx.closePath();
         ctx.stroke();
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = "black";
+        ctx.fillStyle = 'black';
+        ctx.strokeStyle = 'black';
         if (room.exits.up) {
             ctx.beginPath();
             ctx.moveTo(x + 1, y + 11);
@@ -1282,104 +1286,104 @@ export class Mapper extends EventEmitter {
         this.DrawDDoor(ctx, x + 32, y, -5, 5, room.exits.northeast);
         this.DrawDDoor(ctx, x + 32, y + 32, -5, -5, room.exits.southeast);
         this.DrawDDoor(ctx, x, y + 32, 5, -5, room.exits.southwest);
-        if ((room.Details & RoomDetails.Dock) == RoomDetails.Dock) {
-            ctx.fillStyle = "chocolate";
+        if ((room.Details & RoomDetails.Dock) === RoomDetails.Dock) {
+            ctx.fillStyle = 'chocolate';
             ctx.beginPath();
             ctx.arc(x + 20, y + 5, 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
         }
-        else if ((room.Details & RoomDetails.Pier) == RoomDetails.Pier) {
-            ctx.fillStyle = "gray";
+        else if ((room.Details & RoomDetails.Pier) === RoomDetails.Pier) {
+            ctx.fillStyle = 'gray';
             ctx.beginPath();
             ctx.arc(x + 12, y + 5, 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
         }
-        if ((room.Details & RoomDetails.WaterSource) == RoomDetails.WaterSource) {
-            ctx.fillStyle = "aqua";
+        if ((room.Details & RoomDetails.WaterSource) === RoomDetails.WaterSource) {
+            ctx.fillStyle = 'aqua';
             ctx.beginPath();
             ctx.arc(x + 12, y + 5, 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
         }
-        if ((room.Details & RoomDetails.Bank) == RoomDetails.Bank) {
-            ctx.fillStyle = "goldenrod";
+        if ((room.Details & RoomDetails.Bank) === RoomDetails.Bank) {
+            ctx.fillStyle = 'goldenrod';
             ctx.beginPath();
-            ctx.fillText("$", x + 9, y + 17);
+            ctx.fillText('$', x + 9, y + 17);
             ctx.closePath();
         }
-        if ((room.Details & RoomDetails.Shop) == RoomDetails.Shop) {
-            ctx.fillStyle = "purple";
+        if ((room.Details & RoomDetails.Shop) === RoomDetails.Shop) {
+            ctx.fillStyle = 'purple';
             ctx.beginPath();
-            ctx.fillText("\u23CF", x + 15, y + 17);
+            ctx.fillText('\u23CF', x + 15, y + 17);
             ctx.closePath();
         }
-        if ((room.Details & RoomDetails.Hospital) == RoomDetails.Hospital) {
-            ctx.fillStyle = "blue";
+        if ((room.Details & RoomDetails.Hospital) === RoomDetails.Hospital) {
+            ctx.fillStyle = 'blue';
             ctx.beginPath();
-            ctx.fillText("\u2665", x + 15, y + 17);
+            ctx.fillText('\u2665', x + 15, y + 17);
             ctx.closePath();
         }
-        if ((room.Details & RoomDetails.Trainer) == RoomDetails.Trainer) {
-            ctx.fillStyle = "red";
+        if ((room.Details & RoomDetails.Trainer) === RoomDetails.Trainer) {
+            ctx.fillStyle = 'red';
             ctx.beginPath();
-            ctx.fillText("\u260D", x + 15, y + 17);
+            ctx.fillText('\u260D', x + 15, y + 17);
             ctx.closePath();
         }
-        if ((room.Details & RoomDetails.Restaurant) == RoomDetails.Restaurant && (room.Details & RoomDetails.Bar) == RoomDetails.Bar) {
-            ctx.fillStyle = "green";
+        if ((room.Details & RoomDetails.Restaurant) === RoomDetails.Restaurant && (room.Details & RoomDetails.Bar) === RoomDetails.Bar) {
+            ctx.fillStyle = 'green';
             ctx.beginPath();
-            ctx.fillText("\u2617", x + 15, y + 17);
+            ctx.fillText('\u2617', x + 15, y + 17);
             ctx.closePath();
         }
-        else if ((room.Details & RoomDetails.Bar) == RoomDetails.Bar) {
-            ctx.fillStyle = "green";
+        else if ((room.Details & RoomDetails.Bar) === RoomDetails.Bar) {
+            ctx.fillStyle = 'green';
             ctx.beginPath();
-            ctx.fillText("\u266A", x + 15, y + 17);
+            ctx.fillText('\u266A', x + 15, y + 17);
             ctx.closePath();
         }
-        else if ((room.Details & RoomDetails.Restaurant) == RoomDetails.Restaurant) {
-            ctx.fillStyle = "green";
+        else if ((room.Details & RoomDetails.Restaurant) === RoomDetails.Restaurant) {
+            ctx.fillStyle = 'green';
             ctx.beginPath();
-            ctx.fillText("\u2616", x + 15, y + 17);
+            ctx.fillText('\u2616', x + 15, y + 17);
             ctx.closePath();
         }
 
-        if (!ex && this.selected.ID == room.ID) {
-            ctx.fillStyle = "rgba(135, 206, 250, 0.5)";
-            ctx.strokeStyle = "LightSkyBlue";
+        if (!ex && this.selected.ID === room.ID) {
+            ctx.fillStyle = 'rgba(135, 206, 250, 0.5)';
+            ctx.strokeStyle = 'LightSkyBlue';
             ctx.fillRoundedRect(x, y, 32, 32, 8);
             ctx.strokeRoundedRect(x, y, 32, 32, 8);
         }
-        if (this.markers[room.ID] == 2)
-            this.drawMarker(ctx, x, y, "green");
-        else if (this.markers[room.ID] == 3)
-            this.drawMarker(ctx, x, y, "blue");
+        if (this.markers[room.ID] === 2)
+            this.drawMarker(ctx, x, y, 'green');
+        else if (this.markers[room.ID] === 3)
+            this.drawMarker(ctx, x, y, 'blue');
         else if (this.markers[room.ID])
-            this.drawMarker(ctx, x, y, "yellow");
-        if (!ex && room.ID == this.current.ID)
-            this.drawMarker(ctx, x, y, "red");
+            this.drawMarker(ctx, x, y, 'yellow');
+        if (!ex && room.ID === this.current.ID)
+            this.drawMarker(ctx, x, y, 'red');
     }
 
-    drawMarker(ctx, x, y, color) {
-        if (!color) color = "yellow";
+    public drawMarker(ctx, x, y, color) {
+        if (!color) color = 'yellow';
         ctx.beginPath();
         ctx.fillStyle = color;
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = 'black';
         ctx.arc(x + 16, y + 16, 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
     }
 
-    DrawDoor(ctx, x, y, w, h, exit) {
+    public DrawDoor(ctx, x, y, w, h, exit) {
         if (!exit || !exit.isdoor) return;
         ctx.beginPath();
         ctx.clearRect(x, y, w, h);
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = "black";
+        ctx.fillStyle = 'black';
+        ctx.strokeStyle = 'black';
         if (exit.islocked) {
-            ctx.fillStyle = "red";
+            ctx.fillStyle = 'red';
             ctx.fillRect(x, y, w, h);
             ctx.strokeRect(x, y, w, h);
         }
@@ -1390,17 +1394,17 @@ export class Mapper extends EventEmitter {
         ctx.closePath();
     }
 
-    DrawDDoor(ctx, x, y, w, h, exit) {
+    public DrawDDoor(ctx, x, y, w, h, exit) {
         if (!exit || !exit.isdoor) return;
         ctx.beginPath();
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = "black";
+        ctx.fillStyle = 'black';
+        ctx.strokeStyle = 'black';
         ctx.moveTo(x, y);
         ctx.lineTo(x + w, y);
         ctx.lineTo(x, y + h);
         ctx.lineTo(x, y);
         if (exit.islocked) {
-            ctx.fillStyle = "red";
+            ctx.fillStyle = 'red';
             ctx.fill();
             ctx.stroke();
         }
@@ -1411,26 +1415,26 @@ export class Mapper extends EventEmitter {
         ctx.closePath();
     }
 
-    PointInRect(x, y, x1, x2, y1, y2) {
+    public PointInRect(x, y, x1, x2, y1, y2) {
         if ((x1 <= x && x <= x2) && (y1 <= y && y <= y2))
             return true;
         return false;
     }
 
-    getRoom(id, callback) {
-        this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Rooms.ID = $id", {
+    public getRoom(id, callback) {
+        this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Rooms.ID = $id', {
             $id: id
         }, (err, rows) => {
-            let rooms = {};
+            const rooms = {};
             if (rows) {
-                let rl = rows.length;
+                const rl = rows.length;
                 for (let r = 0; r < rl; r++) {
                     if (rooms[rows[r].ID]) {
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
-                        }
+                        };
                     }
                     else {
                         rooms[rows[r].ID] = clone(rows[r]);
@@ -1439,31 +1443,31 @@ export class Mapper extends EventEmitter {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
-                        }
+                        };
                     }
                 }
                 if (callback) callback(rooms[rows[0].ID]);
             }
-        })
+        });
     }
 
-    getRooms(area, level, zone, callback) {
+    public getRooms(area, level, zone, callback) {
         if (this._splitArea) {
-            this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone", {
+            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone', {
                 $area: area,
                 $zone: zone,
                 $z: level
             }, (err, rows) => {
-                let rooms = {};
+                const rooms = {};
                 if (rows) {
-                    let rl = rows.length;
+                    const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
-                            }
+                            };
                         }
                         else {
                             rooms[rows[r].ID] = clone(rows[r]);
@@ -1472,28 +1476,28 @@ export class Mapper extends EventEmitter {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
-                            }
+                            };
                         }
                     }
                     if (callback) callback(rooms);
                 }
-            })
+            });
         }
         else {
-            this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone", {
+            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone', {
                 $zone: zone,
-                $z: level,
+                $z: level
             }, (err, rows) => {
-                let rooms = {};
+                const rooms = {};
                 if (rows) {
-                    let rl = rows.length;
+                    const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
-                            }
+                            };
                         }
                         else {
                             rooms[rows[r].ID] = clone(rows[r]);
@@ -1502,34 +1506,45 @@ export class Mapper extends EventEmitter {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
-                            }
+                            };
                         }
                     }
                     if (callback) callback(rooms);
                 }
-            })
+            });
         }
     }
 
-    showPath(destRoom?: Room) {
+    public showPath(destRoom?: Room) {
         if (!destRoom || !destRoom.ID)
             destRoom = this.selected;
         if (this.current.ID == null || destRoom.ID == null)
             return;
-        if (this._splitArea && this.current.area != destRoom.area)
+        if (this._splitArea && this.current.area !== destRoom.area)
             return;
-        if (this.current.zone != destRoom.zone)
+        if (this.current.zone !== destRoom.zone)
             return;
         //add 3d later
-        if (this.current.z != destRoom.z)
+        if (this.current.z !== destRoom.z)
             return;
         this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
-            let room, id;
-            let roomsC = [];
-            let ox = null, oy = 0, w = 0, h = 0, r, rl = rooms.length, x, y, cx, cy;
+            let room;
+            let id;
+            const roomsC = [];
+            let ox = null;
+            let oy = 0;
+            let w = 0;
+            let h = 0;
+            let r;
+            let rl = rooms.length;
+            let x;
+            let y;
+            let cx;
+            let cy;
             for (id in rooms) {
+                if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
-                if (ox === null) {
+                if (ox == null) {
                     ox = room.X;
                     w = room.X + 1;
                     oy = room.Y;
@@ -1541,15 +1556,16 @@ export class Mapper extends EventEmitter {
             }
 
             for (id in rooms) {
+                if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
-                if (room === null) continue;
+                if (room == null) continue;
                 if (!roomsC[room.Y - oy]) roomsC[room.Y - oy] = [];
                 roomsC[room.Y - oy][room.X - ox] = room;
             }
 
             w = Math.sqrt(Math.pow(w - ox, 2)) + 1;
             h = Math.sqrt(Math.pow(oy - h, 2)) + 1;
-            let matrix = [];
+            const matrix = [];
 
             for (y = 0; y < h; y++) {
                 matrix[y] = [];
@@ -1558,6 +1574,8 @@ export class Mapper extends EventEmitter {
             }
 
             for (id in rooms) {
+                if (!rooms.hasOwnProperty(id)) continue;
+                room = rooms[id];
                 room = rooms[id];
                 x = (room.X - ox);
                 y = (room.Y - oy);
@@ -1580,25 +1598,25 @@ export class Mapper extends EventEmitter {
                 //if (room.exits.up)
                 //matrix[y][x] |= 512;
                 //if (room.exits.down)
-                //matrix[y][x] |= 256;                
+                //matrix[y][x] |= 256;
             }
-            let grid = new PF.Grid(w, h, matrix);
+            const grid = new PF.Grid(w, h, matrix);
 
-            let finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
+            const finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
             x = (this.current.x - ox);
             y = (this.current.y - oy);
             cx = (destRoom.x - ox);
             cy = (destRoom.y - oy);
-            let path = finder.findPath(x, y, cx, cy, grid);
-            rl = path.length;
+            const fPath = finder.findPath(x, y, cx, cy, grid);
+            rl = fPath.length;
             this.markers = {};
             for (r = 0; r < rl; r++) {
-                x = Math.floor(path[r][0]);
-                y = Math.floor(path[r][1]);
+                x = Math.floor(fPath[r][0]);
+                y = Math.floor(fPath[r][1]);
                 if (roomsC[y] && roomsC[y][x]) {
-                    if (roomsC[y][x].ID == this.current.ID)
+                    if (roomsC[y][x].ID === this.current.ID)
                         this.markers[roomsC[y][x].ID] = 2;
-                    else if (roomsC[y][x].ID == destRoom.ID)
+                    else if (roomsC[y][x].ID === destRoom.ID)
                         this.markers[roomsC[y][x].ID] = 3;
                     else
                         this.markers[roomsC[y][x].ID] = 1;
@@ -1609,31 +1627,44 @@ export class Mapper extends EventEmitter {
         });
     }
 
-    clearPath() {
+    public clearPath() {
         this.emit('path-cleared');
         this.markers = {};
         this.draw();
     }
 
-    walkPath(destRoom?: Room) {
+    public walkPath(destRoom?: Room) {
         if (!destRoom || !destRoom.ID)
             destRoom = this.selected;
         if (this.current.ID == null || destRoom.ID == null)
             return;
-        if (this._splitArea && this.current.area != destRoom.area)
+        if (this._splitArea && this.current.area !== destRoom.area)
             return;
-        if (this.current.zone != destRoom.zone)
+        if (this.current.zone !== destRoom.zone)
             return;
         //add 3d later
-        if (this.current.z != destRoom.z)
+        if (this.current.z !== destRoom.z)
             return;
         this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
-            let room, id;
-            let roomsC = [];
-            let ox = null, oy = 0, w = 0, h = 0, r, rl = rooms.length, x, y, cx, cy, x2, y2, s;
+            let room;
+            let id;
+            const roomsC = [];
+            let ox = null;
+            let oy = 0;
+            let w = 0;
+            let h = 0;
+            let r;
+            let rl = rooms.length;
+            let x;
+            let y;
+            let cx;
+            let cy;
+            let x2;
+            let y2;
             for (id in rooms) {
+                if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
-                if (ox === null) {
+                if (ox == null) {
                     ox = room.X;
                     w = room.X + 1;
                     oy = room.Y;
@@ -1645,15 +1676,16 @@ export class Mapper extends EventEmitter {
             }
 
             for (id in rooms) {
+                if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
-                if (room === null) continue;
+                if (room == null) continue;
                 if (!roomsC[room.Y - oy]) roomsC[room.Y - oy] = [];
                 roomsC[room.Y - oy][room.X - ox] = room;
             }
 
             w = Math.sqrt(Math.pow(w - ox, 2)) + 1;
             h = Math.sqrt(Math.pow(oy - h, 2)) + 1;
-            let matrix = [];
+            const matrix = [];
 
             for (y = 0; y < h; y++) {
                 matrix[y] = [];
@@ -1662,6 +1694,7 @@ export class Mapper extends EventEmitter {
             }
 
             for (id in rooms) {
+                if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
                 x = (room.X - ox);
                 y = (room.Y - oy);
@@ -1684,79 +1717,81 @@ export class Mapper extends EventEmitter {
                 //if (room.exits.up)
                 //matrix[y][x] |= 512;
                 //if (room.exits.down)
-                //matrix[y][x] |= 256;                
+                //matrix[y][x] |= 256;
             }
-            let grid = new PF.Grid(w, h, matrix);
+            const grid = new PF.Grid(w, h, matrix);
 
-            let finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
+            const finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
             x = (this.current.x - ox);
             y = (this.current.y - oy);
             cx = (destRoom.x - ox);
             cy = (destRoom.y - oy);
-            let path = finder.findPath(x, y, cx, cy, grid);
-            rl = path.length;
-            let walk = [];
+            const fPath = finder.findPath(x, y, cx, cy, grid);
+            rl = fPath.length;
+            const walk = [];
             for (r = 0; r < rl - 1; r++) {
-                x = Math.floor(path[r][0]);
-                y = Math.floor(path[r][1]);
-                x2 = Math.floor(path[r + 1][0]);
-                y2 = Math.floor(path[r + 1][1]);
+                x = Math.floor(fPath[r][0]);
+                y = Math.floor(fPath[r][1]);
+                x2 = Math.floor(fPath[r + 1][0]);
+                y2 = Math.floor(fPath[r + 1][1]);
 
-                if (x - 1 == x2 && y - 1 == y2)
-                    walk.push("northwest");
-                else if (x == x2 && y - 1 == y2)
-                    walk.push("north");
-                else if (x + 1 == x2 && y - 1 == y2)
-                    walk.push("northeast");
+                if (x - 1 === x2 && y - 1 === y2)
+                    walk.push('northwest');
+                else if (x === x2 && y - 1 === y2)
+                    walk.push('north');
+                else if (x + 1 === x2 && y - 1 === y2)
+                    walk.push('northeast');
 
-                else if (x - 1 == x2 && y + 1 == y2)
-                    walk.push("southwest");
-                else if (x == x2 && y + 1 == y2)
-                    walk.push("south");
-                else if (x + 1 == x2 && y + 1 == y2)
-                    walk.push("southeast");
-                else if (x - 1 == x2 && y == y2)
-                    walk.push("west");
+                else if (x - 1 === x2 && y + 1 === y2)
+                    walk.push('southwest');
+                else if (x === x2 && y + 1 === y2)
+                    walk.push('south');
+                else if (x + 1 === x2 && y + 1 === y2)
+                    walk.push('southeast');
+                else if (x - 1 === x2 && y === y2)
+                    walk.push('west');
                 else
-                    walk.push("east");
+                    walk.push('east');
             }
             this.SendCommands(walk);
         });
-    };
+    }
 
-    SendCommands(cmds) {
+    public SendCommands(cmds) {
         let tmp;
-        let cnt = this.commandDelayCount;
+        const cnt = this.commandDelayCount;
         if (cmds.length > cnt) {
             tmp = cmds.slice(cnt);
             cmds = cmds.slice(0, cnt);
             setTimeout(() => { this.SendCommands(tmp); }, this.commandDelay);
         }
-        this.emit('send-commands', cmds.join("\n") + "\n");
+        this.emit('send-commands', cmds.join('\n') + '\n');
     }
 
-    import(data, type?: ImportType) {
+    public import(data, type?: ImportType) {
         if (!data) return;
-        if (type == ImportType.Replace) {
-            this._db.run("DELETE FROM Exits", () => {
-                this._db.run("DELETE FROM Rooms", () => {
+        if (type === ImportType.Replace) {
+            this._db.run('DELETE FROM Exits', () => {
+                this._db.run('DELETE FROM Rooms', () => {
                     this.emit('clear-done');
                     this.reset();
                     //this.refresh();
                     //this.focusActiveRoom();
                     this.import(data, ImportType.Merge);
                     this._changed = true;
-                })
-            })
+                });
+            });
         }
         else {
             this._cancelImport = false;
-            let idx, r, rl;
+            let idx;
+            let r;
+            let rl;
             this._db.serialize(() => {
                 if (Array.isArray(data)) {
                     rl = data.length;
                     this.emit('import-progress', 0);
-                    let stmt2 = this._db.prepare("INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ");
+                    const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ');
                     idx = 1;
                     for (r = 0; r < rl; r++) {
                         if (this._cancelImport) {
@@ -1794,8 +1829,10 @@ export class Mapper extends EventEmitter {
                                 }
                             });
                         //this._db.run("Delete From Exits WHERE ID = ?", [data[r].ID]);
-                        let stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
-                        for (let exit in data[r].exits) {
+                        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
+                        let exit;
+                        for (exit in data[r].exits) {
+                            if (!data[r].exits.hasOwnProperty(exit)) continue;
                             stmt.run(data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed,
                                 () => {
                                     if (this._cancelImport) {
@@ -1816,23 +1853,23 @@ export class Mapper extends EventEmitter {
                         stmt.finalize();
                     }
                     stmt2.finalize();
-                    if (rl == 0)
+                    if (rl === 0)
                         this.emit('import-progress', 100);
                     this._changed = true;
                     //this.emit('import-progress', 100);
                 }
                 else {
                     this.emit('import-progress', 0);
-                    let stmt2 = this._db.prepare("INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ");
+                    const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ');
                     rl = Object.keys(data).length;
                     idx = 1;
                     for (r in data) {
+                        if (!data.hasOwnProperty(r) || !data[r]) continue;
                         if (this._cancelImport) {
                             stmt2.finalize();
                             this._changed = true;
                             return;
                         }
-                        if (!data.hasOwnProperty(r) || !data[r]) continue;
                         rl += Object.keys(data[r].exits).length;
                         if (this._cancelImport) {
                             stmt2.finalize();
@@ -1868,8 +1905,10 @@ export class Mapper extends EventEmitter {
                                 }
                             });
                         //this._db.run("Delete From Exits WHERE ID = ?", [data[r].ID]);
-                        let stmt = this._db.prepare("INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)");
-                        for (let exit in data[r].exits) {
+                        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
+                        let exit;
+                        for (exit in data[r].exits) {
+                            if (!data[r].exits.hasOwnProperty(exit)) continue;
                             stmt.run([data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed],
                                 () => {
                                     if (this._cancelImport) {
@@ -1890,24 +1929,21 @@ export class Mapper extends EventEmitter {
                         stmt.finalize();
                     }
                     stmt2.finalize();
-                    if (rl == 0)
+                    if (rl === 0)
                         this.emit('import-progress', 100);
                     this._changed = true;
-                    //this.emit('import-progress', 100);
-                    //this.reset();
-                    //this.refresh();
                 }
             });
         }
     }
 
-    exportArea(file: string) {
-        this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area", {
-            $area: this.active.area || "",
+    public exportArea(file: string) {
+        this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area', {
+            $area: this.active.area || ''
         }, (err, rows) => {
-            let rooms = {};
+            const rooms = {};
             if (rows) {
-                let rl = rows.length;
+                const rl = rows.length;
                 this.emit('import-progress', 0);
                 for (let r = 0; r < rl; r++) {
                     if (rooms[rows[r].ID]) {
@@ -1915,12 +1951,13 @@ export class Mapper extends EventEmitter {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
-                        }
+                        };
                     }
                     else {
                         rooms[rows[r].ID] = { num: rows[r].ID };
-                        for (let prop in rows[r]) {
-                            if (prop == "ID")
+                        let prop;
+                        for (prop in rows[r]) {
+                            if (prop === 'ID')
                                 continue;
                             if (!rows[r].hasOwnProperty(prop)) {
                                 continue;
@@ -1932,7 +1969,7 @@ export class Mapper extends EventEmitter {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
-                        }
+                        };
                     }
                     this.emit('import-progress', Math.floor(r / rl * 100));
                 }
@@ -1941,11 +1978,11 @@ export class Mapper extends EventEmitter {
         });
     }
 
-    exportAll(file: string) {
-        this._db.all("Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID", (err, rows) => {
-            let rooms = {};
+    public exportAll(file: string) {
+        this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID', (err, rows) => {
+            const rooms = {};
             if (rows) {
-                let rl = rows.length;
+                const rl = rows.length;
                 this.emit('import-progress', 0);
                 for (let r = 0; r < rl; r++) {
                     if (rooms[rows[r].ID]) {
@@ -1953,12 +1990,13 @@ export class Mapper extends EventEmitter {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
-                        }
+                        };
                     }
                     else {
                         rooms[rows[r].ID] = { num: rows[r].ID };
-                        for (let prop in rows[r]) {
-                            if (prop == "ID")
+                        let prop;
+                        for (prop in rows[r]) {
+                            if (prop === 'ID')
                                 continue;
                             if (!rows[r].hasOwnProperty(prop)) {
                                 continue;
@@ -1970,7 +2008,7 @@ export class Mapper extends EventEmitter {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
-                        }
+                        };
                     }
                     this.emit('import-progress', Math.floor(r / rl * 100));
                 }
@@ -1979,7 +2017,7 @@ export class Mapper extends EventEmitter {
         });
     }
 
-    exportRooms(file: string, rooms) {
+    public exportRooms(file: string, rooms) {
         if (!rooms) {
             this.emit('import-progress', 100);
             return;
@@ -1988,24 +2026,24 @@ export class Mapper extends EventEmitter {
         this.emit('import-progress', 100);
     }
 
-    cancelImport() {
+    public cancelImport() {
         this._cancelImport = true;
         this.emit('import-progress', 101);
     }
 
-    compact() {
+    public compact() {
         this.emit('import-progress', 0);
-        this._db.run("VACUUM;", () => {
+        this._db.run('VACUUM;', () => {
             this.emit('import-progress', 100);
         });
     }
 
-    executeCommand(cmd: string, callback?) {
+    public executeCommand(cmd: string, callback?) {
         if (!cmd || cmd.length === 0) return;
         this._db.run(cmd, callback);
     }
 
-    save(callback?) {
+    public save(callback?) {
         if (this._memory) {
             if (!this._changed) {
                 if (callback)
@@ -2019,9 +2057,9 @@ export class Mapper extends EventEmitter {
             this._db.run('DELETE FROM Disk.Rooms', (err) => {
                 if (err) this.emit('error', err);
             });
-            this._db.run('DELETE FROM Disk.Exits'), (err) => {
+            this._db.run('DELETE FROM Disk.Exits', (err) => {
                 if (err) this.emit('error', err);
-            };
+            });
             this._db.run('INSERT OR REPLACE INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms', (err) => {
                 if (err) this.emit('error', err);
             });
@@ -2040,41 +2078,4 @@ export class Mapper extends EventEmitter {
         else if (callback)
             callback();
     }
-    /*
-    clientToMapper(x, y?: number) {
-        if (x instanceof Point) {
-            y = x.y;
-            x = x.x;
-        }
-        else if (typeof x == "object") {
-            y = x.y;
-            x = x.x;
-        }
-        let ox = this._canvas.width % 2 !== 0 ? 15 : 15.5;
-        let oy = this._canvas.height % 2 !== 0 ? 15 : 15.5;
-        x = this.vscroll - (this._canvas.width / 32 / 2) + (x - ox) / 32;
-        y = this.hscroll - (this._canvas.height / 32 / 2) + (y - oy) / 32;
-        x = Math.floor(x);
-        y = Math.floor(y);
-        return new Point(x, y);
-    }
-    mapperToClient(x, y?: number) {
-        if (x instanceof Point) {
-            y = x.y;
-            x = x.x;
-        }
-        else if (typeof x == "object") {
-            y = x.y;
-            x = x.x;
-        }
-        let ox = this._canvas.width % 2 !== 0 ? 15 : 15.5;
-        let oy = this._canvas.height % 2 !== 0 ? 15 : 15.5;
-
-        x = (x - this.vscroll) + (this._canvas.width / 32 / 2);
-        y = (y - this.hscroll) + (this._canvas.height / 32 / 2);
-        x = Math.floor(x * 32 + ox);
-        y = Math.floor(y * 32 + oy);        
-        return new Point(x, y);        
-    }
-    */
 }

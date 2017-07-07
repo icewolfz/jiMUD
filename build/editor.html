@@ -66,7 +66,7 @@
                             back = $(this).parent().css('background-color');
                         }
                         if (back === "black")
-                            back = ""
+                            back = ''
                         if (fore === "rgba(0, 0, 0, 0)")
                             fore = "black";
                         $(this).css('color', fore);
@@ -183,13 +183,13 @@
                                 data = data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;');
                                 data = data.replace(/(?:\r\n|\r|\n)/g, '<br/>');
                                 var content = tinymce.activeEditor.getContent({ format: 'text' });
-                                if (content === "\n") {
+                                if (content === '\n') {
                                     tinymce.activeEditor.undoManager.transact(function () {
                                         tinymce.activeEditor.setContent(data);
                                     });
                                 }
                                 else {
-                                    if (!content.endsWith("\n"))
+                                    if (!content.endsWith('\n'))
                                         data = "<br>" + data;
                                     tinymce.activeEditor.undoManager.transact(function () {
                                         tinymce.activeEditor.dom.add(tinymce.activeEditor.getBody(), 'span', {}, data);
@@ -223,7 +223,7 @@
                     if (!tag)
                         stack.push('"' + $el.text() + '"');
                     else if (tag === "SPAN") {
-                        if (els[e].className != "") {
+                        if (els[e].className != '') {
                             tag = els[e].className.toUpperCase().split(/\s+/g);
                             var t, tl = tag.length;
                             for (t = 0; t < tl; t++) {
@@ -348,7 +348,7 @@
                         case "BR":
                             if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith("%^RESET%^"))
                                 buffer.push("%^RESET%^");
-                            buffer.push("\n");
+                            buffer.push('\n');
                             if (codes.length > 0)
                                 buffer.push(codes.join(''));
                             break;
@@ -976,8 +976,8 @@
                 for (r = 0; r < 6; r++) {
                     for (g = 0; g < 6; g++) {
                         for (b = 0; b < 6; b++) {
-                            idx = "RGB" + r + "" + g + "" + b;
-                            color = "";
+                            idx = `RGB${r}${g}${b}`;
+                            color = '';
                             c = 0;
                             c = r * 40 + 55;
                             if (c < 16)

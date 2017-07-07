@@ -19,8 +19,8 @@ let reload = null;
 
 let windows = {};
 
-global.settingsFile = parseTemplate(path.join("{data}", "settings.json"));
-global.mapFile = parseTemplate(path.join("{data}", "map.sqlite"));
+global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
+global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
 global.profiles = null;
 global.character = null;
 
@@ -1128,7 +1128,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (win === null) {
+  if (win == null) {
     createWindow()
   }
 })
@@ -1529,7 +1529,7 @@ ipcMain.on('ondragstart', (event, files, icon) => {
 function updateMenuItem(args) {
   var item, i = 0, ic, items;
   var tItem, tItems;
-  if (!menubar || args === null || args.menu === null) return;
+  if (!menubar || args == null || args.menu == null) return;
 
   if (!Array.isArray(args.menu))
     args.menu = args.menu.split('|');
@@ -2256,7 +2256,7 @@ function loadCharacters(noLoad) {
 }
 
 function logError(err, skipClient) {
-  var msg = "";
+  var msg = '';
   if (debug)
     console.error(err);
   if (err.stack)
@@ -2274,7 +2274,7 @@ function logError(err, skipClient) {
   if (win && !skipClient)
     win.webContents.send('error', msg);
   else if (set && set.logErrors) {
-    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + "\n", { flag: 'a' });
-    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), msg + "\n", { flag: 'a' });
+    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + '\n', { flag: 'a' });
+    fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), msg + '\n', { flag: 'a' });
   }
 }

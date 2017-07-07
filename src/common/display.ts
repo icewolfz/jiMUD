@@ -1,19 +1,19 @@
 /**
  * Ansi display
- * 
+ *
  * Display ansi and mxp formated text
- * 
+ *
  * @arthur Icewolfz
  * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support
    */
 
 import { Size, Point, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from './types';
 import EventEmitter = require('events');
-import { Parser } from "./parser";
-import { AnsiColorCode } from "./ansi";
-import { clone, stripHTML, getScrollBarSize, htmlEncode } from "./library";
+import { Parser } from './parser';
+import { AnsiColorCode } from './ansi';
+import { clone, stripHTML, getScrollBarSize, htmlEncode } from './library';
 import { Finder } from './finder.js';
-import { DisplayOptions, OverlayRange } from './types.js'
+import { DisplayOptions, OverlayRange } from './types.js';
 
 interface Overlays {
     selection: any[];
@@ -60,7 +60,7 @@ export class Display extends EventEmitter {
     private _overlay: HTMLElement;
     private _view: HTMLElement;
     private _background: HTMLElement;
-    private _finder: Finder
+    private _finder: Finder;
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -103,9 +103,9 @@ export class Display extends EventEmitter {
     private _mxpSendFunction;
     private _mxpTooltipFunction;
 
-    get enableSplit(): boolean { return this.split === null; }
+    get enableSplit(): boolean { return this.split == null; }
     set enableSplit(value: boolean) {
-        let id = this._el.id;
+        const id = this._el.id;
         if (!this.split && value) {
             this.split = document.createElement('div');
             this.split.id = id + '-split-frame';
@@ -121,8 +121,8 @@ export class Display extends EventEmitter {
             this.split.appendChild(this.split.overlay);
             this.split.appendChild(this.split.view);
             this._el.appendChild(this.split);
-            if (this.splitHeight != -1)
-                this.split.style.height = this.splitHeight + "%";
+            if (this.splitHeight !== -1)
+                this.split.style.height = this.splitHeight + '%';
 
             this.split.updateView = () => {
                 this.split.style.bottom = this._HScroll.size + 'px';
@@ -134,23 +134,25 @@ export class Display extends EventEmitter {
                         this.split._viewRange.start = 0;
                     if (this.split._viewRange.end > this.lines.length)
                         this.split._viewRange.end = this.lines.length;
-                    let lines = this._viewLines.slice(this.split._viewRange.start, this.split._viewRange.end + 1);
-                    let bLines = this._backgroundLines.slice(this.split._viewRange.start, this.split._viewRange.end + 1);
-                    let start = this.split._viewRange.start;
-                    let end = this.split._viewRange.end;
-                    let mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
-                    for (let l = 0, ll = lines.length; l < ll; l++) {
+                    const lines = this._viewLines.slice(this.split._viewRange.start, this.split._viewRange.end + 1);
+                    const bLines = this._backgroundLines.slice(this.split._viewRange.start, this.split._viewRange.end + 1);
+                    const start = this.split._viewRange.start;
+                    const end = this.split._viewRange.end;
+                    const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
+                    let l;
+                    const ll = lines.length;
+                    for (l = 0; l < ll; l++) {
                         lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
                         bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
                     }
-
-                    let overlays = [];
-                    for (let ol in this._overlays) {
-                        if (!this._overlays.hasOwnProperty(ol) || ol == "selection")
+                    const overlays = [];
+                    let ol;
+                    for (ol in this._overlays) {
+                        if (!this._overlays.hasOwnProperty(ol) || ol === 'selection')
                             continue;
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
-                    overlays.push.apply(overlays, this._overlays["selection"].slice(start, end + 1));
+                    overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
                     this.split.background.innerHTML = bLines.join('');
@@ -159,13 +161,13 @@ export class Display extends EventEmitter {
                     this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
                     this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
                 }
-            }
+            };
             this.split.bar.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 e.cancelBubble = true;
                 this.split.ghostBar = document.createElement('div');
                 this.split.ghostBar.id = id + '-split-ghost-bar';
-                this.split.ghostBar.style.top = (this.offset(this.split).top - 4) + "px";
+                this.split.ghostBar.style.top = (this.offset(this.split).top - 4) + 'px';
                 this.split.ghostBar.style.display = this.splitLive ? 'none' : 'block';
                 this._el.appendChild(this.split.ghostBar);
 
@@ -178,38 +180,38 @@ export class Display extends EventEmitter {
                 e.preventDefault();
                 e.cancelBubble = true;
                 if (e.pageY < 20)
-                    this.split.ghostBar.style.top = "20px";
+                    this.split.ghostBar.style.top = '20px';
                 else if (e.pageY > this._el.clientHeight - 150 - this._HScroll.size)
-                    this.split.ghostBar.style.top = (this._el.clientHeight - 150 - 4 - this._HScroll.size) + "px";
+                    this.split.ghostBar.style.top = (this._el.clientHeight - 150 - 4 - this._HScroll.size) + 'px';
                 else
-                    this.split.ghostBar.style.top = (e.pageY - 4) + "px";
+                    this.split.ghostBar.style.top = (e.pageY - 4) + 'px';
                 let h;
                 if (this.splitLive) {
                     if (e.pageY < 20)
-                        h = this._el.clientHeight - 20 + 4;//TODO change the 4 to calculate split bar height
+                        h = this._el.clientHeight - 20 + 4; //TODO change the 4 to calculate split bar height
                     else if (e.pageY > this._el.clientHeight - 150)
                         h = 150;
                     else
-                        h = this._el.clientHeight - e.pageY + 4;//TODO change the 4 to calculate split bar height
+                        h = this._el.clientHeight - e.pageY + 4; //TODO change the 4 to calculate split bar height
 
                     h = (h / this._el.clientHeight * 100);
-                    this.split.style.height = h + "%";
+                    this.split.style.height = h + '%';
                     this.doUpdate(UpdateType.scrollView);
                 }
                 this.emit('split-move', h);
-            }
+            };
 
             this.split.moveDone = (e) => {
                 if (this.split.ghostBar) {
                     let h;
                     if (e.pageY < 20)
-                        h = this._el.clientHeight - 20 + 4 - this._HScroll.size;//TODO change the 4 to calculate split bar height
+                        h = this._el.clientHeight - 20 + 4 - this._HScroll.size; //TODO change the 4 to calculate split bar height
                     else if (e.pageY > this._el.clientHeight - 150 - this._HScroll.size)
                         h = 150;
                     else
-                        h = this._el.clientHeight - e.pageY + 4;//TODO change the 4 to calculate split bar height
+                        h = this._el.clientHeight - e.pageY + 4; //TODO change the 4 to calculate split bar height
                     h = (h / this._el.clientHeight * 100);
-                    this.split.style.height = h + "%";
+                    this.split.style.height = h + '%';
                     this.split.top = Math.ceil(this.offset(this.split).top + 0.5);
                     this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
                     this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
@@ -222,7 +224,7 @@ export class Display extends EventEmitter {
                 this._el.removeEventListener('mousemove', this.split.mouseMove);
                 this._el.removeEventListener('mouseup', this.split.moveDone);
                 this._el.removeEventListener('mouseleave', this.split.moveDone);
-            }
+            };
         }
         else if (this.split && !value) {
             this._el.removeEventListener('mouseup', this.split.moveDone);
@@ -235,7 +237,7 @@ export class Display extends EventEmitter {
 
     get linkFunction(): string {
 
-        return this._linkFunction || "doLink";
+        return this._linkFunction || 'doLink';
     }
 
     set linkFunction(val: string) {
@@ -243,7 +245,7 @@ export class Display extends EventEmitter {
     }
 
     get mxpLinkFunction(): string {
-        return this._mxpLinkFunction || "doMXPLink";
+        return this._mxpLinkFunction || 'doMXPLink';
     }
 
     set mxpLinkFunction(val: string) {
@@ -251,7 +253,7 @@ export class Display extends EventEmitter {
     }
 
     get mxpSendFunction(): string {
-        return this._mxpSendFunction || "doMXPSend";
+        return this._mxpSendFunction || 'doMXPSend';
     }
 
     set mxpSendFunction(val: string) {
@@ -259,22 +261,20 @@ export class Display extends EventEmitter {
     }
 
     get mxpTooltipFunction(): string {
-        return this._mxpTooltipFunction || "doMXPTooltip";
+        return this._mxpTooltipFunction || 'doMXPTooltip';
     }
 
     set mxpTooltipFunction(val: string) {
         this._mxpTooltipFunction = val;
     }
 
-    constructor(display: string, options?);
-    constructor(display: JQuery, options?);
-    constructor(display: HTMLElement, options?);
+    constructor(display: string | JQuery | HTMLElement, options?);
     constructor(display?: any, options?: DisplayOptions) {
         super();
         if (!display)
-            throw "Display must be an id, element or jquery object";
-        if (typeof display === "string") {
-            if (display.startsWith("#"))
+            throw new Error('Display must be an id, element or jquery object');
+        if (typeof display === 'string') {
+            if (display.startsWith('#'))
                 this._el = document.getElementById(display.substr(1));
             else
                 this._el = document.getElementById(display);
@@ -284,20 +284,20 @@ export class Display extends EventEmitter {
         else if (display instanceof HTMLElement)
             this._el = display;
         else
-            throw "Display must be an id, element or jquery object";
+            throw new Error('Display must be an id, element or jquery object');
 
         this._elJ = $(this._el);
 
-        this._background = document.createElement('div')
-        this._background.id = this._el.id + "-background";
+        this._background = document.createElement('div');
+        this._background.id = this._el.id + '-background';
         this._el.appendChild(this._background);
 
-        this._overlay = document.createElement('div')
-        this._overlay.id = this._el.id + "-overlay";
+        this._overlay = document.createElement('div');
+        this._overlay.id = this._el.id + '-overlay';
         this._el.appendChild(this._overlay);
 
-        this._view = document.createElement('div')
-        this._view.id = this._el.id + "-view";
+        this._view = document.createElement('div');
+        this._view.id = this._el.id + '-view';
         this._el.appendChild(this._view);
 
         this._character = document.createElement('div');
@@ -313,21 +313,21 @@ export class Display extends EventEmitter {
         this._VScroll = new ScrollBar(this._el, this._view);
         this._VScroll.on('scroll', (amt) => {
             this.doUpdate(UpdateType.scroll | UpdateType.view);
-        })
+        });
         this._HScroll = new ScrollBar(this._el, this._view, ScrollType.horizontal);
         this._HScroll.on('scroll', (amt) => {
             this.doUpdate(UpdateType.scroll);
-        })
+        });
         //this.update();
 
         if (!options)
-            options = { display: this }
+            options = { display: this };
         else
             options.display = this;
         this._parser = new Parser(options);
-        this._parser.on('debug', (msg) => { this.debug(msg) });
+        this._parser.on('debug', (msg) => { this.debug(msg); });
 
-        this._parser.on('bell', () => { this.emit('bell') })
+        this._parser.on('bell', () => { this.emit('bell'); });
 
         this._parser.on('add-line', (data: ParserLine) => {
             this.addParserLine(data, true);
@@ -335,20 +335,22 @@ export class Display extends EventEmitter {
 
         this._parser.on('expire-links', (args) => {
             let lines;
+            let line;
+            let expire;
             if (!args || args.length === 0) {
-                for (let line in this._expire2) {
+                for (line in this._expire2) {
                     if (!this._expire2.hasOwnProperty(line))
                         continue;
-                    this.expireLineLinkFormat(this._expire2[line], parseInt(line))
+                    this.expireLineLinkFormat(this._expire2[line], parseInt(line));
                 }
-                for (let expire in this._expire) {
+                for (expire in this._expire) {
                     if (!this._expire.hasOwnProperty(expire))
                         continue;
                     lines = this._expire[expire];
-                    for (let line in lines) {
+                    for (line in lines) {
                         if (!lines.hasOwnProperty(line))
                             continue;
-                        this.expireLineLinkFormat(lines[line], parseInt(line))
+                        this.expireLineLinkFormat(lines[line], parseInt(line));
                     }
                 }
                 this._expire2 = [];
@@ -357,10 +359,10 @@ export class Display extends EventEmitter {
             }
             else if (this._expire[args]) {
                 lines = this._expire[args];
-                for (let line in lines) {
+                for (line in lines) {
                     if (!lines.hasOwnProperty(line))
                         continue;
-                    this.expireLineLinkFormat(lines[line], parseInt(line))
+                    this.expireLineLinkFormat(lines[line], parseInt(line));
                 }
                 delete this._expire[args];
                 this.doUpdate(UpdateType.view);
@@ -368,13 +370,13 @@ export class Display extends EventEmitter {
             this.emit('expire-links', args);
         });
 
-        this._parser.on("parse-done", () => {
+        this._parser.on('parse-done', () => {
             //disable animation
             this._el.classList.remove('animate');
-            let bar = this._HScroll.visible;
+            const bar = this._HScroll.visible;
             this.trimLines();
             this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
-            if (bar != this._HScroll.visible)
+            if (bar !== this._HScroll.visible)
                 this.updateWindow();
             this.emit('parse-done');
             //re-enable animation so they are all synced
@@ -392,20 +394,18 @@ export class Display extends EventEmitter {
         });
 
         this._el.addEventListener('mousedown', (e) => {
-            if (e.buttons && e.button == 0) {
+            if (e.buttons && e.button === 0) {
                 e.preventDefault();
                 e.cancelBubble = true;
-                let os = this._os;
+                const os = this._os;
                 if (e.pageX - os.left > this._el.clientWidth)
                     return;
                 if (e.pageY - os.top > this._el.clientHeight)
                     return;
                 this._currentSelection.drag = true;
                 if (e.shiftKey) {
-                    let o = this._currentSelection.end;
                     this._currentSelection.end = this.getLineOffset(e);
                     this.emit('selection-start');
-                    //this.updateSelectionRange(o);
                     this.doUpdate(UpdateType.selection);
                 }
                 else {
@@ -416,23 +416,23 @@ export class Display extends EventEmitter {
                 }
 
             }
-        })
+        });
 
         this._el.addEventListener('dblclick', (e) => {
             if (this.lines.length === 0) return;
-            let o = this.getLineOffset(e);
+            const o = this.getLineOffset(e);
             if (o.y >= 0 && o.y < this.lines.length) {
-                let line = this.lines[o.y];
-                let len = line.length;
+                const line = this.lines[o.y];
+                const len = line.length;
                 if (o.x >= 0 || o.x < len) {
-                    let sPos = o.x, ePos = o.x;
+                    let sPos = o.x;
+                    let ePos = o.x;
                     while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
                         sPos--;
                         if (sPos < 0)
                             break;
                     }
                     sPos++;
-                    let ll = line.length;
                     while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
                         ePos++;
                     }
@@ -450,12 +450,12 @@ export class Display extends EventEmitter {
                 }
             }
 
-        })
+        });
 
         this._el.addEventListener('click', (e) => {
             if (this.lines.length === 0) return;
             if (e.detail === 3) {
-                let o = this.getLineOffset(e);
+                const o = this.getLineOffset(e);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     this._currentSelection = {
                         start: { x: 0, y: o.y },
@@ -470,10 +470,10 @@ export class Display extends EventEmitter {
             }
             else if (e.detail === 4)
                 this.selectAll();
-        })
+        });
 
         this._el.addEventListener('mouseenter', (e) => {
-            if (!e.buttons || e.button != 0) {
+            if (!e.buttons || e.button !== 0) {
                 if (this._currentSelection.drag) {
                     this.emit('selection-changed');
                     this.emit('selection-done');
@@ -483,7 +483,7 @@ export class Display extends EventEmitter {
             }
             clearInterval(this._currentSelection.scrollTimer);
             this._currentSelection.scrollTimer = null;
-        })
+        });
 
         this._el.addEventListener('mouseleave', (e) => {
             if (this._currentSelection.drag) {
@@ -496,13 +496,12 @@ export class Display extends EventEmitter {
                         this._currentSelection.scrollTimer = null;
                         return;
                     }
-                    let os = this._os;
-
-                    let x = this._lastMouse.pageX - os.left, y = this._lastMouse.pageY - os.top;
-                    let old: Point = this._currentSelection.end;
+                    const os = this._os;
+                    let x = this._lastMouse.pageX - os.left;
+                    let y = this._lastMouse.pageY - os.top;
 
                     if (y <= 0 && this._VScroll.position > 0) {
-                        y = -1 * this._charHeight;;
+                        y = -1 * this._charHeight;
                         this._currentSelection.end.y--;
                     }
                     else if (y >= this._el.clientHeight && this._VScroll.position < this._VScroll.scrollSize) {
@@ -525,47 +524,50 @@ export class Display extends EventEmitter {
                     else
                         x = 0;
 
-                    if (x == 0 && y == 0)
+                    if (x === 0 && y === 0)
                         return;
 
                     this.emit('selection-changed');
                     this._VScroll.scrollBy(y);
                     this._HScroll.scrollBy(x);
-                    //this.updateSelectionRange(old);
                     this.doUpdate(UpdateType.selection);
                 }, 20);
             }
-        })
+        });
 
         this._el.addEventListener('contextmenu', (e: ContextEvent) => {
-            let word: string = '', line: string = '', url: string = '';
+            let word: string = '';
+            let line: string = '';
+            let url: string = '';
             if (this.lines.length > 0) {
-                let o = this.getLineOffset(e);
+                const o = this.getLineOffset(e);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     line = this.lines[o.y];
-                    let len = line.length;
+                    const len = line.length;
                     if (o.x >= 0 || o.x < len) {
-                        let sPos = o.x, ePos = o.x;
+                        let sPos = o.x;
+                        let ePos = o.x;
                         while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
                             sPos--;
                             if (sPos < 0)
                                 break;
                         }
                         sPos++;
-                        let ll = line.length;
                         while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len)
                             word = line.substring(sPos, ePos);
-                        let formats = this.lineFormats[o.y];
-                        for (let l = 0, len = formats.length; l < len; l++) {
-                            let format = formats[l];
+                        const formats = this.lineFormats[o.y];
+                        const fl = formats.length;
+                        let l;
+                        for (l = 0; l < fl; l++) {
+                            const format = formats[l];
                             if (format.formatType !== FormatType.Link && format.formatType !== FormatType.MXPLink)
                                 continue;
                             let end = format.offset;
-                            if (l < len - 1) {
-                                let nFormat = formats[l + 1];
+                            if (l < fl - 1) {
+                                const nFormat = formats[l + 1];
                                 //skip empty blocks
                                 if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
                                     continue;
@@ -585,18 +587,16 @@ export class Display extends EventEmitter {
             e.url = url;
             e.line = line;
             this.emit('context-menu', e);
-        })
+        });
 
         window.addEventListener('mousemove', (e) => {
             this._lastMouse = e;
             if (this._currentSelection.drag) {
-                let o = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-changed');
-                //this.updateSelectionRange(o);
                 this.doUpdate(UpdateType.selection);
             }
-        })
+        });
 
         window.addEventListener('mouseup', (e) => {
             this._lastMouse = e;
@@ -604,13 +604,11 @@ export class Display extends EventEmitter {
                 clearInterval(this._currentSelection.scrollTimer);
                 this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
-                let o = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-done');
-                //this.updateSelectionRange(o);
                 this.doUpdate(UpdateType.selection);
             }
-        })
+        });
 
         window.addEventListener('resize', (e) => {
             this.doUpdate(UpdateType.update);
@@ -619,34 +617,33 @@ export class Display extends EventEmitter {
         this._finder = new Finder(this);
         this._finder.on('word', () => {
             this.emit('word');
-        })
+        });
         this._finder.on('case', () => {
             this.emit('case');
-        })
+        });
         this._finder.on('reverse', () => {
             this.emit('reverse');
-        })
+        });
         this._finder.on('regex', () => {
             this.emit('regex');
-        })
+        });
 
         this._finder.on('shown', () => {
             this.emit('shown');
-        })
+        });
         this._finder.on('closed', () => {
             this.emit('closed');
-        })
+        });
 
         this._finder.on('found-results', () => {
             this.doUpdate(UpdateType.scrollView);
             this.emit('found-results');
-        })
+        });
 
         this._finder.on('moved', () => {
             this.doUpdate(UpdateType.scrollView);
             this.emit('moved');
-        })
-
+        });
 
         this.doUpdate(UpdateType.update);
         //setTimeout(() => { this.update(); }, 0);
@@ -759,7 +756,7 @@ export class Display extends EventEmitter {
 
     get maxLines(): number { return this._maxLines; }
     set maxLines(value: number) {
-        if (value != this._maxLines) {
+        if (value !== this._maxLines) {
             this._maxLines = value;
             this.trimLines();
         }
@@ -850,7 +847,7 @@ export class Display extends EventEmitter {
         }
         this._parser.updateWindow(width, height);
         this.emit('update-window', width, height);
-    };
+    }
 
     public clear() {
         this._parser.Clear();
@@ -861,7 +858,7 @@ export class Display extends EventEmitter {
         this._expire2 = [];
         this._overlays = {
             selection: []
-        }
+        };
         this._viewLines = [];
         this._backgroundLines = [];
         this._viewRange = { start: 0, end: 0 };
@@ -879,16 +876,16 @@ export class Display extends EventEmitter {
         this._VScroll.reset();
         this._HScroll.reset();
         this.doUpdate(UpdateType.scrollbars);
-    };
+    }
 
     public updateFont(font?: string, size?: string) {
         if (!font || font.length === 0)
-            font = "'Courier New', Courier, monospace";
+            font = '\'Courier New\', Courier, monospace';
         else //fall back just incase
-            font += ", monospace";
+            font += ', monospace';
         if (!size || size.length === 0)
-            size = "1em";
-        if (font != this._el.style.fontFamily || size != this._el.style.fontSize) {
+            size = '1em';
+        if (font !== this._el.style.fontFamily || size !== this._el.style.fontSize) {
             //set styles using raw javascript for minor speed
             this._el.style.fontSize = size;
             this._el.style.fontFamily = font;
@@ -911,17 +908,17 @@ export class Display extends EventEmitter {
             this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
             this.updateWindow();
         }
-        let pc = window.getComputedStyle(this._el);
-        let padding = [
+        const pc = window.getComputedStyle(this._el);
+        const padding = [
             parseInt(pc.getPropertyValue('padding-top')) || 0,
             parseInt(pc.getPropertyValue('padding-right')) || 0,
             parseInt(pc.getPropertyValue('padding-bottom')) || 0,
             parseInt(pc.getPropertyValue('padding-left')) || 0
-        ]
-        if (padding[0] != this._padding[0] ||
-            padding[1] != this._padding[1] ||
-            padding[2] != this._padding[2] ||
-            padding[3] != this._padding[3]
+        ];
+        if (padding[0] !== this._padding[0] ||
+            padding[1] !== this._padding[1] ||
+            padding[2] !== this._padding[2] ||
+            padding[3] !== this._padding[3]
         ) {
             this._padding = padding;
             this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update);
@@ -929,15 +926,15 @@ export class Display extends EventEmitter {
     }
 
     public updateView() {
-        let w = this._maxLineLength * this._charWidth;
-        let h = this.lines.length * this._charHeight;
-        let mw = Math.max(w, this._el.clientWidth);
+        const w = this._maxLineLength * this._charWidth;
+        const h = this.lines.length * this._charHeight;
+        const mw = Math.max(w, this._el.clientWidth);
 
-        this._view.style.height = h + "px";
-        this._view.style.width = w + "px";
+        this._view.style.height = h + 'px';
+        this._view.style.width = w + 'px';
 
-        this._overlay.style.height = Math.max(h, this._el.clientHeight) + "px";
-        this._overlay.style.width = mw + "px";
+        this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
+        this._overlay.style.width = mw + 'px';
 
         //this._viewRange.start = Math.floor(this._el.scrollTop / this._charHeight) - 6;
         //this._viewRange.end = Math.ceil((this._el.scrollTop + this._elJ.innerHeight()) / this._charHeight) + 6;
@@ -948,21 +945,21 @@ export class Display extends EventEmitter {
             this._viewRange.start = 0;
         if (this._viewRange.end > this.lines.length)
             this._viewRange.end = this.lines.length;
-        let lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
-        let bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
-        let start = this._viewRange.start;
-        for (let l = 0, ll = lines.length; l < ll; l++) {
+        const lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
+        const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
+        const start = this._viewRange.start;
+        const ll = lines.length;
+        for (let l = 0; l < ll; l++) {
             lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
             bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
         }
         /*
-                lines = lines.map((value, idx) => {            
+                lines = lines.map((value, idx) => {
                     return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
                 })
                 bLines = bLines.map((value, idx) => {
                     return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
                 })*/
-
 
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
@@ -973,14 +970,15 @@ export class Display extends EventEmitter {
         if (start === undefined)
             start = this._viewRange.start;
         if (end === undefined)
-            end = this._viewRange.end
-        let overlays = [];
-        for (let ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || ol == "selection")
+            end = this._viewRange.end;
+        const overlays = [];
+        let ol;
+        for (ol in this._overlays) {
+            if (!this._overlays.hasOwnProperty(ol) || ol === 'selection')
                 continue;
             overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
         }
-        overlays.push.apply(overlays, this._overlays["selection"].slice(start, end + 1));
+        overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
         this._overlay.innerHTML = overlays.join('');
         this.doUpdate(UpdateType.scrollView);
     }
@@ -999,20 +997,20 @@ export class Display extends EventEmitter {
         return Math.floor((this._elJ.innerHeight() - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
     }
 
-    click(callback) {
+    public click(callback) {
         this._el.addEventListener('click', callback);
     }
 
-    addParserLine(data: ParserLine, noUpdate?: boolean) {
+    public addParserLine(data: ParserLine, noUpdate?: boolean) {
         let t;
         this.emit('add-line', data);
-        if (data === null || typeof data == "undefined" || data.line === null || typeof data.line == "undefined")
+        if (data == null || typeof data === 'undefined' || data.line == null || typeof data.line === 'undefined')
             return;
         this.emit('add-line-done', data);
         if (data.gagged)
             return;
-        if (data.line === "\n" || data.line.length == 0)
-            this.lines.push("");
+        if (data.line === '\n' || data.line.length === 0)
+            this.lines.push('');
         else
             this.lines.push(data.line);
         this.rawLines.push(data.raw);
@@ -1031,17 +1029,17 @@ export class Display extends EventEmitter {
         if (!noUpdate) {
             //disable animation
             this._el.classList.remove('animate');
-            let bar = this._HScroll.visible;
+            const bar = this._HScroll.visible;
             this.trimLines();
             this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
-            if (bar != this._HScroll.visible)
+            if (bar !== this._HScroll.visible)
                 this.updateWindow();
             //re-enable animation so they are all synced
             this._el.classList.add('animate');
         }
     }
 
-    removeLine(line: number) {
+    public removeLine(line: number) {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line]);
         this.lines.splice(line, 1);
@@ -1085,32 +1083,31 @@ export class Display extends EventEmitter {
                 }
             }
         }
-
-        for (let ol in this._overlays) {
+        let ol;
+        for (ol in this._overlays) {
             if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
                 continue;
             this._overlays[ol].splice(line, 1);
         }
 
-        for (let ol in this._expire) {
+        for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
                 continue;
             this._expire[ol].splice(line, 1);
         }
 
-
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
-    SetColor(code: number, color) {
+    public SetColor(code: number, color) {
         this._parser.SetColor(code, color);
     }
 
-    ClearMXP() {
+    public ClearMXP() {
         this._parser.ClearMXP();
     }
 
-    ResetMXPLine() {
+    public ResetMXPLine() {
         this._parser.ResetMXPLine();
     }
 
@@ -1127,10 +1124,10 @@ export class Display extends EventEmitter {
     }
 
     public trimLines() {
-        if (this._maxLines == -1)
+        if (this._maxLines === -1)
             return;
         if (this.lines.length > this._maxLines) {
-            let amt = this.lines.length - this._maxLines
+            const amt = this.lines.length - this._maxLines;
             this.lines.splice(0, amt);
             this.rawLines.splice(0, amt);
             this.lineFormats.splice(0, amt);
@@ -1160,23 +1157,24 @@ export class Display extends EventEmitter {
                 this.emit('selection-changed');
                 this.emit('selection-done');
             }
-            for (let ol in this._overlays) {
+            let ol;
+            for (ol in this._overlays) {
                 if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
                     continue;
                 this._overlays[ol].splice(0, amt);
             }
 
-
-            for (let ol in this._expire) {
+            for (ol in this._expire) {
                 if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
                     continue;
                 this._expire[ol].splice(0, amt);
             }
 
             let m = 0;
-            let lines = this.lines;
-            let formats = this.lineFormats;
-            for (let l = 0, ll = lines.length; l < ll; l++) {
+            const lines = this.lines;
+            const formats = this.lineFormats;
+            const ll = lines.length;
+            for (let l = 0; l < ll; l++) {
                 if (formats[0].hr)
                     m = this.WindowWidth;
                 else if (lines[l].length > m)
@@ -1189,8 +1187,8 @@ export class Display extends EventEmitter {
 
     private getLineOffset(e) {
         if (this.lines.length === 0)
-            return { x: 0, y: 0 }
-        let os = this._os;
+            return { x: 0, y: 0 };
+        const os = this._os;
         let y = (e.pageY - os.top);
         if (this.split && this.split.shown) {
             if (y >= this._VScroll.track.clientHeight - this.split.clientHeight)
@@ -1208,28 +1206,36 @@ export class Display extends EventEmitter {
     }
 
     private offset(elt) {
-        let rect = elt.getBoundingClientRect(), bodyElt = document.body;
+        const rect = elt.getBoundingClientRect();
+        const bodyElt = document.body;
         return {
             top: rect.top + bodyElt.scrollTop,
             left: rect.left + bodyElt.scrollLeft
-        }
+        };
     }
 
-    clearOverlay(type?: string) {
+    public clearOverlay(type?: string) {
         if (!type)
-            type = "default";
+            type = 'default';
         this._overlays[type] = [];
         this.doUpdate(UpdateType.overlays);
     }
 
-    addOverlays(ranges: OverlayRange[], cls?: string, type?: string) {
-        let s, e, sL, eL, c, w, range;
+    public addOverlays(ranges: OverlayRange[], cls?: string, type?: string) {
+        let s;
+        let e;
+        let sL;
+        let eL;
+        let w;
+        let r;
+        let range;
+        const rl = ranges.length;
         if (!type)
-            type = "default";
+            type = 'default';
         if (!cls || cls.length === 0)
-            cls = "overlay-default";
+            cls = 'overlay-default';
         this._overlays[type] = [];
-        for (let r = 0, rl = ranges.length; r < rl; r++) {
+        for (r = 0; r < rl; r++) {
             range = ranges[r];
             if (range.start.y > range.end.y) {
                 sL = range.end.y;
@@ -1264,7 +1270,7 @@ export class Display extends EventEmitter {
                 this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls} trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`);
                 continue;
             }
-            let len = this.lines.length;
+            const len = this.lines.length;
 
             if (sL < 0)
                 sL = 0;
@@ -1275,37 +1281,35 @@ export class Display extends EventEmitter {
             if (e > this.lines[eL].length)
                 e = this.lines[eL].length;
 
-
             for (let line = sL; line < eL + 1; line++) {
-                let startStyle = {
+                const startStyle = {
                     top: CornerType.Extern,
                     bottom: CornerType.Extern
-                }
-                let endStyle = {
+                };
+                const endStyle = {
                     top: CornerType.Extern,
                     bottom: CornerType.Extern
-                }
+                };
 
-                let cl = sL == line ? s : 0;
-                let cr = eL == line ? e : (this.lines[line].length || 1);
+                const cl = sL === line ? s : 0;
+                const cr = eL === line ? e : (this.lines[line].length || 1);
                 if (line > sL) {
-                    let pl = sL == line - 1 ? s : 0;
-                    let pr = this.lines[line - 1].length || 1;
+                    const pl = sL === line - 1 ? s : 0;
+                    const pr = this.lines[line - 1].length || 1;
 
-
-                    if (cl == pl)
+                    if (cl === pl)
                         startStyle.top = CornerType.Flat;
                     else if (cl > pl)
                         startStyle.top = CornerType.Intern;
-                    if (cr == pr)
+                    if (cr === pr)
                         endStyle.top = CornerType.Flat;
                     else if (pl < cr && cr < pr)
                         endStyle.top = CornerType.Intern;
                 }
 
                 if (line < eL) {
-                    let nl = 0;
-                    let nr = eL == line + 1 ? e : (this.lines[line + 1].length || 1);
+                    const nl = 0;
+                    const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
                     if (cl === nl) {
                         startStyle.bottom = CornerType.Flat;
                     } else if (nl < cl && cl < nr) {
@@ -1331,10 +1335,10 @@ export class Display extends EventEmitter {
                 if (endStyle.bottom === CornerType.Extern) {
                     rCls += ' brc';
                 }
-                if (sL == line) {
+                if (sL === line) {
                     w = ((this.lines[line].length || 1) - s) * this._charWidth;
                 }
-                else if (eL == line) {
+                else if (eL === line) {
                     w = e * this._charWidth;
                 }
                 else {
@@ -1345,16 +1349,18 @@ export class Display extends EventEmitter {
                     this._overlays[type][line] = [];
 
                 this._overlays[type][line].push(`<span id="${type}-${r}" class="${rCls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
-
-                if (startStyle.top == CornerType.Intern || startStyle.bottom == CornerType.Intern) {
+                /*
+                if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern) {
                 }
                 if (endStyle.top === CornerType.Intern) {
                 }
                 if (endStyle.bottom === CornerType.Intern) {
                 }
+                */
             }
         }
-        for (let ol in this._overlays[type]) {
+        let ol;
+        for (ol in this._overlays[type]) {
             if (!this._overlays[type].hasOwnProperty(ol))
                 continue;
             this._overlays[type][ol] = `<div style="top: ${(parseInt(ol, 10) || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
@@ -1363,8 +1369,13 @@ export class Display extends EventEmitter {
     }
 
     private updateSelection() {
-        let sel = this._currentSelection;
-        let s, e, sL, eL, c, parts, w;
+        const sel = this._currentSelection;
+        let s;
+        let e;
+        let sL;
+        let eL;
+        let parts;
+        let w;
         this._overlays.selection = [];
         if (sel.start.y > sel.end.y) {
             sL = sel.end.y;
@@ -1378,7 +1389,7 @@ export class Display extends EventEmitter {
             s = sel.start.x;
             e = sel.end.x;
         }
-        else if (sel.start.x == sel.end.x) {
+        else if (sel.start.x === sel.end.x) {
             this.doUpdate(UpdateType.overlays);
             return;
         }
@@ -1394,11 +1405,11 @@ export class Display extends EventEmitter {
 
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
-            this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`
+            this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             this.doUpdate(UpdateType.overlays);
             return;
         }
-        let len = this.lines.length;
+        const len = this.lines.length;
 
         if (sL < 0)
             sL = 0;
@@ -1409,37 +1420,35 @@ export class Display extends EventEmitter {
         if (e > this.lines[eL].length)
             e = this.lines[eL].length;
 
-
         for (let line = sL; line < eL + 1; line++) {
-            let startStyle = {
+            const startStyle = {
                 top: CornerType.Extern,
                 bottom: CornerType.Extern
-            }
-            let endStyle = {
+            };
+            const endStyle = {
                 top: CornerType.Extern,
                 bottom: CornerType.Extern
-            }
+            };
 
-            let cl = sL == line ? s : 0;
-            let cr = eL == line ? e : (this.lines[line].length || 1);
+            const cl = sL === line ? s : 0;
+            const cr = eL === line ? e : (this.lines[line].length || 1);
             if (line > sL) {
-                let pl = sL == line - 1 ? s : 0;
-                let pr = this.lines[line - 1].length || 1;
+                const pl = sL === line - 1 ? s : 0;
+                const pr = this.lines[line - 1].length || 1;
 
-
-                if (cl == pl)
+                if (cl === pl)
                     startStyle.top = CornerType.Flat;
                 else if (cl > pl)
                     startStyle.top = CornerType.Intern;
-                if (cr == pr)
+                if (cr === pr)
                     endStyle.top = CornerType.Flat;
                 else if (pl < cr && cr < pr)
                     endStyle.top = CornerType.Intern;
             }
 
             if (line < eL) {
-                let nl = 0;
-                let nr = eL == line + 1 ? e : (this.lines[line + 1].length || 1);
+                const nl = 0;
+                const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
                 if (cl === nl) {
                     startStyle.bottom = CornerType.Flat;
                 } else if (nl < cl && cl < nr) {
@@ -1467,10 +1476,10 @@ export class Display extends EventEmitter {
             if (endStyle.bottom === CornerType.Extern) {
                 cls += ' brc';
             }
-            if (sL == line) {
+            if (sL === line) {
                 w = ((this.lines[line].length || 1) - s) * this._charWidth;
             }
-            else if (eL == line) {
+            else if (eL === line) {
                 w = e * this._charWidth;
             }
             else {
@@ -1479,7 +1488,7 @@ export class Display extends EventEmitter {
 
             parts.push(`<span class="${cls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
 
-            if (startStyle.top == CornerType.Intern || startStyle.bottom == CornerType.Intern) {
+            if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern) {
                 //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;"></span>`);
                 //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;background-color:black;border-bottom-right-radius: 2px"></span>`);
             }
@@ -1500,160 +1509,19 @@ export class Display extends EventEmitter {
         this.doUpdate(UpdateType.overlays);
     }
 
-    private updateSelectionRange(end: Point) {
-        let sel = this._currentSelection;
-        let s, e, sL, eL, parts, w;
-        let c, cE;
-        //nothing changed so bail
-        if (end.x == sel.end.x && end.y == sel.end.y)
-            return;
-        this._overlays.selection = [];
-        if (sel.start.y > sel.end.y) {
-            sL = sel.end.y;
-            eL = sel.start.y;
-            s = sel.end.x;
-            e = sel.start.x;
-        }
-        else if (sel.start.y < sel.end.y) {
-            sL = sel.start.y;
-            eL = sel.end.y;
-            s = sel.start.x;
-            e = sel.end.x;
-        }
-        else if (sel.start.x == sel.end.x) {
-            this.doUpdate(UpdateType.overlays);
-            return;
-        }
-        else {
-            sL = sel.start.y;
-            if (sL < 0 || sL >= this.lines.length)
-                return;
-            s = Math.min(sel.start.x, sel.end.x);
-            e = Math.max(sel.start.x, sel.end.x);
-            if (s < 0) s = 0;
-            if (e > this.lines[sL].length)
-                e = this.lines[sL].length;
-
-            e = (e - s) * this._charWidth;
-            s *= this._charWidth;
-
-            this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
-            this.doUpdate(UpdateType.overlays);
-            return;
-        }
-        let len = this.lines.length;
-
-        if (sL < 0)
-            sL = 0;
-        if (eL >= len)
-            eL = len - 1;
-        if (s < 0)
-            s = 0;
-        if (e > this.lines[eL].length)
-            e = this.lines[eL].length;
-
-
-        for (let line = sL; line < eL + 1; line++) {
-            let startStyle = {
-                top: CornerType.Extern,
-                bottom: CornerType.Extern
-            }
-            let endStyle = {
-                top: CornerType.Extern,
-                bottom: CornerType.Extern
-            }
-
-            let cl = sL == line ? s : 0;
-            let cr = eL == line ? e : (this.lines[line].length || 1);
-            if (line > sL) {
-                let pl = sL == line - 1 ? s : 0;
-                let pr = this.lines[line - 1].length || 1;
-
-
-                if (cl == pl)
-                    startStyle.top = CornerType.Flat;
-                else if (cl > pl)
-                    startStyle.top = CornerType.Intern;
-                if (cr == pr)
-                    endStyle.top = CornerType.Flat;
-                else if (pl < cr && cr < pr)
-                    endStyle.top = CornerType.Intern;
-            }
-
-            if (line < eL) {
-                let nl = 0;
-                let nr = eL == line + 1 ? e : (this.lines[line + 1].length || 1);
-                if (cl === nl) {
-                    startStyle.bottom = CornerType.Flat;
-                } else if (nl < cl && cl < nr) {
-                    startStyle.bottom = CornerType.Intern;
-                }
-
-                if (cr === nr) {
-                    endStyle.bottom = CornerType.Flat;
-                } else if (cr < nr) {
-                    endStyle.bottom = CornerType.Intern;
-                }
-            }
-
-            parts = [];
-            let cls = 'select-text';
-            if (startStyle.top === CornerType.Extern) {
-                cls += ' tlc';
-            }
-            if (startStyle.bottom === CornerType.Extern) {
-                cls += ' blc';
-            }
-            if (endStyle.top === CornerType.Extern) {
-                cls += ' trc';
-            }
-            if (endStyle.bottom === CornerType.Extern) {
-                cls += ' brc';
-            }
-            if (sL == line) {
-                w = ((this.lines[line].length || 1) - s) * this._charWidth;
-            }
-            else if (eL == line) {
-                w = e * this._charWidth;
-            }
-            else {
-                w = (this.lines[line].length || 1) * this._charWidth;
-            }
-
-            parts.push(`<span class="${cls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
-
-            if (startStyle.top == CornerType.Intern || startStyle.bottom == CornerType.Intern) {
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;"></span>`);
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;background-color:black;border-bottom-right-radius: 2px"></span>`);
-            }
-            if (endStyle.top === CornerType.Intern) {
-                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;"></span>`);
-                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;background-color:black;border-top-left-radius: 2px"></span>`);
-            }
-            if (endStyle.bottom === CornerType.Intern) {
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;"></span>`);
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;background-color:black;border-bottom-left-radius: 2px"></span>`);
-            }
-
-            //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(0,128,0,0.5)"></span>`);
-            //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(255,0,0,0.5)"></span>`);
-
-            this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`
-        }
-        //this.updateOverlays();
-        this.doUpdate(UpdateType.overlays);
-    }
-
     get hasSelection(): boolean {
-        let sel = this._currentSelection;
-        if (sel.start.x == sel.end.x && sel.start.y == sel.end.y)
+        const sel = this._currentSelection;
+        if (sel.start.x === sel.end.x && sel.start.y === sel.end.y)
             return false;
         return true;
     }
 
     get selection(): string {
-        let sel = this._currentSelection;
-        let s, e, sL, eL;
+        const sel = this._currentSelection;
+        let s;
+        let e;
+        let sL;
+        let eL;
         if (sel.start.y > sel.end.y) {
             sL = sel.end.y;
             eL = sel.start.y;
@@ -1666,16 +1534,16 @@ export class Display extends EventEmitter {
             s = sel.start.x;
             e = sel.end.x;
         }
-        else if (sel.start.x == sel.end.x) {
-            return "";
+        else if (sel.start.x === sel.end.x) {
+            return '';
         }
         else {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
             return this.lines[sel.start.y].substring(s, e);
         }
-        let len = this.lines.length;
-        
+        const len = this.lines.length;
+
         if (sL < 0)
             sL = 0;
         if (eL >= len)
@@ -1684,8 +1552,8 @@ export class Display extends EventEmitter {
             s = 0;
         if (e > this.lines[eL].length)
             e = this.lines[eL].length;
-        
-        let txt = [this.lines[sL].substring(s)];
+
+        const txt = [this.lines[sL].substring(s)];
         sL++;
         if (eL - sL > 0)
             txt.push.apply(txt, this.lines.slice(sL, eL));
@@ -1720,10 +1588,9 @@ export class Display extends EventEmitter {
         this.updateSelection();
     }
 
-
     private update() {
         this._os = this.offset(this._el);
-        let t = window.getComputedStyle(this._el);
+        const t = window.getComputedStyle(this._el);
         this._borderSize.height = parseInt(t.borderTopWidth) || 0;
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
     }
@@ -1731,13 +1598,18 @@ export class Display extends EventEmitter {
     private createLine(idx?: number) {
         if (idx === undefined)
             idx = this.lines.length - 1;
-        let back = [], fore = [];
-        let text = this.lines[idx];
-        let formats = this.lineFormats[idx];
-        let offset = 0, bStyle = [];
-        let fStyle = [], fCls;
-        let height = this._charHeight;
-        for (let ol in this._expire) {
+        const back = [];
+        const fore = [];
+        const text = this.lines[idx];
+        const formats = this.lineFormats[idx];
+        let offset = 0;
+        let bStyle = [];
+        let fStyle = [];
+        let fCls;
+        const height = this._charHeight;
+        const len = formats.length;
+        let ol;
+        for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
                 continue;
             if (this._expire[ol][idx])
@@ -1745,10 +1617,13 @@ export class Display extends EventEmitter {
         }
         delete this._expire2[idx];
 
-        for (let f = 0, len = formats.length; f < len; f++) {
-            let format = formats[f];
-            let nFormat, end, td = [];
-            let oSize, oFont;
+        for (let f = 0; f < len; f++) {
+            const format = formats[f];
+            let nFormat;
+            let end;
+            const td = [];
+            let oSize;
+            let oFont;
             if (f < len - 1) {
                 nFormat = formats[f + 1];
                 //skip empty blocks
@@ -1764,9 +1639,9 @@ export class Display extends EventEmitter {
                 fStyle = [];
                 fCls = [];
                 if (format.background)
-                    bStyle.push("background:", format.background, ";");
+                    bStyle.push('background:', format.background, ';');
                 if (format.color)
-                    fStyle.push("color:", format.color, ";");
+                    fStyle.push('color:', format.color, ';');
                 if (format.font || format.size) {
                     oSize = this._character.style.fontSize;
                     oFont = this._character.style.fontFamily;
@@ -1775,7 +1650,7 @@ export class Display extends EventEmitter {
                 //TODO once supported update parser support tag to add font
                 /*
                 if (format.font) {
-                    
+
                     fStyle.push("font-family: ", format.font, ";")
                     this._character.style.fontFamily = format.font;
                 }
@@ -1790,28 +1665,28 @@ export class Display extends EventEmitter {
                 }
                 */
                 if (format.style !== FontStyle.None) {
-                    if ((format.style & FontStyle.Bold) == FontStyle.Bold)
-                        fStyle.push("font-weight: bold;");
-                    if ((format.style & FontStyle.Italic) == FontStyle.Italic)
-                        fStyle.push("font-style: italic;");
-                    if ((format.style & FontStyle.Overline) == FontStyle.Overline)
-                        td.push("overline ");
-                    if ((format.style & FontStyle.DoubleUnderline) == FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) == FontStyle.Underline)
-                        td.push("underline ");
-                    if ((format.style & FontStyle.DoubleUnderline) == FontStyle.DoubleUnderline)
-                        fStyle.push("border-bottom: 1px solid ", format.color, ";");
+                    if ((format.style & FontStyle.Bold) === FontStyle.Bold)
+                        fStyle.push('font-weight: bold;');
+                    if ((format.style & FontStyle.Italic) === FontStyle.Italic)
+                        fStyle.push('font-style: italic;');
+                    if ((format.style & FontStyle.Overline) === FontStyle.Overline)
+                        td.push('overline ');
+                    if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
+                        td.push('underline ');
+                    if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
+                        fStyle.push('border-bottom: 1px solid ', format.color, ';');
                     else
-                        fStyle.push("padding-bottom: 1px;");
-                    if ((format.style & FontStyle.Rapid) == FontStyle.Rapid || (format.style & FontStyle.Slow) == FontStyle.Slow) {
+                        fStyle.push('padding-bottom: 1px;');
+                    if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
                         if (this.enableFlashing)
-                            fCls.push(" ansi-blink");
-                        else if ((format.style & FontStyle.DoubleUnderline) != FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) != FontStyle.Underline)
-                            td.push("underline ");
+                            fCls.push(' ansi-blink');
+                        else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
+                            td.push('underline ');
                     }
-                    if ((format.style & FontStyle.Strikeout) == FontStyle.Strikeout)
-                        td.push("line-through ");
+                    if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
+                        td.push('line-through ');
                     if (td.length > 0)
-                        fStyle.push("text-decoration:", td.join(''), ";");
+                        fStyle.push('text-decoration:', td.join(''), ';');
                 }
                 if (format.hr) {
                     back.push('<span style="left:0;width:{max}px;', bStyle.join(''), '" class="ansi"></span>');
@@ -1832,10 +1707,10 @@ export class Display extends EventEmitter {
                 fore.push('</span>');
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
-                fore.push("</a>");
+                fore.push('</a>');
             }
             else if (format.formatType === FormatType.WordBreak)
-                fore.push('<wbr>')
+                fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.href);
@@ -1895,8 +1770,8 @@ export class Display extends EventEmitter {
 
     public rebuildLines() {
         let t;
-
-        for (let l = 0, ll = this.lines.length; l < ll; l++) {
+        const ll = this.lines.length;
+        for (let l = 0; l < ll; l++) {
             t = this.createLine(l);
             this._viewLines[l] = t[0];
             this._backgroundLines[l] = t[1];
@@ -1908,7 +1783,7 @@ export class Display extends EventEmitter {
             if (this.split.shown)
                 return;
             if (this.scrollLock && !this.split.shown && this._VScroll.scrollSize > 0) {
-                this.split.style.display = "block";
+                this.split.style.display = 'block';
                 this.split.shown = true;
                 this.doUpdate(UpdateType.scrollView);
             }
@@ -1919,7 +1794,7 @@ export class Display extends EventEmitter {
 
     private _scrollCorner: HTMLElement;
 
-    updateScrollbars() {
+    public updateScrollbars() {
         this._HScroll.offset = this._VScroll.track.clientWidth;
         this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize >= 0;
@@ -1931,35 +1806,35 @@ export class Display extends EventEmitter {
             this._scrollCorner = null;
         }
         else if (this._HScroll.visible && !this._scrollCorner) {
-            this._scrollCorner = document.createElement('div')
+            this._scrollCorner = document.createElement('div');
             this._scrollCorner.className = 'scroll-corner';
-            this._scrollCorner.style.position = "absolute";
-            this._scrollCorner.style.right = "0";
-            this._scrollCorner.style.bottom = "0";
+            this._scrollCorner.style.position = 'absolute';
+            this._scrollCorner.style.right = '0';
+            this._scrollCorner.style.bottom = '0';
             this._el.appendChild(this._scrollCorner);
         }
     }
 
-    showFind() {
+    public showFind() {
         this._finder.show();
     }
 
-    hideFind() {
+    public hideFind() {
         this._finder.hide();
     }
 
-    find(focus?: boolean) {
+    public find(focus?: boolean) {
         {
             this._finder.find(false);
         }
     }
 
-    scrollTo(x: number, y: number) {
+    public scrollTo(x: number, y: number) {
         this._VScroll.scrollTo(y);
         this._HScroll.scrollTo(x);
     }
 
-    scrollToCharacter(x: number, y: number) {
+    public scrollToCharacter(x: number, y: number) {
         x *= this._charWidth;
         y *= this._charHeight;
         if (this.split && this.split.shown) {
@@ -1979,11 +1854,20 @@ export class Display extends EventEmitter {
     }
 
     private expireLineLinkFormat(formats, idx: number) {
-        let t, f, fs, fl, fsl, type, eType, format, n = 0;
+        let t;
+        let f;
+        let fs;
+        let fl;
+        let fsl;
+        let type;
+        let eType;
+        let format;
+        let n = 0;
         for (fs = 0, fsl = formats.length; fs < fsl; fs++) {
             fl = this.lineFormats[idx].length;
             f = formats[fs];
             format = this.lineFormats[idx][f];
+            type = format.formatType;
             if (format.formatType === FormatType.MXPLink)
                 eType = FormatType.MXPLinkEnd;
             else
@@ -1992,7 +1876,7 @@ export class Display extends EventEmitter {
             f++;
             for (; f < fl; f++) {
                 if (this.lineFormats[idx][f] === eType) {
-                    if (n == 0) {
+                    if (n === 0) {
                         format.formatType = FormatType.MXPSkip;
                         break;
                     }
@@ -2039,7 +1923,7 @@ export class ScrollBar extends EventEmitter {
         dragging: false,
         dragPosition: 0,
         position: 0
-    }
+    };
 
     get size(): number { return this._visible ? 12 : 0; }
 
@@ -2047,14 +1931,14 @@ export class ScrollBar extends EventEmitter {
 
     get offset(): number { return this._offset; }
     set offset(value: number) {
-        if (value != this._offset) {
+        if (value !== this._offset) {
             this._offset = value;
             this.updateLocation();
         }
     }
     get type(): ScrollType { return this._type; }
     set type(value: ScrollType) {
-        if (this._type != value) {
+        if (this._type !== value) {
             this._type = value;
             this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
             this.updateLocation();
@@ -2063,7 +1947,7 @@ export class ScrollBar extends EventEmitter {
     }
     get visible(): boolean { return this._visible; }
     set visible(value: boolean) {
-        if (!this._visible == value) {
+        if (!this._visible === value) {
             this._visible = value;
             this.track.style.display = value ? 'block' : 'none';
             this.resize();
@@ -2072,7 +1956,7 @@ export class ScrollBar extends EventEmitter {
 
     get scrollOffset(): number { return this._scrollOffset; }
     set scrollOffset(value: number) {
-        if (value != this._scrollOffset) {
+        if (value !== this._scrollOffset) {
             this._scrollOffset = value;
             this.resize();
         }
@@ -2084,7 +1968,7 @@ export class ScrollBar extends EventEmitter {
         this.type = type || ScrollType.vertical;
     }
 
-    setParent(parent: HTMLElement, content?: HTMLElement) {
+    public setParent(parent: HTMLElement, content?: HTMLElement) {
         if (this.track)
             this._parent.removeChild(this.track);
         this._parent = parent;
@@ -2094,36 +1978,36 @@ export class ScrollBar extends EventEmitter {
 
     private updateLocation() {
         if (this._type === ScrollType.horizontal) {
-            this.track.style.top = "";
-            this.track.style.right = this.offset + "px";
-            this.track.style.left = "0";
-            this.track.style.bottom = "0";
-            this.track.style.width = "auto";
-            this.track.style.height = "";
+            this.track.style.top = '';
+            this.track.style.right = this.offset + 'px';
+            this.track.style.left = '0';
+            this.track.style.bottom = '0';
+            this.track.style.width = 'auto';
+            this.track.style.height = '';
 
-            this.thumb.style.height = "100%";
-            this.thumb.style.width = "";
+            this.thumb.style.height = '100%';
+            this.thumb.style.width = '';
         }
         else {
-            this.track.style.top = "0";
-            this.track.style.right = "0";
-            this.track.style.left = "";
-            this.track.style.bottom = this.offset + "px";
-            this.track.style.width = "";
-            this.track.style.height = "auto";
+            this.track.style.top = '0';
+            this.track.style.right = '0';
+            this.track.style.left = '';
+            this.track.style.bottom = this.offset + 'px';
+            this.track.style.width = '';
+            this.track.style.height = 'auto';
 
-            this.thumb.style.height = "";
-            this.thumb.style.width = "100%";
+            this.thumb.style.height = '';
+            this.thumb.style.width = '100%';
         }
-        this.thumb.style.left = "0";
-        this.thumb.style.top = "0";
+        this.thumb.style.left = '0';
+        this.thumb.style.top = '0';
         this._os = this.elOffset(this.track);
     }
 
     private createBar() {
-        this.track = document.createElement('div')
+        this.track = document.createElement('div');
         this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
-        this.track.style.position = "absolute";
+        this.track.style.position = 'absolute';
         this.track.addEventListener('mousedown', (e) => {
             if (e.button === 0 && e.buttons) {
                 this._lastMouse = e;
@@ -2134,12 +2018,12 @@ export class ScrollBar extends EventEmitter {
                 this.state.dragPosition = (this._type === ScrollType.horizontal ? (e.pageX - this._os.left) : (e.pageY - this._os.top)) - this.state.position;
                 this.updatePosition(this.currentPosition());
             }
-        })
+        });
         this._parent.appendChild(this.track);
 
-        this.thumb = document.createElement('div')
+        this.thumb = document.createElement('div');
         this.thumb.className = 'scroll-thumb';
-        this.thumb.style.position = "absolute";
+        this.thumb.style.position = 'absolute';
         this.track.appendChild(this.thumb);
         this.updateLocation();
         this.thumb.addEventListener('mousedown', (e) => {
@@ -2161,7 +2045,7 @@ export class ScrollBar extends EventEmitter {
             if (this.state.dragging) {
                 this.updatePosition(this.currentPosition());
             }
-        })
+        });
 
         window.addEventListener('mouseup', (e) => {
             this._lastMouse = e;
@@ -2169,7 +2053,7 @@ export class ScrollBar extends EventEmitter {
                 this.state.dragging = false;
                 this.updatePosition(this.currentPosition());
             }
-        })
+        });
 
         window.addEventListener('resize', (e) => {
             this.resize();
@@ -2177,18 +2061,18 @@ export class ScrollBar extends EventEmitter {
         this.resize();
     }
 
-    reset() {
+    public reset() {
         this.state = {
             dragging: false,
             dragPosition: 0,
             position: 0
-        }
+        };
         this.maxPosition = 0;
         this.updatePosition(0);
         this.update();
     }
 
-    update() {
+    public update() {
         if (this.scrollSize >= 0)
             this.track.classList.remove('scroll-disabled');
         else
@@ -2198,7 +2082,7 @@ export class ScrollBar extends EventEmitter {
             this._thumbSize = this._parentSize;
         if (this._thumbSize < 20)
             this._thumbSize = 20;
-        this.thumb.style[this._type === ScrollType.horizontal ? "width" : "height"] = this._thumbSize + "px";
+        this.thumb.style[this._type === ScrollType.horizontal ? 'width' : 'height'] = this._thumbSize + 'px';
         this._maxDrag = this._trackSize - this._thumbSize;
         if (this._maxDrag < 0) {
             this._maxDrag = 0;
@@ -2211,7 +2095,7 @@ export class ScrollBar extends EventEmitter {
         }
     }
 
-    scrollBy(amount: number) {
+    public scrollBy(amount: number) {
         if (amount === 0) return;
         amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
         amount = Math.ceil(amount * this._ratio2);
@@ -2219,29 +2103,28 @@ export class ScrollBar extends EventEmitter {
         this.updatePosition(amount);
     }
 
-    scrollTo(position: number) {
+    public scrollTo(position: number) {
         position = (position < 0 ? Math.floor(position) : Math.ceil(position));
         position = Math.ceil(position * this._ratio2);
         //this.updatePosition(position / this.scrollSize * this.maxPosition);
         this.updatePosition(position);
     }
 
-    scrollToEnd() {
+    public scrollToEnd() {
         this.updatePosition(this.maxPosition);
     }
 
-    resize() {
-        let pc = window.getComputedStyle(this._parent);
+    public resize() {
+        const pc = window.getComputedStyle(this._parent);
         this._padding = [
             parseInt(pc.getPropertyValue('padding-top')) || 0,
             parseInt(pc.getPropertyValue('padding-right')) || 0,
             parseInt(pc.getPropertyValue('padding-bottom')) || 0,
             parseInt(pc.getPropertyValue('padding-left')) || 0
-        ]
-
+        ];
 
         let p = 0;
-        let m = this.maxPosition;
+        const m = this.maxPosition;
         p = (this.position / this.scrollSize) * this.maxPosition;
         p = (p < 0 ? Math.floor(p) : Math.ceil(p));
         if (this._type === ScrollType.horizontal) {
@@ -2264,8 +2147,8 @@ export class ScrollBar extends EventEmitter {
         this.updatePosition(p || 0);
     }
 
-    currentPosition() {
-        let p = this._type === ScrollType.horizontal ? (this._lastMouse.pageX - this.state.position - this._os.left) : (this._lastMouse.pageY - this.state.position - this._os.top);
+    public currentPosition() {
+        const p = this._type === ScrollType.horizontal ? (this._lastMouse.pageX - this.state.position - this._os.left) : (this._lastMouse.pageY - this.state.position - this._os.top);
         if (p < 0)
             return 0;
         if (p > this.maxPosition)
@@ -2279,7 +2162,7 @@ export class ScrollBar extends EventEmitter {
         else if (p > this._maxDrag)
             p = this._maxDrag;
 
-        this.thumb.style[this._type === ScrollType.horizontal ? "left" : "top"] = p + "px";
+        this.thumb.style[this._type === ScrollType.horizontal ? 'left' : 'top'] = p + 'px';
         this.state.dragPosition = p;
         this._position = Math.ceil(p * this._ratio);
         if (this._position < 0)
@@ -2289,10 +2172,11 @@ export class ScrollBar extends EventEmitter {
     }
 
     private elOffset(elt) {
-        let rect = elt.getBoundingClientRect(), bodyElt = document.body;
+        const rect = elt.getBoundingClientRect();
+        const bodyElt = document.body;
         return {
             top: rect.top + bodyElt.scrollTop,
             left: rect.left + bodyElt.scrollLeft
-        }
+        };
     }
 }

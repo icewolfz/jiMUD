@@ -125,15 +125,15 @@
         $("#mapper-body").css('right', $('#mapper-room').outerWidth() + "px");
       }
       else {
-        $("#mapper-room").css("display", "");
-        $("#mapper-body").css('right', "");
+        $("#mapper-room").css("display", '');
+        $("#mapper-body").css('right', '');
       }
       $(window).trigger('resize');
       ipcRenderer.send('setting-changed', { type: 'mapper', name: 'room', value: roomEditor });
     }
 
     function saveRoom() {
-      if (!roomEditor || !mapper.selected || mapper.selected.ID === null)
+      if (!roomEditor || !mapper.selected || mapper.selected.ID == null)
         return;
       var data = {};
       data.X = parseInt($("#reX").val(), 10);
@@ -226,7 +226,7 @@
       });
 
       mapper.on('room-before-selected', (room) => {
-        if (!roomEditor || !room || room.ID === null)
+        if (!roomEditor || !room || room.ID == null)
           return;
         var data = {};
         data.X = parseInt($("#reX").val(), 10);
@@ -285,7 +285,7 @@
 
       mapper.on('room-selected', (room) => {
         $("#reDNone").prop('checked', true);
-        if (!room || room.ID === null) {
+        if (!room || room.ID == null) {
           $("#btn-walk").prop('disabled', true);
           $("#btn-highlight").prop('disabled', true);
           $("#mapper-room input").prop("disabled", true);
@@ -319,7 +319,7 @@
         else {
           $("#btn-walk").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
           $("#btn-highlight").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
-          $("#reName").text(room.Name || room.name || "");
+          $("#reName").text(room.Name || room.name || '');
           $("#mapper-room input").prop("disabled", false);
           $("#mapper-room select").prop("disabled", false);
           $("#mapper-room button").prop("disabled", false);
@@ -568,7 +568,7 @@
 
             dialog.showSaveDialog(remote.getCurrentWindow(), {
               title: 'Export clipped view',
-              defaultPath: 'jiMUD' + (!mapper.SplitArea ? "" : "." + mapper.active.area) + '.png',
+              defaultPath: 'jiMUD' + (!mapper.SplitArea ? '' : "." + mapper.active.area) + '.png',
               filters: [
 
                 { name: 'Images (*.png)', extensions: ['png'] },
@@ -589,13 +589,13 @@
                     return;
                   }
                   var x = null, y = 0, w = 0, h = 0, room, cx, cy;
-                  var t = mapper.active.area === null ? "" : mapper.active.area;
+                  var t = mapper.active.area == null ? '' : mapper.active.area;
                   if (!mapper.SplitArea)
-                    t = "";
+                    t = '';
                   for (var rms in rooms) {
                     room = rooms[rms];
-                    if (room === null) continue;
-                    if (x === null) {
+                    if (room == null) continue;
+                    if (x == null) {
                       x = room.X;
                       w = room.X + 1;
                       y = room.Y;
@@ -638,7 +638,7 @@
                   for (var rms in rooms) {
                     room = rooms[rms];
                     //no room
-                    if (room === null) continue;
+                    if (room == null) continue;
                     cx = (room.X - x) * 32 + 30.5;
                     cy = (room.Y - y) * 32 + 30.5;
                     mapper.DrawRoom(ctx, cx, cy, room, true);
@@ -1149,7 +1149,7 @@
 
             <div class="form-group">
               <label class="control-label">
-          Area <select id="reArea" style="width:100%" name="reArea" class="form-control" onchange="" data-width="auto"></select>
+          Area <select id="reArea" style="width:100%" name="reArea" class="form-control" data-width="auto"></select>
           </label>
             </div>
           </div>

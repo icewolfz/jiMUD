@@ -427,13 +427,13 @@
     }
 
     function setColor(id, color) {
-      if (!color || typeof color === "undefined" || color.length === 0) {
-        $("#" + id).val("");
+      if (!color || typeof color === 'undefined' || color.length === 0) {
+        $("#" + id).val('');
       }
       else {
         var color = new RGBColor(color);
         if (!color.ok)
-          $("#" + id).val("");
+          $("#" + id).val('');
         else
           $("#" + id).val(color.toHex());
       }

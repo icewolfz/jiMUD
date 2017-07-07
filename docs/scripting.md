@@ -43,7 +43,7 @@ and ensure append arguments is checked
 //the line to display text on
 var line = arguments[1];
 //new string
-var str = "";
+var str = '';
 //colors to use
 var colors = [];
 //random start

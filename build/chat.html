@@ -64,17 +64,17 @@
         }
 
         function echo(str, fore, back, newline, forceLine) {
-            if (str === null) str = "";
-            if (newline === null) newline = false;
-            if (forceLine === null) forceLine = false;
-            if (fore === null) fore = AnsiColorCode.LocalEcho;
-            if (back === null) back = AnsiColorCode.LocalEchoBack;
-            var codes = display.CurrentAnsiCode() + "\n";
-            if (str.endsWith("\n"))
+            if (str == null) str = '';
+            if (newline == null) newline = false;
+            if (forceLine == null) forceLine = false;
+            if (fore == null) fore = AnsiColorCode.LocalEcho;
+            if (back == null) back = AnsiColorCode.LocalEchoBack;
+            var codes = display.CurrentAnsiCode() + '\n';
+            if (str.endsWith('\n'))
                 str = str.substr(0, str.length - 1);
             str = "\x1b[" + fore + ";" + back + "m" + str + codes;
             if (newline && display.textLength > 0 && !display.EndOfLine)
-                str = "\n" + str;
+                str = '\n' + str;
             display.append(str, false);
         }
 
@@ -163,7 +163,7 @@
         });
 
         ipcRenderer.on('load-default', (event, char) => {
-            _logger.postMessage({ action: 'name', args: "" });
+            _logger.postMessage({ action: 'name', args: '' });
         });
 
         ipcRenderer.on('reload-options', (event) => {

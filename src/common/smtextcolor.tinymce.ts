@@ -16,8 +16,9 @@
  */
 declare let tinymce;
 
-tinymce.PluginManager.add('smtextcolor', function (editor, url) {
-    let cols, rows;
+tinymce.PluginManager.add('smtextcolor', (editor, url) => {
+    let cols;
+    let rows;
 
     rows = {
         forecolor: editor.settings.forecolor_rows || editor.settings.textcolor_rows || 5,
@@ -31,10 +32,9 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     function getCurrentColor(format) {
         let color;
 
-        editor.dom.getParents(editor.selection.getStart(), function (elm) {
-            let value;
-
-            if ((value = elm.style[format == 'forecolor' ? 'color' : 'background-color'])) {
+        editor.dom.getParents(editor.selection.getStart(), (elm) => {
+            const value = elm.style[format === 'forecolor' ? 'color' : 'background-color'];
+            if (value) {
                 color = value;
             }
         });
@@ -43,48 +43,50 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function mapColors(type) {
-        let i, colors = [], colorMap;
+        let i;
+        const colors = [];
+        let colorMap;
 
         colorMap = [
-            "000000", "Black",
-            "993300", "Burnt orange",
-            "333300", "Dark olive",
-            "003300", "Dark green",
-            "003366", "Dark azure",
-            "000080", "Navy Blue",
-            "333399", "Indigo",
-            "333333", "Very dark gray",
-            "800000", "Maroon",
-            "FF6600", "Orange",
-            "808000", "Olive",
-            "008000", "Green",
-            "008080", "Teal",
-            "0000FF", "Blue",
-            "666699", "Grayish blue",
-            "808080", "Gray",
-            "FF0000", "Red",
-            "FF9900", "Amber",
-            "99CC00", "Yellow green",
-            "339966", "Sea green",
-            "33CCCC", "Turquoise",
-            "3366FF", "Royal blue",
-            "800080", "Purple",
-            "999999", "Medium gray",
-            "FF00FF", "Magenta",
-            "FFCC00", "Gold",
-            "FFFF00", "Yellow",
-            "00FF00", "Lime",
-            "00FFFF", "Aqua",
-            "00CCFF", "Sky blue",
-            "993366", "Red violet",
-            "FFFFFF", "White",
-            "FF99CC", "Pink",
-            "FFCC99", "Peach",
-            "FFFF99", "Light yellow",
-            "CCFFCC", "Pale green",
-            "CCFFFF", "Pale cyan",
-            "99CCFF", "Light sky blue",
-            "CC99FF", "Plum"
+            '000000', 'Black',
+            '993300', 'Burnt orange',
+            '333300', 'Dark olive',
+            '003300', 'Dark green',
+            '003366', 'Dark azure',
+            '000080', 'Navy Blue',
+            '333399', 'Indigo',
+            '333333', 'Very dark gray',
+            '800000', 'Maroon',
+            'FF6600', 'Orange',
+            '808000', 'Olive',
+            '008000', 'Green',
+            '008080', 'Teal',
+            '0000FF', 'Blue',
+            '666699', 'Grayish blue',
+            '808080', 'Gray',
+            'FF0000', 'Red',
+            'FF9900', 'Amber',
+            '99CC00', 'Yellow green',
+            '339966', 'Sea green',
+            '33CCCC', 'Turquoise',
+            '3366FF', 'Royal blue',
+            '800080', 'Purple',
+            '999999', 'Medium gray',
+            'FF00FF', 'Magenta',
+            'FFCC00', 'Gold',
+            'FFFF00', 'Yellow',
+            '00FF00', 'Lime',
+            '00FFFF', 'Aqua',
+            '00CCFF', 'Sky blue',
+            '993366', 'Red violet',
+            'FFFFFF', 'White',
+            'FF99CC', 'Pink',
+            'FFCC99', 'Peach',
+            'FFFF99', 'Light yellow',
+            'CCFFCC', 'Pale green',
+            'CCFFFF', 'Pale cyan',
+            '99CCFF', 'Light sky blue',
+            'CC99FF', 'Plum'
         ];
 
         colorMap = editor.settings.textcolor_map || colorMap;
@@ -101,20 +103,30 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function renderColorPicker() {
-        let self = this, colors, color, html, last, x, y, i, id = self._id, count = 0, type;
+        const self = this;
+        let colors;
+        let color;
+        let html;
+        let last;
+        let x;
+        let y;
+        let i;
+        const id = self._id;
+        let count = 0;
+        let type;
 
         type = self.settings.origin;
 
-        function getColorCellHtml(color, title) {
-            let isNoColor = color == 'transparent';
+        function getColorCellHtml(clr, title) {
+            const isNoColor = clr === 'transparent';
 
             return (
                 '<td class="mce-grid-cell' + (isNoColor ? ' mce-colorbtn-trans' : '') + '">' +
                 '<div id="' + id + '-' + (count++) + '"' +
-                ' data-mce-color="' + (color ? color : '') + '"' +
+                ' data-mce-color="' + (clr ? clr : '') + '"' +
                 ' role="option"' +
                 ' tabIndex="-1"' +
-                ' style="' + (color ? 'background-color: ' + color : '') + '"' +
+                ' style="' + (clr ? 'background-color: ' + clr : '') + '"' +
                 ' title="' + tinymce.translate(title) + '">' +
                 (isNoColor ? '&#215;' : '') +
                 '</div>' +
@@ -124,8 +136,8 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
 
         colors = mapColors(type);
         colors.push({
-            text: tinymce.translate("No color"),
-            color: "transparent"
+            text: tinymce.translate('No color'),
+            color: 'transparent'
         });
 
         html = '<table class="mce-grid mce-grid-border mce-colorbutton-grid" role="list" cellspacing="0"><tbody>';
@@ -149,7 +161,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
         }
 
         if (editor.settings.color_picker_callback) {
-            let caption = editor.settings.color_picker_caption || tinymce.translate('Custom...')
+            const caption = editor.settings.color_picker_caption || tinymce.translate('Custom...');
             html += (
                 '<tr>' +
                 '<td colspan="' + cols[type] + '" class="mce-custom-color-btn">' +
@@ -176,7 +188,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function applyFormat(format, value) {
-        editor.undoManager.transact(function () {
+        editor.undoManager.transact( () => {
             editor.focus();
             editor.formatter.apply(format, { value: value });
             editor.nodeChanged();
@@ -184,7 +196,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function removeFormat(format) {
-        editor.undoManager.transact(function () {
+        editor.undoManager.transact( () => {
             editor.focus();
             editor.formatter.remove(format, { value: null }, null, true);
             editor.nodeChanged();
@@ -192,14 +204,16 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function onPanelClick(e) {
-        let buttonCtrl = this.parent(), value, type;
+        const buttonCtrl = this.parent();
+        let value;
+        let type;
 
         type = buttonCtrl.settings.origin;
 
-        function selectColor(value) {
+        function selectColor(val) {
             buttonCtrl.hidePanel();
-            buttonCtrl.color(value);
-            applyFormat(buttonCtrl.settings.format, value);
+            buttonCtrl.color(val);
+            applyFormat(buttonCtrl.settings.format, val);
         }
 
         function resetColor() {
@@ -208,19 +222,21 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
             removeFormat(buttonCtrl.settings.format);
         }
 
-        function setDivColor(div, value) {
-            div.style.background = value;
-            div.setAttribute('data-mce-color', value);
+        function setDivColor(div, val) {
+            div.style.background = val;
+            div.setAttribute('data-mce-color', val);
         }
 
         if (tinymce.dom.DOMUtils.DOM.getParent(e.target, '.mce-custom-color-btn')) {
             buttonCtrl.hidePanel();
 
-            editor.settings.color_picker_callback.call(editor, function (value) {
-                let tableElm = buttonCtrl.panel.getEl().getElementsByTagName('table')[0];
-                let customColorCells, div, i;
+            editor.settings.color_picker_callback.call(editor, (val) => {
+                const tableElm = buttonCtrl.panel.getEl().getElementsByTagName('table')[0];
+                let customColorCells;
+                let div;
+                let i;
 
-                customColorCells = tinymce.map(tableElm.rows[tableElm.rows.length - 1].childNodes, function (elm) {
+                customColorCells = tinymce.map(tableElm.rows[tableElm.rows.length - 1].childNodes, (elm) => {
                     return elm.firstChild;
                 });
 
@@ -233,14 +249,14 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
 
                 // Shift colors to the right
                 // TODO: Might need to be the left on RTL
-                if (i == cols[type]) {
+                if (i === cols[type]) {
                     for (i = 0; i < cols[type] - 1; i++) {
                         setDivColor(customColorCells[i], customColorCells[i + 1].getAttribute('data-mce-color'));
                     }
                 }
 
-                setDivColor(div, value);
-                selectColor(value);
+                setDivColor(div, val);
+                selectColor(val);
             }, getCurrentColor(buttonCtrl.settings.format), buttonCtrl.settings.format);
         }
 
@@ -253,7 +269,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
             e.target.setAttribute('aria-selected', true);
             this.lastId = e.target.id;
 
-            if (value == 'transparent') {
+            if (value === 'transparent') {
                 resetColor();
             } else {
                 selectColor(value);
@@ -264,8 +280,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     }
 
     function onButtonClick() {
-        let self = this;
-
+        const self = this;
         if (self._color) {
             applyFormat(self.settings.format, self._color);
         } else {

@@ -14,6 +14,7 @@
   - Font sample displays no longer cover other preferences when font is larger then width or cause other sizing issues.
   - Immortal tools: fixed remote delete trying to delete folders
   - Fixed a bug in #alias not correctly adding a new alias
+  - Fixed a bug with MSP link expiring and nested tags
 ##### 0.4.1 2017-07-03
 - **New:**
   - Immortal tools

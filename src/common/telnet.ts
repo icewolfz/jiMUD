@@ -1,9 +1,9 @@
 // cSpell:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR
 import EventEmitter = require('events');
-import net = require("net");
-import util = require("util");
+import net = require('net');
+import util = require('util');
 
-const ZLIB: any = require("./../../lib/inflate_stream.min.js").Zlib;
+const ZLIB: any = require('./../../lib/inflate_stream.min.js').Zlib;
 
 const Socket = net.Socket;
 
@@ -82,7 +82,7 @@ export interface TelnetOptionsServer {
  * @property {Boolean} [options.ZMP=0]				- Enable/disable Zenith MUD Protocol (ZMP) (93)
  * @property {Boolean} [options.GMCP=1]				- Enable/disable Generic Mud Communication Protocol/ATCP2 protocol (GMCP) (201)
  * @property {Boolean} [options.ATCP=0]				- Enable/disable Achaea Telnet Client Protocol (ATCP) (200)
- * @property {Boolean} [options.CHARSET=1]		    - Enable/disable CHARSET enabled, and which type, 1 is UTF-8 
+ * @property {Boolean} [options.CHARSET=1]		    - Enable/disable CHARSET enabled, and which type, 1 is UTF-8
  * @property {Object}  server						- The telnet options the server has enabled or disabled
  * @property {Boolean} [server.NAWS=0]				- Is NAWS enabled
  * @property {Boolean} [server.MSDP=0]				- Is MSDP enabled
@@ -109,8 +109,8 @@ export interface TelnetOptionsServer {
  * @property {Object}  [socket=null]				- The websocket object
  * @property {Number}  [latency=0]					- The milliseconds between the last send and the current received data
  * @property {Boolean} [enableLatency=false]	    - Attempt to calculate the latency between a send/receive, and if sent on receive send a GMCP ping back and attempt to get latency of a connection
- * @property {Number}  [latencyAvg=0]				- The average milliseconds between the last send and the current received data 
- * @property {Number}  [enablePing=false]			- Enable GMCP ping back to better track latency 
+ * @property {Number}  [latencyAvg=0]				- The average milliseconds between the last send and the current received data
+ * @property {Number}  [enablePing=false]			- Enable GMCP ping back to better track latency
  * @property {Array}   GMCPSupports					- An array of supported GMCP modules for mat of "Modulate 0|1", defaults are "Core 1", "Char 1", "Char.Vitals 1", "Char.Experience 1"
  */
 export class Telnet extends EventEmitter {
@@ -124,15 +124,15 @@ export class Telnet extends EventEmitter {
     private _zlib: boolean = false;
 
     public options: TelnetOptions = { MCCP: true, MXP: true, NAWS: true, MSDP: true, GMCP: true, MSSP: false, ECHO: true, TTYPE: true, EOR: true, NEWENVIRON: false, ZMP: false, ATCP: false, CHARSET: true };
-    public host: string = "";
+    public host: string = '';
     public port: number = 23;
     public prompt: boolean = false;
     public echo: boolean = true;
     public firstSent: boolean = true;
     public firstReceived: boolean = true;
     public server: TelnetOptionsServer = { NAWS: false, MSDP: false, GMCP: false, MXP: false, MCCP1: false, MCCP2: false, MSSP: false, NEWENVIRON: false, ZMP: false, EOR: false, ATCP: false, CHARSET: false };
-    public version: string = "2.0";
-    public terminal: string = "ansi";
+    public version: string = '2.0';
+    public terminal: string = 'ansi';
     public UTF8: boolean = true;
     public MSSP = {};
     public socket = null;
@@ -140,15 +140,14 @@ export class Telnet extends EventEmitter {
     public latencyAvg: number = null;
     public enableLatency: boolean = false;
     public enablePing: boolean = false;
-    public GMCPSupports: string[] = ["Core 1", "Char 1", "Char.Vitals 1", "Char.Experience 1"];
+    public GMCPSupports: string[] = ['Core 1', 'Char 1', 'Char.Vitals 1', 'Char.Experience 1'];
     public enableDebug: boolean = false;
-
 
     /**
      * Creates an instance of Telnet.
-     * 
+     *
      * @param {any} options a list of options to set
-     * 
+     *
      * @memberOf Telnet
      */
     constructor(options?: TelnetOptions | any) {
@@ -170,22 +169,22 @@ export class Telnet extends EventEmitter {
      * @name connected
      * @desc determine if connected to host
      * @returns {Boolean} weather connected to host or not
-     * 
+     *
      * @readonly
-     * 
+     *
      * @memberOf Telnet
      */
     get connected(): boolean {
-        if (!this.socket || typeof this.socket === null)
+        if (!this.socket || typeof this.socket === 'undefined')
             return false;
         return this._connected;
     }
 
     /**
-         * @name Telnet#reset 
+         * @name Telnet#reset
          * @desc reset state in preparation for a connect
          */
-    reset() {
+    public reset() {
         this._MTTS = 0;
         this.firstSent = true;
         this.firstReceived = true;
@@ -201,12 +200,12 @@ export class Telnet extends EventEmitter {
     }
 
     /**
-     * @name connect 
+     * @name connect
      * @desc connect to target host
      *
      * @fires Telnet#connecting
      */
-    connect() {
+    public connect() {
         this._destroySocket();
         this.reset();
         this.emit('connecting');
@@ -215,19 +214,19 @@ export class Telnet extends EventEmitter {
             this.socket.connect(this.port, this.host);
         }
         catch (e) {
-            this.emit('error', e)
+            this.emit('error', e);
         }
         if (this.enableDebug)
-            this.emit('debug', 'Connecting to ' + this.host + ":" + this.port);
-    };
+            this.emit('debug', 'Connecting to ' + this.host + ':' + this.port);
+    }
 
     /**
-     * @name Telnet#close 
+     * @name Telnet#close
      * @desc close the connection ot host and reset state in preparation for next connection
      *
      * @fires Telnet#close
      */
-    close() {
+    public close() {
         if (this._closed) return;
         this._destroySocket();
         this.reset();
@@ -235,20 +234,20 @@ export class Telnet extends EventEmitter {
         this._closed = true;
         if (this.enableDebug)
             this.emit('debug', 'Closed');
-    };
+    }
 
     /**
-     * @name Telnet#receivedData 
+     * @name Telnet#receivedData
      * @desc data that is received from the host to be processed
      *
      * @param {String} data string received from host
      * @fires Telnet#received-data
      */
-    receivedData(data) {
+    public receivedData(data) {
         if (this.enableLatency) {
             if (this._latencyTime !== null) {
                 this.latency = new Date().getTime() - this._latencyTime.getTime();
-                if (this.latencyAvg === null)
+                if (this.latencyAvg == null)
                     this.latencyAvg = this.latency;
                 else
                     this.latencyAvg = (this.latency + this.latencyAvg) / 2;
@@ -264,10 +263,10 @@ export class Telnet extends EventEmitter {
             }
         }
         if (this.enableDebug)
-            this.emit('debug', "PreProcess:" + data, 1);
+            this.emit('debug', 'PreProcess:' + data, 1);
         data = this.processData(data);
         if (this.enableDebug)
-            this.emit('debug', "PostProcess:" + data, 1);
+            this.emit('debug', 'PostProcess:' + data, 1);
         this.emit('received-data', data);
         if (this.enableLatency) {
             //split packet more then likely so reset timer for next part
@@ -279,27 +278,26 @@ export class Telnet extends EventEmitter {
             else if (this._doPing && this.enablePing) {
                 setTimeout(() => {
                     this._latencyTime = new Date();
-                    this.sendGMCP("Core.Ping " + this.latencyAvg);
+                    this.sendGMCP('Core.Ping ' + this.latencyAvg);
                 });
             }
             else
                 this._doPing = false;
         }
-    };
-
+    }
 
     /**
-     * @name Telnet#sendTerminal 
+     * @name Telnet#sendTerminal
      * @desc Send terminal type telnet option to mud to identify the terminal
      */
-    sendTerminal() {
+    public sendTerminal() {
         if (this.enableDebug) {
             if (this._MTTS === 0)
-                this.emit('debug', "REPLY: <IAC><SB><TERMINALTYPE><IS>" + this.terminal + "<IAC><SE>");
+                this.emit('debug', 'REPLY: <IAC><SB><TERMINALTYPE><IS>' + this.terminal + '<IAC><SE>');
             else if (this._MTTS === 1)
-                this.emit('debug', "REPLY: <IAC><SB><TERMINALTYPE><IS>ANSI-256COLOR<IAC><SE>");
+                this.emit('debug', 'REPLY: <IAC><SB><TERMINALTYPE><IS>ANSI-256COLOR<IAC><SE>');
             else if (this._MTTS >= 2)
-                this.emit('debug', "REPLY: <IAC><SB><TERMINALTYPE><IS>MTTS 9<IAC><SE>");
+                this.emit('debug', 'REPLY: <IAC><SB><TERMINALTYPE><IS>MTTS 9<IAC><SE>');
         }
         if (this._MTTS === 0) {
             this.sendData([255, 250, 24, 0], true);
@@ -310,18 +308,18 @@ export class Telnet extends EventEmitter {
             this.sendData([255, 250, 24, 0, 65, 78, 83, 73, 45, 50, 53, 54, 67, 79, 76, 79, 82, 255, 240], true);
         else if (this._MTTS >= 2)
             this.sendData([255, 250, 24, 0, 77, 84, 84, 83, 32, 57, 255, 240], true);
-    };
+    }
 
     /**
-     * @name Telnet#sendData 
+     * @name Telnet#sendData
      * @desc Send data to the host
      *
      * @param {String} data string to send
      * @param {Boolean} raw send raw unescaped telnet data to host, other wise it will escape the IAC for proper telnet
      * @fires Telnet#data-sent
      */
-    sendData(data: any, raw?: boolean) {
-        if (data === null || typeof data == "undefined" || data.length === 0)
+    public sendData(data: any, raw?: boolean) {
+        if (data == null || typeof data === 'undefined' || data.length === 0)
             return;
         if (this.connected) {
             try {
@@ -334,23 +332,23 @@ export class Telnet extends EventEmitter {
                     if (!Buffer.isBuffer(data))
                         data = Buffer.from(data, 'binary');
                     if (this.enableDebug)
-                        this.emit('debug', "sendData:" + data.toString('binary'), 2);
+                        this.emit('debug', 'sendData:' + data.toString('binary'), 2);
                     this.socket.write(data, 'binary');
                     if (!raw) this.firstSent = false;
                 }
 
             }
             catch (e) {
-                this.emit('error', e)
+                this.emit('error', e);
             }
         }
         else if (this.enableLatency)
             this._latencyTime = null;
         this.emit('data-sent', data);
-    };
+    }
 
     /**
-     * @name Telnet#processData 
+     * @name Telnet#processData
      * @desc Process raw incoming data
      *
      * @param {string} data The data to process
@@ -363,9 +361,10 @@ export class Telnet extends EventEmitter {
      * @fires Telnet#receive-CHARSET
      */
     //this.processData = function(data) { return data; };
-    processData(data) {
-        let len: number, _sb;
-        if (data === null)
+    public processData(data) {
+        let len: number;
+        let _sb;
+        if (data == null)
             return data;
         data = this._decompressData(data);
         len = data.length;
@@ -374,26 +373,28 @@ export class Telnet extends EventEmitter {
         _sb = this._splitBuffer;
 
         if (_sb.length > 0) {
-            if (this.enableDebug) this.emit('debug', "Split buffer length: " + _sb.length, 1);
+            if (this.enableDebug) this.emit('debug', 'Split buffer length: ' + _sb.length, 1);
             data = Buffer.concat([Buffer.from(_sb, 'binary'), data]);
             _sb = [];
             len = data.length;
         }
-        let state: number = 0, pState: number = 0;
+        let state: number = 0;
+        let pState: number = 0;
         let processed: (Buffer | any[]) = [];
 
-        let ga: boolean = this.prompt;
+        const ga: boolean = this.prompt;
         let verb: number = 0;
         let option: number = 0;
-        let msdp_val: string = "";
-        let msdp_var: string = "";
+        let msdp_val: string = '';
+        let msdp_var: string = '';
         let _MSSP;
-        let i: number = 0, ne: number;
+        let i: number = 0;
+        let ne: number;
         let idx: number = 0;
-        let tmp: (string | boolean) = "";
+        let tmp: (string | boolean) = '';
         //reset for new state
         this.prompt = false;
-        let debugOp = "";
+        let debugOp = '';
         try {
             for (; idx < len; idx++) {
                 i = data[idx];
@@ -401,7 +402,7 @@ export class Telnet extends EventEmitter {
                     case 0:
                         // If the current byte is the "Interpret as Command" code, set the state to 1.
                         if (i === 255) {
-                            if (this.enableDebug) debugOp = "TELOP: <IAC>";
+                            if (this.enableDebug) debugOp = 'TELOP: <IAC>';
                             //store in case it is split;
                             _sb.push(i);
                             state = 1;
@@ -413,8 +414,8 @@ export class Telnet extends EventEmitter {
                         if (i === 255) //escaped
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<IAC>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<IAC>');
+                                debugOp = '';
                             }
                             processed.push(i);
                             _sb = [];
@@ -423,8 +424,8 @@ export class Telnet extends EventEmitter {
                         else if ((!this.options.EOR || !this.server.EOR) && i === 239) //EOR, if not enabled treat as NOP
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<NOP>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<NOP>');
+                                debugOp = '';
                             }
                             _sb = [];
                             state = 0;
@@ -432,8 +433,8 @@ export class Telnet extends EventEmitter {
                         else if (i === 241 || i === 130) //no operation, just continue on
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<NOP>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<NOP>');
+                                debugOp = '';
                             }
                             _sb = [];
                             state = 0;
@@ -442,10 +443,10 @@ export class Telnet extends EventEmitter {
                         {
                             if (this.enableDebug) {
                                 if (i === 239)
-                                    this.emit('debug', debugOp + "<EOR>");
+                                    this.emit('debug', debugOp + '<EOR>');
                                 else
-                                    this.emit('debug', debugOp + "<GA>");
-                                debugOp = "";
+                                    this.emit('debug', debugOp + '<GA>');
+                                debugOp = '';
                             }
                             //more data to read, so ga means nothing but a new line
                             if (idx + 1 < len && len - idx > 2) {
@@ -461,10 +462,10 @@ export class Telnet extends EventEmitter {
                         {
                             if (this.enableDebug) {
                                 switch (i) {
-                                    case 253: debugOp += "<DO>"; break;
-                                    case 254: debugOp += "<DONT>"; break;
-                                    case 251: debugOp += "<WILL>"; break;
-                                    case 252: debugOp += "<WONT>"; break;
+                                    case 253: debugOp += '<DO>'; break;
+                                    case 254: debugOp += '<DONT>'; break;
+                                    case 251: debugOp += '<WILL>'; break;
+                                    case 252: debugOp += '<WONT>'; break;
                                 }
                             }
                             //store in case it is split;
@@ -474,7 +475,7 @@ export class Telnet extends EventEmitter {
                         }
                         else if (i === 250) // Sub negotiation
                         {
-                            if (this.enableDebug) debugOp += "<SB>";
+                            if (this.enableDebug) debugOp += '<SB>';
                             _sb.push(i);
                             state = 3;
                         }
@@ -488,40 +489,40 @@ export class Telnet extends EventEmitter {
                         if (i === 1) // ECHO
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<ECHO>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<ECHO>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 if (this.options.ECHO) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><ECHO>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><ECHO>');
                                     this.replyToOption(i, 251, verb);
                                     this.echo = false;
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><ECHO>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><ECHO>');
                                     this.echo = true;
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><ECHO>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><ECHO>');
                                 this.replyToOption(i, 252, verb);
                                 this.echo = true;
                             }
                             else if (verb === 251) {
                                 if (this.options.ECHO) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><ECHO>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><ECHO>');
                                     this.replyToOption(i, 253, verb);
                                     this.echo = false;
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><ECHO>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><ECHO>');
                                     this.echo = true;
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><ECHO>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><ECHO>');
                                 this.echo = true;
                                 this.replyToOption(i, 254, verb);
                             }
@@ -531,35 +532,35 @@ export class Telnet extends EventEmitter {
                         else if (i === 24) // TERMINALTYPE
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<TERMINALTYPE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<TERMINALTYPE>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 if (this.options.TTYPE) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><TERMINALTYPE>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><TERMINALTYPE>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><TERMINALTYPE>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><TERMINALTYPE>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><TERMINALTYPE>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><TERMINALTYPE>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 if (this.options.TTYPE) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><TERMINALTYPE>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><TERMINALTYPE>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><TERMINALTYPE>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><TERMINALTYPE>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><TERMINALTYPE>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><TERMINALTYPE>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -568,37 +569,37 @@ export class Telnet extends EventEmitter {
                         else if (i === 25) // END OF RECORD
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<ENDOFRECORD>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<ENDOFRECORD>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.EOR = true;
                                 if (this.options.EOR) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><ENDOFRECORD>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><ENDOFRECORD>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><ENDOFRECORD>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><ENDOFRECORD>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><ENDOFRECORD>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><ENDOFRECORD>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.EOR = true;
                                 if (this.options.EOR) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><ENDOFRECORD>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><ENDOFRECORD>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><ENDOFRECORD>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><ENDOFRECORD>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><ENDOFRECORD>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><ENDOFRECORD>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -607,39 +608,39 @@ export class Telnet extends EventEmitter {
                         else if (i === 31) // NAWS
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<NAWS>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<NAWS>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.NAWS = true;
                                 if (this.options.NAWS) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><NAWS>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><NAWS>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><NAWS>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><NAWS>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
                                 this.server.NAWS = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><NAWS>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><NAWS>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.NAWS = true;
                                 if (this.options.NAWS) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><NAWS>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><NAWS>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><NAWS>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><NAWS>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
                                 this.server.NAWS = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><NAWS>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><NAWS>');
                                 this.replyToOption(i, 254, verb);
                             }
                             this.emit('windowSize');
@@ -649,37 +650,37 @@ export class Telnet extends EventEmitter {
                         else if (i === 36 || i === 39) // NEWENVIRON
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<NEWENVIRON>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<NEWENVIRON>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.NEWENVIRON = true;
                                 if (this.options.NEWENVIRON) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><NEWENVIRON>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><NEWENVIRON>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><NEWENVIRON>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><NEWENVIRON>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><NEWENVIRON>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><NEWENVIRON>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.NEWENVIRON = true;
                                 if (this.options.NEWENVIRON) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><NEWENVIRON>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><NEWENVIRON>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><NEWENVIRON>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><NEWENVIRON>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><NEWENVIRON>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><NEWENVIRON>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -688,39 +689,39 @@ export class Telnet extends EventEmitter {
                         else if (i === 69) // MSDP
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<MSDP>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<MSDP>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.MSDP = true;
                                 if (this.options.MSDP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><MSDP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><MSDP>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MSDP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MSDP>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
                                 this.server.MSDP = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><MSDP>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><MSDP>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.MSDP = true;
                                 if (this.options.MSDP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><MSDP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><MSDP>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MSDP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MSDP>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
                                 this.server.MSDP = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MSDP>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MSDP>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -729,39 +730,39 @@ export class Telnet extends EventEmitter {
                         else if (i === 70) // MSSP
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<MSSP>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<MSSP>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.MSSP = true;
                                 if (this.options.MSSP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><MSSP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><MSSP>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MSSP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MSSP>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
                                 this.server.MSSP = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><MSSP>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><MSSP>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.MSSP = true;
                                 if (this.options.MSSP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><MSSP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><MSSP>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MSSP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MSSP>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
                                 this.server.MSSP = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MSSP>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MSSP>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -770,39 +771,39 @@ export class Telnet extends EventEmitter {
                         else if (i === 85) // MCCP1
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<MCCP1>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<MCCP1>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.MCCP1 = true;
                                 if (this.options.MCCP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><MCCP1>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><MCCP1>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MCCP1>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MCCP1>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
                                 this.server.MCCP1 = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><MCCP1>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><MCCP1>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.MCCP1 = true;
                                 if (this.options.MCCP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><MCCP1>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><MCCP1>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MCCP1>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MCCP1>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
                                 this.server.MCCP1 = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MCCP1>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MCCP1>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -811,39 +812,39 @@ export class Telnet extends EventEmitter {
                         else if (i === 86) // MCCP2
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<MCCP2>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<MCCP2>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.MCCP2 = true;
                                 if (this.options.MCCP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><MCCP2>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><MCCP2>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MCCP2>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MCCP2>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
                                 this.server.MCCP2 = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><MCCP2>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><MCCP2>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.MCCP2 = true;
                                 if (this.options.MCCP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><MCCP2>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><MCCP2>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MCCP2>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MCCP2>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
                                 this.server.MCCP2 = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MCCP2>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MCCP2>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -852,39 +853,39 @@ export class Telnet extends EventEmitter {
                         else if (i === 91) // MXP
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<MXP>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<MXP>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.MXP = true;
                                 if (this.options.MXP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><MXP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><MXP>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MXP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MXP>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
                                 this.server.MXP = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><MXP>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><MXP>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.MXP = true;
                                 if (this.options.MXP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><MXP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><MXP>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MXP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MXP>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
                                 this.server.MXP = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><MXP>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><MXP>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -893,51 +894,51 @@ export class Telnet extends EventEmitter {
                         else if (i === 130 || i === 241) // NOP
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<NOP>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<NOP>');
+                                debugOp = '';
                             }
-                            this._fireReceiveOption(i, verb, "");
+                            this._fireReceiveOption(i, verb, '');
                             _sb = [];
                             state = 0;
                         }
                         else if (i === 201) //GMCP
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<GMCP>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<GMCP>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.GMCP = true;
                                 if (this.options.GMCP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><GMCP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><GMCP>');
                                     this.replyToOption(i, 251, verb);
                                     this._startGMCP();
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><GMCP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><GMCP>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
                                 this.server.GMCP = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><GMCP>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><GMCP>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.GMCP = true;
                                 if (this.options.GMCP) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><GMCP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><GMCP>');
                                     this.replyToOption(i, 253, verb);
                                     this._startGMCP();
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><GMCP>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><GMCP>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
                                 this.server.GMCP = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><GMCP>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><GMCP>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -946,39 +947,39 @@ export class Telnet extends EventEmitter {
                         else if (i === 42) //CHARSET
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<CHARSET>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<CHARSET>');
+                                debugOp = '';
                             }
                             if (verb === 253) {
                                 this.server.CHARSET = true;
                                 if (this.options.CHARSET) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WILL><CHARSET>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><CHARSET>');
                                     this.replyToOption(i, 251, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><CHARSET>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><CHARSET>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 254) {
                                 this.server.CHARSET = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><CHARSET>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><CHARSET>');
                                 this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 this.server.CHARSET = true;
                                 if (this.options.CHARSET) {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DO><CHARSET>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><CHARSET>');
                                     this.replyToOption(i, 253, verb);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><CHARSET>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><CHARSET>');
                                     this.replyToOption(i, 254, verb);
                                 }
                             }
                             else if (verb === 252) {
                                 this.server.CHARSET = false;
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><CHARSET>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><CHARSET>');
                                 this.replyToOption(i, 254, verb);
                             }
                             state = 0;
@@ -988,14 +989,14 @@ export class Telnet extends EventEmitter {
                         {
                             if (this.enableDebug) {
                                 this.emit('debug', debugOp + this._formatByte(i));
-                                debugOp = "";
+                                debugOp = '';
                             }
                             if (verb === 251 || verb === 252) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><DONT><" + i + ">");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><' + i + '>');
                                 this.replyToOption(i, 254, verb);
                             }
                             else if (verb === 254 || verb === 253) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><WONT><" + i + ">");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><' + i + '>');
                                 this.replyToOption(i, 252, verb);
                             }
                             state = 0;
@@ -1006,14 +1007,14 @@ export class Telnet extends EventEmitter {
                         option = i;
                         if (i === 24) // TERMINALTYPE
                         {
-                            if (this.enableDebug) debugOp += "<TERMINALTYPE>";
+                            if (this.enableDebug) debugOp += '<TERMINALTYPE>';
                             _sb.push(i);
                             option = i;
                             state = 4;
                         }
                         else if (i === 36 || i === 39) // NEWENVIRON
                         {
-                            if (this.enableDebug) debugOp += "<NEWENVIRON>";
+                            if (this.enableDebug) debugOp += '<NEWENVIRON>';
                             _sb.push(i);
                             option = i;
                             state = 12;
@@ -1021,14 +1022,14 @@ export class Telnet extends EventEmitter {
                         }
                         else if (i === 69) // MSDP
                         {
-                            if (this.enableDebug) debugOp += "<MSDP>";
+                            if (this.enableDebug) debugOp += '<MSDP>';
                             _sb.push(i);
                             option = i;
                             state = 4;
                         }
                         else if (i === 70) // MSSP
                         {
-                            if (this.enableDebug) debugOp += "<MSSP>";
+                            if (this.enableDebug) debugOp += '<MSSP>';
                             _sb.push(i);
                             option = i;
                             state = 8;
@@ -1036,13 +1037,13 @@ export class Telnet extends EventEmitter {
                         }
                         else if (i === 85 || i === 86) // MCCP1 & MCCP2
                         {
-                            if (this.enableDebug) debugOp += i === 85 ? "<MCCP1>" : "<MCCP2>";
+                            if (this.enableDebug) debugOp += i === 85 ? '<MCCP1>' : '<MCCP2>';
                             _sb.push(i);
                             option = i;
                             state = 11;
                         }
                         else if (i === 201) {
-                            if (this.enableDebug) debugOp += "<GMCP>";
+                            if (this.enableDebug) debugOp += '<GMCP>';
                             _sb.push(i);
                             option = i;
                             state = 7;
@@ -1056,8 +1057,8 @@ export class Telnet extends EventEmitter {
                         else if (i === 240) // SE
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<SE>');
+                                debugOp = '';
                             }
                             this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
                             state = 0;
@@ -1065,11 +1066,11 @@ export class Telnet extends EventEmitter {
                         }
                         else if (i === 42) //CHARSET
                         {
-                            if (this.enableDebug) debugOp += "<CHARSET>";
+                            if (this.enableDebug) debugOp += '<CHARSET>';
                             _sb.push(i);
                             option = i;
                             state = 17;
-                            msdp_val = "";
+                            msdp_val = '';
                         }
                         else {
                             if (this.enableDebug) debugOp += this._formatByte(i);
@@ -1079,22 +1080,22 @@ export class Telnet extends EventEmitter {
                     case 4: //MSDP negotiation
                         if (option === 24 && i === 1) // TERMINALTYPE SEND
                         {
-                            if (this.enableDebug) debugOp += "<SEND>";
+                            if (this.enableDebug) debugOp += '<SEND>';
                             _sb.push(i);
                             verb = 1;
                         }
                         else if (i === 240) // SE
                         {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<SE>');
+                                debugOp = '';
                             }
                             if (option === 24 && verb === 1) // TERMINALTYPE
                             {
                                 tmp = false;
-                                this._fireReceiveOption(option, 250, "");
+                                this._fireReceiveOption(option, 250, '');
                                 if (!tmp) {
-                                    this.sendTerminal();//sending it once doesn't seem to work, sending it a 2nd time seems to register it correctly
+                                    this.sendTerminal(); //sending it once doesn't seem to work, sending it a 2nd time seems to register it correctly
                                     this.sendTerminal();
                                     this._MTTS++;
                                 }
@@ -1104,9 +1105,9 @@ export class Telnet extends EventEmitter {
                         }
                         else if (option === 69 && i === 1) // MSDP
                         {
-                            if (this.enableDebug) debugOp += "<MSDP_VAR>";
+                            if (this.enableDebug) debugOp += '<MSDP_VAR>';
                             _sb.push(i);
-                            msdp_var = "";
+                            msdp_var = '';
                             state = 5;
                         }
                         else {
@@ -1116,9 +1117,9 @@ export class Telnet extends EventEmitter {
                         break;
                     case 5: // MSDP Variable
                         if (i === 2) {
-                            if (this.enableDebug) debugOp += "<MSDP_VAL>";
+                            if (this.enableDebug) debugOp += '<MSDP_VAL>';
                             _sb.push(i);
-                            msdp_val = "";
+                            msdp_val = '';
                             state = 6;
                         }
                         else {
@@ -1129,26 +1130,26 @@ export class Telnet extends EventEmitter {
                         break;
                     case 6: // MSDP Value
                         if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                         }
                         else if (i === 1) {
-                            if (this.enableDebug) debugOp += "<MSDP_VAR>";
+                            if (this.enableDebug) debugOp += '<MSDP_VAR>';
                             this._fireReceiveMSDP(msdp_var, msdp_val);
-                            msdp_val = "";
-                            msdp_var = "";
+                            msdp_val = '';
+                            msdp_var = '';
                             _sb.push(i);
                             state = 5;
                         }
                         else if (i === 240) {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<SE>');
+                                debugOp = '';
                             }
                             this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
                             this._fireReceiveMSDP(msdp_var, msdp_val);
-                            msdp_val = "";
-                            msdp_var = "";
+                            msdp_val = '';
+                            msdp_var = '';
                             state = 0;
                             _sb = [];
                         }
@@ -1160,18 +1161,18 @@ export class Telnet extends EventEmitter {
                         break;
                     case 7: // GMCP Sub Sub negotiation
                         if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                         }
                         else if (i === 240) {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<SE>');
+                                debugOp = '';
                             }
                             this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
                             this._fireReceiveGMCP(msdp_val);
                             state = 0;
-                            msdp_val = "";
+                            msdp_val = '';
                             _sb = [];
                         }
                         else {
@@ -1182,27 +1183,27 @@ export class Telnet extends EventEmitter {
                         break;
                     case 8: // MSSP Sub negotiation
                         if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                         }
                         else if (i === 240) {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
+                                this.emit('debug', debugOp + '<SE>');
                                 this.emit('debug', this.MSSP);
-                                debugOp = "";
+                                debugOp = '';
                             }
                             this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
                             this.emit('receive-MSSP', _MSSP);
-                            msdp_val = "";
-                            msdp_var = "";
+                            msdp_val = '';
+                            msdp_var = '';
                             _MSSP = 0;
                             state = 0;
                             _sb = [];
                         }
                         else if (i === 1) {
-                            if (this.enableDebug) debugOp += "<MSSP_VAR>";
+                            if (this.enableDebug) debugOp += '<MSSP_VAR>';
                             _sb.push(i);
-                            msdp_var = "";
+                            msdp_var = '';
                             state = 9;
                         }
                         else {
@@ -1212,20 +1213,20 @@ export class Telnet extends EventEmitter {
                         break;
                     case 9: // MSSP Variable
                         if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                             state = 8;
                         }
                         else if (i === 1) {
-                            if (this.enableDebug) debugOp += "<MSSP_VAR>";
+                            if (this.enableDebug) debugOp += '<MSSP_VAR>';
                             _sb.push(i);
-                            msdp_var = "";
+                            msdp_var = '';
                         }
                         else if (i === 2) {
-                            if (this.enableDebug) debugOp += "<MSSP_VAL>";
+                            if (this.enableDebug) debugOp += '<MSSP_VAL>';
                             _sb.push(i);
-                            this.MSSP[msdp_var] = "";
-                            _MSSP[msdp_var] = "";
+                            this.MSSP[msdp_var] = '';
+                            _MSSP[msdp_var] = '';
                             state = 10;
                         }
                         else {
@@ -1236,21 +1237,21 @@ export class Telnet extends EventEmitter {
                         break;
                     case 10: // MSSP Value
                         if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                             state = 8;
                         }
                         else if (i === 1) {
-                            if (this.enableDebug) debugOp += "<MSSP_VAR>";
+                            if (this.enableDebug) debugOp += '<MSSP_VAR>';
                             _sb.push(i);
-                            msdp_var = "";
+                            msdp_var = '';
                             state = 9;
                         }
                         else if (i === 2) {
-                            if (this.enableDebug) debugOp += "<MSSP_VAL>";
+                            if (this.enableDebug) debugOp += '<MSSP_VAL>';
                             _sb.push(i);
-                            this.MSSP[msdp_var] = "";
-                            _MSSP[msdp_var] = "";
+                            this.MSSP[msdp_var] = '';
+                            _MSSP[msdp_var] = '';
                         }
                         else {
                             if (this.enableDebug) debugOp += this._formatByte(i);
@@ -1261,15 +1262,15 @@ export class Telnet extends EventEmitter {
                         break;
                     case 11: // MCCP Sub negotiation
                         if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                         }
                         else if (i === 240) {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<SE>');
+                                debugOp = '';
                             }
-                            this._fireReceiveOption(option, 86, "")
+                            this._fireReceiveOption(option, 86, '');
                             this._startMCCP();
                             state = 0;
                             _sb = [];
@@ -1280,37 +1281,37 @@ export class Telnet extends EventEmitter {
                         break;
                     case 12: // NEWENVIRON Sub sub negotiation
                         if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                         }
                         else if (i === 240) {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<SE>');
+                                debugOp = '';
                             }
                             this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
                             this._fireReceiveGMCP(msdp_val);
                             state = 0;
-                            msdp_val = "";
+                            msdp_val = '';
                             _sb = [];
                         }
                         else if (i === 0) // IS
                         {
-                            if (this.enableDebug) debugOp += "<IS>";
+                            if (this.enableDebug) debugOp += '<IS>';
                             _sb.push(i);
                             state = 13;
                             verb = i;
                         }
                         else if (i === 1) // SEND
                         {
-                            if (this.enableDebug) debugOp += "<SEND>";
+                            if (this.enableDebug) debugOp += '<SEND>';
                             _sb.push(i);
                             state = 13;
                             verb = i;
                         }
                         else if (i === 2) // INFO
                         {
-                            if (this.enableDebug) debugOp += "<SEND>";
+                            if (this.enableDebug) debugOp += '<SEND>';
                             _sb.push(i);
                             state = 13;
                             verb = i;
@@ -1324,46 +1325,46 @@ export class Telnet extends EventEmitter {
                     case 13: // NEWENVIRON
                         if (i === 0) //var
                         {
-                            if (this.enableDebug) debugOp += "<VAR>";
+                            if (this.enableDebug) debugOp += '<VAR>';
                             _sb.push(i);
                             state = 14;
                             verb = i;
-                            msdp_var = "";
-                            if (ne == -1) ne = 0;
+                            msdp_var = '';
+                            if (ne === -1) ne = 0;
                         }
                         else if (i === 1) //value
                         {
-                            if (this.enableDebug) debugOp += "<VALUE>";
+                            if (this.enableDebug) debugOp += '<VALUE>';
                             _sb.push(i);
                             state = 13;
                             verb = i;
-                            if (ne == -1) ne = 1;
+                            if (ne === -1) ne = 1;
                         }
                         else if (i === 3) //user var
                         {
-                            if (this.enableDebug) debugOp += "<USERVAR>";
+                            if (this.enableDebug) debugOp += '<USERVAR>';
                             _sb.push(i);
                             state = 13;
                             verb = i;
                         }
                         else if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                         }
                         else if (i === 240) {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<SE>');
+                                debugOp = '';
                             }
                             tmp = this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
                             this.emit('receive-NEWENVIRON', msdp_val);
                             //custom handled so dont do defaults
                             if (!tmp) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><SB><NEWENVIRON><IS><IAC><SE>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><SB><NEWENVIRON><IS><IAC><SE>');
                                 this.sendData([255, 250, option, 0, 255, 40], true);
                             }
                             state = 0;
-                            msdp_val = "";
+                            msdp_val = '';
                             _sb = [];
                         }
                         else {
@@ -1380,7 +1381,7 @@ export class Telnet extends EventEmitter {
                             state = 15;
                             pState = 14;
                         }
-                        else if (i == 255 || i <= 3) {
+                        else if (i === 255 || i <= 3) {
                             idx--;
                             state = 13;
                         }
@@ -1404,29 +1405,29 @@ export class Telnet extends EventEmitter {
                     case 17: //CHARSET
                         if (i === 1) //REQUEST
                         {
-                            if (this.enableDebug) debugOp += "<REQUEST>";
+                            if (this.enableDebug) debugOp += '<REQUEST>';
                             _sb.push(i);
                             state = 18;
-                            msdp_val = "";
+                            msdp_val = '';
                         }
-                        //TODO add table support			
+                        //TODO add table support
                         else if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                         }
                         else if (i === 240) {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<SE>');
+                                debugOp = '';
                             }
                             tmp = this._fireReceiveOption(option, 250, msdp_val);
                             this.emit('receive-CHARSET', msdp_val);
                             if (!tmp) {
-                                if (this.enableDebug) this.emit('debug', "REPLY: <IAC><SB><CHARSET><REJECTED><IAC><SE>");
+                                if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><SB><CHARSET><REJECTED><IAC><SE>');
                                 this.sendData([255, 250, 42, 3, 255, 240], true);
                             }
                             state = 0;
-                            msdp_val = "";
+                            msdp_val = '';
                             _sb = [];
                         }
                         else {
@@ -1435,33 +1436,33 @@ export class Telnet extends EventEmitter {
                             _sb.push(i);
                         }
                         break;
-                    case 18://CHARSET REQUEST
+                    case 18: //CHARSET REQUEST
                         if (i === 255) {
-                            if (this.enableDebug) debugOp += "<IAC>";
+                            if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
                         }
                         else if (i === 240) {
                             if (this.enableDebug) {
-                                this.emit('debug', debugOp + "<SE>");
-                                debugOp = "";
+                                this.emit('debug', debugOp + '<SE>');
+                                debugOp = '';
                             }
                             tmp = this._fireReceiveOption(option, 250, msdp_val);
                             this.emit('receive-CHARSET', msdp_val.slice(1));
                             if (!tmp) {
-                                if (this.options.CHARSET && msdp_val.slice(1).toLowerCase() == "utf-8") {
+                                if (this.options.CHARSET && msdp_val.slice(1).toLowerCase() === 'utf-8') {
                                     this.server.CHARSET = true;
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><SB><ACCEPTED>UTF-8<IAC><SE>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><SB><ACCEPTED>UTF-8<IAC><SE>');
                                     this.sendData([255, 250, 42, 2], true);
-                                    this.sendData("UTF-8", true);
+                                    this.sendData('UTF-8', true);
                                     this.sendData([255, 240], true);
                                 }
                                 else {
-                                    if (this.enableDebug) this.emit('debug', "REPLY: <IAC><SB><CHARSET><REJECTED><IAC><SE>");
+                                    if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><SB><CHARSET><REJECTED><IAC><SE>');
                                     this.sendData([255, 250, 42, 3, 255, 240], true);
                                 }
                             }
                             state = 0;
-                            msdp_val = "";
+                            msdp_val = '';
                             _sb = [];
                         }
                         else {
@@ -1481,12 +1482,12 @@ export class Telnet extends EventEmitter {
                 if (debugOp.length > 0)
                     this.emit('debug', debugOp);
             }
-            this.emit('debug', "Post Split buffer length: " + _sb.length, 1);
-            this.emit('debug', "Post Split buffer  " + Buffer.from(_sb), 1);
+            this.emit('debug', 'Post Split buffer length: ' + _sb.length, 1);
+            this.emit('debug', 'Post Split buffer  ' + Buffer.from(_sb), 1);
         }
         //if processed and was prev goAhead, it needs to starts a new line to correctly end goAhead
         if (ga && processed.length > 0)
-            processed.unshift(10)
+            processed.unshift(10);
         else if (ga)  //go ahead wasn't effected and if prev true, so reset back to true
             this.prompt = true;
         if (processed.length > 0)
@@ -1498,10 +1499,10 @@ export class Telnet extends EventEmitter {
         if (this.UTF8 || (this.options.CHARSET))
             return processed.toString('UTF8');
         return processed;
-    };
+    }
 
     /**
-     * @name Telnet#replyToOption 
+     * @name Telnet#replyToOption
      * @desc Replay to a telnet option
      *
      * @param {Number} op The telnet option code
@@ -1511,26 +1512,29 @@ export class Telnet extends EventEmitter {
      * @return boolean returns if the reply was handled or not
      * @fires Telnet#receive-option
      */
-    replyToOption(op: number, verb: number, reply: number, val?: string): boolean {
-        if (typeof val == "undefined") val = "";
+    public replyToOption(op: number, verb: number, reply: number, val?: string): boolean {
+        if (typeof val === 'undefined') val = '';
         if (this._fireReceiveOption(op, reply, val))
             return false;
         this.sendData([255, verb, op], true);
         return true;
-    };
+    }
 
     /**
-     * @name Telnet#updateWindow 
+     * @name Telnet#updateWindow
      * @desc Send a NAWS Window update
      *
      * @param {Number} w The current width in lines of the window
      * @param {Number} h The current height in characters of the window
      */
-    updateWindow(w, h) {
+    public updateWindow(w, h) {
         if (h < 1 || w < 1 || !this.connected || !this.server.NAWS) return;
         try {
-            let w1, w2, h1, h2;
-            let mf = Math.floor;
+            let w1;
+            let w2;
+            let h1;
+            let h2;
+            const mf = Math.floor;
             w1 = mf(w / 256);
             if (w1 > 256)
                 w1 = 255;
@@ -1539,61 +1543,61 @@ export class Telnet extends EventEmitter {
             if (h1 > 256)
                 h1 = 255;
             h2 = h % 256;
-            if (this.enableDebug) this.emit('debug', "REPLY: <IAC><SB><NAWS><" + w1 + "><" + w2 + "><" + h1 + "><" + h2 + "><IAC><SE>");
+            if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><SB><NAWS><' + w1 + '><' + w2 + '><' + h1 + '><' + h2 + '><IAC><SE>');
             this.sendData([255, 250, 31, w1, w2, h1, h2, 255, 240], true);
         }
         catch (e) {
-            this.emit('error', { message: "UpdateWindow Error: " + e, err: e });
+            this.emit('error', { message: 'UpdateWindow Error: ' + e, err: e });
         }
-    };
+    }
 
     /**
-     * @name Telnet#sendGMCP 
+     * @name Telnet#sendGMCP
      * @desc Send a GMCP formated string
      *
      * @param {String} str The GMCP formated string to send to the host
      */
-    sendGMCP(str) {
+    public sendGMCP(str) {
         if (this.connected && this.server.GMCP) {
-            if (this.enableDebug) this.emit('debug', "REPLY: <IAC><SB><GMCP>" + this._escapeData(str).toString('binary') + "<IAC><SE>");
+            if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><SB><GMCP>' + this._escapeData(str).toString('binary') + '<IAC><SE>');
             this.sendData([255, 250, 201], true);
             this.sendData(this._escapeData(str), true);
             this.sendData([255, 240], true);
         }
-    };
+    }
 
     /**
-     * @name Telnet#startGMCP 
+     * @name Telnet#startGMCP
      * @desc Start GMCP and send Core.Hello and Core.Support.Set
      */
     private _startGMCP() {
         if (this.server.GMCP) {
             if (this.enableDebug)
-                this.emit('debug', "REPLY: <IAC><SB><GMCP>Core.Hello { \"client\": \"" + this.terminal + "\", \"version\": \"" + this.version + "\" }<IAC><SE>");
+                this.emit('debug', 'REPLY: <IAC><SB><GMCP>Core.Hello { "client": "' + this.terminal + '", "version": "' + this.version + '" }<IAC><SE>');
             this.sendData([255, 250, 201], true);
-            this.sendData("Core.Hello { \"client\": \"" + this.terminal + "\", \"version\": \"" + this.version + "\" }", true);
+            this.sendData('Core.Hello { "client": "' + this.terminal + '", "version": "' + this.version + '" }', true);
             this.sendData([255, 240], true);
             this.sendData([255, 250, 201], true);
 
             if (this.GMCPSupports.length > 0) {
                 //ensure we at least support core module
-                if (this.GMCPSupports.indexOf("Core 1") == -1)
-                    this.GMCPSupports.unshift("Core 1");
+                if (this.GMCPSupports.indexOf('Core 1') === -1)
+                    this.GMCPSupports.unshift('Core 1');
                 if (this.enableDebug)
-                    this.emit('debug', "REPLY: <IAC><SB><GMCP>" + JSON.stringify(this.GMCPSupports) + "<IAC><SE>");
-                this.sendData("Core.Supports.Set " + JSON.stringify(this.GMCPSupports));
+                    this.emit('debug', 'REPLY: <IAC><SB><GMCP>' + JSON.stringify(this.GMCPSupports) + '<IAC><SE>');
+                this.sendData('Core.Supports.Set ' + JSON.stringify(this.GMCPSupports));
             }
             else {
                 if (this.enableDebug)
-                    this.emit('debug', "REPLY: <IAC><SB><GMCP>Core.Supports.Set [ \"Core 1\" ]<IAC><SE>");
-                this.sendData("Core.Supports.Set [ \"Core 1\" ]", true);
+                    this.emit('debug', 'REPLY: <IAC><SB><GMCP>Core.Supports.Set [ "Core 1" ]<IAC><SE>');
+                this.sendData('Core.Supports.Set [ "Core 1" ]', true);
             }
             this.sendData([255, 240], true);
         }
-    };
+    }
 
     /**
-     * @name Telnet#startMCCP 
+     * @name Telnet#startMCCP
      * @desc Start MCCP compression protocol and set compress state on
      */
     private _startMCCP() {
@@ -1601,7 +1605,7 @@ export class Telnet extends EventEmitter {
     }
 
     /**
-     * @name Telnet#endMCCP 
+     * @name Telnet#endMCCP
      * @desc End MCCP compression protocol and set compress state off
      */
     private _endMCCP() {
@@ -1610,7 +1614,7 @@ export class Telnet extends EventEmitter {
     }
 
     /**
-     * @name Telnet#decompressData 
+     * @name Telnet#decompressData
      * @desc Decompresses a ZLIB stream if ZLIB is present and compress state is on
      *
      * @param {String} data The compressed data string
@@ -1620,14 +1624,14 @@ export class Telnet extends EventEmitter {
         if (!this._zlib) return data;
         if (!this.zStream)
             this.zStream = new ZLIB.InflateStream();
-        if (this.enableDebug) this.emit('debug', "Pre decompress:" + data.toString('binary'), 1);
+        if (this.enableDebug) this.emit('debug', 'Pre decompress:' + data.toString('binary'), 1);
         data = this.zStream.decompress(data);
-        if (this.enableDebug) this.emit('debug', "Post decompress:" + data.toString('binary'), 1);
+        if (this.enableDebug) this.emit('debug', 'Post decompress:' + data.toString('binary'), 1);
         return new Buffer(data, 'binary');
     }
 
     /**
-     * @name Telnet#escapeData 
+     * @name Telnet#escapeData
      * @desc Escape data for sending over telnet, IAC should become IAC IAC and \r to \r\0 and \n to \r\n
      *
      * @param {String} data the data to be escaped
@@ -1635,8 +1639,9 @@ export class Telnet extends EventEmitter {
      *
      */
     private _escapeData(data) {
-        if (data === null || typeof data == "undefined") return data;
-        let dl, ba;
+        if (data == null || typeof data === 'undefined') return data;
+        let dl;
+        let ba;
         let idx = 0;
         if (!Buffer.isBuffer(data) && !Array.isArray(data))
             data = Buffer.from(data);
@@ -1646,9 +1651,9 @@ export class Telnet extends EventEmitter {
             ba.push(data[idx]);
             if (data[idx] === 255)
                 ba.push(255);
-            else if (data[idx] === 13 && dl == 1)
+            else if (data[idx] === 13 && dl === 1)
                 ba.push(10);
-            else if (data[idx] === 10 && dl == 1) {
+            else if (data[idx] === 10 && dl === 1) {
                 ba.push(13);
                 ba.push(0);
             }
@@ -1657,7 +1662,7 @@ export class Telnet extends EventEmitter {
     }
 
     /**
-     * @name Telnet#createSocket 
+     * @name Telnet#createSocket
      * @desc Create a websocket object and assign events
      *
      * @returns {object} returns the socket object
@@ -1665,7 +1670,7 @@ export class Telnet extends EventEmitter {
     private _createSocket() {
         let _socket;
         try {
-            _socket = new Socket({ 'allowHalfOpen': true });
+            _socket = new Socket({ allowHalfOpen: true });
             //_socket.setEncoding('binary');
             _socket.on('close', err => {
                 if (err)
@@ -1696,13 +1701,13 @@ export class Telnet extends EventEmitter {
     }
 
     /**
-    * @name Telnet#destroySocket 
+    * @name Telnet#destroySocket
     * @desc Destroy the current websocket object by assigning all functions to be empty
     *
     * @returns {object} returns null
     */
     private _destroySocket() {
-        if (!this.socket || this.socket === null) return;
+        if (!this.socket || this.socket == null) return;
         try {
             this.socket.removeAllListeners();
             if (this.connected)
@@ -1716,32 +1721,32 @@ export class Telnet extends EventEmitter {
     }
 
     /**
-    * @name Telnet#fireTelnetOption 
+    * @name Telnet#fireTelnetOption
     * @desc Fire the onTelnetOption e
     *
     * @returns {object} returns null
     */
     private _fireReceiveOption(option, verb, val) {
-        let data: TelnetOption = { telnet: this, option: option, verb: 250, value: val, handled: false };
+        const data: TelnetOption = { telnet: this, option: option, verb: 250, value: val, handled: false };
         this.emit('received-option', data);
         return data.handled;
     }
 
     private _fireReceiveMSDP(msdp_var, msdp_val) {
-        let data = { telnet: this, variable: msdp_var, value: msdp_val, handled: false };
+        const data = { telnet: this, variable: msdp_var, value: msdp_val, handled: false };
         this.emit('received-MSDP', data);
         return data.handled;
     }
 
     private _fireReceiveGMCP(val) {
-        let data = { telnet: this, value: val, handled: false };
+        const data = { telnet: this, value: val, handled: false };
         this.emit('received-GMCP', data);
         return data.handled;
     }
 
     private _formatByte(b) {
         if (b < 32 || b >= 127)
-            return "<" + b + ">";
+            return '<' + b + '>';
         return String.fromCharCode(b);
-    };
+    }
 }

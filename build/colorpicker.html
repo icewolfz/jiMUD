@@ -395,8 +395,8 @@
                         html2 += "<tr>";
                     for (g = 0; g < 6; g++) {
                         for (b = 0; b < 6; b++) {
-                            idx = "RGB" + r + "" + g + "" + b;
-                            color = "";
+                            idx = `RGB${r}${g}${b}`;
+                            color = '';
                             c = 0;
                             c = r * 40 + 55;
                             if (c < 16)

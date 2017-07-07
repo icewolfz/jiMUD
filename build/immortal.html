@@ -337,7 +337,7 @@
         function updateMenuItem(args) {
             var item, i = 0, ic, items;
             var tItem, tItems;
-            if (args === null || args.menu === null) return;
+            if (args == null || args.menu == null) return;
 
             if (!Array.isArray(args.menu))
                 args.menu = args.menu.split('|');
@@ -594,7 +594,7 @@
                 }
                 var paths = [];
                 var found = false;
-                var c = "";
+                var c = '';
                 if (drives.length > 0) {
                     for (var d = 0, dl = drives.length; d < dl; d++) {
                         if (drives[d].mountpoints.length === 0)
@@ -602,7 +602,7 @@
                         for (var m = 0, ml = drives[d].mountpoints.length; m < ml; m++) {
                             if (!drives[d].mountpoints[m].path) continue;
                             var sd = drives[d].mountpoints[m].path.split(path.sep);
-                            c = "";
+                            c = '';
                             for (var pt = 0, pl = sd.length; pt < pl; pt++) {
                                 c = path.join(c, sd[pt], path.sep);
                                 if (c.toLowerCase() === parts[0].toLowerCase() + path.sep) {
@@ -622,7 +622,7 @@
                         }
                     }
                 }
-                c = found ? c = path.join(parts[0], path.sep) : "";
+                c = found ? c = path.join(parts[0], path.sep) : '';
                 for (var pt = found ? 1 : 0, pl = parts.length; pt < pl; pt++) {
                     c = path.join(c, parts[pt], path.sep);
                     if (pt === pl - 1)
@@ -674,11 +674,11 @@
             for (var d = 0, dl = dir.length; d < dl; d++) {
                 file = {
                     name: path.basename(dir[d].file),
-                    path: (p === "/" ? "" : p) + "/" + dir[d].file,
+                    path: (p === "/" ? '' : p) + "/" + dir[d].file,
                     size: dir[d].size,
                     type: path.extname(dir[d].file),
                     date: dir[d].date * 1000,
-                    hidden: IED.isHidden((p === "/" ? "" : p) + "/" + dir[d].file, true)
+                    hidden: IED.isHidden((p === "/" ? '' : p) + "/" + dir[d].file, true)
                 }
                 if (file.hidden && !options.showhidden)
                     continue;
@@ -753,8 +753,8 @@
             if (options.debug)
                 console.log(error);
             if (options.logErrors) {
-                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), "Immortal Tools: " + new Date().toLocaleString() + "\n", { flag: 'a' });
-                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), msg + "\n", { flag: 'a' });
+                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), "Immortal Tools: " + new Date().toLocaleString() + '\n', { flag: 'a' });
+                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), msg + '\n', { flag: 'a' });
             }
         }
 
@@ -854,7 +854,7 @@
                     footer: false
                 },
                 scrollResize: true,
-                language: { zeroRecords: "", emptyTable: "" },
+                language: { zeroRecords: '', emptyTable: '' },
                 autoWidth: false,
                 columnDefs: [
                     {
@@ -927,7 +927,7 @@
                     footer: false
                 },
                 scrollResize: true,
-                language: { zeroRecords: "", emptyTable: "" },
+                language: { zeroRecords: '', emptyTable: '' },
                 autoWidth: false,
                 columnDefs: [
                     {
@@ -999,7 +999,7 @@
                 },
                 scrollResize: true,
                 ordering: false,
-                language: { zeroRecords: "", emptyTable: "" },
+                language: { zeroRecords: '', emptyTable: '' },
                 columnDefs: [
                     {
                         type: 'file',
@@ -1407,7 +1407,7 @@
                 row.select();
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
-                    key = "";
+                    key = '';
                 }, 500);
             });
             $("#remote-list").on('keypress', function (e) {
@@ -1425,7 +1425,7 @@
                 row.select();
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
-                    key = "";
+                    key = '';
                 }, 500);
             });
 
@@ -2649,7 +2649,7 @@
                             <i class="fa fa-upload"></i>
                         </button>
                         <div class="btn-group" role="group">
-                            <button id="btn-rename-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
+                            <button id="btn-rename-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="renameLocal()">
                                 <i class="fa fa-i-cursor"></i>
                             </button>
                             <button id="btn-delete-local" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="deleteLocal()">
@@ -2672,7 +2672,7 @@
                                     <span class="caret" style="margin-left: -1px;"></span>
                                 </button>
                                 <ul id="local-navigate" class="dropdown-menu" aria-labelledby="button-local" data-container="body"></ul>
-                                <button id="btn-local-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
+                                <button id="btn-local-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory">
                                     <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                         <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
                                         <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>
@@ -2716,7 +2716,7 @@
                         </button>
 
                         <div class="btn-group" role="group">
-                            <button id="btn-rename-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="">
+                            <button id="btn-rename-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Rename" onclick="renameRemote()">
                                 <i class="fa fa-i-cursor"></i>
                             </button>
                             <button id="btn-delete-remote" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Delete" onclick="deleteRemote()">
@@ -2739,7 +2739,7 @@
                                     <span class="caret" style="margin-left: -1px;"></span>
                                 </button>
                                 <ul id="remote-navigate" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
-                                <button id="btn-remote-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory" onclick="">
+                                <button id="btn-remote-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory">
                                     <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                         <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
                                         <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>

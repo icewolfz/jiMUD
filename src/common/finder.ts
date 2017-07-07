@@ -29,17 +29,17 @@ export class Finder extends EventEmitter {
             }
         });
 
-        this._control.on("keydown", (e) => {
-            if (e.keyCode != 8) return;
+        this._control.on('keydown', (e) => {
+            if (e.keyCode !== 8) return;
             clearTimeout(this._timer);
             //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
-            this._timer = setTimeout(() => { this.find() }, this._regex ? 500 : 250);
+            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
         });
 
-        this._control.on("keypress", () => {
+        this._control.on('keypress', () => {
             clearTimeout(this._timer);
             //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
-            this._timer = setTimeout(() => { this.find() }, this._regex ? 500 : 250);
+            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
         });
 
         //create box
@@ -50,12 +50,12 @@ export class Finder extends EventEmitter {
     }
 
     set MatchCase(value: boolean) {
-        if (value != this._case) {
+        if (value !== this._case) {
             this._case = value;
             if (this._case)
-                $("#find-case", this._control).addClass("active");
+                $('#find-case', this._control).addClass('active');
             else
-                $("#find-case", this._control).removeClass("active");
+                $('#find-case', this._control).removeClass('active');
             this.find(true);
             this.emit('case');
         }
@@ -66,12 +66,12 @@ export class Finder extends EventEmitter {
     }
 
     set RegularExpression(value: boolean) {
-        if (value != this._regex) {
+        if (value !== this._regex) {
             this._regex = value;
             if (this._case)
-                $("#find-regex", this._control).addClass("active");
+                $('#find-regex', this._control).addClass('active');
             else
-                $("#find-regex", this._control).removeClass("active");
+                $('#find-regex', this._control).removeClass('active');
             this.find(true);
             this.emit('regex');
         }
@@ -82,12 +82,12 @@ export class Finder extends EventEmitter {
     }
 
     set MatchWord(value: boolean) {
-        if (value != this._word) {
+        if (value !== this._word) {
             this._word = value;
             if (this._word)
-                $("#find-word", this._control).addClass("active");
+                $('#find-word', this._control).addClass('active');
             else
-                $("#find-word", this._control).removeClass("active");
+                $('#find-word', this._control).removeClass('active');
             this.find(true);
             this.emit('word');
         }
@@ -98,17 +98,17 @@ export class Finder extends EventEmitter {
     }
 
     set Reverse(value: boolean) {
-        if (value != this._reverse) {
+        if (value !== this._reverse) {
             this._reverse = value;
             if (this._reverse) {
-                $("#find-reverse", this._control).addClass("active");
-                $("#find-prev", this._control).html('<i class="fa fa-arrow-up"></i>');
-                $("#find-next", this._control).html('<i class="fa fa-arrow-down"></i>');
+                $('#find-reverse', this._control).addClass('active');
+                $('#find-prev', this._control).html('<i class="fa fa-arrow-up"></i>');
+                $('#find-next', this._control).html('<i class="fa fa-arrow-down"></i>');
             }
             else {
-                $("#find-reverse", this._control).removeClass("active");
-                $("#find-prev", this._control).html('<i class="fa fa-arrow-down"></i>');
-                $("#find-next", this._control).html('<i class="fa fa-arrow-up"></i>');
+                $('#find-reverse', this._control).removeClass('active');
+                $('#find-prev', this._control).html('<i class="fa fa-arrow-down"></i>');
+                $('#find-next', this._control).html('<i class="fa fa-arrow-up"></i>');
             }
             //this._position = this._results.length - this._position - 1;
             //this.updateButtons();
@@ -120,13 +120,13 @@ export class Finder extends EventEmitter {
 
     get Highlight(): boolean { return this._all; }
     set Highlight(value: boolean) {
-        if (value != this._all) {
+        if (value !== this._all) {
             this._all = value;
             if (this._all) {
-                $("#find-all", this._control).addClass("active");
+                $('#find-all', this._control).addClass('active');
             }
             else {
-                $("#find-all", this._control).removeClass("active");
+                $('#find-all', this._control).removeClass('active');
             }
             this.find(true);
             this.emit('highlight');
@@ -134,56 +134,56 @@ export class Finder extends EventEmitter {
     }
     private createControl() {
         this._control = $('<div id="find"><input placeholder="Find" /><button id="find-case" title="Match Case">Aa</button><button id="find-word" title="Match Whole Word">Aa|</button><button id="find-regex" title="Use Regular Expression">.*</button><button id="find-all" title="Highlight all matches"><i class="fa fa-paint-brush"></i></button><div id="find-count"></div><button id="find-prev" title="Previous Match" disabled="disabled"><i class="fa fa-arrow-down"></i></button><button id="find-next" title="Next Match" disabled="disabled"><i class="fa fa-arrow-up"></i></button><button id="find-selection" title="Find in selection" disabled="disabled"><i class="fa fa-align-left"></i></button><button id="find-reverse" title="Search Down"><i class="fa fa-caret-down"></i></button><button id="find-close" title="Close"><i class="fa fa-close"></i></button></div>');
-        $("#find-close", this._control).on('click', () => {
+        $('#find-close', this._control).on('click', () => {
             this.hide();
         });
-        $("#find-prev", this._control).on('click', () => {
+        $('#find-prev', this._control).on('click', () => {
             this.gotoPrevious();
         });
-        $("#find-next", this._control).on('click', () => {
+        $('#find-next', this._control).on('click', () => {
             this.gotoNext();
         });
-        $("#find-case", this._control).on('click', () => {
+        $('#find-case', this._control).on('click', () => {
             this.MatchCase = !this.MatchCase;
         });
-        $("#find-word", this._control).on('click', () => {
+        $('#find-word', this._control).on('click', () => {
             this.MatchWord = !this.MatchWord;
         });
-        $("#find-reverse", this._control).on('click', () => {
+        $('#find-reverse', this._control).on('click', () => {
             this.Reverse = !this.Reverse;
         });
-        $("#find-all", this._control).on('click', () => {
+        $('#find-all', this._control).on('click', () => {
             this.Highlight = !this.Highlight;
         });
-        $("#find-regex", this._control).on('click', () => {
+        $('#find-regex', this._control).on('click', () => {
             this.RegularExpression = !this.RegularExpression;
         });
         window.document.body.appendChild(this._control[0]);
     }
 
-    show() {
+    public show() {
         this._control.slideDown();
-        let sel = this._display.selection;
+        const sel = this._display.selection;
         if (sel.length)
-            $("input", this._control).val(sel);
-        $("input", this._control).focus().select();
+            $('input', this._control).val(sel);
+        $('input', this._control).focus().select();
         this.find();
         this.emit('shown');
     }
 
-    hide() {
+    public hide() {
         this._control.slideUp(() => {
-            $("input", this._control).val('');
+            $('input', this._control).val('');
             this.clear();
             this.emit('closed');
         });
     }
 
-    find(focus?: boolean) {
-        let val = $("input", this._control).val();
+    public find(focus?: boolean) {
+        const val = $('input', this._control).val();
         this.clear();
         if (val.length === 0) {
-            $("#find-count", this._control).html("No Results")
+            $('#find-count', this._control).html('No Results');
             this.emit('found-results', this._results);
             return;
         }
@@ -195,17 +195,20 @@ export class Finder extends EventEmitter {
             pattern = val.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
         let re;
         if (this._word)
-            pattern = "\\b" + pattern + "\\b";
+            pattern = '\\b' + pattern + '\\b';
         if (this._case)
             re = new RegExp(pattern, 'g');
         else
             re = new RegExp(pattern, 'gi');
-        let lines = this._display.lines;
-        let m, id = 0, items;
-        let ranges: OverlayRange[] = [];
+        const lines = this._display.lines;
+        let m;
+        let id = 0;
+        let items;
+        const ranges: OverlayRange[] = [];
         for (let l = lines.length - 1; l >= 0; l--) {
             items = [];
-            while ((m = re.exec(lines[l])) !== null) {
+            m = re.exec(lines[l]);
+            while (m !== null) {
                 id++;
                 // This is necessary to avoid infinite loops with zero-width matches
                 if (m.index === re.lastIndex) {
@@ -223,8 +226,9 @@ export class Finder extends EventEmitter {
                             start: { x: m.index, y: l },
                             end: { x: m.index + m[0].length, y: l }
                         }
-                    )
+                    );
                 }
+                m = re.exec(lines[l]);
             }
             items.reverse();
             this._results.push.apply(this._results, items);
@@ -237,21 +241,21 @@ export class Finder extends EventEmitter {
         this.emit('found-results', this._results);
     }
 
-    gotoNext() {
+    public gotoNext() {
         this._position++;
         this.gotoResult(this._position, true);
     }
 
-    gotoPrevious() {
+    public gotoPrevious() {
         this._position--;
         this.gotoResult(this._position, true);
     }
 
-    gotoCurrent() {
+    public gotoCurrent() {
         this.gotoResult(this._position, true);
     }
 
-    gotoResult(idx: number, focus?: boolean) {
+    public gotoResult(idx: number, focus?: boolean) {
         if (idx < 0) idx = 0;
         if (idx >= this._results.length)
             idx = this._results.length - 1;
@@ -259,7 +263,7 @@ export class Finder extends EventEmitter {
         this.updateCount();
         this._display.clearOverlay('find-current');
         if (this._results.length > 0) {
-            let r = this._results[idx];
+            const r = this._results[idx];
             this._display.addOverlays([{
                 start: { x: r.index, y: r.line },
                 end: { x: r.index + r.length, y: r.line }
@@ -271,7 +275,7 @@ export class Finder extends EventEmitter {
         this.updateButtons();
     }
 
-    clear() {
+    public clear() {
         this._results = [];
         this._position = 0;
         this._display.clearOverlay('find');
@@ -282,21 +286,21 @@ export class Finder extends EventEmitter {
 
     private updateButtons() {
         if (this._position >= this._results.length - 1)
-            $("#find-next", this._control).prop('disabled', true);
+            $('#find-next', this._control).prop('disabled', true);
         else
-            $("#find-next", this._control).prop('disabled', false);
+            $('#find-next', this._control).prop('disabled', false);
         if (this._position === 0 || this._results.length === 0)
-            $("#find-prev", this._control).prop('disabled', true);
+            $('#find-prev', this._control).prop('disabled', true);
         else
-            $("#find-prev", this._control).prop('disabled', false);
+            $('#find-prev', this._control).prop('disabled', false);
     }
 
     private updateCount() {
         if (this._results.length === 0)
-            $("#find-count", this._control).html("<span class='find-no-results'>No Results</span>")
+            $('#find-count', this._control).html('<span class=\'find-no-results\'>No Results</span>');
         else if (this._results.length > 999)
-            $("#find-count", this._control).html((this._position + 1) + " of 999+");
+            $('#find-count', this._control).html((this._position + 1) + ' of 999+');
         else
-            $("#find-count", this._control).html((this._position + 1) + " of " + this._results.length);
+            $('#find-count', this._control).html((this._position + 1) + ' of ' + this._results.length);
     }
 }
