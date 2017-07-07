@@ -25,3 +25,4 @@ Immortal tools allow wizards and other immortals to manage files. It provides a 
 
 ## Known Issues
 - Dragging multiple files and dropping outside to other applications will only drop the first file, all others ignored. This is a limitation of electron drag and drop support, until it is added it can not be supported outside of application  
+- Queue pausing, The remote server only allows 2 uploads and 2 downloads at once, if you pause active upload or downloads you will receive in progress errors.

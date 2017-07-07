@@ -6,6 +6,7 @@
     - Make new folders local and remote
     - Drag and drop support to ul/dl files
     - Remote command support from menu or context menu for selected items: backup, goto, change to dir, clone, dest, update, renew
+    - Queue stop, pause, resume items
   - Immortal doc file
 - **Fixed:**
   - An issue with scroll bars inner borders when nothing to scroll
