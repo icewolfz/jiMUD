@@ -1012,9 +1012,10 @@
                         type: 'file',
                         targets: 0,
                         render: function (data, type, full, meta) {
-                            if (full.state === ItemState.paused) {
+                            if (full.state === ItemState.paused)
                                 return '<i class="fa fa-pause" style="width:12px; margin-right: 2px"></i>' + data;
-                            }
+                            if(full.state === ItemState.error)
+                                return '<i class="fa fa-warning" style="width:12px; margin-right: 2px"></i>' + data;
                             return '<i class="fa fa-play" style="width:12px; margin-right: 2px"></i>' + data;
                         }
                     },

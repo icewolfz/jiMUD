@@ -105,6 +105,7 @@ export class IED extends EventEmitter {
 
     public processGMCP(mod: string, obj) {
         const mods = mod.split('.');
+        let item;
         if (mods.length < 2 || mods[0] !== 'IED') return;
         if (this._gmcp.length > 0) {
             this._gmcp.push([mod, obj]);
@@ -115,10 +116,15 @@ export class IED extends EventEmitter {
         switch (mods[1]) {
             case 'error':
                 switch (obj.code) {
-                    case IEDError.DL_INVALIDFMT:
-                    case IEDError.DL_INPROGRESS:
                     case IEDError.DL_NOTSTART:
                     case IEDError.DL_TOOMANY:
+                    case IEDError.DL_INPROGRESS:
+                        item = this.getItem(obj.tag);
+                        item.state = ItemState.error;
+                        this.emit('message', `Download error for '${obj.path}/${obj.file}': ${obj.msg}`);
+                        this.emit('update', item);
+                        break;
+                    case IEDError.DL_INVALIDFMT:
                     case IEDError.DL_UNKNOWN:
                     case IEDError.DL_USERABORT:
                     case IEDError.DL_INVALIDFILE:
@@ -137,6 +143,13 @@ export class IED extends EventEmitter {
                         this.clear();
                         this.emit('reset');
                         break;
+                    case IEDError.UL_TOOMANY:
+                    case IEDError.UL_INPROGRESS:
+                        item = this.getItem(obj.tag);
+                        item.state = ItemState.error;
+                        this.emit('message', `Upload error for '${obj.path}/${obj.file}': ${obj.msg}`);
+                        this.emit('update', item);
+                        break;
                     case IEDError.UL_INVALIDFMT:
                     case IEDError.UL_USERABORT:
                     case IEDError.UL_BADENCODE:
@@ -145,8 +158,6 @@ export class IED extends EventEmitter {
                     case IEDError.UL_UNKNOWN:
                     case IEDError.UL_INVALIDFILE:
                     case IEDError.UL_INVALIDPATH:
-                    case IEDError.UL_TOOMANY:
-                    case IEDError.UL_INPROGRESS:
                         if (this.active && this.active.ID === obj.tag)
                             this.removeActive();
                         this.emit('message', `Upload aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
@@ -614,7 +625,8 @@ export enum ItemState {
     stopped = 0,
     paused = 1,
     done = 2,
-    working = 3
+    working = 3,
+    error = 4
 }
 
 export interface FileInfo {
