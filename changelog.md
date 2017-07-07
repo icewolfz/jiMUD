@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.4.2
+##### 0.4.2 2017-07-07
 - **New:**
   - Immortal tools:
     - Rename local and remote files
