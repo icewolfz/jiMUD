@@ -31,7 +31,7 @@ You may drag files from local to queue or remote list to upload, from remote to 
 - `Sync folders while browsing` this will attempt to change local or remote path to match the one that was changed
 - `Show queue and log` toggles the display of the queue and log tabs
 - `Upload files when changed` this will cause any file that has been changed in the current local folder to be automatically uploaded to the current remote folder
-- `Open file in editor` this causes any file that is downloaded to automaticly be opened in default or provided editor
+- `Open file in editor` this causes any file that is downloaded to automatically be opened in default or provided editor
 - `Path to editor` this is a path to the editor you want to open files in instead default
 ### Window
 - `Always on top of parent` causes window to remain on top of main client
