@@ -65,6 +65,22 @@
                     },
                     { type: 'separator' },
                     {
+                        label: 'Preferences...',
+                        click: () => {
+                            window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=300,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                        }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Close',
+                        click: () => { window.close(); }
+                    }
+                ]
+            },
+            {
+                label: '&Queue',
+                submenu: [
+                    {
                         label: '&Start',
                         enabled: false,
                         click: queueStart
@@ -81,22 +97,16 @@
                     },
                     { type: 'separator' },
                     {
+                        label: 'Select &all',
+                        click: () => {
+                            queueTable.rows().select();
+                        }
+                    },
+                    {
                         label: '&Reset all',
                         accelerator: "CmdOrCtrl+R",
                         click: () => { _ied.reset(); }
                     },
-                    { type: 'separator' },
-                    {
-                        label: 'Preferences...',
-                        click: () => {
-                            window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=300,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
-                        }
-                    },
-                    { type: 'separator' },
-                    {
-                        label: '&Close',
-                        click: () => { window.close(); }
-                    }
                 ]
             },
             {
@@ -150,7 +160,7 @@
                             { type: 'separator' },
                             {
                                 label: '&Select all',
-                                accelerator: "CmdOrCtrl+A",
+                                accelerator: "CmdOrCtrl+Alt+A",
                                 click: () => {
                                     localTable.rows().select();
                                 }
@@ -347,6 +357,7 @@
             for (i = 0; i < args.menu.length; i++) {
                 if (!items || items.length === 0) break;
                 for (var m = 0; m < items.length; m++) {
+                    if (!items[m]) continue;
                     if (items[m].id === args.menu[i] || items[m].label.toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
                         item = items[m];
                         tItem = tItems[m];
@@ -760,88 +771,94 @@
             }
         }
 
+        var updatingMenu = false;
 
         function updateMenu() {
-            //var remote = $("#remote-list").hasClass("focused");
-            //var local = $("#local-list").hasClass("focused");
-            //var queue = $("#queue-list").hasClass("focused");
-            //var either = remote || local;
-            //var localFilesOnly = false;
-            //var localFoldersOnly = false;
-            var localSelected = false;
-            //var remoteFilesOnly = false;
-            //var remoteFoldersOnly = false;
-            var remoteSelected = false;
-            var queueSelected = false;
+            if (updatingMenu) return;
+            updatingMenu = true;
+            setTimeout(() => {
+                //var remote = $("#remote-list").hasClass("focused");
+                //var local = $("#local-list").hasClass("focused");
+                //var queue = $("#queue-list").hasClass("focused");
+                //var either = remote || local;
+                //var localFilesOnly = false;
+                //var localFoldersOnly = false;
+                var localSelected = false;
+                //var remoteFilesOnly = false;
+                //var remoteFoldersOnly = false;
+                var remoteSelected = false;
+                var queueSelected = false;
 
-            var data = localTable.rows({ selected: true }).data().pluck('size');
-            localSelected = data.length != 0;
-            /*
-            var dirs = 0;
-            var d, dl;
-            for (d = 0, dl = data.length; d < data.length; d++) {
-                if (data[d] === -2) {
-                    dirs++;
+                var data = localTable.rows({ selected: true }).data().pluck('size');
+                localSelected = data.length != 0;
+                /*
+                var dirs = 0;
+                var d, dl;
+                for (d = 0, dl = data.length; d < data.length; d++) {
+                    if (data[d] === -2) {
+                        dirs++;
+                    }
                 }
-            }
-            */
-            //localFilesOnly = dirs != data.length;
-            //localFoldersOnly = dirs === data.length;
+                */
+                //localFilesOnly = dirs != data.length;
+                //localFoldersOnly = dirs === data.length;
 
-            data = remoteTable.rows({ selected: true }).data().pluck('size');
-            remoteSelected = data.length != 0;
-            /*
-            dirs = 0;
-            for (d = 0; d < data.length; d++) {
-                if (data[d] === -2) {
-                    dirs++;
+                data = remoteTable.rows({ selected: true }).data().pluck('size');
+                remoteSelected = data.length != 0;
+                /*
+                dirs = 0;
+                for (d = 0; d < data.length; d++) {
+                    if (data[d] === -2) {
+                        dirs++;
+                    }
                 }
-            }
-            */
-            //remoteFilesOnly = dirs != data.length;
-            //remoteFoldersOnly = dirs === data.length;
+                */
+                //remoteFilesOnly = dirs != data.length;
+                //remoteFoldersOnly = dirs === data.length;
 
-            data = queueTable.rows({ selected: true }).data();
-            queueSelected = data.length != 0;
+                data = queueTable.rows({ selected: true }).data();
+                queueSelected = data.length != 0;
 
-            updateMenuItem({ menu: 'file|upload', enabled: localSelected });
-            updateMenuItem({ menu: 'file|download', enabled: remoteSelected });
+                updateMenuItem({ menu: 'file|upload', enabled: localSelected });
+                updateMenuItem({ menu: 'file|download', enabled: remoteSelected });
 
-            updateMenuItem({ menu: 'file|start', enabled: queueSelected });
-            updateMenuItem({ menu: 'file|pause', enabled: queueSelected });
-            updateMenuItem({ menu: 'file|stop', enabled: queueSelected });
+                updateMenuItem({ menu: 'queue|start', enabled: queueSelected });
+                updateMenuItem({ menu: 'queue|pause', enabled: queueSelected });
+                updateMenuItem({ menu: 'queue|stop', enabled: queueSelected });
 
-            updateMenuItem({ menu: 'edit|local|rename', enabled: localSelected });
-            updateMenuItem({ menu: 'edit|local|delete', enabled: localSelected });
+                updateMenuItem({ menu: 'edit|local|rename', enabled: localSelected });
+                updateMenuItem({ menu: 'edit|local|delete', enabled: localSelected });
 
-            updateMenuItem({ menu: 'edit|local|reveal in explorer...', enabled: localSelected });
-            updateMenuItem({ menu: 'edit|local|open...', enabled: localSelected });
-            updateMenuItem({ menu: 'edit|local|open with editor...', enabled: localSelected && options.editor && options.editor.length > 0 });
+                updateMenuItem({ menu: 'edit|local|reveal in explorer...', enabled: localSelected });
+                updateMenuItem({ menu: 'edit|local|open...', enabled: localSelected });
+                updateMenuItem({ menu: 'edit|local|open with editor...', enabled: localSelected && options.editor && options.editor.length > 0 });
 
-            updateMenuItem({ menu: 'edit|remote|goto', enabled: remoteSelected });
-            updateMenuItem({ menu: 'edit|remote|change to directory', enabled: remoteSelected });
-            updateMenuItem({ menu: 'edit|remote|update', enabled: remoteSelected });
-            updateMenuItem({ menu: 'edit|remote|renew', enabled: remoteSelected });
-            updateMenuItem({ menu: 'edit|remote|clone', enabled: remoteSelected });
-            updateMenuItem({ menu: 'edit|remote|dest', enabled: remoteSelected });
-            updateMenuItem({ menu: 'edit|remote|backup', enabled: remoteSelected });
-            updateMenuItem({ menu: 'edit|remote|copy full path', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|goto', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|change to directory', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|update', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|renew', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|clone', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|dest', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|backup', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|copy full path', enabled: remoteSelected });
 
-            updateMenuItem({ menu: 'edit|remote|rename', enabled: remoteSelected });
-            updateMenuItem({ menu: 'edit|remote|delete', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|rename', enabled: remoteSelected });
+                updateMenuItem({ menu: 'edit|remote|delete', enabled: remoteSelected });
 
-            $("#btn-rename-local").prop('disabled', !localSelected);
-            $("#btn-delete-local").prop('disabled', !localSelected);
-            $("#btn-upload-local").prop('disabled', !localSelected);
+                $("#btn-rename-local").prop('disabled', !localSelected);
+                $("#btn-delete-local").prop('disabled', !localSelected);
+                $("#btn-upload-local").prop('disabled', !localSelected);
 
-            $("#btn-rename-remote").prop('disabled', !remoteSelected);
-            $("#btn-delete-remote").prop('disabled', !remoteSelected);
-            $("#btn-download-remote").prop('disabled', !remoteSelected);
+                $("#btn-rename-remote").prop('disabled', !remoteSelected);
+                $("#btn-delete-remote").prop('disabled', !remoteSelected);
+                $("#btn-download-remote").prop('disabled', !remoteSelected);
 
-            $("#btn-start").prop('disabled', !queueSelected);
-            $("#btn-pause").prop('disabled', !queueSelected);
-            $("#btn-stop").prop('disabled', !queueSelected);
-            updateStatus();
+                $("#btn-start").prop('disabled', !queueSelected);
+                $("#btn-pause").prop('disabled', !queueSelected);
+                $("#btn-stop").prop('disabled', !queueSelected);
+                updateStatus();
+                updatingMenu = false;
+            }, 0);
         }
 
         $(document).ready(() => {
@@ -1099,7 +1116,7 @@
                     return data.id === item.ID ?
                         true : false;
                 }).remove().draw();
-
+                updateMenu();
                 if (item.download) {
                     //Update local list if file was uploaded to current local
                     if (item.state === ItemState.done && options.openEditor) {
@@ -1571,25 +1588,25 @@
                             event.preventDefault();
                         }
                         break;
-                    case 46:
+                    case 46://delete
                         if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
                             if ($("#local-list").hasClass("focused"))
                                 deleteLocal();
                             else if ($("#remote-list").hasClass("focused"))
                                 deleteRemote();
-                            //else if ($("#queue-list").hasClass("focused"))
-                            //queueTable.rows().select();                            
+                            else if ($("#queue-list").hasClass("focused"))
+                                queueStop();
                             event.preventDefault();
                         }
                         break;
                     case 65://select all, hack as menu accelerator doesn't work
                         if (!event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
-                            //if ($("#local-list").hasClass("focused"))
-                            localTable.rows().select();
-                            //else if ($("#remote-list").hasClass("focused"))
-                            //remoteTable.rows().select();
-                            //else if ($("#queue-list").hasClass("focused"))
-                            //queueTable.rows().select();
+                            if ($("#local-list").hasClass("focused"))
+                                localTable.rows().select();
+                            else if ($("#remote-list").hasClass("focused"))
+                                remoteTable.rows().select();
+                            else if ($("#queue-list").hasClass("focused"))
+                                queueTable.rows().select();
                             event.preventDefault();
                         }
                         break;
@@ -1910,8 +1927,28 @@
                             _ied.upload(event.dataTransfer.files[f].path);
                     }
             };
+            /*
+                        $('#local-list tbody').on('mousedown', 'tr', function (e) {
+                            if (!$(this).hasClass('selected')) {
+                                if (!event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey)
+                                {
+            
+                                }
+                                else if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey)
+                                {}
+                                else
+                                    localTable.rows().deselect();
+                                localTable.row(this).select();
+                            }
+                        });
+                        */
 
             $("#local-list")[0].ondragstart = (event) => {
+                var row = $(document.elementFromPoint(event.pageX, event.pageY)).parent();
+                if (!$(row).hasClass('selected')) {
+                    localTable.rows().deselect();
+                    localTable.row(row).select();
+                }
                 event.preventDefault();
                 var selected = localTable.rows({ selected: true }).data().pluck('path');
                 var files = [];
@@ -2221,6 +2258,12 @@
                 }));
                 c.append(new MenuItem({ type: 'separator' }));
             }
+            c.append(new MenuItem({
+                label: 'Select all',
+                click: () => {
+                    queueTable.rows().select();
+                }
+            }));
             c.append(new MenuItem({
                 label: 'Reset',
                 click: () => {

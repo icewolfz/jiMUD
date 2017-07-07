@@ -588,6 +588,7 @@ export class IED extends EventEmitter {
     }
 
     public uploadChunk(obj) {
+        if (!obj) return;
         let data;
         let size = obj.chunksize;
         const item = this.getItem(obj.tag);
