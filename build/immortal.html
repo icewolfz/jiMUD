@@ -1014,7 +1014,7 @@
                         render: function (data, type, full, meta) {
                             if (full.state === ItemState.paused)
                                 return '<i class="fa fa-pause" style="width:12px; margin-right: 2px"></i>' + data;
-                            if(full.state === ItemState.error)
+                            if (full.state === ItemState.error)
                                 return '<i class="fa fa-warning" style="width:12px; margin-right: 2px"></i>' + data;
                             return '<i class="fa fa-play" style="width:12px; margin-right: 2px"></i>' + data;
                         }
@@ -1748,6 +1748,11 @@
                 return false;
             };
 
+            window.onmouseout = (event) => {
+                _localDrag = 0;
+                _remoteDrag = 0;
+            };
+
             $("#local")[0].ondragenter = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
@@ -1918,6 +1923,21 @@
                     _localDrag = files;
                     ipcRenderer.send('ondragstart', files);
                 }
+                return false;
+            };
+
+            $("#local-list")[0].ondragend = (event) => {
+                event.preventDefault();
+                _localDrag = 0;
+                _remoteDrag = 0;
+                return false;
+            };
+
+            $("#remote-list")[0].ondragend = (event) => {
+                event.preventDefault();
+                _localDrag = 0;
+                _remoteDrag = 0;
+                return false;
             };
 
             $("#remote-list")[0].ondragstart = (event) => {
