@@ -1956,6 +1956,59 @@
                 }
             };
 
+            $("#queue-list-container")[0].ondragenter = (event) => {
+                event.dataTransfer.dropEffect = "copy";
+                event.dataTransfer.effectAllowed = "copy";
+                event.preventDefault();
+                event.cancelBubble = true;
+                event.stopPropagation();
+                return false;
+            };
+
+            $("#queue-list-container")[0].ondragover = (event) => {
+                event.dataTransfer.dropEffect = "copy";
+                event.dataTransfer.effectAllowed = "copy";
+                event.preventDefault();
+                event.cancelBubble = true;
+                event.stopPropagation();
+                return false;
+            };
+
+            $("#queue-list-container")[0].ondrop = (event) => {
+                event.preventDefault();
+                if (_localDrag) {
+                    for (var f = 0, fl = _localDrag.length; f < fl; f++) {
+                        if (_local[path.basename(_localDrag[f])].size === -2) continue;
+                        _ied.upload(_localDrag[f]);
+                    }
+                    _localDrag = 0;
+                }
+                else if (_remoteDrag) {
+                    for (f = 0, fl = _remoteDrag.length; f < fl; f++) {
+                        _ied.download(_remoteDrag[f]);
+                    }
+                    _remoteDrag = 0;
+                }
+                else
+                    for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
+                        if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
+                            _ied.download(event.dataTransfer.files[f].path.substring(8));
+                        }
+                        else if (event.dataTransfer.files[f].size < 1) {
+                            try {
+                                var stat = fs.statSync(info.path);
+                            }
+                            catch (error) {
+                                throw error;
+                            }
+                            if (!stat.isDirectory())
+                                _ied.upload(event.dataTransfer.files[f].path);
+                        }
+                        else
+                            _ied.upload(event.dataTransfer.files[f].path);
+                    }
+            };
+
             $(window).trigger('resize');
 
             window.onbeforeunload = function () {
