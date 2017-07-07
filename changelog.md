@@ -15,6 +15,8 @@
   - Immortal tools: fixed remote delete trying to delete folders
   - Fixed a bug in #alias not correctly adding a new alias
   - Fixed a bug with MSP link expiring and nested tags
+  - Profile Manager: Fixed an issue when editing macros and key is always None.
+  - Minor bug fixes related to cleaning code.
 ##### 0.4.1 2017-07-03
 - **New:**
   - Immortal tools

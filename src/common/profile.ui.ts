@@ -3386,7 +3386,7 @@ function UpdateEditor(editor, item, options?) {
 }
 
 function MacroValue(item, prop, el) {
-    el.val(MacroKeys(item[prop]));
+    el.val(MacroKeys(item));
     el.data('key', item.key);
     el.data('mod', item.modifiers);
 }
