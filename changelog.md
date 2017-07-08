@@ -1,4 +1,7 @@
 ## Changelog
+##### 0.4.3 2017-07-08
+- **Fixed:**
+  -Advanced editor was broken due to previous code cleanups
 ##### 0.4.2 2017-07-07
 - **New:**
   - Immortal tools:
