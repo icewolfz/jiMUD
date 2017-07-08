@@ -16,7 +16,8 @@
  */
 declare let tinymce;
 
-tinymce.PluginManager.add('smtextcolor', (editor, url) => {
+// tslint:disable-next-line:only-arrow-functions
+tinymce.PluginManager.add('smtextcolor', function(editor, url) {
     let cols;
     let rows;
 
