@@ -28,7 +28,7 @@ To use scripting you just have to select script as the type from the type dropdo
   - `fore` ansi foreground code default is local echo
   - `back` background color
   - `newline` see this.print
-  - `foreline` always force a new line regardless of current last line state
+  - `forceline` always force a new line regardless of current last line state
 - `client.parse(text)` send raw text to the screen to be parsed and displayed, can be used to send raw ansi or MXP coded
 - `client.sendGMCP(text)` send a GMCP formatted string to the mud, see GMCP spec notes for formatting, its mostly in {module, data} where data is a JSON formatted string
 ### **WARNING**: you can effect the client if you access the wrong function, so any function used other then this list may caused unknown results and could cause the client to stop working
