@@ -50,8 +50,8 @@ setTimeout(()=> {
   //send a command to the mud
   client.sendCommand("say Hello world again");
 }, 4000);
-//notice the timing is 4000 this is 2000 from the oringal + 2000 for the new for a total of 4 seconds
-//Unlike zmud where timing is build up, with javascript you will have to handle your own consecutive timing
+//notice the timing is 4000 this is 2000 from the original + 2000 for the new for a total of 4 seconds
+//Unlike zMUD where timing is build up, with javascript you will have to handle your own consecutive timing
 ```
 
 #### Mono grayscale rainbow text alias
