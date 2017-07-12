@@ -1159,6 +1159,8 @@
                         info.uploads--;
                     updateStatus();
                 }
+                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
+                ipcRenderer.send('set-progress', { value: -1 });
             });
             _ied.on('update', (item) => {
                 queueTable.row(function (idx, data, node) {
@@ -1172,6 +1174,8 @@
                     "id": item.ID,
                     "state": item.state
                 }).draw();
+                ipcRenderer.send('set-progress-window', 'immortal', { value: item.percent });
+                ipcRenderer.send('set-progress', { value: item.percent });
             });
 
             _ied.on('cmd', (obj) => {

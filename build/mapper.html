@@ -351,12 +351,14 @@
         if (value != -1) {
           $("#mapProgress progress").val(value);
           ipcRenderer.send('set-progress', { value: value / 100.0 });
+          ipcRenderer.send('set-progress-window', 'mapper', { value: value / 100.0 });
         }
         if (value >= 100) {
           //setTimeout(updateAreas, 1);
           updateAreas();
           $("#mapProgress")[0].close();
           ipcRenderer.send('set-progress', { value: -1 });
+          ipcRenderer.send('set-progress-window', 'mapper', { value: -1});
         }
       });
 
@@ -749,6 +751,7 @@
                   return;
                 }
                 ipcRenderer.send('set-progress', { value: 0 });
+                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
                 $("#mapProgressbar").html('<progress max="100"></progress>');
                 $("#mapProgressTitle").html("Exporting '" + mapper.active.area + "' map data&hellip;");
                 $("#mapProgress")[0].showModal();
@@ -775,6 +778,7 @@
                 $("#mapProgressbar").html('<progress max="100"></progress>');
                 $("#mapProgressTitle").html("Exporting map data&hellip;");
                 ipcRenderer.send('set-progress', { value: 0 });
+                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
                 $("#mapProgress")[0].showModal();
                 mapper.exportAll(fileName);
               });
@@ -808,6 +812,7 @@
                       return;
                     }
                     ipcRenderer.send('set-progress', { value: 0 });
+                    ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
                     $("#mapProgressbar").html('<progress max="100"></progress>');
                     $("#mapProgressTitle").html("Importing map data&hellip;");
                     $("#mapProgress")[0].showModal();
@@ -843,6 +848,7 @@
                       return;
                     }
                     ipcRenderer.send('set-progress', { value: 0 });
+                    ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
                     $("#mapProgressbar").html('<progress max="100"></progress>');
                     $("#mapProgressTitle").html("Importing map data&hellip;");
                     $("#mapProgress")[0].showModal();
@@ -888,6 +894,7 @@
       $("#mapProgressTitle").html("Importing map data&hellip;");
       $("#mapProgress")[0].showModal();
       ipcRenderer.send('set-progress', { value: 0 });
+      ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
       mapper.import(data, importType);
     });
 
@@ -918,6 +925,7 @@
       $("#mapProgressTitle").html("Compacting map data&hellip;");
       $("#mapProgress")[0].showModal();
       ipcRenderer.send('set-progress', { value: 0, options: { mode: 'indeterminate' } });
+      ipcRenderer.send('set-progress-window', 'mapper', { value: 0, options: { mode: 'indeterminate' } });
       mapper.compact();
     }
   </script>
