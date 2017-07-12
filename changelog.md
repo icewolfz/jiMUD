@@ -1,4 +1,7 @@
 ## Changelog
+##### 0.4.4
+- **Fixed:**
+  - Mapper: during code cleanup moved to a stricter compare (===) and the mud sends a # while it is stored as a string in the mapper, it now converts remote data into string
 ##### 0.4.3 2017-07-08
 - **Fixed:**
   -Advanced editor was broken due to previous code cleanups

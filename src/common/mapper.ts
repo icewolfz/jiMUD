@@ -953,6 +953,7 @@ export class Mapper extends EventEmitter {
     }
 
     private sanitizeRoom(r): Room {
+        r.ID = '' + r.ID;
         r.x = parseInt(r.x, 10);
         r.y = parseInt(r.y, 10);
         r.z = parseInt(r.z, 10);
