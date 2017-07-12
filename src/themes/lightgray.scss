@@ -770,7 +770,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     filter: drop-shadow(1px 1px 0px #fff);
 }
 
-.button:active {
+.button:active, .button:focus {
     background-color: #e0e0e0;
     border-color: #dbdbdb;
     background-image: none;

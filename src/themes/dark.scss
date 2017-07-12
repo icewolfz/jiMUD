@@ -795,4 +795,8 @@ $panelInsetBackground: "#252526";
     fill: #{$color};
 }
 
+.button:focus {
+    color: #{$color};
+}
+
 /** button end */
