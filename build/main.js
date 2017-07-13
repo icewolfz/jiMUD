@@ -902,7 +902,7 @@ function updateTray() {
   if (!tray) return;
   switch (overlay) {
     case 1:
-      tray.setImage(path.join(__dirname, '../assets/icons/png/connected.png'));
+      tray.setImage(path.join(__dirname, '../assets/icons/png/connected2.png'));
       if (title && title.length > 0)
         t = `jiMUD - ${title} - Connected`;
       else
@@ -913,14 +913,14 @@ function updateTray() {
         t = `jiMUD - ${title} - Connected`;
       else
         t = 'jiMUD - Connected';
-      tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive.png'));
+      tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
       break;
     default:
       if (title && title.length > 0)
         t = `jiMUD - ${title} - Disconnected`;
       else
         t = 'jiMUD - Disconnected';
-      tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected.png'));
+      tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
       break;
   }
   tray.setTitle(t);
