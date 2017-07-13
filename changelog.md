@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.4.4
+##### 0.4.4 2017-07-12
 - **New:**
   - Immortal tools: current queue progress now supports windows task bar progress
   - Mapper: import task bar progress should now support separate window update + main client on task bar
