@@ -17,13 +17,14 @@ let set, mapperMax = false, editorMax = false, chatMax = false, debug = false;
 let chatReady = false;
 let reload = null;
 let tray = null;
-
+let overlay = 0;
 let windows = {};
 
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
 global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
 global.profiles = null;
 global.character = null;
+global.title = '';
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
@@ -55,6 +56,8 @@ function loadCharacter(char) {
   global.character = char;
   global.settingsFile = parseTemplate(characters.characters[char].settings);
   global.mapFile = parseTemplate(characters.characters[char].map);
+  global.title = char;
+  updateTray();
 }
 
 var menuTemp = [
@@ -883,13 +886,45 @@ function createTray() {
     { type: 'separator' },
     { label: 'Exit', role: 'quit' }
   ]);
-  tray.setToolTip('jiMUD - Disconnected');
-  tray.setTitle('jiMUD - Disconnected');
+  updateTray();
   tray.setContextMenu(contextMenu);
 
   tray.on('click', () => {
     win.show();
   });
+}
+
+function updateTray() {
+  let t = '';
+  let title = global.title;
+  if (!title || title.length === 0)
+    title = global.character;
+  if (!tray) return;
+  switch (overlay) {
+    case 1:
+      tray.setImage(path.join(__dirname, '../assets/icons/png/connected.png'));
+      if (title && title.length > 0)
+        t = `jiMUD - ${title} - Connected`;
+      else
+        t = 'jiMUD - Connected';
+      break;
+    case 2:
+      if (title && title.length > 0)
+        t = `jiMUD - ${title} - Connected`;
+      else
+        t = 'jiMUD - Connected';
+      tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive.png'));
+      break;
+    default:
+      if (title && title.length > 0)
+        t = `jiMUD - ${title} - Disconnected`;
+      else
+        t = 'jiMUD - Disconnected';
+      tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected.png'));
+      break;
+  }
+  tray.setTitle(t);
+  tray.setToolTip(t);
 }
 
 function createWindow() {
@@ -1371,6 +1406,7 @@ ipcMain.on('reload-options', () => {
 });
 
 ipcMain.on('set-title', (event, title) => {
+  global.title = title;
   if (winChat)
     winChat.webContents.send('set-title', title);
   if (winProfiles)
@@ -1384,6 +1420,7 @@ ipcMain.on('set-title', (event, title) => {
       continue;
     windows[name].window.webContents.send('set-title', title);
   }
+  updateTray();
 });
 
 ipcMain.on('closed', (event) => {
@@ -1554,29 +1591,19 @@ ipcMain.on('update-menuitem', (event, args) => {
 });
 
 ipcMain.on('set-overlay', (event, args) => {
+  overlay = args;
   switch (args) {
     case 1:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
-      if (tray) {
-        tray.setImage(path.join(__dirname, '../assets/icons/png/connected.png'));
-        tray.setToolTip('jiMUD - Connected');
-        tray.setTitle('jiMUD - Connected');
-      }
       break;
     case 2:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received text');
-      if (tray)
-        tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive.png'));
       break;
     default:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
-      if (tray) {
-        tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected.png'));
-        tray.setToolTip('jiMUD - Disconnected');
-        tray.setTitle('jiMUD - Disconnected');
-      }
       break;
   }
+  updateTray();
 });
 
 ipcMain.on('set-progress', (event, args) => {
