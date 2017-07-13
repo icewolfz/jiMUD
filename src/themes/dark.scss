@@ -767,7 +767,7 @@ $panelInsetBackground: "#252526";
     fill: #fff;
 }
 
-.button:active {
+.button:active, .button:focus {
     color: #3f3f46;
     background-color: #{$color};
 }
@@ -793,10 +793,6 @@ $panelInsetBackground: "#252526";
 
 .button.on:active svg {
     fill: #{$color};
-}
-
-.button:focus {
-    color: #{$color};
 }
 
 /** button end */
