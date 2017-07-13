@@ -241,6 +241,8 @@ export class Settings {
     public showButtonBar: boolean = true;
     public allowNegativeNumberNeeded = false;
     public spellchecking: boolean = true;
+    public hideOnMinimize: boolean = false;
+    public showTrayIcon: boolean = false;
 
     public pasteSpecialPrefix: string = '';
     public pasteSpecialPostfix: string = '';

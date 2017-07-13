@@ -216,6 +216,9 @@
       $('#enableMSP').prop('checked', _settings.enableMSP);
       $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
 
+      $('#hideOnMinimize').prop('checked', _settings.hideOnMinimize);
+      $('#showTrayIcon').prop('checked', _settings.showTrayIcon);
+
       $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) === 2);
       $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) === 4);
       $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) === 8);
@@ -1510,6 +1513,18 @@
             </div>
           </div>
         </div>
+
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="hideOnMinimize" /> Hide main window in task bar when minimized
+          </label>
+        </div>
+        
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="showTrayIcon" /> Show notification icon in system tray
+          </label>
+        </div>        
       </div>
     </div>
 

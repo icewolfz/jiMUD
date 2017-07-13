@@ -4,6 +4,8 @@
   - Context menu: 
     - Urls now add open/copy url/copy text.
     - MXP links add open/copy text
+  - Tray icon support
+  - Hide when minimized - will hide window when you minimize the main window
 - **Fixed:**
   - MXP: links where not displaying correct tool tips
   - $selectedurl was always empty when right clicking a link

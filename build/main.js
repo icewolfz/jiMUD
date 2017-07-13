@@ -1,7 +1,7 @@
 //cSpell:words submenu, pasteandmatchstyle, statusvisible, lagmeter, taskbar, 
 //cSpell:ignore prefs, partyhealth, combathealth
 const { app, BrowserWindow, shell } = require('electron');
-const { dialog, Menu } = require('electron');
+const { Tray, dialog, Menu } = require('electron');
 const ipcMain = require('electron').ipcMain;
 const path = require('path');
 const fs = require('fs');
@@ -16,6 +16,7 @@ let win, winWho, winMap, winProfiles, winEditor, winChat;//winHelp
 let set, mapperMax = false, editorMax = false, chatMax = false, debug = false;
 let chatReady = false;
 let reload = null;
+let tray = null;
 
 let windows = {};
 
@@ -792,6 +793,105 @@ function createMenu() {
   win.webContents.send('menu-reload');
 }
 
+function createTray() {
+  if (!set)
+    set = settings.Settings.load(global.settingsFile);
+  if (!set.showTrayIcon)
+    return;
+  tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected.png'));
+  const contextMenu = Menu.buildFromTemplate([
+    { label: '&Show window...', click: () => { win.show(); } },
+    {
+      label: "Ch&aracters...",
+      id: "characters",
+      click: () => {
+        win.show();
+        win.webContents.executeJavaScript('showCharacters()');
+      }
+    },
+    { type: 'separator' },
+    {
+      label: '&Who is on?',
+      click: () => {
+        if (winWho) {
+          winWho.show();
+          return;
+        }
+        shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
+      }
+    },
+    {
+      label: '&Help',
+      role: 'help',
+      submenu: [
+        {
+          label: '&ShadowMUD',
+          click: () => {
+            shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
+          }
+        },
+        {
+          label: '&jiMUD',
+          click: () => {
+            shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
+          }
+        },
+        { type: 'separator' },
+        {
+          label: '&About...',
+          click: () => {
+            var b = win.getBounds();
+
+            let about = new BrowserWindow({
+              parent: win,
+              modal: true,
+              x: Math.floor(b.x + b.width / 2 - 225),
+              y: Math.floor(b.y + b.height / 2 - 200),
+              width: 450,
+              height: 400,
+              movable: false,
+              minimizable: false,
+              maximizable: false,
+              skipTaskbar: true,
+              resizable: false,
+              title: 'About jiMUD',
+              icon: path.join(__dirname, '../assets/icons/png/64x64.png')
+            });
+            about.webContents.on('crashed', (event, killed) => {
+              logError(`About crashed, killed: ${killed}\n`, true);
+            });
+
+            about.setMenu(null);
+            about.on('closed', () => {
+              about = null;
+            });
+
+            // and load the index.html of the app.
+            about.loadURL(url.format({
+              pathname: path.join(__dirname, 'about.html'),
+              protocol: 'file:',
+              slashes: true
+            }));
+
+            about.once('ready-to-show', () => {
+              about.show();
+            });
+          }
+        }
+      ]
+    },
+    { type: 'separator' },
+    { label: 'Exit', role: 'quit' }
+  ]);
+  tray.setToolTip('jiMUD - Disconnected');
+  tray.setTitle('jiMUD - Disconnected');
+  tray.setContextMenu(contextMenu);
+
+  tray.on('click', () => {
+    win.show();
+  });
+}
+
 function createWindow() {
   /*
   if(set.reportCrashes)
@@ -852,7 +952,7 @@ function createWindow() {
     trackWindowState('main', win);
   });
 
-  win.on('unresponsive', function () {
+  win.on('unresponsive', () => {
     dialog.showMessageBox({
       type: 'info',
       message: 'Unresponsive',
@@ -899,6 +999,11 @@ function createWindow() {
       else
         logError(`Client unresponsive, waiting.\n`, true);
     });
+  });
+
+  win.on('minimize', () => {
+    if (set.hideOnMinimize)
+      win.hide();
   });
 
   win.webContents.on('crashed', (event, killed) => {
@@ -1104,6 +1209,8 @@ app.on('ready', () => {
     if (val.startsWith("-pf=") || val.startsWith("-pf:"))
       global.profiles = parseTemplate(val.substring(4)).split(',');
   });
+
+  createTray();
   createWindow();
 });
 
@@ -1227,6 +1334,13 @@ ipcMain.on('load-char', (event, char) => {
 ipcMain.on('reload-options', () => {
   win.webContents.send('reload-options');
   set = settings.Settings.load(global.settingsFile);
+  if (set.showTrayIcon && !tray)
+    createTray();
+  else if (!set.showTrayIcon && tray) {
+    tray.destroy();
+    tray = null;
+  }
+
   if (winMap) {
     winMap.webContents.send('reload-options');
     if (winMap.setParentWindow)
@@ -1443,12 +1557,24 @@ ipcMain.on('set-overlay', (event, args) => {
   switch (args) {
     case 1:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
+      if (tray) {
+        tray.setImage(path.join(__dirname, '../assets/icons/png/connected.png'));
+        tray.setToolTip('jiMUD - Connected');
+        tray.setTitle('jiMUD - Connected');
+      }
       break;
     case 2:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received text');
+      if (tray)
+        tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive.png'));
       break;
     default:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
+      if (tray) {
+        tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected.png'));
+        tray.setToolTip('jiMUD - Disconnected');
+        tray.setTitle('jiMUD - Disconnected');
+      }
       break;
   }
 });
