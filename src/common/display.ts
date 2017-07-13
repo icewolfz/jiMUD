@@ -1712,8 +1712,10 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
-                fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
+                fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" data-href="');
                 fore.push(format.href);
+                fore.push('" href="javascript:void(0);" title="');
+                fore.push(format.hint);
                 fore.push('"');
                 if (format.expire && format.expire.length > 0) {
                     if (!this._expire[format.expire])

@@ -1,4 +1,12 @@
 ## Changelog
+##### 0.4.5
+- **New:**
+  - Context menu: 
+    - Urls now add open/copy url/copy text.
+    - MXP links add open/copy text
+- **Fixed:**
+  - MXP: links where not displaying correct tool tips
+  - $selectedurl was always empty when right clicking a link
 ##### 0.4.4 2017-07-12
 - **New:**
   - Immortal tools: current queue progress now supports windows task bar progress

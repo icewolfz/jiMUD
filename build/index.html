@@ -137,6 +137,8 @@
     function doMXPTooltip(el) {
       el = $(el);
       el.prop("title", el.prop("title").replace("&text;", el.text()));
+      console.log(el);
+      console.log(el.prop('title'));
     }
 
 
@@ -392,9 +394,17 @@
 
       client.display._el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
+        var parent = $(e.srcElement.parentNode);
         window.$selected = client.display.selection;
         window.$copied = clipboard.readText('selection');
-        window.$selectedurl = $(e.srcElement).hasClass('URLLink') ? e.srcElement.title : '';
+        if (parent && parent.hasClass('URLLink'))
+          window.$selectedurl = parent.title;
+        else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+          window.$selectedurl = parent.data('href');
+        else
+          window.$selectedurl = '';
+
+
         window.$selectedline = $(e.srcElement).closest('.line').text();
 
         var line = $(e.srcElement).closest('.line').text();
@@ -453,6 +463,25 @@
         if (client.defaultContext) {
           if (c.items.length > 0)
             c.append(new MenuItem({ type: 'separator' }));
+
+          if (parent && parent.hasClass('URLLink')) {
+            c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
+            c.append(new MenuItem({ label: 'Copy url', click: () => { clipboard.writeText(parent.attr('title'), 'selection'); } }));
+            c.append(new MenuItem({ label: 'Copy url text', click: () => { clipboard.writeText(parent.text(), 'selection'); } }));
+            c.append(new MenuItem({ type: 'separator' }));
+          }
+          else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
+            c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
+            c.append(new MenuItem({ label: 'Copy url', click: () => { clipboard.writeText(parent.data('href'), 'selection'); } }));
+            c.append(new MenuItem({ label: 'Copy url text', click: () => { clipboard.writeText(parent.text(), 'selection'); } }));
+            c.append(new MenuItem({ type: 'separator' }));
+          }
+          else if (parent && parent.hasClass('MXPLink')) {
+            c.append(new MenuItem({ label: 'Open mxp url', click: () => { parent.trigger('click'); } }));
+            c.append(new MenuItem({ label: 'Copy mxp url text', click: () => { clipboard.writeText(parent.text(), 'selection'); } }));
+            c.append(new MenuItem({ type: 'separator' }));
+          }
+
           if (window.$selected && window.$selected != '') {
             c.append(new MenuItem({ role: 'copy' }));
           }
