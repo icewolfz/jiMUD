@@ -120,3 +120,7 @@ Controls what is captured into the chat window
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Backup save` what to save when using remote backup systems
 - `Backup load` what to load when using remote backup systems
+- `Hide when minimized` will hide the main window and any window set as a child
+- `Show tray icon` display an icon in the system tray/notification area
+- `Tray icon single click` set what happens when the tray icon is clicked
+- `Tray icon double click` set what happens when the tray icon is double clicked. __Mac__, __Windows__
