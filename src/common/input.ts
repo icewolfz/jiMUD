@@ -1368,7 +1368,6 @@ export class Input extends EventEmitter {
             this._TriggerCache = $.grep(this.client.triggers, (a) => {
                 return a.enabled;
             });
-            this._TriggerCache.sort(SortArrayByPriority);
         }
         let t = 0;
         const tl = this._TriggerCache.length;
