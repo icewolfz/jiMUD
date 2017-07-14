@@ -451,7 +451,7 @@ export class Backup extends EventEmitter {
                 this.client.options.showCharacterManager = data.settings.showCharacterManager ? true : false;
                 this.client.options.logErrors = data.settings.showCharacterManager ? true : false;
 
-                this.client.clearTriggerCache();
+                this.client.clearCache();
                 this.client.saveOptions();
                 this.client.loadOptions();
                 this.emit('imported-settings');

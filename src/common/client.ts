@@ -5,7 +5,7 @@ import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
 import { ParserLine, Size } from './types';
 import { AnsiColorCode } from './ansi';
-import { stripHTML, parseTemplate, getScrollBarHeight } from './library';
+import { stripHTML, parseTemplate, getScrollBarHeight, SortArrayByPriority } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
 import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context } from './profile';
@@ -15,6 +15,14 @@ const { version } = require('../../package.json');
 const path = require('path');
 const fs = require('fs');
 
+interface ItemCache {
+    triggers: Trigger[];
+    aliases: Alias[];
+    macros: Macro[];
+    buttons: Button[];
+    contexts: Context[];
+}
+
 export class Client extends EventEmitter {
     private lineID = '.line';
     private _enableDebug: boolean = false;
@@ -22,6 +30,13 @@ export class Client extends EventEmitter {
     private _auto: NodeJS.Timer = null;
     private _autoError: boolean = false;
     private _settingsFile: string = parseTemplate(path.join('{data}', 'settings.json'));
+    private _itemCache: ItemCache = {
+        triggers: null,
+        aliases: null,
+        macros: null,
+        buttons: null,
+        contexts: null
+    };
 
     public MSP: MSP;
 
@@ -80,6 +95,8 @@ export class Client extends EventEmitter {
     get settingsFile(): string { return this._settingsFile; }
 
     get aliases(): Alias[] {
+        if (this._itemCache.aliases)
+            return this._itemCache.aliases;
         const keys = this.profiles.keys;
         let tmp = [];
         let k = 0;
@@ -87,18 +104,23 @@ export class Client extends EventEmitter {
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableAliases)
-                return [];
-            return this.profiles.items[keys[0]].aliases;
+                this._itemCache.aliases = [];
+            else
+                this._itemCache.aliases = this.profiles.items[keys[0]].aliases.sort(SortArrayByPriority);
+            return this._itemCache.aliases;
         }
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableAliases || this.profiles.items[keys[k]].aliases.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].aliases);
+            tmp = tmp.concat(this.profiles.items[keys[k]].aliases.sort(SortArrayByPriority));
         }
-        return tmp;
+        this._itemCache.aliases = tmp;
+        return this._itemCache.aliases;
     }
 
     get macros(): Macro[] {
+        if (this._itemCache.macros)
+            return this._itemCache.macros;
         const keys = this.profiles.keys;
         let tmp = [];
         let k = 0;
@@ -106,18 +128,23 @@ export class Client extends EventEmitter {
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableMacros)
-                return [];
-            return this.profiles.items[keys[0]].macros;
+                this._itemCache.macros = [];
+            else
+                this._itemCache.macros = this.profiles.items[keys[0]].macros.sort(SortArrayByPriority);
+            return this._itemCache.macros;
         }
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableMacros || this.profiles.items[keys[k]].macros.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].macros);
+            tmp = tmp.concat(this.profiles.items[keys[k]].macros.sort(SortArrayByPriority));
         }
-        return tmp;
+        this._itemCache.macros = tmp;
+        return this._itemCache.macros;
     }
 
     get triggers(): Trigger[] {
+        if (this._itemCache.triggers)
+            return this._itemCache.triggers;
         const keys = this.profiles.keys;
         let tmp = [];
         let k = 0;
@@ -125,18 +152,23 @@ export class Client extends EventEmitter {
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableTriggers)
-                return [];
-            return this.profiles.items[keys[0]].triggers;
+                this._itemCache.triggers = [];
+            else
+                this._itemCache.triggers = this.profiles.items[keys[0]].triggers.sort(SortArrayByPriority);
+            return this._itemCache.triggers;
         }
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableTriggers || this.profiles.items[keys[k]].triggers.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].triggers);
+            tmp = tmp.concat(this.profiles.items[keys[k]].triggers.sort(SortArrayByPriority));
         }
-        return tmp;
+        this._itemCache.triggers = tmp;
+        return this._itemCache.triggers;
     }
 
     get buttons(): Button[] {
+        if (this._itemCache.buttons)
+            return this._itemCache.buttons;
         const keys = this.profiles.keys;
         let tmp = [];
         let k = 0;
@@ -144,18 +176,23 @@ export class Client extends EventEmitter {
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableButtons)
-                return [];
-            return this.profiles.items[keys[0]].buttons;
+                this._itemCache.buttons = [];
+            else
+                this._itemCache.buttons = this.profiles.items[keys[0]].buttons.sort(SortArrayByPriority);
+            return this._itemCache.buttons;
         }
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableButtons || this.profiles.items[keys[k]].buttons.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].buttons);
+            tmp = tmp.concat(this.profiles.items[keys[k]].buttons.sort(SortArrayByPriority));
         }
-        return tmp;
+        this._itemCache.buttons = tmp;
+        return this._itemCache.buttons;
     }
 
     get contexts(): Context[] {
+        if (this._itemCache.contexts)
+            return this._itemCache.contexts;
         const keys = this.profiles.keys;
         let tmp = [];
         let k = 0;
@@ -163,15 +200,18 @@ export class Client extends EventEmitter {
         if (kl === 0) return [];
         if (kl === 1) {
             if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableContexts)
-                return [];
-            return this.profiles.items[keys[0]].contexts;
+                this._itemCache.contexts = [];
+            else
+                this._itemCache.contexts = this.profiles.items[keys[0]].contexts.sort(SortArrayByPriority);
+            return this._itemCache.contexts;
         }
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableContexts || this.profiles.items[keys[k]].contexts.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].contexts);
+            tmp = tmp.concat(this.profiles.items[keys[k]].contexts.sort(SortArrayByPriority));
         }
-        return tmp;
+        this._itemCache.contexts = tmp;
+        return this._itemCache['contexts'];
     }
 
     get defaultContext(): boolean {
@@ -191,7 +231,7 @@ export class Client extends EventEmitter {
         this.profiles.load(p);
         if (!this.profiles.contains('Default'))
             this.profiles.add(Profile.Default);
-        this.clearTriggerCache();
+        this.clearCache();
         this.emit('profiles-loaded');
     }
 
@@ -200,7 +240,7 @@ export class Client extends EventEmitter {
         if (!fs.existsSync(p))
             fs.mkdirSync(p);
         this.profiles.save(p);
-        this.clearTriggerCache();
+        this.clearCache();
         this.emit('profiles-updated');
     }
 
@@ -209,7 +249,7 @@ export class Client extends EventEmitter {
         if (!fs.existsSync(p))
             fs.mkdirSync(p);
         this.profiles.items[profile].save(p);
-        this.clearTriggerCache();
+        this.clearCache();
         this.emit('profile-updated', profile);
     }
 
@@ -228,7 +268,7 @@ export class Client extends EventEmitter {
         }
         this.enabledProfiles = p;
         this.saveOptions();
-        this.clearTriggerCache();
+        this.clearCache();
     }
 
     constructor(display, command, settings?: string) {
@@ -515,7 +555,7 @@ export class Client extends EventEmitter {
     }
 
     public getOption(name) {
-       if (name === -1 || name === '-1')
+        if (name === -1 || name === '-1')
             return null;
         let opt = this.options;
         let o;
@@ -729,8 +769,15 @@ export class Client extends EventEmitter {
         return this._input.parseOutgoing(text, eAlias, stacking);
     }
 
-    public clearTriggerCache() {
+    public clearCache() {
         this._input.clearTriggerCache();
+        this._itemCache = {
+            triggers: null,
+            aliases: null,
+            macros: null,
+            buttons: null,
+            contexts: null
+        };
     }
 
     public beep() {

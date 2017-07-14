@@ -8,9 +8,11 @@
   - Hide when minimized - will hide window when you minimize the main window
   - Preferences: display and command font selectors now list the original basic fonts as well as installed system fonts now 
   - Add better error checking for spell checker to prevent crashes if spell checker breaks
+  - Buttons, aliases, triggers, macros, and context are now cached better, so global arrays are only built only when loaded or changed instead of each time accessed.
 - **Fixed:**
   - MXP: links where not displaying correct tool tips
   - $selectedurl was always empty when right clicking a link
+  - Buttons, aliases, triggers, macros, and context should now be properly sorted by priorities. All items are first sorted by profile priority then by type priority.
 ##### 0.4.4 2017-07-12
 - **New:**
   - Immortal tools: current queue progress now supports windows task bar progress
