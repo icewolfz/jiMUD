@@ -805,12 +805,30 @@ function createTray() {
     return;
   tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected.png'));
   const contextMenu = Menu.buildFromTemplate([
-    { label: '&Show window...', click: () => { win.show(); } },
+    {
+      label: '&Show window...', click: () => {
+        let s = getWindowState('main');
+        if (!s) getWindowState('main', win);
+        if (s.maximized)
+          win.maximize();
+        else
+          win.show();
+        if (s.isFullScreen)
+          win.setFullScreen(s.fullscreen);
+      }
+    },
     {
       label: "Ch&aracters...",
       id: "characters",
       click: () => {
-        win.show();
+        let s = getWindowState('main');
+        if (!s) getWindowState('main', win);
+        if (s.maximized)
+          win.maximize();
+        else
+          win.show();
+        if (s.isFullScreen)
+          win.setFullScreen(s.fullscreen);
         win.webContents.executeJavaScript('showCharacters()');
       }
     },
@@ -892,15 +910,28 @@ function createTray() {
   tray.setContextMenu(contextMenu);
 
   tray.on('click', () => {
+    let s = getWindowState('main');
+    if (!s) getWindowState('main', win);
     switch (set.trayClick) {
       case TrayClick.show:
-        win.show();
+        if (s.maximized)
+          win.maximize();
+        else
+          win.show();
+        if (s.isFullScreen)
+          win.setFullScreen(s.fullscreen);
         break;
       case TrayClick.toggle:
         if (win.isVisible())
           win.hide();
-        else
-          win.show();
+        else {
+          if (s.maximized)
+            win.maximize();
+          else
+            win.show();
+          if (s.isFullScreen)
+            win.setFullScreen(s.fullscreen);
+        }
         break;
       case TrayClick.hide:
         win.hide();
@@ -912,15 +943,28 @@ function createTray() {
   });
 
   tray.on('double-click', () => {
-    switch (set.trayDblClick) {
+    let s = getWindowState('main');
+    if (!s) getWindowState('main', win);
+    switch (set.trayClick) {
       case TrayClick.show:
-        win.show();
+        if (s.maximized)
+          win.maximize();
+        else
+          win.show();
+        if (s.isFullScreen)
+          win.setFullScreen(s.fullscreen);
         break;
       case TrayClick.toggle:
         if (win.isVisible())
           win.hide();
-        else
-          win.show();
+        else {
+          if (s.maximized)
+            win.maximize();
+          else
+            win.show();
+          if (s.isFullScreen)
+            win.setFullScreen(s.fullscreen);
+        }
         break;
       case TrayClick.hide:
         win.hide();
@@ -1018,11 +1062,18 @@ function createWindow() {
   });
 
   win.on('move', () => {
+    if (!win.isMaximized() && !win.isFullScreen())
+      trackWindowState('main', win);
+  });
+
+  win.on('maximize', () => {
     trackWindowState('main', win);
+    states['main'].maximized = true;
   });
 
   win.on('unmaximize', () => {
     trackWindowState('main', win);
+    states['main'].maximized = false;
   });
 
   win.on('unresponsive', () => {
@@ -1790,6 +1841,8 @@ function loadMenu() {
 
 function getWindowState(id, window) {
   var bounds = states[id];
+  if (!window)
+    return states[id];
   return {
     x: bounds.x,
     y: bounds.y,
@@ -1808,25 +1861,32 @@ function loadWindowState(window) {
       x: 0,
       y: 0,
       width: 800,
-      height: 600
+      height: 600,
     };
   states[window] = {
     x: set.windows[window].x,
     y: set.windows[window].y,
     width: set.windows[window].width,
-    height: set.windows[window].height
+    height: set.windows[window].height,
   };
   return set.windows[window];
 }
 
 function trackWindowState(id, window) {
   var bounds = window.getBounds();
-  states[id] = {
-    x: bounds.x,
-    y: bounds.y,
-    width: bounds.width,
-    height: bounds.height
-  };
+  if (!states[id])
+    states[id] = {
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height
+    };
+  else {
+    states[id].x = bounds.x;
+    states[id].y = bounds.y;
+    states[id].width = bounds.width;
+    states[id].height = bounds.height;
+  }
 }
 
 function parseTemplate(str, data) {
@@ -1941,10 +2001,16 @@ function createMapper(show) {
     trackWindowState('mapper', winMap);
   });
 
-  winMap.on('unmaximize', () => {
+  winMap.on('maximize', () => {
     trackWindowState('mapper', winMap);
+    states['mapper'].maximized = true;
   });
 
+  winMap.on('unmaximize', () => {
+    trackWindowState('mapper', winMap);
+    states['mapper'].maximized = false;
+  });
+  
   if (debug)
     winMap.webContents.openDevTools();
 
@@ -2053,9 +2119,16 @@ function showProfiles() {
     trackWindowState('profiles', winProfiles);
   });
 
+  winProfiles.on('maximize', () => {
+    trackWindowState('profiles', winProfiles);
+    states['profiles'].maximized = true;
+  });
+
   winProfiles.on('unmaximize', () => {
     trackWindowState('profiles', winProfiles);
+    states['profiles'].maximized = false;
   });
+  
 }
 
 function createEditor(show) {
@@ -2101,8 +2174,14 @@ function createEditor(show) {
     trackWindowState('editor', winEditor);
   });
 
+  winEditor.on('maximize', () => {
+    trackWindowState('editor', winEditor);
+    states['editor'].maximized = true;
+  });
+
   winEditor.on('unmaximize', () => {
     trackWindowState('editor', winEditor);
+    states['editor'].maximized = false;
   });
 
   if (debug)
@@ -2195,8 +2274,14 @@ function createChat(show) {
     trackWindowState('chat', winChat);
   });
 
+  winChat.on('maximize', () => {
+    trackWindowState('chat', winChat);
+    states['chat'].maximized = true;
+  });
+
   winChat.on('unmaximize', () => {
     trackWindowState('chat', winChat);
+    states['chat'].maximized = false;
   });
 
   if (debug)
@@ -2294,9 +2379,20 @@ function createNewWindow(name, options) {
     trackWindowState(name, windows[name].window);
   });
 
-  windows[name].window.on('unmaximize', () => {
+  windows[name].window.on('maximize', () => {
     trackWindowState(name, windows[name].window);
   });
+
+  windows[name].on('maximize', () => {
+    trackWindowState(name, windows[name]);
+    states[name].maximized = true;
+  });
+
+  windows[name].on('unmaximize', () => {
+    trackWindowState(name, windows[name]);
+    states[name].maximized = false;
+  });
+  
 
   windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
     event.preventDefault();
