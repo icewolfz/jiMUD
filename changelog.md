@@ -7,6 +7,7 @@
   - Tray icon support
   - Hide when minimized - will hide window when you minimize the main window
   - Preferences: display and command font selectors now list the original basic fonts as well as installed system fonts now 
+  - Add better error checking for spell checker to prevent crashes if spell checker breaks
 - **Fixed:**
   - MXP: links where not displaying correct tool tips
   - $selectedurl was always empty when right clicking a link

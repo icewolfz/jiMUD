@@ -42,6 +42,14 @@
     const path = require('path');
     const { version } = require("../package.json");
 
+    var spellchecker;
+    try {
+      spellchecker = require('spellchecker');
+    }
+    catch (ex) {
+      client.error(ex);
+    }
+
     var set = Settings.load(remote.getGlobal('settingsFile'));
     loadTheme(set.theme);
     delete set;
@@ -55,9 +63,9 @@
 
     webFrame.setSpellCheckProvider("en-US", true, {
       spellCheck: function (text) {
-        if (!client.options.spellchecking)
+        if (!spellchecker || !client.options.spellchecking)
           return true;
-        return !(require('spellchecker').isMisspelled(text));
+        return !(spellchecker.isMisspelled(text));
       }
     });
 
@@ -1041,8 +1049,8 @@
         if (ll > 0)
           e.currentTarget.selectionEnd = e.currentTarget.selectionEnd - ll;
 
-        if (client.options.spellchecking && require('spellchecker').isMisspelled(word)) {
-          var words = require('spellchecker').getCorrectionsForMisspelling(word);
+        if (client.options.spellchecking && spellchecker && spellchecker.isMisspelled(word)) {
+          var words = spellchecker.getCorrectionsForMisspelling(word);
           if (words.length > 0)
             inputMenu.insert(0, new MenuItem({ type: 'separator' }));
           var start = e.currentTarget.selectionStart;
