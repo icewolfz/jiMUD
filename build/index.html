@@ -47,7 +47,13 @@
       spellchecker = require('spellchecker');
     }
     catch (ex) {
-      client.error(ex);
+      if (!client)
+      setTimeout(()=> {
+        if(!client)
+          console.log(ex);
+        else
+          client.error(ex);
+      }, 1000);        
     }
 
     var set = Settings.load(remote.getGlobal('settingsFile'));
