@@ -21,6 +21,7 @@ interface ItemCache {
     macros: Macro[];
     buttons: Button[];
     contexts: Context[];
+    defaultContext: boolean;
 }
 
 export class Client extends EventEmitter {
@@ -35,7 +36,8 @@ export class Client extends EventEmitter {
         aliases: null,
         macros: null,
         buttons: null,
-        contexts: null
+        contexts: null,
+        defaultContext: null
     };
 
     public MSP: MSP;
@@ -215,7 +217,10 @@ export class Client extends EventEmitter {
     }
 
     get defaultContext(): boolean {
-        return this.profiles.defaultContext;
+        if (this._itemCache.defaultContext !== null)
+            return this._itemCache.defaultContext;
+        this._itemCache.defaultContext = this.profiles.defaultContext;
+        return this._itemCache.defaultContext;
     }
 
     get activeProfile(): Profile {
@@ -776,7 +781,8 @@ export class Client extends EventEmitter {
             aliases: null,
             macros: null,
             buttons: null,
-            contexts: null
+            contexts: null,
+            defaultContext: null
         };
     }
 
