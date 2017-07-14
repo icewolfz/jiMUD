@@ -218,3 +218,11 @@ export enum IEDCmdStatus {
   success = 1,
   failed = 2
 }
+
+export enum TrayClick {
+  none = 0,
+  show = 1,
+  hide = 2,
+  toggle = 3,
+  menu = 4
+}

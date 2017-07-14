@@ -1,6 +1,6 @@
 //cSpell:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //cSpell:ignore emoteto, emotetos
-import { NewLineType, Log, BackupSelection } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -243,6 +243,9 @@ export class Settings {
     public spellchecking: boolean = true;
     public hideOnMinimize: boolean = false;
     public showTrayIcon: boolean = false;
+
+    public trayClick: TrayClick = TrayClick.show;
+    public trayDblClick: TrayClick = TrayClick.none;
 
     public pasteSpecialPrefix: string = '';
     public pasteSpecialPostfix: string = '';

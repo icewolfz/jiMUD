@@ -7,6 +7,8 @@ const path = require('path');
 const fs = require('fs');
 const url = require('url');
 const settings = require('./js/settings');
+const { TrayClick } = require('./js/types');
+
 
 //require('electron-local-crash-reporter').start();
 
@@ -890,7 +892,43 @@ function createTray() {
   tray.setContextMenu(contextMenu);
 
   tray.on('click', () => {
-    win.show();
+    switch (set.trayClick) {
+      case TrayClick.show:
+        win.show();
+        break;
+      case TrayClick.toggle:
+        if (win.isVisible())
+          win.hide();
+        else
+          win.show();
+        break;
+      case TrayClick.hide:
+        win.hide();
+        break;
+      case TrayClick.menu:
+        tray.popUpContextMenu();
+        break;
+    }
+  });
+
+  tray.on('double-click', () => {
+    switch (set.trayDblClick) {
+      case TrayClick.show:
+        win.show();
+        break;
+      case TrayClick.toggle:
+        if (win.isVisible())
+          win.hide();
+        else
+          win.show();
+        break;
+      case TrayClick.hide:
+        win.hide();
+        break;
+      case TrayClick.menu:
+        tray.popUpContextMenu();
+        break;
+    }
   });
 }
 

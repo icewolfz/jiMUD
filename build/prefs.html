@@ -25,6 +25,7 @@
   <script>
     //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
     const { parseTemplate, templatePath } = require('./js/library');
+    const { TrayClick } = require('./js/types');
     const Settings = require('./js/settings').Settings;
     const { remote, ipcRenderer } = require('electron');
     const { dialog } = remote;
@@ -237,6 +238,18 @@
       $('#newlineShortcut-4').prop('checked', _settings.newlineShortcut === 4);
       $('#newlineShortcut-8').prop('checked', _settings.newlineShortcut === 8);
 
+      $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
+      $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
+      $('#trayClick-hide').prop('checked', _settings.trayClick === TrayClick.hide);
+      $('#trayClick-toggle').prop('checked', _settings.trayClick === TrayClick.toggle);
+      $('#trayClick-menu').prop('checked', _settings.trayClick === TrayClick.menu);
+
+      $('#trayDblClick-none').prop('checked', _settings.trayDblClick === TrayClick.none);
+      $('#trayDblClick-show').prop('checked', _settings.trayDblClick === TrayClick.show);
+      $('#trayDblClick-hide').prop('checked', _settings.trayDblClick === TrayClick.hide);
+      $('#trayDblClick-toggle').prop('checked', _settings.trayDblClick === TrayClick.toggle);
+      $('#trayDblClick-menu').prop('checked', _settings.trayDblClick === TrayClick.menu);
+
       $('.btn-group input').parent().removeClass('active');
       $('.btn-group input:checked').parent().addClass('active');
 
@@ -377,6 +390,46 @@
           case 'newlineShortcut-8':
             if (this.checked)
               _settings.newlineShortcut = 8;
+            break;
+          case 'trayClick-none':
+            if (this.checked)
+              _settings.trayClick = TrayClick.none;
+            break;
+          case 'trayClick-show':
+            if (this.checked)
+              _settings.trayClick = TrayClick.show;
+            break;
+          case 'trayClick-hide':
+            if (this.checked)
+              _settings.trayClick = TrayClick.hide;
+            break;
+          case 'trayClick-toggle':
+            if (this.checked)
+              _settings.trayClick = TrayClick.toggle;
+            break;
+          case 'trayClick-menu':
+            if (this.checked)
+              _settings.trayClick = TrayClick.menu;
+            break;
+          case 'trayDblClick-none':
+            if (this.checked)
+              _settings.trayDblClick = TrayClick.none;
+            break;
+          case 'trayDblClick-show':
+            if (this.checked)
+              _settings.trayDblClick = TrayClick.show;
+            break;
+          case 'trayDblClick-hide':
+            if (this.checked)
+              _settings.trayDblClick = TrayClick.hide;
+            break;
+          case 'trayDblClick-toggle':
+            if (this.checked)
+              _settings.trayDblClick = TrayClick.toggle;
+            break;
+          case 'trayDblClick-menu':
+            if (this.checked)
+              _settings.trayDblClick = TrayClick.menu;
             break;
           case 'chat-selective':
             _settings.chat.captureAllLines = !this.checked;
@@ -1519,12 +1572,56 @@
             <input type="checkbox" id="hideOnMinimize" /> Hide main window in task bar when minimized
           </label>
         </div>
-        
+
         <div class="col-sm-6 form-group">
           <label class="control-label">
             <input type="checkbox" id="showTrayIcon" /> Show notification icon in system tray
           </label>
-        </div>        
+        </div>
+
+        <div class="col-sm-12 form-group">
+          <label class="control-label">Tray icon click</label>
+          <div class="btn-group" data-toggle="buttons">
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayClick" id="trayClick-none"> None
+            </label>
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayClick" id="trayClick-show"> Show
+            </label>
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayClick" id="trayClick-hide"> Hide
+            </label>
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayClick" id="trayClick-toggle"> Toggle
+            </label>
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayClick" id="trayClick-menu"> Menu
+            </label>
+
+          </div>
+        </div>
+
+        <div class="col-sm-12 form-group">
+          <label class="control-label">Tray icon double click</label>
+          <div class="btn-group" data-toggle="buttons">
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayDblClick" id="trayDblClick-none"> None
+            </label>
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayDblClick" id="trayDblClick-show"> Show
+            </label>
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayDblClick" id="trayDblClick-hide"> Hide
+            </label>
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayDblClick" id="trayDblClick-toggle"> Toggle
+            </label>
+            <label class="btn btn-default btn-xs">
+              <input type="radio" name="trayDblClick" id="trayDblClick-menu"> Menu
+            </label>
+
+          </div>
+        </div>
       </div>
     </div>
 
