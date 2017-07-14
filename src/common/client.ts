@@ -100,7 +100,7 @@ export class Client extends EventEmitter {
         if (this._itemCache.aliases)
             return this._itemCache.aliases;
         const keys = this.profiles.keys;
-        let tmp = [];
+        const tmp = [];
         let k = 0;
         const kl = keys.length;
         if (kl === 0) return [];
@@ -114,7 +114,7 @@ export class Client extends EventEmitter {
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableAliases || this.profiles.items[keys[k]].aliases.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].aliases.sort(SortArrayByPriority));
+            tmp.push.apply(tmp, this.profiles.items[keys[k]].aliases.sort(SortArrayByPriority));
         }
         this._itemCache.aliases = tmp;
         return this._itemCache.aliases;
@@ -124,7 +124,7 @@ export class Client extends EventEmitter {
         if (this._itemCache.macros)
             return this._itemCache.macros;
         const keys = this.profiles.keys;
-        let tmp = [];
+        const tmp = [];
         let k = 0;
         const kl = keys.length;
         if (kl === 0) return [];
@@ -138,7 +138,7 @@ export class Client extends EventEmitter {
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableMacros || this.profiles.items[keys[k]].macros.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].macros.sort(SortArrayByPriority));
+            tmp.push.apply(tmp, this.profiles.items[keys[k]].macros.sort(SortArrayByPriority));
         }
         this._itemCache.macros = tmp;
         return this._itemCache.macros;
@@ -148,7 +148,7 @@ export class Client extends EventEmitter {
         if (this._itemCache.triggers)
             return this._itemCache.triggers;
         const keys = this.profiles.keys;
-        let tmp = [];
+        const tmp = [];
         let k = 0;
         const kl = keys.length;
         if (kl === 0) return [];
@@ -162,7 +162,7 @@ export class Client extends EventEmitter {
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableTriggers || this.profiles.items[keys[k]].triggers.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].triggers.sort(SortArrayByPriority));
+            tmp.push.apply(tmp, this.profiles.items[keys[k]].triggers.sort(SortArrayByPriority));
         }
         this._itemCache.triggers = tmp;
         return this._itemCache.triggers;
@@ -172,7 +172,7 @@ export class Client extends EventEmitter {
         if (this._itemCache.buttons)
             return this._itemCache.buttons;
         const keys = this.profiles.keys;
-        let tmp = [];
+        const tmp = [];
         let k = 0;
         const kl = keys.length;
         if (kl === 0) return [];
@@ -186,7 +186,7 @@ export class Client extends EventEmitter {
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableButtons || this.profiles.items[keys[k]].buttons.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].buttons.sort(SortArrayByPriority));
+            tmp.push.apply(tmp, this.profiles.items[keys[k]].buttons.sort(SortArrayByPriority));
         }
         this._itemCache.buttons = tmp;
         return this._itemCache.buttons;
@@ -196,7 +196,7 @@ export class Client extends EventEmitter {
         if (this._itemCache.contexts)
             return this._itemCache.contexts;
         const keys = this.profiles.keys;
-        let tmp = [];
+        const tmp = [];
         let k = 0;
         const kl = keys.length;
         if (kl === 0) return [];
@@ -210,7 +210,7 @@ export class Client extends EventEmitter {
         for (; k < kl; k++) {
             if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableContexts || this.profiles.items[keys[k]].contexts.length === 0)
                 continue;
-            tmp = tmp.concat(this.profiles.items[keys[k]].contexts.sort(SortArrayByPriority));
+            tmp.push.apply(tmp, this.profiles.items[keys[k]].contexts.sort(SortArrayByPriority));
         }
         this._itemCache.contexts = tmp;
         return this._itemCache['contexts'];
@@ -233,8 +233,19 @@ export class Client extends EventEmitter {
             this.profiles.add(Profile.Default);
             return;
         }
-        this.profiles.load(p);
-        if (!this.profiles.contains('Default'))
+        //backward compat, if no enabled one just load all so enabled profile setting can be scanned
+        //use direct setting instead of wrapper as wrapper assumes profiles are loaded if empty
+        if (this.options.profiles.enabled.length === 0)
+            this.profiles.loadPath(p);
+        else if (this.options.profiles.enabled.indexOf('default') === -1) {
+            this.profiles.load(this.options.profiles.enabled, p);
+            //always load default just incase
+            this.profiles.load('default', p);
+        }
+        else
+            this.profiles.load(this.options.profiles.enabled, p);
+        //ensure default exist and is loaded
+        if (!this.profiles.contains('default'))
             this.profiles.add(Profile.Default);
         this.clearCache();
         this.emit('profiles-loaded');
@@ -263,9 +274,12 @@ export class Client extends EventEmitter {
         let p = this.enabledProfiles;
         if (p.indexOf(profile) === -1) {
             p.push(profile);
+            //load if not loaded
+            if (!this.profiles.contains(profile))
+                this.profiles.load(profile, path.join(parseTemplate('{data}'), 'profiles'));
         }
         else {
-            //remove profile
+            //remove profile, dont bother unloading as they may turn it back on so just leave it loaded
             p = p.filter((a) => { return a !== profile; });
             //cant disable if only profile
             if (p.length === 0)

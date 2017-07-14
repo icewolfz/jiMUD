@@ -9,6 +9,8 @@
   - Preferences: display and command font selectors now list the original basic fonts as well as installed system fonts now 
   - Add better error checking for spell checker to prevent crashes if spell checker breaks
   - Buttons, aliases, triggers, macros, and context are now cached better, so global arrays are only built only when loaded or changed instead of each time accessed.
+- **Change:**
+  - Profiles loading use to load all profiles into memory even if not needed, now only profiles that are enabled are loaded to speed up loading times. Note this does not effect profile manager
 - **Fixed:**
   - MXP: links where not displaying correct tool tips
   - $selectedurl was always empty when right clicking a link

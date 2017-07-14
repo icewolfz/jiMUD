@@ -789,7 +789,17 @@ export class ProfileCollection {
         return pc;
     }
 
-    public load(p) {
+    public load(list: (string | string[]), p: string) {
+        if (typeof list === 'string')
+            list = [list];
+        for (let i = 0; i < list.length; i++) {
+            const n = path.join(p, list[i] + '.json');
+            if (fs.existsSync(n))
+                this.add(Profile.load(n));
+        }
+    }
+
+    public loadPath(p: string) {
         const files = fs.readdirSync(p);
         for (let i = 0; i < files.length; i++) {
             if (path.extname(files[i]) === '.json') {

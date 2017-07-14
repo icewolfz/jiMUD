@@ -1894,7 +1894,7 @@ export function init() {
         profiles.add(Profile.Default);
     }
     else {
-        profiles.load(p);
+        profiles.loadPath(p);
         if (!profiles.contains('default'))
             profiles.add(Profile.Default);
         watcher = fs.watch(p, (type, file) => {
@@ -2642,7 +2642,7 @@ export function doRefresh() {
                     profiles.add(Profile.Default);
                 }
                 else {
-                    profiles.load(p);
+                    profiles.loadPath(p);
                     if (!profiles.contains('default'))
                         profiles.add(Profile.Default);
                     if (watcher)
@@ -2667,7 +2667,7 @@ export function doRefresh() {
             profiles.add(Profile.Default);
         }
         else {
-            profiles.load(p);
+            profiles.loadPath(p);
             if (!profiles.contains('default'))
                 profiles.add(Profile.Default);
             if (watcher)
