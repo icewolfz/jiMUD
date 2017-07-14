@@ -32,6 +32,13 @@
     const RGBColor = require('rgbcolor');
     const path = require('path');
     const fs = require('fs');
+    var fontManager;
+    try {
+      fontManager = require('font-manager');
+    }
+    catch (ex) {
+      ipcRenderer.send('error', ex);
+    }
 
     var _settings;
     if (window.module) module.module;
@@ -45,6 +52,26 @@
         $('.win32').css('display', 'inline-block');
       else
         $('.win32').css('display', 'none');
+      if (fontManager) {
+        var fonts = fontManager.getAvailableFontsSync();
+        var fl = fonts.length;
+        var f = 0;
+        var sFont = {};
+        for (f = 0; f < fl; f++) {
+          if (sFont[fonts[f].family]) continue;
+          $('#font-system').append($('<option/>', {
+            value: fonts[f].family,
+            text: fonts[f].family,
+          }).css('font-family', fonts[f].family));
+          $('#cmdfont-system').append($('<option/>', {
+            value: fonts[f].family,
+            text: fonts[f].family
+          }).css('font-family', fonts[f].family));
+          sFont[fonts[f].family] = true;
+        }
+        $('#font').selectpicker('refresh');
+        $('#cmdfont').selectpicker('refresh');
+      }
       $('#font').change(() => {
         $('#font-sample').css('font-family', $('#font').val() + ', monospace');
         $('#font-sample').css('font-size', $('#fontSize').val());
@@ -852,19 +879,23 @@
             <label class="control-label">Font
               <br>
               <select id="font" class="form-control selectpicker" data-container="body" data-width="250px">
-                <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
-                <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
-                <option value="Georgia, serif">Georgia, serif</option>
-                <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
-                <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
-                <option value="Arial, Helvetica, sans-serif">Arial, Helvetica, sans-serif</option>
-                <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
-                <option value="'Comic Sans MS', cursive, sans-serif">'Comic Sans MS', cursive, sans-serif</option>
-                <option value="Impact, Charcoal, sans-serif">Impact, Charcoal, sans-serif</option>
-                <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
-                <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
-                <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
-                <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
+                <optgroup label="Basic">
+                  <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
+                  <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
+                  <option value="Georgia, serif">Georgia, serif</option>
+                  <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
+                  <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
+                  <option value="Arial, Helvetica, sans-serif">Arial, Helvetica, sans-serif</option>
+                  <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
+                  <option value="'Comic Sans MS', cursive, sans-serif">'Comic Sans MS', cursive, sans-serif</option>
+                  <option value="Impact, Charcoal, sans-serif">Impact, Charcoal, sans-serif</option>
+                  <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
+                  <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
+                  <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
+                  <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
+                </optgroup>
+                <optgroup id="font-system" label="System">
+                </optgroup>
               </select>
             </label>
           </div>
@@ -1128,19 +1159,23 @@
             <label class="control-label">Font
               <br>
               <select id="cmdfont" class="form-control selectpicker" data-container="body" data-width="250px">
-                <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
-                <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
-                <option value="Georgia, serif">Georgia, serif</option>
-                <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
-                <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
-                <option value="Arial, Helvetica, sans-serif">Arial, Helvetica, sans-serif</option>
-                <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
-                <option value="'Comic Sans MS', cursive, sans-serif">'Comic Sans MS', cursive, sans-serif</option>
-                <option value="Impact, Charcoal, sans-serif">Impact, Charcoal, sans-serif</option>
-                <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
-                <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
-                <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
-                <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
+                <optgroup label="Basic">
+                  <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
+                  <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
+                  <option value="Georgia, serif">Georgia, serif</option>
+                  <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
+                  <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
+                  <option value="Arial, Helvetica, sans-serif">Arial, Helvetica, sans-serif</option>
+                  <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
+                  <option value="'Comic Sans MS', cursive, sans-serif">'Comic Sans MS', cursive, sans-serif</option>
+                  <option value="Impact, Charcoal, sans-serif">Impact, Charcoal, sans-serif</option>
+                  <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
+                  <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
+                  <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
+                  <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
+                </optgroup>
+                <optgroup id="cmdfont-system" label="System">
+                </optgroup>
               </select>
             </label>
           </div>
