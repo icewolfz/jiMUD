@@ -37,7 +37,7 @@
     const { Settings } = require('./js/settings');
     const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
     const { dialog, Menu, MenuItem, nativeImage } = remote;
-    const { parseTemplate, setSelectionRange } = require("./js/library.js");
+    const { parseTemplate, setSelectionRange, SortArrayByPriority } = require("./js/library.js");
     const fs = require('fs');
     const path = require('path');
     const { version } = require("../package.json");
@@ -48,12 +48,12 @@
     }
     catch (ex) {
       if (!client)
-      setTimeout(()=> {
-        if(!client)
-          console.log(ex);
-        else
-          client.error(ex);
-      }, 1000);        
+        setTimeout(() => {
+          if (!client)
+            console.log(ex);
+          else
+            client.error(ex);
+        }, 1000);
     }
 
     var set = Settings.load(remote.getGlobal('settingsFile'));
@@ -1201,10 +1201,12 @@
       buttons.empty();
       if (!client.options.buttons.user)
         return;
-      var bl = client.buttons.length;
+      var pButtons = client.buttons;
+      pButtons.sort(SortArrayByPriority);
+      var bl = pButtons.length;
       if (bl > 0) {
         for (var b = 0; b < bl; b++) {
-          var item = client.buttons[b];
+          var item = pButtons[b];
           if (!item.enabled) continue;
           var button;
           if (item.name && item.name.length > 0)
