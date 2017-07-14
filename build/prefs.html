@@ -59,14 +59,21 @@
         var sFont = {};
         for (f = 0; f < fl; f++) {
           if (sFont[fonts[f].family]) continue;
-          $('#font-system').append($('<option/>', {
-            value: fonts[f].family,
-            text: fonts[f].family,
-          }).css('font-family', fonts[f].family));
-          $('#cmdfont-system').append($('<option/>', {
-            value: fonts[f].family,
-            text: fonts[f].family
-          }).css('font-family', fonts[f].family));
+          var op;
+          if (fonts[f].monospace) {
+            op = $('<option/>', {
+              value: "'" + fonts[f].family + "', monospace",
+              text: "'" + fonts[f].family + "', monospace",
+            });
+          }
+          else
+            op = $('<option/>', {
+              value: "'" + fonts[f].family + "'",
+              text: "'" + fonts[f].family + "'",
+            });
+          op[0].style.fontFamily = "'" + fonts[f].family + "'";
+          $('#font-system').append(op);
+          $('#cmdfont-system').append(op.clone());
           sFont[fonts[f].family] = true;
         }
         $('#font').selectpicker('refresh');
