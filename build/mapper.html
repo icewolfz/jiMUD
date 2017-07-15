@@ -26,7 +26,7 @@
 
     var roomEditor = false;
     var importType = ImportType.Replace;
-/*
+
     var menu = [
       {
         label: '&File',
@@ -35,26 +35,24 @@
           {
             label: '&Enabled',
             type: 'checkbox',
-            click: () => {
-
-            }
+            click: toggleEnabled
           },
           { type: 'separator' },
           {
             label: '&Export',
             submenu: [
-              { label: 'Export as image' },
-              { label: 'Export current view as image' },
+              { label: 'Export as image', click: exportImage },
+              { label: 'Export current view as image', click: exportCurrentImage },
               { type: 'separator' },
-              { label: 'Export current area' },
-              { label: 'Export all' },
+              { label: 'Export current area', click: exportCurrentArea },
+              { label: 'Export all', click: exportAll },
             ]
           },
           {
             label: '&Import',
             submenu: [
-              { label: 'Import and replace' },
-              { label: 'Import and merge' },
+              { label: 'Import and replace', click: importMerge },
+              { label: 'Import and merge', click: importReplace },
             ]
           },
           { type: 'separator' },
@@ -67,44 +65,96 @@
       {
         label: '&Edit',
         submenu: [
-          { label: 'Remove selected room' },
-          { label: 'Remove current room' },
+          { label: 'Remove selected room', enabled: false, click: removeSelectedRoom },
+          { label: 'Remove current room', enabled: false, click: removeCurrentRoom },
           { type: 'separator' },
-          { label: 'Remove current area' },
-          { label: 'Remove all' },
+          { label: 'Remove current area', click: removeCurrentArea },
+          { label: 'Remove all', click: removeAll },
+          { type: 'separator' },
+          { label: 'Compact map', click: compact },
         ]
       },
       {
         label: '&View',
         submenu: [
-          { label: 'Legend', type: 'checkbox' },
-          { label: 'Room Properties', type: 'checkbox' },
+          { label: 'Legend', type: 'checkbox', click: toggleLegend },
+          { label: 'Room Properties', type: 'checkbox', click: toggleRooms },
           { type: 'separator' },
-          { label: 'Split areas', type: 'checkbox' },
-          { label: 'Fill walls', type: 'checkbox' },
+          { label: 'Split areas', type: 'checkbox', click: toggleSplitArea },
+          { label: 'Fill walls', type: 'checkbox', click: toggleFillWalls },
           { type: 'separator' },
-          { label: 'Refresh' },
+          { label: 'Refresh', click: refreshMap },
         ]
       },
       {
         label: '&Actions',
         submenu: [
-          { label: 'Follow', type: 'checkbox' },
+          { label: 'Follow', type: 'checkbox', click: toggleFollow },
           { type: 'separator' },
-          { label: 'Focus on current room' },
-          { label: 'Set selected as current' },
+          { label: 'Focus on current room', click: () => { mapper.focusCurrentRoom(); } },
+          { label: 'Set selected as current', click: () => { mapper.setCurrent(); } },
           { type: 'separator' },
-          { label: 'Highlight path' },
-          { label: 'Clear path', enabled: false },
-          { label: 'Walk path', enabled: false },
+          { label: 'Highlight path', enabled: false, click: () => { mapper.showPath(); } },
+          { label: 'Clear path', enabled: false, click: () => { mapper.clearPath(); } },
+          { label: 'Walk path', enabled: false, click: () => { mapper.walkPath(); } },
         ]
       }
 
     ];
-*/
-    //remote.getCurrentWindow().setMenu(Menu.buildFromTemplate(menu));
+
+    var menubar = Menu.buildFromTemplate(menu);
+    remote.getCurrentWindow().setMenu(menubar);
+
     var mapper;
     var MapperNavDown = false;
+
+    function updateMenuItem(args) {
+      var item, i = 0, items;
+      var tItem, tItems;
+      if (args == null || args.menu == null) return;
+
+      if (!Array.isArray(args.menu))
+        args.menu = args.menu.split('|');
+
+      items = menubar.items;
+      tItems = menu;
+      for (i = 0; i < args.menu.length; i++) {
+        if (!items || items.length === 0) break;
+        for (var m = 0; m < items.length; m++) {
+          if (!items[m]) continue;
+          if (items[m].id === args.menu[i] || items[m].label.toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
+            item = items[m];
+            tItem = tItems[m];
+            if (item.submenu) {
+              items = item.submenu.items;
+              tItems = tItem.submenu;
+            }
+            else
+              items = null;
+            break;
+          }
+        }
+      }
+      if (!item)
+        return;
+      if (args.enabled != null)
+        item.enabled = args.enabled ? true : false;
+      if (args.checked != null)
+        item.checked = args.checked ? true : false;
+      if (args.icon != null)
+        item.icon = args.icon;
+      if (args.visible != null)
+        item.visible = args.visible ? true : false;
+      if (args.position != null)
+        item.position = args.position;
+
+      tItem.enabled = item.enabled;
+      tItem.checked = item.checked;
+      tItem.icon = item.icon;
+      tItem.visible = item.visible;
+      tItem.position = item.position;
+    }
+
     function MapperNavClicked(x, y) {
       if (!MapperNavDown) return;
       mapper.scrollBy(x, y);
@@ -114,20 +164,6 @@
     function clearButton(id) {
       $(id).removeClass('open');
       $(id).blur();
-    }
-
-    function toggleRooms() {
-      roomEditor = !roomEditor;
-      if (roomEditor) {
-        $("#mapper-room").css("display", "block");
-        $("#mapper-body").css('right', $('#mapper-room').outerWidth() + "px");
-      }
-      else {
-        $("#mapper-room").css("display", '');
-        $("#mapper-body").css('right', '');
-      }
-      $(window).trigger('resize');
-      ipcRenderer.send('setting-changed', { type: 'mapper', name: 'room', value: roomEditor });
     }
 
     function saveRoom() {
@@ -190,11 +226,7 @@
 
       var options = Settings.load(remote.getGlobal('settingsFile'));
       mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
-      mapper.enabled = options.mapper.enabled;
-      mapper.showLegend = options.mapper.legend;
-      mapper.follow = options.mapper.follow;
-      mapper.splitArea = options.mapper.split;
-      mapper.fillWalls = options.mapper.fill;
+
       mapper.active = options.mapper.active;
       mapper.commandDelay = options.commandDelay;
       mapper.commandDelayCount = options.commandDelayCount;
@@ -202,24 +234,18 @@
 
       $("#MapLevel").val(options.mapper.active.z);
       $("#MapZone").val(options.mapper.active.zone);
-      if (options.mapper.room) {
-        $("#btn-room").button('toggle');
+      if (options.mapper.room)
         toggleRooms();
-      }
-      /*
-      mapper._db.on('profile', (sql, time)=>{
-        console.log(sql);
-        console.log(time);
-      })
-      */
 
       mapper.on('path-shown', () => {
         $("#btn-clear").prop('disabled', false);
+        updateMenuItem({ menu: 'actions|walk path', enabled: false });
         //$("#btn-walk").prop('disabled', false);
       });
 
       mapper.on('path-cleared', () => {
         $("#btn-clear").prop('disabled', true);
+        updateMenuItem({ menu: 'actions|walk path', enabled: true });
         //$("#btn-walk").prop('disabled', true);
       });
 
@@ -279,6 +305,10 @@
       mapper.on('current-room-changed', (room) => {
         $("#btn-walk").prop('disabled', !(mapper.current.ID && room.ID && mapper.current.ID != room.ID));
         $("#btn-highlight").prop('disabled', !(mapper.current.ID && room.ID && mapper.current.ID != room.ID));
+
+        updateMenuItem({ menu: 'edit|Remove current room', enabled: mapper.current.ID && room.ID });
+        updateMenuItem({ menu: 'actions|highlight path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
+        updateMenuItem({ menu: 'actions|walk path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
       });
 
       mapper.on('room-selected', (room) => {
@@ -290,6 +320,12 @@
           $("#mapper-room select").prop("disabled", true);
           $("#mapper-room button").prop("disabled", true);
           $("#mapper-room textarea").prop("disabled", true);
+
+          updateMenuItem({ menu: 'edit|Remove selected room', enabled: false });
+          updateMenuItem({ menu: 'actions|highlight path', enabled: false });
+          updateMenuItem({ menu: 'actions|walk path', enabled: false });
+
+
           $("#reX").val('');
           $("#reY").val('');
           $("#reZ").val('');
@@ -322,6 +358,11 @@
           $("#mapper-room select").prop("disabled", false);
           $("#mapper-room button").prop("disabled", false);
           $("#mapper-room textarea").prop("disabled", false);
+
+          updateMenuItem({ menu: 'edit|Remove selected room', enabled: true });
+          updateMenuItem({ menu: 'actions|highlight path', enabled: mapper.current.ID && mapper.current.ID != room.ID });
+          updateMenuItem({ menu: 'actions|walk path', enabled: mapper.current.ID && mapper.current.ID != room.ID });
+
           $("#reX").val(room.X || room.x);
           $("#reY").val(room.Y || room.y);
           $("#reZ").val(room.Z || room.z || 0);
@@ -358,7 +399,7 @@
           updateAreas();
           $("#mapProgress")[0].close();
           ipcRenderer.send('set-progress', { value: -1 });
-          ipcRenderer.send('set-progress-window', 'mapper', { value: -1});
+          ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
         }
       });
 
@@ -473,16 +514,20 @@
           $("#export .dropdown-menu").removeClass("dropdown-menu-right");
       });
 
-      if (mapper.enabled)
-        $("#btn-enable").button('toggle');
+      if (options.mapper.enabled) {
+        mapper.enabled = false;
+        toggleEnabled();
+      }
       if (mapper.showLegend)
-        $("#btn-legend").button('toggle');
-      if (mapper.follow)
-        $("#btn-follow").button('toggle');
+        toggleLegend();
+      if (options.mapper.follow) {
+        mapper.follow = false;
+        toggleFollow();
+      }
       if (mapper.splitArea)
-        $("#btn-split").button('toggle');
+        toggleSplitArea();
       if (mapper.fillWalls)
-        $("#btn-fill").button('toggle');
+        toggleFillWalls();
       if (mapper.follow)
         mapper.focusCurrentRoom();
 
@@ -493,65 +538,17 @@
         var y = Math.floor(pos.top + $(this).outerHeight() + 2);
         var removeMenu = new Menu();
         removeMenu.append(new MenuItem({
-          label: 'Remove selected room', enabled: mapper.selected.ID != null, click() {
-            clearButton("#remove");
-            dialog.showMessageBox(remote.getCurrentWindow(), {
-              type: 'question',
-              title: 'Remove selected room',
-              message: 'Are you sure you want to remove selected room?',
-              buttons: ['Yes', 'No'],
-              defaultId: 1,
-            }, (response) => {
-              if (response === 0)
-                mapper.clearSelectedRoom();
-            });
-          }
+          label: 'Remove selected room', enabled: mapper.selected.ID != null, click: removeSelectedRoom
         }));
         removeMenu.append(new MenuItem({
-          label: 'Remove current room', enabled: mapper.current.ID != null, click() {
-            clearButton("#remove");
-            dialog.showMessageBox(remote.getCurrentWindow(), {
-              type: 'question',
-              title: 'Remove current room',
-              message: 'Are you sure you want to remove current room?',
-              buttons: ['Yes', 'No'],
-              defaultId: 1,
-            }, (response) => {
-              if (response === 0)
-                mapper.clearRoom();
-            });
-          }
+          label: 'Remove current room', enabled: mapper.current.ID != null, click: removeCurrentRoom
         }));
         removeMenu.append(new MenuItem({ type: 'separator' }));
         removeMenu.append(new MenuItem({
-          label: 'Remove current area', click() {
-            clearButton("#remove");
-            dialog.showMessageBox(remote.getCurrentWindow(), {
-              type: 'question',
-              title: 'Remove ' + mapper.active.area,
-              message: 'Are you sure you want to remove all rooms from ' + mapper.active.area + '?',
-              buttons: ['Yes', 'No'],
-              defaultId: 1,
-            }, (response) => {
-              if (response === 0)
-                mapper.clearArea();
-            });
-          }
+          label: 'Remove current area', click: removeCurrentArea
         }));
         removeMenu.append(new MenuItem({
-          label: 'Remove all', click() {
-            clearButton("#remove");
-            dialog.showMessageBox(remote.getCurrentWindow(), {
-              type: 'question',
-              title: 'Remove all',
-              message: 'Are you sure you want to remove all rooms?',
-              buttons: ['Yes', 'No'],
-              defaultId: 1,
-            }, (response) => {
-              if (response === 0)
-                mapper.clearAll();
-            });
-          }
+          label: 'Remove all', click: removeAll
         }));
         removeMenu.popup(remote.getCurrentWindow(), x, y);
       });
@@ -563,299 +560,24 @@
         var y = Math.floor(pos.top + $(this).outerHeight() + 2);
         var exportMenu = new Menu();
         exportMenu.append(new MenuItem({
-          label: 'Export as image', click() {
-            clearButton("#export");
-
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
-              title: 'Export clipped view',
-              defaultPath: 'jiMUD' + (!mapper.SplitArea ? '' : "." + mapper.active.area) + '.png',
-              filters: [
-
-                { name: 'Images (*.png)', extensions: ['png'] },
-                { name: 'All files (*.*)', extensions: ['*'] },
-              ]
-            },
-              function (fileName) {
-                if (fileName === undefined) {
-                  return;
-                }
-                mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
-                  if (!rooms || rooms.length === 0) {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
-                      type: 'error',
-                      title: 'Error generating',
-                      message: 'Could not generate map'
-                    });
-                    return;
-                  }
-                  var x = null, y = 0, w = 0, h = 0, room, cx, cy, rms;
-                  var t = mapper.active.area == null ? '' : mapper.active.area;
-                  if (!mapper.SplitArea)
-                    t = '';
-                  for (rms in rooms) {
-                    if (!rooms.hasOwnProperty(rms)) continue;
-                    room = rooms[rms];
-                    if (room == null) continue;
-                    if (x == null) {
-                      x = room.X;
-                      w = room.X + 1;
-                      y = room.Y;
-                      h = room.Y + 1;
-                      continue;
-                    }
-                    if (room.X < x) x = room.X; else if (room.X > w) w = room.X;
-                    if (room.Y < y) y = room.Y; else if (room.Y > h) h = room.Y;
-                  }
-                  mapper._context.font = "italic bold 16pt Georgia";
-                  var fx = mapper._context.measureText(t).width;
-                  var rectWidth = Math.sqrt(Math.pow(w - x, 2)) * 32 + 60 + 32;
-                  var rectHeight = Math.sqrt(Math.pow(y - h, 2)) * 32 + 60 + 32;
-                  if (rectWidth < fx) rectWidth = fx + 60;
-                  if (mapper.ShowLegend) {
-                    rectWidth += 155;
-                    if (rectHeight < 200) rectHeight = 200;
-                  }
-                  var canvas = document.createElement('canvas');
-                  canvas.width = rectWidth;
-                  canvas.height = rectHeight;
-
-
-                  var ctx;
-                  if (canvas && canvas.getContext)
-                    ctx = canvas.getContext("2d");
-                  else {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
-                      type: 'error',
-                      title: 'Error generating',
-                      message: 'Could not generate map'
-                    });
-                    return;
-                  }
-                  ctx.strokeStyle = "black";
-
-                  ctx.fillStyle = "#eae4d6";
-                  ctx.fillRect(0, 0, canvas.width, canvas.height);
-                  ctx.font = "8pt Arial";
-                  for (rms in rooms) {
-                    if (!rooms.hasOwnProperty(rms)) continue;
-                    room = rooms[rms];
-                    //no room
-                    if (room == null) continue;
-                    cx = (room.X - x) * 32 + 30.5;
-                    cy = (room.Y - y) * 32 + 30.5;
-                    mapper.DrawRoom(ctx, cx, cy, room, true);
-                  }
-                  ctx.save();
-                  ctx.strokeStyle = "black";
-                  ctx.fillStyle = "black";
-                  ctx.font = "italic bold 16pt Georgia";
-                  fx = rectWidth / 2 - fx / 2;
-                  ctx.fillText(t, fx, 20);
-                  ctx.translate(rectWidth - 25, rectHeight - 25);
-                  ctx.font = "italic bold 12pt Georgia";
-                  ctx.fillText("N", 3, -5);
-                  ctx.beginPath();
-                  ctx.moveTo(10, 0);
-                  ctx.lineTo(5, 15);
-                  ctx.lineTo(10, 20);
-                  ctx.lineTo(15, 15);
-                  ctx.lineTo(10, 0);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
-                  ctx.restore();
-                  mapper.DrawLegend(ctx, rectWidth - 185, -10, 1);
-
-                  fs.writeFileSync(fileName, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG());
-                  /*
-                                  canvas.toBlob(function (blob) {
-                                    blob_to_buffer(blob, function (err, buff) {
-                                      if (err) {
-                                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                                          type: 'error',
-                                          title: 'Error saving map',
-                                          message: err
-                                        });
-                                        return;
-                                      }
-                                      var img = nativeImage.createFromBuffer(buff);
-                                      fs.writeFileSync(fileName, img.toPNG());
-                  
-                                    });
-                                  });
-                                  */
-                });
-              });
-
-          }
+          label: 'Export as image', click: exportImage
         }));
         exportMenu.append(new MenuItem({
-          label: 'Export current view as image', click() {
-            clearButton("#export");
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
-              title: 'Export clipped view',
-              defaultPath: 'jiMUD.clipped.png',
-              filters: [
-
-                { name: 'Images (*.png)', extensions: ['png'] },
-                { name: 'All files (*.*)', extensions: ['*'] },
-              ]
-            },
-              function (fileName) {
-                if (fileName === undefined) {
-                  return;
-                }
-                var oldCanvas = document.getElementById("MapperCanvas");
-                var newCanvas = document.createElement('canvas');
-                var context = newCanvas.getContext('2d');
-                newCanvas.width = oldCanvas.width;
-                newCanvas.height = oldCanvas.height;
-                mapper.draw(newCanvas, context, true, () => {
-                  fs.writeFileSync(fileName, nativeImage.createFromDataURL(newCanvas.toDataURL('image/png')).toPNG());
-                  /*
-                  newCanvas.toBlob(function (blob) {
-                    blob_to_buffer(blob, function (err, buff) {
-                      if (err) {
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                          type: 'error',
-                          title: 'Error saving map',
-                          message: err
-                        });
-                        return;
-                      }
-                      var img = nativeImage.createFromBuffer(buff);
-                      fs.writeFileSync(fileName, img.toPNG());
-  
-                    });
-                  });
-                  */
-                });
-              });
-          }
+          label: 'Export current view as image', click: exportCurrentImage
         }));
         exportMenu.append(new MenuItem({ type: 'separator' }));
         exportMenu.append(new MenuItem({
-          label: 'Export current area', click() {
-            clearButton("#export");
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
-              title: 'Export current area',
-              defaultPath: 'jiMUD.' + mapper.active.area + '.txt',
-              filters: [
-
-                { name: 'Text files (*.txt)', extensions: ['txt'] },
-                { name: 'All files (*.*)', extensions: ['*'] },
-              ]
-            },
-              function (fileName) {
-                if (fileName === undefined) {
-                  return;
-                }
-                ipcRenderer.send('set-progress', { value: 0 });
-                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-                $("#mapProgressbar").html('<progress max="100"></progress>');
-                $("#mapProgressTitle").html("Exporting '" + mapper.active.area + "' map data&hellip;");
-                $("#mapProgress")[0].showModal();
-                mapper.exportArea(fileName);
-              });
-          }
+          label: 'Export current area', click: exportCurrentArea
         }));
         exportMenu.append(new MenuItem({
-          label: 'Export all', click() {
-            clearButton("#export");
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
-              title: 'Export all',
-              defaultPath: 'jiMUD.txt',
-              filters: [
-
-                { name: 'Text files (*.txt)', extensions: ['txt'] },
-                { name: 'All files (*.*)', extensions: ['*'] },
-              ]
-            },
-              function (fileName) {
-                if (fileName === undefined) {
-                  return;
-                }
-                $("#mapProgressbar").html('<progress max="100"></progress>');
-                $("#mapProgressTitle").html("Exporting map data&hellip;");
-                ipcRenderer.send('set-progress', { value: 0 });
-                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-                $("#mapProgress")[0].showModal();
-                mapper.exportAll(fileName);
-              });
-          }
+          label: 'Export all', click: exportAll
         }));
         exportMenu.append(new MenuItem({ type: 'separator' }));
         exportMenu.append(new MenuItem({
-          label: 'Import and merge', click() {
-            clearButton("#export");
-            dialog.showOpenDialog(remote.getCurrentWindow(),
-              {
-                filters: [
-                  { name: 'Text files (*.txt)', extensions: ['txt'] },
-                  { name: 'All files (*.*)', extensions: ['*'] },
-                ]
-              },
-              function (fileNames) {
-                if (fileNames === undefined) {
-                  return;
-                }
-                for (var f = 0, fl = fileNames.length; f < fl; f++)
-                  fs.readFile(fileNames[f], (err, data) => {
-                    if (err) throw err;
-                    data = JSON.parse(data);
-                    if (!data) {
-                      dialog.showMessageBox(remote.getCurrentWindow(), {
-                        type: 'error',
-                        title: 'Invalid map data',
-                        message: 'Invalid map data unable to process.'
-                      });
-                      return;
-                    }
-                    ipcRenderer.send('set-progress', { value: 0 });
-                    ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-                    $("#mapProgressbar").html('<progress max="100"></progress>');
-                    $("#mapProgressTitle").html("Importing map data&hellip;");
-                    $("#mapProgress")[0].showModal();
-                    mapper.import(data, ImportType.Merge);
-                  });
-              });
-          }
+          label: 'Import and merge', click: importMerge
         }));
         exportMenu.append(new MenuItem({
-          label: 'Import and replace', click() {
-            clearButton("#export");
-            dialog.showOpenDialog(remote.getCurrentWindow(),
-              {
-                filters: [
-                  { name: 'Text files (*.txt)', extensions: ['txt'] },
-                  { name: 'All files (*.*)', extensions: ['*'] },
-                ]
-              },
-              function (fileNames) {
-                if (fileNames === undefined) {
-                  return;
-                }
-                for (var f = 0, fl = fileNames.length; f < fl; f++)
-                  fs.readFile(fileNames[f], (err, data) => {
-                    if (err) throw err;
-                    data = JSON.parse(data);
-                    if (!data) {
-                      dialog.showMessageBox(remote.getCurrentWindow(), {
-                        type: 'error',
-                        title: 'Invalid map data',
-                        message: 'Invalid map data unable to process.'
-                      });
-                      return;
-                    }
-                    ipcRenderer.send('set-progress', { value: 0 });
-                    ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-                    $("#mapProgressbar").html('<progress max="100"></progress>');
-                    $("#mapProgressTitle").html("Importing map data&hellip;");
-                    $("#mapProgress")[0].showModal();
-                    mapper.import(data, ImportType.Replace);
-                  });
-              });
-          }
+          label: 'Import and replace', click: importReplace
         }));
 
         exportMenu.popup(remote.getCurrentWindow(), x, y);
@@ -928,32 +650,426 @@
       ipcRenderer.send('set-progress-window', 'mapper', { value: 0, options: { mode: 'indeterminate' } });
       mapper.compact();
     }
+
+    function toggleEnabled() {
+      mapper.enabled = !mapper.enabled;
+      if (mapper.enabled)
+        $('#btn-enable').addClass('active');
+      else
+        $('#btn-enable').removeClass('active');
+      $('#btn-enable').prop('aria-pressed', mapper.enabled);
+      updateMenuItem({ menu: 'file|enabled', checked: mapper.enabled });
+    }
+
+    function toggleFollow() {
+      mapper.follow = !mapper.follow;
+      if (mapper.follow)
+        $('#btn-follow').addClass('active');
+      else
+        $('#btn-follow').removeClass('active');
+      $('#btn-follow').prop('aria-pressed', mapper.follow);
+      updateMenuItem({ menu: 'actions|follow', checked: mapper.follow });
+    }
+
+    function toggleLegend() {
+      mapper.showLegend = !mapper.showLegend;
+      if (mapper.showLegend)
+        $('#btn-legend').addClass('active');
+      else
+        $('#btn-legend').removeClass('active');
+      $('#btn-legend').prop('aria-pressed', mapper.showLegend);
+      updateMenuItem({ menu: 'view|legend', checked: mapper.showLegend });
+    }
+
+    function toggleRooms() {
+      roomEditor = !roomEditor;
+      if (roomEditor) {
+        $("#mapper-room").css("display", "block");
+        $("#mapper-body").css('right', $('#mapper-room').outerWidth() + "px");
+        $('#btn-room').addClass('active');
+      }
+      else {
+        $("#mapper-room").css("display", '');
+        $("#mapper-body").css('right', '');
+        $('#btn-room').removeClass('active');
+      }
+      $(window).trigger('resize');
+      ipcRenderer.send('setting-changed', { type: 'mapper', name: 'room', value: roomEditor });
+
+      $('#btn-room').prop('aria-pressed', roomEditor);
+      updateMenuItem({ menu: 'view|room properties', checked: roomEditor });
+    }
+
+    function refreshMap() {
+      saveRoom();
+      mapper.refresh();
+    }
+
+    function toggleSplitArea() {
+      mapper.splitArea = !mapper.splitArea;
+      if (mapper.splitArea)
+        $('#btn-split').addClass('active');
+      else
+        $('#btn-split').removeClass('active');
+      $('#btn-split').prop('aria-pressed', mapper.splitArea);
+      updateMenuItem({ menu: 'view|split areas', checked: mapper.splitArea });
+    }
+
+    function toggleFillWalls() {
+      mapper.fillWalls = !mapper.fillWalls;
+      if (mapper.fillWalls)
+        $('#btn-fill').addClass('active');
+      else
+        $('#btn-fill').removeClass('active');
+      $('#btn-fill').prop('aria-pressed', mapper.fillWalls);
+      updateMenuItem({ menu: 'view|fill walls', checked: mapper.fillWalls });
+    }
+
+    function exportImage() {
+      clearButton("#export");
+      dialog.showSaveDialog(remote.getCurrentWindow(), {
+        title: 'Export clipped view',
+        defaultPath: 'jiMUD' + (!mapper.SplitArea ? '' : "." + mapper.active.area) + '.png',
+        filters: [
+
+          { name: 'Images (*.png)', extensions: ['png'] },
+          { name: 'All files (*.*)', extensions: ['*'] },
+        ]
+      },
+        function (fileName) {
+          if (fileName === undefined) {
+            return;
+          }
+          mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
+            if (!rooms || rooms.length === 0) {
+              dialog.showMessageBox(remote.getCurrentWindow(), {
+                type: 'error',
+                title: 'Error generating',
+                message: 'Could not generate map'
+              });
+              return;
+            }
+            var x = null, y = 0, w = 0, h = 0, room, cx, cy, rms;
+            var t = mapper.active.area == null ? '' : mapper.active.area;
+            if (!mapper.SplitArea)
+              t = '';
+            for (rms in rooms) {
+              if (!rooms.hasOwnProperty(rms)) continue;
+              room = rooms[rms];
+              if (room == null) continue;
+              if (x == null) {
+                x = room.X;
+                w = room.X + 1;
+                y = room.Y;
+                h = room.Y + 1;
+                continue;
+              }
+              if (room.X < x) x = room.X; else if (room.X > w) w = room.X;
+              if (room.Y < y) y = room.Y; else if (room.Y > h) h = room.Y;
+            }
+            mapper._context.font = "italic bold 16pt Georgia";
+            var fx = mapper._context.measureText(t).width;
+            var rectWidth = Math.sqrt(Math.pow(w - x, 2)) * 32 + 60 + 32;
+            var rectHeight = Math.sqrt(Math.pow(y - h, 2)) * 32 + 60 + 32;
+            if (rectWidth < fx) rectWidth = fx + 60;
+            if (mapper.ShowLegend) {
+              rectWidth += 155;
+              if (rectHeight < 200) rectHeight = 200;
+            }
+            var canvas = document.createElement('canvas');
+            canvas.width = rectWidth;
+            canvas.height = rectHeight;
+
+
+            var ctx;
+            if (canvas && canvas.getContext)
+              ctx = canvas.getContext("2d");
+            else {
+              dialog.showMessageBox(remote.getCurrentWindow(), {
+                type: 'error',
+                title: 'Error generating',
+                message: 'Could not generate map'
+              });
+              return;
+            }
+            ctx.strokeStyle = "black";
+
+            ctx.fillStyle = "#eae4d6";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "8pt Arial";
+            for (rms in rooms) {
+              if (!rooms.hasOwnProperty(rms)) continue;
+              room = rooms[rms];
+              //no room
+              if (room == null) continue;
+              cx = (room.X - x) * 32 + 30.5;
+              cy = (room.Y - y) * 32 + 30.5;
+              mapper.DrawRoom(ctx, cx, cy, room, true);
+            }
+            ctx.save();
+            ctx.strokeStyle = "black";
+            ctx.fillStyle = "black";
+            ctx.font = "italic bold 16pt Georgia";
+            fx = rectWidth / 2 - fx / 2;
+            ctx.fillText(t, fx, 20);
+            ctx.translate(rectWidth - 25, rectHeight - 25);
+            ctx.font = "italic bold 12pt Georgia";
+            ctx.fillText("N", 3, -5);
+            ctx.beginPath();
+            ctx.moveTo(10, 0);
+            ctx.lineTo(5, 15);
+            ctx.lineTo(10, 20);
+            ctx.lineTo(15, 15);
+            ctx.lineTo(10, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+            mapper.DrawLegend(ctx, rectWidth - 185, -10, 1);
+
+            fs.writeFileSync(fileName, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG());
+          });
+        });
+
+    }
+
+    function exportCurrentImage() {
+      clearButton("#export");
+      dialog.showSaveDialog(remote.getCurrentWindow(), {
+        title: 'Export clipped view',
+        defaultPath: 'jiMUD.clipped.png',
+        filters: [
+
+          { name: 'Images (*.png)', extensions: ['png'] },
+          { name: 'All files (*.*)', extensions: ['*'] },
+        ]
+      },
+        function (fileName) {
+          if (fileName === undefined) {
+            return;
+          }
+          var oldCanvas = document.getElementById("MapperCanvas");
+          var newCanvas = document.createElement('canvas');
+          var context = newCanvas.getContext('2d');
+          newCanvas.width = oldCanvas.width;
+          newCanvas.height = oldCanvas.height;
+          mapper.draw(newCanvas, context, true, () => {
+            fs.writeFileSync(fileName, nativeImage.createFromDataURL(newCanvas.toDataURL('image/png')).toPNG());
+          });
+        });
+    }
+
+    function exportCurrentArea() {
+      clearButton("#export");
+      dialog.showSaveDialog(remote.getCurrentWindow(), {
+        title: 'Export current area',
+        defaultPath: 'jiMUD.' + mapper.active.area + '.txt',
+        filters: [
+
+          { name: 'Text files (*.txt)', extensions: ['txt'] },
+          { name: 'All files (*.*)', extensions: ['*'] },
+        ]
+      },
+        function (fileName) {
+          if (fileName === undefined) {
+            return;
+          }
+          ipcRenderer.send('set-progress', { value: 0 });
+          ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+          $("#mapProgressbar").html('<progress max="100"></progress>');
+          $("#mapProgressTitle").html("Exporting '" + mapper.active.area + "' map data&hellip;");
+          $("#mapProgress")[0].showModal();
+          mapper.exportArea(fileName);
+        });
+    }
+
+    function exportAll() {
+      clearButton("#export");
+      dialog.showSaveDialog(remote.getCurrentWindow(), {
+        title: 'Export all',
+        defaultPath: 'jiMUD.txt',
+        filters: [
+
+          { name: 'Text files (*.txt)', extensions: ['txt'] },
+          { name: 'All files (*.*)', extensions: ['*'] },
+        ]
+      },
+        function (fileName) {
+          if (fileName === undefined) {
+            return;
+          }
+          $("#mapProgressbar").html('<progress max="100"></progress>');
+          $("#mapProgressTitle").html("Exporting map data&hellip;");
+          ipcRenderer.send('set-progress', { value: 0 });
+          ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+          $("#mapProgress")[0].showModal();
+          mapper.exportAll(fileName);
+        });
+    }
+
+    function importMerge() {
+      clearButton("#export");
+      dialog.showOpenDialog(remote.getCurrentWindow(),
+        {
+          filters: [
+            { name: 'Text files (*.txt)', extensions: ['txt'] },
+            { name: 'All files (*.*)', extensions: ['*'] },
+          ]
+        },
+        function (fileNames) {
+          if (fileNames === undefined) {
+            return;
+          }
+          for (var f = 0, fl = fileNames.length; f < fl; f++)
+            fs.readFile(fileNames[f], (err, data) => {
+              if (err) throw err;
+              data = JSON.parse(data);
+              if (!data) {
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                  type: 'error',
+                  title: 'Invalid map data',
+                  message: 'Invalid map data unable to process.'
+                });
+                return;
+              }
+              ipcRenderer.send('set-progress', { value: 0 });
+              ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+              $("#mapProgressbar").html('<progress max="100"></progress>');
+              $("#mapProgressTitle").html("Importing map data&hellip;");
+              $("#mapProgress")[0].showModal();
+              mapper.import(data, ImportType.Merge);
+            });
+        });
+    }
+
+    function importReplace() {
+      clearButton("#export");
+      dialog.showOpenDialog(remote.getCurrentWindow(),
+        {
+          filters: [
+            { name: 'Text files (*.txt)', extensions: ['txt'] },
+            { name: 'All files (*.*)', extensions: ['*'] },
+          ]
+        },
+        function (fileNames) {
+          if (fileNames === undefined) {
+            return;
+          }
+          for (var f = 0, fl = fileNames.length; f < fl; f++)
+            fs.readFile(fileNames[f], (err, data) => {
+              if (err) throw err;
+              data = JSON.parse(data);
+              if (!data) {
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                  type: 'error',
+                  title: 'Invalid map data',
+                  message: 'Invalid map data unable to process.'
+                });
+                return;
+              }
+              ipcRenderer.send('set-progress', { value: 0 });
+              ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+              $("#mapProgressbar").html('<progress max="100"></progress>');
+              $("#mapProgressTitle").html("Importing map data&hellip;");
+              $("#mapProgress")[0].showModal();
+              mapper.import(data, ImportType.Replace);
+            });
+        });
+    }
+
+    function removeSelectedRoom() {
+      clearButton("#remove");
+      dialog.showMessageBox(remote.getCurrentWindow(), {
+        type: 'question',
+        title: 'Remove selected room',
+        message: 'Are you sure you want to remove selected room?',
+        buttons: ['Yes', 'No'],
+        defaultId: 1,
+      }, (response) => {
+        if (response === 0)
+          mapper.clearSelectedRoom();
+      });
+    }
+
+    function removeCurrentRoom() {
+      clearButton("#remove");
+      dialog.showMessageBox(remote.getCurrentWindow(), {
+        type: 'question',
+        title: 'Remove current room',
+        message: 'Are you sure you want to remove current room?',
+        buttons: ['Yes', 'No'],
+        defaultId: 1,
+      }, (response) => {
+        if (response === 0)
+          mapper.clearRoom();
+      });
+    }
+
+    function removeCurrentArea() {
+      clearButton("#remove");
+      dialog.showMessageBox(remote.getCurrentWindow(), {
+        type: 'question',
+        title: 'Remove ' + mapper.active.area,
+        message: 'Are you sure you want to remove all rooms from ' + mapper.active.area + '?',
+        buttons: ['Yes', 'No'],
+        defaultId: 1,
+      }, (response) => {
+        if (response === 0)
+          mapper.clearArea();
+      });
+    }
+
+    function removeAll() {
+      clearButton("#remove");
+      dialog.showMessageBox(remote.getCurrentWindow(), {
+        type: 'question',
+        title: 'Remove all',
+        message: 'Are you sure you want to remove all rooms?',
+        buttons: ['Yes', 'No'],
+        defaultId: 1,
+      }, (response) => {
+        if (response === 0)
+          mapper.clearAll();
+      });
+    }
   </script>
 </head>
 
 <body>
   <div id="mapper-toolbar" class="btn-toolbar" role="toolbar">
     <div class="btn-group" role="group">
-      <button id="btn-enable" type="button" class="btn btn-default btn-xs" title="Enabled" onclick="mapper.enabled = !mapper.enabled"
-        data-toggle="button"><i class="fa fa-map-o"></i></button>
-      <button id="btn-follow" type="button" class="btn btn-default btn-xs" title="Follow" onclick="mapper.follow = !mapper.follow"
-        data-toggle="button"><i class="fa fa-paw"></i></button>
-      <button id="btn-legend" type="button" class="btn btn-default btn-xs" title="Show legend" onclick="mapper.showLegend = !mapper.showLegend"
-        data-toggle="button"><i class="fa fa-map-marker"></i></button>
-      <button id="btn-room" type="button" class="btn btn-default btn-xs" title="Show room properties" onclick="toggleRooms();"
-        data-toggle="button"><i class="fa fa-list-alt"></i></button>
+      <button id="btn-enable" type="button" class="btn btn-default btn-xs" title="Enabled" onclick="toggleEnabled()">
+        <i class="fa fa-map-o"></i>
+      </button>
+      <button id="btn-follow" type="button" class="btn btn-default btn-xs" title="Follow" onclick="toggleFollow()">
+        <i class="fa fa-paw"></i>
+      </button>
+      <button id="btn-legend" type="button" class="btn btn-default btn-xs" title="Show legend" onclick="toggleLegend()">
+        <i class="fa fa-map-marker"></i>
+      </button>
+      <button id="btn-room" type="button" class="btn btn-default btn-xs" title="Show room properties" onclick="toggleRooms();">
+        <i class="fa fa-list-alt"></i>
+      </button>
     </div>
     <div class="btn-group" role="group">
-      <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh map" onclick="saveRoom();mapper.refresh();"><i class="fa fa-refresh"></i></button>
-      <button id="btn-compact" type="button" class="btn btn-default btn-xs" title="Compact map" onclick="compact()"><i class="fa fa-compress"></i></button>
+      <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh map" onclick="refreshMap()">
+        <i class="fa fa-refresh"></i>
+      </button>
+      <button id="btn-compact" type="button" class="btn btn-default btn-xs" title="Compact map" onclick="compact()">
+        <i class="fa fa-compress"></i>
+      </button>
     </div>
     <div class="btn-group" role="group">
-      <button id="btn-split" type="button" class="btn btn-default btn-xs" title="Split areas" onclick="mapper.splitArea = !mapper.splitArea"
-        data-toggle="button"><i class="fa fa-object-ungroup"></i></button>
-      <button id="btn-fill" type="button" class="btn btn-default btn-xs" title="Fill walls" onclick="mapper.fillWalls = !mapper.fillWalls"
-        data-toggle="button"><i class="fa fa-building-o"></i></button>
+      <button id="btn-split" type="button" class="btn btn-default btn-xs" title="Split areas" onclick="toggleSplitArea()">
+        <i class="fa fa-object-ungroup"></i>
+      </button>
+      <button id="btn-fill" type="button" class="btn btn-default btn-xs" title="Fill walls" onclick="toggleFillWalls()">
+        <i class="fa fa-building-o"></i>
+      </button>
     </div>
-    <button id="btn-focus" type="button" class="btn btn-default btn-xs" title="Focus on current room" onclick="mapper.focusCurrentRoom()"><i class="fa fa-crosshairs"></i></button>
+    <button id="btn-focus" type="button" class="btn btn-default btn-xs" title="Focus on current room" onclick="mapper.focusCurrentRoom()">
+      <i class="fa fa-crosshairs"></i>
+    </button>
     <select id="select-area" class="form-control" title="Select Area"></select>
     <div class="btn-group" style="float: left">
       <label for="MapLevel" style="float: left">Level:</label>
@@ -965,37 +1081,39 @@
     </div>
     <div class="btn-group" role="group">
       <button id="remove" type="button" class="btn btn-default btn-xs" aria-haspopup="true" title="Remove area/room">
-          <i class="fa fa-eraser"></i>&nbsp;<span class="caret"></span>
-        </button>
+        <i class="fa fa-eraser"></i>&nbsp;
+        <span class="caret"></span>
+      </button>
       <button id="export" type="button" class="btn btn-default btn-xs" aria-haspopup="true" title="Export/Import data">
-          <i class="fa fa-exchange"></i>&nbsp;<span class="caret"></span>
-        </button>
+        <i class="fa fa-exchange"></i>&nbsp;
+        <span class="caret"></span>
+      </button>
     </div>
 
     <div class="btn-group" role="group">
-      <button type="button" class="btn btn-default btn-xs" title="Set selected as current" onclick="mapper.setCurrent()"><i class="fa fa-circle"></i></button>
-      <button id="btn-highlight" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Highlight path" onclick="mapper.showPath()"><i class="fa fa-paint-brush"></i></button>
-      <button id="btn-clear" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Clear path" onclick="mapper.clearPath()"><i class="fa fa-times"></i></button>
-      <button id="btn-walk" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Walk path" onclick="mapper.walkPath()"><i class="fa fa-blind"></i></button>
+      <button type="button" class="btn btn-default btn-xs" title="Set selected as current" onclick="mapper.setCurrent()">
+        <i class="fa fa-circle"></i>
+      </button>
+      <button id="btn-highlight" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Highlight path" onclick="mapper.showPath()">
+        <i class="fa fa-paint-brush"></i>
+      </button>
+      <button id="btn-clear" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Clear path" onclick="mapper.clearPath()">
+        <i class="fa fa-times"></i>
+      </button>
+      <button id="btn-walk" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Walk path" onclick="mapper.walkPath()">
+        <i class="fa fa-blind"></i>
+      </button>
     </div>
   </div>
   <div id="mapper-body">
-    <div class="MapperNavButton" title="Scroll northwest" style="top:4px;left:4px;background-position: 0px 0px;" data-x="-1"
-      data-y="-1"></div>
-    <div class="MapperNavButton" title="Scroll north" style="top:4px;left:50%;background-position: -22px 0px;margin-left:-11px;"
-      data-x="0" data-y="-1"></div>
-    <div class="MapperNavButton" title="Scroll northeast" style="top:4px;left:100%;background-position: -44px 0px;margin-left:-26px;"
-      data-x="1" data-y="-1"></div>
-    <div class="MapperNavButton" title="Scroll west" style="top:50%;left:4px;background-position: 0px -22px;margin-top:-11px;"
-      data-x="-1" data-y="0"></div>
-    <div class="MapperNavButton" title="Scroll east" style="top:50%;left:100%;background-position: -44px -22px;margin-top:-11px;margin-left:-26px;"
-      data-x="1" data-y="0"></div>
-    <div class="MapperNavButton" title="Scroll southwest" style="bottom:4px;left:4px;background-position: 0px -44px;" data-x="-1"
-      data-y="1"></div>
-    <div class="MapperNavButton" title="Scroll south" style="bottom:4px;left:50%;background-position: -22px -44px;margin-left:-11px;"
-      data-x="0" data-y="1"></div>
-    <div class="MapperNavButton" title="Scroll southeast" style="bottom:4px;left:100%;background-position: -44px -44px;margin-left:-26px;"
-      data-x="1" data-y="1"></div>
+    <div class="MapperNavButton" title="Scroll northwest" style="top:4px;left:4px;background-position: 0px 0px;" data-x="-1" data-y="-1"></div>
+    <div class="MapperNavButton" title="Scroll north" style="top:4px;left:50%;background-position: -22px 0px;margin-left:-11px;" data-x="0" data-y="-1"></div>
+    <div class="MapperNavButton" title="Scroll northeast" style="top:4px;left:100%;background-position: -44px 0px;margin-left:-26px;" data-x="1" data-y="-1"></div>
+    <div class="MapperNavButton" title="Scroll west" style="top:50%;left:4px;background-position: 0px -22px;margin-top:-11px;" data-x="-1" data-y="0"></div>
+    <div class="MapperNavButton" title="Scroll east" style="top:50%;left:100%;background-position: -44px -22px;margin-top:-11px;margin-left:-26px;" data-x="1" data-y="0"></div>
+    <div class="MapperNavButton" title="Scroll southwest" style="bottom:4px;left:4px;background-position: 0px -44px;" data-x="-1" data-y="1"></div>
+    <div class="MapperNavButton" title="Scroll south" style="bottom:4px;left:50%;background-position: -22px -44px;margin-left:-11px;" data-x="0" data-y="1"></div>
+    <div class="MapperNavButton" title="Scroll southeast" style="bottom:4px;left:100%;background-position: -44px -44px;margin-left:-26px;" data-x="1" data-y="1"></div>
     <canvas id="MapperCanvas"></canvas>
   </div>
   <div id="mapper-room">
@@ -1004,8 +1122,8 @@
         <div class="panel-heading" role="tab" id="headingOne">
           <h4 class="panel-title">
             <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-          General
-          </a>
+              General
+            </a>
           </h4>
         </div>
         <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
@@ -1018,26 +1136,29 @@
 
             <div class="form-group">
               <label class="control-label">
-          Background <input type="text" id="reBackground" class="form-control"/>
-          </label>
+                Background
+                <input type="text" id="reBackground" class="form-control" />
+              </label>
             </div>
 
             <div class="form-group">
               <label class="control-label">
-          Terrain <input type="text" id="reTerrain" class="form-control"/>
-          </label>
+                Terrain
+                <input type="text" id="reTerrain" class="form-control" />
+              </label>
             </div>
 
             <div class="form-group">
               <label class="control-label">
-          <input type="checkbox" id="reIndoors"/> Indoors 
-          </label>
+                <input type="checkbox" id="reIndoors" /> Indoors
+              </label>
             </div>
 
             <div class="form-group">
               <label class="control-label">
-          Notes <textarea rows="3" id="reNotes" class="form-control" style="resize: none;"></textarea>
-          </label>
+                Notes
+                <textarea rows="3" id="reNotes" class="form-control" style="resize: none;"></textarea>
+              </label>
             </div>
           </div>
         </div>
@@ -1045,10 +1166,9 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab" id="headingThree">
           <h4 class="panel-title">
-            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false"
-              aria-controls="collapseThree">
-          Details
-        </a>
+            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+              Details
+            </a>
           </h4>
         </div>
         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
@@ -1058,63 +1178,63 @@
 
               <div class="form-group">
                 <label class="control-label">
-          <input type="checkbox" id="reDDock"/> Dock 
-          </label>
+                  <input type="checkbox" id="reDDock" /> Dock
+                </label>
               </div>
 
               <div class="form-group">
                 <label class="control-label">
-          <input type="checkbox" id="reDPier"/> Pier 
-          </label>
+                  <input type="checkbox" id="reDPier" /> Pier
+                </label>
               </div>
 
               <div class="form-group">
                 <label class="control-label">
-          <input type="checkbox" id="reDBank"/> Bank 
-          </label>
+                  <input type="checkbox" id="reDBank" /> Bank
+                </label>
               </div>
               <div class="form-group">
                 <label class="control-label">
-          <input type="checkbox" id="reDWaterSource"/> WaterSource 
-          </label>
+                  <input type="checkbox" id="reDWaterSource" /> WaterSource
+                </label>
               </div>
             </fieldset>
             <fieldset>
               <legend>NPC</legend>
               <div class="form-group">
                 <label class="control-label">
-          <input type="radio" id="reDNone" name="dne" checked="checked"/> None 
-          </label>
+                  <input type="radio" id="reDNone" name="dne" checked="checked" /> None
+                </label>
               </div>
 
               <div class="form-group">
                 <label class="control-label">
-          <input type="radio" id="reDShop" name="dne"/> Shop 
-          </label>
+                  <input type="radio" id="reDShop" name="dne" /> Shop
+                </label>
               </div>
 
               <div class="form-group">
                 <label class="control-label">
-           <input type="radio" id="reDHospital" name="dne"/> Hospital
-          </label>
+                  <input type="radio" id="reDHospital" name="dne" /> Hospital
+                </label>
               </div>
 
               <div class="form-group">
                 <label class="control-label">
-           <input type="radio" id="reDBar" name="dne"/> Bar
-          </label>
+                  <input type="radio" id="reDBar" name="dne" /> Bar
+                </label>
               </div>
 
               <div class="form-group">
                 <label class="control-label">
-           <input type="radio" id="reDRestaurant" name="dne"/> Restaurant
-          </label>
+                  <input type="radio" id="reDRestaurant" name="dne" /> Restaurant
+                </label>
               </div>
 
               <div class="form-group">
                 <label class="control-label">
-           <input type="radio" id="reDTrainer" name="dne"/> Trainer
-          </label>
+                  <input type="radio" id="reDTrainer" name="dne" /> Trainer
+                </label>
               </div>
             </fieldset>
           </div>
@@ -1123,49 +1243,54 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab" id="headingTwo">
           <h4 class="panel-title">
-            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false"
-              aria-controls="collapseTwo">
-          Location
-        </a>
+            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+              Location
+            </a>
           </h4>
         </div>
         <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
           <div class="panel-body">
             <div class="form-group">
               <label class="control-label">
-          X <input type="number" id="reX" class="form-control"/>
-          </label>
+                X
+                <input type="number" id="reX" class="form-control" />
+              </label>
             </div>
 
             <div class="form-group">
               <label class="control-label">
-          Y <input type="number" id="reY" class="form-control"/>
-          </label>
+                Y
+                <input type="number" id="reY" class="form-control" />
+              </label>
             </div>
 
             <div class="form-group">
               <label class="control-label">
-          Z <input type="number" id="reZ" class="form-control"/>
-          </label>
+                Z
+                <input type="number" id="reZ" class="form-control" />
+              </label>
             </div>
 
             <div class="form-group">
               <label class="control-label">
-          Zone <input type="number" id="reZone" class="form-control"/>
-          </label>
+                Zone
+                <input type="number" id="reZone" class="form-control" />
+              </label>
             </div>
 
             <div class="form-group">
               <label class="control-label">
-          Area <select id="reArea" style="width:100%" name="reArea" class="form-control" data-width="auto"></select>
-          </label>
+                Area
+                <select id="reArea" style="width:100%" name="reArea" class="form-control" data-width="auto"></select>
+              </label>
             </div>
           </div>
         </div>
       </div>
     </div>
     <div class="form-group" style="width:100%;text-align: center;position: absolute;bottom:4px;">
-      <button type="button" class="btn btn-default" onclick="saveRoom();"><i class="fa fa-save"></i> Save</button>
+      <button type="button" class="btn btn-default" onclick="saveRoom();">
+        <i class="fa fa-save"></i> Save</button>
     </div>
   </div>
   <dialog id="mapProgress" style="z-index:1000;text-align:center">
@@ -1174,8 +1299,8 @@
       <progress max="100"></progress>
     </div>
     <div>
-      <button onclick="mapper.cancelImport();">        
-          Cancel        
+      <button onclick="mapper.cancelImport();">
+        Cancel
       </button>
     </div>
   </dialog>
