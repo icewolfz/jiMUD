@@ -37,7 +37,7 @@ const menu: any[] = [
         id: 'file',
         submenu: [
             {
-                label: '&Add',
+                label: '&New',
                 submenu: [
                     {
                         label: '&Empty profile', click() {
@@ -85,12 +85,19 @@ const menu: any[] = [
                 ]
             },
             { type: 'separator' },
+            { label: '&Apply changes', click: saveProfiles },
+            {
+                label: '&Save', click: () => {
+                    if (saveProfiles()) window.close();
+                }
+            },
+            { type: 'separator' },
             { label: 'E&xport current...', click: exportCurrent },
             { label: 'Export &all...', click: exportAll },
             { type: 'separator' },
             { label: '&Import...', click: importProfiles },
             { type: 'separator' },
-            { label: '&Close', click: () => { window.close(); } }
+            { label: '&Close', click: doClose }
         ]
     },
     {
@@ -2070,12 +2077,12 @@ export function init() {
         const c = new Menu();
         if (!nodes || nodes.length === 0) {
             c.append(new MenuItem({
-                label: 'Add empty profile', click() {
+                label: 'New empty profile', click() {
                     AddNewProfile();
                 }
             }));
             c.append(new MenuItem({
-                label: 'Add profile with defaults', click() {
+                label: 'New profile with defaults', click() {
                     AddNewProfile(true);
                 }
             }));
@@ -2091,12 +2098,12 @@ export function init() {
             switch (t) {
                 case 'profile':
                     c.append(new MenuItem({
-                        label: 'Add empty profile', click() {
+                        label: 'New empty profile', click() {
                             AddNewProfile();
                         }
                     }));
                     c.append(new MenuItem({
-                        label: 'Add profile with defaults', click() {
+                        label: 'New profile with defaults', click() {
                             AddNewProfile(true);
                         }
                     }));
@@ -2151,7 +2158,7 @@ export function init() {
                 case 'aliases':
                 case 'alias':
                     c.append(new MenuItem({
-                        label: 'Add alias', click() {
+                        label: 'New alias', click() {
                             addItem('Alias', 'aliases', new Alias());
                         }
                     }));
@@ -2198,7 +2205,7 @@ export function init() {
                 case 'macros':
                 case 'macro':
                     c.append(new MenuItem({
-                        label: 'Add macro', click() {
+                        label: 'New macro', click() {
                             addItem('Macro', 'macros', new Macro());
                         }
                     }));
@@ -2245,7 +2252,7 @@ export function init() {
                 case 'triggers':
                 case 'trigger':
                     c.append(new MenuItem({
-                        label: 'Add trigger', click() {
+                        label: 'New trigger', click() {
                             addItem('Trigger', 'triggers', new Trigger());
                         }
                     }));
@@ -2292,7 +2299,7 @@ export function init() {
                 case 'buttons':
                 case 'button':
                     c.append(new MenuItem({
-                        label: 'Add button', click() {
+                        label: 'New button', click() {
                             addItem('Button', 'buttons', new Button());
                         }
                     }));
@@ -2339,7 +2346,7 @@ export function init() {
                 case 'contexts':
                 case 'context':
                     c.append(new MenuItem({
-                        label: 'Add context', click() {
+                        label: 'New context', click() {
                             addItem('Context', 'contexts', new Context());
                         }
                     }));
@@ -2452,44 +2459,44 @@ export function init() {
         const y = Math.floor(pos.top + $(this).outerHeight() + 2);
         const addMenu = new Menu();
         addMenu.append(new MenuItem({
-            label: 'Add empty profile', click() {
+            label: 'New empty profile', click() {
                 clearButton('#btn-add-dropdown');
                 AddNewProfile();
             }
         }));
         addMenu.append(new MenuItem({
-            label: 'Add profile with defaults', click() {
+            label: 'New profile with defaults', click() {
                 clearButton('#btn-add-dropdown');
                 AddNewProfile(true);
             }
         }));
         addMenu.append(new MenuItem({ type: 'separator' }));
         addMenu.append(new MenuItem({
-            label: 'Add alias', click() {
+            label: 'New alias', click() {
                 clearButton('#btn-add-dropdown');
                 addItem('Alias', 'aliases', new Alias());
             }
         }));
         addMenu.append(new MenuItem({
-            label: 'Add macro', click() {
+            label: 'New macro', click() {
                 clearButton('#btn-add-dropdown');
                 addItem('Macro', 'macros', new Macro());
             }
         }));
         addMenu.append(new MenuItem({
-            label: 'Add trigger', click() {
+            label: 'New trigger', click() {
                 clearButton('#btn-add-dropdown');
                 addItem('Trigger', 'triggers', new Trigger());
             }
         }));
         addMenu.append(new MenuItem({
-            label: 'Add button', click() {
+            label: 'New button', click() {
                 clearButton('#btn-add-dropdown');
                 addItem('Button', 'buttons', new Button());
             }
         }));
         addMenu.append(new MenuItem({
-            label: 'Add context', click() {
+            label: 'New context', click() {
                 clearButton('#btn-add-dropdown');
                 addItem('Context', 'contexts', new Context());
             }
