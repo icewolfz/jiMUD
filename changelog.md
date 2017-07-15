@@ -2,7 +2,8 @@
 ##### 0.4.6
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar
-  - Mapper: add file menu for standard gui
+  - Mapper: add menu bar for standard gui
+  - Profile manager: add menu for standard gui
 ##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 
