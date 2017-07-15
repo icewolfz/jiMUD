@@ -15,6 +15,7 @@
   - MXP: links where not displaying correct tool tips
   - $selectedurl was always empty when right clicking a link
   - Buttons, aliases, triggers, macros, and context should now be properly sorted by priorities. All items are first sorted by profile priority then by type priority.
+  - Mapper window progress task bar
 ##### 0.4.4 2017-07-12
 - **New:**
   - Immortal tools: current queue progress now supports windows task bar progress

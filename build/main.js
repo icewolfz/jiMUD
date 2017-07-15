@@ -1703,7 +1703,7 @@ ipcMain.on('set-progress', (event, args) => {
 ipcMain.on('set-progress-window', (event, window, args) => {
   if (window == "mapper") {
     if (winMap)
-      winMap.webContents.setProgressBar(args.value, args.options);
+      winMap.setProgressBar(args.value, args.options);
   }
   else if (windows[window] && windows[window].window)
     windows[window].window.setProgressBar(args.value, args.options);
