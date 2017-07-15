@@ -31,6 +31,137 @@ enum UpdateState {
     Error
 }
 
+const menu: any[] = [
+    {
+        label: '&File',
+        id: 'file',
+        submenu: [
+            {
+                label: '&Add',
+                submenu: [
+                    {
+                        label: '&Empty profile', click() {
+                            clearButton('#btn-add-dropdown');
+                            AddNewProfile();
+                        }
+                    },
+                    {
+                        label: '&Profile with defaults', click() {
+                            clearButton('#btn-add-dropdown');
+                            AddNewProfile(true);
+                        }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Alias', click() {
+                            clearButton('#btn-add-dropdown');
+                            addItem('Alias', 'aliases', new Alias());
+                        }
+                    },
+                    {
+                        label: '&Macro', click() {
+                            clearButton('#btn-add-dropdown');
+                            addItem('Macro', 'macros', new Macro());
+                        }
+                    },
+                    {
+                        label: '&Trigger', click() {
+                            clearButton('#btn-add-dropdown');
+                            addItem('Trigger', 'triggers', new Trigger());
+                        }
+                    },
+                    {
+                        label: '&Button', click() {
+                            clearButton('#btn-add-dropdown');
+                            addItem('Button', 'buttons', new Button());
+                        }
+                    },
+                    {
+                        label: '&Context', click() {
+                            clearButton('#btn-add-dropdown');
+                            addItem('Context', 'contexts', new Context());
+                        }
+                    }
+                ]
+            },
+            { type: 'separator' },
+            { label: 'E&xport current...', click: exportCurrent },
+            { label: 'Export &all...', click: exportAll },
+            { type: 'separator' },
+            { label: '&Import...', click: importProfiles },
+            { type: 'separator' },
+            { label: '&Close', click: () => { window.close(); } }
+        ]
+    },
+    {
+        label: '&Edit',
+        submenu: [
+            { label: 'R&efresh', accelerator: 'F5', click: doRefresh },
+            { type: 'separator' },
+            { label: '&Undo', enabled: false, accelerator: 'CmdOrCtrl+Z', click: doUndo },
+            { label: '&Redo', enabled: false, accelerator: 'CmdOrCtrl+Y', click: doRedo },
+            { type: 'separator' },
+            { label: 'Cu&t', enabled: false, accelerator: 'CmdOrCtrl+X', click: doCut },
+            { label: '&Copy', enabled: false, accelerator: 'CmdOrCtrl+C', click: doCopy },
+            { label: '&Paste', enabled: false, accelerator: 'CmdOrCtrl+V', click: doPaste },
+            { label: '&Delete', enabled: false, accelerator: 'Delete', click: doDelete }
+        ]
+    }
+];
+
+const menubar = Menu.buildFromTemplate(menu);
+remote.getCurrentWindow().setMenu(menubar);
+
+function updateMenuItem(args) {
+    let item;
+    let i = 0;
+    let items;
+    let tItem;
+    let tItems;
+    if (args == null || args.menu == null) return;
+
+    if (!Array.isArray(args.menu))
+        args.menu = args.menu.split('|');
+
+    items = menubar.items;
+    tItems = menu;
+    for (i = 0; i < args.menu.length; i++) {
+        if (!items || items.length === 0) break;
+        for (let m = 0; m < items.length; m++) {
+            if (!items[m]) continue;
+            if (items[m].id === args.menu[i] || items[m].label.toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
+                item = items[m];
+                tItem = tItems[m];
+                if (item.submenu) {
+                    items = item.submenu.items;
+                    tItems = tItem.submenu;
+                }
+                else
+                    items = null;
+                break;
+            }
+        }
+    }
+    if (!item)
+        return;
+    if (args.enabled != null)
+        item.enabled = args.enabled ? true : false;
+    if (args.checked != null)
+        item.checked = args.checked ? true : false;
+    if (args.icon != null)
+        item.icon = args.icon;
+    if (args.visible != null)
+        item.visible = args.visible ? true : false;
+    if (args.position != null)
+        item.position = args.position;
+
+    tItem.enabled = item.enabled;
+    tItem.checked = item.checked;
+    tItem.icon = item.icon;
+    tItem.visible = item.visible;
+    tItem.position = item.position;
+}
+
 function addInputContext() {
     window.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -1060,6 +1191,7 @@ function canPaste() {
 
 function UpdatePaste() {
     $('#btn-paste').prop('disabled', !canPaste());
+    updateMenuItem({ menu: 'edit|paste', enabled: canPaste() });
 }
 
 function getType(item) {
@@ -1168,6 +1300,8 @@ export function doUndo() {
                                 if (t === 'profile') {
                                     $('#btn-cut').prop('disabled', true);
                                     $('#btn-delete').prop('disabled', true);
+                                    updateMenuItem({ menu: 'edit|cut', enabled: false });
+                                    updateMenuItem({ menu: 'edit|delete', enabled: false });
                                 }
                             }
                             else
@@ -1177,9 +1311,14 @@ export function doUndo() {
                                 $('#btn-copy').prop('disabled', true);
                                 $('#btn-cut').prop('disabled', true);
                                 $('#btn-delete').prop('disabled', true);
+                                updateMenuItem({ menu: 'edit|cut', enabled: false });
+                                updateMenuItem({ menu: 'edit|copy', enabled: false });
+                                updateMenuItem({ menu: 'edit|delete', enabled: false });
                             }
-                            else if (t === 'profile')
+                            else if (t === 'profile') {
                                 $('#btn-cut').prop('disabled', true);
+                                updateMenuItem({ menu: 'edit|cut', enabled: false });
+                            }
                         }
                     });
                 }
@@ -1335,6 +1474,8 @@ export function doRedo() {
                                 if (t === 'profile') {
                                     $('#btn-cut').prop('disabled', true);
                                     $('#btn-delete').prop('disabled', true);
+                                    updateMenuItem({ menu: 'edit|cut', enabled: false });
+                                    updateMenuItem({ menu: 'edit|delete', enabled: false });
                                 }
                             }
                             else
@@ -1344,9 +1485,14 @@ export function doRedo() {
                                 $('#btn-copy').prop('disabled', true);
                                 $('#btn-cut').prop('disabled', true);
                                 $('#btn-delete').prop('disabled', true);
+                                updateMenuItem({ menu: 'edit|cut', enabled: false });
+                                updateMenuItem({ menu: 'edit|copy', enabled: false });
+                                updateMenuItem({ menu: 'edit|delete', enabled: false });
                             }
-                            else if (t === 'profile')
+                            else if (t === 'profile') {
                                 $('#btn-cut').prop('disabled', true);
+                                updateMenuItem({ menu: 'edit|cut', enabled: false });
+                            }
                         }
                     });
                 }
@@ -1766,6 +1912,9 @@ function buildTreeview(data) {
             $('#btn-cut').prop('disabled', false);
             $('#btn-copy').prop('disabled', false);
             $('#btn-delete').prop('disabled', false);
+            updateMenuItem({ menu: 'edit|cut', enabled: true });
+            updateMenuItem({ menu: 'edit|copy', enabled: true });
+            updateMenuItem({ menu: 'edit|delete', enabled: true });
             UpdatePaste();
             switch (t) {
                 case 'aliases':
@@ -1781,6 +1930,8 @@ function buildTreeview(data) {
                                 if (t === 'profile') {
                                     $('#btn-cut').prop('disabled', true);
                                     $('#btn-delete').prop('disabled', true);
+                                    updateMenuItem({ menu: 'edit|cut', enabled: false });
+                                    updateMenuItem({ menu: 'edit|delete', enabled: false });
                                 }
                             }
                             else
@@ -1790,9 +1941,14 @@ function buildTreeview(data) {
                                 $('#btn-copy').prop('disabled', true);
                                 $('#btn-cut').prop('disabled', true);
                                 $('#btn-delete').prop('disabled', true);
+                                updateMenuItem({ menu: 'edit|cut', enabled: false });
+                                updateMenuItem({ menu: 'edit|copy', enabled: false });
+                                updateMenuItem({ menu: 'edit|delete', enabled: false });
                             }
-                            else if (t === 'profile')
+                            else if (t === 'profile') {
                                 $('#btn-cut').prop('disabled', true);
+                                updateMenuItem({ menu: 'edit|cut', enabled: false });
+                            }
                         }
                     });
                     break;
@@ -2505,59 +2661,10 @@ export function init() {
         const x = Math.floor(pos.left);
         const y = Math.floor(pos.top + $(this).outerHeight() + 2);
         const exportmenu = new Menu();
-        exportmenu.append(new MenuItem({
-            label: 'Export current...', click() {
-                clearButton('#export');
-                dialog.showSaveDialog(remote.getCurrentWindow(), {
-                    title: 'Export profile',
-                    defaultPath: 'jiMUD.' + profileID(currentProfile.name) + '.txt',
-                    filters: [
-                        { name: 'Text files (*.txt)', extensions: ['txt'] },
-                        { name: 'All files (*.*)', extensions: ['*'] }
-                    ]
-                },
-                    (fileName) => {
-                        if (fileName === undefined) {
-                            return;
-                        }
-                        const data = {
-                            version: 2,
-                            profiles: {}
-                        };
-                        data.profiles[currentProfile.name] = currentProfile.clone(2);
-                        fs.writeFileSync(fileName, JSON.stringify(data));
-                    });
-
-            }
-        }));
-        exportmenu.append(new MenuItem({
-            label: 'Export all...', click() {
-                clearButton('#export');
-                dialog.showSaveDialog(remote.getCurrentWindow(), {
-                    title: 'Export all profiles',
-                    defaultPath: 'jiMUD.profiles.txt',
-                    filters: [
-                        { name: 'Text files (*.txt)', extensions: ['txt'] },
-                        { name: 'All files (*.*)', extensions: ['*'] }
-                    ]
-                },
-                    (fileName) => {
-                        if (fileName === undefined) {
-                            return;
-                        }
-                        const data = {
-                            version: 2,
-                            profiles: profiles.clone(2)
-                        };
-                        fs.writeFileSync(fileName, JSON.stringify(data));
-                    });
-
-            }
-        }));
+        exportmenu.append(new MenuItem({ label: 'Export current...', click: exportCurrent }));
+        exportmenu.append(new MenuItem({ label: 'Export all...', click: exportAll }));
         exportmenu.append(new MenuItem({ type: 'separator' }));
-        exportmenu.append(new MenuItem({
-            label: 'Import...', click: importProfiles
-        }));
+        exportmenu.append(new MenuItem({ label: 'Import...', click: importProfiles }));
         exportmenu.popup(remote.getCurrentWindow(), { x: x, y: y });
     });
 }
@@ -3054,6 +3161,8 @@ function pushUndo(data) {
 function updateUndoState() {
     $('#btn-undo').prop('disabled', _undo.length === 0);
     $('#btn-redo').prop('disabled', _redo.length === 0);
+    updateMenuItem({ menu: 'edit|undo', enabled: _undo.length === 0 });
+    updateMenuItem({ menu: 'edit|redo', enabled: _redo.length === 0 });
 }
 
 function DeleteProfileConfirm(profile) {
@@ -3456,3 +3565,50 @@ ipcRenderer.on('profile-item-removed', (event, type, profile, idx) => {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
 });
+
+function exportAll() {
+    clearButton('#export');
+    dialog.showSaveDialog(remote.getCurrentWindow(), {
+        title: 'Export all profiles',
+        defaultPath: 'jiMUD.profiles.txt',
+        filters: [
+            { name: 'Text files (*.txt)', extensions: ['txt'] },
+            { name: 'All files (*.*)', extensions: ['*'] }
+        ]
+    },
+        (fileName) => {
+            if (fileName === undefined) {
+                return;
+            }
+            const data = {
+                version: 2,
+                profiles: profiles.clone(2)
+            };
+            fs.writeFileSync(fileName, JSON.stringify(data));
+        });
+
+}
+
+function exportCurrent() {
+    clearButton('#export');
+    dialog.showSaveDialog(remote.getCurrentWindow(), {
+        title: 'Export profile',
+        defaultPath: 'jiMUD.' + profileID(currentProfile.name) + '.txt',
+        filters: [
+            { name: 'Text files (*.txt)', extensions: ['txt'] },
+            { name: 'All files (*.*)', extensions: ['*'] }
+        ]
+    },
+        (fileName) => {
+            if (fileName === undefined) {
+                return;
+            }
+            const data = {
+                version: 2,
+                profiles: {}
+            };
+            data.profiles[currentProfile.name] = currentProfile.clone(2);
+            fs.writeFileSync(fileName, JSON.stringify(data));
+        });
+
+}
