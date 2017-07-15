@@ -85,12 +85,8 @@ const menu: any[] = [
                 ]
             },
             { type: 'separator' },
-            { label: '&Apply changes', click: saveProfiles },
-            {
-                label: '&Save', click: () => {
-                    if (saveProfiles()) window.close();
-                }
-            },
+            { label: '&Save', click: saveProfiles },
+            { label: 'Sa&ve and close', click: () => { if (saveProfiles()) window.close(); } },
             { type: 'separator' },
             { label: 'E&xport current...', click: exportCurrent },
             { label: 'Export &all...', click: exportAll },
