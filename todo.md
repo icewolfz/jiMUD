@@ -10,5 +10,3 @@
 ## Miscellaneous
 - look into reducing memory
 - Cleanup and optimize code as much as possible
-- See about making an xp needed progress bar based on xp required to level
-  - HTML and typescript code added but commented out, decide if worth adding and how

@@ -1,4 +1,7 @@
 ## Changelog
+##### 0.4.6
+- **New:**
+  - Status: allow experience needed to be displayed as a progress bar
 ##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 

@@ -243,6 +243,7 @@ export class Settings {
     public spellchecking: boolean = true;
     public hideOnMinimize: boolean = false;
     public showTrayIcon: boolean = false;
+    public statusExperienceNeededProgressbar: boolean = false;
 
     public trayClick: TrayClick = TrayClick.show;
     public trayDblClick: TrayClick = TrayClick.none;

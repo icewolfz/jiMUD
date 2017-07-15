@@ -6,22 +6,6 @@ import EventEmitter = require('events');
 import { Client } from './client';
 import { naturalCompare } from './library';
 
-//$("#environment").removeClass('day night twilight dawn').addClass('dawn')
-
-/*
-$("#environment").removeClass (function (index, className) {
-    return (className.match (/(^|\s)moon1-\S+/g) || []).join(' ');
-}).addClass('');
-
-$("#environment").removeClass (function (index, className) {
-    return (className.match (/(^|\s)weather-\S+/g) || []).join(' ');
-}).addClass('');
-
-$("#environment").removeClass (function (index, className) {
-    return (className.match (/(^|\s)weather-\S+/g) || []).join(' ');
-}).addClass('');
-*/
-
 export class Status extends EventEmitter {
     private info = [];
     private infoAC = [];
@@ -348,7 +332,7 @@ export class Status extends EventEmitter {
         $('#xp-value').text(this.info['EXPERIENCE']);
         $('#xp-banked').text(this.info['EXPERIENCE_BANKED']);
         $('#need-value').text(this.info['EXPERIENCE_NEED']);
-        //this.updateBar("#need-percent", this.info["EXPERIENCE_NEED_P"], 100, this.info["EXPERIENCE_NEED"].toString());
+        this.updateBar('#need-percent', this.info['EXPERIENCE_NEED_P'], 100, this.info['EXPERIENCE_NEED'].toString());
         $('#earn-value').text(this.info['EXPERIENCE_EARNED']);
     }
 
@@ -475,7 +459,7 @@ export class Status extends EventEmitter {
         $('#xp-value').text('0');
         $('#xp-banked').text('0');
         $('#need-value').text('0');
-        //this.updateBar("#need-percent", 0, 0, "0");
+        this.updateBar('#need-percent', 0, 0, '0');
         $('#earn-value').text('0');
         $('#combat').empty();
         $('#party').empty();
@@ -576,6 +560,15 @@ export class Status extends EventEmitter {
             $('#display-border').css('right', (parseInt($('#display-border').css('right'), 10) - w) + 'px');
             $('#command').css('right', (parseInt($('#command').css('right'), 10) - w) + 'px');
             return;
+        }
+
+        if (this.client.options.statusExperienceNeededProgressbar) {
+            $('#need-value').css('display', 'none');
+            $('#need-percent').css('display', 'block');
+        }
+        else {
+            $('#need-value').css('display', '');
+            $('#need-percent').css('display', 'none');
         }
 
         let top = 0;

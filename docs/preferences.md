@@ -10,7 +10,7 @@ Reset - Resetting will revert all settings back to default values
 - `Show character manager onload` open the character manager when the client first loads.
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
 - `Theme` the theme for the main client window
-
+- `Show Experience Needed as Progressbar` display the experience needed value as a progress bar
 ## Display
 
 - `Font` The font for the display area, mono spaced fonts work the best.

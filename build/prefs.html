@@ -250,7 +250,7 @@
       $('#enableEcho').prop('checked', _settings.enableEcho);
       $('#enableMSP').prop('checked', _settings.enableMSP);
       $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
-
+      $('#statusExperienceNeededProgressbar').prop('checked', _settings.statusExperienceNeededProgressbar);
       $('#hideOnMinimize').prop('checked', _settings.hideOnMinimize);
       $('#showTrayIcon').prop('checked', _settings.showTrayIcon);
 
@@ -876,9 +876,11 @@
             <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
           </label>
         </div>
-
-
-
+        <div class="col-sm-6 form-group">
+          <label class="control-label">
+            <input type="checkbox" id="statusExperienceNeededProgressbar" /> Show Experience Needed as Progressbar
+          </label>
+        </div>
       </div>
       <div role="tabpanel" class="tab-pane fade" id="display">
         <div class="col-sm-4">
