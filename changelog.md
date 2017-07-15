@@ -6,7 +6,11 @@
     - MXP links add open/copy text
   - Tray icon support
   - Hide when minimized - will hide window when you minimize the main window
-  - Preferences: display and command font selectors now list the original basic fonts as well as installed system fonts now 
+  - Preferences: display and command font selectors now list the original basic fonts as well as installed system fonts now
+    - Mac OS X 10.5 and later supported via CoreText
+    - Windows 7 and later supported via DirectWrite
+    - Linux supported via fontconfig
+      - May need to install `sudo apt-get install libfontconfig-dev`
   - Add better error checking for spell checker to prevent crashes if spell checker breaks
   - Buttons, aliases, triggers, macros, and context are now cached better, so global arrays are only built only when loaded or changed instead of each time accessed.
 - **Change:**
