@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.4.5
+##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 
     - Urls now add open/copy url/copy text.
