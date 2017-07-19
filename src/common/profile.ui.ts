@@ -1,7 +1,7 @@
 //cSpell:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt, exportmenu
 import { shell, remote, ipcRenderer } from 'electron';
 const { dialog, Menu, MenuItem, nativeImage } = remote;
-import { FilterArrayByKeyValue, parseTemplate, keyCharToCode, keyCodeToChar, clone, isFileSync, isDirSync } from './library';
+import { FilterArrayByKeyValue, parseTemplate, keyCharToCode, keyCodeToChar, clone, isFileSync, isDirSync, existsSync } from './library';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
 import { Settings } from './settings';
 const path = require('path');
@@ -2049,7 +2049,7 @@ function setAdvancedPanel(id, state) {
 
 export function init() {
     const p = path.join(parseTemplate('{data}'), 'profiles');
-    if (!isFileSync(p)) {
+    if (!isDirSync(p)) {
         profiles.add(Profile.Default);
     }
     else {
@@ -2748,7 +2748,7 @@ export function doRefresh() {
                 profiles = new ProfileCollection();
                 $('#btn-refresh').removeClass('btn-warning');
                 const p = path.join(parseTemplate('{data}'), 'profiles');
-                if (!isFileSync(p)) {
+                if (!isDirSync(p)) {
                     profiles.add(Profile.Default);
                 }
                 else {
@@ -2773,7 +2773,7 @@ export function doRefresh() {
         profiles = new ProfileCollection();
         $('#btn-refresh').removeClass('btn-warning');
         const p = path.join(parseTemplate('{data}'), 'profiles');
-        if (!isFileSync(p)) {
+        if (!isDirSync(p)) {
             profiles.add(Profile.Default);
         }
         else {
@@ -3000,7 +3000,7 @@ export function saveProfiles() {
         }, (response) => {
             if (response === 0) {
                 const p = path.join(parseTemplate('{data}'), 'profiles');
-                if (!isDirSync(p))
+                if (!existsSync(p))
                     fs.mkdirSync(p);
                 profiles.save(p);
                 trashProfiles(p);
@@ -3013,7 +3013,7 @@ export function saveProfiles() {
         });
     else {
         const p = path.join(parseTemplate('{data}'), 'profiles');
-        if (!isDirSync(p))
+        if (!existsSync(p))
             fs.mkdirSync(p);
         profiles.save(p);
         trashProfiles(p);

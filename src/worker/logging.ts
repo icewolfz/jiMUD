@@ -102,14 +102,9 @@ self.addEventListener('message', (e: MessageEvent) => {
                     if (options.path !== e.data.args.path) {
                         options.path = e.data.args.path;
                         try {
-                            if (fs.statSync(options.path).isDirectory())
-                                fs.mkdirSync(options.path);
-                        } catch (e) {
-                            if (e.code === 'ENOENT') {
-                                fs.mkdirSync(options.path);
-                            } else {
-                                throw e;
-                            }
+                            fs.statSync(options.path);
+                        } catch (ex) {
+                            fs.mkdirSync(options.path);
                         }
                         if (logging)
                             fileChanged();

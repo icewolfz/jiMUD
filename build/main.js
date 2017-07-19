@@ -1274,7 +1274,7 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  if (!isDirSync(path.join(app.getPath('userData'), "characters")))
+  if (!existsSync(path.join(app.getPath('userData'), "characters")))
     fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
 
   loadCharacters();
@@ -1926,6 +1926,16 @@ function isDirSync(aPath) {
         }
     }
 }
+
+function existsSync(filename) {
+    try {
+        fs.statSync(filename);
+        return true;
+    } catch (ex) {
+        return false;
+    }
+}
+
 
 function isFileSync(aPath) {
     try {

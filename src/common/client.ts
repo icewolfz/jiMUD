@@ -5,7 +5,7 @@ import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
 import { ParserLine, Size } from './types';
 import { AnsiColorCode } from './ansi';
-import { stripHTML, parseTemplate, getScrollBarHeight, SortArrayByPriority, isDirSync } from './library';
+import { stripHTML, parseTemplate, getScrollBarHeight, SortArrayByPriority, existsSync } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
 import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context } from './profile';
@@ -229,7 +229,7 @@ export class Client extends EventEmitter {
 
     public loadProfiles() {
         const p = path.join(parseTemplate('{data}'), 'profiles');
-        if (!isDirSync(p)) {
+        if (!existsSync(p)) {
             this.profiles.add(Profile.Default);
             return;
         }
@@ -253,7 +253,7 @@ export class Client extends EventEmitter {
 
     public saveProfiles() {
         const p = path.join(parseTemplate('{data}'), 'profiles');
-        if (!isDirSync(p))
+        if (!existsSync(p))
             fs.mkdirSync(p);
         this.profiles.save(p);
         this.clearCache();
@@ -262,7 +262,7 @@ export class Client extends EventEmitter {
 
     public saveProfile(profile: string) {
         const p = path.join(parseTemplate('{data}'), 'profiles');
-        if (!isDirSync(p))
+        if (!existsSync(p))
             fs.mkdirSync(p);
         this.profiles.items[profile].save(p);
         this.clearCache();
