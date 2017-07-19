@@ -4,10 +4,11 @@
   - Status: allow experience needed to be displayed as a progress bar
   - Mapper: add menu bar for standard gui
   - Profile manager: add menu for standard gui
+  - Immortal tools: added upload folder support
 - **Fixed:**
   - Fixed bugs with remote drag and drop support
   - Fixed bug with dynamic windows when max/min tracking fix was added
-  - Immortal Tools: a bug in queue adding more then 1 item will display active item path for all items added
+  - Immortal tools: a bug in queue adding more then 1 item will display active item path for all items added
 ##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 
