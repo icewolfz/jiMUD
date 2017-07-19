@@ -165,7 +165,7 @@ export class IED extends EventEmitter {
                         break;
                     case IEDError.CMD_EXIST:
                         if (obj && this._callbacks[obj.tag])
-                            this._callbacks[obj.tag](obj.path + '/' + obj.file, obj.tag.startsWith('mkdirIgnore') ? IEDCmdStatus.success : IEDCmdStatus.failed);
+                            this._callbacks[obj.tag](obj.path + '/' + obj.file, (obj.tag.startsWith('mkdirIgnore') || obj.tag.startsWith('mkdiraIgnore')) ? IEDCmdStatus.success : IEDCmdStatus.failed);
                         this.emit('message', `File or directory already exist: '${obj.path}/${obj.file}`);
                         break;
                     case IEDError.CMD_DIRECTORY:
@@ -220,6 +220,10 @@ export class IED extends EventEmitter {
                             this.makeDirectory(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
                         else if (obj.tag && obj.tag.startsWith('mkdirIgnore:'))
                             this.makeDirectory(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
+                        else if (obj.tag && obj.tag.startsWith('mkdira:'))
+                            this.makeDirectoryAll(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
+                        else if (obj.tag && obj.tag.startsWith('mkdiraIgnore:'))
+                            this.makeDirectoryAll(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
                         break;
                 }
                 break;
@@ -463,6 +467,20 @@ export class IED extends EventEmitter {
         }
         else {
             ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mkdir', path: file, tag: (ignore ? 'mkdirIgnore' : 'mkdir') + this._id }));
+            this.emit('message', 'Creating directory: ' + file);
+        }
+        this._id++;
+    }
+
+    public makeDirectoryAll(file, resolve?: boolean, ignore?: boolean, callback?) {
+        if (callback)
+            this._callbacks[(ignore ? 'mkdiraIgnore' : 'mkdira') + this._id] = callback;
+        if (resolve) {
+            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: (ignore ? 'mkdiraIgnore' : 'mkdira') + this._id }));
+            this.emit('message', 'Resolving: ' + file);
+        }
+        else {
+            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mkdira', path: file, tag: (ignore ? 'mkdiraIgnore' : 'mkdira') + this._id }));
             this.emit('message', 'Creating directory: ' + file);
         }
         this._id++;

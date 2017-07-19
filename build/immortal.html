@@ -2434,7 +2434,7 @@
                         p = r + p.substr(s).replace(/\\/g, "/");
                         if (paths.indexOf(p) === -1)
                             paths.push(p);
-                        _ied.makeDirectory(p, false, true, (path, code) => {
+                        _ied.makeDirectoryAll(p, false, true, (path, code) => {
                             if (code != IEDCmdStatus.success)
                                 throw new Error('Could not create remote path: ' + path);
                             _ied.uploadTo(files[f], p + '/' + path.basename(files[f]));
