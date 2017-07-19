@@ -51,7 +51,7 @@ function loadCharacter(char) {
     var d = settings.Settings.load(parseTemplate(path.join("{data}", "settings.json")));
     d.save(parseTemplate(characters.characters[char].settings));
     fs.writeFileSync(path.join(app.getPath('userData'), "characters.json"), JSON.stringify(characters));
-    if (fs.existsSync(parseTemplate(path.join("{data}", "map.sqlite")))) {
+    if (isFileSync(parseTemplate(path.join("{data}", "map.sqlite")))) {
       copyFile(parseTemplate(path.join("{data}", "map.sqlite")), parseTemplate(characters.characters[char].map));
     }
   }
@@ -763,7 +763,7 @@ function createMenu() {
     });
 
   var p = path.join(app.getPath('userData'), "profiles");
-  if (fs.existsSync(p)) {
+  if (isDirSync(p)) {
     var files = fs.readdirSync(p);
     for (var i = 0; i < files.length; i++) {
       if (path.extname(files[i]) === ".json") {
@@ -1204,17 +1204,17 @@ function createWindow() {
 
   win.once('ready-to-show', () => {
     addInputContext(win);
-    if (fs.existsSync(path.join(app.getPath('userData'), "monsters.css"))) {
+    if (isFileSync(path.join(app.getPath('userData'), "monsters.css"))) {
       fs.readFile(path.join(app.getPath('userData'), "monsters.css"), 'utf8', (err, data) => {
         win.webContents.insertCSS(parseTemplate(data));
       });
     }
-    if (fs.existsSync(path.join(app.getPath('userData'), "user.css"))) {
+    if (isFileSync(path.join(app.getPath('userData'), "user.css"))) {
       fs.readFile(path.join(app.getPath('userData'), "user.css"), 'utf8', (err, data) => {
         win.webContents.insertCSS(parseTemplate(data));
       });
     }
-    if (fs.existsSync(path.join(app.getPath('userData'), "user.js"))) {
+    if (isFileSync(path.join(app.getPath('userData'), "user.js"))) {
       fs.readFile(path.join(app.getPath('userData'), "user.js"), 'utf8', (err, data) => {
         win.webContents.executeJavaScript(data);
       });
@@ -1274,7 +1274,7 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  if (!fs.existsSync(path.join(app.getPath('userData'), "characters")))
+  if (!isDirSync(path.join(app.getPath('userData'), "characters")))
     fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
 
   loadCharacters();
@@ -1915,6 +1915,30 @@ function parseTemplate(str, data) {
   return str;
 }
 
+function isDirSync(aPath) {
+    try {
+        return fs.statSync(aPath).isDirectory();
+    } catch (e) {
+        if (e.code === 'ENOENT') {
+            return false;
+        } else {
+            throw e;
+        }
+    }
+}
+
+function isFileSync(aPath) {
+    try {
+        return fs.statSync(aPath).isFile();
+    } catch (e) {
+        if (e.code === 'ENOENT') {
+            return false;
+        } else {
+            throw e;
+        }
+    }
+}
+
 function showPrefs() {
   var b = win.getBounds();
 
@@ -2535,7 +2559,7 @@ function copyFile(src, dest) {
 }
 
 function loadCharacters(noLoad) {
-  if (fs.existsSync(path.join(app.getPath('userData'), "characters.json"))) {
+  if (isFileSync(path.join(app.getPath('userData'), "characters.json"))) {
     characters = fs.readFileSync(path.join(app.getPath('userData'), "characters.json"), 'utf-8');
     if (characters.length > 0) {
       try {

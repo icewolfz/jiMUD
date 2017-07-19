@@ -195,7 +195,7 @@ export class IED extends EventEmitter {
             case 'resolved':
                 this.emit('resolved', obj.path, obj.tag || '');
                 switch (obj.tag || '') {
-                    case 'browse':
+                    case 'dir:browse':
                         this.getDir(obj.path, true);
                         break;
                     case 'delete':
@@ -210,26 +210,30 @@ export class IED extends EventEmitter {
                         this.rename(this._data['rename'], obj.path + '/' + obj.file);
                         break;
                     default:
-                        if (obj.tag && obj.tag.startsWith('download:'))
-                            this.download(obj.path + '/' + obj.file, false, obj.tag);
-                        else if (obj.tag && obj.tag.startsWith('upload:'))
-                            this.upload(obj.path + '/' + obj.file, false, obj.tag);
-                        else if (obj.tag && obj.tag.startsWith('uploadTo:'))
-                            this.upload(obj.path + '/' + obj.file, false, obj.tag);
-                        else if (obj.tag && obj.tag.startsWith('uploadMkdir:'))
-                            this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
-                        else if (obj.tag && obj.tag.startsWith('uploadToMkdir:'))
-                            this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
-                        else if (obj.tag && obj.tag.startsWith('downloadTo:'))
-                            this.download(obj.path + '/' + obj.file, false, obj.tag);
-                        else if (obj.tag && obj.tag.startsWith('mkdir:'))
-                            this.makeDirectory(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
-                        else if (obj.tag && obj.tag.startsWith('mkdirIgnore:'))
-                            this.makeDirectory(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
-                        else if (obj.tag && obj.tag.startsWith('mkdirP:'))
-                            this.makeDirectoryParent(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
-                        else if (obj.tag && obj.tag.startsWith('mkdirPIgnore:'))
-                            this.makeDirectoryParent(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
+                        if (obj.tag) {
+                            if (obj.tag.startsWith('download:'))
+                                this.download(obj.path + '/' + obj.file, false, obj.tag);
+                            else if (obj.tag.startsWith('upload:'))
+                                this.upload(obj.path + '/' + obj.file, false, obj.tag);
+                            else if (obj.tag.startsWith('uploadTo:'))
+                                this.upload(obj.path + '/' + obj.file, false, obj.tag);
+                            else if (obj.tag.startsWith('uploadMkdir:'))
+                                this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
+                            else if (obj.tag.startsWith('uploadToMkdir:'))
+                                this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
+                            else if (obj.tag.startsWith('downloadTo:'))
+                                this.download(obj.path + '/' + obj.file, false, obj.tag);
+                            else if (obj.tag.startsWith('mkdir:'))
+                                this.makeDirectory(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
+                            else if (obj.tag.startsWith('mkdirIgnore:'))
+                                this.makeDirectory(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
+                            else if (obj.tag.startsWith('mkdirP:'))
+                                this.makeDirectoryParent(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
+                            else if (obj.tag.startsWith('mkdirPIgnore:'))
+                                this.makeDirectoryParent(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
+                            else if (obj.tag.startsWith('dir:'))
+                                this.getDir(obj.path, true, obj.tag.substr(4));
+                        }
                         break;
                 }
                 break;
@@ -313,14 +317,14 @@ export class IED extends EventEmitter {
         }
     }
 
-    public getDir(dir: string, noResolve?: boolean) {
+    public getDir(dir: string, noResolve?: boolean, tag?) {
         if (noResolve) {
-            ipcRenderer.send('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: 'browse' }));
+            ipcRenderer.send('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: 'dir:' + (tag || 'browse') }));
             this.emit('message', 'Getting Directory: ' + dir);
         }
         else {
             delete this._data['browse'];
-            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: dir, file: '', tag: 'browse' }));
+            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: dir, file: '', tag: 'dir:' + (tag || 'browse') }));
             this.emit('message', 'Resolving: ' + dir);
         }
     }

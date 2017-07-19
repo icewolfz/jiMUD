@@ -256,8 +256,13 @@ export class Settings {
     public pasteSpecialReplaceEnabled: boolean = true;
 
     public static load(file) {
-        if (!fs.existsSync(file))
+        try {
+            if (!fs.statSync(file).isFile())
+                return new Settings();
+        }
+        catch (err) {
             return new Settings();
+        }
         let data = fs.readFileSync(file, 'utf-8');
         if (data.length === 0)
             return new Settings();

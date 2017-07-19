@@ -25,7 +25,7 @@
         <script src="../lib/bootstrap-select.min.js"></script>
         <script>
             //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-            const { parseTemplate, templatePath } = require('./js/library');
+            const { parseTemplate, templatePath, isFileSync } = require('./js/library');
             const Settings = require('./js/settings').Settings;
             const { shell, remote, ipcRenderer } = require('electron');
             const { dialog, Menu, MenuItem } = remote;
@@ -196,7 +196,7 @@
             }
 
             function loadCharacters() {
-                if (fs.existsSync(charactersFile))
+                if (isFileSync(charactersFile))
                     characters = fs.readFileSync(charactersFile, 'utf-8');
 
                 if (characters && characters.length > 0) {
@@ -324,7 +324,7 @@
                     characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
                     var sf = parseTemplate(characters.characters[name].settings);
                     var response, d;
-                    if (fs.existsSync(sf)) {
+                    if (isFileSync(sf)) {
                         response = dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'warning',
                             title: 'File exists',
@@ -342,7 +342,7 @@
                         d.save(sf);
                     }
                     sf = parseTemplate(characters.characters[name].map);
-                    if (fs.existsSync(sf)) {
+                    if (isFileSync(sf)) {
                         response = dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'warning',
                             title: 'File exists',
@@ -351,13 +351,13 @@
                             defaultId: 1,
                         });
                         if (response === 0) {
-                            if (fs.existsSync(parseTemplate(path.join("{data}", "map.sqlite"))))
+                            if (isFileSync(parseTemplate(path.join("{data}", "map.sqlite"))))
                                 copyFile(parseTemplate(path.join("{data}", "map.sqlite")), sf);
                             else
                                 fs.closeSync(fs.openSync(sf, 'w'));
                         }
                     }
-                    else if (fs.existsSync(parseTemplate(path.join("{data}", "map.sqlite"))))
+                    else if (isFileSync(parseTemplate(path.join("{data}", "map.sqlite"))))
                         copyFile(parseTemplate(path.join("{data}", "map.sqlite")), sf);
                     else
                         fs.closeSync(fs.openSync(sf, 'w'));
@@ -373,7 +373,7 @@
                     characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
                     var sf = parseTemplate(characters.characters[name].settings);
                     var response, d;
-                    if (fs.existsSync(sf)) {
+                    if (isFileSync(sf)) {
                         response = dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'warning',
                             title: 'File exists',
@@ -391,7 +391,7 @@
                         d.save(sf);
                     }
                     sf = parseTemplate(characters.characters[name].map);
-                    if (fs.existsSync(sf)) {
+                    if (isFileSync(sf)) {
                         response = dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'warning',
                             title: 'File exists',
@@ -420,7 +420,7 @@
                     var f = parseTemplate(characters.characters[oldName].settings);
                     var sf = parseTemplate(characters.characters[name].settings);
                     var response;
-                    if (fs.existsSync(sf)) {
+                    if (isFileSync(sf)) {
                         response = dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'warning',
                             title: 'File exists',
@@ -435,7 +435,7 @@
                         fs.renameSync(f, sf);
                     f = parseTemplate(characters.characters[oldName].map);
                     sf = parseTemplate(characters.characters[name].map);
-                    if (fs.existsSync(sf)) {
+                    if (isFileSync(sf)) {
                         response = dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'warning',
                             title: 'File exists',
@@ -482,7 +482,7 @@
                     var f = parseTemplate(characters.characters[oldName].settings);
                     var sf = parseTemplate(characters.characters[name].settings);
                     var response;
-                    if (fs.existsSync(sf)) {
+                    if (isFileSync(sf)) {
                         response = dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'warning',
                             title: 'File exists',
@@ -497,7 +497,7 @@
                         copyFile(f, sf);
                     f = parseTemplate(characters.characters[oldName].map);
                     sf = parseTemplate(characters.characters[name].map);
-                    if (fs.existsSync(sf)) {
+                    if (isFileSync(sf)) {
                         response = dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'warning',
                             title: 'File exists',
@@ -506,13 +506,13 @@
                             defaultId: 1,
                         });
                         if (response === 0) {
-                            if (fs.existsSync(f))
+                            if (isFileSync(f))
                                 copyFile(f, sf);
                             else
                                 fs.closeSync(fs.openSync(sf, 'w'));
                         }
                     }
-                    else if (fs.existsSync(f))
+                    else if (isFileSync(f))
                         copyFile(f, sf);
                     else
                         fs.closeSync(fs.openSync(sf, 'w'));
@@ -536,10 +536,10 @@
 
                 if (response === 0) {
                     var sf = parseTemplate(characters.characters[name].settings);
-                    if (fs.existsSync(sf))
+                    if (isFileSync(sf))
                         shell.moveItemToTrash(sf);
                     sf = parseTemplate(characters.characters[name].map);
-                    if (fs.existsSync(sf))
+                    if (isFileSync(sf))
                         shell.moveItemToTrash(sf);
                     if (characters.load === name)
                         characters.load = 0;

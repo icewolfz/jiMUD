@@ -28,7 +28,7 @@
         const { TempType, IEDCmdStatus } = require('./js/types');
         const { remote, ipcRenderer, shell, clipboard } = require('electron');
         const { app, dialog, Menu, MenuItem } = remote;
-        const { parseTemplate } = require('./js/library');
+        const { parseTemplate, isDirSync } = require('./js/library');
         const { Settings } = require('./js/settings');
         const fs = require('fs-extra');
         const child_process = require('child_process');
@@ -619,7 +619,7 @@
         function updateLocal(p) {
             if (!p || p.length === 0)
                 p = options.local || app.getPath('downloads');
-            else if (!fs.existsSync(p))
+            else if (!isDirSync(p))
                 p = app.getPath('downloads');
             options.local = p;
             createWatcher();
@@ -1134,8 +1134,12 @@
             _ied.on('reset', () => {
                 queueTable.rows().remove().draw();
             });
-            _ied.on('dir', (dir, files) => {
-                updateRemote(dir, files);
+            _ied.on('dir', (dir, files, tag) => {
+                if (tag === 'dir:browse')
+                    updateRemote(dir, files);
+                else if (tag === 'dir:download') {
+                    //TODO dl folder
+                }
             });
             _ied.on('resolved', (dir, tag) => {
                 logMessage("Resolved: " + dir);
@@ -2432,12 +2436,12 @@
         }
 
 
-        var upFiles;
-        var upTotal;
+        var pFiles;
+        var pTotal;
 
         function uploadPath(p) {
             _progressCancel = false;
-            if (!upTotal && !$("#Progress")[0].open) {
+            if (!pTotal && !$("#Progress")[0].open) {
                 $("#Progressbar").html('<progress max="100"></progress>');
                 $("#ProgressTitle").html(`Preparing upload`);
                 $("#Progress")[0].showModal();
@@ -2455,13 +2459,13 @@
                     for (var e = 0, el = empty.length; e < el; e++) {
                         _ied.makeDirectory(r + path.dirname(empty[e]).substr(s).replace(/\\/g, "/") + '/' + path.basename(empty[e]), false, true);
                     }
-                    if (upTotal) {
-                        upFiles.push.apply(upFiles, files);
-                        upTotal += files.length;
+                    if (pTotal) {
+                        pFiles.push.apply(pFiles, files);
+                        pTotal += files.length;
                     }
                     else {
-                        upFiles = files;
-                        upTotal = files.length;
+                        pFiles = files;
+                        pTotal = files.length;
                     }
                     upNext();
                 });
@@ -2469,14 +2473,14 @@
         }
 
         function upNext() {
-            if (!upFiles || upFiles.length === 0 || _progressCancel) {
-                upFiles = null;
-                upTotal = 0;
+            if (!pFiles || pFiles.length === 0 || _progressCancel) {
+                pFiles = null;
+                pTotal = 0;
                 if ($("#Progress")[0].open)
                     $("#Progress")[0].close();
                 return;
             }
-            var file = upFiles.shift();
+            var file = pFiles.shift();
             var s = options.local.length;
             if (options.local.endsWith('/') || options.local.endsWith('\\'))
                 s--;
@@ -2486,7 +2490,7 @@
             var p = path.dirname(file);
             p = r + p.substr(s).replace(/\\/g, "/");
             _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
-            $("#Progress progress").val(Math.ceil((upTotal - upFiles.length) * 100 / upTotal));
+            $("#Progress progress").val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
             setTimeout(upNext, 0);
         }
 
@@ -2497,7 +2501,15 @@
         }
 
         function downloadPath(p) {
-            console.log(p);
+            _progressCancel = false;
+            if (!pTotal && !$("#Progress")[0].open) {
+                $("#Progressbar").html('<progress max="100"></progress>');
+                $("#ProgressTitle").html(`Preparing upload`);
+                $("#Progress")[0].showModal();
+            }            
+            if(!isDirSync(path.join(options.local, path.basename(p))))
+                fs.mkdirSync(path.join(options.local, path.basename(p)));
+            _ied.getDir(p, true, "download");
         }
 
         function closing() {

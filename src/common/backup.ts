@@ -1,7 +1,7 @@
 //cSpell:words vscroll, hscroll, Commandon, cmdfont, isdoor, isclosed, triggernewline, triggerprompt
 import EventEmitter = require('events');
 import { Client } from './client';
-import { parseTemplate } from './library';
+import { parseTemplate, isDirSync } from './library';
 import { BackupSelection, Log } from './types';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
 const fs = require('fs');
@@ -381,7 +381,7 @@ export class Backup extends EventEmitter {
                     profiles.add(p);
                 }
                 const pf = path.join(parseTemplate('{data}'), 'profiles');
-                if (!fs.existsSync(pf))
+                if (!isDirSync(pf))
                     fs.mkdirSync(pf);
                 profiles.save(pf);
                 //this.client.loadProfiles();

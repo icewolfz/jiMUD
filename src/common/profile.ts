@@ -1,5 +1,5 @@
 //cSpell:ignore displaytype, submenu, triggernewline, triggerprompt
-import { clone, keyCodeToChar } from './library';
+import { clone, keyCodeToChar, isFileSync } from './library';
 const path = require('path');
 const fs = require('fs');
 
@@ -414,7 +414,7 @@ export class Profile {
     }
 
     public static load(file: string) {
-        if (!fs.existsSync(file))
+        if (!isFileSync(file))
             return null;
         let profile;
         let data = fs.readFileSync(file, 'utf-8');
@@ -476,7 +476,7 @@ export class Profile {
 
     public save(p) {
         if (this.file !== this.name.toLowerCase()) {
-            if (fs.existsSync(path.join(p, this.file + '.json')))
+            if (isFileSync(path.join(p, this.file + '.json')))
                 fs.unlinkSync(path.join(p, this.file + '.json'));
             this.file = this.name.toLowerCase();
         }
@@ -794,7 +794,7 @@ export class ProfileCollection {
             list = [list];
         for (let i = 0; i < list.length; i++) {
             const n = path.join(p, list[i] + '.json');
-            if (fs.existsSync(n))
+            if (isFileSync(n))
                 this.add(Profile.load(n));
         }
     }

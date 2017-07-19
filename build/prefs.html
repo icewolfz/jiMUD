@@ -24,7 +24,7 @@
   <script src="../lib/bootstrap-select.min.js"></script>
   <script>
     //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-    const { parseTemplate, templatePath } = require('./js/library');
+    const { parseTemplate, templatePath, isDirSync } = require('./js/library');
     const { TrayClick } = require('./js/types');
     const Settings = require('./js/settings').Settings;
     const { remote, ipcRenderer } = require('electron');
@@ -127,7 +127,7 @@
 
     function getThemes(p) {
       var p2 = parseTemplate(p);
-      if (!fs.existsSync(p2))
+      if (!isDirSync(p2))
         return [];
       var themes = [];
       var files = fs.readdirSync(p2);

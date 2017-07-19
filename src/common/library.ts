@@ -1,6 +1,7 @@
 //cSpell:ignore Eisu, Junja, Hanja, Nonconvert, Modechange, printscreen, jisho, Masshou, Touroku, loya, roya
 //cSpell:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel,  Ereof
 const path = require('path');
+const fs = require('fs');
 const { app } = require('electron').remote;
 
 export function SortArrayByPriority(a, b) {
@@ -698,4 +699,41 @@ export function getScrollBarSize(el) {
     el.removeChild(inner);
 
     return [(w1 - w2), (h1 - h2)];
+}
+
+export function existsSync(filename) {
+    try {
+        fs.statSync(filename);
+        return true;
+    } catch (ex) {
+        return false;
+    }
+}
+
+export function exists(filename, cb) {
+    fs.stat(filename, cb);
+}
+
+export function isDirSync(aPath) {
+    try {
+        return fs.statSync(aPath).isDirectory();
+    } catch (e) {
+        if (e.code === 'ENOENT') {
+            return false;
+        } else {
+            throw e;
+        }
+    }
+}
+
+export function isFileSync(aPath) {
+    try {
+        return fs.statSync(aPath).isFile();
+    } catch (e) {
+        if (e.code === 'ENOENT') {
+            return false;
+        } else {
+            throw e;
+        }
+    }
 }
