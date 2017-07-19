@@ -2426,18 +2426,37 @@
                 var r = options.remote;
                 if (r.endsWith('/'))
                     r = r.substr(0, r.length - 1);
-                files = files.map((value) => {
-                    var p = path.dirname(value);
+                var fs = files.length;
+                var f;
+                try {
+                    for (f = 0; f < fs; f++) {
+                        var p = path.dirname(files[f]);
+                        p = r + p.substr(s).replace(/\\/g, "/");
+                        if (paths.indexOf(p) === -1)
+                            paths.push(p);
+                        _ied.makeDirectory(p, false, true, (path, code) => {
+                            if (code != IEDCmdStatus.success)
+                                throw new Error('Could not create remote path: ' + path);
+                            _ied.uploadTo(files[f], p + '/' + path.basename(files[f]));
+                        });
+                    }
+                }
+                catch (err) {
+                    logMessage(err.message);
+                }
+                $("#mask").css('display', '');
+                /*
+                for (f = 0; f < fs; f++) {
+                    var p = path.dirname(files[f]);
                     p = r + p.substr(s).replace(/\\/g, "/");
                     if (paths.indexOf(p) === -1)
                         paths.push(p);
-                    return { remote: p + '/' + path.basename(value), local: value };
-                });
+                    files[f] = { remote: p + '/' + path.basename(files[f]), local: files[f] };
+                }
                 try {
                     chainMkdir(paths, () => {
-                        files.forEach((value) => {
-                            _ied.uploadTo(value.local, value.remote);
-                        });
+                        for (f = 0; f < fs; f++)
+                            _ied.uploadTo(files[f].local, files[f].remote);
                         $("#mask").css('display', '');
                     });
                 }
@@ -2445,6 +2464,7 @@
                     logMessage(err.message);
                     $("#mask").css('display', '');
                 }
+                */
             });
         }
 
