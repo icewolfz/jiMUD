@@ -44,7 +44,7 @@
         var localTable, remoteTable, queueTable, key = '', keyClearID;
         var watcher;
         var dragging = false, btmDragging = false;
-        var _localDrag, _remoteDrag;
+        var _localDrag, _remoteDrag, _progressCancel = false;
 
         var menu = [
             {
@@ -392,20 +392,28 @@
         }
 
         // List all files in a directory in Node.js recursively in a synchronous fashion
-        var walkSync = function (dir, fileList) {
+        var walkSync = function (dir, fileList, dirList, empty) {
             var path = path || require('path');
             var fs = fs || require('fs'),
                 files = fs.readdirSync(dir);
             fileList = fileList || [];
+            dirList = dirList || [];
+            empty = empty || [];
+            if (files.length == 0)
+                empty.push(dir);
             files.forEach(function (file) {
                 if (fs.statSync(path.join(dir, file)).isDirectory()) {
-                    fileList = walkSync(path.join(dir, file), fileList);
+                    dirList.push(path.join(dir, file));
+                    var t = walkSync(path.join(dir, file), fileList, dirList, empty);
+                    fileList = t.files;
+                    dirList = t.dirs;
+                    empty = t.empty;
                 }
                 else {
                     fileList.push(path.join(dir, file));
                 }
             });
-            return fileList;
+            return { files: fileList, dirs: dirList, empty: empty };
         };
 
         var walk = function (dir, callback) {
@@ -413,16 +421,24 @@
             var fs = fs || require('fs');
             fs.readdir(dir, (err, files) => {
                 var fileList = [];
+                var dirList = [];
+                var empty = [];
+                if (files.length == 0)
+                    empty.push(dir);
                 files.forEach(function (file) {
                     if (fs.statSync(path.join(dir, file)).isDirectory()) {
-                        fileList = walkSync(path.join(dir, file), fileList);
+                        dirList.push(path.join(dir, file));
+                        var t = walkSync(path.join(dir, file), fileList, dirList, empty);
+                        fileList = t.files;
+                        dirList = t.dirs;
+                        empty = t.empty;
                     }
                     else {
                         fileList.push(path.join(dir, file));
                     }
                 });
                 if (callback)
-                    callback(fileList);
+                    callback(fileList, dirList, empty);
 
             });
         };
@@ -2415,65 +2431,69 @@
             }
         }
 
+
+        var upFiles;
+        var upTotal;
+
         function uploadPath(p) {
-            $("#mask").css('display', 'block');
-            $("#mask").html(`<div style="top: 50%;transform: translateY(-50%);position: absolute;width:100%"><h1>Preparing upload: ${path.basename(p)} <br><i class="fa fa-cog fa-spin fa-3x fa-fw"></i></h1></div>`);
-            walk(p, (files) => {
-                var paths = [];
-                var s = options.local.length;
-                if (options.local.endsWith('/') || options.local.endsWith('\\'))
-                    s--;
-                var r = options.remote;
-                if (r.endsWith('/'))
-                    r = r.substr(0, r.length - 1);
-                var fs = files.length;
-                var f;
-                try {
-                    for (f = 0; f < fs; f++) {
-                        var p = path.dirname(files[f]);
-                        p = r + p.substr(s).replace(/\\/g, "/");
-                        if (paths.indexOf(p) === -1)
-                            paths.push(p);
-                        _ied.uploadTo(files[f], p + '/' + path.basename(files[f]), false, 0, true);
+            _progressCancel = false;
+            if (!upTotal && !$("#Progress")[0].open) {
+                $("#Progressbar").html('<progress max="100"></progress>');
+                $("#ProgressTitle").html(`Preparing upload`);
+                $("#Progress")[0].showModal();
+            }
+            //make dir then start uploads
+            _ied.makeDirectory(options.remote + "/" + path.basename(p), false, true, () => {
+                walk(p, (files, dirs, empty) => {
+                    var s = options.local.length;
+                    if (options.local.endsWith('/') || options.local.endsWith('\\'))
+                        s--;
+                    var r = options.remote;
+                    if (r.endsWith('/'))
+                        r = r.substr(0, r.length - 1);
+
+                    for (var e = 0, el = empty.length; e < el; e++) {
+                        _ied.makeDirectory(r + path.dirname(empty[e]).substr(s).replace(/\\/g, "/") + '/' + path.basename(empty[e]), false, true);
                     }
-                }
-                catch (err) {
-                    logMessage(err.message);
-                }
-                $("#mask").css('display', '');
-                /*
-                for (f = 0; f < fs; f++) {
-                    var p = path.dirname(files[f]);
-                    p = r + p.substr(s).replace(/\\/g, "/");
-                    if (paths.indexOf(p) === -1)
-                        paths.push(p);
-                    files[f] = { remote: p + '/' + path.basename(files[f]), local: files[f] };
-                }
-                try {
-                    chainMkdir(paths, () => {
-                        for (f = 0; f < fs; f++)
-                            _ied.uploadTo(files[f].local, files[f].remote);
-                        $("#mask").css('display', '');
-                    });
-                }
-                catch (err) {
-                    logMessage(err.message);
-                    $("#mask").css('display', '');
-                }
-                */
+                    if (upTotal) {
+                        upFiles.push.apply(upFiles, files);
+                        upTotal += files.length;
+                    }
+                    else {
+                        upFiles = files;
+                        upTotal = files.length;
+                    }
+                    upNext();
+                });
             });
         }
 
-        function chainMkdir(paths, callback) {
-            var p = paths.shift();
-            _ied.makeDirectory(p, false, true, (path, code) => {
-                if (code != IEDCmdStatus.success)
-                    throw new Error('Could not create remote path: ' + path);
-                if (paths.length > 0)
-                    chainMkdir(paths, callback);
-                else if (callback)
-                    callback();
-            });
+        function upNext() {
+            if (!upFiles || upFiles.length === 0 || _progressCancel) {
+                upFiles = null;
+                upTotal = 0;
+                if ($("#Progress")[0].open)
+                    $("#Progress")[0].close();
+                return;
+            }
+            var file = upFiles.shift();
+            var s = options.local.length;
+            if (options.local.endsWith('/') || options.local.endsWith('\\'))
+                s--;
+            var r = options.remote;
+            if (r.endsWith('/'))
+                r = r.substr(0, r.length - 1);
+            var p = path.dirname(file);
+            p = r + p.substr(s).replace(/\\/g, "/");
+            _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
+            $("#Progress progress").val(Math.ceil((upTotal - upFiles.length) * 100 / upTotal));
+            setTimeout(upNext, 0);
+        }
+
+        function progressCancel() {
+            _progressCancel = true;
+            if ($("#Progress")[0].open)
+                $("#Progress")[0].close();
         }
 
         function downloadPath(p) {
@@ -3078,8 +3098,17 @@
             <button style="float: right" type="button" class="btn btn-primary" onclick="newFolderOk()">Ok</button>
         </div>
     </dialog>
-    <div id="mask">
-    </div>
+    <dialog id="Progress" style="z-index:1000;text-align:center">
+        <div id="ProgressTitle"></div>
+        <div id="Progressbar">
+            <progress max="100"></progress>
+        </div>
+        <div>
+            <button onclick="progressCancel()">
+                Cancel
+            </button>
+        </div>
+    </dialog>
 </body>
 
 </html>

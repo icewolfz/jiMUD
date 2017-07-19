@@ -159,13 +159,15 @@ export class IED extends EventEmitter {
                     case IEDError.UL_UNKNOWN:
                     case IEDError.UL_INVALIDFILE:
                     case IEDError.UL_INVALIDPATH:
+                    case IEDError.UL_DENIED:
+                    case IEDError.UL_FILE:
                         if (this.active && this.active.ID === obj.tag)
                             this.removeActive();
                         this.emit('message', `Upload aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
                         break;
                     case IEDError.CMD_EXIST:
                         if (obj && this._callbacks[obj.tag])
-                            this._callbacks[obj.tag](obj.path + '/' + obj.file, (obj.tag.startsWith('mkdirIgnore') || obj.tag.startsWith('mkdiraIgnore')) ? IEDCmdStatus.success : IEDCmdStatus.failed);
+                            this._callbacks[obj.tag](obj.path + '/' + obj.file, (obj.tag.startsWith('mkdirIgnore') || obj.tag.startsWith('mkdirPIgnore')) ? IEDCmdStatus.success : IEDCmdStatus.failed);
                         this.emit('message', `File or directory already exist: '${obj.path}/${obj.file}`);
                         break;
                     case IEDError.CMD_DIRECTORY:
@@ -214,9 +216,9 @@ export class IED extends EventEmitter {
                             this.upload(obj.path + '/' + obj.file, false, obj.tag);
                         else if (obj.tag && obj.tag.startsWith('uploadTo:'))
                             this.upload(obj.path + '/' + obj.file, false, obj.tag);
-                        else if (obj.tag && obj.tag.startsWith('uploadCreate:'))
+                        else if (obj.tag && obj.tag.startsWith('uploadMkdir:'))
                             this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
-                        else if (obj.tag && obj.tag.startsWith('uploadToCreate:'))
+                        else if (obj.tag && obj.tag.startsWith('uploadToMkdir:'))
                             this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
                         else if (obj.tag && obj.tag.startsWith('downloadTo:'))
                             this.download(obj.path + '/' + obj.file, false, obj.tag);
@@ -224,10 +226,10 @@ export class IED extends EventEmitter {
                             this.makeDirectory(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
                         else if (obj.tag && obj.tag.startsWith('mkdirIgnore:'))
                             this.makeDirectory(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
-                        else if (obj.tag && obj.tag.startsWith('mkdira:'))
-                            this.makeDirectoryAll(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
-                        else if (obj.tag && obj.tag.startsWith('mkdiraIgnore:'))
-                            this.makeDirectoryAll(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
+                        else if (obj.tag && obj.tag.startsWith('mkdirP:'))
+                            this.makeDirectoryParent(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
+                        else if (obj.tag && obj.tag.startsWith('mkdirPIgnore:'))
+                            this.makeDirectoryParent(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
                         break;
                 }
                 break;
@@ -379,7 +381,7 @@ export class IED extends EventEmitter {
         }
     }
 
-    public upload(file, resolve?: boolean, tag?: string, create?: boolean) {
+    public upload(file, resolve?: boolean, tag?: string, mkdir?: boolean) {
         if (!resolve) {
             let item;
             if (tag)
@@ -388,7 +390,7 @@ export class IED extends EventEmitter {
                 item = new Item('upload:' + this._id);
                 this._id++;
             }
-            item.create = create;
+            item.mkdir = mkdir;
             if (this._paths[tag]) {
                 item.local = this._paths[tag];
                 item.remote = file;
@@ -403,9 +405,9 @@ export class IED extends EventEmitter {
             this.addItem(item);
         }
         else {
-            if (create) {
-                this._paths['uploadCreate:' + this._id] = file;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: this.remote, file: path.basename(file), tag: 'uploadCreate:' + this._id }));
+            if (mkdir) {
+                this._paths['uploadMkdir:' + this._id] = file;
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: this.remote, file: path.basename(file), tag: 'uploadMkdir:' + this._id }));
             }
             else {
                 this._paths['upload:' + this._id] = file;
@@ -416,7 +418,7 @@ export class IED extends EventEmitter {
         }
     }
 
-    public uploadTo(file, remote, resolve?: boolean, tag?: string, create?: boolean) {
+    public uploadTo(file, remote, resolve?: boolean, tag?: string, mkdir?: boolean) {
         if (!resolve) {
             let item;
             if (tag)
@@ -425,7 +427,7 @@ export class IED extends EventEmitter {
                 item = new Item('upload:' + this._id);
                 this._id++;
             }
-            item.create = create;
+            item.mkdir = mkdir;
             if (this._paths[tag]) {
                 item.local = this._paths[tag];
                 item.remote = remote;
@@ -440,9 +442,9 @@ export class IED extends EventEmitter {
             this.addItem(item);
         }
         else {
-            if (create) {
-                this._paths['uploadToCreate:' + this._id] = file;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: remote, file: path.basename(remote), tag: 'uploadToCreate:' + this._id }));
+            if (mkdir) {
+                this._paths['uploadToMkdir:' + this._id] = file;
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: remote, file: path.basename(remote), tag: 'uploadToMkdir:' + this._id }));
             }
             else {
                 this._paths['uploadTo:' + this._id] = file;
@@ -490,15 +492,15 @@ export class IED extends EventEmitter {
         this._id++;
     }
 
-    public makeDirectoryAll(file, resolve?: boolean, ignore?: boolean, callback?) {
+    public makeDirectoryParent(file, resolve?: boolean, ignore?: boolean, callback?) {
         if (callback)
-            this._callbacks[(ignore ? 'mkdiraIgnore' : 'mkdira') + this._id] = callback;
+            this._callbacks[(ignore ? 'mkdirPIgnore' : 'mkdirP') + this._id] = callback;
         if (resolve) {
-            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: (ignore ? 'mkdiraIgnore' : 'mkdira') + this._id }));
+            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: (ignore ? 'mkdirPIgnore' : 'mkdirP') + this._id }));
             this.emit('message', 'Resolving: ' + file);
         }
         else {
-            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mkdira', path: file, tag: (ignore ? 'mkdiraIgnore' : 'mkdira') + this._id }));
+            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mkdirP', args: '-p', path: file, tag: (ignore ? 'mkdirPIgnore' : 'mkdirP') + this._id }));
             this.emit('message', 'Creating directory: ' + file);
         }
         this._id++;
@@ -700,7 +702,7 @@ export class IED extends EventEmitter {
         }
         else {
             this.active.inProgress = true;
-            ipcRenderer.send('send-gmcp', 'IED.upload ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, size: this.active.totalSize, create: this.active.create }));
+            ipcRenderer.send('send-gmcp', 'IED.upload ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, size: this.active.totalSize, mkdir: this.active.mkdir }));
             this.emit('message', 'Upload start: ' + this.active.remote);
         }
     }
@@ -775,7 +777,7 @@ export class Item {
     public state: ItemState = ItemState.working;
     public inProgress = false;
     public chunks: number = 0;
-    public create: boolean = false;
+    public mkdir: boolean = false;
 
     constructor(id: string, download?: boolean) {
         this.ID = id;

@@ -198,7 +198,7 @@ export enum IEDError {
   DIR_TOOMANY = 23,
   DIR_CANTREAD = 24,
   DIR_NOTSTART = 25,
-  CMD_DEINED = 26,
+  CMD_DENIED = 26,
   CMD_INVALIDFILE = 27,
   CMD_INVALIDARG = 28,
   CMD_INVALIDPATH = 29,
@@ -210,7 +210,9 @@ export enum IEDError {
   CMD_UNKNOWN = 35,
   UL_TOOMANY = 36,
   UL_INPROGRESS = 37,
-  CMD_FILE = 38
+  CMD_FILE = 38,
+  UL_DENIED = 39,
+  UL_FILE = 40
 }
 
 export enum IEDCmdStatus {
