@@ -4,7 +4,9 @@
   - Status: allow experience needed to be displayed as a progress bar
   - Mapper: add menu bar for standard gui
   - Profile manager: add menu for standard gui
-  - Immortal tools: added upload folder support
+  - Immortal tools
+    - Upload folder support
+    - Download folder support
 - **Fixed:**
   - Fixed bugs with remote drag and drop support
   - Fixed bug with dynamic windows when max/min tracking fix was added
