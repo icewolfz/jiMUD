@@ -6,6 +6,7 @@
   - Profile manager: add menu for standard gui
 - **Fixed:**
   - Fixed bugs with remote drag and drop support
+  - Fixed bug with dynamic windows when max/min tracking fix was added
 ##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 

@@ -2383,12 +2383,12 @@ function createNewWindow(name, options) {
     trackWindowState(name, windows[name].window);
   });
 
-  windows[name].on('maximize', () => {
+  windows[name].window.on('maximize', () => {
     trackWindowState(name, windows[name]);
     states[name].maximized = true;
   });
 
-  windows[name].on('unmaximize', () => {
+  windows[name].window.on('unmaximize', () => {
     trackWindowState(name, windows[name]);
     states[name].maximized = false;
   });
