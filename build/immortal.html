@@ -1138,7 +1138,37 @@
                 if (tag === 'dir:browse')
                     updateRemote(dir, files);
                 else if (tag === 'dir:download') {
-                    //TODO dl folder
+                    if (_progressCancel) {
+                        pTotal = 0;
+                        if ($("#Progress")[0].open)
+                            $("#Progress")[0].close();
+                        return;
+                    }
+                    var s = options.remote.length;
+                    if (options.remote.endsWith('/'))
+                        s--;
+                    var r = dir.substr(s).replace(/\//g, path.sep);
+
+                    if (!existsSync(path.join(options.local, path.basename(dir))))
+                        fs.mkdirSync(path.join(options.local, path.basename(dir)));
+                    for (var f = 0, fl = files.length; f < fl; f++) {
+                        var file = (dir === "/" ? '' : dir) + "/" + files[f].file;
+                        if (files[f].size == -2) {
+                            //create local
+                            if (!existsSync(path.join(options.local, path.basename(file))))
+                                fs.mkdirSync(path.join(options.local, path.basename(file)));
+                            pTotal++;
+                            _ied.getDir(file, true, 'download');
+                        }
+                        else
+                            _ied.downloadTo(file, path.join(options.local, r, files[f].file), false, true);
+                    }
+                    pTotal--;
+                    if (pTotal < 0) {
+                        if ($("#Progress")[0].open)
+                            $("#Progress")[0].close();
+                        return;
+                    }
                 }
             });
             _ied.on('resolved', (dir, tag) => {
@@ -2504,12 +2534,13 @@
             _progressCancel = false;
             if (!pTotal && !$("#Progress")[0].open) {
                 $("#Progressbar").html('<progress max="100"></progress>');
-                $("#ProgressTitle").html(`Preparing upload`);
+                $("#ProgressTitle").html(`Preparing download`);
                 $("#Progress")[0].showModal();
-            }            
-            if(!existsSync(path.join(options.local, path.basename(p))))
+            }
+            if (!existsSync(path.join(options.local, path.basename(p))))
                 fs.mkdirSync(path.join(options.local, path.basename(p)));
-            _ied.getDir(p, true, "download");
+            pTotal++;
+            _ied.getDir(p, true, 'download');
         }
 
         function closing() {
