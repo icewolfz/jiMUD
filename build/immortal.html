@@ -408,6 +408,25 @@
             return fileList;
         };
 
+        var walk = function (dir, callback) {
+            var path = path || require('path');
+            var fs = fs || require('fs');
+            fs.readdir(dir, (err, files) => {
+                var fileList = [];
+                files.forEach(function (file) {
+                    if (fs.statSync(path.join(dir, file)).isDirectory()) {
+                        fileList = walkSync(path.join(dir, file), fileList);
+                    }
+                    else {
+                        fileList.push(path.join(dir, file));
+                    }
+                });
+                if (callback)
+                    callback(fileList);
+
+            });
+        };
+
         (function () {
             function fileSort(a, b) {
                 if (_local[a].size === -2 && _local[b].size != -2)
@@ -2397,8 +2416,48 @@
         }
 
         function uploadPath(p) {
-            var files = walkSync(p);
-            console.log(files);
+            $("#mask").css('display', 'block');
+            $("#mask").html(`<div style="top: 50%;transform: translateY(-50%);position: absolute;width:100%"><h1>Preparing upload: ${path.basename(p)} <br><i class="fa fa-cog fa-spin fa-3x fa-fw"></i></h1></div>`);
+            walk(p, (files) => {
+                var paths = [];
+                var s = options.local.length;
+                if (options.local.endsWith('/') || options.local.endsWith('\\'))
+                    s--;
+                var r = options.remote;
+                if (r.endsWith('/'))
+                    r = r.substr(0, r.length - 1);
+                files = files.map((value) => {
+                    var p = path.dirname(value);
+                    p = r + p.substr(s).replace(/\\/g, "/");
+                    if (paths.indexOf(p) === -1)
+                        paths.push(p);
+                    return { remote: p + '/' + path.basename(value), local: value };
+                });
+                try {
+                    chainMkdir(paths, () => {
+                        files.forEach((value) => {
+                            _ied.uploadTo(value.local, value.remote);
+                        });
+                        $("#mask").css('display', '');
+                    });
+                }
+                catch (err) {
+                    logMessage(err.message);
+                    $("#mask").css('display', '');
+                }
+            });
+        }
+
+        function chainMkdir(paths, callback) {
+            var p = paths.shift();
+            _ied.makeDirectory(p, false, true, (path, code) => {
+                if (code != IEDCmdStatus.success)
+                    throw new Error('Could not create remote path: ' + path);
+                if (paths.length > 0)
+                    chainMkdir(paths, callback);
+                else if (callback)
+                    callback();
+            });
         }
 
         function downloadPath(p) {
@@ -2497,8 +2556,6 @@
                 uploadPath(p);
             else if (!_downloads[p] && options.uploadOnChange)
                 _ied.upload(p);
-
-
             if (_downloads[p])
                 delete _downloads[p];
         }
@@ -3005,6 +3062,8 @@
             <button style="float: right" type="button" class="btn btn-primary" onclick="newFolderOk()">Ok</button>
         </div>
     </dialog>
+    <div id="mask">
+    </div>
 </body>
 
 </html>

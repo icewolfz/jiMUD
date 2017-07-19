@@ -7,6 +7,7 @@
 - **Fixed:**
   - Fixed bugs with remote drag and drop support
   - Fixed bug with dynamic windows when max/min tracking fix was added
+  - Immortal Tools: a bug in queue adding more then 1 item will display active item path for all items added
 ##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 
