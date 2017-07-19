@@ -5,7 +5,7 @@ import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
 import { ParserLine, Size } from './types';
 import { AnsiColorCode } from './ansi';
-import { stripHTML, parseTemplate, getScrollBarHeight, SortArrayByPriority, isDirSync, isDirSync } from './library';
+import { stripHTML, parseTemplate, getScrollBarHeight, SortArrayByPriority, isDirSync } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
 import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context } from './profile';
