@@ -391,6 +391,23 @@
             tItem.position = item.position;
         }
 
+        // List all files in a directory in Node.js recursively in a synchronous fashion
+        var walkSync = function (dir, fileList) {
+            var path = path || require('path');
+            var fs = fs || require('fs'),
+                files = fs.readdirSync(dir);
+            fileList = fileList || [];
+            files.forEach(function (file) {
+                if (fs.statSync(path.join(dir, file)).isDirectory()) {
+                    fileList = walkSync(path.join(dir, file), fileList);
+                }
+                else {
+                    fileList.push(path.join(dir, file));
+                }
+            });
+            return fileList;
+        };
+
         (function () {
             function fileSort(a, b) {
                 if (_local[a].size === -2 && _local[b].size != -2)
@@ -1852,7 +1869,10 @@
                 }
                 else if (_remoteDrag) {
                     for (f = 0, fl = _remoteDrag.length; f < fl; f++) {
-                        _ied.download(_remoteDrag[f]);
+                        if (_remote[path.basename(_remoteDrag[f])].size === -2)
+                            downloadPath(_remoteDrag[f]);
+                        else
+                            _ied.download(_remoteDrag[f]);
                     }
                     _remoteDrag = 0;
                 }
@@ -1860,7 +1880,11 @@
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         if (event.dataTransfer.files[f].path === options.local) continue;
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
-                            _ied.download(event.dataTransfer.files[f].path.substring(8));
+                            var p = event.dataTransfer.files[f].path.substring(8);
+                            if (_remote[path.basename(p)].size === -2)
+                                downloadPath(_remoteDrag[f]);
+                            else
+                                _ied.download(p);
                         }
                         else if (type === 1) {
                             if (path.dirname(event.dataTransfer.files[f].path) === options.local) continue;
@@ -1906,8 +1930,10 @@
                 event.preventDefault();
                 if (_localDrag) {
                     for (var f = 0, fl = _localDrag.length; f < fl; f++) {
-                        if (_local[path.basename(_localDrag[f])].size === -2) continue;
-                        _ied.upload(_localDrag[f]);
+                        if (_local[path.basename(_localDrag[f])].size === -2)
+                            uploadPath(_localDrag[f]);
+                        else
+                            _ied.upload(_localDrag[f]);
                     }
                     _localDrag = 0;
                 }
@@ -1924,28 +1950,16 @@
                             catch (error) {
                                 throw error;
                             }
-                            if (!stat.isDirectory())
+                            if (stat.isDirectory())
+                                uploadPath(event.dataTransfer.files[f].path);
+                            else
                                 _ied.upload(event.dataTransfer.files[f].path);
+
                         }
                         else
                             _ied.upload(event.dataTransfer.files[f].path);
                     }
             };
-            /*
-                        $('#local-list tbody').on('mousedown', 'tr', function (e) {
-                            if (!$(this).hasClass('selected')) {
-                                if (!event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey)
-                                {
-            
-                                }
-                                else if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey)
-                                {}
-                                else
-                                    localTable.rows().deselect();
-                                localTable.row(this).select();
-                            }
-                        });
-                        */
 
             $("#local-list")[0].ondragstart = (event) => {
                 var row = $(document.elementFromPoint(event.pageX, event.pageY)).parent();
@@ -1985,12 +1999,13 @@
                 event.preventDefault();
                 var selected = remoteTable.rows({ selected: true }).data();
                 var files = [];
+                _remoteDrag = [];
                 for (var s = 0, sl = selected.length; s < sl; s++) {
                     if (selected[s].size === -2) continue;
                     files.push("jiMUD://" + selected[s].path);
+                    _remoteDrag.push(selected[s].path);
                 }
                 _localDrag = 0;
-                _remoteDrag = 0;
                 if (files.length > 0) {
                     _remoteDrag = files;
                     ipcRenderer.send('ondragstart', files, path.join(__dirname, '../assets/icons/png/drag2.png'));
@@ -2019,21 +2034,30 @@
                 event.preventDefault();
                 if (_localDrag) {
                     for (var f = 0, fl = _localDrag.length; f < fl; f++) {
-                        if (_local[path.basename(_localDrag[f])].size === -2) continue;
-                        _ied.upload(_localDrag[f]);
+                        if (_local[path.basename(_localDrag[f])].size === -2)
+                            uploadPath(_localDrag[f]);
+                        else
+                            _ied.upload(_localDrag[f]);
                     }
                     _localDrag = 0;
                 }
                 else if (_remoteDrag) {
                     for (f = 0, fl = _remoteDrag.length; f < fl; f++) {
-                        _ied.download(_remoteDrag[f]);
+                        if (_remote[path.basename(_remoteDrag[f])].size === -2)
+                            downloadPath(_remoteDrag[f]);
+                        else
+                            _ied.download(_remoteDrag[f]);
                     }
                     _remoteDrag = 0;
                 }
                 else
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
-                            _ied.download(event.dataTransfer.files[f].path.substring(8));
+                            var p = event.dataTransfer.files[f].path.substring(8);
+                            if (_remote[path.basename(p)].size === -2)
+                                downloadPath(_remoteDrag[f]);
+                            else
+                                _ied.download(p);
                         }
                         else if (event.dataTransfer.files[f].size < 1) {
                             try {
@@ -2042,7 +2066,9 @@
                             catch (error) {
                                 throw error;
                             }
-                            if (!stat.isDirectory())
+                            if (stat.isDirectory())
+                                uploadPath(event.dataTransfer.files[f].path);
+                            else
                                 _ied.upload(event.dataTransfer.files[f].path);
                         }
                         else
@@ -2354,8 +2380,9 @@
             var data = remoteTable.rows({ selected: true }).data();
             for (var d = 0, dl = data.length; d < dl; d++) {
                 if (data[d].size === -2)
-                    continue;
-                _ied.download(data[d].path);
+                    downloadPath(data[d].path);
+                else
+                    _ied.download(data[d].path);
             }
         }
 
@@ -2363,9 +2390,19 @@
             var data = localTable.rows({ selected: true }).data();
             for (var d = 0, dl = data.length; d < dl; d++) {
                 if (data[d].size === -2)
-                    continue;
-                _ied.upload(data[d].path);
+                    uploadPath(data[d].path);
+                else
+                    _ied.upload(data[d].path);
             }
+        }
+
+        function uploadPath(p) {
+            var files = walkSync(p);
+            console.log(files);
+        }
+
+        function downloadPath(p) {
+            console.log(p);
         }
 
         function closing() {
@@ -2456,8 +2493,11 @@
             localTable.row.add(_local[file.name]).draw();
             if (options.debug)
                 console.log(_downloads[p]);
-            if (file.size != -2 && !_downloads[p] && options.uploadOnChange)
+            if (file.size === -2)
+                uploadPath(p);
+            else if (!_downloads[p] && options.uploadOnChange)
                 _ied.upload(p);
+
 
             if (_downloads[p])
                 delete _downloads[p];

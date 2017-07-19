@@ -4,6 +4,8 @@
   - Status: allow experience needed to be displayed as a progress bar
   - Mapper: add menu bar for standard gui
   - Profile manager: add menu for standard gui
+- **Fixed:**
+  - Fixed bugs with remote drag and drop support
 ##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 
