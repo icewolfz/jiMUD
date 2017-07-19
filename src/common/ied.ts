@@ -214,6 +214,10 @@ export class IED extends EventEmitter {
                             this.upload(obj.path + '/' + obj.file, false, obj.tag);
                         else if (obj.tag && obj.tag.startsWith('uploadTo:'))
                             this.upload(obj.path + '/' + obj.file, false, obj.tag);
+                        else if (obj.tag && obj.tag.startsWith('uploadCreate:'))
+                            this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
+                        else if (obj.tag && obj.tag.startsWith('uploadToCreate:'))
+                            this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
                         else if (obj.tag && obj.tag.startsWith('downloadTo:'))
                             this.download(obj.path + '/' + obj.file, false, obj.tag);
                         else if (obj.tag && obj.tag.startsWith('mkdir:'))
@@ -375,7 +379,7 @@ export class IED extends EventEmitter {
         }
     }
 
-    public upload(file, resolve?: boolean, tag?: string) {
+    public upload(file, resolve?: boolean, tag?: string, create?: boolean) {
         if (!resolve) {
             let item;
             if (tag)
@@ -384,6 +388,7 @@ export class IED extends EventEmitter {
                 item = new Item('upload:' + this._id);
                 this._id++;
             }
+            item.create = create;
             if (this._paths[tag]) {
                 item.local = this._paths[tag];
                 item.remote = file;
@@ -398,14 +403,20 @@ export class IED extends EventEmitter {
             this.addItem(item);
         }
         else {
-            this._paths['upload:' + this._id] = file;
-            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: this.remote, file: path.basename(file), tag: 'upload:' + this._id }));
+            if (create) {
+                this._paths['uploadCreate:' + this._id] = file;
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: this.remote, file: path.basename(file), tag: 'uploadCreate:' + this._id }));
+            }
+            else {
+                this._paths['upload:' + this._id] = file;
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: this.remote, file: path.basename(file), tag: 'upload:' + this._id }));
+            }
             this._id++;
             this.emit('message', 'Resolving: ' + file);
         }
     }
 
-    public uploadTo(file, remote, resolve?: boolean, tag?: string) {
+    public uploadTo(file, remote, resolve?: boolean, tag?: string, create?: boolean) {
         if (!resolve) {
             let item;
             if (tag)
@@ -414,6 +425,7 @@ export class IED extends EventEmitter {
                 item = new Item('upload:' + this._id);
                 this._id++;
             }
+            item.create = create;
             if (this._paths[tag]) {
                 item.local = this._paths[tag];
                 item.remote = remote;
@@ -428,8 +440,14 @@ export class IED extends EventEmitter {
             this.addItem(item);
         }
         else {
-            this._paths['uploadTo:' + this._id] = file;
-            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: remote, file: path.basename(remote), tag: 'uploadTo:' + this._id }));
+            if (create) {
+                this._paths['uploadToCreate:' + this._id] = file;
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: remote, file: path.basename(remote), tag: 'uploadToCreate:' + this._id }));
+            }
+            else {
+                this._paths['uploadTo:' + this._id] = file;
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: remote, file: path.basename(remote), tag: 'uploadTo:' + this._id }));
+            }
             this._id++;
             this.emit('message', 'Resolving: ' + file);
         }
@@ -682,7 +700,7 @@ export class IED extends EventEmitter {
         }
         else {
             this.active.inProgress = true;
-            ipcRenderer.send('send-gmcp', 'IED.upload ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, size: this.active.totalSize }));
+            ipcRenderer.send('send-gmcp', 'IED.upload ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, size: this.active.totalSize, create: this.active.create }));
             this.emit('message', 'Upload start: ' + this.active.remote);
         }
     }
@@ -757,6 +775,7 @@ export class Item {
     public state: ItemState = ItemState.working;
     public inProgress = false;
     public chunks: number = 0;
+    public create: boolean = false;
 
     constructor(id: string, download?: boolean) {
         this.ID = id;
