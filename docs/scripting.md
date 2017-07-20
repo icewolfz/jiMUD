@@ -31,7 +31,12 @@ To use scripting you just have to select script as the type from the type dropdo
   - `forceline` always force a new line regardless of current last line state
 - `client.parse(text)` send raw text to the screen to be parsed and displayed, can be used to send raw ansi or MXP coded
 - `client.sendGMCP(text)` send a GMCP formatted string to the mud, see GMCP spec notes for formatting, its mostly in {module, data} where data is a JSON formatted string
-- `client.notify(title, message)` display a windows notification for systems that support it
+- `client.notify(title, message, options)` display a windows notification for systems that support it, options are optional
+  - `title` the title of the notification
+  - `message` the message to display
+  - `options` addtional options to customize the display [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
+    - `dir` - auto, rtl, ltr
+    - `icon` - full icon path, supports {varibales}
 ### **WARNING**: you can effect the client if you access the wrong function, so any function used other then this list may caused unknown results and could cause the client to stop working
 
 Notice how all the functions have a client. in front of them, this is the client object that has all functions related to the client. For backward compatiblit with the ShadowMUD

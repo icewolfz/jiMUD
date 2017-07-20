@@ -7,14 +7,17 @@
   - Immortal tools
     - Upload folder support
     - Download folder support
+  - expanded the client.notify function to have an optional options argument to pass more advanced notification options: dir (auto, rtl, ltr), icon (supports {varibales}), lang, tag [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
 - **Change:**
   - Active icon is no longer triggerd when zero length data is returned
   - Updated to electron 1.7.5 beta
+  - #notify and client.notify will cut messages over 197 characters long to prevent abuse, if you want more text you can create raw notifications in javascript
 - **Fixed:**
   - Remote drag and drop support
   - Dynamic windows when max/min tracking fix was added
-  - Dtring parser where it was cutting off a character when parsing parameters
+  - String parser where it was cutting off a character when parsing parameters
   - #notify was not correctly parsing single word titles wrapped with ''
+  - New notifications should now trigger if old one is still displayed
   - Immortal tools
     - Queue adding more then 1 item was displaying active item path for all items added
     - Making a new remote directory was not correctly setting the path

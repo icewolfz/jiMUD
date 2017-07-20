@@ -615,8 +615,18 @@
           capture--;
       });
 
-      client.on('notify', (title, message) => {
-        var notify = new window.Notification(title, { body: message });
+      client.on('notify', (title, message, options) => {
+        options = options || {};
+        if (options.icon)
+          options.icon = parseTemplate(options.icon);
+        if (options.badge)
+          options.badge = parseTemplate(options.badge);
+        if (options.image)
+          options.image = parseTemplate(options.image);
+        options.body = message;
+        if (options.body.length > 197)
+          options.body = options.body.substr(0, 197) + "...";
+        var notify = new window.Notification(title, options);
         notify.click = () => {
           client.emit('notify-clicked', title);
         };
@@ -1643,7 +1653,7 @@
         <div class="progressbar" id="need-percent" style="display:none;width:100px;background: rgb(252, 238, 42);">
           <div class="progressbar-text" style="text-align:right;right: 5px;color:black;">0</div>
           <div class="progressbar-value"></div>
-        </div>        
+        </div>
       </div>
       <div>
         <span>Earned:</span>

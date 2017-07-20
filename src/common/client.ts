@@ -772,12 +772,12 @@ export class Client extends EventEmitter {
         this.telnet.receivedData(data);
     }
 
-    public notify(title: string, message: string) {
+    public notify(title: string, message: string, options?: NotificationOptions) {
         if (this.enableDebug) {
             this.emit('debug', 'notify title: ' + title);
             this.emit('debug', 'notify msg: ' + message);
         }
-        this.emit('notify', title, message);
+        this.emit('notify', title, message, options);
     }
 
     public clear() {
