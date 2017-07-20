@@ -18,7 +18,8 @@ export enum RoomDetails {
     Bar = 32,
     Restaurant = 64,
     WaterSource = 128,
-    Trainer = 256
+    Trainer = 256,
+    Stable = 512
 }
 
 export enum RoomExits {
@@ -836,7 +837,12 @@ export class Mapper extends EventEmitter {
                             room.details |= RoomDetails.WaterSource;
                             break;
                         case 'trainer':
+                        case 'training':
+                        case 'advance':
                             room.details |= RoomDetails.Trainer;
+                            break;
+                        case 'stable':
+                            room.details |= RoomDetails.Stable;
                             break;
                     }
                 }
@@ -967,10 +973,10 @@ export class Mapper extends EventEmitter {
         if (!nc) {
             ctx.fillStyle = '#eae4d6';
             //ctx.clearRect(x + 30, y + 35, 130, 145);
-            ctx.fillRect(x + 30, y + 35, 130, 160);
+            ctx.fillRect(x + 30, y + 35, 130, 175);
         }
         ctx.fillStyle = 'black';
-        ctx.strokeRect(x + 30, y + 35, 130, 160);
+        ctx.strokeRect(x + 30, y + 35, 130, 175);
         ctx.font = 'italic bold 8pt Georgia';
         ctx.fillText('Dock', x + 50, y + 50);
         ctx.fillStyle = 'chocolate';
@@ -1042,11 +1048,20 @@ export class Mapper extends EventEmitter {
 
         ctx.font = 'italic bold 8pt Georgia';
         ctx.fillStyle = 'black';
-        ctx.fillText('Trainer', x + 50, y + 185);
+        ctx.fillText('Train', x + 50, y + 185);
         ctx.font = '8pt Arial';
         ctx.fillStyle = 'red';
         ctx.beginPath();
         ctx.fillText('\u260D', x + 38, y + 185);
+        ctx.closePath();
+
+        ctx.font = 'italic bold 8pt Georgia';
+        ctx.fillStyle = 'black';
+        ctx.fillText('Stable', x + 50, y + 200);
+        ctx.font = '8pt Arial';
+        ctx.fillStyle = 'rgb(153, 102, 0)';
+        ctx.beginPath();
+        ctx.fillText('\u2658', x + 38, y + 200);
         ctx.closePath();
 
     }
@@ -1330,6 +1345,12 @@ export class Mapper extends EventEmitter {
             ctx.fillStyle = 'red';
             ctx.beginPath();
             ctx.fillText('\u260D', x + 15, y + 17);
+            ctx.closePath();
+        }
+        if ((room.Details & RoomDetails.Stable) === RoomDetails.Stable) {
+            ctx.fillStyle = 'rgb(153, 102, 0)';
+            ctx.beginPath();
+            ctx.fillText('\u2658', x + 7, y + 17);
             ctx.closePath();
         }
         if ((room.Details & RoomDetails.Restaurant) === RoomDetails.Restaurant && (room.Details & RoomDetails.Bar) === RoomDetails.Bar) {
