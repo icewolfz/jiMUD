@@ -915,6 +915,80 @@
             }, 0);
         }
 
+        function renderFile(data, type, full, meta) {
+            if (type === "sort" || type === 'type')
+                return data;
+            if (full.size === -2) {
+                return '<i class="fa fa-folder-o" style="margin-right: 2px"></i>' + data;
+            }
+            else {
+                switch (full.type.toLowerCase()) {
+                    case ".pdf":
+                        return '<i class="fa fa-file-pdf-o" style="margin-right: 2px"></i>' + data;
+                    case ".xls":
+                    case ".xlt":
+                    case ".xlm":
+                    case ".xlsx":
+                    case ".xlsm":
+                    case ".xltx":
+                    case ".xltm":
+                        return '<i class="fa fa-file-excel-o" style="margin-right: 2px"></i>' + data;
+                    case ".doc":
+                    case ".dot":
+                    case ".wbk":
+                    case ".docx":
+                    case ".docm":
+                    case ".dotx":
+                    case ".dotm":
+                    case ".docb":
+                        return '<i class="fa fa-file-word-o" style="margin-right: 2px"></i>' + data;
+                    case ".ppt":
+                    case ".pot":
+                    case ".pps":
+                    case ".pptx":
+                    case ".pptm":
+                    case ".potx":
+                    case ".potm":
+                    case ".ppam":
+                    case ".ppsx":
+                    case ".ppsm":
+                    case ".sldx":
+                    case ".sldm":
+                        return '<i class="fa fa-file-powerpoint-o" style="margin-right: 2px"></i>' + data;
+                    case ".png":
+                    case ".gif":
+                    case ".jpg":
+                    case ".ico":
+                    case ".svg":
+                    case ".webp":
+                        return '<i class="fa fa-file-image-o" style="margin-right: 2px"></i>' + data;
+                    case ".m4a":
+                    case ".wav":
+                    case ".mp3":
+                    case ".flac":
+                        return '<i class="fa fa-file-audio-o" style="margin-right: 2px"></i>' + data;
+                    case ".avi":
+                    case ".mpg":
+                    case ".mov":
+                    case ".webm":
+                    case ".oog":
+                    case ".mkv":
+                        return '<i class="fa fa-file-video-o" style="margin-right: 2px"></i>' + data;
+                    case ".7z":
+                    case ".zip":
+                    case ".rar":
+                        return '<i class="fa fa-file-archive-o" style="margin-right: 2px"></i>' + data;
+                    case ".txt":
+                        return '<i class="fa fa-file-text-o" style="margin-right: 2px"></i>' + data;
+                    case ".h":
+                    case ".c":
+                        return '<i class="fa fa-file-code-o" style="margin-right: 2px"></i>' + data;
+                }
+
+            }
+            return '<i class="fa fa-file-o" style="margin-right: 2px"></i>' + data;
+        }
+
         $(document).ready(() => {
 
             $('#local-list').DataTable({
@@ -938,28 +1012,7 @@
                     {
                         type: 'file',
                         targets: 0,
-                        render: function (data, type, full, meta) {
-                            if (type === "sort" || type === 'type')
-                                return data;
-                            if (full.size === -2) {
-                                return '<i class="fa fa-folder-o" style="margin-right: 2px"></i>' + data;
-                            }
-                            else {
-                                switch (full.type.toLowerCase()) {
-                                    case ".7z":
-                                    case ".zip":
-                                    case ".rar":
-                                        return '<i class="fa fa-file-archive-o" style="margin-right: 2px"></i>' + data;
-                                    case ".txt":
-                                        return '<i class="fa fa-file-text-o" style="margin-right: 2px"></i>' + data;
-                                    case ".h":
-                                    case ".c":
-                                        return '<i class="fa fa-file-code-o" style="margin-right: 2px"></i>' + data;
-                                }
-
-                            }
-                            return '<i class="fa fa-file-o" style="margin-right: 2px"></i>' + data;
-                        },
+                        render: renderFile
                     },
                     {
                         render: function (data, type, full, meta) {
@@ -1009,28 +1062,7 @@
                     {
                         type: 'rFile',
                         targets: 0,
-                        render: function (data, type, full, meta) {
-                            if (type === "sort" || type === 'type')
-                                return data;
-                            if (full.size === -2) {
-                                return '<i class="fa fa-folder-o" style="margin-right: 2px"></i>' + data;
-                            }
-                            else {
-                                switch (full.type.toLowerCase()) {
-                                    case ".7z":
-                                    case ".zip":
-                                    case ".rar":
-                                        return '<i class="fa fa-file-archive-o" style="margin-right: 2px"></i>' + data;
-                                    case ".txt":
-                                        return '<i class="fa fa-file-text-o" style="margin-right: 2px"></i>' + data;
-                                    case ".h":
-                                    case ".c":
-                                        return '<i class="fa fa-file-code-o" style="margin-right: 2px"></i>' + data;
-                                }
-
-                            }
-                            return '<i class="fa fa-file-o" style="margin-right: 2px"></i>' + data;
-                        },
+                        render: renderFile,
                     },
                     {
                         render: function (data, type, full, meta) {
