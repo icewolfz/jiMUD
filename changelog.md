@@ -7,10 +7,14 @@
   - Immortal tools
     - Upload folder support
     - Download folder support
+- **Change:**
+  - Active icon is no longer triggerd when zero length data is returned
 - **Fixed:**
   - Fixed bugs with remote drag and drop support
   - Fixed bug with dynamic windows when max/min tracking fix was added
-  - Immortal tools: a bug in queue adding more then 1 item will display active item path for all items added
+  - Immortal tools
+    - Queue adding more then 1 item will display active item path for all items added
+    - Making a new remote directory was not correctly setting the path
 ##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 
