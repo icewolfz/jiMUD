@@ -2,17 +2,19 @@
 ##### 0.4.6
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar
-  - Mapper: add menu bar for standard gui
-  - Profile manager: add menu for standard gui
+  - Mapper: added menu bar for standard gui
+  - Profile manager: added menu for standard gui
   - Immortal tools
     - Upload folder support
     - Download folder support
+    - More file type icons
   - expanded the client.notify function to have an optional options argument to pass more advanced notification options: dir (auto, rtl, ltr), icon (supports {varibales}), lang, tag [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
 - **Change:**
-  - Active icon is no longer triggerd when zero length data is returned
+  - Active icon is no longer triggered when zero length data is returned
   - Updated to electron 1.7.5 beta
   - #notify and client.notify will cut messages over 197 characters long to prevent abuse, if you want more text you can create raw notifications in javascript
 - **Fixed:**
+  - Set application id to 'jiMUD' instead of the default 'Electron'
   - Remote drag and drop support
   - Dynamic windows when max/min tracking fix was added
   - String parser where it was cutting off a character when parsing parameters
@@ -21,7 +23,8 @@
   - Immortal tools
     - Queue adding more then 1 item was displaying active item path for all items added
     - Making a new remote directory was not correctly setting the path
-    - Issue when draging and dropping remote files
+    - Issue when dragging and dropping remote files
+    - When running backup remote command from context or menu and bak folder did not exist was setting wrong path when created in remote list
 ##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 
