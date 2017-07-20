@@ -12,7 +12,7 @@
 - **Change:**
   - Active icon is no longer triggered when zero length data is returned
   - Updated to electron 1.7.5 beta
-  - #notify and client.notify will cut messages over 197 characters long to prevent abuse, if you want more text you can create raw notifications in javascript
+  - #notify and client.notify will cut messages over 127 characters long to prevent abuse, if you want more text you can create raw notifications in javascript
 - **Fixed:**
   - Set application id to 'jiMUD' instead of the default 'Electron'
   - Remote drag and drop support

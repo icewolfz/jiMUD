@@ -619,13 +619,15 @@
         options = options || {};
         if (options.icon)
           options.icon = parseTemplate(options.icon);
+        else
+          options.icon = parseTemplate("{assets}\\icons\\png\\128x128.png");
         if (options.badge)
           options.badge = parseTemplate(options.badge);
         if (options.image)
           options.image = parseTemplate(options.image);
         options.body = message;
-        if (options.body.length > 197)
-          options.body = options.body.substr(0, 197) + "...";
+        if (options.body.length > 127)
+          options.body = options.body.substr(0, 127) + "...";
         var notify = new window.Notification(title, options);
         notify.click = () => {
           client.emit('notify-clicked', title);
