@@ -45,6 +45,7 @@
         var watcher;
         var dragging = false, btmDragging = false;
         var _localDrag, _remoteDrag, _progressCancel = false;
+        var _localIcon = {};
 
         var menu = [
             {
@@ -631,6 +632,7 @@
             var dirs = [];
             var all = [];
             _local = {};
+            _localIcon = {};
             var file;
             for (var d = 0, dl = dir.length; d < dl; d++) {
                 try {
@@ -936,30 +938,28 @@
                     {
                         type: 'file',
                         targets: 0,
-                        createdCell: function (td, cellData, rowData, row, col) {
-                            if (rowData.size === -2) {
-                                $(td).prepend('<i class="fa fa-folder-o" style="margin-right: 2px"></i>');
+                        render: function (data, type, full, meta) {
+                            if (type === "sort" || type === 'type')
+                                return data;
+                            if (full.size === -2) {
+                                return '<i class="fa fa-folder-o" style="margin-right: 2px"></i>' + data;
                             }
                             else {
-                                switch (rowData.type.toLowerCase()) {
+                                switch (full.type.toLowerCase()) {
                                     case ".7z":
                                     case ".zip":
                                     case ".rar":
-                                        $(td).prepend('<i class="fa fa-file-archive-o" style="margin-right: 2px"></i>');
-                                        break;
+                                        return '<i class="fa fa-file-archive-o" style="margin-right: 2px"></i>' + data;
                                     case ".txt":
-                                        $(td).prepend('<i class="fa fa-file-text-o" style="margin-right: 2px"></i>');
-                                        break;
+                                        return '<i class="fa fa-file-text-o" style="margin-right: 2px"></i>' + data;
                                     case ".h":
                                     case ".c":
-                                        $(td).prepend('<i class="fa fa-file-code-o" style="margin-right: 2px"></i>');
-                                        break;
-                                    default:
-                                        $(td).prepend('<i class="fa fa-file-o" style="margin-right: 2px"></i>');
-                                        break;
+                                        return '<i class="fa fa-file-code-o" style="margin-right: 2px"></i>' + data;
                                 }
+
                             }
-                        }
+                            return '<i class="fa fa-file-o" style="margin-right: 2px"></i>' + data;
+                        },
                     },
                     {
                         render: function (data, type, full, meta) {
@@ -1009,30 +1009,28 @@
                     {
                         type: 'rFile',
                         targets: 0,
-                        createdCell: function (td, cellData, rowData, row, col) {
-                            if (rowData.size === -2) {
-                                $(td).prepend('<i class="fa fa-folder-o" style="margin-right: 2px"></i>');
+                        render: function (data, type, full, meta) {
+                            if (type === "sort" || type === 'type')
+                                return data;
+                            if (full.size === -2) {
+                                return '<i class="fa fa-folder-o" style="margin-right: 2px"></i>' + data;
                             }
                             else {
-                                switch (rowData.type.toLowerCase()) {
+                                switch (full.type.toLowerCase()) {
                                     case ".7z":
                                     case ".zip":
                                     case ".rar":
-                                        $(td).prepend('<i class="fa fa-file-archive-o" style="margin-right: 2px"></i>');
-                                        break;
+                                        return '<i class="fa fa-file-archive-o" style="margin-right: 2px"></i>' + data;
                                     case ".txt":
-                                        $(td).prepend('<i class="fa fa-file-text-o" style="margin-right: 2px"></i>');
-                                        break;
+                                        return '<i class="fa fa-file-text-o" style="margin-right: 2px"></i>' + data;
                                     case ".h":
                                     case ".c":
-                                        $(td).prepend('<i class="fa fa-file-code-o" style="margin-right: 2px"></i>');
-                                        break;
-                                    default:
-                                        $(td).prepend('<i class="fa fa-file-o" style="margin-right: 2px"></i>');
-                                        break;
+                                        return '<i class="fa fa-file-code-o" style="margin-right: 2px"></i>' + data;
                                 }
+
                             }
-                        }
+                            return '<i class="fa fa-file-o" style="margin-right: 2px"></i>' + data;
+                        },
                     },
                     {
                         render: function (data, type, full, meta) {
@@ -1081,6 +1079,8 @@
                         type: 'file',
                         targets: 0,
                         render: function (data, type, full, meta) {
+                            if (type === "sort" || type === 'type')
+                                return data;
                             if (full.state === ItemState.paused)
                                 return '<i class="fa fa-pause" style="width:12px; margin-right: 2px"></i>' + data;
                             if (full.state === ItemState.error)
@@ -1090,6 +1090,8 @@
                     },
                     {
                         render: function (data, type, full, meta) {
+                            if (type === "sort" || type === 'type')
+                                return data;
                             return `<div class="progressbar"><div class="progressbar-text">${Math.round(100 * data)}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`;
                         },
                         targets: 3
@@ -2744,6 +2746,28 @@
             if (_downloads[path])
                 delete _downloads[path];
             updateStatus();
+        }
+
+        function getLocalIcon(file) {
+            if (path.extname(file).length > 0)
+                app.getFileIcon(file, { size: 'small' }, (err, res) => {
+                    _localIcon[path.basename(file)] = res.toDataURL();
+                    var row = localTable.row(function (idx, data, node) {
+                        return data.name === path.basename(file) ?
+                            true : false;
+                    });
+                    row.invalidate().draw();
+                });
+            else
+                app.getFileIcon('.jiMUD-noExt', { size: 'small' }, (err, res) => {
+                    _localIcon[path.basename(file)] = res.toDataURL();
+                    var row = localTable.row(function (idx, data, node) {
+                        return data.name === path.basename(file) ?
+                            true : false;
+                    });
+                    row.invalidate().draw();
+                });
+
         }
 
         function deleteLocal() {
