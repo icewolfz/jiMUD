@@ -285,8 +285,15 @@ table.dataTable {
 #queue-list.table.dataTable tbody > tr > .selected {
     /*background-color: #08C;*/
     background-color: #969696 !important;
+    color: white !important;
 }
 
+#local-list.table.dataTable.focused tbody > tr.selected td > .fa,
+#local-list.table.dataTable.focused tbody > tr > .selected td > .fa,
+#remote-list.table.dataTable.focused tbody > tr.selected td > .fa,
+#remote-list.table.dataTable.focused tbody > tr > .selected td > .fa,
+#queue-list.table.dataTable.focused tbody > tr.selected td > .fa,
+#queue-list.table.dataTable.focused tbody > tr > .selected td > .fa,
 #local-list.table.dataTable.focused tbody > tr.selected,
 #local-list.table.dataTable.focused tbody > tr > .selected,
 #remote-list.table.dataTable.focused tbody > tr.selected,
@@ -294,6 +301,7 @@ table.dataTable {
 #queue-list.table.dataTable.focused tbody > tr.selected,
 #queue-list.table.dataTable.focused tbody > tr > .selected {
     background-color: #08C !important;
+    color: white !important;
 }
 
 #queue-list td:nth-child(1) {

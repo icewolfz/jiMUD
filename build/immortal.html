@@ -924,7 +924,7 @@
             else {
                 switch (full.type.toLowerCase()) {
                     case ".pdf":
-                        return '<i class="fa fa-file-pdf-o" style="margin-right: 2px"></i>' + data;
+                        return '<i class="fa fa-file-pdf-o" style="color: #cc3e44;margin-right: 2px"></i>' + data;
                     case ".xls":
                     case ".xlt":
                     case ".xlm":
@@ -932,7 +932,7 @@
                     case ".xlsm":
                     case ".xltx":
                     case ".xltm":
-                        return '<i class="fa fa-file-excel-o" style="margin-right: 2px"></i>' + data;
+                        return '<i class="fa fa-file-excel-o" style="color: #8dc149;margin-right: 2px"></i>' + data;
                     case ".doc":
                     case ".dot":
                     case ".wbk":
@@ -941,7 +941,7 @@
                     case ".dotx":
                     case ".dotm":
                     case ".docb":
-                        return '<i class="fa fa-file-word-o" style="margin-right: 2px"></i>' + data;
+                        return '<i class="fa fa-file-word-o" style="color:#519aba;margin-right: 2px"></i>' + data;
                     case ".ppt":
                     case ".pot":
                     case ".pps":
@@ -961,7 +961,7 @@
                     case ".ico":
                     case ".svg":
                     case ".webp":
-                        return '<i class="fa fa-file-image-o" style="margin-right: 2px"></i>' + data;
+                        return '<i class="fa fa-file-image-o" style="color: #a074c4;margin-right: 2px"></i>' + data;
                     case ".m4a":
                     case ".wav":
                     case ".mp3":
@@ -973,16 +973,21 @@
                     case ".webm":
                     case ".oog":
                     case ".mkv":
-                        return '<i class="fa fa-file-video-o" style="margin-right: 2px"></i>' + data;
+                        return '<i class="fa fa-file-video-o" style="color: #f55385;margin-right: 2px"></i>' + data;
                     case ".7z":
                     case ".zip":
                     case ".rar":
-                        return '<i class="fa fa-file-archive-o" style="margin-right: 2px"></i>' + data;
+                    case ".jar":
+                        return '<i class="fa fa-file-archive-o" style="color: #6d8086;margin-right: 2px"></i>' + data;
                     case ".txt":
                         return '<i class="fa fa-file-text-o" style="margin-right: 2px"></i>' + data;
-                    case ".h":
+                    case ".o":
+                    case ".csv":
+                        return '<i class="fa fa-file-o" style="color: #8dc149;margin-right: 2px"></i>' + data;
+                    case ".h":                    
+                        return '<i class="fa fa-file-code-o" style="color:#a074c4;margin-right: 2px"></i>' + data;
                     case ".c":
-                        return '<i class="fa fa-file-code-o" style="margin-right: 2px"></i>' + data;
+                        return '<i class="fa fa-file-code-o" style="color:#519aba;margin-right: 2px"></i>' + data;
                 }
 
             }
