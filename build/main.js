@@ -22,6 +22,8 @@ let tray = null;
 let overlay = 0;
 let windows = {};
 
+app.setAppUserModelId('jiMUD');
+
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
 global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
 global.profiles = null;
