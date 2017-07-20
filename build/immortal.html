@@ -1135,6 +1135,7 @@
                 queueTable.rows().remove().draw();
             });
             _ied.on('dir', (dir, files, tag) => {
+                var f, fl, file;
                 if (tag === 'dir:browse')
                     updateRemote(dir, files);
                 else if (tag === 'dir:download') {
@@ -1151,8 +1152,8 @@
 
                     if (!existsSync(path.join(options.local, path.basename(dir))))
                         fs.mkdirSync(path.join(options.local, path.basename(dir)));
-                    for (var f = 0, fl = files.length; f < fl; f++) {
-                        var file = (dir === "/" ? '' : dir) + "/" + files[f].file;
+                    for (f = 0, fl = files.length; f < fl; f++) {
+                        file = (dir === "/" ? '' : dir) + "/" + files[f].file;
                         if (files[f].size == -2) {
                             //create local
                             if (!existsSync(path.join(options.local, path.basename(file))))
@@ -1165,6 +1166,31 @@
                     }
                     pTotal--;
                     if (pTotal <= 0) {
+                        pTotal = 0;
+                        if ($("#Progress")[0].open)
+                            $("#Progress")[0].close();
+                        return;
+                    }
+                }
+                else if (tag === 'dir:delete') {
+                    if (_progressCancel) {
+                        pTotal = 0;
+                        pFiles = 0;
+                        if ($("#Progress")[0].open)
+                            $("#Progress")[0].close();
+                        return;
+                    }
+                    for (f = 0, fl = files.length; f < fl; f++) {
+                        file = (dir === "/" ? '' : dir) + "/" + files[f].file;
+                        if (files[f].size === -2)
+                            deleteRemoteFolder(file);
+                        else
+                            _ied.deleteFile(file);
+                    }
+                    pTotal--;
+                    if (pTotal <= 0) {
+                        for (f = pFiles.length - 1; f >= 0; f--)
+                            _ied.deleteDirectory(pFiles[f]);
                         pTotal = 0;
                         if ($("#Progress")[0].open)
                             $("#Progress")[0].close();
@@ -1274,7 +1300,8 @@
                 if (obj.cmd === "rm") {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Deleted: ${obj.path}/${obj.file}`);
-
+                        if (obj.path != options.remote)
+                            return;
                         row = remoteTable.row(function (idx, data, node) {
                             return data.name === obj.file ?
                                 true : false;
@@ -1297,7 +1324,8 @@
                 else if (obj.cmd === "mv") {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Renamed ${obj.path}/${obj.file} to ${obj.path2}/${obj.file2}`);
-
+                        if (obj.path != options.remote)
+                            return;
                         row = remoteTable.row(function (idx, data, node) {
                             return data.name === obj.file ?
                                 true : false;
@@ -1332,6 +1360,8 @@
                 else if (obj.cmd === "mkdir") {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Created directory ${obj.path}`);
+                        if (path.dirname(obj.path) != options.remote)
+                            return;
                         name = path.basename(obj.path);
                         row = remoteTable.row(function (idx, data, node) {
                             return data.name === name ?
@@ -1339,7 +1369,7 @@
                         });
                         _remote[name] = {
                             name: name,
-                            path: name,
+                            path: obj.path,
                             size: -2,
                             type: "Directory",
                             date: new Date().getTime(),
@@ -1368,13 +1398,15 @@
                 else if (obj.cmd === "rmdir") {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Removed directory ${obj.path}`);
+                        if (path.dirname(obj.path) != options.remote)
+                            return;
                         name = path.basename(obj.path);
                         row = remoteTable.row(function (idx, data, node) {
                             return data.name === name ?
                                 true : false;
                         });
                         if (row && row.length === 1)
-                            row.remove();
+                            row.remove().draw();
                         delete _remote[name];
                         info.remoteDirs--;
                         updateStatus();
@@ -2497,7 +2529,7 @@
 
 
         var pFiles;
-        var pTotal;
+        var pTotal = 0;
 
         function uploadPath(p) {
             _progressCancel = false;
@@ -2563,7 +2595,6 @@
         }
 
         function downloadPath(p) {
-            console.log(p);
             _progressCancel = false;
             if (!pTotal && !$("#Progress")[0].open) {
                 $("#Progressbar").html('<progress max="100"></progress>');
@@ -2726,21 +2757,33 @@
             dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'warning',
                 title: "Delete?",
-                message: data.length > 1 ? "Delete remote files?" : "Delete remote file: " + data[0].name + "?",
+                message: data.length > 1 ? "Delete remote?" : "Delete remote: " + data[0].name + "?",
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
             }, (response) => {
                 if (response === 0) {
+
                     for (var d = 0, dl = data.length; d < dl; d++) {
                         if (data[d].size === -2)
-                            _ied.deleteDirectory(data[d].path, false, true);
+                            deleteRemoteFolder(data[d].path);
                         else
                             _ied.deleteFile(data[d].path);
-
-
                     }
                 }
             });
+        }
+
+        function deleteRemoteFolder(dir) {
+            if (!$("#Progress")[0].open) {
+                $("#Progressbar").html('<progress max="100"></progress>');
+                $("#ProgressTitle").html(`Preparing delete`);
+                $("#Progress")[0].showModal();
+            }
+            if (!pFiles)
+                pFiles = [];
+            pFiles.push(dir);
+            _ied.deleteDirectory(dir, false, true);
+            pTotal++;
         }
 
         function newFolderLocal() {

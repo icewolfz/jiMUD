@@ -507,6 +507,9 @@ export class IED extends EventEmitter {
                 ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: file, tag: 'deleteDir' }));
             this.emit('message', 'Resolving: ' + file);
         }
+        else if (files) {
+            this.getDir(file, !resolve, 'delete');
+        }
         else {
             ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'rmdir', path: file, tag: 'deleteDir' }));
             this.emit('message', 'Deleting: ' + file);
