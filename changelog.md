@@ -9,12 +9,14 @@
     - Download folder support
 - **Change:**
   - Active icon is no longer triggerd when zero length data is returned
+  - Updated to electron 1.7.5 beta
 - **Fixed:**
   - Fixed bugs with remote drag and drop support
   - Fixed bug with dynamic windows when max/min tracking fix was added
   - Immortal tools
-    - Queue adding more then 1 item will display active item path for all items added
+    - Queue adding more then 1 item was displaying active item path for all items added
     - Making a new remote directory was not correctly setting the path
+    - Issue when draging and dropping remote files
 ##### 0.4.5 2017-07-14
 - **New:**
   - Context menu: 
