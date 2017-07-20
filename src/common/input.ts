@@ -278,6 +278,7 @@ export class Input extends EventEmitter {
                     n = n.substring(1);
                     if (n.endsWith('\'') && !n.endsWith('\\\'')) {
                         i = 1;
+                        n = n.substring(0, n.length - 1);
                     }
                     else {
                         for (i = 1; i < al; i++) {

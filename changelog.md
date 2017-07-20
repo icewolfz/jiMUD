@@ -11,9 +11,10 @@
   - Active icon is no longer triggerd when zero length data is returned
   - Updated to electron 1.7.5 beta
 - **Fixed:**
-  - Fixed bugs with remote drag and drop support
-  - Fixed bug with dynamic windows when max/min tracking fix was added
-  - Fixed bug in string parser where it was cutting off a character when parsing parameters
+  - Remote drag and drop support
+  - Dynamic windows when max/min tracking fix was added
+  - Dtring parser where it was cutting off a character when parsing parameters
+  - #notify was not correctly parsing single word titles wrapped with ''
   - Immortal tools
     - Queue adding more then 1 item was displaying active item path for all items added
     - Making a new remote directory was not correctly setting the path
