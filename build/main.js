@@ -1686,7 +1686,7 @@ ipcMain.on('set-overlay', (event, args) => {
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
       break;
     case 2:
-      win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received text');
+      win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
       break;
     default:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');

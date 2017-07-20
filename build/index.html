@@ -701,7 +701,7 @@
       });
 
       client.on('received-data', (data) => {
-        if (!active && client.connected)
+        if (!active && client.connected && data.value.length > 0)
           ipcRenderer.send('set-overlay', 2);
       });
       client.on('parse-done', () => {
