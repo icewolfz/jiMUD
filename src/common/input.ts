@@ -1087,6 +1087,7 @@ export class Input extends EventEmitter {
                             }
                             else
                                 str += '%' + c;
+                            idx--;
                             state = 0;
                             break;
                     }
