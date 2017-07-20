@@ -77,7 +77,7 @@ export class IED extends EventEmitter {
                             this.active.moveFinal();
                             this.active.info = IED.getFileInfo(this.active.local);
                             this.emit('download-finished', this.active);
-                            this.emit('message', 'Download complete: ' + this.active);
+                            this.emit('message', 'Download complete: ' + this.active.local);
                         }
                         catch (err) {
                             this.emit('error', err);
@@ -121,7 +121,8 @@ export class IED extends EventEmitter {
                     case IEDError.DL_TOOMANY:
                     case IEDError.DL_INPROGRESS:
                         item = this.getItem(obj.tag);
-                        item.state = ItemState.error;
+                        if (item)
+                            item.state = ItemState.error;
                         this.emit('message', `Download error for '${obj.path}/${obj.file}': ${obj.msg}`);
                         this.emit('update', item);
                         break;
@@ -197,6 +198,12 @@ export class IED extends EventEmitter {
                 switch (obj.tag || '') {
                     case 'dir:browse':
                         this.getDir(obj.path, true);
+                        break;
+                    case 'deleteDir':
+                        this.deleteDirectory(obj.path, false);
+                        break;
+                    case 'deleteDirFiles':
+                        this.deleteDirectory(obj.path, false, true);
                         break;
                     case 'delete':
                         this.deleteFile(obj.path + '/' + obj.file);
@@ -377,6 +384,10 @@ export class IED extends EventEmitter {
                 item = new Item('download:' + this._id);
                 this._id++;
             }
+            // tslint:disable-next-line:no-console
+            console.log(item.ID);
+            // tslint:disable-next-line:no-console
+            console.log(item);
             item.tmp = this._temp;
             item.download = true;
             item.remote = file;
@@ -484,6 +495,20 @@ export class IED extends EventEmitter {
         }
         else {
             ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'rm', path: path.dirname(file), file: path.basename(file), tag: 'delete' }));
+            this.emit('message', 'Deleting: ' + file);
+        }
+    }
+
+    public deleteDirectory(file, resolve?: boolean, files?: boolean) {
+        if (resolve) {
+            if (files)
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: file, tag: 'deleteDirFiles' }));
+            else
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: file, tag: 'deleteDir' }));
+            this.emit('message', 'Resolving: ' + file);
+        }
+        else {
+            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'rmdir', path: file, tag: 'deleteDir' }));
             this.emit('message', 'Deleting: ' + file);
         }
     }
@@ -854,7 +879,7 @@ export class Item {
     public write(data: string) {
         if (!this.stream) {
             if (this.mkdir) {
-                const parts = path.dirName(this._local).split(path.sep);
+                const parts = path.dirname(this._local).split(path.sep);
                 const pl = parts.length;
                 let c = '';
                 for (let p = 0; p < pl; p++) {

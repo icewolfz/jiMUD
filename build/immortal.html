@@ -1161,10 +1161,11 @@
                             _ied.getDir(file, true, 'download');
                         }
                         else
-                            _ied.downloadTo(file, path.join(options.local, r, files[f].file), false, true);
+                            downNext(file, path.join(options.local, r));
                     }
                     pTotal--;
-                    if (pTotal < 0) {
+                    if (pTotal <= 0) {
+                        pTotal = 0;
                         if ($("#Progress")[0].open)
                             $("#Progress")[0].close();
                         return;
@@ -1249,23 +1250,27 @@
                 ipcRenderer.send('set-progress', { value: -1 });
             });
             _ied.on('update', (item) => {
-                queueTable.row(function (idx, data, node) {
+                if (!item)
+                    return;
+                var row = queueTable.row(function (idx, data, node) {
                     return data.id === item.ID ?
                         true : false;
-                }).data({
-                    "local": item.local,
-                    "direction": item.download ? "<-" : "->",
-                    "remote": item.remote,
-                    "progress": item.percent,
-                    "id": item.ID,
-                    "state": item.state
-                }).draw();
+                });
+                if (row && row.length === 1)
+                    row.data({
+                        "local": item.local,
+                        "direction": item.download ? "<-" : "->",
+                        "remote": item.remote,
+                        "progress": item.percent,
+                        "id": item.ID,
+                        "state": item.state
+                    }).draw();
                 ipcRenderer.send('set-progress-window', 'immortal', { value: item.percent });
                 ipcRenderer.send('set-progress', { value: item.percent });
             });
 
             _ied.on('cmd', (obj) => {
-                var row;
+                var row, name;
                 if (obj.cmd === "rm") {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Deleted: ${obj.path}/${obj.file}`);
@@ -1327,7 +1332,7 @@
                 else if (obj.cmd === "mkdir") {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Created directory ${obj.path}`);
-                        var name = path.basename(obj.path);
+                        name = path.basename(obj.path);
                         row = remoteTable.row(function (idx, data, node) {
                             return data.name === name ?
                                 true : false;
@@ -1352,11 +1357,34 @@
                         updateStatus();
                     }
                     else {
-                        logMessage(`Failed to create directory: ${obj.path}}`);
+                        logMessage(`Failed to create directory: ${obj.path}`);
                         dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'error',
                             title: "Could not create directory",
                             message: "Could not create: " + path.basename(obj.path),
+                        });
+                    }
+                }
+                else if (obj.cmd === "rmdir") {
+                    if (obj.code === IEDCmdStatus.success) {
+                        logMessage(`Removed directory ${obj.path}`);
+                        name = path.basename(obj.path);
+                        row = remoteTable.row(function (idx, data, node) {
+                            return data.name === name ?
+                                true : false;
+                        });
+                        if (row && row.length === 1)
+                            row.remove();
+                        delete _remote[name];
+                        info.remoteDirs--;
+                        updateStatus();
+                    }
+                    else {
+                        logMessage(`Failed to remove directory: ${obj.path}`);
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: "Could not remove directory",
+                            message: "Could not remove: " + path.basename(obj.path),
                         });
                     }
                 }
@@ -1951,7 +1979,7 @@
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             var p = event.dataTransfer.files[f].path.substring(8);
                             if (_remote[path.basename(p)].size === -2)
-                                downloadPath(_remoteDrag[f]);
+                                downloadPath(p);
                             else
                                 _ied.download(p);
                         }
@@ -2065,20 +2093,22 @@
             };
 
             $("#remote-list")[0].ondragstart = (event) => {
+                var row = $(document.elementFromPoint(event.pageX, event.pageY)).parent();
+                if (!$(row).hasClass('selected')) {
+                    remoteTable.rows().deselect();
+                    remoteTable.row(row).select();
+                }
                 event.preventDefault();
                 var selected = remoteTable.rows({ selected: true }).data();
                 var files = [];
                 _remoteDrag = [];
                 for (var s = 0, sl = selected.length; s < sl; s++) {
-                    if (selected[s].size === -2) continue;
                     files.push("jiMUD://" + selected[s].path);
                     _remoteDrag.push(selected[s].path);
                 }
                 _localDrag = 0;
-                if (files.length > 0) {
-                    _remoteDrag = files;
+                if (files.length > 0)
                     ipcRenderer.send('ondragstart', files, path.join(__dirname, '../assets/icons/png/drag2.png'));
-                }
             };
 
             $("#queue-list-container")[0].ondragenter = (event) => {
@@ -2124,7 +2154,7 @@
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             var p = event.dataTransfer.files[f].path.substring(8);
                             if (_remote[path.basename(p)].size === -2)
-                                downloadPath(_remoteDrag[f]);
+                                downloadPath(p);
                             else
                                 _ied.download(p);
                         }
@@ -2526,11 +2556,14 @@
 
         function progressCancel() {
             _progressCancel = true;
+            pTotal = 0;
+            pFiles = 0;
             if ($("#Progress")[0].open)
                 $("#Progress")[0].close();
         }
 
         function downloadPath(p) {
+            console.log(p);
             _progressCancel = false;
             if (!pTotal && !$("#Progress")[0].open) {
                 $("#Progressbar").html('<progress max="100"></progress>');
@@ -2539,8 +2572,12 @@
             }
             if (!existsSync(path.join(options.local, path.basename(p))))
                 fs.mkdirSync(path.join(options.local, path.basename(p)));
-            pTotal++;
+            pTotal = 1;
             _ied.getDir(p, true, 'download');
+        }
+
+        function downNext(file, local) {
+            setTimeout(() => { _ied.downloadTo(file, local, false, 0, true); }, 0);
         }
 
         function closing() {
@@ -2695,8 +2732,12 @@
             }, (response) => {
                 if (response === 0) {
                     for (var d = 0, dl = data.length; d < dl; d++) {
-                        if (data.size != -2)
+                        if (data[d].size === -2)
+                            _ied.deleteDirectory(data[d].path, false, true);
+                        else
                             _ied.deleteFile(data[d].path);
+
+
                     }
                 }
             });
@@ -2923,7 +2964,7 @@
 
         ipcRenderer.on('GMCP-received', (event, data) => {
             if (options && options.debug)
-                console.log(data.mod);
+                console.log(data);
             if (_ied)
                 _ied.processGMCP(data.mod, data.obj);
         });
