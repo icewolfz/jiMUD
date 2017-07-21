@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.4.6
+##### 0.4.6 2017-07-21
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar
   - Mapper
