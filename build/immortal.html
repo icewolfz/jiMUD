@@ -45,7 +45,6 @@
         var watcher;
         var dragging = false, btmDragging = false;
         var _localDrag, _remoteDrag, _progressCancel = false;
-        var _localIcon = {};
 
         var menu = [
             {
@@ -632,7 +631,6 @@
             var dirs = [];
             var all = [];
             _local = {};
-            _localIcon = {};
             var file;
             for (var d = 0, dl = dir.length; d < dl; d++) {
                 try {
@@ -719,8 +717,7 @@
                         $("#local-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
                 }
             });
-
-            localTable.rows().remove().draw();
+            localTable.rows().remove();
             localTable.rows.add(all).draw();
             $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
             updateStatus();
@@ -793,7 +790,7 @@
                 else
                     $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
             }
-            remoteTable.rows().remove().draw();
+            remoteTable.rows().remove();
             remoteTable.rows.add(all).draw();
             $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
@@ -984,7 +981,7 @@
                     case ".o":
                     case ".csv":
                         return '<i class="fa fa-file-o" style="color: #8dc149;margin-right: 2px"></i>' + data;
-                    case ".h":                    
+                    case ".h":
                         return '<i class="fa fa-file-code-o" style="color:#a074c4;margin-right: 2px"></i>' + data;
                     case ".c":
                         return '<i class="fa fa-file-code-o" style="color:#519aba;margin-right: 2px"></i>' + data;
@@ -2783,28 +2780,6 @@
             if (_downloads[path])
                 delete _downloads[path];
             updateStatus();
-        }
-
-        function getLocalIcon(file) {
-            if (path.extname(file).length > 0)
-                app.getFileIcon(file, { size: 'small' }, (err, res) => {
-                    _localIcon[path.basename(file)] = res.toDataURL();
-                    var row = localTable.row(function (idx, data, node) {
-                        return data.name === path.basename(file) ?
-                            true : false;
-                    });
-                    row.invalidate().draw();
-                });
-            else
-                app.getFileIcon('.jiMUD-noExt', { size: 'small' }, (err, res) => {
-                    _localIcon[path.basename(file)] = res.toDataURL();
-                    var row = localTable.row(function (idx, data, node) {
-                        return data.name === path.basename(file) ?
-                            true : false;
-                    });
-                    row.invalidate().draw();
-                });
-
         }
 
         function deleteLocal() {

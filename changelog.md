@@ -12,7 +12,7 @@
     - More file type icons
     - Color some icons to try and make them stand out
   - Expanded the client.notify function to have an optional options argument to pass more advanced notification options: dir (auto, rtl, ltr), icon (supports {variables}), lang, tag [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
-  - preference dialog
+  - Preference dialog
     - Redesigned to allow easier organizing by replacing tab control with a treeview/panel
     - New status section that now contains all preferences related to status display
     - Added mapper/chat window sub areas for window related settings
