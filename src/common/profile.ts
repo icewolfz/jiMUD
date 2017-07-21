@@ -637,13 +637,13 @@ export class ProfileCollection {
     public SortByPriority() {
         this.keys.sort((a, b) => {
             let ap = this.items[a].priority;
-            let bp = this.items[a].priority;
+            let bp = this.items[b].priority;
             if (ap > bp)
                 return -1;
             if (ap < bp)
                 return 1;
             ap = this.items[a].name;
-            bp = this.items[a].name;
+            bp = this.items[b].name;
             if (ap > bp)
                 return -1;
             if (ap < bp)

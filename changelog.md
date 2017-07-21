@@ -29,6 +29,7 @@
   - #notify was not correctly parsing single word titles wrapped with ''
   - New notifications should now trigger if old one is still displayed
   - Tray: tray hide will now minimize if [hide on minimize](docs/preferences.md#advanced) is not enabled
+  - Profiles where not correctly sorted by priority
   - Immortal tools
     - Queue adding more then 1 item was displaying active item path for all items added
     - Making a new remote directory was not correctly setting the path
