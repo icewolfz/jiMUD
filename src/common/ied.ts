@@ -384,10 +384,6 @@ export class IED extends EventEmitter {
                 item = new Item('download:' + this._id);
                 this._id++;
             }
-            // tslint:disable-next-line:no-console
-            console.log(item.ID);
-            // tslint:disable-next-line:no-console
-            console.log(item);
             item.tmp = this._temp;
             item.download = true;
             item.remote = file;
@@ -885,7 +881,13 @@ export class Item {
                 const parts = path.dirname(this._local).split(path.sep);
                 const pl = parts.length;
                 let c = '';
-                for (let p = 0; p < pl; p++) {
+                let p = 0;
+                //windows only, if drive letter move to next
+                if (IED.windows && parts.length > 0 && parts[0].endsWith(':')) {
+                    p++;
+                    c = parts[0];
+                }
+                for (; p < pl; p++) {
                     c = path.join(c, parts[p]);
                     if (!isDirSync(c))
                         fs.mkdirSync(c);
