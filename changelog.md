@@ -14,9 +14,8 @@
   - Expanded the client.notify function to have an optional options argument to pass more advanced notification options: dir (auto, rtl, ltr), icon (supports {variables}), lang, tag [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
   - preference dialog
     - Redesigned to allow easier organizing by replacing tab control with a treeview/panel
-    - New status section that now contains all preferances related to status display
+    - New status section that now contains all preferences related to status display
     - Added mapper/chat window sub areas for window related settings
-
 - **Change:**
   - Active icon is no longer triggered when zero length data is returned
   - Updated to electron 1.7.5 beta
@@ -29,6 +28,7 @@
   - String parser where it was cutting off a character when parsing parameters
   - #notify was not correctly parsing single word titles wrapped with ''
   - New notifications should now trigger if old one is still displayed
+  - Tray: tray hide will now minimize if [hide on minimize](docs/preferences.md#advanced) is not enabled
   - Immortal tools
     - Queue adding more then 1 item was displaying active item path for all items added
     - Making a new remote directory was not correctly setting the path

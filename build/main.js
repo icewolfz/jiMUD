@@ -924,8 +924,12 @@ function createTray() {
           win.setFullScreen(s.fullscreen);
         break;
       case TrayClick.toggle:
-        if (win.isVisible())
-          win.hide();
+        if (win.isVisible()) {
+          if (set.hideOnMinimize)
+            win.hide();
+          else
+            win.minimize();
+        }
         else {
           if (s.maximized)
             win.maximize();
@@ -936,7 +940,10 @@ function createTray() {
         }
         break;
       case TrayClick.hide:
-        win.hide();
+        if (set.hideOnMinimize)
+          win.hide();
+        else
+          win.minimize();
         break;
       case TrayClick.menu:
         tray.popUpContextMenu();
@@ -957,8 +964,12 @@ function createTray() {
           win.setFullScreen(s.fullscreen);
         break;
       case TrayClick.toggle:
-        if (win.isVisible())
-          win.hide();
+        if (win.isVisible()) {
+          if (set.hideOnMinimize)
+            win.hide();
+          else
+            win.minimize();
+        }
         else {
           if (s.maximized)
             win.maximize();
@@ -969,7 +980,10 @@ function createTray() {
         }
         break;
       case TrayClick.hide:
-        win.hide();
+        if (set.hideOnMinimize)
+          win.hide();
+        else
+          win.minimize();
         break;
       case TrayClick.menu:
         tray.popUpContextMenu();
@@ -1918,37 +1932,37 @@ function parseTemplate(str, data) {
 }
 
 function isDirSync(aPath) {
-    try {
-        return fs.statSync(aPath).isDirectory();
-    } catch (e) {
-        if (e.code === 'ENOENT') {
-            return false;
-        } else {
-            throw e;
-        }
+  try {
+    return fs.statSync(aPath).isDirectory();
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      return false;
+    } else {
+      throw e;
     }
+  }
 }
 
 function existsSync(filename) {
-    try {
-        fs.statSync(filename);
-        return true;
-    } catch (ex) {
-        return false;
-    }
+  try {
+    fs.statSync(filename);
+    return true;
+  } catch (ex) {
+    return false;
+  }
 }
 
 
 function isFileSync(aPath) {
-    try {
-        return fs.statSync(aPath).isFile();
-    } catch (e) {
-        if (e.code === 'ENOENT') {
-            return false;
-        } else {
-            throw e;
-        }
+  try {
+    return fs.statSync(aPath).isFile();
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      return false;
+    } else {
+      throw e;
     }
+  }
 }
 
 function showPrefs() {
@@ -2046,7 +2060,7 @@ function createMapper(show) {
     trackWindowState('mapper', winMap);
     states['mapper'].maximized = false;
   });
-  
+
   if (debug)
     winMap.webContents.openDevTools();
 
@@ -2164,7 +2178,7 @@ function showProfiles() {
     trackWindowState('profiles', winProfiles);
     states['profiles'].maximized = false;
   });
-  
+
 }
 
 function createEditor(show) {
@@ -2428,7 +2442,7 @@ function createNewWindow(name, options) {
     trackWindowState(name, windows[name]);
     states[name].maximized = false;
   });
-  
+
 
   windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
     event.preventDefault();
