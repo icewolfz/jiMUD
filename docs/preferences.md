@@ -6,11 +6,11 @@ Reset - Resetting will revert all settings back to default values
 
 - `Auto connect onload` This will cause the client to try and connect as soon as the client has finished loading.
 - `Auto create character` When connecting to mud and if it returns a character name, create/load character
-- `Show Lagmeter` Weather to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Show character manager onload` open the character manager when the client first loads.
+- `Enable spellchecking` support spellchecking in command line and advanced editor
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
 - `Theme` the theme for the main client window
-- `Show Experience Needed as Progressbar` display the experience needed value as a progress bar
+
 ## Display
 
 - `Font` The font for the display area, mono spaced fonts work the best.
@@ -35,8 +35,8 @@ Reset - Resetting will revert all settings back to default values
 
 ## Command Line
 
-- `Command font` The font for the command input box
-- `Command font size` The font size for the command input box
+- `Font` The font for the command input box
+- `Font size` The font size for the command input box
 - `Keep Last Command` This leaves the last command entered into the command input and selected it, if disabled it will be cleared
 - `History Size` The number of items to keep in command history when navigating using the up/down arrow.
 - `Command Stacking` 
@@ -77,11 +77,7 @@ Settings to control how to handle telnet options and emulation
 - `Display Notification on MSP Play` Display a message when a file has started to play
 
 ## Mapper
-
-- `Open on load` Open the mapper when you load the client
 - `Enable Mapper` Enable the mapper and create rooms as player moves
-- `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. _When disabled requires mapper to be closed to fully exits client_ **Requires restart on windows**
-- `Always on top of all windows` Force mapper to always be on top of all windows
 - `Follow Player` Set the current room to the players as they move
 - `Show legend` Show map legend
 - `Split Areas` Attempt to draw maps split up by area/zones
@@ -91,14 +87,18 @@ Settings to control how to handle telnet options and emulation
 - `Directions to send` the # of directions to send between delays
 - `Load in Memory` load mapper in to memory and only access disk on load and window/client close, try if slow or have large amounts of memory. **Requires restart on windows**, **WARNING _if the client or OS crash all in memory data will be lost and not saved to disk_**
 - `Save period` how often to flush to disk when using load in memory option
-- `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if mapper is not enabled
 - `Default import type` determines how default import system imports new map data
+
+## Mapper > Window
+
+- `Open on load` Open the mapper when you load the client
+- `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if mapper is not enabled
+- `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. _When disabled requires mapper to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of all windows` Force mapper to always be on top of all windows
 
 ## Chat
 Controls what is captured into the chat window
 
-- `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. _When disabled requires chat to be closed to fully exits client_ **Requires restart on windows**
-- `Always on top of all windows` Force chat window to always be on top of all windows
 - `Capture tells` Causes all tells, emoteto and any related lines.
 - `Capture talk` Capture all talking, which are says, yells, whispers, and speaking and any related lines.
 - `Capture reviews` Determines if line, say, or tell reviews are captured. The capturing is determined based on the settings enabled. Tell reviews are only captured if capture tells is enabled, say review with only capture say, all line reviews or selective reviews when enabled.
@@ -106,9 +106,19 @@ Controls what is captured into the chat window
   - `All` capture all chat lines
   - `Selective` capture only those provided in the selective lines list
 - `Selective lines` A comma delimited list of lines to selectively capture, For example: Chat,Rp,Mudinfo will capture Chat, Rp, and Mudinfo lines.
-- `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
 
 **Note:** line names are case sensitive.
+
+## Chat > Window
+
+- `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. _When disabled requires chat to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of all windows` Force chat window to always be on top of all windows
+- `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
+
+## Status
+
+- `Show Lagmeter` Weather to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
+- `Show Experience Needed as Progressbar` display the experience needed value as a progress bar
 
 ## Advanced
 
@@ -121,6 +131,14 @@ Controls what is captured into the chat window
 - `Backup save` what to save when using remote backup systems
 - `Backup load` what to load when using remote backup systems
 - `Hide when minimized` will hide the main window and any window set as a child
+
+## Advanced > Tray
+
 - `Show tray icon` display an icon in the system tray/notification area
 - `Tray icon single click` set what happens when the tray icon is clicked
-- `Tray icon double click` set what happens when the tray icon is double clicked. __Mac__, __Windows__
+  - `None` - do nothing when clicked
+  - `Show` - show or focus on client window
+  - `Hide` - hide or minimize client window based on `Hide when minimized` setting
+  - `Toggle` - Toggle between show / hide
+  - `Menu` - display the tray menu
+- `Tray icon double click` set what happens when the tray icon is double clicked, same values as single click. __Mac__, __Windows__
