@@ -2,7 +2,9 @@
 ##### 0.4.6
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar
-  - Mapper: added menu bar for standard gui
+  - Mapper
+    - Added menu bar for standard gui
+    - Add stable marker support and expanded trainer support to display for stat/skill/advance rooms
   - Profile manager: added menu for standard gui
   - Immortal tools
     - Upload folder support
@@ -10,7 +12,6 @@
     - More file type icons
     - Color some icons to try and make them stand out
   - Expanded the client.notify function to have an optional options argument to pass more advanced notification options: dir (auto, rtl, ltr), icon (supports {varibales}), lang, tag [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
-  - Mapper: Add stable marker support and expanded trainer support to display for stat/skill/advance rooms
 - **Change:**
   - Active icon is no longer triggered when zero length data is returned
   - Updated to electron 1.7.5 beta
