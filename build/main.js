@@ -117,6 +117,7 @@ var menuTemp = [
       {
         label: '&Preferences...',
         id: 'preferences',
+        accelerator: "CmdOrCtrl+Comma",
         click: showPrefs
       },
       {
