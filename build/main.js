@@ -820,6 +820,15 @@ function createTray() {
       }
     },
     {
+      label: 'H&ide window...', click: () => {
+        if (set.hideOnMinimize)
+          win.hide();
+        else
+          win.minimize();
+      }
+    },
+    { type: 'separator' },
+    {
       label: "Ch&aracters...",
       id: "characters",
       click: () => {
@@ -834,6 +843,15 @@ function createTray() {
         win.webContents.executeJavaScript('showCharacters()');
       }
     },
+    {
+      label: '&Manage profiles...',
+      click: showProfiles,
+    },    
+    { type: 'separator' },
+    {
+      label: '&Preferences...',
+      click: showPrefs
+    },
     { type: 'separator' },
     {
       label: '&Who is on?',
@@ -845,6 +863,7 @@ function createTray() {
         shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
       }
     },
+    { type: 'separator' },
     {
       label: '&Help',
       role: 'help',
@@ -906,7 +925,7 @@ function createTray() {
       ]
     },
     { type: 'separator' },
-    { label: 'Exit', role: 'quit' }
+    { label: 'E&xit', role: 'quit' }
   ]);
   updateTray();
   tray.setContextMenu(contextMenu);
