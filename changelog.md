@@ -2,6 +2,8 @@
 ##### 0.4.7
 - **New:**
   - Tray: added profile manager and preference to menu
+- **Fixed:**
+  - Preference dialog: Select dropdowns in wrong location
 ##### 0.4.6 2017-07-21
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar
