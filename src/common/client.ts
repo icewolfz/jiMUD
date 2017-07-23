@@ -623,6 +623,9 @@ export class Client extends EventEmitter {
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
         }
 
+        if (err === 'Error: ECONNRESET - read ECONNRESET.' && this.telnet.connected)
+            this.close();
+
         if (this.options.autoConnect && !this.telnet.connected && !this._autoError) {
             if (this._auto)
                 clearTimeout(this._auto);
