@@ -1438,12 +1438,12 @@
 
     function childClosed(url, name)
     {
-      if(url === 'characters.html')
+      if(path.basename(url) === 'characters.html')
         _cLoading = false;
     }
 
     function showCharacters() {
-      if(!_cLoading) return;
+      if(_cLoading) return;
       _cLoading = true;
       window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
     }
