@@ -43,20 +43,9 @@
     const { version } = require("../package.json");
 
     var spellchecker;
-    try {
-      spellchecker = require('spellchecker');
-    }
-    catch (ex) {
-      if (!client)
-        setTimeout(() => {
-          if (!client)
-            console.log(ex);
-          else
-            client.error(ex);
-        }, 1000);
-    }
-
     var set = Settings.load(remote.getGlobal('settingsFile'));
+    if (set.spellchecking)
+      loadSpellchecker();
     loadTheme(set.theme);
     delete set;
 
@@ -75,6 +64,21 @@
         return !(spellchecker.isMisspelled(text));
       }
     });
+
+    function loadSpellchecker() {
+      try {
+        spellchecker = require('spellchecker');
+      }
+      catch (ex) {
+        if (!client)
+          setTimeout(() => {
+            if (!client)
+              console.log(ex);
+            else
+              client.error(ex);
+          }, 1000);
+      }
+    }
 
     function doLink(url) {
       if (confirm("Open '" + url + "'?") === true)
@@ -639,6 +643,8 @@
         _backup.saveSelection = client.options.backupSave;
         updateInterface();
         buildCaptures();
+        if (client.options.spellchecking)
+          loadSpellchecker();
         client.port = client.options.dev ? 1035 : 1030;
         if (_logger)
           _logger.postMessage({
@@ -1436,14 +1442,13 @@
       client.error(err);
     });
 
-    function childClosed(url, name)
-    {
-      if(path.basename(url) === 'characters.html')
+    function childClosed(url, name) {
+      if (path.basename(url) === 'characters.html')
         _cLoading = false;
     }
 
     function showCharacters() {
-      if(_cLoading) return;
+      if (_cLoading) return;
       _cLoading = true;
       window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
     }
