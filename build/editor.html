@@ -33,13 +33,6 @@
 
 
         var spellchecker;
-        try {
-            spellchecker = require('spellchecker');
-        }
-        catch (ex) {
-            ipcRenderer.send('error', ex);
-        }
-
 
         var _colors, _ColorTable, options;
         var colorNames = {
@@ -1043,6 +1036,15 @@
 
         function loadOptions() {
             options = Settings.load(remote.getGlobal('settingsFile'));
+
+            try {
+                if (!spellchecker && options.spellchecking)
+                    spellchecker = require('spellchecker');
+            }
+            catch (ex) {
+                ipcRenderer.send('error', ex);
+            }
+
 
             $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-size", options.cmdfontSize);
             $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-family", options.cmdfont + ", monospace");

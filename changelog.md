@@ -5,6 +5,7 @@
 - **Change:**
   - Immortal tools: updated the window icon
   - Default profile is now the first in list instead of alpha order based on priority first
+  - Only load the spellchecker if enabled
 - **Fixed:**
   - Preference dialog
     - Select dropdowns in wrong location
