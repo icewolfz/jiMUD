@@ -1146,10 +1146,10 @@ function createWindow() {
           windows[name].window.webContents.executeJavaScript('closing();');
           windows[name].window.webContents.executeJavaScript('closed();');
           set.windows[name] = getWindowState(name, windows[name].window);
-          set.windows[name].options = copyWindowOptions(name);
           set.windows[name].persistent = windows[name].persistent;
           set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
           set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
+          set.windows[name].options = copyWindowOptions(name);
           windows[name].window.destroy();
         }
         logError(`Client unresponsive, closed.\n`, true);
@@ -1230,10 +1230,10 @@ function createWindow() {
         continue;
       windows[name].window.webContents.executeJavaScript('closed();');
       set.windows[name] = getWindowState(name, windows[name].window);
-      set.windows[name].options = copyWindowOptions(name);
       set.windows[name].persistent = windows[name].persistent;
       set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
       set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
+      set.windows[name].options = copyWindowOptions(name);
       windows[name].window.destroy();
     }
     set.save(global.settingsFile);
@@ -1277,9 +1277,9 @@ function createWindow() {
       createChat();
     for (var name in set.windows) {
       if (set.windows[name].show)
-        showWindow(name, set.windows[name].options||set.windows[name]);
+        showWindow(name, set.windows[name].options || set.windows[name]);
       else if (set.windows[name].persistent)
-        createNewWindow(name, set.windows[name].options||set.windows[name]);
+        createNewWindow(name, set.windows[name].options || set.windows[name]);
     }
 
   });
@@ -1414,7 +1414,8 @@ ipcMain.on('load-default', (event) => {
   var mf = parseTemplate(path.join("{data}", "map.sqlite"));
   if (sf === global.settingsFile && mf === global.mapFile)
     return;
-  win.webContents.send('load-default');
+  if (win && win.webContents)
+    win.webContents.send('load-default');
   global.settingsFile = sf;
   global.mapFile = mf;
 
@@ -1435,7 +1436,8 @@ ipcMain.on('load-default', (event) => {
     windows[name].window.webContents.executeJavaScript('closed();');
     windows[name].window.destroy();
   }
-  win.webContents.send('change-options', global.settingsFile);
+  if (win && win.webContents)
+    win.webContents.send('change-options', global.settingsFile);
 
   if (set.showMapper)
     showMapper();
@@ -1458,7 +1460,8 @@ ipcMain.on('load-char', (event, char) => {
     return;
   loadCharacter(char);
   set = settings.Settings.load(global.settingsFile);
-  win.webContents.send('load-char', char);
+  if (win && win.webContents)
+    win.webContents.send('load-char', char);
 
   if (winMap) {
     winMap.webContents.executeJavaScript('save();');
@@ -1475,7 +1478,8 @@ ipcMain.on('load-char', (event, char) => {
     windows[name].window.webContents.executeJavaScript('closed();');
     windows[name].window.destroy();
   }
-  win.webContents.send('change-options', global.settingsFile);
+  if (win && win.webContents)
+    win.webContents.send('change-options', global.settingsFile);
 
   if (set.showMapper)
     showMapper();
@@ -1494,7 +1498,8 @@ ipcMain.on('load-char', (event, char) => {
 });
 
 ipcMain.on('reload-options', () => {
-  win.webContents.send('reload-options');
+  if (win && win.webContents)
+    win.webContents.send('reload-options');
   set = settings.Settings.load(global.settingsFile);
   if (set.showTrayIcon && !tray)
     createTray();
@@ -1588,23 +1593,28 @@ ipcMain.on('set-color', (event, type, color) => {
 });
 
 ipcMain.on('send-background', (event, command) => {
-  win.webContents.send('send-background', command);
+  if (win && win.webContents)
+    win.webContents.send('send-background', command);
 });
 
 ipcMain.on('send-command', (event, command) => {
-  win.webContents.send('send-command', command);
+  if (win && win.webContents)
+    win.webContents.send('send-command', command);
 });
 
 ipcMain.on('send-gmcp', (event, data) => {
-  win.webContents.send('send-gmcp', data);
+  if (win && win.webContents)
+    win.webContents.send('send-gmcp', data);
 });
 
 ipcMain.on('send-raw', (event, raw) => {
-  win.webContents.send('send-raw', raw);
+  if (win && win.webContents)
+    win.webContents.send('send-raw', raw);
 });
 
 ipcMain.on('send', (event, raw) => {
-  win.webContents.send('send', raw);
+  if (win && win.webContents)
+    win.webContents.send('send', raw);
 });
 
 ipcMain.on('log', (event, raw) => {
@@ -1612,18 +1622,21 @@ ipcMain.on('log', (event, raw) => {
 });
 
 ipcMain.on('debug', (event, msg) => {
-  win.webContents.send('debug', msg);
+  if (win && win.webContents)
+    win.webContents.send('debug', msg);
 });
 
 ipcMain.on('error', (event, err) => {
-  win.webContents.send('error', err);
+  if (win && win.webContents)
+    win.webContents.send('error', err);
 });
 
 ipcMain.on('reload-profiles', (event) => {
   createMenu();
-  win.webContents.send('reload-profiles');
+  if (win && win.webContents)
+    win.webContents.send('reload-profiles');
   for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
+    if (!windows.hasOwnProperty(name) || !windows[name].window || !windows[name].window.webContents)
       continue;
     windows[name].window.webContents.send('reload-profiles');
   }
@@ -1777,7 +1790,7 @@ ipcMain.on('flush', (event) => {
 });
 
 ipcMain.on('flush-end', (event) => {
-  if (winMap)
+  if (win && win.webContents)
     win.webContents.send('flush-end');
 });
 
@@ -2524,11 +2537,12 @@ function createNewWindow(name, options) {
   windows[name].window.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, windows[name].window);
-    set.windows[name].options = copyWindowOptions(name);
     set.windows[name].persistent = windows[name].persistent;
     set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
     set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
     set.windows[name].show = false;
+    set.windows[name].options = copyWindowOptions(name);
+    set.windows[name].options.show = false;
     set.save(global.settingsFile);
     if (windows[name].persistent) {
       e.preventDefault();
@@ -2638,7 +2652,7 @@ function logError(err, skipClient) {
     msg = err;
 
 
-  if (win && !skipClient)
+  if (win && win.webContents && !skipClient)
     win.webContents.send('error', msg);
   else if (set && set.logErrors) {
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + '\n', { flag: 'a' });
