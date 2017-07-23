@@ -2,9 +2,13 @@
 ##### 0.4.7
 - **New:**
   - Tray: added profile manager and preference to menu
+- **Change:**
+  - Immortal tools: updated the window icon
+  - Default profile is now the first in list instead of alpha order based on priority first
 - **Fixed:**
   - Preference dialog: Select dropdowns in wrong location
   - Profile manager: advanced panel visible states where not being saved
+  - Dyanmic windows: save options better so it can properly restore windows
 ##### 0.4.6 2017-07-21
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar

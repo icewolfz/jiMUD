@@ -847,7 +847,7 @@ function createTray() {
     {
       label: '&Manage profiles...',
       click: showProfiles,
-    },    
+    },
     { type: 'separator' },
     {
       label: '&Preferences...',
@@ -1146,6 +1146,7 @@ function createWindow() {
           windows[name].window.webContents.executeJavaScript('closing();');
           windows[name].window.webContents.executeJavaScript('closed();');
           set.windows[name] = getWindowState(name, windows[name].window);
+          set.windows[name].options = copyWindowOptions(name);
           set.windows[name].persistent = windows[name].persistent;
           set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
           set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
@@ -1229,6 +1230,7 @@ function createWindow() {
         continue;
       windows[name].window.webContents.executeJavaScript('closed();');
       set.windows[name] = getWindowState(name, windows[name].window);
+      set.windows[name].options = copyWindowOptions(name);
       set.windows[name].persistent = windows[name].persistent;
       set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
       set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
@@ -1275,9 +1277,9 @@ function createWindow() {
       createChat();
     for (var name in set.windows) {
       if (set.windows[name].show)
-        showWindow(name, set.windows[name]);
+        showWindow(name, set.windows[name].options||set.windows[name]);
       else if (set.windows[name].persistent)
-        createNewWindow(name, set.windows[name]);
+        createNewWindow(name, set.windows[name].options||set.windows[name]);
     }
 
   });
@@ -2463,7 +2465,6 @@ function createNewWindow(name, options) {
     states[name].maximized = false;
   });
 
-
   windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
     event.preventDefault();
     if (frameName === 'modal') {
@@ -2523,6 +2524,7 @@ function createNewWindow(name, options) {
   windows[name].window.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, windows[name].window);
+    set.windows[name].options = copyWindowOptions(name);
     set.windows[name].persistent = windows[name].persistent;
     set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
     set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
@@ -2642,4 +2644,15 @@ function logError(err, skipClient) {
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + '\n', { flag: 'a' });
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), msg + '\n', { flag: 'a' });
   }
+}
+
+function copyWindowOptions(name) {
+  if (!name || !windows[name]) return {};
+  var ops = {};
+  for (var op in windows[name]) {
+    if (!windows[name].hasOwnProperty(op) || op === "window")
+      continue;
+    ops[op] = windows[name][op];
+  }
+  return ops;
 }
