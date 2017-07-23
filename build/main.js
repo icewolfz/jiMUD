@@ -1270,12 +1270,18 @@ function createWindow() {
     else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
       createChat();
     for (var name in set.windows) {
-      if (!set.windows[name].options)
-        continue;
-      if (set.windows[name].options.show)
-        showWindow(name, set.windows[name].options || set.windows[name]);
-      else if (set.windows[name].options.persistent)
-        createNewWindow(name, set.windows[name].options || set.windows[name]);
+      if (set.windows[name].options) {
+        if (set.windows[name].options.show)
+          showWindow(name, set.windows[name].options || set.windows[name]);
+        else if (set.windows[name].options.persistent)
+          createNewWindow(name, set.windows[name].options || set.windows[name]);
+      }
+      else {
+        if (set.windows[name].show)
+          showWindow(name, set.windows[name]);
+        else if (set.windows[name].persistent)
+          createNewWindow(name, set.windows[name]);
+      }
     }
 
   });
