@@ -1199,6 +1199,12 @@ function createWindow() {
       logError(`${url} crashed, killed: ${killed}\n`, true);
     });
 
+    w.on('closed', () => {
+      if (win && win.webContents) {
+        win.webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
+      }
+    });
+
     w.loadURL(url);
     event.newGuest = w;
   });
@@ -2508,6 +2514,12 @@ function createNewWindow(name, options) {
     });
     w.webContents.on('crashed', (event, killed) => {
       logError(`${url} crashed, killed: ${killed}\n`, true);
+    });
+
+    w.on('closed', () => {
+      if (w.getParentWindow()) {
+        w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
+      }
     });
 
     w.loadURL(url);

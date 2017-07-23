@@ -66,6 +66,7 @@
     var capture = 0, captureReview = 0;
     var _captures = [], _captureReviews = [];
     var _noCapture = false;
+    var _cLoading = false;
 
     webFrame.setSpellCheckProvider("en-US", true, {
       spellCheck: function (text) {
@@ -1435,7 +1436,15 @@
       client.error(err);
     });
 
+    function childClosed(url, name)
+    {
+      if(url === 'characters.html')
+        _cLoading = false;
+    }
+
     function showCharacters() {
+      if(!_cLoading) return;
+      _cLoading = true;
       window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
     }
 
