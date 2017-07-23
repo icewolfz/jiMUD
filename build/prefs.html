@@ -283,6 +283,7 @@
 
     function loadSettings() {
       $('#autoConnect').prop('checked', _settings.autoConnect);
+      $('#autoConnectDelay').val(_settings.autoConnectDelay);
       $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
       $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
       $('#dev').prop('checked', _settings.dev);
@@ -942,6 +943,15 @@
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="autoConnect" /> Auto connect on load
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              Auto connect delay
+              <div class="input-group">
+                <input type="number" id="autoConnectDelay" class="input-sm form-control" min="0" max="10000" />
+                <div class="input-group-addon">ms</div>
+              </div>
             </label>
           </div>
           <div class="col-sm-6 form-group">

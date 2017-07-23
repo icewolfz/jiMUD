@@ -629,7 +629,7 @@ export class Client extends EventEmitter {
         if (this.options.autoConnect && !this.telnet.connected && !this._autoError) {
             if (this._auto)
                 clearTimeout(this._auto);
-            this._auto = setTimeout(() => { this.connect(); }, 600);
+            this._auto = setTimeout(() => { this.connect(); }, this.options.autoConnectDelay);
         }
     }
 

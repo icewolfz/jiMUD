@@ -5,6 +5,7 @@ Reset - Resetting will revert all settings back to default values
 ## General
 
 - `Auto connect onload` This will cause the client to try and connect as soon as the client has finished loading.
+- `Auto connect delay` This determins the delay before an auto connect happens
 - `Auto create character` When connecting to mud and if it returns a character name, create/load character
 - `Show character manager onload` open the character manager when the client first loads.
 - `Enable spellchecking` support spellchecking in command line and advanced editor

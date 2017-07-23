@@ -152,6 +152,7 @@ export class Settings {
     public commandHistorySize: number = 20;
     public enableEcho: boolean = true;
     public autoConnect: boolean = true;
+    public autoConnectDelay: number = 600;
     public commandEcho: boolean = true;
 
     public newlineShortcut: NewLineType = NewLineType.Ctrl;

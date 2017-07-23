@@ -745,7 +745,7 @@
       });
 
       if (client.options.autoConnect)
-        setTimeout(function () { client.connect(); }, 600);
+        setTimeout(function () { client.connect(); }, client.options.autoConnectDelay);
 
       _backup = new Backup(client, remote.getGlobal('mapFile'));
       _backup.loadSelection = client.options.backupLoad;

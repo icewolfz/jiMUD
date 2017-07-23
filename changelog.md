@@ -2,6 +2,7 @@
 ##### 0.4.7
 - **New:**
   - Tray: added profile manager and preference to menu
+  - Auto connect delay - new option to allow control how of long to wait before auto connecting
 - **Change:**
   - Immortal tools: updated the window icon
   - Default profile is now the first in list instead of alpha order based on priority first

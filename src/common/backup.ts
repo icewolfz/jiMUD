@@ -102,6 +102,7 @@ export class Backup extends EventEmitter {
                     commandHistorySize: this.client.options.commandHistorySize,
                     enableEcho: this.client.options.enableEcho,
                     autoConnect: this.client.options.autoConnect,
+                    autoConnectDelay: this.client.options.autoConnectDelay,
                     commandEcho: this.client.options.commandEcho,
                     commandStacking: this.client.options.commandStacking,
                     htmlLog: (this.client.options.logWhat & Log.Html) === Log.Html,
@@ -412,6 +413,7 @@ export class Backup extends EventEmitter {
                 this.client.options.commandHistorySize = data.settings.commandHistorySize;
                 this.client.options.enableEcho = data.settings.enableEcho ? true : false;
                 this.client.options.autoConnect = data.settings.autoConnect ? true : false;
+                this.client.options.autoConnectDelay = data.settings.autoConnectDelay || 600;
                 this.client.options.commandEcho = data.settings.commandEcho ? true : false;
                 this.client.options.commandStacking = data.settings.commandStacking ? true : false;
                 this.client.options.logWhat = data.settings ? Log.Html : Log.None;
