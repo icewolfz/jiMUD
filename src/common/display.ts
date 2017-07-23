@@ -92,16 +92,25 @@ export class Display extends EventEmitter {
     private _VScroll: ScrollBar;
     private _HScroll: ScrollBar;
     private _updating: UpdateType = UpdateType.none;
+    private _splitHeight: number = -1;
 
     public split = null;
     public splitLive: boolean = false;
-    public splitHeight: number = -1;
     public scrollLock: boolean = false;
 
     private _linkFunction;
     private _mxpLinkFunction;
     private _mxpSendFunction;
     private _mxpTooltipFunction;
+
+    get splitHeight(): number { return this._splitHeight; }
+    set splitHeight(value: number) {
+        if (this._splitHeight !== value) {
+            this._splitHeight = value;
+            if (this.split)
+                this.split.style.height = this._splitHeight + '%';
+        }
+    }
 
     get enableSplit(): boolean { return this.split == null; }
     set enableSplit(value: boolean) {
@@ -121,8 +130,8 @@ export class Display extends EventEmitter {
             this.split.appendChild(this.split.overlay);
             this.split.appendChild(this.split.view);
             this._el.appendChild(this.split);
-            if (this.splitHeight !== -1)
-                this.split.style.height = this.splitHeight + '%';
+            if (this._splitHeight !== -1)
+                this.split.style.height = this._splitHeight + '%';
 
             this.split.updateView = () => {
                 this.split.style.bottom = this._HScroll.size + 'px';
