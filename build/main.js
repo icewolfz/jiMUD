@@ -1146,9 +1146,6 @@ function createWindow() {
           windows[name].window.webContents.executeJavaScript('closing();');
           windows[name].window.webContents.executeJavaScript('closed();');
           set.windows[name] = getWindowState(name, windows[name].window);
-          set.windows[name].persistent = windows[name].persistent;
-          set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
-          set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
           set.windows[name].options = copyWindowOptions(name);
           windows[name].window.destroy();
         }
@@ -1230,9 +1227,6 @@ function createWindow() {
         continue;
       windows[name].window.webContents.executeJavaScript('closed();');
       set.windows[name] = getWindowState(name, windows[name].window);
-      set.windows[name].persistent = windows[name].persistent;
-      set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
-      set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
       set.windows[name].options = copyWindowOptions(name);
       windows[name].window.destroy();
     }
@@ -1276,9 +1270,11 @@ function createWindow() {
     else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
       createChat();
     for (var name in set.windows) {
-      if (set.windows[name].show)
+      if (!set.windows[name].options)
+        continue;
+      if (set.windows[name].options.show)
         showWindow(name, set.windows[name].options || set.windows[name]);
-      else if (set.windows[name].persistent)
+      else if (set.windows[name].options.persistent)
         createNewWindow(name, set.windows[name].options || set.windows[name]);
     }
 
@@ -1494,7 +1490,6 @@ ipcMain.on('load-char', (event, char) => {
     showChat();
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
-
 });
 
 ipcMain.on('reload-options', () => {
@@ -2537,10 +2532,6 @@ function createNewWindow(name, options) {
   windows[name].window.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, windows[name].window);
-    set.windows[name].persistent = windows[name].persistent;
-    set.windows[name].alwaysOnTopClient = windows[name].alwaysOnTopClient;
-    set.windows[name].alwaysOnTop = windows[name].alwaysOnTop;
-    set.windows[name].show = false;
     set.windows[name].options = copyWindowOptions(name);
     set.windows[name].options.show = false;
     set.save(global.settingsFile);
