@@ -4,7 +4,7 @@
   - Tray: added profile manager and preference to menu
 - **Fixed:**
   - Preference dialog: Select dropdowns in wrong location
-  - Profile manager: advanced panal visible states where not being saved
+  - Profile manager: advanced panel visible states where not being saved
 ##### 0.4.6 2017-07-21
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar
@@ -29,7 +29,6 @@
   - Update treeview control to 2.1.5
 - **Fixed:**
   - Set application id to 'jiMUD' instead of the default 'Electron'
-  - Remote drag and drop support
   - Dynamic windows when max/min tracking fix was added
   - String parser where it was cutting off a character when parsing parameters
   - #notify was not correctly parsing single word titles wrapped with ''
@@ -37,6 +36,7 @@
   - Tray: tray hide will now minimize if [hide on minimize](docs/preferences.md#advanced) is not enabled
   - Profiles where not correctly sorted by priority
   - Immortal tools
+    - Remote drag and drop support
     - Queue adding more then 1 item was displaying active item path for all items added
     - Making a new remote directory was not correctly setting the path
     - Issue when dragging and dropping remote files
