@@ -4,6 +4,7 @@
   - Tray: added profile manager and preference to menu
 - **Fixed:**
   - Preference dialog: Select dropdowns in wrong location
+  - Profile manager: advanced panal visible states where not being saved
 ##### 0.4.6 2017-07-21
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar

@@ -2042,9 +2042,13 @@ function loadOptions() {
 }
 
 function setAdvancedPanel(id, state) {
-    const cState = $('#' + id + '-editor .btn-adv').data('open');
+    const cState = $('#' + id + '-editor .btn-adv').data('open') || false;
+    console.log(state);
+    console.log(cState);
+    console.log(cState !== state);
+    console.log('#' + id + '-editor .btn-adv');
     if (cState !== state)
-        $('#context-editor .btn-adv').click();
+        $('#' + id + '-editor .btn-adv').click();
 }
 
 export function init() {
@@ -2061,8 +2065,6 @@ export function init() {
             $('#btn-refresh').addClass('btn-warning');
         });
     }
-    loadOptions();
-
     buildTreeview(getProfileData());
     $('#profile-tree').contextmenu((event) => {
         event.preventDefault();
@@ -2549,7 +2551,7 @@ export function init() {
 
     $('.btn-adv').click(function () {
         const editor = $(this).closest('.panel-body').attr('id');
-        let state = $(this).data('open');
+        let state = $(this).data('open') || false;
         state = !state;
         $(this).data('open', state);
         const panel = $(this).closest('.panel-body');
@@ -2670,6 +2672,7 @@ export function init() {
         exportmenu.append(new MenuItem({ label: 'Import...', click: importProfiles }));
         exportmenu.popup(remote.getCurrentWindow(), { x: x, y: y });
     });
+    loadOptions();
 }
 
 function undoKeydown(e) {
