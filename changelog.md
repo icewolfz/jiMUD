@@ -6,7 +6,9 @@
   - Immortal tools: updated the window icon
   - Default profile is now the first in list instead of alpha order based on priority first
 - **Fixed:**
-  - Preference dialog: Select dropdowns in wrong location
+  - Preference dialog
+    - Select dropdowns in wrong location
+    - Optimize load times to speed up opening dialog
   - Profile manager: advanced panel visible states where not being saved
   - Dynamic windows: save options better so it can properly restore windows
   - Some windows would try and send commands after the main window was closed, now all remote commands test to makee sure main window is there

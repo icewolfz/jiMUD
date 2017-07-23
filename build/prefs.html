@@ -179,31 +179,32 @@
       else
         $('.win32').css('display', 'none');
       if (fontManager) {
-        var fonts = fontManager.getAvailableFontsSync();
-        var fl = fonts.length;
-        var f = 0;
-        var sFont = {};
-        for (f = 0; f < fl; f++) {
-          if (sFont[fonts[f].family]) continue;
-          var op;
-          if (fonts[f].monospace) {
-            op = $('<option/>', {
-              value: "'" + fonts[f].family + "', monospace",
-              text: "'" + fonts[f].family + "', monospace",
-            });
+        fontManager.getAvailableFonts((fonts) => {
+          var fl = fonts.length;
+          var f = 0;
+          var sFont = {};
+          var ops = [];
+          for (f = 0; f < fl; f++) {
+            if (sFont[fonts[f].family]) continue;
+            if (fonts[f].monospace)
+              ops.push(`<option style="font-family: '${fonts[f].family}', monospace" value="'${fonts[f].family}', monospace">'${fonts[f].family}', monospace</option>`);
+            else
+              ops.push(`<option style="font-family: '${fonts[f].family}'" value="'${fonts[f].family}'">'${fonts[f].family}'</option>`);
+            sFont[fonts[f].family] = true;
           }
-          else
-            op = $('<option/>', {
-              value: "'" + fonts[f].family + "'",
-              text: "'" + fonts[f].family + "'",
-            });
-          op[0].style.fontFamily = "'" + fonts[f].family + "'";
-          $('#font-system').append(op);
-          $('#cmdfont-system').append(op.clone());
-          sFont[fonts[f].family] = true;
-        }
-        $('#font').selectpicker('refresh');
-        $('#cmdfont').selectpicker('refresh');
+          ops = ops.join('');
+          $('#font-system').append(ops);
+          $('#cmdfont-system').append(ops);
+
+          $('#font').selectpicker('refresh');
+          $('#cmdfont').selectpicker('refresh');
+          $('#font').val(_settings.font);
+          $('#font').selectpicker('render');
+          $('#font').change();
+          $('#cmdfont').val(_settings.font);
+          $('#cmdfont').selectpicker('render');
+          $('#cmdfont').change();
+        });
       }
       $('#font').change(() => {
         $('#font-sample').css('font-family', $('#font').val() + ', monospace');
