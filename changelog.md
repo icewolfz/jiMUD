@@ -12,8 +12,9 @@
     - Optimize load times to speed up opening dialog
   - Profile manager: advanced panel visible states where not being saved
   - Dynamic windows: save options better so it can properly restore windows
-  - Some windows would try and send commands after the main window was closed, now all remote commands test to makee sure main window is there
+  - Some windows would try and send commands after the main window was closed, now all remote commands test to make sure main window is there
   - Scroll area size was not correctly being restored when using display scroll system
+  - When connection is reset it will now properly close connection and attempt to reconnect if auto connected enable
 ##### 0.4.6 2017-07-21
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar

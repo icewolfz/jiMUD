@@ -361,14 +361,13 @@ export class Client extends EventEmitter {
                     msg.push(err.message);
                 if (err.reason)
                     msg.push(err.reason);
-
                 if (err.code === 'ECONNREFUSED')
                     this._autoError = true;
                 if (err.code)
                     this.error(err.code + ' - ' + msg.join(', '));
                 else
                     this.error(msg.join(', '));
-                if (err.code === 'ECONNREFUSED')
+                if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET')
                     this.close();
             }
             else
