@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.4.7
+##### 0.4.7 2017-07-23
 - **New:**
   - Tray: added profile manager and preference to menu
   - Auto connect delay - new option to allow control how of long to wait before auto connecting
