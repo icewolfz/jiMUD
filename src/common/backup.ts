@@ -146,6 +146,7 @@ export class Backup extends EventEmitter {
                     continue;
                 }
                 if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
+                    if (!data.settings[prop]) data.settings[prop] = {};
                     for (prop2 in this.client.options[prop]) {
                         if (!this.client.options[prop].hasOwnProperty(prop2)) {
                             continue;
