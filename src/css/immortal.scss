@@ -277,6 +277,12 @@ table.dataTable {
     outline: none;
 }
 
+#local-list.table.dataTable tbody > tr.selected td > .fa,
+#local-list.table.dataTable tbody > tr > .selected td > .fa,
+#remote-list.table.dataTable tbody > tr.selected td > .fa,
+#remote-list.table.dataTable tbody > tr > .selected td > .fa,
+#queue-list.table.dataTable tbody > tr.selected td > .fa,
+#queue-list.table.dataTable tbody > tr > .selected td > .fa,
 #local-list.table.dataTable tbody > tr.selected,
 #local-list.table.dataTable tbody > tr > .selected,
 #remote-list.table.dataTable tbody > tr.selected,
