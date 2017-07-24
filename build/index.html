@@ -321,7 +321,7 @@
           menu = {};
           menu.label = context[x].caption;
           menu.item = context[x];
-          menu.click = (item, win) => {
+          menu.click = (item) => {
             executeContext(item.item);
           };
           var sub = buildMenu(context[x].name || x, context);
@@ -333,6 +333,35 @@
         items.push(new MenuItem(menu));
       }
       return items;
+    }
+
+    function buildMenuItems(items) {
+      if (!items || items.length === 0)
+        return [];
+      var menuItems = [], item;
+      for (var x = 0, xl = items.length; x < xl; x++) {
+        if (!items[x].enabled) continue;
+        if (items[x].caption === '-')
+          item = { type: 'separator' };
+        else {
+          item = {
+            label: items[x].caption,
+            item: items[x],
+            click: (item) => {
+              executeContext(item.item);
+            }
+          };
+          if (items[x].items) {
+            var sub = buildMenuItems(items[x].items);
+            if (sub.length > 0)
+              item.submenu = sub;
+          }
+          if (items[x].icon && items[x].icon.length > 0)
+            item.icon = nativeImage.createFromPath(parseTemplate(items[x].icon)).resize({ width: 16, height: 16 });
+        }
+        menuItems.push(new MenuItem(item));
+      }
+      return menuItems;
     }
 
     function init() {
@@ -468,6 +497,9 @@
                 executeContext(item.item);
               };
               var sub = buildMenu(context[x].name || x, context);
+              if (context[x].items)
+                sub.push.apply(sub, buildMenuItems(context[x].items));
+
               if (sub.length > 0)
                 menu.submenu = sub;
               if (context[x].icon && context[x].icon.length > 0)

@@ -203,6 +203,7 @@ export class Context extends Item {
     public send: boolean = true;
     public chain: boolean = false;
     public parent: string = '';
+    public items: Context[] = [];
     constructor(data?) {
         super(data);
         this.caption = 'NewContext';
@@ -219,7 +220,7 @@ export class Context extends Item {
     }
 
     public clone() {
-        return new Button(this);
+        return new Context(this);
     }
 }
 
