@@ -49,6 +49,7 @@ Basic questions answered about jiMUD
 - `-mf=[file], --map=[file]`      Override default map file
 - `-c=[name], --character=[name]` Allows you to load/create a character from character database
 - `-pf=[list], --profiles[]`      Set which profiles will be enabled, if not found will default
+- `-v, --version`                 Print current version
 
 ## References
 - [Profiles](docs/profiles.md)

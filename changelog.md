@@ -3,6 +3,7 @@
 - **New:**
   - Tray: added profile manager and preference to menu
   - Auto connect delay - new option to allow control how of long to wait before auto connecting
+  - Add -v/version to command line to print version
 - **Change:**
   - Immortal tools: updated the window icon
   - Default profile is now the first in list instead of alpha order based on priority first

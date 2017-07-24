@@ -1341,8 +1341,15 @@ app.on('ready', () => {
         console.log('-mf=[file], --map=[file]      Override default map file');
         console.log('-c=[name], --character=[name] Allows you to load/create a character from character database');
         console.log('-pf=[list], --profiles[]      Set which profiles will be enabled, if not found will default');
+        console.log('-v, --version                 Print current version');
         app.quit();
         return;
+      case "--version":
+      case "-v":
+      case "--v":
+        console.log(`jiMUD v${require("../package.json").version}`);
+        app.quit();
+        break;
       case "-debug":
       case "--debug":
       case "-d":
