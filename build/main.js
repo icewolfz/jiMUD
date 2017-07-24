@@ -1013,34 +1013,38 @@ function createTray() {
 }
 
 function updateTray() {
+  if (!tray) return;
   let t = '';
+  let d = '';
   let title = global.title;
   if (!title || title.length === 0)
     title = global.character;
-  if (!tray) return;
+  if (set && set.options.dev)
+    d = " to Development";
   switch (overlay) {
     case 1:
       tray.setImage(path.join(__dirname, '../assets/icons/png/connected2.png'));
       if (title && title.length > 0)
-        t = `jiMUD - ${title} - Connected`;
+        t = `Connected${d} as ${title} - jiMUD`;
       else
-        t = 'jiMUD - Connected';
+        t = `Connected${d} - jiMUD`;
       break;
     case 2:
       if (title && title.length > 0)
-        t = `jiMUD - ${title} - Connected`;
+        t = `Connected${d} as ${title} - jiMUD`;
       else
-        t = 'jiMUD - Connected';
+        t = `Connected${d} - jiMUD`;
       tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
       break;
     default:
       if (title && title.length > 0)
-        t = `jiMUD - ${title} - Disconnected`;
+        t = `Disconnected${d} as ${title} - jiMUD`;
       else
-        t = 'jiMUD - Disconnected';
+        t = `Disconnected${d} - jiMUD`;
       tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
       break;
   }
+
   tray.setTitle(t);
   tray.setToolTip(t);
 }
