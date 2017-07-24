@@ -9,6 +9,8 @@
   - Default profile is now the first in list instead of alpha order based on priority first
   - Only load the spellchecker if enabled
   - Tray: Tooltip now list if connected to dev and better display format
+  - Change how allowNegativeNumberNeeded is applied
+  - Reverse needed xp progress bar fill
 - **Fixed:**
   - Preference dialog
     - Select dropdowns in wrong location
@@ -19,6 +21,8 @@
   - Scroll area size was not correctly being restored when using display scroll system
   - When connection is reset it will now properly close connection and attempt to reconnect if auto connected enable
   - Backup: remote backup should now save all settings
+  - Bug with display window size
+  - Chat capture: fix some issues causing it not to display text
 ##### 0.4.6 2017-07-21
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar

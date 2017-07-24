@@ -1001,7 +1001,7 @@ export class Display extends EventEmitter {
     }
 
     get WindowHeight(): number {
-        if (this._elJ.hasHorizontalScrollBar())
+        if (this._HScroll.visible)
             return Math.floor((this._elJ.innerHeight() - 12 - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
         return Math.floor((this._elJ.innerHeight() - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
     }
@@ -2095,7 +2095,7 @@ export class ScrollBar extends EventEmitter {
             this._thumbSize = 20;
         this.thumb.style[this._type === ScrollType.horizontal ? 'width' : 'height'] = this._thumbSize + 'px';
         this._maxDrag = this._trackSize - this._thumbSize;
-        if (this._maxDrag < 0) {
+        if (this._maxDrag <= 0) {
             this._maxDrag = 0;
             this._ratio = 1;
             this._ratio2 = 1;

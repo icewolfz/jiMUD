@@ -806,7 +806,7 @@ function createTray() {
     set = settings.Settings.load(global.settingsFile);
   if (!set.showTrayIcon)
     return;
-  tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected.png'));
+  tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '&Show window...', click: () => {
@@ -1019,7 +1019,7 @@ function updateTray() {
   let title = global.title;
   if (!title || title.length === 0)
     title = global.character;
-  if (set && set.options.dev)
+  if (set && set.dev)
     d = " to Development";
   switch (overlay) {
     case 1:

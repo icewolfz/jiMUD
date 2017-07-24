@@ -33,8 +33,8 @@ export class Status extends EventEmitter {
         });
         this.client.on('options-loaded', () => {
             this.info['EXPERIENCE_NEED'] = this.info['EXPERIENCE_NEED_RAW'] - this.info['EXPERIENCE'];
-            if (this.info['EXPERIENCE_NEED'] < 0 && !client.options.allowNegativeNumberNeeded)
-                this.info['EXPERIENCE_NEED'] = 0;
+            //if (this.info['EXPERIENCE_NEED'] < 0 && !this.client.options.allowNegativeNumberNeeded)
+            //this.info['EXPERIENCE_NEED'] = 0;
         });
 
         this.client.on('received-GMCP', (mod, obj) => {
@@ -62,8 +62,8 @@ export class Status extends EventEmitter {
                     this.info['EXPERIENCE_NEED_RAW'] = obj.need;
                     this.info['EXPERIENCE_NEED'] = obj.need - obj.current;
                     this.info['EXPERIENCE_NEED_P'] = obj.needPercent;
-                    if (this.info['EXPERIENCE_NEED'] < 0 && !client.options.allowNegativeNumberNeeded)
-                        this.info['EXPERIENCE_NEED'] = 0;
+                    //if (this.info['EXPERIENCE_NEED'] < 0 && !this.client.options.allowNegativeNumberNeeded)
+                    //this.info['EXPERIENCE_NEED'] = 0;
 
                     this.info['EXPERIENCE_EARNED'] = obj.earned;
                     this.info['EXPERIENCE_BANKED'] = obj.banked;
@@ -331,8 +331,11 @@ export class Status extends EventEmitter {
     public updateXP() {
         $('#xp-value').text(this.info['EXPERIENCE']);
         $('#xp-banked').text(this.info['EXPERIENCE_BANKED']);
-        $('#need-value').text(this.info['EXPERIENCE_NEED']);
-        this.updateBar('#need-percent', this.info['EXPERIENCE_NEED_P'], 100, this.info['EXPERIENCE_NEED'].toString());
+        if (this.info['EXPERIENCE_NEED'] < 0)
+            $('#need-value').text(this.client.options.allowNegativeNumberNeeded ? this.info['EXPERIENCE_NEED'] : 0);
+        else
+            $('#need-value').text(this.info['EXPERIENCE_NEED']);
+        this.updateBar('#need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.info['EXPERIENCE_NEED'].toString());
         $('#earn-value').text(this.info['EXPERIENCE_EARNED']);
     }
 
