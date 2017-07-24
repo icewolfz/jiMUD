@@ -497,8 +497,8 @@
                 executeContext(item.item);
               };
               var sub = buildMenu(context[x].name || x, context);
-              if (context[x].items)
-                sub.push.apply(sub, buildMenuItems(context[x].items));
+              //if (context[x].items)
+                //sub.push.apply(sub, buildMenuItems(context[x].items));
 
               if (sub.length > 0)
                 menu.submenu = sub;

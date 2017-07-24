@@ -2043,10 +2043,6 @@ function loadOptions() {
 
 function setAdvancedPanel(id, state) {
     const cState = $('#' + id + '-editor .btn-adv').data('open') || false;
-    console.log(state);
-    console.log(cState);
-    console.log(cState !== state);
-    console.log('#' + id + '-editor .btn-adv');
     if (cState !== state)
         $('#' + id + '-editor .btn-adv').click();
 }
