@@ -214,7 +214,14 @@ export class Context extends Item {
                 if (!data.hasOwnProperty(prop)) {
                     continue;
                 }
-                this[prop] = data[prop];
+                if (prop === 'items') {
+                    let i = 0;
+                    const il = data[prop].length;
+                    for (; i < il; i++)
+                        this.items.push(new Context(data[prop][i]));
+                }
+                else
+                    this[prop] = data[prop];
             }
         }
     }
