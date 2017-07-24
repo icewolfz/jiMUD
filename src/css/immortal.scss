@@ -418,3 +418,12 @@ table.dataTable {
     color: white;
     text-align: center;
 }
+
+#localInfo,
+#remoteInfo,
+#queueInfo {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow:hidden;
+    max-width: 33%;
+}

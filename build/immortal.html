@@ -2473,35 +2473,40 @@
 
         function updateStatus() {
             var tmp = [];
+            var d, dl;
             if (info.localFiles)
-                tmp.push(`Local files: ${info.localFiles}`);
+                tmp.push(`Files: ${info.localFiles}`);
             if (info.localDirs)
-                tmp.push(`Local folders: ${info.localDirs}`);
+                tmp.push(`Folders: ${info.localDirs}`);
             var size = 0;
             var data = localTable.rows({ selected: true }).data();
-            data.map(function (key, index) {
-                if (data[index].size > 0)
-                    size += data[index].size;
-            });
+            dl = data.length;
+            for (d = 0; d < dl; d++) {
+                if (data[d].size > 0)
+                    size += data[d].size;
+            }
             if (size)
-                tmp.push(`Local selected: ${formatSize(size)}`);
-            $("#localInfo").text(tmp.join(", "));
+                tmp.push(`Selected: ${formatSize(size)}`);
+            if(tmp.length > 0)
+                $("#localInfo").text("Local - " + tmp.join(", "));
 
             tmp = [];
             if (info.remoteFiles)
-                tmp.push(`Remote files: ${info.remoteFiles}`);
+                tmp.push(`Files: ${info.remoteFiles}`);
             if (info.remoteDirs)
-                tmp.push(`Remote folders: ${info.remoteDirs}`);
+                tmp.push(`Folders: ${info.remoteDirs}`);
 
             size = 0;
             data = remoteTable.rows({ selected: true }).data();
-            data.map(function (key, index) {
-                if (data[index].size > 0)
-                    size += data[index].size;
-            });
+            dl = data.length;
+            for (d = 0; d < dl; d++) {
+                if (data[d].size > 0)
+                    size += data[d].size;
+            }
             if (size)
-                tmp.push(`Remote selected: ${formatSize(size)}`);
-            $("#remoteInfo").text(tmp.join(", "));
+                tmp.push(`Selected: ${formatSize(size)}`);
+                if(tmp.length > 0)
+                $("#remoteInfo").text("Remote - " + tmp.join(", "));
 
 
             tmp = [];
@@ -3246,9 +3251,9 @@
         </div>
     </div>
     <div id="status" class="btn-toolbar" role="toolbar">
-        <div id="localInfo" style="width:33%;display:inline-block;"></div>
-        <div id="queueInfo" style="width:33%;display:inline-block;"></div>
-        <div id="remoteInfo" style="width:33%;display:inline-block;"></div>
+        <div id="localInfo" style="float:left;display:block;"></div>
+        <div id="queueInfo" style="float:left;display:block;"></div>
+        <div id="remoteInfo" style="float:right;display:block;"></div>
     </div>
     <dialog id="newFolder" style="z-index:1000;height:150px;width:350px;">
         <div class="dialog-body">
