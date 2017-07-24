@@ -138,6 +138,25 @@ export class Backup extends EventEmitter {
                 map: {}
             };
 
+            let prop;
+            let prop2;
+
+            for (prop in this.client.options) {
+                if (!this.client.options.hasOwnProperty(prop)) {
+                    continue;
+                }
+                if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
+                    for (prop2 in this.client.options[prop]) {
+                        if (!this.client.options[prop].hasOwnProperty(prop2)) {
+                            continue;
+                        }
+                        data.settings[prop][prop2] = this.client.options[prop][prop2];
+                    }
+                }
+                else
+                    data.settings[prop] = this.client.options[prop];
+            }
+
             const rooms = {};
             if (rows) {
                 const rl = rows.length;
@@ -151,7 +170,6 @@ export class Backup extends EventEmitter {
                     }
                     else {
                         rooms[rows[r].ID] = { num: rows[r].ID };
-                        let prop;
                         for (prop in rows[r]) {
                             if (prop === 'ID')
                                 continue;
@@ -452,6 +470,27 @@ export class Backup extends EventEmitter {
                 this.client.options.showMapper = data.settings.MapperOpen ? true : false;
                 this.client.options.showCharacterManager = data.settings.showCharacterManager ? true : false;
                 this.client.options.logErrors = data.settings.showCharacterManager ? true : false;
+
+                let prop;
+                let prop2;
+
+                for (prop in this.client.options) {
+                    if (!this.client.options.hasOwnProperty(prop) || !data.setting.hasOwnProperty(prop)) {
+                        continue;
+                    }
+                    if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
+                        for (prop2 in this.client.options[prop]) {
+                            if (!this.client.options[prop].hasOwnProperty(prop2)) {
+                                continue;
+                            }
+                            this.client.options[prop][prop2] = data.settings[prop][prop2];
+                        }
+                    }
+                    else if (typeof this.client.options[prop] === 'boolean')
+                        this.client.options[prop] = data.settings[prop] ? true : false;
+                    else
+                        this.client.options[prop] = data.settings[prop];
+                }
 
                 this.client.clearCache();
                 this.client.saveOptions();

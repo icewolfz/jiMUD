@@ -16,6 +16,7 @@
   - Some windows would try and send commands after the main window was closed, now all remote commands test to make sure main window is there
   - Scroll area size was not correctly being restored when using display scroll system
   - When connection is reset it will now properly close connection and attempt to reconnect if auto connected enable
+  - Backup: remote backup should now save all settings
 ##### 0.4.6 2017-07-21
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar
