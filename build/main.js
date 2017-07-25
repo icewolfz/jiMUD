@@ -21,6 +21,7 @@ let reload = null;
 let tray = null;
 let overlay = 0;
 let windows = {};
+let quiting = false;
 
 app.setAppUserModelId('jiMUD');
 
@@ -1218,29 +1219,6 @@ function createWindow() {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    set = settings.Settings.load(global.settingsFile);
-    if (winMap) {
-      set.windows['mapper'] = getWindowState('mapper', winMap);
-      winMap.webContents.executeJavaScript('save();');
-      winMap.destroy();
-    }
-    if (winEditor) {
-      set.windows['editor'] = getWindowState('editor', winEditor);
-      winEditor.destroy();
-    }
-    if (winChat) {
-      set.windows['chat'] = getWindowState('chat', winChat);
-      winChat.destroy();
-    }
-    for (var name in windows) {
-      if (!windows.hasOwnProperty(name) || !windows[name].window)
-        continue;
-      windows[name].window.webContents.executeJavaScript('closed();');
-      set.windows[name] = getWindowState(name, windows[name].window);
-      set.windows[name].options = copyWindowOptions(name);
-      windows[name].window.destroy();
-    }
-    set.save(global.settingsFile);
     win = null;
   });
 
@@ -1299,9 +1277,7 @@ function createWindow() {
   win.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.windows['main'] = getWindowState('main', win);
-    set.save(global.settingsFile);
-    if (winMap)
-      winMap.webContents.executeJavaScript('save();');
+
     if (winProfiles) {
       e.preventDefault();
       dialog.showMessageBox(winProfiles, {
@@ -1309,13 +1285,33 @@ function createWindow() {
         title: 'Close profile manager',
         message: 'You must close the profile manager before you can exit.'
       });
+      set.save(global.settingsFile);
       return;
+    }
+
+    if (winMap) {
+      set.windows['mapper'] = getWindowState('mapper', winMap);
+      winMap.webContents.executeJavaScript('save();');
+      winMap.destroy();
+    }
+    if (winEditor) {
+      set.windows['editor'] = getWindowState('editor', winEditor);
+      winEditor.destroy();
+    }
+    if (winChat) {
+      set.windows['chat'] = getWindowState('chat', winChat);
+      winChat.destroy();
     }
     for (var name in windows) {
       if (!windows.hasOwnProperty(name) || !windows[name].window)
         continue;
       windows[name].window.webContents.executeJavaScript('closing();');
+      windows[name].window.webContents.executeJavaScript('closed();');
+      set.windows[name] = getWindowState(name, windows[name].window);
+      set.windows[name].options = copyWindowOptions(name);
+      windows[name].window.destroy();
     }
+    set.save(global.settingsFile);
   });
 }
 
@@ -1419,6 +1415,10 @@ app.on('activate', () => {
   }
 });
 
+app.on('before-quit', () => {
+  quiting = true;
+});
+
 ipcMain.on('reload', (event, char) => {
   //already loaded so no need to reload
   if (char === global.character)
@@ -1453,6 +1453,8 @@ ipcMain.on('load-default', (event) => {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.executeJavaScript('closed();');
+    set.windows[name] = getWindowState(name, windows[name].window);
+    set.windows[name].options = copyWindowOptions(name);
     windows[name].window.destroy();
   }
   if (win && win.webContents)
@@ -1495,6 +1497,8 @@ ipcMain.on('load-char', (event, char) => {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.executeJavaScript('closed();');
+    set.windows[name] = getWindowState(name, windows[name].window);
+    set.windows[name].options = copyWindowOptions(name);
     windows[name].window.destroy();
   }
   if (win && win.webContents)
@@ -2445,7 +2449,6 @@ function createNewWindow(name, options) {
   if (!options) options = {};
   var s = loadWindowState(name);
   windows[name] = options;
-  console.log(options);
   windows[name].window = new BrowserWindow({
     parent: windows[name].alwaysOnTopClient ? win : null,
     title: options.title || name,
@@ -2567,8 +2570,8 @@ function createNewWindow(name, options) {
   windows[name].window.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, windows[name].window);
+    windows[name].show = false;
     set.windows[name].options = copyWindowOptions(name);
-    set.windows[name].options.show = false;
     set.save(global.settingsFile);
     if (windows[name].persistent) {
       e.preventDefault();
@@ -2579,6 +2582,7 @@ function createNewWindow(name, options) {
 
 function showWindow(name, options) {
   set = settings.Settings.load(global.settingsFile);
+  options.show = true;
   if (!set.windows[name])
     set.windows[name] = {};
   set.windows[name].show = true;

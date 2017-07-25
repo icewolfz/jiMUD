@@ -115,6 +115,9 @@ export class IED extends EventEmitter {
         this._gmcp.unshift([mod, obj]);
 
         switch (mods[1]) {
+            case 'init':
+                this.emit('init');
+                break;
             case 'error':
                 switch (obj.code) {
                     case IEDError.DL_NOTSTART:

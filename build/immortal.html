@@ -600,11 +600,11 @@
                 $("#main").css('bottom', '28px');
             }
             if (localTable)
-                localTable.draw();
+                updateDraw(localTable);
             if (remoteTable)
-                remoteTable.draw();
+                updateDraw(remoteTable);
             if (queueTable)
-                queueTable.draw();
+                updateDraw(queueTable);
         }
 
         function saveOptions() {
@@ -719,7 +719,7 @@
                 }
             });
             localTable.rows().remove();
-            localTable.rows.add(all).draw();
+            updateDraw(localTable, localTable.rows.add(all));
             $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
             updateStatus();
         }
@@ -791,8 +791,8 @@
                 else
                     $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
             }
-            remoteTable.rows().remove();
-            remoteTable.rows.add(all).draw();
+            remoteTable.rows().remove();          
+            updateDraw(remoteTable, remoteTable.rows.add(all));
             $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
 
@@ -1169,7 +1169,7 @@
                 logError(msg);
             });
             _ied.on('reset', () => {
-                queueTable.rows().remove().draw();
+                updateDraw(queueTable, queueTable.rows().remove());
             });
             _ied.on('dir', (dir, files, tag) => {
                 var f, fl, file;
@@ -1252,20 +1252,20 @@
                 else
                     info.uploads++;
                 updateStatus();
-                queueTable.row.add({
+                updateDraw(queueTable, queueTable.row.add({
                     "local": item.local,
                     "direction": item.download ? "<-" : "->",
                     "remote": item.remote,
                     "progress": item.percent,
                     "id": item.ID,
                     "state": item.state
-                }).draw();
+                }));
             });
             _ied.on('remove', (item) => {
-                queueTable.rows(function (idx, data, node) {
+                updateDraw(queueTable, queueTable.rows(function (idx, data, node) {
                     return data.id === item.ID ?
                         true : false;
-                }).remove().draw();
+                }).remove());
                 updateMenu();
                 if (item.download) {
                     //Update local list if file was uploaded to current local
@@ -1302,7 +1302,7 @@
                             row.remove();
                         else
                             info.remoteFiles++;
-                        remoteTable.row.add(_remote[path.basename(item.remote)]).draw();
+                        updateDraw(remoteTable, remoteTable.row.add(_remote[path.basename(item.remote)]));
                         info.uploads--;
                     }
                     else
@@ -1320,14 +1320,14 @@
                         true : false;
                 });
                 if (row && row.length === 1)
-                    row.data({
+                    updateDraw(queueTable, row.data({
                         "local": item.local,
                         "direction": item.download ? "<-" : "->",
                         "remote": item.remote,
                         "progress": item.percent,
                         "id": item.ID,
                         "state": item.state
-                    }).draw();
+                    }));
                 ipcRenderer.send('set-progress-window', 'immortal', { value: item.percent });
                 ipcRenderer.send('set-progress', { value: item.percent });
             });
@@ -1345,7 +1345,7 @@
                         });
                         delete _remote[obj.file];
                         if (row && row.length === 1)
-                            row.remove().draw();
+                            updateDraw(remoteTable, row.remove());
                         info.remoteFiles--;
                         updateStatus();
                     }
@@ -1382,7 +1382,7 @@
                             info.remoteFiles--;
                             return;
                         }
-                        remoteTable.row.add(_remote[obj.file2]).draw();
+                        updateDraw(remoteTable, remoteTable.row.add(_remote[obj.file2]));
                         updateStatus();
                     }
                     else {
@@ -1420,7 +1420,7 @@
                             row.remove();
                         else
                             info.remoteDirs++;
-                        remoteTable.row.add(_remote[name]).draw();
+                        updateDraw(remoteTable, remoteTable.row.add(_remote[name]));
                         updateStatus();
                     }
                     else {
@@ -1443,7 +1443,7 @@
                                 true : false;
                         });
                         if (row && row.length === 1)
-                            row.remove().draw();
+                            updateDraw(remoteTable, row.remove());
                         delete _remote[name];
                         info.remoteDirs--;
                         updateStatus();
@@ -1876,10 +1876,9 @@
                     h += $("#bottom").outerHeight();
                 $("#local-navigate").css("max-height", h + "px");
                 $("#remote-navigate").css("max-height", h + "px");
-                localTable.draw();
-                remoteTable.draw();
-                queueTable.draw();
-
+                updateDraw(localTable);
+                updateDraw(remoteTable);
+                updateDraw(queueTable);
             });
 
             $(document).mouseup(function (e) {
@@ -1899,8 +1898,8 @@
                         $('#remote').css("left", e.pageX + 2);
                         options.localSize = e.pageX + 2;
                     }
-                    localTable.draw();
-                    remoteTable.draw();
+                    updateDraw(localTable);
+                    updateDraw(remoteTable);
                     saveOptions();
                     $('#ghost-bar').remove();
                     $(document).unbind('mousemove');
@@ -1916,9 +1915,9 @@
                     options.queueSize -= 26;
                     $('#bottom').css("height", options.queueSize);
                     $('#main').css("bottom", options.queueSize);
-                    localTable.draw();
-                    remoteTable.draw();
-                    queueTable.draw();
+                    updateDraw(localTable);
+                    updateDraw(remoteTable);
+                    updateDraw(queueTable);
                     saveOptions();
                     $('#btm-ghost-bar').remove();
                     $(document).unbind('mousemove');
@@ -2738,7 +2737,7 @@
             _local[file.name] = file;
             if (row && row.length === 1)
                 row.remove();
-            localTable.row.add(_local[file.name]).draw();
+            updateDraw(localTable, localTable.row.add(_local[file.name]));
             if (options.debug)
                 console.log(_downloads[p]);
             if (file.size === -2)
@@ -2754,7 +2753,7 @@
                 return data.name === path.basename(p) ?
                     true : false;
             });
-            row.remove().draw();
+            updateDraw(localTable, row.remove());
             if (_local[path.basename(p)].size === -2)
                 info.localDirs--;
             else
@@ -2778,7 +2777,7 @@
             else
                 info.localFiles++;
             _local[file.name] = file;
-            localTable.row.add(_local[file.name]).draw();
+            updateDraw(localTable, localTable.row.add(_local[file.name]));
             if (options.debug)
                 console.log(_downloads[path]);
             if (file.size != -2 && !_downloads[path] && options.uploadOnChange)
@@ -3043,8 +3042,17 @@
                     hidden: false
                 };
                 info.remoteDirs++;
-                remoteTable.row.add(_remote["bak"]).draw();
+                updateDraw(remoteTable, remoteTable.row.add(_remote["bak"]));
             }
+        }
+
+        function updateDraw(table, what) {
+            if (!table) return;
+            if(!what) what = table;
+            var body = $(".dataTables_scrollBody", localTable.table().container())[0];
+            var st = body.scrollTop;
+            what.draw();
+            body.scrollTop = st;
         }
 
         function childClosed(url, name) {

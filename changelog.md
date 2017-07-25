@@ -3,6 +3,8 @@
 - **Fixed:**
   - Fixed immortal tools status bar
   - When closing a dynamic window dialog it would error saying window destroyed
+  - Fixed saving dynamic window alwaysontop, alwaysontopclient, and persistent
+  - Fix window close states for all windows
 ##### 0.4.7 2017-07-24
 - **New:**
   - Tray: added profile manager and preference to menu
