@@ -2133,7 +2133,7 @@
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) continue;
                         if (event.dataTransfer.files[f].size < 1) {
                             try {
-                                var stat = fs.statSync(info.path);
+                                var stat = fs.statSync(event.dataTransfer.files[f].path);
                             }
                             catch (error) {
                                 throw error;
@@ -2251,7 +2251,7 @@
                         }
                         else if (event.dataTransfer.files[f].size < 1) {
                             try {
-                                var stat = fs.statSync(info.path);
+                                var stat = fs.statSync(event.dataTransfer.files[f].path);
                             }
                             catch (error) {
                                 throw error;

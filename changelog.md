@@ -14,6 +14,7 @@
     - Scroll position is no longer lost when local, remote, or queue list are updated
     - Selection state is no longer lost when local or remote files are updated
     - Remote list is now properly reinitialized when the mud sends init code
+    - Error when dropping files for remote upload
 ##### 0.4.7 2017-07-24
 - **New:**
   - Tray: added profile manager and preference to menu
