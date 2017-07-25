@@ -2,6 +2,7 @@
 ##### 0.4.8
 - **Fixed:**
   - Fixed immortal tools status bar
+  - When closing a dynamic window dialog it would error saying window destroyed
 ##### 0.4.7 2017-07-24
 - **New:**
   - Tray: added profile manager and preference to menu

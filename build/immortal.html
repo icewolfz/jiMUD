@@ -2487,7 +2487,7 @@
             }
             if (size)
                 tmp.push(`Selected: ${formatSize(size)}`);
-            if(tmp.length > 0)
+            if (tmp.length > 0)
                 $("#localInfo").text("Local - " + tmp.join(", "));
 
             tmp = [];
@@ -2505,7 +2505,7 @@
             }
             if (size)
                 tmp.push(`Selected: ${formatSize(size)}`);
-                if(tmp.length > 0)
+            if (tmp.length > 0)
                 $("#remoteInfo").text("Remote - " + tmp.join(", "));
 
 
@@ -3045,6 +3045,9 @@
                 info.remoteDirs++;
                 remoteTable.row.add(_remote["bak"]).draw();
             }
+        }
+
+        function childClosed(url, name) {
         }
 
         ipcRenderer.on('GMCP-received', (event, data) => {

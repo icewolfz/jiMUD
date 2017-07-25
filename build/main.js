@@ -1282,9 +1282,9 @@ function createWindow() {
     for (var name in set.windows) {
       if (set.windows[name].options) {
         if (set.windows[name].options.show)
-          showWindow(name, set.windows[name].options || set.windows[name]);
+          showWindow(name, set.windows[name].options);
         else if (set.windows[name].options.persistent)
-          createNewWindow(name, set.windows[name].options || set.windows[name]);
+          createNewWindow(name, set.windows[name].options);
       }
       else {
         if (set.windows[name].show)
@@ -1716,6 +1716,11 @@ ipcMain.on('setting-changed', (event, data) => {
         windows[name].alwaysOnTopClient = data.value.alwaysOnTopClient;
         windows[name].persistent = data.value.persistent;
         windows[name].alwaysOnTop = data.value.alwaysOnTop;
+        if (!set)
+          set = settings.Settings.load(global.settingsFile);
+        set.windows[name] = getWindowState(name, windows[name].window);
+        set.windows[name].options = copyWindowOptions(name);
+        set.save(global.settingsFile);
       }
       if (windows[name].window)
         windows[name].window.webContents.send('setting-changed', data);
@@ -2440,6 +2445,7 @@ function createNewWindow(name, options) {
   if (!options) options = {};
   var s = loadWindowState(name);
   windows[name] = options;
+  console.log(options);
   windows[name].window = new BrowserWindow({
     parent: windows[name].alwaysOnTopClient ? win : null,
     title: options.title || name,
@@ -2527,7 +2533,7 @@ function createNewWindow(name, options) {
       logError(`${url} crashed, killed: ${killed}\n`, true);
     });
 
-    w.on('closed', () => {
+    w.on('close', () => {
       if (w.getParentWindow()) {
         w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
       }

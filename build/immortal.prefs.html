@@ -193,9 +193,9 @@
 
             $('#editor').val(_settings.extensions["immortal"].editor);
 
-            $("#persistent").prop('checked', _settings.windows["immortal"].persistent);
-            $("#alwaysOnTopClient").prop('checked', _settings.windows["immortal"].alwaysOnTopClient);
-            $("#alwaysOnTop").prop('checked', _settings.windows["immortal"].alwaysOnTop);
+            $("#persistent").prop('checked', _settings.windows["immortal"].options.persistent);
+            $("#alwaysOnTopClient").prop('checked', _settings.windows["immortal"].options.alwaysOnTopClient);
+            $("#alwaysOnTop").prop('checked', _settings.windows["immortal"].options.alwaysOnTop);
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
         }
@@ -217,9 +217,9 @@
                 'logErrors': false,
                 'tempFile': TempType.extension
             };
-            _settings.windows["immortal"].persistent = false;
-            _settings.windows["immortal"].alwaysOnTopClient = true;
-            _settings.windows["immortal"].alwaysOnTop = false;
+            _settings.windows["immortal"].options.persistent = false;
+            _settings.windows["immortal"].options.alwaysOnTopClient = true;
+            _settings.windows["immortal"].options.alwaysOnTop = false;
             loadSettings();
         }
 
