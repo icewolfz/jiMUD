@@ -791,7 +791,7 @@
                 else
                     $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
             }
-            remoteTable.rows().remove();          
+            remoteTable.rows().remove();
             updateDraw(remoteTable, remoteTable.rows.add(all));
             $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
@@ -1151,6 +1151,12 @@
             _ied = new IED(options.local, options.remote);
             _ied.bufferSize = options.bufferSize;
             _ied.useTemp = options.tempFile;
+            _ied.on('init', () => {
+                if (!options.remote || options.remote.length === 0)
+                    _ied.getDir(".");
+                else
+                    _ied.getDir(options.remote);
+            });
             _ied.on('error', (error) => {
                 var msg;
                 if (error.stack)
@@ -2473,10 +2479,11 @@
         function updateStatus() {
             var tmp = [];
             var d, dl;
-            if (info.localFiles)
-                tmp.push(`Files: ${info.localFiles}`);
-            if (info.localDirs)
-                tmp.push(`Folders: ${info.localDirs}`);
+            if (info.localFiles + info.localDirs === 1)
+                tmp.push(`Local: ${info.localFiles + info.localDirs} item`);
+            else
+                tmp.push(`Local: ${info.localFiles + info.localDirs} items`);
+
             var size = 0;
             var data = localTable.rows({ selected: true }).data();
             dl = data.length;
@@ -2484,16 +2491,18 @@
                 if (data[d].size > 0)
                     size += data[d].size;
             }
-            if (size)
-                tmp.push(`Selected: ${formatSize(size)}`);
-            if (tmp.length > 0)
-                $("#localInfo").text("Local - " + tmp.join(", "));
+            if (dl === 1)
+                tmp.push(`${dl} item selected ${formatSize(size)}`);
+            else if (dl > 0)
+                tmp.push(`${dl} items selected ${formatSize(size)}`);
+
+            $("#localInfo").text(tmp.join(", "));
 
             tmp = [];
-            if (info.remoteFiles)
-                tmp.push(`Files: ${info.remoteFiles}`);
-            if (info.remoteDirs)
-                tmp.push(`Folders: ${info.remoteDirs}`);
+            if (info.remoteFiles + info.remoteDirs === 1)
+                tmp.push(`Remote: ${info.localFiles + info.localDirs} item`);
+            else
+                tmp.push(`Remote: ${info.localFiles + info.localDirs} items`);
 
             size = 0;
             data = remoteTable.rows({ selected: true }).data();
@@ -2502,11 +2511,13 @@
                 if (data[d].size > 0)
                     size += data[d].size;
             }
-            if (size)
-                tmp.push(`Selected: ${formatSize(size)}`);
-            if (tmp.length > 0)
-                $("#remoteInfo").text("Remote - " + tmp.join(", "));
+            if (dl === 1)
+                tmp.push(`${dl} item selected ${formatSize(size)}`);
+            else if (dl > 0)
+                tmp.push(`${dl} items selected ${formatSize(size)}`);
 
+            if (tmp.length > 0)
+                $("#remoteInfo").text(tmp.join(", "));
 
             tmp = [];
             if (info.uploads)
@@ -3048,7 +3059,7 @@
 
         function updateDraw(table, what) {
             if (!table) return;
-            if(!what) what = table;
+            if (!what) what = table;
             var body = $(".dataTables_scrollBody", localTable.table().container())[0];
             var st = body.scrollTop;
             what.draw();
