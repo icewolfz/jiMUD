@@ -173,6 +173,14 @@
                     'logErrors': false,
                     'tempFile': TempType.extension
                 };
+            else {
+                if (!_settings.extensions["immortal"].hasOwnProperty('focusOnFinished'))
+                    _settings.extensions["immortal"].focusOnFinished = true;
+                if (!_settings.extensions["immortal"].hasOwnProperty('selectOnFinished'))
+                    _settings.extensions["immortal"].selectOnFinished = true;
+            }
+            $("#focusOnFinished").prop('checked', _settings.extensions["immortal"].focusOnFinished);
+            $("#selectOnFinished").prop('checked', _settings.extensions["immortal"].selectOnFinished);
 
             $("#openEditor").prop('checked', _settings.extensions["immortal"].openEditor);
             $("#syncFolders").prop('checked', _settings.extensions["immortal"].syncFolders);
@@ -192,6 +200,8 @@
             $('#bufferSize').change();
 
             $('#editor').val(_settings.extensions["immortal"].editor);
+            if (!_settings.windows["immortal"])
+                _settings.windows["immortal"] = {};
             if (!_settings.windows["immortal"].options)
                 _settings.windows["immortal"].options = {
                     persistent: false,
@@ -222,7 +232,7 @@
                 'logErrors': false,
                 'tempFile': TempType.extension,
                 'focusOnFinished': true,
-                'selectOnFinished' : true
+                'selectOnFinished': true
             };
             if (!_settings.windows["immortal"].options)
                 _settings.windows["immortal"].options = {
@@ -287,6 +297,18 @@
                     <label class="control-label">
                         <input type="checkbox" id="uploadOnChange" /> Upload files when changed
                     </label>
+                </div>
+                <div class="col-xs-12 form-group">
+                    <div class="col-xs-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="focusOnFinished" /> Focus files on finish upload/download
+                        </label>
+                    </div>
+                    <div class="col-xs-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="selectOnFinished" /> Select files on finish upload/download
+                        </label>
+                    </div>
                 </div>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editorTab">

@@ -1,5 +1,9 @@
 ## Changelog
 ##### 0.4.8
+- **New:**
+  - Immortal tools:
+    - Focus files on finish upload/download
+    - Select files on finish upload/download
 - **Fixed:**
   - When closing a dynamic window dialog it would error saying window destroyed
   - Fixed saving dynamic window alwaysOnTop, alwaysOnTopC, and persistent

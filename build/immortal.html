@@ -1316,7 +1316,15 @@
                         else {
                             info.remoteFiles++;
                             updateDraw(remoteTable, remoteTable.row.add(_remote[path.basename(item.remote)]));
+                            row = localTable.row(function (idx, data, node) {
+                                return data.name === path.basename(item.remote) ?
+                                    true : false;
+                            });
                         }
+                        if (options.focusOnFinished)
+                            focusRow(row);
+                        if (options.selectOnFinished)
+                            row.select();
                         info.uploads--;
                     }
                     else
@@ -2757,16 +2765,26 @@
             _local[file.name] = file;
             if (row && row.length === 1)
                 updateDraw(localTable, row.data(_local[file.name]));
-            else
+            else {
                 updateDraw(localTable, localTable.row.add(_local[file.name]));
+                row = localTable.row(function (idx, data, node) {
+                    return data.name === path.basename(p) ?
+                        true : false;
+                });
+            }
             if (options.debug)
                 console.log(_downloads[p]);
             if (file.size === -2)
                 uploadPath(p);
             else if (!_downloads[p] && options.uploadOnChange)
                 _ied.upload(p);
-            if (_downloads[p])
+            if (_downloads[p]) {
+                if (options.focusOnFinished)
+                    focusRow(row);
+                if (options.selectOnFinished)
+                    row.select();
                 delete _downloads[p];
+            }
         }
 
         function removeLocalFile(p) {
@@ -3074,6 +3092,16 @@
             var st = body.scrollTop;
             what.draw();
             body.scrollTop = st;
+        }
+
+        function focusRow(row) {
+            if (!row || row.length === 0) return;
+            var top = row.node().offsetTop;
+            var body = $(".dataTables_scrollBody", row.table().container())[0];
+            var sTop = body.scrollTop;
+            var sHeight = body.clientHeight;
+            if (top < sTop || top + 31 >= sTop + sHeight)
+                body.scrollTop = top;
         }
 
         function childClosed(url, name) {
