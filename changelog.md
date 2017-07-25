@@ -1,10 +1,15 @@
 ## Changelog
 ##### 0.4.8
 - **Fixed:**
-  - Fixed immortal tools status bar
   - When closing a dynamic window dialog it would error saying window destroyed
-  - Fixed saving dynamic window alwaysontop, alwaysontopclient, and persistent
+  - Fixed saving dynamic window alwaysOnTop, alwaysOnTopC, and persistent
   - Fix window close states for all windows
+  - Immortal tools:
+    - Updated status bar to have more generic information
+    - Preference dialog now correctly sets and saves window settings
+    - Scroll position is no longer lost when local, remote, or queue list are updated
+    - Selection state is no longer lost when local or remote files are updated
+    - Remote list is now properly reinitialized when the mud sends init code
 ##### 0.4.7 2017-07-24
 - **New:**
   - Tray: added profile manager and preference to menu

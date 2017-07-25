@@ -572,10 +572,16 @@
                     'uploadOnChange': false,
                     'debug': false,
                     'logErrors': false,
-                    'tempFile': TempType.extension
+                    'tempFile': TempType.extension,
+                    'focusOnFinished': true,
+                    'selectOnFinished': true
                 };
                 saveOptions();
             }
+            if (!options.hasOwnProperty('focusOnFinished'))
+                options.focusOnFinished = true;
+            if (!options.hasOwnProperty('selectOnFinished'))
+                options.selectOnFinished = true;
             $('#local').css("width", options.localSize);
             $('#remote').css("left", options.localSize);
 
@@ -1267,6 +1273,7 @@
                     "state": item.state
                 }));
             });
+
             _ied.on('remove', (item) => {
                 updateDraw(queueTable, queueTable.rows(function (idx, data, node) {
                     return data.id === item.ID ?
@@ -1305,10 +1312,11 @@
                             return;
                         }
                         if (row && row.length === 1)
-                            row.remove();
-                        else
+                            updateDraw(remoteTable, row.data(_remote[path.basename(item.remote)]));
+                        else {
                             info.remoteFiles++;
-                        updateDraw(remoteTable, remoteTable.row.add(_remote[path.basename(item.remote)]));
+                            updateDraw(remoteTable, remoteTable.row.add(_remote[path.basename(item.remote)]));
+                        }
                         info.uploads--;
                     }
                     else
@@ -1318,6 +1326,7 @@
                 ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
                 ipcRenderer.send('set-progress', { value: -1 });
             });
+
             _ied.on('update', (item) => {
                 if (!item)
                     return;
@@ -2747,8 +2756,9 @@
             });
             _local[file.name] = file;
             if (row && row.length === 1)
-                row.remove();
-            updateDraw(localTable, localTable.row.add(_local[file.name]));
+                updateDraw(localTable, row.data(_local[file.name]));
+            else
+                updateDraw(localTable, localTable.row.add(_local[file.name]));
             if (options.debug)
                 console.log(_downloads[p]);
             if (file.size === -2)
@@ -3060,7 +3070,7 @@
         function updateDraw(table, what) {
             if (!table) return;
             if (!what) what = table;
-            var body = $(".dataTables_scrollBody", localTable.table().container())[0];
+            var body = $(".dataTables_scrollBody", table.table().container())[0];
             var st = body.scrollTop;
             what.draw();
             body.scrollTop = st;
