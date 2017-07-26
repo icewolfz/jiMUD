@@ -38,7 +38,7 @@
     const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
     const { dialog, Menu, MenuItem, nativeImage } = remote;
     const { parseTemplate, setSelectionRange, isFileSync } = require("./js/library.js");
-//    const fs = require('fs');
+    //    const fs = require('fs');
     const path = require('path');
     const { version } = require("../package.json");
 
@@ -498,7 +498,7 @@
               };
               var sub = buildMenu(context[x].name || x, context);
               //if (context[x].items)
-                //sub.push.apply(sub, buildMenuItems(context[x].items));
+              //sub.push.apply(sub, buildMenuItems(context[x].items));
 
               if (sub.length > 0)
                 menu.submenu = sub;
@@ -583,7 +583,7 @@
         updateMenu();
       });
       client.on('add-line', (data) => {
-        
+
         var res, re, c, cl;
         if (_captures.length === 0) return;
         //custom capture to ignore who list
@@ -1394,10 +1394,12 @@
       }
       else if (data.type === "windows") {
         if (!client.options.windows[data.name])
-          client.options.windows[data.name] = {};
-        client.options.windows[data.name].alwaysOnTopClient = data.value.alwaysOnTopClient;
-        client.options.windows[data.name].persistent = data.value.persistent;
-        client.options.windows[data.name].alwaysOnTop = data.value.alwaysOnTop;
+          client.options.windows[data.name] = { options: {} };
+        else if (!client.options.windows[data.name].options)
+          client.options.windows[data.name].options = {};
+        client.options.windows[data.name].options.alwaysOnTopClient = data.value.alwaysOnTopClient;
+        client.options.windows[data.name].options.persistent = data.value.persistent;
+        client.options.windows[data.name].options.alwaysOnTop = data.value.alwaysOnTop;
         client.saveOptions();
       }
     });
