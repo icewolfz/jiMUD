@@ -233,7 +233,7 @@
                 'focusOnFinished': true,
                 'selectOnFinished': true
             };
-            if (!_settings.windows["immortal"].options)
+            if (!_settings.windows["immortal"] || !_settings.windows["immortal"].options)
                 _settings.windows["immortal"].options = {
                     persistent: false,
                     alwaysOnTopClient: true,
