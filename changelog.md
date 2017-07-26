@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.4.8
+##### 0.4.8 2017-07-25
 - **New:**
   - Immortal tools:
     - Focus files on finish upload/download
@@ -30,7 +30,7 @@
   - Reverse needed xp progress bar fill
 - **Fixed:**
   - Preference dialog
-    - Select dropdowns in wrong location
+    - Select drop downs in wrong location
     - Optimize load times to speed up opening dialog
   - Profile manager: advanced panel visible states where not being saved
   - Dynamic windows: save options better so it can properly restore windows
