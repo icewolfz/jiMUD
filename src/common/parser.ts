@@ -1566,33 +1566,33 @@ export class Parser extends EventEmitter {
             if (arg.length > 1) {
               switch (arg[0].toUpperCase()) {
                 case 'FNAME':
-                  e.file = stripQuotes(arg[x]);
+                  e.file = stripQuotes(arg[1]);
                   if (e.file.toLowerCase() === 'off') {
                     e.off = true;
                     e.file = '';
                   }
                   break;
                 case 'V':  //volume
-                  tmp = parseInt(arg[x], 10);
+                  tmp = parseInt(arg[1], 10);
                   if (isNaN(tmp))
                     tmp = 100;
                   e.volume = tmp;
                   break;
                 case 'L':  //repeat
-                  tmp = parseInt(arg[x], 10);
+                  tmp = parseInt(arg[1], 10);
                   if (isNaN(tmp))
                     tmp = 1;
                   e.repeat = tmp;
                   break;
                 case 'C':  //continue
-                  e.continue = arg[x] !== '0';
+                  e.continue = arg[1] !== '0';
                   break;
                 case 'T':  //type
                   if (arg[1].length > 0)
-                    e.type = arg[x];
+                    e.type = arg[1];
                   break;
                 case 'U':  //url
-                  e.url = stripQuotes(arg[x]);
+                  e.url = stripQuotes(arg[1]);
                   if (!e.url.endsWith('/') && e.url.length > 0)
                     e.Url += '/';
                   break;
@@ -1638,36 +1638,36 @@ export class Parser extends EventEmitter {
             if (arg.length > 1) {
               switch (arg[0].toUpperCase()) {
                 case 'FNAME':
-                  e.file = stripQuotes(arg[x]);
+                  e.file = stripQuotes(arg[1]);
                   if (e.file.toLowerCase() === 'off') {
                     e.off = true;
                     e.file = '';
                   }
                   break;
                 case 'V':  //volume
-                  tmp = parseInt(arg[x], 10);
+                  tmp = parseInt(arg[1], 10);
                   if (isNaN(tmp))
                     tmp = 100;
                   e.volume = tmp;
                   break;
                 case 'L':  //repeat
-                  tmp = parseInt(arg[x], 10);
+                  tmp = parseInt(arg[1], 10);
                   if (isNaN(tmp))
                     tmp = 1;
                   e.repeat = tmp;
                   break;
                 case 'P':  //priority
-                  tmp = parseInt(arg[x], 10);
+                  tmp = parseInt(arg[1], 10);
                   if (isNaN(tmp))
                     tmp = 1;
                   e.priority = tmp;
                   break;
                 case 'T':  //type
-                  if (arg[x].length > 0)
-                    e.type = arg[x];
+                  if (arg[1].length > 0)
+                    e.type = arg[1];
                   break;
                 case 'U':  //url
-                  e.url = stripQuotes(arg[x]);
+                  e.url = stripQuotes(arg[1]);
                   if (!e.url.endsWith('/') && e.url.length > 0)
                     e.Url += '/';
                   break;
