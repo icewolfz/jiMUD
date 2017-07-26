@@ -9,7 +9,7 @@
   - Fixed saving dynamic window alwaysOnTop, alwaysOnTopClient, and persistent
   - Fix window close states for all windows
   - Backup was not correctly loading settings when using client load
-  - Parsing MSP protocol parameters was broken
+  - Fix MXP music, sound, gauge and stat tag argument parsing
   - Immortal tools:
     - Updated status bar to have more generic information
     - Preference dialog now correctly sets and saves window settings

@@ -1474,20 +1474,20 @@ export class Parser extends EventEmitter {
             if (arg.length > 1) {
               switch (arg[0].toUpperCase()) {
                 case 'VALUE':
-                  tmp = parseFloat(this.GetEntity(args[x]));
+                  tmp = parseFloat(this.GetEntity(arg[1]));
                   if (isNaN(tmp))
-                    tmp = this.GetEntity(args[x]);
+                    tmp = this.GetEntity(arg[1]);
                   e.value = tmp;
                   break;
                 case 'MAX':
-                  tmp = parseFloat(this.GetEntity(args[x]));
+                  tmp = parseFloat(this.GetEntity(arg[1]));
                   if (isNaN(tmp))
-                    tmp = this.GetEntity(args[x]);
+                    tmp = this.GetEntity(arg[1]);
                   e.max = tmp;
                   break;
                 case 'CAPTION':  //volume
-                  if (arg[x].length > 0)
-                    e.caption = stripQuotes(args[x]);
+                  if (arg[1].length > 0)
+                    e.caption = stripQuotes(arg[1]);
                   break;
                 case 'COLOR':  //repeat
                   color = new RGBColor(stripQuotes(arg[1]));
@@ -1524,20 +1524,20 @@ export class Parser extends EventEmitter {
             if (arg.length > 1) {
               switch (arg[0].toUpperCase()) {
                 case 'VALUE':
-                  tmp = parseFloat(this.GetEntity(args[x]));
+                  tmp = parseFloat(this.GetEntity(arg[1]));
                   if (isNaN(tmp))
-                    tmp = this.GetEntity(args[x]);
+                    tmp = this.GetEntity(arg[1]);
                   e.value = tmp;
                   break;
                 case 'MAX':
-                  tmp = parseFloat(this.GetEntity(args[x]));
+                  tmp = parseFloat(this.GetEntity(arg[1]));
                   if (isNaN(tmp))
-                    tmp = this.GetEntity(args[x]);
+                    tmp = this.GetEntity(arg[1]);
                   e.max = tmp;
                   break;
                 case 'CAPTION':  //volume
-                  if (arg[x].length > 0)
-                    e.caption = stripQuotes(args[x]);
+                  if (arg[1].length > 0)
+                    e.caption = stripQuotes(arg[1]);
                   break;
               }
             }
