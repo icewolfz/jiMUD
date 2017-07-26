@@ -1720,10 +1720,6 @@ ipcMain.on('setting-changed', (event, data) => {
         windows[name].alwaysOnTopClient = data.value.alwaysOnTopClient;
         windows[name].persistent = data.value.persistent;
         windows[name].alwaysOnTop = data.value.alwaysOnTop;
-        set = settings.Settings.load(global.settingsFile);
-        set.windows[name] = getWindowState(name, windows[name].window);
-        set.windows[name].options = copyWindowOptions(name);
-        set.save(global.settingsFile);
       }
       if (windows[name].window)
         windows[name].window.webContents.send('setting-changed', data);
