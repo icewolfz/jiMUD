@@ -200,17 +200,16 @@
             $('#bufferSize').change();
 
             $('#editor').val(_settings.extensions["immortal"].editor);
-            if (!_settings.windows["immortal"])
-                _settings.windows["immortal"] = {};
-            if (!_settings.windows["immortal"].options)
-                _settings.windows["immortal"].options = {
-                    persistent: false,
-                    alwaysOnTopClient: true,
-                    alwaysOnTop: false
-                };
-            $("#persistent").prop('checked', _settings.windows["immortal"].options.persistent);
-            $("#alwaysOnTopClient").prop('checked', _settings.windows["immortal"].options.alwaysOnTopClient);
-            $("#alwaysOnTop").prop('checked', _settings.windows["immortal"].options.alwaysOnTop);
+            if (!_settings.windows["immortal"] || !_settings.windows["immortal"].options) {
+                $("#persistent").prop('checked', false);
+                $("#alwaysOnTopClient").prop('checked', true);
+                $("#alwaysOnTop").prop('checked', false);
+            }
+            else {
+                $("#persistent").prop('checked', _settings.windows["immortal"].options.persistent);
+                $("#alwaysOnTopClient").prop('checked', _settings.windows["immortal"].options.alwaysOnTopClient);
+                $("#alwaysOnTop").prop('checked', _settings.windows["immortal"].options.alwaysOnTop);
+            }
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
         }
