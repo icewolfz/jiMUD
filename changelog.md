@@ -6,7 +6,7 @@
     - Select files on finish upload/download
 - **Fixed:**
   - When closing a dynamic window dialog it would error saying window destroyed
-  - Fixed saving dynamic window alwaysOnTop, alwaysOnTopC, and persistent
+  - Fixed saving dynamic window alwaysOnTop, alwaysOnTopClient, and persistent
   - Fix window close states for all windows
   - Backup was not correctly loading settings when using client load
   - Immortal tools:
