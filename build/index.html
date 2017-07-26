@@ -37,7 +37,7 @@
     const { Settings } = require('./js/settings');
     const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
     const { dialog, Menu, MenuItem, nativeImage } = remote;
-    const { parseTemplate, setSelectionRange, isFileSync } = require("./js/library.js");
+    const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require("./js/library.js");
     //    const fs = require('fs');
     const path = require('path');
     const { version } = require("../package.json");
@@ -583,8 +583,20 @@
         updateMenu();
       });
       client.on('add-line', (data) => {
-
         var res, re, c, cl;
+        if (client.options.autoLogin && remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
+          if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character):') {
+            client.sendCommand(remote.getGlobal('character'));
+          }
+          else if (data.fragment && data.line === 'Password:') {
+            var pass = remote.getGlobal('characterPass');
+            if (pass && pass.length > 0) {
+              pass = pass.split(':');
+              pass = decrypt(pass[0], pass[1], pass[2]);
+              client.send(pass + '\n');
+            }
+          }
+        }
         if (_captures.length === 0) return;
         //custom capture to ignore who list
         res = /^(-*)\s*\[ .* matching users \]\s*(-*)$/.exec(data.line);

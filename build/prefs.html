@@ -284,6 +284,7 @@
     function loadSettings() {
       $('#autoConnect').prop('checked', _settings.autoConnect);
       $('#autoConnectDelay').val(_settings.autoConnectDelay);
+      $('#autoLogin').val(_settings.autoLogin);
       $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
       $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
       $('#dev').prop('checked', _settings.dev);
@@ -959,6 +960,13 @@
               <input type="checkbox" id="autoCreateCharacter" /> Auto create character
             </label>
           </div>
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="autoLogin" /> Auto login
+            </label>
+          </div>
+          
 
           <div class="col-sm-6 form-group">
             <label class="control-label">

@@ -555,6 +555,7 @@ function UpdateItemNode(item, updateNode?) {
     //only text or check state effect node
     newNode.text = GetDisplay(item);
     newNode.state.checked = item.enabled;
+    newNode.dataAttr.name = item.name;
     //re-find node just in case
     //let node = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + "$", 'id'])[0];
     $('#profile-tree').treeview('updateNode', [updateNode, newNode]);
@@ -793,7 +794,8 @@ function newItemNode(item, idx?: number, type?: string, profile?) {
         dataAttr: {
             type: type,
             profile: profile,
-            index: idx
+            index: idx,
+            name: item.name
         },
         state: {
             checked: item.enabled

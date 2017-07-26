@@ -2,6 +2,7 @@
 //cSpell:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel,  Ereof
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { app } = require('electron').remote;
 
 export function SortArrayByPriority(a, b) {
@@ -736,4 +737,40 @@ export function isFileSync(aPath) {
             throw e;
         }
     }
+}
+
+export function encrypt(text, key, iv, algorithm, input_encoding, output_encoding) {
+    let cipher;
+    let crypted;
+    if (algorithm == null) {
+        algorithm = 'aes-256-cbc';
+    }
+    if (input_encoding == null) {
+        input_encoding = 'utf-8';
+    }
+    if (output_encoding == null) {
+        output_encoding = 'hex';
+    }
+    cipher = crypto.createCipheriv(algorithm, key, iv);
+    crypted = cipher.update(text, input_encoding, output_encoding);
+    crypted += cipher.final(output_encoding);
+    return crypted;
+}
+
+export function decrypt(crypted, key, iv, algorithm, input_encoding, output_encoding) {
+    let decipher;
+    let decrypted;
+    if (algorithm == null) {
+        algorithm = 'aes-256-cbc';
+    }
+    if (input_encoding == null) {
+        input_encoding = 'hex';
+    }
+    if (output_encoding == null) {
+        output_encoding = 'utf-8';
+    }
+    decipher = crypto.createDecipheriv(algorithm, key, iv);
+    decrypted = decipher.update(crypted, input_encoding, output_encoding);
+    decrypted += decipher.final(output_encoding);
+    return decrypted;
 }
