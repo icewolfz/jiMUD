@@ -8,6 +8,7 @@
   - When closing a dynamic window dialog it would error saying window destroyed
   - Fixed saving dynamic window alwaysOnTop, alwaysOnTopC, and persistent
   - Fix window close states for all windows
+  - Backup was not correctly loading settings when using client load
   - Immortal tools:
     - Updated status bar to have more generic information
     - Preference dialog now correctly sets and saves window settings

@@ -408,7 +408,7 @@ export class Backup extends EventEmitter {
                 this.emit('imported-profiles');
             }
 
-            if ((this.loadSelection & BackupSelection.Settings) !== BackupSelection.Settings) {
+            if ((this.loadSelection & BackupSelection.Settings) === BackupSelection.Settings) {
                 this.client.options.mapper.enabled = data.settings.mapEnabled ? true : false;
                 this.client.options.mapper.follow = data.settings.mapFollow ? true : false;
                 this.client.options.mapper.legend = data.settings.legend ? true : false;
@@ -476,7 +476,7 @@ export class Backup extends EventEmitter {
                 let prop2;
 
                 for (prop in this.client.options) {
-                    if (!this.client.options.hasOwnProperty(prop) || !data.setting.hasOwnProperty(prop)) {
+                    if (!this.client.options.hasOwnProperty(prop) || !data.settings.hasOwnProperty(prop)) {
                         continue;
                     }
                     if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
