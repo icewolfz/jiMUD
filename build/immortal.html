@@ -1330,8 +1330,10 @@
                         }
                         if (options.focusOnFinished)
                             focusRow(row);
-                        if (options.selectOnFinished)
+                        if (options.selectOnFinished) {
+                            remoteTable.rows().deselect();
                             row.select();
+                        }
                         info.uploads--;
                     }
                     else
@@ -2798,8 +2800,10 @@
             if (_downloads[p]) {
                 if (options.focusOnFinished)
                     focusRow(row);
-                if (options.selectOnFinished)
+                if (options.selectOnFinished) {
+                    localTable.rows().deselect();
                     row.select();
+                }
                 delete _downloads[p];
             }
         }
@@ -3132,10 +3136,14 @@
                     return data.name === path.basename(file) ?
                         true : false;
                 });
-                if (row && row.length > 0)
+                if (row && row.length > 0) {
+                    focusRow(row);
+                    localTable.rows().deselect();
+                    row.select();
                     rename(row, _local, (o, n) => {
                         fs.renameSync(o, path.join(path.dirname(o), n));
                     });
+                }
             }, 500);
         }
 

@@ -11,6 +11,7 @@
 - **Fixed:**
   - Character manager was not reloading the loaded character when changes happened
   - Profile manger: initial profile enabled checkbox in treeview where not being set
+  - Immortal tools: select on finish now clears previous selected items
 ##### 0.4.8 2017-07-25
 - **New:**
   - Immortal tools:
