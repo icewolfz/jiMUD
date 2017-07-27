@@ -2,6 +2,7 @@
 ##### 0.4.9
 - **New:**
   - Auto login system if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
+  - Immortal tools: create new empty local file
 - **Change:**
   - Immortal tools: focusing on local or remote path text box will now auto select all text
   - Profile manger

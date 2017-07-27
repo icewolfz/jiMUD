@@ -65,6 +65,13 @@
                     },
                     { type: 'separator' },
                     {
+                        label: '&New file',
+                        accelerator: "CmdOrCtrl+F",
+                        enabled: false,
+                        click: newLocalFile
+                    },
+                    { type: 'separator' },
+                    {
                         label: '&Preferences...',
                         accelerator: "CmdOrCtrl+Comma",
                         click: () => {
@@ -1772,7 +1779,7 @@
             });
             $('#remote-path').on('focus', () => {
                 $('#remote-path').select();
-            });                
+            });
 
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
                 var target = $(e.target).attr("href"); // activated tab
@@ -2323,6 +2330,10 @@
                     click: deleteLocal
                 }));
             }
+            c.append(new MenuItem({
+                label: 'New file',
+                click: newLocalFile
+            }));
             c.append(new MenuItem({
                 label: 'New directory',
                 click: newFolderLocal
@@ -3113,6 +3124,21 @@
         function childClosed(url, name) {
         }
 
+        function newLocalFile() {
+            var file = path.join(options.local, getNewName("newfile", _local));
+            fs.closeSync(fs.openSync(file, 'w'));
+            setTimeout(() => {
+                var row = localTable.row(function (idx, data, node) {
+                    return data.name === path.basename(file) ?
+                        true : false;
+                });
+                if (row && row.length > 0)
+                    rename(row, _local, (o, n) => {
+                        fs.renameSync(o, path.join(path.dirname(o), n));
+                    });
+            }, 500);
+        }
+
         ipcRenderer.on('GMCP-received', (event, data) => {
             if (options && options.debug)
                 console.log(data);
@@ -3152,12 +3178,16 @@
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
+                        <button id="btn-newFile-local" type="button" class="btn btn-default btn-xs" title="New file" onclick="newLocalFile()">
+                            <i class="fa fa-file-o"></i>
+                        </button>
                         <button id="btn-newFolder-local" type="button" class="btn btn-default btn-xs" title="New directory" onclick="newFolderLocal()">
                             <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                 <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
                                 <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
                             </span>
                         </button>
+
                     </label>
 
                     <span class="path-container">
