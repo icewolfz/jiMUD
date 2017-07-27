@@ -13,6 +13,7 @@
   - Character name was not being set when using character manager on inital load
   - Profile manger: initial profile enabled checkbox in treeview where not being set
   - Immortal tools: select on finish now clears previous selected items
+  - Autoconnect will now correctly fire when changing character settings based on if connected or not
 ##### 0.4.8 2017-07-25
 - **New:**
   - Immortal tools:

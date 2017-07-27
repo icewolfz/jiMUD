@@ -43,6 +43,7 @@
     const { version } = require("../package.json");
 
     var spellchecker;
+    var autoConnectID;
     var set = Settings.load(remote.getGlobal('settingsFile'));
     if (set.spellchecking)
       loadSpellchecker();
@@ -574,7 +575,9 @@
       client.port = client.options.dev ? 1035 : 1030;
       client.telnet.GMCPSupports.push("Room 1");
       client.telnet.GMCPSupports.push("IED 1");
-
+      client.on('initialized', () => {
+        autoConnect();
+      });
       client.on('profile-updated', (profile) => {
         ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
       });
@@ -789,9 +792,6 @@
         ipcRenderer.send('profile-item-removed', type, profile, idx);
       });
 
-      if (client.options.autoConnect)
-        setTimeout(function () { client.connect(); }, client.options.autoConnectDelay);
-
       _backup = new Backup(client, remote.getGlobal('mapFile'));
       _backup.loadSelection = client.options.backupLoad;
       _backup.saveSelection = client.options.backupSave;
@@ -850,7 +850,7 @@
       _backup.on('finish-load', (data) => {
 
       });
-      _status = new Status(client);     
+      _status = new Status(client);
       _status.on('display-changed', () => {
         if (_status.ac) {
           $("#health").removeClass('on');
@@ -874,11 +874,10 @@
         _logger.postMessage({ action: 'name', args: title });
         ipcRenderer.send('set-title', title);
       });
-      if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) 
-      {
+      if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
         _logger.postMessage({ action: 'name', args: remote.getGlobal('character') });
         $("#character-name").text(remote.getGlobal('character'));
-      }      
+      }
       updateMenu();
       updateInterface();
       buildCaptures();
@@ -1382,6 +1381,7 @@
 
     ipcRenderer.on('change-options', (event, file) => {
       client.settingsFile = remote.getGlobal('settingsFile');
+      autoConnect();
     });
 
     ipcRenderer.on('setting-changed', (event, data) => {
@@ -1585,6 +1585,11 @@
       } else {
         client.commandInput[0].value += clipboard.readText();
       }
+    }
+
+    function autoConnect() {
+      if (!autoConnectID && client.options.autoConnect && !client.connected)
+        autoConnectID = setTimeout(function () { client.connect(); autoConnectID = null; }, client.options.autoConnectDelay);
     }
   </script>
 </head>
