@@ -544,21 +544,69 @@ export function UpdateEnabled() {
     }
 }
 
-function UpdateItemNode(item, updateNode?) {
+function UpdateItemNode(item, updateNode?, old?) {
     if (!updateNode)
         updateNode = currentNode;
     else if (typeof updateNode === 'string')
         updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode + '$', 'id'])[0];
     const selected = updateNode.state.selected || updateNode.id === currentNode.id;
     //clone node
-    const newNode = cloneNode(updateNode);
+    let newNode = cloneNode(updateNode);
     //only text or check state effect node
     newNode.text = GetDisplay(item);
     newNode.state.checked = item.enabled;
     newNode.dataAttr.name = item.name;
+    newNode.dataAttr.priority = item.priority;
+    newNode.dataAttr.parent = item.parent;
     //re-find node just in case
     //let node = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + "$", 'id'])[0];
     $('#profile-tree').treeview('updateNode', [updateNode, newNode]);
+    let n;
+    if (newNode.dataAttr.type === 'context') {
+        const key = getKey(newNode.dataAttr.type);
+        //get node
+
+        if (item.parent && item.parent.length > 0 && item.parent !== item.name) {
+            updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + '$', 'id'])[0];
+            //remove node
+            $('#profile-tree').treeview('removeNode', [updateNode, { silent: true }]);
+            //find parent node
+            n = $('#profile-tree').treeview('findNodes', ['^' + item.parent + '$', 'dataAttr.name']);
+            //no parent use root
+            if (!n.length)
+                n = $('#profile-tree').treeview('findNodes', ['^Profile' + newNode.dataAttr.profile + key + '$', 'id']);
+            $('#profile-tree').treeview('addNode', [cleanNode(newNode), n, false, { silent: true }]);
+        }
+        if (item.name !== old.name && item.name && item.name.length > 0) {
+            //move old children to root
+            const root = $('#profile-tree').treeview('findNodes', ['^Profile' + newNode.dataAttr.profile + key + '$', 'id']);
+            updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + '$', 'id'])[0];
+            let mn;
+            if (old.name && old.name.length > 0) {
+                n = $('#profile-tree').treeview('findNodes', ['^' + old.name + '$', 'dataAttr.parent']);
+                mn = [];
+                mn.push.apply(mn, n);
+                while (n.length > 0) {
+                    $('#profile-tree').treeview('removeNode', [n, { silent: true }]);
+                    n = $('#profile-tree').treeview('findNodes', ['^' + old.name + '$', 'dataAttr.parent']);
+                }
+                $('#profile-tree').treeview('addNode', [cleanNodes(mn), root, false, { silent: true }]);
+                newNode = clone(updateNode);
+                delete newNode.nodes;
+                $('#profile-tree').treeview('updateNode', [updateNode, cleanNode(newNode)]);
+                updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + '$', 'id'])[0];
+            }
+            n = $('#profile-tree').treeview('findNodes', ['^' + item.name + '$', 'dataAttr.parent']);
+            mn = [];
+            mn.push.apply(mn, n);
+            while (n.length > 0) {
+                $('#profile-tree').treeview('removeNode', [n, { silent: true }]);
+                n = $('#profile-tree').treeview('findNodes', ['^' + item.name + '$', 'dataAttr.parent']);
+            }
+            mn = mn.sort(sortNodes);
+            $('#profile-tree').treeview('addNode', [cleanNodes(mn), updateNode, false, { silent: true }]);
+        }
+    }
     if (selected) {
         updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + '$', 'id'])[0];
         $('#profile-tree').treeview('selectNode', [updateNode, { silent: true }]);
@@ -609,7 +657,7 @@ function UpdateMacro(customUndo?: boolean): UpdateState {
         currentProfile.macros[currentNode.dataAttr.index].modifiers = parseInt($('#macro-key').data('mod'), 10);
     }
     if (data) {
-        UpdateItemNode(currentProfile.macros[currentNode.dataAttr.index]);
+        UpdateItemNode(currentProfile.macros[currentNode.dataAttr.index], 0, data);
         $('#editor-title').text('Macro: ' + GetDisplay(currentProfile.macros[currentNode.dataAttr.index]));
         if (!customUndo)
             pushUndo({ action: 'update', type: 'macro', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
@@ -621,7 +669,7 @@ function UpdateMacro(customUndo?: boolean): UpdateState {
 function UpdateAlias(customUndo?: boolean): UpdateState {
     const data: any = UpdateItem(currentProfile.aliases[currentNode.dataAttr.index]);
     if (data) {
-        UpdateItemNode(currentProfile.aliases[currentNode.dataAttr.index]);
+        UpdateItemNode(currentProfile.aliases[currentNode.dataAttr.index], 0, data);
         $('#editor-title').text('Alias: ' + GetDisplay(currentProfile.aliases[currentNode.dataAttr.index]));
         if (!customUndo)
             pushUndo({ action: 'update', type: 'alias', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
@@ -633,7 +681,7 @@ function UpdateAlias(customUndo?: boolean): UpdateState {
 function UpdateTrigger(customUndo?: boolean): UpdateState {
     const data: any = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
     if (data) {
-        UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index]);
+        UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index], 0, data);
         $('#editor-title').text('Trigger: ' + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]));
         if (!customUndo)
             pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
@@ -646,7 +694,7 @@ function UpdateButton(customUndo?: boolean): UpdateState {
     const data: any = UpdateItem(currentProfile.buttons[currentNode.dataAttr.index]);
     if (data) {
         UpdateButtonSample();
-        UpdateItemNode(currentProfile.buttons[currentNode.dataAttr.index]);
+        UpdateItemNode(currentProfile.buttons[currentNode.dataAttr.index], 0, data);
         $('#editor-title').text('Button: ' + GetDisplay(currentProfile.buttons[currentNode.dataAttr.index]));
         if (!customUndo)
             pushUndo({ action: 'update', type: 'button', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
@@ -659,7 +707,7 @@ function UpdateContext(customUndo?: boolean): UpdateState {
     const data: any = UpdateItem(currentProfile.contexts[currentNode.dataAttr.index]);
     if (data) {
         UpdateContextSample();
-        UpdateItemNode(currentProfile.contexts[currentNode.dataAttr.index]);
+        UpdateItemNode(currentProfile.contexts[currentNode.dataAttr.index], 0, data);
         $('#editor-title').text('Context: ' + GetDisplay(currentProfile.contexts[currentNode.dataAttr.index]));
         if (!customUndo)
             pushUndo({ action: 'update', type: 'context', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
@@ -775,7 +823,15 @@ function UpdateProfileNode(profile?) {
         $('#profile-tree').treeview('expandNode', [node]);
 }
 
-function newItemNode(item, idx?: number, type?: string, profile?) {
+function sortNodes(a, b) {
+    if (a.dataAttr.priority > b.dataAttr.priority)
+        return -1;
+    if (a.dataAttr.priority < b.dataAttr.priority)
+        return 1;
+    return 0;
+}
+
+function newItemNode(item, idx?: number, type?: string, profile?, p?: string) {
     if (!profile)
         profile = currentProfile.name.toLowerCase();
     else if (typeof profile === 'object')
@@ -787,20 +843,47 @@ function newItemNode(item, idx?: number, type?: string, profile?) {
     const key = getKey(type);
     if (!idx && typeof idx !== 'number')
         idx = profiles.items[profile][key].length;
-
-    return {
+    if (!p)
+        p = '' + idx;
+    const node: any = {
         text: GetDisplay(item),
-        id: 'Profile' + profileID(profile) + key + idx,
+        id: 'Profile' + profileID(profile) + key + p,
         dataAttr: {
             type: type,
             profile: profile,
             index: idx,
-            name: item.name
+            name: item.name,
+            path: p,
+            priority: item.priority,
+            parent: item.parent
         },
         state: {
             checked: item.enabled
         }
     };
+    if (type === 'context' && item.name && item.name.length > 0 && item.parent !== item.name) {
+        let i = 0;
+        const contexts = profiles.items[profile][key];
+        const il = contexts.length;
+        const nodes = [];
+        for (; i < il; i++) {
+            if (contexts[i].parent === item.name)
+                nodes.push(newItemNode(contexts[i], i, type, profile));
+        }
+        if (nodes.length > 0) {
+            node.nodes = nodes.sort(sortNodes);
+        }
+    }
+    if (item.items && item.items.length > 0) {
+        let i = 0;
+        const il = item.items.length;
+        if (!node.nodes)
+            node.nodes = [];
+        for (; i < il; i++) {
+            node.nodes.push(newItemNode(item.items[i], idx, type, profile, `${p}\\${i}`));
+        }
+    }
+    return node;
 }
 
 function newProfileNode(profile?) {
@@ -897,12 +980,22 @@ function cloneNode(node) {
 
 function cleanNode(node) {
     delete node.$el;
+    delete node.parentId;
+    delete node.nodeId;
+    delete node.level;
     if (!node.nodes)
         return node;
     const nl = node.nodes.length;
     for (let n = 0; n < nl; n++)
         node.nodes[n] = cleanNode(node.nodes[n]);
     return node;
+}
+
+function cleanNodes(nodes) {
+    const nl = nodes.length;
+    for (let n = 0; n < nl; n++)
+        nodes[n] = cleanNode(nodes[n]);
+    return nodes;
 }
 
 function UpdateProfile(customUndo?: boolean): UpdateState {
@@ -1338,7 +1431,7 @@ export function doUndo() {
                     current[prop] = profiles.items[action.profile][key][action.item][prop];
                     profiles.items[action.profile][key][action.item][prop] = action.data[prop];
                 }
-                UpdateItemNode(currentProfile[key][action.item], 'Profile' + profileID(action.profile) + key + action.item);
+                UpdateItemNode(currentProfile[key][action.item], 'Profile' + profileID(action.profile) + key + action.item, current);
                 if (currentNode.id === 'Profile' + profileID(action.profile) + key + action.item) {
                     switch (action.type) {
                         case 'alias':
@@ -1512,7 +1605,7 @@ export function doRedo() {
                     current[prop] = profiles.items[action.profile][key][action.item][prop];
                     profiles.items[action.profile][key][action.item][prop] = action.data[prop];
                 }
-                UpdateItemNode(currentProfile[key][action.item], 'Profile' + profileID(action.profile) + key + action.item);
+                UpdateItemNode(currentProfile[key][action.item], 'Profile' + profileID(action.profile) + key + action.item, current);
                 if (currentNode.id === 'Profile' + profileID(action.profile) + key + action.item) {
                     switch (action.type) {
                         case 'alias':
@@ -1986,8 +2079,16 @@ function buildTreeview(data) {
                 t = 'alias';
             else
                 t = node.text.substr(0, node.text.length - 1).toLowerCase();
-            for (i = 0; i < il; i++)
-                nodes.push(newItemNode(profiles.items[parent.dataAttr.profile][node.dataAttr.type][i], i, t, parent.dataAttr.profile));
+            const names = {};
+            const items = profiles.items[parent.dataAttr.profile][node.dataAttr.type];
+            for (i = 0; i < il; i++) {
+                if (!items[i].name || items[i].name.length === 0) continue;
+                names[items[i].name] = i + 1;
+            }
+            for (i = 0; i < il; i++) {
+                if (items[i].parent && names[items[i].parent]) continue;
+                nodes.push(newItemNode(items[i], i, t, parent.dataAttr.profile));
+            }
             add(nodes);
             if (_clip && _clip.action === 2 && _clip.key === node.text.toLowerCase()) {
                 for (i = 0, il = _clip.data.length; i < il; i++) {
