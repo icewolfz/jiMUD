@@ -1,7 +1,7 @@
 ## Changelog
 ##### 0.4.9
 - **New:**
-  - Autologin systems if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
+  - Auto login system if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
 - **Change:**
   - Immortal tools: focusing on local or remote path text box will now auto select all text
   - Profile manger
