@@ -31,6 +31,7 @@
         const { dialog, Menu, MenuItem } = remote;
         const path = require('path');
         const fs = require('fs');
+        const crypto = require('crypto');
 
         var characters, current = '';
         var charactersFile = parseTemplate(path.join("{data}", "characters.json"));
@@ -168,14 +169,31 @@
                 changed++;
                 characters.load = current;
             }
-            v = $("#password").val();
+            v = $("#password").val() || '';
             if (v && v.length > 0) {
-                var key = crypto.randomBytes(16).toString('hex');
-                var iv = crypto.randomBytes(16).toString('hex');
-                characters.characters[current].password = encrypt(v, key, iv) + ':' + key + ':' + iv;
+                var key, iv;
+                if (characters.characters[current].password) {
+                    key = characters.characters[current].password.split(':');
+                    if (key.length === 3) {
+                        iv = key[2];
+                        key = key[1];
+                    }
+                    else {
+                        key = crypto.randomBytes(16).toString('hex');
+                        iv = crypto.randomBytes(16).toString('hex').slice(0, 16);
+                    }
+                }
+                else {
+                    key = crypto.randomBytes(16).toString('hex');
+                    iv = crypto.randomBytes(16).toString('hex').slice(0, 16);
+                }
+                v = encrypt(v, key, iv) + ':' + key + ':' + iv;
             }
-            else
-                characters.characters[current].password = '';
+
+            if (v != characters.characters[current].password) {
+                characters.characters[current].password = v;
+                changed++;
+            }
         }
 
         function saveCharacters() {
@@ -253,6 +271,14 @@
                 $("#settings").val(characters.characters[current].settings);
                 $("#map").val(characters.characters[current].map);
                 $("#auto-load").prop('checked', current === characters.load);
+
+                if (characters.characters[current].password && characters.characters[current].password.length > 0) {
+                    var pass = characters.characters[current].password.split(':');
+                    $("#password").val(decrypt(pass[0], pass[1], pass[2]));
+                }
+                else
+                    $("#password").val('');
+
                 $("#title").text(name);
             });
             item.on('dblclick', function () {
@@ -695,7 +721,7 @@
                 <span id="title"></span>
             </div>
             <div class="panel-body" id="character-editor">
-                <label class="control-label"> Password
+                <label class="control-label" style="width: 100%"> Password
                     <input disabled="disabled" class="form-control" style="width:100%" type="password" id="password">
                 </label>
                 <label class="control-label"> Settings

@@ -64,6 +64,7 @@ function loadCharacter(char) {
   global.mapFile = parseTemplate(characters.characters[char].map);
   global.characterPass = characters.characters[char].password || '';
   global.title = char;
+  console.log(global.characterPass);
   updateTray();
 }
 
@@ -1820,6 +1821,7 @@ ipcMain.on('flush-end', (event) => {
 
 ipcMain.on('reload-characters', (event) => {
   loadCharacters(true);
+  loadCharacter(global.character);
 });
 
 ipcMain.on('profile-item-added', (event, type, profile, item) => {
