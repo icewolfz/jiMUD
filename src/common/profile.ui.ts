@@ -848,7 +848,7 @@ function sortNodeChildren(node) {
     const newNode = cloneNode(node);
     newNode.nodes = newNode.nodes.sort(sortNodes);
     $('#profile-tree').treeview('updateNode', [node, newNode]);
-    if(currentNode)
+    if (currentNode)
         currentNode = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
 }
 
@@ -2186,6 +2186,287 @@ export function init() {
             $('#btn-refresh').addClass('btn-warning');
         });
     }
+
+    $('#drag-bar').mousedown((e) => {
+        e.preventDefault();
+
+        dragging = true;
+        const main = $('#content');
+        const ghostBar = $('<div>',
+            {
+                id: 'ghost-bar',
+                css: {
+                    height: main.outerHeight(),
+                    top: main.offset().top,
+                    left: main.offset().left - 3
+                }
+            }).appendTo('body');
+
+        $(document).mousemove((event) => {
+            if (event.pageX < 199)
+                ghostBar.css('left', 199);
+            else if (event.pageX > document.body.clientWidth - 300)
+                ghostBar.css('left', document.body.clientWidth - 300);
+            else
+                ghostBar.css('left', event.pageX);
+        });
+    });
+
+    $(window).on('resize', () => {
+        if ($('#content').outerWidth() < 300 && $('#sidebar').outerWidth() > 202) {
+            $('#sidebar').css('width', document.body.clientWidth - 300);
+            $('#content').css('left', document.body.clientWidth - 300);
+            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
+        }
+    });
+
+    $(document).mouseup((e) => {
+        if (dragging) {
+            if (e.pageX < 200) {
+                $('#sidebar').css('width', 202);
+                $('#content').css('left', 202);
+                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: 202 });
+            }
+            else if (e.pageX > document.body.clientWidth - 200) {
+                $('#sidebar').css('width', document.body.clientWidth - 300);
+                $('#content').css('left', document.body.clientWidth - 300);
+                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
+            }
+            else {
+                $('#sidebar').css('width', e.pageX + 2);
+                $('#content').css('left', e.pageX + 2);
+                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: e.pageX + 2 });
+            }
+
+            $('#ghost-bar').remove();
+            $(document).unbind('mousemove');
+            dragging = false;
+        }
+    });
+
+    $('#btn-add-dropdown').click(function () {
+        $(this).addClass('open');
+        const pos = $(this).offset();
+        const x = Math.floor(pos.left);
+        const y = Math.floor(pos.top + $(this).outerHeight() + 2);
+        const addMenu = new Menu();
+        addMenu.append(new MenuItem({
+            label: 'New empty profile', click() {
+                clearButton('#btn-add-dropdown');
+                AddNewProfile();
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'New profile with defaults', click() {
+                clearButton('#btn-add-dropdown');
+                AddNewProfile(true);
+            }
+        }));
+        addMenu.append(new MenuItem({ type: 'separator' }));
+        addMenu.append(new MenuItem({
+            label: 'New alias', click() {
+                clearButton('#btn-add-dropdown');
+                addItem('Alias', 'aliases', new Alias());
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'New macro', click() {
+                clearButton('#btn-add-dropdown');
+                addItem('Macro', 'macros', new Macro());
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'New trigger', click() {
+                clearButton('#btn-add-dropdown');
+                addItem('Trigger', 'triggers', new Trigger());
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'New button', click() {
+                clearButton('#btn-add-dropdown');
+                addItem('Button', 'buttons', new Button());
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'New context', click() {
+                clearButton('#btn-add-dropdown');
+                addItem('Context', 'contexts', new Context());
+            }
+        }));
+        addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+    });
+
+    $('#macro-key').keydown((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    $('#macro-key').keypress((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+    $('#macro-key').keyup((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const c = [];
+        let mod = MacroModifiers.None;
+
+        if (e.ctrlKey) {
+            c.push('Ctrl');
+            mod |= MacroModifiers.Ctrl;
+        }
+        if (e.altKey) {
+            c.push('Alt');
+            mod |= MacroModifiers.Alt;
+        }
+        if (e.shiftKey) {
+            c.push('Shift');
+            mod |= MacroModifiers.Shift;
+        }
+        if (e.metaKey) {
+            mod |= MacroModifiers.Meta;
+            if (process.platform === 'darwin')
+                c.push('Cmd');
+            else
+                c.push('Win');
+        }
+        if (keyCodeToChar[e.which])
+            c.push(keyCodeToChar[e.which]);
+        else
+            return false;
+        $('#macro-key').val(c.join('+'));
+        $('#macro-key').data('key', e.which);
+        $('#macro-key').data('mod', mod);
+        UpdateMacro();
+        return false;
+    });
+
+    $('.btn-adv').click(function () {
+        const editor = $(this).closest('.panel-body').attr('id');
+        let state = $(this).data('open') || false;
+        state = !state;
+        $(this).data('open', state);
+        const panel = $(this).closest('.panel-body');
+        const icon = $(this).find('i');
+        const panels = panel.find('.panel-adv-body');
+
+        if (state) {
+            panels.css('display', 'table-row');
+            icon.addClass('fa-chevron-down');
+            icon.removeClass('fa-chevron-up');
+            $(this).parent().css('padding-bottom', '15px');
+            $(this).closest('table').css('min-height', '342px');
+            ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: true });
+        }
+        else {
+            panels.css('display', '');
+            icon.addClass('fa-chevron-up');
+            icon.removeClass('fa-chevron-down');
+            $(this).parent().css('padding-bottom', '');
+            $(this).closest('table').css('min-height', '');
+            ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: false });
+        }
+    });
+
+    ['cut', 'copy', 'paste'].forEach((event) => {
+        document.addEventListener(event, (e) => {
+            if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA'))
+                return;
+            if (event === 'cut')
+                doCut();
+            else if (event === 'copy')
+                doCopy();
+            else if (event === 'paste')
+                doPaste();
+        });
+    });
+
+    loadActions(parseTemplate(path.join('{assets}', 'actions')), '');
+
+    initEditor('trigger-value');
+    initEditor('macro-value');
+    initEditor('alias-value');
+    initEditor('button-value');
+    initEditor('context-value');
+
+    window.onbeforeunload = () => {
+        if (close || _never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange))
+            return;
+        let choice = dialog.showMessageBox(
+            remote.getCurrentWindow(),
+            {
+                type: 'warning',
+                title: 'Profiles changed',
+                message: 'All unsaved changes will be lost, close?',
+                buttons: ['Yes', 'No', 'Never ask again'],
+                defaultId: 1
+            });
+        if (choice === 2) {
+            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
+            choice = 0;
+        }
+        if (choice === 0)
+            return;
+        return 'no';
+    };
+
+    document.onkeydown = undoKeydown;
+    $('input,textarea').on('keydown', undoKeydown);
+
+    $('select').on('focus', function () {
+        // Store the current value on focus and on change
+        $(this).data('previous-value', this.value);
+    }).change(function () {
+        updateCurrent();
+        $(this).data('previous-value', this.value);
+    });
+
+    $('input[type=\'text\'],input[type=\'number\'],textarea').on('keydown', function () {
+        $(this).data('previous-value', this.value);
+    }).on('keyup', function () {
+        updateCurrent();
+        $(this).data('previous-value', this.value);
+    });
+
+    $('input[type=\'number\']').on('focus', function () {
+        // Store the current value on focus and on change
+        $(this).data('previous-value', this.value);
+    }).change(function () {
+        updateCurrent();
+        $(this).data('previous-value', this.value);
+    });
+
+    $('input[type=checkbox]').on('focus', function () {
+        // Store the current value on focus and on change
+        $(this).data('previous-value', this.checked);
+    }).change(function () {
+        updateCurrent();
+        $(this).data('previous-value', this.checked);
+    });
+    addInputContext();
+
+    $('#export').on('show.bs.dropdown', () => {
+        if ($(window).width() < 675 && $('#export').parent().position().left > 400)
+            $('#export .dropdown-menu').addClass('dropdown-menu-right');
+        else
+            $('#export .dropdown-menu').removeClass('dropdown-menu-right');
+    });
+
+    $('#export').click(function () {
+        $(this).addClass('open');
+        const pos = $(this).offset();
+        const x = Math.floor(pos.left);
+        const y = Math.floor(pos.top + $(this).outerHeight() + 2);
+        const exportmenu = new Menu();
+        exportmenu.append(new MenuItem({ label: 'Export current...', click: exportCurrent }));
+        exportmenu.append(new MenuItem({ label: 'Export all...', click: exportAll }));
+        exportmenu.append(new MenuItem({ type: 'separator' }));
+        exportmenu.append(new MenuItem({ label: 'Import...', click: importProfiles }));
+        exportmenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+    });
+    loadOptions();
     buildTreeview(getProfileData());
     $('#profile-tree').contextmenu((event) => {
         event.preventDefault();
@@ -2513,287 +2794,6 @@ export function init() {
         }
         c.popup(remote.getCurrentWindow());
     });
-
-    $('#drag-bar').mousedown((e) => {
-        e.preventDefault();
-
-        dragging = true;
-        const main = $('#content');
-        const ghostBar = $('<div>',
-            {
-                id: 'ghost-bar',
-                css: {
-                    height: main.outerHeight(),
-                    top: main.offset().top,
-                    left: main.offset().left - 3
-                }
-            }).appendTo('body');
-
-        $(document).mousemove((event) => {
-            if (event.pageX < 199)
-                ghostBar.css('left', 199);
-            else if (event.pageX > document.body.clientWidth - 300)
-                ghostBar.css('left', document.body.clientWidth - 300);
-            else
-                ghostBar.css('left', event.pageX);
-        });
-    });
-
-    $(window).on('resize', () => {
-        if ($('#content').outerWidth() < 300 && $('#sidebar').outerWidth() > 202) {
-            $('#sidebar').css('width', document.body.clientWidth - 300);
-            $('#content').css('left', document.body.clientWidth - 300);
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
-        }
-    });
-
-    $(document).mouseup((e) => {
-        if (dragging) {
-            if (e.pageX < 200) {
-                $('#sidebar').css('width', 202);
-                $('#content').css('left', 202);
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: 202 });
-            }
-            else if (e.pageX > document.body.clientWidth - 200) {
-                $('#sidebar').css('width', document.body.clientWidth - 300);
-                $('#content').css('left', document.body.clientWidth - 300);
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
-            }
-            else {
-                $('#sidebar').css('width', e.pageX + 2);
-                $('#content').css('left', e.pageX + 2);
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: e.pageX + 2 });
-            }
-
-            $('#ghost-bar').remove();
-            $(document).unbind('mousemove');
-            dragging = false;
-        }
-    });
-
-    $('#btn-add-dropdown').click(function () {
-        $(this).addClass('open');
-        const pos = $(this).offset();
-        const x = Math.floor(pos.left);
-        const y = Math.floor(pos.top + $(this).outerHeight() + 2);
-        const addMenu = new Menu();
-        addMenu.append(new MenuItem({
-            label: 'New empty profile', click() {
-                clearButton('#btn-add-dropdown');
-                AddNewProfile();
-            }
-        }));
-        addMenu.append(new MenuItem({
-            label: 'New profile with defaults', click() {
-                clearButton('#btn-add-dropdown');
-                AddNewProfile(true);
-            }
-        }));
-        addMenu.append(new MenuItem({ type: 'separator' }));
-        addMenu.append(new MenuItem({
-            label: 'New alias', click() {
-                clearButton('#btn-add-dropdown');
-                addItem('Alias', 'aliases', new Alias());
-            }
-        }));
-        addMenu.append(new MenuItem({
-            label: 'New macro', click() {
-                clearButton('#btn-add-dropdown');
-                addItem('Macro', 'macros', new Macro());
-            }
-        }));
-        addMenu.append(new MenuItem({
-            label: 'New trigger', click() {
-                clearButton('#btn-add-dropdown');
-                addItem('Trigger', 'triggers', new Trigger());
-            }
-        }));
-        addMenu.append(new MenuItem({
-            label: 'New button', click() {
-                clearButton('#btn-add-dropdown');
-                addItem('Button', 'buttons', new Button());
-            }
-        }));
-        addMenu.append(new MenuItem({
-            label: 'New context', click() {
-                clearButton('#btn-add-dropdown');
-                addItem('Context', 'contexts', new Context());
-            }
-        }));
-        addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
-    });
-
-    $('#macro-key').keydown((e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    });
-
-    $('#macro-key').keypress((e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    });
-    $('#macro-key').keyup((e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const c = [];
-        let mod = MacroModifiers.None;
-
-        if (e.ctrlKey) {
-            c.push('Ctrl');
-            mod |= MacroModifiers.Ctrl;
-        }
-        if (e.altKey) {
-            c.push('Alt');
-            mod |= MacroModifiers.Alt;
-        }
-        if (e.shiftKey) {
-            c.push('Shift');
-            mod |= MacroModifiers.Shift;
-        }
-        if (e.metaKey) {
-            mod |= MacroModifiers.Meta;
-            if (process.platform === 'darwin')
-                c.push('Cmd');
-            else
-                c.push('Win');
-        }
-        if (keyCodeToChar[e.which])
-            c.push(keyCodeToChar[e.which]);
-        else
-            return false;
-        $('#macro-key').val(c.join('+'));
-        $('#macro-key').data('key', e.which);
-        $('#macro-key').data('mod', mod);
-        UpdateMacro();
-        return false;
-    });
-
-    $('.btn-adv').click(function () {
-        const editor = $(this).closest('.panel-body').attr('id');
-        let state = $(this).data('open') || false;
-        state = !state;
-        $(this).data('open', state);
-        const panel = $(this).closest('.panel-body');
-        const icon = $(this).find('i');
-        const panels = panel.find('.panel-adv-body');
-
-        if (state) {
-            panels.css('display', 'table-row');
-            icon.addClass('fa-chevron-down');
-            icon.removeClass('fa-chevron-up');
-            $(this).parent().css('padding-bottom', '15px');
-            $(this).closest('table').css('min-height', '342px');
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: true });
-        }
-        else {
-            panels.css('display', '');
-            icon.addClass('fa-chevron-up');
-            icon.removeClass('fa-chevron-down');
-            $(this).parent().css('padding-bottom', '');
-            $(this).closest('table').css('min-height', '');
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: false });
-        }
-    });
-
-    ['cut', 'copy', 'paste'].forEach((event) => {
-        document.addEventListener(event, (e) => {
-            if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA'))
-                return;
-            if (event === 'cut')
-                doCut();
-            else if (event === 'copy')
-                doCopy();
-            else if (event === 'paste')
-                doPaste();
-        });
-    });
-
-    loadActions(parseTemplate(path.join('{assets}', 'actions')), '');
-
-    initEditor('trigger-value');
-    initEditor('macro-value');
-    initEditor('alias-value');
-    initEditor('button-value');
-    initEditor('context-value');
-
-    window.onbeforeunload = () => {
-        if (close || _never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange))
-            return;
-        let choice = dialog.showMessageBox(
-            remote.getCurrentWindow(),
-            {
-                type: 'warning',
-                title: 'Profiles changed',
-                message: 'All unsaved changes will be lost, close?',
-                buttons: ['Yes', 'No', 'Never ask again'],
-                defaultId: 1
-            });
-        if (choice === 2) {
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
-            choice = 0;
-        }
-        if (choice === 0)
-            return;
-        return 'no';
-    };
-
-    document.onkeydown = undoKeydown;
-    $('input,textarea').on('keydown', undoKeydown);
-
-    $('select').on('focus', function () {
-        // Store the current value on focus and on change
-        $(this).data('previous-value', this.value);
-    }).change(function () {
-        updateCurrent();
-        $(this).data('previous-value', this.value);
-    });
-
-    $('input[type=\'text\'],input[type=\'number\'],textarea').on('keydown', function () {
-        $(this).data('previous-value', this.value);
-    }).on('keyup', function () {
-        updateCurrent();
-        $(this).data('previous-value', this.value);
-    });
-
-    $('input[type=\'number\']').on('focus', function () {
-        // Store the current value on focus and on change
-        $(this).data('previous-value', this.value);
-    }).change(function () {
-        updateCurrent();
-        $(this).data('previous-value', this.value);
-    });
-
-    $('input[type=checkbox]').on('focus', function () {
-        // Store the current value on focus and on change
-        $(this).data('previous-value', this.checked);
-    }).change(function () {
-        updateCurrent();
-        $(this).data('previous-value', this.checked);
-    });
-    addInputContext();
-
-    $('#export').on('show.bs.dropdown', () => {
-        if ($(window).width() < 675 && $('#export').parent().position().left > 400)
-            $('#export .dropdown-menu').addClass('dropdown-menu-right');
-        else
-            $('#export .dropdown-menu').removeClass('dropdown-menu-right');
-    });
-
-    $('#export').click(function () {
-        $(this).addClass('open');
-        const pos = $(this).offset();
-        const x = Math.floor(pos.left);
-        const y = Math.floor(pos.top + $(this).outerHeight() + 2);
-        const exportmenu = new Menu();
-        exportmenu.append(new MenuItem({ label: 'Export current...', click: exportCurrent }));
-        exportmenu.append(new MenuItem({ label: 'Export all...', click: exportAll }));
-        exportmenu.append(new MenuItem({ type: 'separator' }));
-        exportmenu.append(new MenuItem({ label: 'Import...', click: importProfiles }));
-        exportmenu.popup(remote.getCurrentWindow(), { x: x, y: y });
-    });
-    loadOptions();
 }
 
 function undoKeydown(e) {
