@@ -3,8 +3,10 @@
 - **New:**
   - Autologin systems if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
 - **Change:**
-  - Immortal tools: focusing on local or remote path textbox will now auto select all text
-  - Profile manger: context items with parents will now apper under thier parent item, if not found it will default to standard context location
+  - Immortal tools: focusing on local or remote path text box will now auto select all text
+  - Profile manger
+    - Context items with parents will now appear under their parent item, if not found it will default to standard context location
+    - All item are now sorted by priority then by order added this allows you to see the exact order items will be executed or seached
 - **Fixed:**
   - Character manager was not reloading the loaded character when changes happened
 ##### 0.4.8 2017-07-25

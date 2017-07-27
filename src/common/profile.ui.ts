@@ -462,6 +462,7 @@ function addItem(type: string, key: string, item, idx?: number, profile?: Profil
     const nodes = [newItemNode(item, idx, type, profile)];
     $('#profile-tree').treeview('addNode', [nodes, n, false, { silent: false }]);
     $('#profile-tree').treeview('selectNode', [nodes, { silent: false }]);
+    sortNodeChildren('Profile' + profileID(profile.name) + key);
     if (!customUndo)
         pushUndo({ action: 'add', type: type.toLowerCase(), item: item.clone(), data: { type: type, key: key, item: item, idx: idx, profile: profile.name.toLowerCase() } });
 }
@@ -550,6 +551,7 @@ function UpdateItemNode(item, updateNode?, old?) {
     else if (typeof updateNode === 'string')
         updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode + '$', 'id'])[0];
     const selected = updateNode.state.selected || updateNode.id === currentNode.id;
+    const key = getKey(updateNode.dataAttr.type);
     //clone node
     let newNode = cloneNode(updateNode);
     //only text or check state effect node
@@ -563,9 +565,6 @@ function UpdateItemNode(item, updateNode?, old?) {
     $('#profile-tree').treeview('updateNode', [updateNode, newNode]);
     let n;
     if (newNode.dataAttr.type === 'context') {
-        const key = getKey(newNode.dataAttr.type);
-        //get node
-
         if (item.parent && item.parent.length > 0 && item.parent !== item.name) {
             updateNode = $('#profile-tree').treeview('findNodes', ['^' + updateNode.id + '$', 'id'])[0];
             //remove node
@@ -573,9 +572,14 @@ function UpdateItemNode(item, updateNode?, old?) {
             //find parent node
             n = $('#profile-tree').treeview('findNodes', ['^' + item.parent + '$', 'dataAttr.name']);
             //no parent use root
-            if (!n.length)
+            if (!n.length) {
                 n = $('#profile-tree').treeview('findNodes', ['^Profile' + newNode.dataAttr.profile + key + '$', 'id']);
-            $('#profile-tree').treeview('addNode', [cleanNode(newNode), n, false, { silent: true }]);
+                $('#profile-tree').treeview('addNode', [cleanNode(newNode), n, false, { silent: true }]);
+            }
+            else {
+                $('#profile-tree').treeview('addNode', [cleanNode(newNode), n, false, { silent: true }]);
+                sortNodeChildren(n[0].id);
+            }
         }
         if (item.name !== old.name && item.name && item.name.length > 0) {
             //move old children to root
@@ -615,6 +619,7 @@ function UpdateItemNode(item, updateNode?, old?) {
     }
     if (updateNode.id === currentNode.id)
         $('#editor-title').text(updateNode.dataAttr.type + ': ' + updateNode.text);
+    sortNodeChildren('Profile' + newNode.dataAttr.profile + key);
 }
 
 function getEditorValue(editor, style: ItemStyle) {
@@ -828,7 +833,23 @@ function sortNodes(a, b) {
         return -1;
     if (a.dataAttr.priority < b.dataAttr.priority)
         return 1;
+    if (a.dataAttr.index < b.dataAttr.index)
+        return -1;
+    if (a.dataAttr.index > b.dataAttr.index)
+        return 1;
     return 0;
+}
+
+function sortNodeChildren(node) {
+    if (!node)
+        return;
+    else if (typeof node === 'string')
+        node = $('#profile-tree').treeview('findNodes', ['^' + node + '$', 'id'])[0];
+    const newNode = cloneNode(node);
+    newNode.nodes = newNode.nodes.sort(sortNodes);
+    $('#profile-tree').treeview('updateNode', [node, newNode]);
+    if(currentNode)
+        currentNode = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
 }
 
 function newItemNode(item, idx?: number, type?: string, profile?, p?: string) {
@@ -983,6 +1004,7 @@ function cleanNode(node) {
     delete node.parentId;
     delete node.nodeId;
     delete node.level;
+    delete node.index;
     if (!node.nodes)
         return node;
     const nl = node.nodes.length;
@@ -2089,7 +2111,7 @@ function buildTreeview(data) {
                 if (items[i].parent && names[items[i].parent]) continue;
                 nodes.push(newItemNode(items[i], i, t, parent.dataAttr.profile));
             }
-            add(nodes);
+            add(nodes.sort(sortNodes));
             if (_clip && _clip.action === 2 && _clip.key === node.text.toLowerCase()) {
                 for (i = 0, il = _clip.data.length; i < il; i++) {
                     n = $('#profile-tree').treeview('findNodes', ['^' + node.id + i, 'id']);
@@ -3646,6 +3668,8 @@ function insertItem(type: string, key: string, item, idx: number, profile?: Prof
     $('#profile-tree').treeview('addNode', [nodes, n, idx, { silent: true }]);
     //select the newest node
     $('#profile-tree').treeview('selectNode', [[nodes[0]], { silent: false }]);
+    //sort nodes
+    sortNodeChildren('Profile' + profileID(profile.name) + key);
     if (!customUndo)
         pushUndo({ action: 'add', type: type, item: item.clone(), data: { type: type, key: key, item: item, idx: idx, profile: profile.name.toLowerCase() } });
     _loading--;
