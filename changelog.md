@@ -10,6 +10,7 @@
     - All item are now sorted by priority then by order added this allows you to see the exact order items will be executed or seached
 - **Fixed:**
   - Character manager was not reloading the loaded character when changes happened
+  - Character name was not being set when using character manager on inital load
   - Profile manger: initial profile enabled checkbox in treeview where not being set
   - Immortal tools: select on finish now clears previous selected items
 ##### 0.4.8 2017-07-25

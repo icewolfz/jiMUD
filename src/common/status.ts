@@ -236,7 +236,6 @@ export class Status extends EventEmitter {
             $('#character-name').text(title);
         }
         this.emit('set-title', title || '');
-
     }
 
     public updateOverall() {

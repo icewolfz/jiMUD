@@ -850,13 +850,7 @@
       _backup.on('finish-load', (data) => {
 
       });
-
-      if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
-        _logger.postMessage({ action: 'name', args: remote.getGlobal('character') });
-        $("#character-name").text(remote.getGlobal('character'));
-      }
-
-      _status = new Status(client);
+      _status = new Status(client);     
       _status.on('display-changed', () => {
         if (_status.ac) {
           $("#health").removeClass('on');
@@ -880,6 +874,11 @@
         _logger.postMessage({ action: 'name', args: title });
         ipcRenderer.send('set-title', title);
       });
+      if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) 
+      {
+        _logger.postMessage({ action: 'name', args: remote.getGlobal('character') });
+        $("#character-name").text(remote.getGlobal('character'));
+      }      
       updateMenu();
       updateInterface();
       buildCaptures();
