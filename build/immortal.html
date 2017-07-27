@@ -65,13 +65,6 @@
                     },
                     { type: 'separator' },
                     {
-                        label: '&New file',
-                        accelerator: "CmdOrCtrl+F",
-                        enabled: false,
-                        click: newLocalFile
-                    },
-                    { type: 'separator' },
-                    {
                         label: '&Preferences...',
                         accelerator: "CmdOrCtrl+Comma",
                         click: () => {
@@ -159,6 +152,12 @@
                                 enabled: false,
                                 accelerator: "CmdOrCtrl+Delete",
                                 click: deleteLocal
+                            },
+                            { type: 'separator' },
+                            {
+                                label: '&New file',
+                                accelerator: "CmdOrCtrl+F",
+                                click: newLocalFile
                             },
                             {
                                 label: '&New directory',
@@ -2332,6 +2331,7 @@
                     click: deleteLocal
                 }));
             }
+            c.append(new MenuItem({ type: 'separator' }));
             c.append(new MenuItem({
                 label: 'New file',
                 click: newLocalFile
@@ -3186,16 +3186,20 @@
                                 <i class="fa fa-times"></i>
                             </button>
                         </div>
-                        <button id="btn-newFile-local" type="button" class="btn btn-default btn-xs" title="New file" onclick="newLocalFile()">
-                            <i class="fa fa-file-o"></i>
-                        </button>
-                        <button id="btn-newFolder-local" type="button" class="btn btn-default btn-xs" title="New directory" onclick="newFolderLocal()">
-                            <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
-                                <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
-                                <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
-                            </span>
-                        </button>
-
+                        <div class="btn-group" role="group">
+                            <button id="btn-newFile-local" type="button" class="btn btn-default btn-xs" title="New file" onclick="newLocalFile()">
+                                <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                                    <i class="fa fa-file-o fa-stack-2x" style="font-size: 1em"></i>
+                                    <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
+                                </span>
+                            </button>
+                            <button id="btn-newFolder-local" type="button" class="btn btn-default btn-xs" title="New directory" onclick="newFolderLocal()">
+                                <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                                    <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
+                                    <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
+                                </span>
+                            </button>
+                        </div>
                     </label>
 
                     <span class="path-container">
