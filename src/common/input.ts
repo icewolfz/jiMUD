@@ -284,11 +284,25 @@ export class Input extends EventEmitter {
                 return null;
             case 'event':
             case 'ev':
+                if (this.client.options.parseDoubleQuotes)
+                    args.map((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.options.parseSingleQuotes)
+                    args.map((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+                /*
                 args = args.join(' ').splitQuote(', ', 1, 1).map((a) => {
                     return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
                         return e.replace(/\\\'/g, '\'');
                     });
                 });
+                */
                 if (args.length === 0)
                     this.client.error('Invalid syntax use #event name or #event name arguments');
                 else if (args.length === 1)
