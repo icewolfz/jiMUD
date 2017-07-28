@@ -12,6 +12,9 @@ display text to the screen
 same as echo but doesn't append newline
 - `#say text`
 same as echo
+- `#wait number` or `#wa`
+pause current block for number of milliseconds
+  - `number` the amount of milliseconds to wait before executing remaining commands command block
 - `#sayprompt text` or `#sayp`
 same as echoprompt
 - `#alias name value` or `#al`

@@ -306,6 +306,21 @@ export class Input extends EventEmitter {
         let i;
         let tmp;
         switch (fun.toLowerCase()) {
+            case 'wait':
+            case 'wa':
+                if (args.length === 0)
+                    this.client.error('Invalid syntax use #wait number');
+                else if (args.length === 1) {
+                    i = parseInt(args[0], 10);
+                    if (isNaN(i))
+                        this.client.error('Invalid number \'' + args[0] + '\'');
+                    if (i < 1)
+                        this.client.error('Must be greater then zero');
+                    return i;
+                }
+                else
+                    this.client.error('Invalid syntax use #wait number');
+                return null;
             case 'showclient':
             case 'showcl':
                 this.client.show();
@@ -895,6 +910,19 @@ export class Input extends EventEmitter {
                         al = AliasesCached.length;
                         for (a = 0; a < al; a++) {
                             str = this.executeScript(this.ExecuteAlias(AliasesCached[a], args));
+                            if (typeof str === 'number') {
+                                text = text.substr(idx + 1);
+                                if (text.length > 0)
+                                    setTimeout(() => {
+                                        const ret = this.parseOutgoing(text, eAlias, stacking);
+                                        if (this.client.connected)
+                                            this.client.send(ret);
+                                        if (this.client.telnet.echo && this.client.options.commandEcho)
+                                            this.client.echo(ret);
+                                    }, str);
+                                if (out.length === 0) return null;
+                                return out;
+                            }
                             if (str !== null) out += str;
                             str = '';
                             if (!a.multi) break;
@@ -998,6 +1026,11 @@ export class Input extends EventEmitter {
                                 al = AliasesCached.length;
                                 for (a = 0; a < al; a++) {
                                     str = this.executeScript(this.ExecuteAlias(AliasesCached[a], args));
+                                    if (typeof str === 'number') {
+                                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                                        if (out.length === 0) return null;
+                                        return out;
+                                    }
                                     if (str !== null) out += str;
                                     if (!a.multi) break;
                                 }
@@ -1009,6 +1042,11 @@ export class Input extends EventEmitter {
                             else //else not an alias so normal space
                             {
                                 str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true));
+                                if (typeof str === 'number') {
+                                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                                    if (out.length === 0) return null;
+                                    return out;
+                                }
                                 if (str !== null) out += str + '\n';
                                 str = '';
                                 AliasesCached = null;
@@ -1017,6 +1055,11 @@ export class Input extends EventEmitter {
                         }
                         else {
                             str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true));
+                            if (typeof str === 'number') {
+                                this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                                if (out.length === 0) return null;
+                                return out;
+                            }
                             if (str !== null) out += str + '\n';
                             str = '';
                         }
@@ -1047,6 +1090,11 @@ export class Input extends EventEmitter {
                 al = AliasesCached.length;
                 for (a = 0; a < al; a++) {
                     str = this.executeScript(this.ExecuteAlias(AliasesCached[a], args));
+                    if (typeof str === 'number') {
+                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                        if (out.length === 0) return null;
+                        return out;
+                    }
                     if (str !== null) out += str;
                     else if (out.length === 0) return null;
                     if (!a.multi) break;
@@ -1055,6 +1103,11 @@ export class Input extends EventEmitter {
             else //else not an alias so normal space
             {
                 str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true));
+                if (typeof str === 'number') {
+                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                    if (out.length === 0) return null;
+                    return out;
+                }
                 if (str !== null) out += str;
                 else if (out.length === 0) return null;
             }
@@ -1064,11 +1117,21 @@ export class Input extends EventEmitter {
             if (str.length > 0)
                 alias += str;
             str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true));
+            if (typeof str === 'number') {
+                this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                if (out.length === 0) return null;
+                return out;
+            }
             if (str !== null) out += str;
             else if (out.length === 0) return null;
         }
         else if (str.length > 0) {
             str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true));
+            if (typeof str === 'number') {
+                this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                if (out.length === 0) return null;
+                return out;
+            }
             if (str !== null) out += str;
             else if (out.length === 0) return null;
         }
@@ -1513,6 +1576,19 @@ export class Input extends EventEmitter {
             if (event !== this._TriggerCache[t].pattern) continue;
             this.ExecuteTrigger(this._TriggerCache[t], args, false, t);
         }
+    }
+
+    public executeWait(text, delay: number, eAlias?: boolean, stacking?: boolean) {
+        if (!text || text.length === 0) return;
+        if (delay < 0)
+            delay = 0;
+        setTimeout(() => {
+            const ret = this.parseOutgoing(text, eAlias, stacking);
+            if (this.client.connected)
+                this.client.send(ret);
+            if (this.client.telnet.echo && this.client.options.commandEcho)
+                this.client.echo(ret);
+        }, delay);
     }
 
     public buildScript(str: string) {
