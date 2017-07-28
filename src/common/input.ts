@@ -1489,4 +1489,41 @@ export class Input extends EventEmitter {
             this.ExecuteTrigger(this._TriggerCache[t], args, false, t);
         }
     }
+
+    public buildScript(str: string) {
+        if (!str) return '';
+        let lines;
+        /*
+        if (this.client.options.commandStacking && this.client.options.commandStackingChar && this.client.options.commandStackingChar.length > 0)
+            lines = str.split(new RegExp('\n|' + this.client.options.commandStackingChar));
+        else
+            lines = str.split('\n');
+        */
+        if (this.client.options.commandStacking && this.client.options.commandStackingChar && this.client.options.commandStackingChar.length > 0)
+            lines = str.splitQuote('\n' + this.client.options.commandStackingChar);
+        else
+            lines = str.splitQuote('\n');
+        let l = 0;
+        const ll = lines.length;
+        const code = [];
+        const b = [];
+        for (; l < ll; l++) {
+            if (lines[l].trim().startsWith('#wait ')) {
+                code.push('setTimeout(()=> {');
+                b.unshift(parseInt(lines[l].trim().substr(5), 10) || 0);
+            }
+            else {
+                code.push('client.sendCommand(\'');
+                code.push(lines[l]);
+                code.push('\\n\');');
+            }
+        }
+        const bl = b.length;
+        for (l = 0; l < bl; l++) {
+            code.push('}, ');
+            code.push(b[l]);
+            code.push(');');
+        }
+        return code.join('');
+    }
 }
