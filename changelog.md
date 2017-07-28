@@ -25,9 +25,10 @@
   - Profile manger
     - Context items with parents will now appear under their parent item, if not found it will default to standard context location
     - All item are now sorted by priority then by order added this allows you to see the exact order items will be executed or seached
+  - #notify now uses command line quote parse settings to build arguments, based on setting you can use ' or " to wrap title argument
 - **Fixed:**
   - Character manager was not reloading the loaded character when changes happened
-  - Character name was not being set when using character manager on inital load
+  - Character name was not being set when using character manager on initial load
   - Profile manger: initial profile enabled checkbox in treeview where not being set
   - Immortal tools: 
     - Select on finish now clears previous selected items

@@ -229,15 +229,49 @@ export class Input extends EventEmitter {
                 case 3:
                     if (c === '"')
                         state = 2;
+                    //if (c === '\\')
+                    //state = 5;
+                    //else {
                     arg += c;
                     raw += c;
+                    //}
                     break;
                 case 4:
                     if (c === '\'')
                         state = 2;
+                    //if (c === '\\')
+                    //state = 6;
+                    //else {
                     arg += c;
                     raw += c;
+                    //}
                     break;
+                /*
+            case 5:
+                if (c === '"') {
+                    arg += c;
+                    raw += c;
+                }
+                else {
+                    arg += '\\';
+                    raw += '\\';
+                    idx--;
+                }
+                state = 3;
+                break;
+            case 6:
+                if (c === '\'') {
+                    arg += c;
+                    raw += c;
+                }
+                else {
+                    arg += '\\';
+                    raw += '\\';
+                    idx--;
+                }
+                state = 4;
+                break;
+                */
                 default:
                     if (idx === 0 && c === '#') {
                         state = 1;
@@ -256,6 +290,8 @@ export class Input extends EventEmitter {
                 arg += '"';
             else if (state === 4)
                 arg += '\'';
+            if (arg.endsWith('\n'))
+                arg = arg.substring(0, args.length - 1);
             if (arg.length > 0) args.push(arg);
             return this.executeFunction(fun, args, raw);
         }
@@ -296,13 +332,6 @@ export class Input extends EventEmitter {
                             return e.replace(/\\\'/g, '\'');
                         });
                     });
-                /*
-                args = args.join(' ').splitQuote(', ', 1, 1).map((a) => {
-                    return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
-                        return e.replace(/\\\'/g, '\'');
-                    });
-                });
-                */
                 if (args.length === 0)
                     this.client.error('Invalid syntax use #event name or #event name arguments');
                 else if (args.length === 1)
@@ -312,40 +341,22 @@ export class Input extends EventEmitter {
                 return null;
             case 'notify':
             case 'not':
-                n = args[0];
-                al = args.length;
-                if (n.startsWith('\'')) {
-                    n = n.substring(1);
-                    if (n.endsWith('\'') && !n.endsWith('\\\'')) {
-                        i = 1;
-                        n = n.substring(0, n.length - 1);
-                    }
-                    else {
-                        for (i = 1; i < al; i++) {
-                            n += ' ' + args[i];
-                            if (args[i].endsWith('\'')) {
-                                if (args[i].endsWith('\\\''))
-                                    continue;
-                                n = n.substring(0, n.length - 1);
-                                i++;
-                                break;
-                            }
-                        }
-                    }
+                if (args.length === 0)
+                    this.client.error('Invalid syntax use #notify \'title\' message');
+                else {
+                    if (this.client.options.parseDoubleQuotes)
+                        args[0] = args[0].replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    if (this.client.options.parseSingleQuotes)
+                        args[0] = args[0].replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '"');
+                        });
+                    if (args.length === 1)
+                        this.client.notify(args[0], null);
+                    else
+                        this.client.notify(args[0], args.slice(1).join(' '));
                 }
-                else
-                    i = 1;
-                if (i < al)
-                    args = args.slice(i).join(' ');
-                else
-                    args = '';
-                n = n.replace(/\\\'/g, '\'');
-                args = args.replace(/\\\'/g, '\'');
-                if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
-                    n = n.substring(1, n.length - 1);
-                if (/^"(.*)"$/.exec(args) !== null || /^'(.*)'$/.exec(args) !== null)
-                    args = args.substring(1, args.length - 1);
-                this.client.notify(n, args);
                 return null;
             case 'idle':
             case 'idletime':
