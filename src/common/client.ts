@@ -664,9 +664,13 @@ export class Client extends EventEmitter {
         this.parseInternal(txt, remote);
     }
 
-    public send(data) {
+    public send(data, echo?: boolean) {
         this.telnet.sendData(data);
         this.lastSendTime = Date.now();
+        if (echo && this.telnet.echo && this.options.commandEcho)
+            this.echo(data);
+        else if (echo)
+            this.echo('\n');
     }
 
     public sendRaw(data) {
@@ -702,14 +706,8 @@ export class Client extends EventEmitter {
         this.emit('parse-command', data);
         if (data == null || typeof data === 'undefined') return;
         if (data.handled || data.value == null || typeof data.value === 'undefined') return;
-        if (data.value.length > 0) {
-            if (this.connected)
-                this.send(data.value);
-            if (this.telnet.echo && this.options.commandEcho)
-                this.echo(data.value);
-            else
-                this.echo('\n');
-        }
+        if (data.value.length > 0)
+            this.send(txt, true);
         if (this.options.keepLastCommand)
             this.commandInput.select();
         else
@@ -730,14 +728,8 @@ export class Client extends EventEmitter {
         this.emit('parse-command', data);
         if (data == null || typeof data === 'undefined') return;
         if (data.value == null || typeof data.value === 'undefined') return;
-        if (!data.handled && data.value.length > 0) {
-            if (this.connected)
-                this.send(data.value);
-            if (this.telnet.echo && this.options.commandEcho)
-                this.echo(data.value);
-            else
-                this.echo('\n');
-        }
+        if (!data.handled && data.value.length > 0)
+            this.send(txt, true);
     }
 
     get scrollLock(): boolean {

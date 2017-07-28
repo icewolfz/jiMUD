@@ -1370,12 +1370,9 @@ export class Input extends EventEmitter {
             if (macro.chain && this.client.commandInput.val().endsWith(' ')) {
                 this.client.commandInput.val(this.client.commandInput.val() + ret);
                 this.client.sendCommand();
-                return true;
             }
-            if (this.client.connected)
-                this.client.send(ret);
-            if (this.client.telnet.echo && this.client.options.commandEcho)
-                this.client.echo(ret);
+            else
+                this.client.send(ret, true);
         }
         else if (macro.append)
             this.client.commandInput.val(this.client.commandInput.val() + ret);
@@ -1581,10 +1578,7 @@ export class Input extends EventEmitter {
         setTimeout(() => {
             const ret = this.parseOutgoing(text, eAlias, stacking);
             if (ret == null || typeof ret === 'undefined' || ret.length === 0) return;
-            if (this.client.connected)
-                this.client.send(ret);
-            if (this.client.telnet.echo && this.client.options.commandEcho)
-                this.client.echo(ret);
+            this.client.send(ret, true);
         }, delay);
     }
 

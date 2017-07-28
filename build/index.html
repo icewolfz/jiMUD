@@ -133,12 +133,8 @@
         client.commandInput.val(url);
         setSelectionRange(client.commandInput[0], url.length, url.length);
       }
-      else {
-        url = url.replace("&text;", $(el).text()) + extra + '\n';
-        client.send(url);
-        if (client.telnet.echo && client.options.commandEcho)
-          client.echo(url);
-      }
+      else
+        client.send(url.replace("&text;", $(el).text()) + extra + '\n', true);
     }
 
     function MXPMenuHandler(cmd, pmt) {
@@ -146,11 +142,8 @@
         client.commandInput.val(cmd);
         setSelectionRange(client.commandInput[0], cmd.length, cmd.length);
       }
-      else {
-        client.send(cmd);
-        if (client.telnet.echo && client.options.commandEcho)
-          client.echo(cmd);
-      }
+      else
+        client.send(cmd, true);
     }
 
 
@@ -1240,12 +1233,9 @@
         if (item.chain && client.commandInput.val().endsWith(" ")) {
           client.commandInput.val(client.commandInput.val() + ret);
           client.sendCommand();
-          return true;
         }
-        if (client.connected)
-          client.send(ret);
-        if (client.telnet.echo && client.options.commandEcho)
-          client.echo(ret);
+        else
+          client.send(ret, true);
       }
       else if (item.append)
         client.commandInput.val(client.commandInput.val() + ret);
@@ -1279,12 +1269,9 @@
         if (button.chain && client.commandInput.val().endsWith(" ")) {
           client.commandInput.val(client.commandInput.val() + ret);
           client.sendCommand();
-          return true;
         }
-        if (client.connected)
-          client.send(ret);
-        if (client.telnet.echo && client.options.commandEcho)
-          client.echo(ret);
+        else
+          client.send(ret, true);
       }
       else if (button.append)
         client.commandInput.val(client.commandInput.val() + ret);
@@ -1464,8 +1451,8 @@
       client.sendRaw(raw);
     });
 
-    ipcRenderer.on('send', (event, raw) => {
-      client.send(raw);
+    ipcRenderer.on('send', (event, raw, echo) => {
+      client.send(raw, echo);
     });
 
     ipcRenderer.on('menu-reload', (event) => {

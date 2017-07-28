@@ -1637,9 +1637,9 @@ ipcMain.on('send-raw', (event, raw) => {
     win.webContents.send('send-raw', raw);
 });
 
-ipcMain.on('send', (event, raw) => {
+ipcMain.on('send', (event, raw, echo) => {
   if (win && win.webContents)
-    win.webContents.send('send', raw);
+    win.webContents.send('send', raw, echo);
 });
 
 ipcMain.on('log', (event, raw) => {
