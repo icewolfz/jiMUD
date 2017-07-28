@@ -283,7 +283,7 @@ export class Input extends EventEmitter {
                 this.client.toggle();
                 return null;
             case 'event':
-            case 'eve':
+            case 'ev':
                 args = args.join(' ').splitQuote(', ', 1, 1).map((a) => {
                     return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
                         return e.replace(/\\\'/g, '\'');
