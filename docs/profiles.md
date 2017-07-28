@@ -65,6 +65,16 @@
 - `Type` the type of trigger
   - `Regular Expression` use javascript regular expressions when matching the pattern against text.
   - `Command Input Regular Expression` same as Regular Expression but only triggered against text sent from teh command input.
+  - `Event` fired when pattern matches an event name, either a custom name or build in:
+    - `opened` fired when client has finished opening
+    - `closed` fired when client is closing
+    - `connected` fired when client has been connected
+    - `disconnected` fired when client has bene disconnected
+    - `error` fired when an error happens, first first argument is error message
+    - `focus` fired when window focused
+    - `blur` fired when window loses focus
+    - `notify-clicked` fired when notification is clicked, argument 1 is title, argument 2 is message
+    - `notify-closed` fired when notification is closed, argument 1 is title, argument 2 is message
 - `Priority` the sort order of triggers
 - `Verbatim` the text is compared exactly how it is, including case
 - `Trigger on Newline` this causes the trigger to execute if it is a full line of text

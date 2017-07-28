@@ -8,7 +8,7 @@ import { AnsiColorCode } from './ansi';
 import { stripHTML, parseTemplate, getScrollBarHeight, SortArrayByPriority, existsSync } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
-import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context } from './profile';
+import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context, TriggerType } from './profile';
 import { MSP } from './msp';
 import { Display } from './display';
 const { version } = require('../../package.json');
@@ -383,6 +383,7 @@ export class Client extends EventEmitter {
             this.connectTime = Date.now();
             this.lastSendTime = Date.now();
             this.emit('connected');
+            this.emitEvent('connected');
         });
         this.telnet.on('debug', (msg) => {
             this.debug(msg);
@@ -398,6 +399,7 @@ export class Client extends EventEmitter {
             this.lastSendTime = 0;
             this.MSP.reset();
             this.emit('closed');
+            this.emitEvent('disconnected');
         });
         this.telnet.on('received-data', (data) => {
             data = { value: data };
@@ -631,6 +633,7 @@ export class Client extends EventEmitter {
                 clearTimeout(this._auto);
             this._auto = setTimeout(() => { this.connect(); }, this.options.autoConnectDelay);
         }
+        this.emitEvent('error', msg);
     }
 
     public echo(str: string, fore?: number, back?: number, newline?: boolean, forceLine?: boolean) {
@@ -804,5 +807,21 @@ export class Client extends EventEmitter {
 
     public beep() {
         require('electron').shell.beep();
+    }
+
+    public emitEvent(event: string, args?) {
+        this._input.triggerEvent(event, args);
+    }
+
+    public show() {
+        this.emit('show');
+    }
+
+    public hide() {
+        this.emit('hide');
+    }
+
+    public toggle() {
+        this.emit('toggle');
     }
 }

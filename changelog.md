@@ -3,6 +3,22 @@
 - **New:**
   - Auto login system if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
   - Immortal tools: create new empty local file
+  - Event [trigger type](docs/profiles.md#Triggers), you can now create triggers that will fire when events fire
+    - You can create custom events using #event or use a built in event name:
+      - `opened` fired when client has finished opening
+      - `closed` fired when client is closing
+      - `connected` fired when client has been connected
+      - `disconnected` fired when client has bene disconnected
+      - `error` fired when an error happens, first first argument is error message
+      - `focus` fired when window focused
+      - `blur` fired when window loses focus
+      - `notify-clicked` fired when notification is clicked, argument 1 is title, argument 2 is message
+      - `notify-closed` fired when notification is closed, argument 1 is title, argument 2 is message
+  - Added [#event](docs/commands.md) command to fire custom events
+  - Added [client.show()](docs/scripting.md#Basic-function-list) function to show the window
+  - Added [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
+  - Added [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show
+  - Added [#showclient, #hideclient, #toggleclient](docs/commands.md) commands to made scripting functions  
 - **Change:**
   - Immortal tools: focusing on local or remote path text box will now auto select all text
   - Profile manger

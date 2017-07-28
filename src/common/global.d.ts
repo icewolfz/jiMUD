@@ -11,22 +11,23 @@ interface CanvasRenderingContext2D {
 
 interface String {
 	splice(idx: number, s: string, rem?: number): string;
-	paddingLeft(paddingvalue:(string|number)): string;
-	paddingRight(paddingvalue:(string|number)): string;
+	paddingLeft(paddingvalue: (string | number)): string;
+	paddingRight(paddingvalue: (string | number)): string;
+	splitQuote(sep: string, type?, escape?): string[];
 }
 
-declare let $selected:string;
-declare let $selectedurl:string;
-declare let $selectedline:string;
-declare let $selectedword:string;
-declare let $selurl:string;
-declare let $selline:string;
-declare let $selword:string;
+declare let $selected: string;
+declare let $selectedurl: string;
+declare let $selectedline: string;
+declare let $selectedword: string;
+declare let $selurl: string;
+declare let $selline: string;
+declare let $selword: string;
 
 interface JQuery {
-	hasHorizontalScrollBar():boolean;	
-	innerText(msg):string;
-	textContents(msg):string;
-	treeview:any;
-	selectpicker:any
+	hasHorizontalScrollBar(): boolean;
+	innerText(msg): string;
+	textContents(msg): string;
+	treeview: any;
+	selectpicker: any
 }

@@ -37,6 +37,12 @@ To use scripting you just have to select script as the type from the type dropdo
   - `options` addtional options to customize the display [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
     - `dir` - auto, rtl, ltr
     - `icon` - full icon path, supports {varibales}
+- `client.emitEvent(event, args)` fire an event
+  - `event` the event name to fire
+  - `args` an array of arguments to pass to the event
+- `client.show()` show client
+- `client.hide()` hide client
+- `client.toggle()` toggle hide and show
 ### **WARNING**: you can effect the client if you access the wrong function, so any function used other then this list may caused unknown results and could cause the client to stop working
 
 Notice how all the functions have a client. in front of them, this is the client object that has all functions related to the client. For backward compatiblit with the ShadowMUD

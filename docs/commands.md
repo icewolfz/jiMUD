@@ -62,4 +62,12 @@ display time since connected
 display a notification window
   - `title` the title of the notification, if more then one word it must be in single quotes
   - `message` the main message of the notification, this is optional
-
+- `#event 'name' arguments` or `#eve` 
+fire a custom event, arguments is a space or comma delimited format supported with quoted grouping
+  - Example: `#event 'test' 1 2 3 '4 5'` will fire and event named test with arguments 1, 2, 3, and 4 5
+- `#showclient` or `#showcl`
+show client
+- `#hideclient` or `#hidecl`
+hide client
+- `#toggleclient` or `#togglecl`
+toggle show and hide client

@@ -525,6 +525,64 @@ String.prototype.paddingRight = function (this: string, paddingValue: (string | 
     return this + paddingValue.slice(-this.length);
 };
 
+String.prototype.splitQuote = function (this: string, sep: string, type?, escape?) {
+    if (this.length === 0)
+        return [this];
+    if (!type) type = 1 | 2;
+    if (!escape) escape = 1 | 2;
+    let quote: boolean = false;
+    let sQuote: boolean = false;
+    const str = [];
+    let pS = 0;
+    let s = 0;
+    let c: string;
+    let pC: string;
+    let sp;
+    const spl = sep.length;
+    let spC: string;
+    const tl = this.length;
+    for (; s < tl; s++) {
+        c = this.charAt(s);
+        if (c === '"' && (type & 2) === 2) {
+            if ((escape & 2) === 2) {
+                if (pC !== '\\')
+                    quote = !quote;
+            }
+            else
+                quote = !quote;
+        }
+        else if (c === '\'' && pC !== '\\' && (type & 1) === 1) {
+            if ((escape & 1) === 1) {
+                if (pC !== '\\')
+                    sQuote = !sQuote;
+            }
+            else
+                sQuote = !sQuote;
+        }
+        else if (!quote && !sQuote) {
+            for (sp = 0; sp < spl; sp++) {
+                spC = sep.charAt(sp);
+                if (c === spC) {
+                    if (s > pS || s === 0) {
+                        str.push(this.substr(pS, s - pS));
+                        pS = s + 1;
+                    }
+                    else if (s === tl - 1)
+                        str.push('');
+                }
+            }
+        }
+        pC = c;
+    }
+    if (s === tl && s === pS && sep.indexOf(pC) !== -1) {
+        str.push('');
+        pS = s + 1;
+    }
+    if (s > pS)
+        str.push(this.substr(pS, s - pS));
+    return str;
+};
+
 export function getTimeSpan(i: number): string {
     let al;
     const tmp = [];

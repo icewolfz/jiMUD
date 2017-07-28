@@ -7,7 +7,7 @@ import { MacroModifiers } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority } from './library';
 import { Client } from './client';
 import { Tests } from './test';
-import { Alias, Trigger, Macro, Profile } from './profile';
+import { Alias, Trigger, Macro, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
 
@@ -61,7 +61,7 @@ export class Input extends EventEmitter {
         });
 
         this.client.on('add-line', (data) => {
-            this.ExecuteTriggers(0, data.line, data.fragment, false);
+            this.ExecuteTriggers(TriggerType.Regular, data.line, data.fragment, false);
         });
 
         this.client.commandInput.keyup((event) => {
@@ -270,6 +270,32 @@ export class Input extends EventEmitter {
         let i;
         let tmp;
         switch (fun.toLowerCase()) {
+            case 'showclient':
+            case 'showcl':
+                this.client.show();
+                return null;
+            case 'hideclient':
+            case 'hidecl':
+                this.client.hide();
+                return null;
+            case 'toggleclient':
+            case 'togglecl':
+                this.client.toggle();
+                return null;
+            case 'event':
+            case 'eve':
+                args = args.join(' ').splitQuote(', ', 1, 1).map((a) => {
+                    return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                        return e.replace(/\\\'/g, '\'');
+                    });
+                });
+                if (args.length === 0)
+                    this.client.error('Invalid syntax use #event name or #event name arguments');
+                else if (args.length === 1)
+                    this.client.emitEvent(args[0]);
+                else
+                    this.client.emitEvent(args[0], args.slice(1));
+                return null;
             case 'notify':
             case 'not':
                 n = args[0];
@@ -957,7 +983,7 @@ export class Input extends EventEmitter {
                             }
                             else //else not an alias so normal space
                             {
-                                str = this.executeScript(this.ExecuteTriggers(1, alias, false, true));
+                                str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true));
                                 if (str !== null) out += str + '\n';
                                 str = '';
                                 AliasesCached = null;
@@ -965,7 +991,7 @@ export class Input extends EventEmitter {
                             //no longer look for an alias
                         }
                         else {
-                            str = this.executeScript(this.ExecuteTriggers(1, str, false, true));
+                            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true));
                             if (str !== null) out += str + '\n';
                             str = '';
                         }
@@ -1003,7 +1029,7 @@ export class Input extends EventEmitter {
             }
             else //else not an alias so normal space
             {
-                str = this.executeScript(this.ExecuteTriggers(1, alias, false, true));
+                str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true));
                 if (str !== null) out += str;
                 else if (out.length === 0) return null;
             }
@@ -1012,12 +1038,12 @@ export class Input extends EventEmitter {
         else if (alias.length > 0) {
             if (str.length > 0)
                 alias += str;
-            str = this.executeScript(this.ExecuteTriggers(1, alias, false, true));
+            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true));
             if (str !== null) out += str;
             else if (out.length === 0) return null;
         }
         else if (str.length > 0) {
-            str = this.executeScript(this.ExecuteTriggers(1, str, false, true));
+            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true));
             if (str !== null) out += str;
             else if (out.length === 0) return null;
         }
@@ -1029,7 +1055,7 @@ export class Input extends EventEmitter {
         return out;
     }
 
-   public ParseString(text: string, args, named, append?: boolean) {
+    public ParseString(text: string, args, named, append?: boolean) {
         if (text == null) return '';
         const tl = text.length;
         if (tl === 0)
@@ -1204,7 +1230,7 @@ export class Input extends EventEmitter {
         }
         if (ret == null || ret === undefined)
             return null;
-        ret = this.ExecuteTriggers(1, ret, false, true);
+        ret = this.ExecuteTriggers(TriggerType.CommandInputRegular, ret, false, true);
         if (ret == null || ret === undefined)
             return null;
         //Convert to string
@@ -1218,7 +1244,7 @@ export class Input extends EventEmitter {
 
     public ProcessMacros(keycode, alt, ctrl, shift, meta) {
         //if(!this.client.options.enableMacros) return false;
-        const  macros = FilterArrayByKeyValue(this.client.macros, 'key', keycode);
+        const macros = FilterArrayByKeyValue(this.client.macros, 'key', keycode);
         let m = 0;
         const ml = macros.length;
         for (; m < ml; m++) {
@@ -1362,15 +1388,11 @@ export class Input extends EventEmitter {
         this.scrollLock = !this.scrollLock;
     }
 
-    public ExecuteTriggers(type, raw?, frag?: boolean, ret?: boolean) {
+    public ExecuteTriggers(type: TriggerType, raw?, frag?: boolean, ret?: boolean) {
         if (raw == null) return raw;
         if (ret == null) ret = false;
         if (frag == null) frag = false;
-        if (this._TriggerCache == null) {
-            this._TriggerCache = $.grep(this.client.triggers, (a) => {
-                return a.enabled;
-            });
-        }
+        this.buildTriggerCache();
         let t = 0;
         const tl = this._TriggerCache.length;
         for (; t < tl; t++) {
@@ -1442,4 +1464,29 @@ export class Input extends EventEmitter {
     }
 
     public clearTriggerCache() { this._TriggerCache = null; this._TriggerFunctionCache = {}; }
+
+    public buildTriggerCache() {
+        if (this._TriggerCache == null) {
+            this._TriggerCache = $.grep(this.client.triggers, (a) => {
+                return a.enabled;
+            });
+        }
+    }
+
+    public triggerEvent(event: string, args?) {
+        this.buildTriggerCache();
+        let t = 0;
+        if (!args)
+            args = [event];
+        else if (!Array.isArray(args))
+            args = [event, args];
+        else
+            args.unshift(event);
+        const tl = this._TriggerCache.length;
+        for (; t < tl; t++) {
+            if (this._TriggerCache[t].type !== TriggerType.Event) continue;
+            if (event !== this._TriggerCache[t].pattern) continue;
+            this.ExecuteTrigger(this._TriggerCache[t], args, false, t);
+        }
+    }
 }

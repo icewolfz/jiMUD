@@ -25,7 +25,8 @@ export enum ItemStyle {
 
 export enum TriggerType {
     Regular = 0,
-    CommandInputRegular = 1
+    CommandInputRegular = 1,
+    Event = 2
 }
 
 export function MacroDisplay(item: Macro) {
