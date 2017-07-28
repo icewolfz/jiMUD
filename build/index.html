@@ -709,11 +709,11 @@
         var notify = new window.Notification(title, options);
         notify.onclick = () => {
           client.emit('notify-clicked', title, message);
-          client.emitEvent('notify-clicked', title, message);
+          client.emitEvent('notify-clicked', [title, message]);
         };
         notify.onclose = () => {
           client.emit('notify-closed', title, message);
-          client.emitEvent('notify-closed', title, message);
+          client.emitEvent('notify-closed', [title, message]);
         };
       });
       client.on('options-loaded', () => {
