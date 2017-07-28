@@ -745,6 +745,7 @@ export class IED extends EventEmitter {
             if (this.queue[q].state !== ItemState.working) continue;
             this.active = this.queue[q];
             this._activeIdx = q;
+            break;
         }
         if (!this.active) return;
         if (this.active.download) {

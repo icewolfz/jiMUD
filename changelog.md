@@ -16,6 +16,7 @@
     - Select on finish now clears previous selected items
     - A memory leak when running mkdir commands
     - An issue when maximizing and un-maximizing window
+    - Queue no longer works from newest to oldest, it now correctly uploads oldest in queue first
   - Auto connect will now correctly fire when changing character settings based on if connected or not
 ##### 0.4.8 2017-07-25
 - **New:**
