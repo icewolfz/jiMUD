@@ -308,23 +308,20 @@ export class Input extends EventEmitter {
         switch (fun.toLowerCase()) {
             case 'wait':
             case 'wa':
-                if (args.length === 0)
+                if (args.length === 0 || args.length > 1) {
                     this.client.error('Invalid syntax use #wait number');
-                else if (args.length === 1) {
-                    i = parseInt(args[0], 10);
-                    if (isNaN(i)) {
-                        this.client.error('Invalid number \'' + args[0] + '\'');
-                        return null;
-                    }
-                    if (i < 1) {
-                        this.client.error('Must be greater then zero');
-                        return null;
-                    }
-                    return i;
+                    return null;
                 }
-                else
-                    this.client.error('Invalid syntax use #wait number');
-                return null;
+                i = parseInt(args[0], 10);
+                if (isNaN(i)) {
+                    this.client.error('Invalid number \'' + args[0] + '\'');
+                    return null;
+                }
+                if (i < 1) {
+                    this.client.error('Must be greater then zero');
+                    return null;
+                }
+                return i;
             case 'showclient':
             case 'showcl':
                 this.client.show();
