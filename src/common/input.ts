@@ -312,10 +312,14 @@ export class Input extends EventEmitter {
                     this.client.error('Invalid syntax use #wait number');
                 else if (args.length === 1) {
                     i = parseInt(args[0], 10);
-                    if (isNaN(i))
+                    if (isNaN(i)) {
                         this.client.error('Invalid number \'' + args[0] + '\'');
-                    if (i < 1)
+                        return null;
+                    }
+                    if (i < 1) {
                         this.client.error('Must be greater then zero');
+                        return null;
+                    }
                     return i;
                 }
                 else
@@ -911,15 +915,7 @@ export class Input extends EventEmitter {
                         for (a = 0; a < al; a++) {
                             str = this.executeScript(this.ExecuteAlias(AliasesCached[a], args));
                             if (typeof str === 'number') {
-                                text = text.substr(idx + 1);
-                                if (text.length > 0)
-                                    setTimeout(() => {
-                                        const ret = this.parseOutgoing(text, eAlias, stacking);
-                                        if (this.client.connected)
-                                            this.client.send(ret);
-                                        if (this.client.telnet.echo && this.client.options.commandEcho)
-                                            this.client.echo(ret);
-                                    }, str);
+                                this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                                 if (out.length === 0) return null;
                                 return out;
                             }
@@ -1584,6 +1580,7 @@ export class Input extends EventEmitter {
             delay = 0;
         setTimeout(() => {
             const ret = this.parseOutgoing(text, eAlias, stacking);
+            if (ret == null || typeof ret === 'undefined' || ret.length === 0) return;
             if (this.client.connected)
                 this.client.send(ret);
             if (this.client.telnet.echo && this.client.options.commandEcho)
