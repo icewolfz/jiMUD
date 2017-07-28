@@ -15,6 +15,7 @@
       - `notify-clicked` fired when notification is clicked, argument 1 is title, argument 2 is message
       - `notify-closed` fired when notification is closed, argument 1 is title, argument 2 is message
   - Added [#event](docs/commands.md) command to fire custom events
+  - Added [client.emitEvent('event', args, delay)](docs/scripting.md#Basic-function-list) function to emit custom events
   - Added [client.show()](docs/scripting.md#Basic-function-list) function to show the window
   - Added [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
   - Added [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show

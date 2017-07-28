@@ -809,8 +809,13 @@ export class Client extends EventEmitter {
         require('electron').shell.beep();
     }
 
-    public emitEvent(event: string, args?) {
-        this._input.triggerEvent(event, args);
+    public emitEvent(event: string, args?, delay?: number) {
+        if (!delay || delay < 1)
+            this._input.triggerEvent(event, args);
+        else
+            setTimeout(() => {
+                this._input.triggerEvent(event, args);
+            }, delay);
     }
 
     public show() {
