@@ -170,23 +170,31 @@ export class IED extends EventEmitter {
                         this.emit('message', `Upload aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
                         break;
                     case IEDError.CMD_EXIST:
-                        if (obj && this._callbacks[obj.tag])
+                        if (obj && this._callbacks[obj.tag]) {
                             this._callbacks[obj.tag](obj.path + '/' + obj.file, (obj.tag.startsWith('mkdirIgnore') || obj.tag.startsWith('mkdirPIgnore')) ? IEDCmdStatus.success : IEDCmdStatus.failed);
+                            delete this._callbacks[obj.tag];
+                        }
                         this.emit('message', `File or directory already exist: '${obj.path}/${obj.file}`);
                         break;
                     case IEDError.CMD_DIRECTORY:
-                        if (obj && this._callbacks[obj.tag])
+                        if (obj && this._callbacks[obj.tag]) {
                             this._callbacks[obj.tag](obj.path + '/' + obj.file, IEDCmdStatus.failed);
+                            delete this._callbacks[obj.tag];
+                        }
                         this.emit('message', `File is a directory: '${obj.path}/${obj.file}`);
                         break;
                     case IEDError.CMD_NOEXIST:
-                        if (obj && this._callbacks[obj.tag])
+                        if (obj && this._callbacks[obj.tag]) {
                             this._callbacks[obj.tag](obj.path + '/' + obj.file, IEDCmdStatus.failed);
+                            delete this._callbacks[obj.tag];
+                        }
                         this.emit('message', `File or directory does not exist: '${obj.path}/${obj.file}`);
                         break;
                     case IEDError.CMD_FILE:
-                        if (obj && this._callbacks[obj.tag])
+                        if (obj && this._callbacks[obj.tag]) {
                             this._callbacks[obj.tag](obj.path + '/' + obj.file, IEDCmdStatus.failed);
+                            delete this._callbacks[obj.tag];
+                        }
                         this.emit('message', `File not a directory: '${obj.path}/${obj.file}`);
                         break;
                 }
@@ -310,12 +318,16 @@ export class IED extends EventEmitter {
                 break;
             case 'cmd':
                 if (mods.length > 2 && mods[2] === 'status') {
-                    if (obj && this._callbacks[obj.tag])
+                    if (obj && this._callbacks[obj.tag]) {
                         this._callbacks[obj.tag](obj.path + '/' + obj.file, obj.code);
+                        delete this._callbacks[obj.tag];
+                    }
                     this.emit('cmd', obj);
                 }
-                else if (obj && this._callbacks[obj.tag])
+                else if (obj && this._callbacks[obj.tag]) {
                     this._callbacks[obj.tag](obj.path + '/' + obj.file, IEDCmdStatus.failed);
+                    delete this._callbacks[obj.tag];
+                }
                 break;
         }
         this.nextGMCP();

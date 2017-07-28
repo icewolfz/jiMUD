@@ -424,6 +424,8 @@ table.dataTable {
 #queueInfo {
     white-space: nowrap;
     text-overflow: ellipsis;
-    overflow:hidden;
+    overflow: hidden;
     max-width: 33%;
+    padding-left: 2px;
+    padding-right: 2px;
 }

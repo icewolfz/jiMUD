@@ -1195,10 +1195,16 @@
                     updateRemote(dir, files);
                 else if (tag === 'dir:download') {
                     if (_progressCancel) {
+                        if (options.debug)
+                            console.log("Download files canceled");
                         pTotal = 0;
                         if ($("#Progress")[0].open)
                             $("#Progress")[0].close();
                         return;
+                    }
+                    if (options.debug) {
+                        console.log("Download files:");
+                        console.log(files);
                     }
                     var s = options.remote.length;
                     if (options.remote.endsWith('/'))
@@ -2626,9 +2632,15 @@
                 $("#ProgressTitle").html(`Preparing upload`);
                 $("#Progress")[0].showModal();
             }
+            if (options.debug)
+                console.log(`Upload path: ${p}`);
             //make dir then start uploads
             _ied.makeDirectory(options.remote + "/" + path.basename(p), false, true, () => {
                 walk(p, (files, dirs, empty) => {
+                    if (options.debug) {
+                        console.log("Upload files:");
+                        console.log(files);
+                    }
                     var s = options.local.length;
                     if (options.local.endsWith('/') || options.local.endsWith('\\'))
                         s--;
@@ -2689,6 +2701,8 @@
                 $("#ProgressTitle").html(`Preparing download`);
                 $("#Progress")[0].showModal();
             }
+            if (options.debug)
+                console.log(`Download path: ${p}`);
             if (!existsSync(path.join(options.local, path.basename(p))))
                 fs.mkdirSync(path.join(options.local, path.basename(p)));
             pTotal = 1;

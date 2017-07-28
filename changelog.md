@@ -12,8 +12,11 @@
   - Character manager was not reloading the loaded character when changes happened
   - Character name was not being set when using character manager on inital load
   - Profile manger: initial profile enabled checkbox in treeview where not being set
-  - Immortal tools: select on finish now clears previous selected items
-  - Autoconnect will now correctly fire when changing character settings based on if connected or not
+  - Immortal tools: 
+    - Select on finish now clears previous selected items
+    - A memory leak when running mkdir commands
+    - An issue when maximizing and un-maximizing window
+  - Auto connect will now correctly fire when changing character settings based on if connected or not
 ##### 0.4.8 2017-07-25
 - **New:**
   - Immortal tools:

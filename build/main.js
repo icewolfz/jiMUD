@@ -1950,6 +1950,7 @@ function loadWindowState(window) {
 }
 
 function trackWindowState(id, window) {
+  if(!window) return states[id];
   var bounds = window.getBounds();
   if (!states[id])
     states[id] = {
@@ -2495,12 +2496,12 @@ function createNewWindow(name, options) {
   });
 
   windows[name].window.on('maximize', () => {
-    trackWindowState(name, windows[name]);
+    trackWindowState(name, windows[name].window);
     states[name].maximized = true;
   });
 
   windows[name].window.on('unmaximize', () => {
-    trackWindowState(name, windows[name]);
+    trackWindowState(name, windows[name].window);
     states[name].maximized = false;
   });
 
