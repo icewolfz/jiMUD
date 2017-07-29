@@ -29,6 +29,7 @@
   - #notify now uses command line quote parse settings to build arguments, based on setting you can use ' or " to wrap title argument
   - Parsing errors now stop parsing and display error
 - **Fixed:**
+  - Windows meta data was not set for application
   - Character manager was not reloading the loaded character when changes happened
   - Character name was not being set when using character manager on initial load
   - Profile manger: initial profile enabled checkbox in treeview where not being set
