@@ -349,10 +349,10 @@ export class Input extends EventEmitter {
                 else
                     this.client.emitEvent(args[0], args.slice(1));
                 return null;
-            case 'delayevent':
+            case 'delayedevent':
             case 'de':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use #delayevent milliseconds name or #delayevent millisconds name arguments');
+                    throw new Error('Invalid syntax use #delayedevent milliseconds name or #delayedevent millisconds name arguments');
                 i = parseInt(args[0], 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
