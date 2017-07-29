@@ -67,7 +67,10 @@ display a notification window
   - `message` the main message of the notification, this is optional
 - `#event "name" arguments` or `#ev` 
 fire a custom event, arguments is a space delimited format supported with quoted grouping
-  - Example: `#event "test" 1 2 3 "4 5"` will fire and event named test with arguments 1, 2, 3, and 4 5
+  - Example: `#event "test" 1 2 3 "4 5"` will fire an event named test with arguments 1, 2, 3, and 4 5
+- `#delayevent milliseconds "name" arguments` or `#de` 
+fire a custom event with a delay, arguments is a space delimited format supported with quoted grouping
+  - Example: `#delayevent 3000 "test" 1 2 3 "4 5"` will fire and event named test with arguments 1, 2, 3, and 4 5 after waiting 3 seconds
 - `#showclient` or `#showcl`
 show client
 - `#hideclient` or `#hidecl`

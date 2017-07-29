@@ -349,6 +349,34 @@ export class Input extends EventEmitter {
                 else
                     this.client.emitEvent(args[0], args.slice(1));
                 return null;
+            case 'delayevent':
+            case 'de':
+                if (args.length < 2)
+                    throw new Error('Invalid syntax use #delayevent milliseconds name or #delayevent millisconds name arguments');
+                i = parseInt(args[0], 10);
+                if (isNaN(i))
+                    throw new Error('Invalid number \'' + args[0] + '\'');
+                if (i < 1)
+                    throw new Error('Must be greater then zero');
+                args.shift();
+                if (this.client.options.parseDoubleQuotes)
+                    args.map((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.options.parseSingleQuotes)
+                    args.map((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+
+                if (args.length === 1)
+                    this.client.emitEvent(args[0], 0, i);
+                else
+                    this.client.emitEvent(args[0], args.slice(1), i);
+                return null;
             case 'notify':
             case 'not':
                 if (args.length === 0)
