@@ -58,6 +58,21 @@
     var _noCapture = false;
     var _cLoading = false;
 
+    window.onerror = function (msg, url, line) {
+      if (client) {
+        if (msg.startsWith('Uncaught Error: '))
+          client.error(`${msg.substr(16)}`);
+        else
+          client.error(`${msg}`);
+      }
+      else {
+        console.log("Message: " + msg);
+        console.log("Url: " + url);
+        console.log("Line: " + line);
+      }
+      return true;
+    };
+
     webFrame.setSpellCheckProvider("en-US", true, {
       spellCheck: function (text) {
         if (!spellchecker || !client.options.spellchecking)

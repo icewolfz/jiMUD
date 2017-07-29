@@ -308,19 +308,13 @@ export class Input extends EventEmitter {
         switch (fun.toLowerCase()) {
             case 'wait':
             case 'wa':
-                if (args.length === 0 || args.length > 1) {
-                    this.client.error('Invalid syntax use #wait number');
-                    return null;
-                }
+                if (args.length === 0 || args.length > 1)
+                    throw new Error('Invalid syntax use #wait number');
                 i = parseInt(args[0], 10);
-                if (isNaN(i)) {
-                    this.client.error('Invalid number \'' + args[0] + '\'');
-                    return null;
-                }
-                if (i < 1) {
-                    this.client.error('Must be greater then zero');
-                    return null;
-                }
+                if (isNaN(i))
+                    throw new Error('Invalid number \'' + args[0] + '\'');
+                if (i < 1)
+                    throw new Error('Must be greater then zero');
                 return i;
             case 'showclient':
             case 'showcl':
@@ -349,7 +343,7 @@ export class Input extends EventEmitter {
                         });
                     });
                 if (args.length === 0)
-                    this.client.error('Invalid syntax use #event name or #event name arguments');
+                    throw new Error('Invalid syntax use #event name or #event name arguments');
                 else if (args.length === 1)
                     this.client.emitEvent(args[0]);
                 else
@@ -358,7 +352,7 @@ export class Input extends EventEmitter {
             case 'notify':
             case 'not':
                 if (args.length === 0)
-                    this.client.error('Invalid syntax use #notify \'title\' message');
+                    throw new Error('Invalid syntax use #notify \'title\' message');
                 else {
                     if (this.client.options.parseDoubleQuotes)
                         args[0] = args[0].replace(/^\"(.*)\"$/g, (v, e, w) => {
@@ -479,9 +473,9 @@ export class Input extends EventEmitter {
             case 'alias':
             case 'al':
                 if (args.length === 0)
-                    this.client.error('Invalid syntax use #alias name value');
+                    throw new Error('Invalid syntax use #alias name value');
                 else if (args.length === 1)
-                    this.client.error('Must supply an alias value');
+                    throw new Error('Must supply an alias value');
                 else {
                     items = this.client.activeProfile.aliases;
                     n = args[0];
@@ -491,7 +485,7 @@ export class Input extends EventEmitter {
                     if (/^\d+$/.exec(n)) {
                         n = parseInt(n, 10);
                         if (n < 0 || n >= items.length)
-                            this.client.error('Alias index must be >= 0 and < ' + items.length);
+                            throw new Error('Alias index must be >= 0 and < ' + items.length);
                         else {
                             items[n].value = args;
                             this.client.echo('Alias \'' + items[n].pattern + '\' updated.', -7, -8, true, true);
@@ -524,7 +518,7 @@ export class Input extends EventEmitter {
             case 'unalias':
             case 'una':
                 if (args.length === 0)
-                    this.client.error('Invalid syntax use #unalias name');
+                    throw new Error('Invalid syntax use #unalias name');
                 else {
                     items = this.client.activeProfile.aliases;
                     n = args.join(' ');
@@ -532,7 +526,7 @@ export class Input extends EventEmitter {
                         tmp = n;
                         n = parseInt(n, 10);
                         if (n < 0 || n >= items.length)
-                            this.client.error('Alias index must be >= 0 and < ' + items.length);
+                            throw new Error('Alias index must be >= 0 and < ' + items.length);
                         else
                             f = true;
                     }
@@ -562,9 +556,9 @@ export class Input extends EventEmitter {
             case 'setsetting':
             case 'sets':
                 if (args.length === 0)
-                    this.client.error('Invalid syntax use #setsetting name value');
+                    throw new Error('Invalid syntax use #setsetting name value');
                 else if (args.length === 1)
-                    this.client.error('Must supply a setsetting value');
+                    throw new Error('Must supply a setsetting value');
                 else {
                     n = args[0];
                     args = args.slice(1).join(' ');
@@ -574,7 +568,7 @@ export class Input extends EventEmitter {
                         tmp = n;
                         n = parseInt(n, 10);
                         if (n < 0 || n >= SettingList.length)
-                            this.client.error('Setting index must be >= 0 and < ' + SettingList.length);
+                            throw new Error('Setting index must be >= 0 and < ' + SettingList.length);
                         f = true;
                     }
                     else {
@@ -590,12 +584,12 @@ export class Input extends EventEmitter {
                         }
                     }
                     if (!f)
-                        this.client.error('Unknown setting \'' + tmp + '\'');
+                        throw new Error('Unknown setting \'' + tmp + '\'');
                     else {
                         switch (SettingList[n][2]) {
                             case 0:
                                 if (SettingList[n][4] > 0 && args.length > SettingList[n][4])
-                                    this.client.error('String can not be longer then ' + SettingList[n][4] + ' characters');
+                                    throw new Error('String can not be longer then ' + SettingList[n][4] + ' characters');
                                 else {
                                     this.client.setOption(SettingList[n][1] || SettingList[n][0], args);
                                     this.client.echo('Setting \'' + SettingList[n][0] + '\' set to \'' + args + '\'.', -7, -8, true, true);
@@ -626,14 +620,13 @@ export class Input extends EventEmitter {
                                         this.client.loadOptions();
                                         break;
                                     default:
-                                        this.client.error('Invalid value, must be true or false');
-                                        break;
+                                        throw new Error('Invalid value, must be true or false');
                                 }
                                 break;
                             case 2:
                                 i = parseInt(args, 10);
                                 if (isNaN(i))
-                                    this.client.error('Invalid number \'' + args + '\'');
+                                    throw new Error('Invalid number \'' + args + '\'');
                                 else {
                                     this.client.setOption(SettingList[n][1] || SettingList[n][0], i);
                                     this.client.echo('Setting \'' + SettingList[n][0] + '\' set to \'' + i + '\'.', -7, -8, true, true);
@@ -642,8 +635,7 @@ export class Input extends EventEmitter {
                                 break;
                             case 4:
                             case 5:
-                                this.client.error('Unsupported setting \'' + n + '\'');
-                                break;
+                                throw new Error('Unsupported setting \'' + n + '\'');
                         }
                     }
                 }
@@ -651,13 +643,13 @@ export class Input extends EventEmitter {
             case 'getsetting':
             case 'gets':
                 if (args.length === 0)
-                    this.client.error('Invalid syntax use #getsetting name');
+                    throw new Error('Invalid syntax use #getsetting name');
                 else {
                     n = args.join(' ');
                     if (/^\d+$/.exec(n)) {
                         n = parseInt(n, 10);
                         if (n < 0 || n >= SettingList.length)
-                            this.client.error('Setting index must be >= 0 and < ' + SettingList.length);
+                            throw new Error('Setting index must be >= 0 and < ' + SettingList.length);
                         else
                             f = true;
                     }
@@ -699,7 +691,7 @@ export class Input extends EventEmitter {
                             this.client.echo(tmp, -7, -8, true, true);
                         }
                         else if (!f)
-                            this.client.error('Unknown setting \'' + n + '\'');
+                            throw new Error('Unknown setting \'' + n + '\'');
                         else {
                             switch (SettingList[n][2]) {
                                 case 0:
@@ -732,17 +724,13 @@ export class Input extends EventEmitter {
             case 'profile':
             case 'pro':
                 if (args.length === 0)
-                    this.client.error('Invalid syntax use #profile name or #profile name enable/disable');
+                    throw new Error('Invalid syntax use #profile name or #profile name enable/disable');
                 else if (args.length === 1) {
                     if (!this.client.profiles.toggle(args[0])) {
-                        if (!this.client.profiles.contains(args[0])) {
-                            this.client.error('Profile not found');
-                            return null;
-                        }
-                        else {
-                            this.client.error(args[0] + ' can not be disabled as it is the only one enabled');
-                            return null;
-                        }
+                        if (!this.client.profiles.contains(args[0]))
+                            throw new Error('Profile not found');
+                        else
+                            throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
                     }
                     this.client.saveProfile(args[0]);
                     if (this.client.profiles[args[0]].enabled)
@@ -752,9 +740,9 @@ export class Input extends EventEmitter {
                 }
                 else {
                     if (!this.client.profiles[args[0]])
-                        this.client.error('Profile not found');
+                        throw new Error('Profile not found');
                     if (!args[1])
-                        this.client.error('Invalid syntax use #profile name or #profile name enable/disable');
+                        throw new Error('Invalid syntax use #profile name or #profile name enable/disable');
                     switch (args[1].toLowerCase()) {
                         case 'enable':
                         case 'on':
@@ -763,10 +751,8 @@ export class Input extends EventEmitter {
                                 args = args[0] + ' is already enabled';
                             else {
                                 if (!this.client.profiles.toggle(args[0])) {
-                                    if (!this.client.profiles.contains(args[0])) {
-                                        this.client.error('Profile not found');
-                                        return null;
-                                    }
+                                    if (!this.client.profiles.contains(args[0]))
+                                        throw new Error('Profile not found');
                                     args = args[0] + ' remains disabled';
                                 }
                                 else
@@ -781,22 +767,17 @@ export class Input extends EventEmitter {
                                 args = args[0] + ' is already disabled';
                             else {
                                 if (!this.client.profiles.toggle(args[0])) {
-                                    if (!this.client.profiles.contains(args[0])) {
-                                        this.client.error('Profile not found');
-                                        return null;
-                                    }
-                                    else {
-                                        this.client.error(args[0] + ' can not be disabled as it is the only one enabled');
-                                        return null;
-                                    }
+                                    if (!this.client.profiles.contains(args[0]))
+                                        throw new Error('Profile not found');
+                                    else
+                                        throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
                                 }
                                 this.client.saveProfile(args[0]);
                                 args = args[0] + ' is disabled';
                             }
                             break;
                         default:
-                            this.client.error('Invalid syntax use #profile name or #profile name enable/disable');
-                            return null;
+                            throw new Error('Invalid syntax use #profile name or #profile name enable/disable');
                     }
                 }
                 if (this.client.telnet.prompt)
