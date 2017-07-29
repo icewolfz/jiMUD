@@ -1554,8 +1554,10 @@ export class Input extends EventEmitter {
         if (delay < 0)
             delay = 0;
         setTimeout(() => {
-            const ret = this.parseOutgoing(text, eAlias, stacking);
+            let ret = this.parseOutgoing(text, eAlias, stacking);
             if (ret == null || typeof ret === 'undefined' || ret.length === 0) return;
+            if (!ret.endsWith('\n'))
+                ret = ret + '\n';
             this.client.send(ret, true);
         }, delay);
     }
