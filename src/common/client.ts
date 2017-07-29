@@ -707,7 +707,7 @@ export class Client extends EventEmitter {
         if (data == null || typeof data === 'undefined') return;
         if (data.handled || data.value == null || typeof data.value === 'undefined') return;
         if (data.value.length > 0)
-            this.send(txt, true);
+            this.send(data.value, true);
         if (this.options.keepLastCommand)
             this.commandInput.select();
         else
@@ -729,7 +729,7 @@ export class Client extends EventEmitter {
         if (data == null || typeof data === 'undefined') return;
         if (data.value == null || typeof data.value === 'undefined') return;
         if (!data.handled && data.value.length > 0)
-            this.send(txt, true);
+            this.send(data.value, true);
     }
 
     get scrollLock(): boolean {
