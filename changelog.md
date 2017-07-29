@@ -16,6 +16,7 @@
       - `notify-closed` fired when notification is closed, argument 1 is title, argument 2 is message
   - Added [#event](docs/commands.md) command to fire custom events
   - Added [#delayedevent](docs/commands.md) command to fire custom events with a delay
+  - Added [#gag](docs/commands.md) command to gag lines
   - Added [client.emitEvent('event', args, delay)](docs/scripting.md#Basic-function-list) function to emit custom events
   - Added [client.show()](docs/scripting.md#Basic-function-list) function to show the window
   - Added [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window

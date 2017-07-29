@@ -1108,6 +1108,70 @@ export class Display extends EventEmitter {
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
+    public removeLines(line: number, amt: number) {
+        if (line < 0 || line >= this.lines.length) return;
+        if (amt < 1) amt = 1;
+        this.emit('lines-removed', line, this.lines.slice(line, amt));
+        this.lines.splice(line, amt);
+        this.rawLines.splice(line, amt);
+        this.lineFormats.splice(line, amt);
+        this._backgroundLines.splice(line, amt);
+        this._viewLines.splice(line, amt);
+        this._expire2.splice(line, amt);
+
+        if (!this._currentSelection.drag) {
+            for (let l = line; l < line + amt; l++) {
+                if (this._currentSelection.start.y >= l && this._currentSelection.end.y >= l) {
+                    this._currentSelection.start.y = null;
+                    this._currentSelection.start.x = null;
+                    this._currentSelection.end.y = null;
+                    this._currentSelection.end.x = null;
+                    break;
+                }
+                else if (this._currentSelection.start.y === l) {
+                    if (this._currentSelection.start.y > this._currentSelection.end.y) {
+                        this._currentSelection.start.y--;
+                        if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this.lines.length)
+                            this._currentSelection.start.x = this.lines[this._currentSelection.start.y].length;
+                        else
+                            this._currentSelection.start.x = 0;
+                    }
+                    else {
+                        this._currentSelection.start.y++;
+                        this._currentSelection.start.x = 0;
+                    }
+                }
+                else if (this._currentSelection.end.y === l) {
+                    if (this._currentSelection.start.y > this._currentSelection.end.y) {
+                        this._currentSelection.end.y++;
+                        this._currentSelection.end.x = 0;
+                    }
+                    else {
+                        this._currentSelection.end.y--;
+                        if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this.lines.length)
+                            this._currentSelection.end.x = this.lines[this._currentSelection.end.y].length;
+                        else
+                            this._currentSelection.end.x = 0;
+                    }
+                }
+            }
+        }
+        let ol;
+        for (ol in this._overlays) {
+            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
+                continue;
+            this._overlays[ol].splice(line, amt);
+        }
+
+        for (ol in this._expire) {
+            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
+                continue;
+            this._expire[ol].splice(line, amt);
+        }
+
+        this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
+    }
+
     public SetColor(code: number, color) {
         this._parser.SetColor(code, color);
     }

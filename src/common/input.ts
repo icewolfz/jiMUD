@@ -25,6 +25,7 @@ export class Input extends EventEmitter {
     private _TriggerCache: Trigger[] = null;
     private _TriggerFunctionCache = {};
     private _scrollLock: boolean = false;
+    private _gag: number = 0;
 
     public client: Client = null;
 
@@ -62,6 +63,10 @@ export class Input extends EventEmitter {
 
         this.client.on('add-line', (data) => {
             this.ExecuteTriggers(TriggerType.Regular, data.line, data.fragment, false);
+            if (this._gag > 0) {
+                data.gagged = true;
+                this._gag--;
+            }
         });
 
         this.client.commandInput.keyup((event) => {
@@ -306,6 +311,22 @@ export class Input extends EventEmitter {
         let i;
         let tmp;
         switch (fun.toLowerCase()) {
+            case 'gag':
+            case 'ga':
+                if (args.length === 0)
+                    this._gag = 1;
+                else if (args.length > 1)
+                    throw new Error('Invalid syntax use #gag number or #gag');
+                i = parseInt(args[0], 10);
+                if (isNaN(i))
+                    throw new Error('Invalid number \'' + args[0] + '\'');
+                if (i >= 0)
+                    this._gag = i + 1;
+                else {
+                    this.client.display.removeLines(this.client.display.lines.length - i, i);
+                    this._gag = 0;
+                }
+                return null;
             case 'wait':
             case 'wa':
                 if (args.length === 0 || args.length > 1)
