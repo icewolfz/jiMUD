@@ -313,16 +313,28 @@ export class Input extends EventEmitter {
         switch (fun.toLowerCase()) {
             case 'gag':
             case 'ga':
-                if (args.length === 0)
-                    this._gag = 1;
+                if (args.length === 0) {
+                    setTimeout(() => {
+                        this.client.display.removeLine(this.client.display.lines.length - 1);
+                    }, 0);
+                    this._gag = 0;
+                    return null;
+                }
                 else if (args.length > 1)
                     throw new Error('Invalid syntax use #gag number or #gag');
                 i = parseInt(args[0], 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
-                if (i >= 0)
-                    this._gag = i + 1;
+                if (i >= 0) {
+                    setTimeout(() => {
+                        this.client.display.removeLine(this.client.display.lines.length - 1);
+                        this._gag = i - 1;
+                    }, 0);
+                }
                 else {
+                    i *= -1;
+                    if (i > this.client.display.lines.length)
+                        i = this.client.display.lines.length;
                     this.client.display.removeLines(this.client.display.lines.length - i, i);
                     this._gag = 0;
                 }
