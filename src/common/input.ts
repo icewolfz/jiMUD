@@ -315,7 +315,7 @@ export class Input extends EventEmitter {
             case 'ungag':
             case 'ung':
                 if (args.length > 0)
-                    throw new Error('Invalid syntax use #gag number or #gag');
+                    throw new Error('Invalid syntax use \x1b[4m#ung\x1b[0;-11;-12mag number or \x1b[4m#ung\x1b[0;-11;-12mag');
                 if (this._gagID)
                     clearTimeout(this._gagID);
                 this._gag = 0;
@@ -334,7 +334,7 @@ export class Input extends EventEmitter {
                     return null;
                 }
                 else if (args.length > 1)
-                    throw new Error('Invalid syntax use #gag number or #gag');
+                    throw new Error('Invalid syntax use \x1b[4m#ga\x1b[0;-11;-12mg number or \x1b[4m#ga\x1b[0;-11;-12mg');
                 i = parseInt(args[0], 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
@@ -365,7 +365,7 @@ export class Input extends EventEmitter {
             case 'wait':
             case 'wa':
                 if (args.length === 0 || args.length > 1)
-                    throw new Error('Invalid syntax use #wait number');
+                    throw new Error('Invalid syntax use \x1b[4m#wa\x1b[0;-11;-12mit number');
                 i = parseInt(args[0], 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
@@ -399,7 +399,7 @@ export class Input extends EventEmitter {
                         });
                     });
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use #raiseevent name or #raiseevent name arguments');
+                    throw new Error('Invalid syntax use #\x1b[4mraise\x1b[0;-11;-12mevent name or #\x1b[4mraise\x1b[0;-11;-12mevent name arguments');
                 else if (args.length === 1)
                     this.client.emitEvent(args[0]);
                 else
@@ -408,7 +408,7 @@ export class Input extends EventEmitter {
             case 'raisedelayed':
             case 'raisede':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use #raisedelayed milliseconds name or #raisedelayed milliseconds name arguments');
+                    throw new Error('Invalid syntax use \x1b[4m#raisede\x1b[0;-11;-12mlayed milliseconds name or \x1b[4m#raisede\x1b[0;-11;-12mlayed milliseconds name arguments');
                 i = parseInt(args[0], 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
@@ -436,7 +436,7 @@ export class Input extends EventEmitter {
             case 'notify':
             case 'not':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use #notify \'title\' message');
+                    throw new Error('Invalid syntax use \x1b[4m#not\x1b[0;-11;-12mify \'title\' message');
                 else {
                     if (this.client.options.parseDoubleQuotes)
                         args[0] = args[0].replace(/^\"(.*)\"$/g, (v, e, w) => {
@@ -557,7 +557,7 @@ export class Input extends EventEmitter {
             case 'alias':
             case 'al':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use #alias name value');
+                    throw new Error('Invalid syntax use \x1b[4m#al\x1b[0;-11;-12mias name value');
                 else if (args.length === 1)
                     throw new Error('Must supply an alias value');
                 else {
@@ -602,7 +602,7 @@ export class Input extends EventEmitter {
             case 'unalias':
             case 'una':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use #unalias name');
+                    throw new Error('Invalid syntax use \x1b[4m#una\x1b[0;-11;-12mlias name');
                 else {
                     items = this.client.activeProfile.aliases;
                     n = args.join(' ');
@@ -640,7 +640,7 @@ export class Input extends EventEmitter {
             case 'setsetting':
             case 'sets':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use #setsetting name value');
+                    throw new Error('Invalid syntax use \x1b[4m#sets\x1b[0;-11;-12metting name value');
                 else if (args.length === 1)
                     throw new Error('Must supply a setsetting value');
                 else {
@@ -727,7 +727,7 @@ export class Input extends EventEmitter {
             case 'getsetting':
             case 'gets':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use #getsetting name');
+                    throw new Error('Invalid syntax use \x1b[4m#gets\x1b[0;-11;-12metting name');
                 else {
                     n = args.join(' ');
                     if (/^\d+$/.exec(n)) {
@@ -808,7 +808,7 @@ export class Input extends EventEmitter {
             case 'profile':
             case 'pro':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use #profile name or #profile name enable/disable');
+                    throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
                 else if (args.length === 1) {
                     if (!this.client.profiles.toggle(args[0])) {
                         if (!this.client.profiles.contains(args[0]))
@@ -826,7 +826,7 @@ export class Input extends EventEmitter {
                     if (!this.client.profiles[args[0]])
                         throw new Error('Profile not found');
                     if (!args[1])
-                        throw new Error('Invalid syntax use #profile name or #profile name enable/disable');
+                        throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
                     switch (args[1].toLowerCase()) {
                         case 'enable':
                         case 'on':
@@ -861,7 +861,7 @@ export class Input extends EventEmitter {
                             }
                             break;
                         default:
-                            throw new Error('Invalid syntax use #profile name or #profile name enable/disable');
+                            throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
                     }
                 }
                 if (this.client.telnet.prompt)
