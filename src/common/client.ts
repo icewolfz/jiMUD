@@ -618,7 +618,7 @@ export class Client extends EventEmitter {
         else
             msg = err;
 
-        this.echo('Error: ' + msg + '.', AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+        this.echo('Error: ' + msg, AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
 
         if (this.options.logErrors) {
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), new Date().toLocaleString() + '\n', { flag: 'a' });

@@ -14,8 +14,8 @@
       - `blur` fired when window loses focus
       - `notify-clicked` fired when notification is clicked, argument 1 is title, argument 2 is message
       - `notify-closed` fired when notification is closed, argument 1 is title, argument 2 is message
-  - Added [#event](docs/commands.md) command to fire custom events
-  - Added [#delayedevent](docs/commands.md) command to fire custom events with a delay
+  - Added [#raisevent](docs/commands.md) command to fire custom events
+  - Added [#raisedelayed](docs/commands.md) command to fire custom events with a delay
   - Added [#gag](docs/commands.md) command to gag lines
   - Added [#ungag](docs/commands.md) command to cancel #gag
   - Added [client.emitEvent('event', args, delay)](docs/scripting.md#Basic-function-list) function to emit custom events

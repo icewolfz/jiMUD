@@ -384,8 +384,8 @@ export class Input extends EventEmitter {
             case 'togglecl':
                 this.client.toggle();
                 return null;
-            case 'event':
-            case 'ev':
+            case 'raiseevent':
+            case 'raise':
                 if (this.client.options.parseDoubleQuotes)
                     args.map((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
@@ -399,16 +399,16 @@ export class Input extends EventEmitter {
                         });
                     });
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use #event name or #event name arguments');
+                    throw new Error('Invalid syntax use #raiseevent name or #raiseevent name arguments');
                 else if (args.length === 1)
                     this.client.emitEvent(args[0]);
                 else
                     this.client.emitEvent(args[0], args.slice(1));
                 return null;
-            case 'delayedevent':
-            case 'de':
+            case 'raisedelayed':
+            case 'raisede':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use #delayedevent milliseconds name or #delayedevent millisconds name arguments');
+                    throw new Error('Invalid syntax use #raisedelayed milliseconds name or #raisedelayed milliseconds name arguments');
                 i = parseInt(args[0], 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
