@@ -940,6 +940,7 @@ export class Input extends EventEmitter {
         text = text.replace(/(\%|\$)\{copied.lower\}/g, copied);
         text = text.replace(/(\%|\$)\{copied.upper\}/g, copied.toUpperCase());
         text = text.replace(/(\%|\$)\{copied.proper\}/g, ProperCase(copied));
+        text = text.replace(/(\%|\$)\{(repeatnum|i)\}/g, '0');
 
         text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)\}/g, (v, e, w) => { return window['$' + w]; });
         text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower\}/g, (v, e, w) => { return window['$' + w].toLowerCase(); });
