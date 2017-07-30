@@ -1255,8 +1255,10 @@ export class Input extends EventEmitter {
             c = text.charAt(idx);
             switch (state) {
                 case 1:
-                    if (c === '{' && arg.length === 0)
+                    if (c === '{' && arg.length === 0) {
                         state = 4;
+                        continue;
+                    }
                     switch (c) {
                         case '%':
                             str += '%';
@@ -1304,7 +1306,7 @@ export class Input extends EventEmitter {
                 case 2:
                     if (c === '{')
                         state = 5;
-                    if (c.match(/[^a-zA-Z_$]/g)) {
+                    else if (c.match(/[^a-zA-Z_$]/g)) {
                         state = 0;
                         str += '$' + c;
                     }
@@ -1334,8 +1336,8 @@ export class Input extends EventEmitter {
                             _used = args.length;
                         }
                         else {
-                            arg = parseInt(arg, 10);
                             if (!isNaN(arg)) {
+                                arg = parseInt(arg, 10);
                                 if (arg < 0) {
                                     str += args.slice(arg).join(' ');
                                     _used = args.length;
@@ -1347,8 +1349,8 @@ export class Input extends EventEmitter {
                                 }
                             }
                             else {
-                                str += '%{';
-                                idx -= arg.length;
+                                str += '%';
+                                idx = idx - arg.length - 2;
                             }
                         }
                         state = 0;
@@ -1367,8 +1369,8 @@ export class Input extends EventEmitter {
                             _used = args.length;
                         }
                         else {
-                            arg = parseInt(arg, 10);
                             if (!isNaN(arg)) {
+                                arg = parseInt(arg, 10);
                                 if (arg < 0) {
                                     str += args.slice(arg).join(' ');
                                     _used = args.length;
@@ -1380,8 +1382,8 @@ export class Input extends EventEmitter {
                                 }
                             }
                             else {
-                                str += `\${`;
-                                idx -= arg.length;
+                                str += '$';
+                                idx = idx - arg.length - 2;
                             }
                         }
                         state = 0;
