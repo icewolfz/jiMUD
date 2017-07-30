@@ -18,7 +18,7 @@
   - Add [#raisedelayed](docs/commands.md) command to fire custom events with a delay
   - Add [#gag](docs/commands.md) command to gag lines
   - Add [#ungag](docs/commands.md) command to cancel #gag
-  - Add [#showclient, #hideclient, #toggleclient](docs/commands.md) commands to made scripting functions
+  - Add [#showclient, #hideclient, #toggleclient](docs/commands.md) commands to go with scripting functions
   - Add [#wait](docs/commands.md) command to pause command execution for that command block
   - Add [#nnn](docs/commands.md) command to repeat commands
   - Add [%{repeatnum}/${i}](docs/profiles.md) returns the current index during #nnn
