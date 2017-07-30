@@ -42,6 +42,7 @@
     - An issue when maximizing and un-maximizing window
     - Queue no longer works from newest to oldest, it now correctly uploads oldest in queue first
   - Auto connect will now correctly fire when changing character settings based on if connected or not
+  - Fixed a bug in echoing system and it restoring the previous ansi state
 ##### 0.4.8 2017-07-25
 - **New:**
   - Immortal tools:

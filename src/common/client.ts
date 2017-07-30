@@ -642,7 +642,7 @@ export class Client extends EventEmitter {
         if (forceLine == null) forceLine = false;
         if (fore == null) fore = AnsiColorCode.LocalEcho;
         if (back == null) back = AnsiColorCode.LocalEchoBack;
-        const codes = this.display.CurrentAnsiCode() + '\n';
+        const codes = '\x1b[0,' + this.display.CurrentAnsiCode() + '\n';
         if (str.endsWith('\n'))
             str = str.substr(0, str.length - 1);
         if (this.telnet.prompt && forceLine)
