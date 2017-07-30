@@ -319,6 +319,7 @@ export class Input extends EventEmitter {
                 if (this._gagID)
                     clearTimeout(this._gagID);
                 this._gag = 0;
+                this._gagID = null;
                 return null;
             case 'gag':
             case 'ga':
@@ -345,6 +346,7 @@ export class Input extends EventEmitter {
                         this._gag = i - 1;
                         this._gagID = null;
                     }, 0);
+                    this._gag = 0;
                 }
                 else {
                     if (this._gagID)
@@ -355,6 +357,7 @@ export class Input extends EventEmitter {
                             i = this.client.display.lines.length;
                         this.client.display.removeLines(this.client.display.lines.length - i, i);
                         this._gagID = null;
+                        this._gag = 0;
                     }, 0);
                     this._gag = 0;
                 }
