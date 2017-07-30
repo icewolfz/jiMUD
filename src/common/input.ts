@@ -1256,6 +1256,9 @@ export class Input extends EventEmitter {
             switch (state) {
                 case 1:
                     switch (c) {
+                        case '{':
+                            state = 4;
+                            break;
                         case '%':
                             str += '%';
                             state = 0;
@@ -1300,10 +1303,11 @@ export class Input extends EventEmitter {
                     }
                     break;
                 case 2:
+                    if (c === '{')
+                        state = 5;
                     if (c.match(/[^a-zA-Z_$]/g)) {
                         state = 0;
                         str += '$' + c;
-                        break;
                     }
                     else {
                         arg = c;
@@ -1316,7 +1320,72 @@ export class Input extends EventEmitter {
                             str += named[arg];
                         idx--;
                         state = 0;
-                        break;
+                    }
+                    else
+                        arg += c;
+                    break;
+                case 4:
+                    if (c === '}') {
+                        if (arg === 'i')
+                            str += window.repeatnum;
+                        else if (arg === 'repeatnum')
+                            str += window.repeatnum;
+                        else if (arg === '*') {
+                            str += args.slice(1).join(' ');
+                            _used = args.length;
+                        }
+                        else {
+                            arg = parseInt(arg, 10);
+                            if (!isNaN(arg)) {
+                                if (arg < 0) {
+                                    str += args.slice(arg).join(' ');
+                                    _used = args.length;
+                                }
+                                else {
+                                    str += args[arg];
+                                    if (arg > _used)
+                                        _used = arg;
+                                }
+                            }
+                            else {
+                                str += '%{';
+                                idx -= arg.length;
+                            }
+                        }
+                        state = 0;
+                    }
+                    else
+                        arg += c;
+                    break;
+                case 5:
+                    if (c === '}') {
+                        if (arg === 'i')
+                            str += window.repeatnum;
+                        else if (arg === 'repeatnum')
+                            str += window.repeatnum;
+                        else if (arg === '*') {
+                            str += args.slice(1).join(' ');
+                            _used = args.length;
+                        }
+                        else {
+                            arg = parseInt(arg, 10);
+                            if (!isNaN(arg)) {
+                                if (arg < 0) {
+                                    str += args.slice(arg).join(' ');
+                                    _used = args.length;
+                                }
+                                else {
+                                    str += args[arg];
+                                    if (arg > _used)
+                                        _used = arg;
+                                }
+                            }
+                            else {
+                                str += `\${`;
+                                idx -= arg.length;
+                            }
+                        }
+                        state = 0;
                     }
                     else
                         arg += c;
@@ -1344,6 +1413,9 @@ export class Input extends EventEmitter {
             arg = parseInt(arg, 10);
             if (arg < args.length)
                 str += args[arg];
+        }
+        else if (state === 4) {
+            str += '%{' + arg;
         }
         //ignore args[0] as 0 should be the "original text"
         if (args.length - 1 > 0 && append && _used + 1 < args.length) {
