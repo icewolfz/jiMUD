@@ -80,3 +80,4 @@ toggle show and hide client
 - `#gag number` or `#ga`
 gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
   - `number` if >= 0 it will gag current line and that number of incoming lines, if negative it will gag the # of lines before current line
+- `#ungag` or `#ung` clear preivous #gag command settings
