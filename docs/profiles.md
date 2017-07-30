@@ -133,3 +133,4 @@
 - `${cr}` - replace with carriage return
 - `${lf}` - replace with line feed
 - `${crlf}` - replace with carriage return and linefeed
+- `${expression}` - evaluate the math expression and return the results

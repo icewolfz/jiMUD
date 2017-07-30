@@ -284,6 +284,7 @@
     function loadSettings() {
       $('#autoConnect').prop('checked', _settings.autoConnect);
       $('#autoLogin').prop('checked', _settings.autoLogin);
+      $('#allowEval').prop('checked', _settings.allowEval);
       $('#autoConnectDelay').val(_settings.autoConnectDelay);
       $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
       $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
@@ -966,7 +967,7 @@
               <input type="checkbox" id="autoLogin" /> Auto login
             </label>
           </div>
-          
+
 
           <div class="col-sm-6 form-group">
             <label class="control-label">
@@ -982,6 +983,11 @@
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="editorPersistent" /> Persistent advanced editor
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="allowEval" /> Allow evaluate
             </label>
           </div>
           <div class="col-sm-6 form-group">

@@ -14,19 +14,21 @@
       - `blur` fired when window loses focus
       - `notify-clicked` fired when notification is clicked, argument 1 is title, argument 2 is message
       - `notify-closed` fired when notification is closed, argument 1 is title, argument 2 is message
-  - Added [#raisevent](docs/commands.md) command to fire custom events
-  - Added [#raisedelayed](docs/commands.md) command to fire custom events with a delay
-  - Added [#gag](docs/commands.md) command to gag lines
-  - Added [#ungag](docs/commands.md) command to cancel #gag
-  - Added [#showclient, #hideclient, #toggleclient](docs/commands.md) commands to made scripting functions
-  - Added [#wait](docs/commands.md) command to pause command execution for that command block
-  - Added [#nnn](docs/commands.md) command to repeat commands
-  - Added [%{repeatnum}/${i}](docs/profiles.md) returns the current index during #nnn
-  - Added [${cr}, ${lf}, and ${crlf}](docs/profiles.md) for carriage return, line feed, and carriage return + line feed
-  - Added [client.raise('event', args, delay)](docs/scripting.md#Basic-function-list) function to emit custom events
-  - Added [client.show()](docs/scripting.md#Basic-function-list) function to show the window
-  - Added [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
-  - Added [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show  
+  - Add [#raisevent](docs/commands.md) command to fire custom events
+  - Add [#raisedelayed](docs/commands.md) command to fire custom events with a delay
+  - Add [#gag](docs/commands.md) command to gag lines
+  - Add [#ungag](docs/commands.md) command to cancel #gag
+  - Add [#showclient, #hideclient, #toggleclient](docs/commands.md) commands to made scripting functions
+  - Add [#wait](docs/commands.md) command to pause command execution for that command block
+  - Add [#nnn](docs/commands.md) command to repeat commands
+  - Add [%{repeatnum}/${i}](docs/profiles.md) returns the current index during #nnn
+  - Add [${cr}, ${lf}, and ${crlf}](docs/profiles.md) for carriage return, line feed, and carriage return + line feed
+  - Add [${expression}](docs/profiles.md) evaluate the math expression and return the results
+  - Add [client.raise('event', args, delay)](docs/scripting.md#Basic-function-list) function to emit custom events
+  - Add [client.show()](docs/scripting.md#Basic-function-list) function to show the window
+  - Add [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
+  - Add [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show 
+value returned
 - **Change:**
   - Immortal tools: focusing on local or remote path text box will now auto select all text
   - Profile manger

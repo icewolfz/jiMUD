@@ -101,6 +101,7 @@
     "fs-extra": "^3.0.1",
     "jquery": "^3.1.1",
     "lz-string": "^1.4.4",
+    "mathjs-expression-parser": "^1.0.0",
     "moment": "^2.18.1",
     "rgbcolor": "^1.0.0",
     "spellchecker": "^3.3.1",

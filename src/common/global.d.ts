@@ -31,3 +31,8 @@ interface JQuery {
 	treeview: any;
 	selectpicker: any
 }
+
+interface Window {
+	i: any;
+	repeatnum: any;
+}

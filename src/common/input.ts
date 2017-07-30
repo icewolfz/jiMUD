@@ -10,6 +10,7 @@ import { Tests } from './test';
 import { Alias, Trigger, Macro, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
+const mathjs = require('mathjs-expression-parser');
 
 const buzz = require('buzz');
 
@@ -45,6 +46,8 @@ export class Input extends EventEmitter {
         if (!client)
             throw new Error('Invalid client!');
         this.client = client;
+        window.i = 0;
+        window.repeatnum = 0;
         this._tests = new Tests(client);
         this._commandHistory = [];
         $(document).keydown((event) => {
@@ -877,13 +880,17 @@ export class Input extends EventEmitter {
                 throw new Error('Number must be greater then 0.');
             if (args.length === 0)
                 throw new Error('Invalid syntax use #nnn commands');
-            args = args.join(' ') ;
+            args = args.join(' ');
             tmp = [];
             for (let r = 0; r < i; r++) {
+                window.i = r;
+                window.repeatnum = r;
                 n = this.parseOutgoing(args.replace(/(\%|\$)\{(repeatnum|i)\}/g, r));
                 if (n != null && n.length > 0)
                     tmp.push(n);
             }
+            window.i = 0;
+            window.repeatnum = 0;
             if (tmp.length > 0)
                 return tmp.join('\n');
             return null;
@@ -940,7 +947,7 @@ export class Input extends EventEmitter {
         text = text.replace(/(\%|\$)\{copied.lower\}/g, copied);
         text = text.replace(/(\%|\$)\{copied.upper\}/g, copied.toUpperCase());
         text = text.replace(/(\%|\$)\{copied.proper\}/g, ProperCase(copied));
-        text = text.replace(/(\%|\$)\{(repeatnum|i)\}/g, '0');
+        text = text.replace(/(\%|\$)\{(repeatnum|i)\}/g, window.repeatnum);
 
         text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)\}/g, (v, e, w) => { return window['$' + w]; });
         text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower\}/g, (v, e, w) => { return window['$' + w].toLowerCase(); });
@@ -950,6 +957,12 @@ export class Input extends EventEmitter {
         text = text.replace(/(\%|\$)\{lower\((.*)\)\}/g, (v, e, w) => { return w.toLowerCase(); });
         text = text.replace(/(\%|\$)\{upper\((.*)\)\}/g, (v, e, w) => { return w.toUpperCase(); });
         text = text.replace(/(\%|\$)\{proper\((.*)\)\}/g, (v, e, w) => { return ProperCase(w); });
+
+        if (this.client.options.allowEval) {
+            text = text.replace(/(\%|\$)\{(.*)\}/g, (v, e, w) => {
+                return mathjs.eval(w, { i: window.repeatnum, repeatnum: window.repeatnum });
+            });
+        }
 
         tl = text.length;
 

@@ -193,6 +193,8 @@ export class Settings {
     public logPath = path.join('{data}', 'logs');
     public theme = path.join('{themes}', 'default');
 
+    public allowEval: boolean = true;
+
     public windows = {};
     public buttons = {
         connect: true,
