@@ -401,9 +401,9 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Invalid syntax use #\x1b[4mraise\x1b[0;-11;-12mevent name or #\x1b[4mraise\x1b[0;-11;-12mevent name arguments');
                 else if (args.length === 1)
-                    this.client.emitEvent(args[0]);
+                    this.client.raise(args[0]);
                 else
-                    this.client.emitEvent(args[0], args.slice(1));
+                    this.client.raise(args[0], args.slice(1));
                 return null;
             case 'raisedelayed':
             case 'raisede':
@@ -429,9 +429,9 @@ export class Input extends EventEmitter {
                     });
 
                 if (args.length === 1)
-                    this.client.emitEvent(args[0], 0, i);
+                    this.client.raise(args[0], 0, i);
                 else
-                    this.client.emitEvent(args[0], args.slice(1), i);
+                    this.client.raise(args[0], args.slice(1), i);
                 return null;
             case 'notify':
             case 'not':

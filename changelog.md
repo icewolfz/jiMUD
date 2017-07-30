@@ -18,12 +18,12 @@
   - Added [#raisedelayed](docs/commands.md) command to fire custom events with a delay
   - Added [#gag](docs/commands.md) command to gag lines
   - Added [#ungag](docs/commands.md) command to cancel #gag
-  - Added [client.emitEvent('event', args, delay)](docs/scripting.md#Basic-function-list) function to emit custom events
-  - Added [client.show()](docs/scripting.md#Basic-function-list) function to show the window
-  - Added [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
-  - Added [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show
   - Added [#showclient, #hideclient, #toggleclient](docs/commands.md) commands to made scripting functions
   - Added [#wait](docs/commands.md) command to pause command execution for that command block
+  - Added [client.raise('event', args, delay)](docs/scripting.md#Basic-function-list) function to emit custom events
+  - Added [client.show()](docs/scripting.md#Basic-function-list) function to show the window
+  - Added [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
+  - Added [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show  
 - **Change:**
   - Immortal tools: focusing on local or remote path text box will now auto select all text
   - Profile manger

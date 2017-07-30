@@ -383,7 +383,7 @@ export class Client extends EventEmitter {
             this.connectTime = Date.now();
             this.lastSendTime = Date.now();
             this.emit('connected');
-            this.emitEvent('connected');
+            this.raise('connected');
         });
         this.telnet.on('debug', (msg) => {
             this.debug(msg);
@@ -399,7 +399,7 @@ export class Client extends EventEmitter {
             this.lastSendTime = 0;
             this.MSP.reset();
             this.emit('closed');
-            this.emitEvent('disconnected');
+            this.raise('disconnected');
         });
         this.telnet.on('received-data', (data) => {
             data = { value: data };
@@ -633,7 +633,7 @@ export class Client extends EventEmitter {
                 clearTimeout(this._auto);
             this._auto = setTimeout(() => { this.connect(); }, this.options.autoConnectDelay);
         }
-        this.emitEvent('error', msg);
+        this.raise('error', msg);
     }
 
     public echo(str: string, fore?: number, back?: number, newline?: boolean, forceLine?: boolean) {
@@ -801,7 +801,7 @@ export class Client extends EventEmitter {
         require('electron').shell.beep();
     }
 
-    public emitEvent(event: string, args?, delay?: number) {
+    public raise(event: string, args?, delay?: number) {
         if (!delay || delay < 1)
             this._input.triggerEvent(event, args);
         else
