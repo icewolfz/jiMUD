@@ -1255,10 +1255,9 @@ export class Input extends EventEmitter {
             c = text.charAt(idx);
             switch (state) {
                 case 1:
+                    if (c === '{' && arg.length === 0)
+                        state = 4;
                     switch (c) {
-                        case '{':
-                            state = 4;
-                            break;
                         case '%':
                             str += '%';
                             state = 0;
