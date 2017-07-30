@@ -120,6 +120,7 @@ export let SettingList: any[] = [
     ['colors', 0, 4],
     ['notifyMSPPlay', 0, 1, false],
     ['CommandonClick', 0, 1, true],
+    ['allowEval', 0, 1, true],
     ['AutoCopySelectedToClipboard', 0, 1, false],
     ['enableDebug', 0, 1, false],
     ['editorPersistent', 0, 1, false],
