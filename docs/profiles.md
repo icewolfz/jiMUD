@@ -130,3 +130,6 @@
 - `${proper(TEXT)}` - force TEXT into proper casing
 - `${repeatnum}` - returns the current index during #nnn
 - `${i}` - same as repeatnum
+- `${cr}` - replace with carriage return
+- `${lf}` - replace with line feed
+- `${crlf}` - replace with carriage return and linefeed

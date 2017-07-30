@@ -933,6 +933,9 @@ export class Input extends EventEmitter {
             stacking = stacking && this.client.options.commandStacking;
         //@TODO re-code someday to be part of the parser engine instead of simple regex
         const copied = clipboard.readText('selection') || '';
+        text = text.replace(/(\%|\$)\{cr\}/g, '\n');
+        text = text.replace(/(\%|\$)\{lf\}/g, '\r');
+        text = text.replace(/(\%|\$)\{crlf\}/g, '\r\n');
         text = text.replace(/(\%|\$)\{copied\}/g, copied);
         text = text.replace(/(\%|\$)\{copied.lower\}/g, copied);
         text = text.replace(/(\%|\$)\{copied.upper\}/g, copied.toUpperCase());
