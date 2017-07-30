@@ -1,4 +1,6 @@
 # Commands
+- `#nnn commands` repeat commands NNN number of times
+  - `commands` the commands you want repeated
 - `#beep` play standard system beep
 - `#version` or `#ver`
 show version information

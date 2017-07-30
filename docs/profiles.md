@@ -127,4 +127,6 @@
 - `${variable.proper}` - force variable to proper casing by appending .proper
 - `${lower(TEXT)}` - force TEXT into lower case, for example ${lower(${selword})} is the same as ${selword.lower}
 - `${upper(TEXT)}` - force TEXT into upper case
-- `${proper(TEXT)}` = force TEXT into proper casing
+- `${proper(TEXT)}` - force TEXT into proper casing
+- `${repeatnum}` - returns the current index during #nnn
+- `${i}` - same as repeatnum

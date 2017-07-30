@@ -871,10 +871,27 @@ export class Input extends EventEmitter {
                 this.client.telnet.prompt = false;
                 return null;
         }
-        const data = { name: fun, args: args, raw: raw, handled: false };
+        i = parseInt(fun, 10);
+        if (!isNaN(i)) {
+            if (i < 1)
+                throw new Error('Number must be greater then 0.');
+            if (args.length === 0)
+                throw new Error('Invalid syntax use #nnn commands');
+            args = args.join(' ') ;
+            tmp = [];
+            for (let r = 0; r < i; r++) {
+                n = this.parseOutgoing(args.replace(/(\%|\$)\{(repeatnum|i)\}/g, r));
+                if (n != null && n.length > 0)
+                    tmp.push(n);
+            }
+            if (tmp.length > 0)
+                return tmp.join('\n');
+            return null;
+        }
+        const data = { name: fun, args: args, raw: raw, handled: false, return: null };
         this.client.emit('function', data);
         if (data.handled)
-            return null;
+            return data.return;
         return data.raw;
     }
 

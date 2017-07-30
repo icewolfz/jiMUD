@@ -20,6 +20,8 @@
   - Added [#ungag](docs/commands.md) command to cancel #gag
   - Added [#showclient, #hideclient, #toggleclient](docs/commands.md) commands to made scripting functions
   - Added [#wait](docs/commands.md) command to pause command execution for that command block
+  - Added [#nnn](docs/commands.md) command to repeat commands
+  - Added [%{repeatnum}/${i}](docs/profiles.md) returns the current index during #nnn
   - Added [client.raise('event', args, delay)](docs/scripting.md#Basic-function-list) function to emit custom events
   - Added [client.show()](docs/scripting.md#Basic-function-list) function to show the window
   - Added [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
