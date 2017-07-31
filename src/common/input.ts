@@ -964,6 +964,13 @@ export class Input extends EventEmitter {
             });
         }
 
+        if (this.client.options.allowEscape) {
+            text = text.replace(/\%\\{/g, '%{');
+            text = text.replace(/\$\\{/g, `\${`);
+            text = text.replace(/\%\\\\/g, '%\\');
+            text = text.replace(/\$\\\\/g, `\$\\`);
+        }
+
         tl = text.length;
 
         for (idx = 0; idx < tl; idx++) {
@@ -1247,6 +1254,7 @@ export class Input extends EventEmitter {
         let _neg: boolean = false;
         let idx: number = 0;
         let c: string;
+        const e = this.client.options.allowEscape;
 
         if (append == null)
             append = true;
@@ -1259,6 +1267,12 @@ export class Input extends EventEmitter {
                         state = 4;
                         continue;
                     }
+                    /*
+                    if (e && c === '\\' && arg.length === 0) {
+                        state = 6;
+                        continue;
+                    }
+                    */
                     switch (c) {
                         case '%':
                             str += '%';
@@ -1306,6 +1320,8 @@ export class Input extends EventEmitter {
                 case 2:
                     if (c === '{')
                         state = 5;
+                    //else if (e && c === '\\')
+                    //state = 7;
                     else if (c.match(/[^a-zA-Z_$]/g)) {
                         state = 0;
                         str += '$' + c;
@@ -1390,6 +1406,28 @@ export class Input extends EventEmitter {
                     }
                     else
                         arg += c;
+                    break;
+                case 6:
+                    if (c === '{')
+                        str += '%{';
+                    else if (c === '\\')
+                        str += '%\\';
+                    else {
+                        str += '%\\';
+                        idx--;
+                    }
+                    state = 0;
+                    break;
+                case 7:
+                    if (c === '{')
+                        str += `\${`;
+                    else if (c === '\\')
+                        str += '$\\';
+                    else {
+                        str += '$\\';
+                        idx--;
+                    }
+                    state = 0;
                     break;
                 default:
                     if (c === '$') {

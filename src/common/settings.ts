@@ -121,6 +121,7 @@ export let SettingList: any[] = [
     ['notifyMSPPlay', 0, 1, false],
     ['CommandonClick', 0, 1, true],
     ['allowEval', 0, 1, true],
+    ['allowEscape', 0, 1, true],
     ['AutoCopySelectedToClipboard', 0, 1, false],
     ['enableDebug', 0, 1, false],
     ['editorPersistent', 0, 1, false],
@@ -195,6 +196,7 @@ export class Settings {
     public theme = path.join('{themes}', 'default');
 
     public allowEval: boolean = true;
+    public allowEscape: boolean = true;
 
     public windows = {};
     public buttons = {

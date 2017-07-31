@@ -285,6 +285,7 @@
       $('#autoConnect').prop('checked', _settings.autoConnect);
       $('#autoLogin').prop('checked', _settings.autoLogin);
       $('#allowEval').prop('checked', _settings.allowEval);
+      $('#allowEscape').prop('checked', _settings.allowEscape);
       $('#autoConnectDelay').val(_settings.autoConnectDelay);
       $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
       $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
@@ -988,6 +989,11 @@
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="allowEval" /> Allow evaluate
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="allowEscape" /> Allow Escape
             </label>
           </div>
           <div class="col-sm-6 form-group">

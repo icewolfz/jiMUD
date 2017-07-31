@@ -29,6 +29,7 @@
   - Add [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
   - Add [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show 
   - Added ${#}, %{#}, %{*}, ${*} formats to match {} variable format
+  - Added proper %\{, $\{ escape system
 value returned
 - **Change:**
   - Immortal tools: focusing on local or remote path text box will now auto select all text

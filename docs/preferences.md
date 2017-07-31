@@ -12,6 +12,7 @@ Reset - Resetting will revert all settings back to default values
 - `Enable spellchecking` support spellchecking in command line and advanced editor
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
 - `Allow evaluate` will enable ${expression} evaluation
+- `Allow escape` will enable escape charcter `\` when parsing certain text formats
 - `Theme` the theme for the main client window
 
 ## Display
