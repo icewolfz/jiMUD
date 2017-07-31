@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.4.9
+##### 0.4.9 2017-07-30
 - **New:**
   - Auto login system if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
   - Immortal tools: create new empty local file
