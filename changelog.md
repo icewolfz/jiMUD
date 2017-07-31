@@ -30,6 +30,7 @@
   - Add [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show 
   - Added ${#}, %{#}, %{*}, ${*} formats to match {} variable format
   - Added proper %\{, $\{ escape system
+  - New scripting setting scripting for allow expression/evaluate and moved parse double/single quote options there
 value returned
 - **Change:**
   - Immortal tools: focusing on local or remote path text box will now auto select all text

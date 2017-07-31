@@ -160,6 +160,7 @@
             ]
           },
           { text: 'Status' },
+          { text: 'Scripting' },
           {
             text: 'Advanced',
             nodes: [
@@ -987,16 +988,6 @@
             </label>
           </div>
           <div class="col-sm-6 form-group">
-            <label class="control-label">
-              <input type="checkbox" id="allowEval" /> Allow evaluate
-            </label>
-          </div>
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
-              <input type="checkbox" id="allowEscape" /> Allow Escape
-            </label>
-          </div>
-          <div class="col-sm-6 form-group">
             <label class="control-label">Theme
               <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
             </label>
@@ -1361,19 +1352,6 @@
               <input type="checkbox" id="keepLastCommand" /> Keep last command
             </label>
           </div>
-          <div class="col-sm-12 form-group" style="margin:0;padding:0">
-            <div class="col-sm-6 form-group">
-              <label class="control-label">
-                <input type="checkbox" id="parseSingleQuotes" /> Parse single quotes as string
-              </label>
-            </div>
-
-            <div class="col-sm-6 form-group">
-              <label class="control-label">
-                <input type="checkbox" id="parseDoubleQuotes" /> Parse double quotes as string
-              </label>
-            </div>
-          </div>
           <div class="col-sm-12 form-group">
             <label class="control-label">Newline shotcut</label>
             <div class="btn-group" data-toggle="buttons">
@@ -1688,6 +1666,30 @@
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="allowNegativeNumberNeeded" /> Allow negative number for experience needed
+            </label>
+          </div>
+        </div>
+
+        <div role="tabpanel" class="pref-pane" id="scripting">
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="allowEval" /> Allow evaluate
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="allowEscape" /> Allow Escape
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="parseSingleQuotes" /> Parse single quotes as string
+            </label>
+          </div>
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="parseDoubleQuotes" /> Parse double quotes as string
             </label>
           </div>
         </div>

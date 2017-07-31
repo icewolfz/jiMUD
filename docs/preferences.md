@@ -11,8 +11,6 @@ Reset - Resetting will revert all settings back to default values
 - `Show character manager onload` open the character manager when the client first loads.
 - `Enable spellchecking` support spellchecking in command line and advanced editor
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
-- `Allow evaluate` will enable ${expression} evaluation
-- `Allow escape` will enable escape charcter `\` when parsing certain text formats
 - `Theme` the theme for the main client window
 
 ## Display
@@ -50,8 +48,6 @@ Reset - Resetting will revert all settings back to default values
   - `Character` The character that is used to determine if the command is a speedpath to expand, default is !
   - `Enable` Weather or not to expand speedpaths, if disabled the line is parsed as normal command
   - `Parse` Parse each command as if it was sent from the command line, if disabled each command is sent to the mud as is.
-- `Parse single quotes as strings` Treat single quotes as string encasing, meaning all text found inside single quotes are treated as is and not parsed.
-- `Parse double quotes as strings` Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
 - `Newline shortcut` A shortcut for adding newlines to command input
   - `None` no shortcut enter always sends command
   - `Ctrl + Enter` add newline on ctrl+enter
@@ -81,6 +77,7 @@ Settings to control how to handle telnet options and emulation
 - `Display Notification on MSP Play` Display a message when a file has started to play
 
 ## Mapper
+
 - `Enable Mapper` Enable the mapper and create rooms as player moves
 - `Follow Player` Set the current room to the players as they move
 - `Show legend` Show map legend
@@ -123,6 +120,13 @@ Controls what is captured into the chat window
 
 - `Show Lagmeter` Weather to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Show Experience Needed as Progressbar` display the experience needed value as a progress bar
+
+## Scripting
+
+- `Allow evaluate` will enable ${expression} evaluation
+- `Allow escape` will enable escape charcter `\` when parsing certain text formats
+- `Parse single quotes as strings` Treat single quotes as string encasing, meaning all text found inside single quotes are treated as is and not parsed.
+- `Parse double quotes as strings` Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
 
 ## Advanced
 
