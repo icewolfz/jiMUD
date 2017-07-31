@@ -36,7 +36,7 @@ value returned
   - Immortal tools: focusing on local or remote path text box will now auto select all text
   - Profile manger
     - Context items with parents will now appear under their parent item, if not found it will default to standard context location
-    - All item are now sorted by priority then by order added this allows you to see the exact order items will be executed or seached
+    - All item are now sorted by priority then by order, added this allows you to see the exact order items will be executed or loaded
   - #notify now uses command line quote parse settings to build arguments, based on setting you can use ' or " to wrap title argument
   - Parsing errors now stop parsing and display error
 - **Fixed:**
