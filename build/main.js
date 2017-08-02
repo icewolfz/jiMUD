@@ -822,6 +822,7 @@ function createTray() {
           win.show();
         if (s.isFullScreen)
           win.setFullScreen(s.fullscreen);
+        win.focus();
       }
     },
     {
@@ -845,6 +846,7 @@ function createTray() {
           win.show();
         if (s.isFullScreen)
           win.setFullScreen(s.fullscreen);
+        win.focus();
         win.webContents.executeJavaScript('showCharacters()');
       }
     },
@@ -946,6 +948,7 @@ function createTray() {
           win.show();
         if (s.isFullScreen)
           win.setFullScreen(s.fullscreen);
+        win.focus();
         break;
       case TrayClick.toggle:
         if (win.isVisible()) {
@@ -961,6 +964,7 @@ function createTray() {
             win.show();
           if (s.isFullScreen)
             win.setFullScreen(s.fullscreen);
+          win.focus();
         }
         break;
       case TrayClick.hide:
@@ -986,6 +990,7 @@ function createTray() {
           win.show();
         if (s.isFullScreen)
           win.setFullScreen(s.fullscreen);
+        win.focus();
         break;
       case TrayClick.toggle:
         if (win.isVisible()) {
@@ -1001,6 +1006,7 @@ function createTray() {
             win.show();
           if (s.isFullScreen)
             win.setFullScreen(s.fullscreen);
+          win.focus();
         }
         break;
       case TrayClick.hide:
@@ -1950,7 +1956,7 @@ function loadWindowState(window) {
 }
 
 function trackWindowState(id, window) {
-  if(!window) return states[id];
+  if (!window) return states[id];
   var bounds = window.getBounds();
   if (!states[id])
     states[id] = {

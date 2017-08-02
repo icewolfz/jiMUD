@@ -386,6 +386,7 @@
         else if (client && !client.connecting)
           ipcRenderer.send('set-overlay', 0);
         client.raise('focus');
+        $("#commandinput").focus();
       });
 
       $(window).resize(function () {
@@ -680,6 +681,7 @@
 
       client.on('show', () => {
         remote.getCurrentWindow().show();
+        remote.getCurrentWindow().focus();
       });
 
       client.on('hide', () => {
@@ -697,8 +699,10 @@
           else
             win.minimize();
         }
-        else
+        else {
           win.show();
+          remote.getCurrentWindow().focus();
+        }
       });
 
       client.on('notify', (title, message, options) => {
