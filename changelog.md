@@ -1,5 +1,5 @@
 ## Changelog
-##### 0.4.10
+##### 0.4.10 2017-08-03
 - **Change:**
   - When window shown it will now focus on command input
   - Window now receive focus when tray show is triggered
