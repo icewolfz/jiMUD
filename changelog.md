@@ -9,6 +9,7 @@
     - Set a min size for panel size when loading
     - When loading window was not correctly passing options
     - When saving options, options not correctly applied to active window
+    - Remote drag and drop on linux was broken
 ##### 0.4.9 2017-07-30
 - **New:**
   - Auto login system if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
