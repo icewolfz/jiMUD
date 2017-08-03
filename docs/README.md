@@ -63,6 +63,8 @@ Basic questions answered about jiMUD
 - [Immortal Tools](immortal.md)
 
 ## Known Issues
+- Backup:
+  - Loading data that is related to operating system may revert to default or be ignored as paths could not exist or may be in wrong format
 - Command input
   - Spell checking will not check for errors until a space or newline is entered, or when the command box is refocused, you may right click any word at any point to get a forced list of suggested corrections.
   - Text selection may be lost when other controls are given focus

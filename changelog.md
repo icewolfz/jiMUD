@@ -4,6 +4,7 @@
   - When window shown it will now focus on command input
   - Window now receive focus when tray show is triggered
 - **Fixed:**
+  - Backup: attempt to fix paths when imported when defaults are used
   - Immortal tools: 
     - Not correctly ignoring fswin node module
     - Set a min size for panel size when loading
