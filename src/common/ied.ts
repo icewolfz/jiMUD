@@ -11,10 +11,17 @@ import { parseTemplate, isDirSync } from './library';
 import { FileInfo, IEDError, IEDCmdStatus, TempType } from './types';
 const fs = require('fs');
 const path = require('path');
-const fswin = require('../../lib/fswin');
 const tmp = require('tmp');
 const { ipcRenderer } = require('electron');
-
+let fswin;
+if (process.platform.indexOf('win') === 0) {
+    try {
+        fswin = require('../../lib/fswin');
+    }
+    catch (err) {
+        //console.log('Not windows!');
+    }
+}
 export class IED extends EventEmitter {
     public static windows = process.platform.indexOf('win') === 0;
     private _data = {};

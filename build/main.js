@@ -64,7 +64,6 @@ function loadCharacter(char) {
   global.mapFile = parseTemplate(characters.characters[char].map);
   global.characterPass = characters.characters[char].password || '';
   global.title = char;
-  console.log(global.characterPass);
   updateTray();
 }
 

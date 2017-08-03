@@ -1539,7 +1539,12 @@
     }
 
     function showImmortalTools() {
-      ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: client.options.windows['immortal'] ? client.options.windows['immortal'].alwaysOnTopClient : true });
+      if (client.options.windows['immortal'] && client.options.windows['immortal'].options) {
+        client.options.windows['immortal'].options.show = true;
+        ipcRenderer.send('show-window', 'immortal', client.options.windows['immortal'].options);
+      }
+      else
+        ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
       //window.open('immortal.html', '', 'backgroundColor=#fff,height=600,width=800,icon=' + path.join(__dirname, '../assets/icons/png/ied.png'));
     }
 

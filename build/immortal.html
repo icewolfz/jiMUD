@@ -588,8 +588,12 @@
                 options.focusOnFinished = true;
             if (!options.hasOwnProperty('selectOnFinished'))
                 options.selectOnFinished = true;
+            if (options.localSize < 202)
+                options.localSize = 202;
+
             $('#local').css("width", options.localSize);
             $('#remote').css("left", options.localSize);
+
 
             $('#bottom').css("height", options.queueSize);
             $('#main').css("bottom", options.queueSize);

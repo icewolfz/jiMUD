@@ -3,6 +3,11 @@
 - **Change:**
   - When window shown it will now focus on command input
   - Window now receive focus when tray show is triggered
+- **Fixed:**
+  - Immortal tools: 
+    - Not correctly ignoring fswin node module
+    - Set a min size for panel size when loading
+    - When loading window was not correctly passing options
 ##### 0.4.9 2017-07-30
 - **New:**
   - Auto login system if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
