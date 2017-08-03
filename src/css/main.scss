@@ -448,6 +448,24 @@ body {
     border-bottom-left-radius: 4px;
 }
 
+.isb {
+    height: 8px;
+    width: 8px;
+    -webkit-mask-image: radial-gradient(circle 10px at 0 0, transparent 0, transparent 8px, black 8px);
+}
+
+.iet {
+    height: 8px;
+    width: 8px;
+    -webkit-mask-image: radial-gradient(circle 10px at 100% 100%, transparent 0, transparent 8px, black 8px);
+}
+
+.ieb {
+    height: 8px;
+    width: 8px;
+    -webkit-mask-image: radial-gradient(circle 10px at 100% 0, transparent 0, transparent 8px, black 8px);
+}
+
 .dialog-footer {
     background-color: #F5F5F5;
     box-shadow: inset 0 1px 0 #fff;

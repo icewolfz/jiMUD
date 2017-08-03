@@ -1420,16 +1420,13 @@ export class Display extends EventEmitter {
 
                 if (!this._overlays[type][line])
                     this._overlays[type][line] = [];
-
                 this._overlays[type][line].push(`<span id="${type}-${r}" class="${rCls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
-                /*
-                if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern) {
-                }
-                if (endStyle.top === CornerType.Intern) {
-                }
-                if (endStyle.bottom === CornerType.Intern) {
-                }
-                */
+                if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
+                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 8}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
+                if (endStyle.top === CornerType.Intern)
+                    this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(cl * this._charWidth) + w - 1}px;"></span>`);
+                if (endStyle.bottom === CornerType.Intern)
+                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 8}px;left:${(cl * this._charWidth) + w - 1}px;"></span>`);
             }
         }
         let ol;
@@ -1561,21 +1558,12 @@ export class Display extends EventEmitter {
 
             parts.push(`<span class="${cls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
 
-            if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern) {
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;"></span>`);
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth)}px;width: 2px;background-color:black;border-bottom-right-radius: 2px"></span>`);
-            }
-            if (endStyle.top === CornerType.Intern) {
-                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;"></span>`);
-                //parts.push(`<span class="select-text" style="top:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;background-color:black;border-top-left-radius: 2px"></span>`);
-            }
-            if (endStyle.bottom === CornerType.Intern) {
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;"></span>`);
-                //parts.push(`<span class="select-text" style="bottom:0px;height:2px;left:${(cl * this._charWidth) + w}px;width: 2px;background-color:black;border-bottom-left-radius: 2px"></span>`);
-            }
-
-            //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(0,128,0,0.5)"></span>`);
-            //parts.push(`<span class="select-text" style="left:${l}px;width: ${w}px;background-color:rgba(255,0,0,0.5)"></span>`);
+            if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
+                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 8}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
+            if (endStyle.top === CornerType.Intern)
+                parts.push(`<span class="select-text iet" style="top:0px;left:${(cl * this._charWidth) + w - 1}px;"></span>`);
+            if (endStyle.bottom === CornerType.Intern)
+                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 8}px;left:${(cl * this._charWidth) + w - 1}px;"></span>`);
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }

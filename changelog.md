@@ -1,4 +1,7 @@
 ## Changelog
+##### 0.4.11
+- **New:**
+  - Add intern corner support for overlays (selection, find)
 ##### 0.4.10 2017-08-03
 - **Change:**
   - When window shown it will now focus on command input
