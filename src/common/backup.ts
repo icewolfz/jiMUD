@@ -494,7 +494,7 @@ export class Backup extends EventEmitter {
                 }
                 //attempt to normalize paths with windows vs linux
                 if (process.platform.indexOf('win') === 0) {
-                    if (this.client.options.theme.startsWith('{theme}'))
+                    if (this.client.options.theme.startsWith('{themes}'))
                         this.client.options.theme = this.client.options.theme.replace(/\//g, '\\');
                     if (this.client.options.soundPath.startsWith('{data}'))
                         this.client.options.soundPath = this.client.options.soundPath.replace(/\//g, '\\');
@@ -502,7 +502,7 @@ export class Backup extends EventEmitter {
                         this.client.options.logPath = this.client.options.logPath.replace(/\//g, '\\');
                 }
                 else {
-                    if (this.client.options.theme.startsWith('{theme}'))
+                    if (this.client.options.theme.startsWith('{themes}'))
                         this.client.options.theme = this.client.options.theme.replace(/\\/g, '/');
                     if (this.client.options.soundPath.startsWith('{data}'))
                         this.client.options.soundPath = this.client.options.soundPath.replace(/\\/g, '/');
