@@ -492,7 +492,23 @@ export class Backup extends EventEmitter {
                     else
                         this.client.options[prop] = data.settings[prop];
                 }
-
+                //attempt to normalize paths with windows vs linux
+                if (process.platform.indexOf('win') === 0) {
+                    if (this.client.options.theme.startsWith('{theme}'))
+                        this.client.options.theme = this.client.options.theme.replace(/\//g, '\\');
+                    if (this.client.options.soundPath.startsWith('{data}'))
+                        this.client.options.soundPath = this.client.options.soundPath.replace(/\//g, '\\');
+                    if (this.client.options.logPath.startsWith('{data}'))
+                        this.client.options.logPath = this.client.options.logPath.replace(/\//g, '\\');
+                }
+                else {
+                    if (this.client.options.theme.startsWith('{theme}'))
+                        this.client.options.theme = this.client.options.theme.replace(/\\/g, '/');
+                    if (this.client.options.soundPath.startsWith('{data}'))
+                        this.client.options.soundPath = this.client.options.soundPath.replace(/\\/g, '/');
+                    if (this.client.options.logPath.startsWith('{data}'))
+                        this.client.options.logPath = this.client.options.logPath.replace(/\\/g, '/');
+                }
                 this.client.clearCache();
                 this.client.saveOptions();
                 this.client.loadOptions();
