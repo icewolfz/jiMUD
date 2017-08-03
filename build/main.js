@@ -1732,8 +1732,8 @@ ipcMain.on('setting-changed', (event, data) => {
       if (windows[name].window)
         windows[name].window.webContents.send('setting-changed', data);
       if (windows[name].window.setParentWindow)
-        windows[name].window.setParentWindow(set.windows[name].alwaysOnTopClient ? win : null);
-      windows[name].window.setSkipTaskbar((set.windows[name].alwaysOnTopClient || set.windows[name].alwaysOnTop) ? true : false);
+        windows[name].window.setParentWindow(windows[name].alwaysOnTopClient ? win : null);
+      windows[name].window.setSkipTaskbar((windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false);
       if (windows[name].persistent)
         createNewWindow(name, windows[name]);
     }
