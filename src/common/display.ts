@@ -1422,11 +1422,11 @@ export class Display extends EventEmitter {
                     this._overlays[type][line] = [];
                 this._overlays[type][line].push(`<span id="${type}-${r}" class="${rCls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
                 if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 8}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
                 if (endStyle.top === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(cl * this._charWidth) + w - 1}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(cl * this._charWidth) + w}px;"></span>`);
                 if (endStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 8}px;left:${(cl * this._charWidth) + w - 1}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth) + w}px;"></span>`);
             }
         }
         let ol;
@@ -1519,17 +1519,15 @@ export class Display extends EventEmitter {
             if (line < eL) {
                 const nl = 0;
                 const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
-                if (cl === nl) {
+                if (cl === nl)
                     startStyle.bottom = CornerType.Flat;
-                } else if (nl < cl && cl < nr) {
+                else if (nl < cl && cl < nr)
                     startStyle.bottom = CornerType.Intern;
-                }
 
-                if (cr === nr) {
+                if (cr === nr)
                     endStyle.bottom = CornerType.Flat;
-                } else if (cr < nr) {
+                else if (cr < nr)
                     endStyle.bottom = CornerType.Intern;
-                }
             }
 
             parts = [];
@@ -1559,11 +1557,11 @@ export class Display extends EventEmitter {
             parts.push(`<span class="${cls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
 
             if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 8}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
+                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
             if (endStyle.top === CornerType.Intern)
-                parts.push(`<span class="select-text iet" style="top:0px;left:${(cl * this._charWidth) + w - 1}px;"></span>`);
+                parts.push(`<span class="select-text iet" style="top:0px;left:${(cl * this._charWidth) + w}px;"></span>`);
             if (endStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 8}px;left:${(cl * this._charWidth) + w - 1}px;"></span>`);
+                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth) + w}px;"></span>`);
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
