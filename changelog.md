@@ -2,6 +2,8 @@
 ##### 0.4.11
 - **New:**
   - Add intern corner support for overlays (selection, find)
+- **Fixed:**
+  - Alias, context, triggers, button, and macro sort order was not correct, most noticeable when using context menus
 ##### 0.4.10 2017-08-03
 - **Change:**
   - When window shown it will now focus on command input

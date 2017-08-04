@@ -13,6 +13,28 @@ export function SortArrayByPriority(a, b) {
     return 0;
 }
 
+export function SortMapByPriority(a, b) {
+    if (a.priority > b.priority)
+        return -1;
+    if (a.priority < b.priority)
+        return 1;
+    if (a.index < b.index)
+        return -1;
+    if (a.index > b.index)
+        return 1;
+    return 0;
+}
+
+export function SortItemArrayByPriority(list) {
+    const map = list.map((el, i) => {
+        return { index: i, priority: el.priority };
+    });
+    map.sort(SortMapByPriority);
+    return map.map((el) => {
+        return list[el.index];
+    });
+}
+
 export function FilterArrayByKeyValue(array, k, v) {
     const res = [];
     if (!array || array.length === 0) return res;
