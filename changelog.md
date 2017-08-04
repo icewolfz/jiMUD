@@ -2,6 +2,8 @@
 ##### 0.4.11
 - **New:**
   - Add intern corner support for overlays (selection, find)
+- **Change:**
+  - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
 - **Fixed:**
   - Alias, context, triggers, button, and macro sort order was not correct, most noticeable when using context menus
 ##### 0.4.10 2017-08-03

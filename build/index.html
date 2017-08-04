@@ -57,6 +57,7 @@
     var _captures = [], _captureReviews = [];
     var _noCapture = false;
     var _cLoading = false;
+    var _context;
 
     window.onerror = function (msg, url, line) {
       if (client) {
@@ -373,6 +374,38 @@
       return menuItems;
     }
 
+    function buildContextMenu() {
+      _context = [];
+      var context = client.contexts;
+      if (context.length > 0) {
+        var xl = context.length;
+        var x;
+        for (x = 0; x < xl; x++) {
+          if (!context[x].enabled || context[x].parent) continue;
+          var menu;
+          if (context[x].caption === "-")
+            menu = { type: 'separator' };
+          else {
+            menu = {};
+            menu.label = context[x].caption;
+            menu.item = context[x];
+            menu.click = (item, win) => {
+              executeContext(item.item);
+            };
+            var sub = buildMenu(context[x].name || x, context);
+            //if (context[x].items)
+            //sub.push.apply(sub, buildMenuItems(context[x].items));
+
+            if (sub.length > 0)
+              menu.submenu = sub;
+            if (context[x].icon && context[x].icon.length > 0)
+              menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
+          }
+          _context.push(new MenuItem(menu));
+        }
+      }
+    }
+
     function init() {
       ipcRenderer.send('set-overlay', 0);
       $(window).blur(function () {
@@ -492,34 +525,11 @@
 
         var c = new Menu();
 
-
-        var context = client.contexts;
-        if (context.length > 0) {
-          var xl = context.length;
-          for (x = 0; x < xl; x++) {
-            if (!context[x].enabled || context[x].parent) continue;
-            var menu;
-            if (context[x].caption === "-")
-              menu = { type: 'separator' };
-            else {
-              menu = {};
-              menu.label = context[x].caption;
-              menu.item = context[x];
-              menu.click = (item, win) => {
-                executeContext(item.item);
-              };
-              var sub = buildMenu(context[x].name || x, context);
-              //if (context[x].items)
-              //sub.push.apply(sub, buildMenuItems(context[x].items));
-
-              if (sub.length > 0)
-                menu.submenu = sub;
-              if (context[x].icon && context[x].icon.length > 0)
-                menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
-            }
-            c.append(new MenuItem(menu));
-          }
-        }
+        if (!_context)
+          buildContextMenu();
+        _context.map((item) => {
+          c.append(item);
+        });
 
         if (client.defaultContext) {
           if (c.items.length > 0)
@@ -1336,6 +1346,7 @@
     }
 
     function updateMenu() {
+      buildContextMenu();
       for (var profile in client.profiles.items)
         ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
 
