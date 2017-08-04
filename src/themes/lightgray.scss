@@ -3,7 +3,8 @@ $borderColor: "rgb(204, 204, 204)";
 $color: "#333";
 $panelBackground: "rgb(240, 240, 240)";
 $panelInsetBackground: "rgb(240, 240, 240)";
-#client {
+
+body {
     background-color: #{$panelBackground};
 }
 
