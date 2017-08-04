@@ -1364,36 +1364,58 @@ export class Display extends EventEmitter {
                     bottom: CornerType.Extern
                 };
 
-                const cl = sL === line ? s : 0;
+                let cl = 0;
+                if (sL === line) {
+                    if (s >= this.lines[line].length)
+                        cl = this.lines[line].length;
+                    else
+                        cl = s;
+                }
                 const cr = eL === line ? e : (this.lines[line].length || 1);
                 if (line > sL) {
-                    const pl = sL === line - 1 ? s : 0;
+                    let pl = 0;
+                    if (sL === line - 1) {
+                        if (s >= this.lines[line - 1].length)
+                            pl = this.lines[line - 1].length;
+                        else
+                            pl = s;
+                    }
                     const pr = this.lines[line - 1].length || 1;
 
                     if (cl === pl)
                         startStyle.top = CornerType.Flat;
                     else if (cl > pl)
                         startStyle.top = CornerType.Intern;
-                    if (cr === pr)
-                        endStyle.top = CornerType.Flat;
+                    if (cr === pr) {
+                        if (line === sL + 1 && this.lines[sL].length === 0)
+                            endStyle.top = CornerType.Extern;
+                        else
+                            endStyle.top = CornerType.Flat;
+                    }
                     else if (pl < cr && cr < pr)
+                        endStyle.top = CornerType.Intern;
+                    else if (cr === 0 && line === eL)
                         endStyle.top = CornerType.Intern;
                 }
 
                 if (line < eL) {
                     const nl = 0;
                     const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
-                    if (cl === nl) {
+                    if (cl === nl)
                         startStyle.bottom = CornerType.Flat;
-                    } else if (nl < cl && cl < nr) {
+                    else if (nl < cl && cl < nr)
                         startStyle.bottom = CornerType.Intern;
-                    }
 
                     if (cr === nr) {
-                        endStyle.bottom = CornerType.Flat;
-                    } else if (cr < nr) {
-                        endStyle.bottom = CornerType.Intern;
+                        if (line === sL && this.lines[line].length === 0)
+                            endStyle.bottom = CornerType.Intern;
+                        else
+                            endStyle.bottom = CornerType.Flat;
                     }
+                    else if (cr < nr)
+                        endStyle.bottom = CornerType.Intern;
+                    else if (line === sL && this.lines[line].length === 0)
+                        endStyle.bottom = CornerType.Intern;
                 }
                 let rCls = cls;
                 if (startStyle.top === CornerType.Extern) {
@@ -1409,7 +1431,10 @@ export class Display extends EventEmitter {
                     rCls += ' brc';
                 }
                 if (sL === line) {
-                    w = ((this.lines[line].length || 1) - s) * this._charWidth;
+                    if (s >= this.lines[line].length)
+                        w = 0;
+                    else
+                        w = ((this.lines[line].length || 1) - s) * this._charWidth;
                 }
                 else if (eL === line) {
                     w = e * this._charWidth;
@@ -1500,19 +1525,37 @@ export class Display extends EventEmitter {
                 bottom: CornerType.Extern
             };
 
-            const cl = sL === line ? s : 0;
+            let cl = 0;
+            if (sL === line) {
+                if (s >= this.lines[line].length)
+                    cl = this.lines[line].length;
+                else
+                    cl = s;
+            }
             const cr = eL === line ? e : (this.lines[line].length || 1);
             if (line > sL) {
-                const pl = sL === line - 1 ? s : 0;
+                let pl = 0;
+                if (sL === line - 1) {
+                    if (s >= this.lines[line - 1].length)
+                        pl = this.lines[line - 1].length;
+                    else
+                        pl = s;
+                }
                 const pr = this.lines[line - 1].length || 1;
 
                 if (cl === pl)
                     startStyle.top = CornerType.Flat;
                 else if (cl > pl)
                     startStyle.top = CornerType.Intern;
-                if (cr === pr)
-                    endStyle.top = CornerType.Flat;
+                if (cr === pr) {
+                    if (line === sL + 1 && this.lines[sL].length === 0)
+                        endStyle.top = CornerType.Extern;
+                    else
+                        endStyle.top = CornerType.Flat;
+                }
                 else if (pl < cr && cr < pr)
+                    endStyle.top = CornerType.Intern;
+                else if (cr === 0 && line === eL)
                     endStyle.top = CornerType.Intern;
             }
 
@@ -1524,9 +1567,15 @@ export class Display extends EventEmitter {
                 else if (nl < cl && cl < nr)
                     startStyle.bottom = CornerType.Intern;
 
-                if (cr === nr)
-                    endStyle.bottom = CornerType.Flat;
+                if (cr === nr) {
+                    if (line === sL && this.lines[line].length === 0)
+                        endStyle.bottom = CornerType.Intern;
+                    else
+                        endStyle.bottom = CornerType.Flat;
+                }
                 else if (cr < nr)
+                    endStyle.bottom = CornerType.Intern;
+                else if (line === sL && this.lines[line].length === 0)
                     endStyle.bottom = CornerType.Intern;
             }
 
@@ -1545,7 +1594,10 @@ export class Display extends EventEmitter {
                 cls += ' brc';
             }
             if (sL === line) {
-                w = ((this.lines[line].length || 1) - s) * this._charWidth;
+                if (s >= this.lines[line].length)
+                    w = 0;
+                else
+                    w = ((this.lines[line].length || 1) - s) * this._charWidth;
             }
             else if (eL === line) {
                 w = e * this._charWidth;
