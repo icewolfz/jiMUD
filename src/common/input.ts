@@ -18,6 +18,17 @@ function ProperCase(str) {
     return str.replace(/\w*\S*/g, (txt) => { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
 }
 
+enum ParseState {
+    none = 0,
+    doubleQuoted = 1,
+    singleQuoted = 2,
+    aliasArguments = 3,
+    aliasArgumentsDouble = 4,
+    aliasArgumentsSingle = 5,
+    path = 6,
+    function = 7
+}
+
 export class Input extends EventEmitter {
     private _historyIdx: number = -1;
     private _commandHistory: string[];
@@ -28,8 +39,15 @@ export class Input extends EventEmitter {
     private _scrollLock: boolean = false;
     private _gag: number = 0;
     private _gagID: NodeJS.Timer = null;
+    private _stack = [];
 
     public client: Client = null;
+
+    get stack() {
+        if (this._stack.length === 0)
+            return { args: 0, named: 0 };
+        return this._stack[this._stack.length - 1];
+    }
 
     get scrollLock(): boolean {
         return this._scrollLock;
@@ -911,6 +929,8 @@ export class Input extends EventEmitter {
         const stackingChar: string = this.client.options.commandStackingChar;
         const spChar: string = this.client.options.speedpathsChar;
         const ePaths: boolean = this.client.options.enableSpeedpaths;
+        const eFn: boolean = this.client.options.enableFunctions;
+        const fnChar: string = this.client.options.functionChar;
         let args = [];
         let arg: string = '';
         let findAlias: boolean = true;
@@ -939,37 +959,37 @@ export class Input extends EventEmitter {
         for (idx = 0; idx < tl; idx++) {
             c = text.charAt(idx);
             switch (state) {
-                case 1:
+                case ParseState.doubleQuoted:
                     //quoted string
                     if (c === '"' && pd)
-                        state = 0;
+                        state = ParseState.none;
                     if (eAlias && findAlias)
                         alias += c;
                     else
                         str += c;
                     start = false;
                     break;
-                case 2:
+                case ParseState.singleQuoted:
                     //quoted string
                     if (c === '\'' && ps)
-                        state = 0;
+                        state = ParseState.none;
                     if (eAlias && findAlias)
                         alias += c;
                     else
                         str += c;
                     start = false;
                     break;
-                case 3:
+                case ParseState.aliasArguments:
                     //quoted string so keep intact
                     if (c === '"' && pd) {
                         arg += c;
-                        state = 4;
+                        state = ParseState.aliasArgumentsDouble;
                         start = false;
                     }
                     //quoted string so keep int
                     else if (c === '\'' && ps) {
                         arg += c;
-                        state = 5;
+                        state = ParseState.aliasArgumentsSingle;
                         start = false;
                     }
                     //end of alias at end of text, new line, or command stack if enabled
@@ -990,7 +1010,7 @@ export class Input extends EventEmitter {
                             if (!a.multi) break;
                         }
                         alias = '';
-                        state = 0;
+                        state = ParseState.none;
                         AliasesCached = null;
                         start = true;
                     }
@@ -1005,28 +1025,51 @@ export class Input extends EventEmitter {
                         start = false;
                     }
                     break;
-                case 4: //quoted alias argument
+                case ParseState.aliasArgumentsDouble: //quoted alias argument
                     if (c === '"')
-                        state = 3;
+                        state = ParseState.aliasArguments;
                     arg += c;
                     start = false;
                     break;
-                case 5: //quoted alias argument
+                case ParseState.aliasArgumentsSingle: //quoted alias argument
                     if (c === '\'')
-                        state = 3;
+                        state = ParseState.aliasArguments;
                     arg += c;
                     start = false;
                     break;
-                case 6: //path found
+                case ParseState.path: //path found
                     if (c === '\n' || (stacking && c === stackingChar)) {
-                        state = 0;
+                        state = ParseState.none;
                         str = this.ProcessPath(str);
                         if (str !== null) out += str;
                         str = '';
                         start = true;
                     }
                     else if (idx === 1 && c === spChar) {
-                        state = 0;
+                        state = ParseState.none;
+                        idx--;
+                        start = false;
+                    }
+                    else {
+                        str += c;
+                        start = false;
+                    }
+                    break;
+                case ParseState.function:
+                    if (c === '\n' || (stacking && c === stackingChar)) {
+                        state = ParseState.none;
+                        str = this.executeScript('#' + str);
+                        if (typeof str === 'number') {
+                            this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                            if (out.length === 0) return null;
+                            return out;
+                        }
+                        if (str !== null) out += str;
+                        str = '';
+                        start = true;
+                    }
+                    else if (idx === 1 && c === spChar) {
+                        state = ParseState.none;
                         idx--;
                         start = false;
                     }
@@ -1036,8 +1079,12 @@ export class Input extends EventEmitter {
                     }
                     break;
                 default:
-                    if (ePaths && start && c === spChar) {
-                        state = 6;
+                    if (eFn && start && c === fnChar) {
+                        state = ParseState.function;
+                        start = false;
+                    }
+                    else if (ePaths && start && c === spChar) {
+                        state = ParseState.path;
                         start = false;
                     }
                     else if (c === '"' && pd) {
@@ -1045,7 +1092,7 @@ export class Input extends EventEmitter {
                             alias += c;
                         else
                             str += c;
-                        state = 1;
+                        state = ParseState.doubleQuoted;
                         start = false;
                     }
                     else if (c === '\'' && ps) {
@@ -1053,7 +1100,7 @@ export class Input extends EventEmitter {
                             alias += c;
                         else
                             str += c;
-                        state = 2;
+                        state = ParseState.singleQuoted;
                         start = false;
                     }
                     //if looking for an alias and a space check
@@ -1062,7 +1109,7 @@ export class Input extends EventEmitter {
                         //are aliases enabled and does it match an alias?
                         if (AliasesCached.length > 0) {
                             //move to alias parsing
-                            state = 3;
+                            state = ParseState.aliasArguments;
                             //init args
                             args.length = 0;
                             arg = '';
@@ -1079,17 +1126,7 @@ export class Input extends EventEmitter {
                         start = false;
                     }
                     else if (c === '\n' || (stacking && c === stackingChar)) {
-                        if (str.length > 0 && str[0] === '#') {
-                            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, this.executeScript(str), false, true));
-                            if (typeof str === 'number') {
-                                this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
-                                if (out.length === 0) return null;
-                                return out;
-                            }
-                            if (str !== null) out += str + '\n';
-                            str = '';
-                        }
-                        else if (eAlias && findAlias && alias.length > 0) {
+                        if (eAlias && findAlias && alias.length > 0) {
                             AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', alias);
                             //are aliases enabled and does it match an alias?
                             if (AliasesCached.length > 0) {
@@ -1151,17 +1188,7 @@ export class Input extends EventEmitter {
                     break;
             }
         }
-        if (str.length > 0 && str[0] === '#') {
-            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, this.executeScript(str), false, true));
-            if (typeof str === 'number') {
-                this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
-                if (out.length === 0) return null;
-                return out;
-            }
-            if (str !== null) out += str;
-            else if (out.length === 0) return null;
-        }
-        else if (alias.length > 0 && eAlias && findAlias) {
+        if (alias.length > 0 && eAlias && findAlias) {
             if (str.length > 0)
                 alias += str;
             AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', alias);
@@ -1583,7 +1610,9 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (alias.style) {
             case 1:
+                this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args) });
                 ret = this.parseOutgoing(this.ParseString(alias.value, args, this.GetNamedArguments(alias.params, args), alias.append));
+                this._stack.pop();
                 break;
             case 2:
                 /*jslint evil: true */
@@ -1795,7 +1824,9 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (trigger.style) {
             case 1:
+                this._stack.push({ args: args, named: [] });
                 ret = this.parseOutgoing(this.ParseString(trigger.value, args, [], false));
+                this._stack.pop();
                 break;
             case 2:
                 if (!this._TriggerFunctionCache[idx])

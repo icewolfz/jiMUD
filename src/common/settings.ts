@@ -172,6 +172,8 @@ export class Settings {
     public enableSpeedpaths: boolean = true;
     public parseSpeedpaths: boolean = true;
 
+    public enableFunctions: boolean = true;
+
     public logErrors: boolean = true;
     public reportCrashes: boolean = false;
 
@@ -186,6 +188,7 @@ export class Settings {
 
     public commandStackingChar: string = ';';
     public speedpathsChar: string = '!';
+    public functionChar: string = '#';
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;
 
