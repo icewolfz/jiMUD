@@ -75,6 +75,7 @@ export class Display extends EventEmitter {
     private _enableDebug: boolean = false;
     private _lastMouse: MouseEvent;
     private _mouseTimer;
+    private _roundedRanges: boolean = true;
 
     public lines: string[] = [];
     public rawLines: string[] = [];
@@ -102,6 +103,14 @@ export class Display extends EventEmitter {
     private _mxpLinkFunction;
     private _mxpSendFunction;
     private _mxpTooltipFunction;
+
+    get roundedRanges(): boolean { return this._roundedRanges; }
+    set roundedRanges(value: boolean) {
+        if (value !== this._roundedRanges) {
+            this._roundedRanges = value;
+            this.doUpdate(UpdateType.selection | UpdateType.overlays);
+        }
+    }
 
     get splitHeight(): number { return this._splitHeight; }
     set splitHeight(value: number) {
@@ -1340,7 +1349,10 @@ export class Display extends EventEmitter {
                 s *= this._charWidth;
                 if (!this._overlays[type][sL])
                     this._overlays[type][sL] = [];
-                this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls} trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`);
+                if (this.roundedRanges)
+                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls} trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`);
+                else
+                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls}" style="left: ${s}px;width: ${e}px"></span>`);
                 continue;
             }
             const len = this.lines.length;
@@ -1363,7 +1375,7 @@ export class Display extends EventEmitter {
                     top: CornerType.Extern,
                     bottom: CornerType.Extern
                 };
-
+                let rCls = cls;
                 let cl = 0;
                 if (sL === line) {
                     if (s >= this.lines[line].length)
@@ -1371,64 +1383,66 @@ export class Display extends EventEmitter {
                     else
                         cl = s;
                 }
-                const cr = eL === line ? e : (this.lines[line].length || 1);
-                if (line > sL) {
-                    let pl = 0;
-                    if (sL === line - 1) {
-                        if (s >= this.lines[line - 1].length)
-                            pl = this.lines[line - 1].length;
-                        else
-                            pl = s;
+                if (this.roundedRanges) {
+                    const cr = eL === line ? e : (this.lines[line].length || 1);
+                    if (line > sL) {
+                        let pl = 0;
+                        if (sL === line - 1) {
+                            if (s >= this.lines[line - 1].length)
+                                pl = this.lines[line - 1].length;
+                            else
+                                pl = s;
+                        }
+                        const pr = this.lines[line - 1].length || 1;
+
+                        if (cl === pl)
+                            startStyle.top = CornerType.Flat;
+                        else if (cl > pl)
+                            startStyle.top = CornerType.Intern;
+                        if (cr === pr) {
+                            if (line === sL + 1 && this.lines[sL].length === 0)
+                                endStyle.top = CornerType.Extern;
+                            else
+                                endStyle.top = CornerType.Flat;
+                        }
+                        else if (pl < cr && cr < pr)
+                            endStyle.top = CornerType.Intern;
+                        else if (cr === 0 && line === eL)
+                            endStyle.top = CornerType.Intern;
                     }
-                    const pr = this.lines[line - 1].length || 1;
 
-                    if (cl === pl)
-                        startStyle.top = CornerType.Flat;
-                    else if (cl > pl)
-                        startStyle.top = CornerType.Intern;
-                    if (cr === pr) {
-                        if (line === sL + 1 && this.lines[sL].length === 0)
-                            endStyle.top = CornerType.Extern;
-                        else
-                            endStyle.top = CornerType.Flat;
-                    }
-                    else if (pl < cr && cr < pr)
-                        endStyle.top = CornerType.Intern;
-                    else if (cr === 0 && line === eL)
-                        endStyle.top = CornerType.Intern;
-                }
+                    if (line < eL) {
+                        const nl = 0;
+                        const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
+                        if (cl === nl)
+                            startStyle.bottom = CornerType.Flat;
+                        else if (nl < cl && cl < nr)
+                            startStyle.bottom = CornerType.Intern;
 
-                if (line < eL) {
-                    const nl = 0;
-                    const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
-                    if (cl === nl)
-                        startStyle.bottom = CornerType.Flat;
-                    else if (nl < cl && cl < nr)
-                        startStyle.bottom = CornerType.Intern;
-
-                    if (cr === nr) {
-                        if (line === sL && this.lines[line].length === 0)
+                        if (cr === nr) {
+                            if (line === sL && this.lines[line].length === 0)
+                                endStyle.bottom = CornerType.Intern;
+                            else
+                                endStyle.bottom = CornerType.Flat;
+                        }
+                        else if (cr < nr)
                             endStyle.bottom = CornerType.Intern;
-                        else
-                            endStyle.bottom = CornerType.Flat;
+                        else if (line === sL && this.lines[line].length === 0)
+                            endStyle.bottom = CornerType.Intern;
                     }
-                    else if (cr < nr)
-                        endStyle.bottom = CornerType.Intern;
-                    else if (line === sL && this.lines[line].length === 0)
-                        endStyle.bottom = CornerType.Intern;
-                }
-                let rCls = cls;
-                if (startStyle.top === CornerType.Extern) {
-                    rCls += ' tlc';
-                }
-                if (startStyle.bottom === CornerType.Extern) {
-                    rCls += ' blc';
-                }
-                if (endStyle.top === CornerType.Extern) {
-                    rCls += ' trc';
-                }
-                if (endStyle.bottom === CornerType.Extern) {
-                    rCls += ' brc';
+
+                    if (startStyle.top === CornerType.Extern) {
+                        rCls += ' tlc';
+                    }
+                    if (startStyle.bottom === CornerType.Extern) {
+                        rCls += ' blc';
+                    }
+                    if (endStyle.top === CornerType.Extern) {
+                        rCls += ' trc';
+                    }
+                    if (endStyle.bottom === CornerType.Extern) {
+                        rCls += ' brc';
+                    }
                 }
                 if (sL === line) {
                     if (s >= this.lines[line].length)
@@ -1500,7 +1514,10 @@ export class Display extends EventEmitter {
 
             e = (e - s) * this._charWidth;
             s *= this._charWidth;
-            this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
+            if (this.roundedRanges)
+                this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
+            else
+                this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text" style="left: ${s}px;width: ${e}px"></span></div>`;
             this.doUpdate(UpdateType.overlays);
             return;
         }
@@ -1524,7 +1541,8 @@ export class Display extends EventEmitter {
                 top: CornerType.Extern,
                 bottom: CornerType.Extern
             };
-
+            parts = [];
+            let cls = 'select-text';
             let cl = 0;
             if (sL === line) {
                 if (s >= this.lines[line].length)
@@ -1532,66 +1550,66 @@ export class Display extends EventEmitter {
                 else
                     cl = s;
             }
-            const cr = eL === line ? e : (this.lines[line].length || 1);
-            if (line > sL) {
-                let pl = 0;
-                if (sL === line - 1) {
-                    if (s >= this.lines[line - 1].length)
-                        pl = this.lines[line - 1].length;
-                    else
-                        pl = s;
+            if (this.roundedRanges) {
+                const cr = eL === line ? e : (this.lines[line].length || 1);
+                if (line > sL) {
+                    let pl = 0;
+                    if (sL === line - 1) {
+                        if (s >= this.lines[line - 1].length)
+                            pl = this.lines[line - 1].length;
+                        else
+                            pl = s;
+                    }
+                    const pr = this.lines[line - 1].length || 1;
+
+                    if (cl === pl)
+                        startStyle.top = CornerType.Flat;
+                    else if (cl > pl)
+                        startStyle.top = CornerType.Intern;
+                    if (cr === pr) {
+                        if (line === sL + 1 && this.lines[sL].length === 0)
+                            endStyle.top = CornerType.Extern;
+                        else
+                            endStyle.top = CornerType.Flat;
+                    }
+                    else if (pl < cr && cr < pr)
+                        endStyle.top = CornerType.Intern;
+                    else if (cr === 0 && line === eL)
+                        endStyle.top = CornerType.Intern;
                 }
-                const pr = this.lines[line - 1].length || 1;
 
-                if (cl === pl)
-                    startStyle.top = CornerType.Flat;
-                else if (cl > pl)
-                    startStyle.top = CornerType.Intern;
-                if (cr === pr) {
-                    if (line === sL + 1 && this.lines[sL].length === 0)
-                        endStyle.top = CornerType.Extern;
-                    else
-                        endStyle.top = CornerType.Flat;
-                }
-                else if (pl < cr && cr < pr)
-                    endStyle.top = CornerType.Intern;
-                else if (cr === 0 && line === eL)
-                    endStyle.top = CornerType.Intern;
-            }
+                if (line < eL) {
+                    const nl = 0;
+                    const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
+                    if (cl === nl)
+                        startStyle.bottom = CornerType.Flat;
+                    else if (nl < cl && cl < nr)
+                        startStyle.bottom = CornerType.Intern;
 
-            if (line < eL) {
-                const nl = 0;
-                const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
-                if (cl === nl)
-                    startStyle.bottom = CornerType.Flat;
-                else if (nl < cl && cl < nr)
-                    startStyle.bottom = CornerType.Intern;
-
-                if (cr === nr) {
-                    if (line === sL && this.lines[line].length === 0)
+                    if (cr === nr) {
+                        if (line === sL && this.lines[line].length === 0)
+                            endStyle.bottom = CornerType.Intern;
+                        else
+                            endStyle.bottom = CornerType.Flat;
+                    }
+                    else if (cr < nr)
                         endStyle.bottom = CornerType.Intern;
-                    else
-                        endStyle.bottom = CornerType.Flat;
+                    else if (line === sL && this.lines[line].length === 0)
+                        endStyle.bottom = CornerType.Intern;
                 }
-                else if (cr < nr)
-                    endStyle.bottom = CornerType.Intern;
-                else if (line === sL && this.lines[line].length === 0)
-                    endStyle.bottom = CornerType.Intern;
-            }
 
-            parts = [];
-            let cls = 'select-text';
-            if (startStyle.top === CornerType.Extern) {
-                cls += ' tlc';
-            }
-            if (startStyle.bottom === CornerType.Extern) {
-                cls += ' blc';
-            }
-            if (endStyle.top === CornerType.Extern) {
-                cls += ' trc';
-            }
-            if (endStyle.bottom === CornerType.Extern) {
-                cls += ' brc';
+                if (startStyle.top === CornerType.Extern) {
+                    cls += ' tlc';
+                }
+                if (startStyle.bottom === CornerType.Extern) {
+                    cls += ' blc';
+                }
+                if (endStyle.top === CornerType.Extern) {
+                    cls += ' trc';
+                }
+                if (endStyle.bottom === CornerType.Extern) {
+                    cls += ' brc';
+                }
             }
             if (sL === line) {
                 if (s >= this.lines[line].length)
@@ -1599,12 +1617,10 @@ export class Display extends EventEmitter {
                 else
                     w = ((this.lines[line].length || 1) - s) * this._charWidth;
             }
-            else if (eL === line) {
+            else if (eL === line)
                 w = e * this._charWidth;
-            }
-            else {
+            else
                 w = (this.lines[line].length || 1) * this._charWidth;
-            }
 
             parts.push(`<span class="${cls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
 
