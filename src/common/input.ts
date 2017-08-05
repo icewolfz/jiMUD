@@ -548,13 +548,13 @@ export class Input extends EventEmitter {
             case 'showprompt':
             case 'showp':
                 args = args.join(' ');
-                this.client.telnet.receivedData(args);
+                this.client.telnet.receivedData(Buffer.from(args), true);
                 this.client.telnet.prompt = true;
                 return null;
             case 'show':
             case 'sh':
                 args = args.join(' ') + '\n';
-                this.client.telnet.receivedData(args);
+                this.client.telnet.receivedData(Buffer.from(args), true);
                 return null;
             case 'sayprompt':
             case 'sayp':

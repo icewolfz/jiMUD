@@ -243,7 +243,7 @@ export class Telnet extends EventEmitter {
      * @param {String} data string received from host
      * @fires Telnet#received-data
      */
-    public receivedData(data) {
+    public receivedData(data, skipDecompress?: boolean) {
         if (this.enableLatency) {
             if (this._latencyTime !== null) {
                 this.latency = new Date().getTime() - this._latencyTime.getTime();
@@ -264,7 +264,7 @@ export class Telnet extends EventEmitter {
         }
         if (this.enableDebug)
             this.emit('debug', 'PreProcess:' + data, 1);
-        data = this.processData(data);
+        data = this.processData(data, skipDecompress);
         if (this.enableDebug)
             this.emit('debug', 'PostProcess:' + data, 1);
         this.emit('received-data', data);
@@ -361,12 +361,13 @@ export class Telnet extends EventEmitter {
      * @fires Telnet#receive-CHARSET
      */
     //this.processData = function(data) { return data; };
-    public processData(data) {
+    public processData(data, skipDecompress?: boolean) {
         let len: number;
         let _sb;
         if (data == null)
             return data;
-        data = this._decompressData(data);
+        if (!skipDecompress)
+            data = this._decompressData(data);
         len = data.length;
         if (len === 0)
             return data;
@@ -1275,7 +1276,7 @@ export class Telnet extends EventEmitter {
                             state = 0;
                             _sb = [];
                             if (idx < len - 1)
-                                processed = processed.concat(this.processData(data.slice(idx + 1)).slice());
+                                processed = processed.concat(this.processData(data.slice(idx + 1), skipDecompress).slice());
                             idx = len;
                         }
                         break;
