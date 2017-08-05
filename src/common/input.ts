@@ -46,7 +46,6 @@ export class Input extends EventEmitter {
         if (!client)
             throw new Error('Invalid client!');
         this.client = client;
-        window.i = 0;
         window.repeatnum = 0;
         this._tests = new Tests(client);
         this._commandHistory = [];
@@ -883,13 +882,11 @@ export class Input extends EventEmitter {
             args = args.join(' ');
             tmp = [];
             for (let r = 0; r < i; r++) {
-                window.i = r;
                 window.repeatnum = r;
-                n = this.parseOutgoing(args.replace(/(\%|\$)\{(repeatnum|i)\}/g, r));
+                n = this.parseOutgoing(args);
                 if (n != null && n.length > 0)
                     tmp.push(n);
             }
-            window.i = 0;
             window.repeatnum = 0;
             if (tmp.length > 0)
                 return tmp.join('\n');
@@ -903,7 +900,7 @@ export class Input extends EventEmitter {
     }
 
     public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
-        let tl = text.length;
+        const tl = text.length;
         if (text == null || tl === 0)
             return text;
         let str: string = '';
@@ -938,40 +935,6 @@ export class Input extends EventEmitter {
             stacking = this.client.options.commandStacking;
         else
             stacking = stacking && this.client.options.commandStacking;
-        //@TODO re-code someday to be part of the parser engine instead of simple regex
-        const copied = clipboard.readText('selection') || '';
-        text = text.replace(/(\%|\$)\{cr\}/g, '\n');
-        text = text.replace(/(\%|\$)\{lf\}/g, '\r');
-        text = text.replace(/(\%|\$)\{crlf\}/g, '\r\n');
-        text = text.replace(/(\%|\$)\{copied\}/g, copied);
-        text = text.replace(/(\%|\$)\{copied.lower\}/g, copied);
-        text = text.replace(/(\%|\$)\{copied.upper\}/g, copied.toUpperCase());
-        text = text.replace(/(\%|\$)\{copied.proper\}/g, ProperCase(copied));
-        text = text.replace(/(\%|\$)\{(repeatnum|i)\}/g, window.repeatnum);
-
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)\}/g, (v, e, w) => { return window['$' + w]; });
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower\}/g, (v, e, w) => { return window['$' + w].toLowerCase(); });
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).upper\}/g, (v, e, w) => { return window['$' + w].toUpperCase(); });
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).proper\}/g, (v, e, w) => { return ProperCase(window['$' + w]); });
-
-        text = text.replace(/(\%|\$)\{lower\((.*)\)\}/g, (v, e, w) => { return w.toLowerCase(); });
-        text = text.replace(/(\%|\$)\{upper\((.*)\)\}/g, (v, e, w) => { return w.toUpperCase(); });
-        text = text.replace(/(\%|\$)\{proper\((.*)\)\}/g, (v, e, w) => { return ProperCase(w); });
-
-        if (this.client.options.allowEval) {
-            text = text.replace(/(\%|\$)\{(.*)\}/g, (v, e, w) => {
-                return mathjs.eval(w, { i: window.repeatnum, repeatnum: window.repeatnum });
-            });
-        }
-
-        if (this.client.options.allowEscape) {
-            text = text.replace(/\%\\{/g, '%{');
-            text = text.replace(/\$\\{/g, `\${`);
-            text = text.replace(/\%\\\\/g, '%\\');
-            text = text.replace(/\$\\\\/g, `\$\\`);
-        }
-
-        tl = text.length;
 
         for (idx = 0; idx < tl; idx++) {
             c = text.charAt(idx);
@@ -1116,7 +1079,17 @@ export class Input extends EventEmitter {
                         start = false;
                     }
                     else if (c === '\n' || (stacking && c === stackingChar)) {
-                        if (eAlias && findAlias && alias.length > 0) {
+                        if (str.length > 0 && str[0] === '#') {
+                            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, this.executeScript(str), false, true));
+                            if (typeof str === 'number') {
+                                this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                                if (out.length === 0) return null;
+                                return out;
+                            }
+                            if (str !== null) out += str + '\n';
+                            str = '';
+                        }
+                        else if (eAlias && findAlias && alias.length > 0) {
                             AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', alias);
                             //are aliases enabled and does it match an alias?
                             if (AliasesCached.length > 0) {
@@ -1178,7 +1151,17 @@ export class Input extends EventEmitter {
                     break;
             }
         }
-        if (alias.length > 0 && eAlias && findAlias) {
+        if (str.length > 0 && str[0] === '#') {
+            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, this.executeScript(str), false, true));
+            if (typeof str === 'number') {
+                this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                if (out.length === 0) return null;
+                return out;
+            }
+            if (str !== null) out += str;
+            else if (out.length === 0) return null;
+        }
+        else if (alias.length > 0 && eAlias && findAlias) {
             if (str.length > 0)
                 alias += str;
             AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', alias);
@@ -1242,7 +1225,51 @@ export class Input extends EventEmitter {
         return out;
     }
 
-    public ParseString(text: string, args, named, append?: boolean) {
+    public parseVariable(text) {
+        //@TODO re-code someday to be part of the parser engine instead of simple regex
+        switch (text) {
+            case 'cr':
+                return '\n';
+            case 'lf':
+                return '\r';
+            case 'crlf':
+                return '\r\n';
+            case 'copied':
+                return clipboard.readText('selection') || '';
+            case 'upper':
+                return text.toUpperCase();
+        }
+        return null;
+        /*
+        text = text.replace(/(\%|\$)\{cr\}/g, '\n');
+        text = text.replace(/(\%|\$)\{lf\}/g, '\r');
+        text = text.replace(/(\%|\$)\{crlf\}/g, '\r\n');
+        text = text.replace(/(\%|\$)\{copied\}/g, copied);
+        text = text.replace(/(\%|\$)\{copied.lower\}/g, copied);
+        text = text.replace(/(\%|\$)\{copied.upper\}/g, copied.toUpperCase());
+        text = text.replace(/(\%|\$)\{copied.proper\}/g, ProperCase(copied));
+        //text = text.replace(/(\%|\$)\{(repeatnum|i)\}/g, window.repeatnum);
+
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)\}/g, (v, e, w) => { return window['$' + w]; });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower\}/g, (v, e, w) => { return window['$' + w].toLowerCase(); });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).upper\}/g, (v, e, w) => { return window['$' + w].toUpperCase(); });
+        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).proper\}/g, (v, e, w) => { return ProperCase(window['$' + w]); });
+
+        text = text.replace(/(\%|\$)\{lower\((.*)\)\}/g, (v, e, w) => { return w.toLowerCase(); });
+        text = text.replace(/(\%|\$)\{upper\((.*)\)\}/g, (v, e, w) => { return w.toUpperCase(); });
+        text = text.replace(/(\%|\$)\{proper\((.*)\)\}/g, (v, e, w) => { return ProperCase(w); });
+*/
+        /*
+        if (this.client.options.allowEscape) {
+            text = text.replace(/\%\\{/g, '%{');
+            text = text.replace(/\$\\{/g, `\${`);
+            text = text.replace(/\%\\\\/g, '%\\');
+            text = text.replace(/\$\\\\/g, `\$\\`);
+        }
+        */
+    }
+
+    public ParseString(text: string, args?, named?, append?: boolean) {
         if (text == null) return '';
         const tl = text.length;
         if (tl === 0)
@@ -1267,21 +1294,23 @@ export class Input extends EventEmitter {
                         state = 4;
                         continue;
                     }
-                    /*
                     if (e && c === '\\' && arg.length === 0) {
                         state = 6;
                         continue;
                     }
-                    */
                     switch (c) {
                         case '%':
                             str += '%';
                             state = 0;
                             break;
                         case '*':
-                            str += args.slice(1).join(' ');
+                            if (args) {
+                                str += args.slice(1).join(' ');
+                                _used = args.length;
+                            }
+                            else
+                                str += '%*';
                             state = 0;
-                            _used = args.length;
                             break;
                         case '-':
                             _neg = true;
@@ -1299,7 +1328,7 @@ export class Input extends EventEmitter {
                             arg += c;
                             break;
                         default:
-                            if (arg.length > 0) {
+                            if (args && arg.length > 0) {
                                 arg = parseInt(arg, 10);
                                 if (_neg && arg < args.length)
                                     str += args.slice(arg).join(' ');
@@ -1309,20 +1338,23 @@ export class Input extends EventEmitter {
                                     _used = args.length;
                                 else if (arg > _used)
                                     _used = arg;
+                                idx--;
                             }
-                            else
-                                str += '%' + c;
-                            idx--;
+                            else {
+                                str += '%';
+                                idx -= arg.length || 1;
+                            }
                             state = 0;
+                            arg = '';
                             break;
                     }
                     break;
                 case 2:
                     if (c === '{')
                         state = 5;
-                    //else if (e && c === '\\')
-                    //state = 7;
-                    else if (c.match(/[^a-zA-Z_$]/g)) {
+                    else if (e && c === '\\')
+                        state = 7;
+                    else if (!named || c.match(/[^a-zA-Z_$]/g)) {
                         state = 0;
                         str += '$' + c;
                     }
@@ -1333,10 +1365,11 @@ export class Input extends EventEmitter {
                     break;
                 case 3:
                     if (c.match(/[^a-zA-Z0-9_]/g)) {
-                        if (named[arg])
+                        if (named && named.hasOwnProperty(arg))
                             str += named[arg];
                         idx--;
                         state = 0;
+                        arg = '';
                     }
                     else
                         arg += c;
@@ -1347,12 +1380,14 @@ export class Input extends EventEmitter {
                             str += window.repeatnum;
                         else if (arg === 'repeatnum')
                             str += window.repeatnum;
-                        else if (arg === '*') {
+                        else if (args && arg === '*') {
                             str += args.slice(1).join(' ');
                             _used = args.length;
                         }
+                        else if (named && named.hasOwnProperty(arg))
+                            str += named[arg];
                         else {
-                            if (!isNaN(arg)) {
+                            if (args && !isNaN(arg)) {
                                 arg = parseInt(arg, 10);
                                 if (arg < 0) {
                                     str += args.slice(arg).join(' ');
@@ -1365,11 +1400,23 @@ export class Input extends EventEmitter {
                                 }
                             }
                             else {
-                                str += '%';
-                                idx = idx - arg.length - 2;
+                                c = this.parseVariable(arg);
+                                if (c)
+                                    str += c;
+                                else if (this.client.options.allowEval) {
+                                    if (named)
+                                        str += '' + mathjs.eval(this.ParseString(arg, args, named, false), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, named));
+                                    else
+                                        str += '' + mathjs.eval(this.ParseString(arg, args, named, false), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+                                }
+                                else {
+                                    str += '%';
+                                    idx = idx - arg.length - 2;
+                                }
                             }
                         }
                         state = 0;
+                        arg = '';
                     }
                     else
                         arg += c;
@@ -1380,12 +1427,14 @@ export class Input extends EventEmitter {
                             str += window.repeatnum;
                         else if (arg === 'repeatnum')
                             str += window.repeatnum;
-                        else if (arg === '*') {
+                        else if (args && arg === '*') {
                             str += args.slice(1).join(' ');
                             _used = args.length;
                         }
+                        else if (named && named.hasOwnProperty(arg))
+                            str += named[arg];
                         else {
-                            if (!isNaN(arg)) {
+                            if (args && !isNaN(arg)) {
                                 arg = parseInt(arg, 10);
                                 if (arg < 0) {
                                     str += args.slice(arg).join(' ');
@@ -1398,11 +1447,23 @@ export class Input extends EventEmitter {
                                 }
                             }
                             else {
-                                str += '$';
-                                idx = idx - arg.length - 2;
+                                c = this.parseVariable(arg);
+                                if (c)
+                                    str += c;
+                                else if (this.client.options.allowEval) {
+                                    if (named)
+                                        str += '' + mathjs.eval(this.ParseString(arg, args, named, false), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, named));
+                                    else
+                                        str += '' + mathjs.eval(this.ParseString(arg, args, named, false), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+                                }
+                                else {
+                                    str += '$';
+                                    idx = idx - arg.length - 2;
+                                }
                             }
                         }
                         state = 0;
+                        arg = '';
                     }
                     else
                         arg += c;
@@ -1445,19 +1506,33 @@ export class Input extends EventEmitter {
             }
         }
         if (state === 3 && arg.length > 0) {
-            if (named[arg])
+            if (named && named[arg])
                 str += named[arg];
+            else
+                str += '%' + arg;
         }
         else if (state === 1 && arg.length > 0) {
-            arg = parseInt(arg, 10);
-            if (arg < args.length)
-                str += args[arg];
+            if (args) {
+                arg = parseInt(arg, 10);
+                if (_neg && arg < args.length)
+                    str += args.slice(arg).join(' ');
+                else if (arg < args.length)
+                    str += args[arg];
+                if (_neg)
+                    _used = args.length;
+                else if (arg > _used)
+                    _used = arg;
+            }
+            else
+                str += '%' + arg;
         }
         else if (state === 4) {
             str += '%{' + arg;
         }
+        else if (arg.length > 0)
+            str += arg;
         //ignore args[0] as 0 should be the "original text"
-        if (args.length - 1 > 0 && append && _used + 1 < args.length) {
+        if (args && append && args.length - 1 > 0 && _used + 1 < args.length) {
             let r = false;
             if (str.endsWith('\n')) {
                 str = str.substring(0, str.length - 1);
@@ -1711,7 +1786,7 @@ export class Input extends EventEmitter {
                 }
             }
         }
-        return raw;
+        return this.ParseString(raw, 0, 0, false);
     }
 
     public ExecuteTrigger(trigger, args, r: boolean, idx) {

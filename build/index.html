@@ -22,14 +22,79 @@
     //cSpell:ignore ismap hellip selectall lagmeter
     if (window.module) module.module;
 
-    window.$selected = '';
-    window.$selectedurl = '';
-    window.$selectedline = '';
-    window.$selectedword = '';
+    ['$selected', '$selectedurl', '$selectedline', '$selectedword'].map((a) => {
+      Object.defineProperty(window, a, {
+        get: function () {
+          if (!client || !client.variables) return undefined;
+          return client.variables[a];
+        },
+        set: function (val) {
+          if (!client) return;
+          if (!client.variables)
+            client.variables = {};
+          client.variables[a] = val;
+        },
+        configurable: true
+      });
+    });
 
-    window.$selurl = window.$selectedurl;
-    window.$selline = window.$selectedline;
-    window.$selword = window.$selectedword;
+    ['repeatnum', 'i'].map((a) => {
+      Object.defineProperty(window, a, {
+        get: function () {
+          if (!client || !client.variables) return 0;
+          return client.variables.repeatnum;
+        },
+        set: function (val) {
+          if (!client) return;
+          if (!client.variables)
+            client.variables = {};
+          client.variables.repeatnum = val;
+        },
+        configurable: true
+      });
+    });
+
+    Object.defineProperty(window, '$selurl', {
+      get: function () {
+        if (!client || !client.variables) return undefined;
+        return client.variables.$selectedurl;
+      },
+      set: function (val) {
+        if (!client) return;
+        if (!client.variables)
+          client.variables = {};
+        client.variables.$selectedurl = val;
+      },
+      configurable: true
+    });
+
+    Object.defineProperty(window, '$selline', {
+      get: function () {
+        if (!client || !client.variables) return undefined;
+        return client.variables.$selectedline;
+      },
+      set: function (val) {
+        if (!client) return;
+        if (!client.variables)
+          client.variables = {};
+        client.variables.$selectedline = val;
+      },
+      configurable: true
+    });
+
+    Object.defineProperty(window, '$selword', {
+      get: function () {
+        if (!client || !client.variables) return undefined;
+        return client.variables.$selectedword;
+      },
+      set: function (val) {
+        if (!client) return;
+        if (!client.variables)
+          client.variables = {};
+        client.variables.$selectedword = val;
+      },
+      configurable: true
+    });
 
     const Client = require('./js/client.js').Client;
     const Status = require('./js/status.js').Status;
@@ -469,6 +534,12 @@
       };
 
       client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
+
+      window.$selected = '';
+      window.$selectedurl = '';
+      window.$selectedline = '';
+      window.$selectedword = '';
+
       if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
         client.enabledProfiles = remote.getGlobal('profiles');
       client.display.enableBell = false;
@@ -518,10 +589,6 @@
           window.$selectedword = '';
         else
           window.$selectedword = line.substring(sPos, ePos);
-
-        window.$selurl = window.$selectedurl;
-        window.$selline = window.$selectedline;
-        window.$selword = window.$selectedword;
 
         var c = new Menu();
 
@@ -1243,7 +1310,7 @@
       var ret;// = '';
       switch (item.style) {
         case 1:
-          ret = client.parseOutgoing(item.value);
+          ret = client.ParseString(client.parseOutgoing(item.value), 0, 0, false);
           break;
         case 2:
           /*jslint evil: true */
@@ -1279,7 +1346,7 @@
       var ret;// = '';
       switch (button.style) {
         case 1:
-          ret = client.parseOutgoing(button.value);
+          ret = client.ParseString(client.parseOutgoing(button.value), 0, 0, false);
           break;
         case 2:
           /*jslint evil: true */

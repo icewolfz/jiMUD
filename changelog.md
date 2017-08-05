@@ -6,8 +6,13 @@
 - **Change:**
   - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
   - Remove experimental tags for scroll and scroll live preferences
+  - Recoded $varibles storage to be dynamic
 - **Fixed:**
   - Alias, context, triggers, button, and macro sort order was not correct, most noticeable when using context menus
+  - ${i}/${repeatnum} always returning 0
+  - ${expression} was not working correctly with repeatnum/i
+  - one letter named arguments where not processed correctly
+  - %/${name} where not being processed
 ##### 0.4.10 2017-08-03
 - **Change:**
   - When window shown it will now focus on command input
