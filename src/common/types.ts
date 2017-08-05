@@ -6,6 +6,7 @@ export interface Point {
 export interface DisplayOptions extends ParserOptions {
   enableSplit?: boolean;
   enableSplitLive?: boolean;
+  enableRoundedRanges?: boolean;
 }
 
 export interface OverlayRange {

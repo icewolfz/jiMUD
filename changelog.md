@@ -2,8 +2,10 @@
 ##### 0.4.11
 - **New:**
   - Add intern corner support for overlays (selection, find)
+  - Preference: Enable rounded overlays, disable or enable rounded corner effect for selection and find highlighting
 - **Change:**
   - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
+  - Remove experimental tags for scroll and scroll live preferences
 - **Fixed:**
   - Alias, context, triggers, button, and macro sort order was not correct, most noticeable when using context menus
 ##### 0.4.10 2017-08-03

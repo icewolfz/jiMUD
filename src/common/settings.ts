@@ -222,7 +222,8 @@ export class Settings {
     public display = {
         split: false,
         splitHeight: -1,
-        splitLive: true
+        splitLive: true,
+        roundedOverlays: true
     };
 
     public extensions = {

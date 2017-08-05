@@ -299,8 +299,10 @@
       $('#logErrors').prop('checked', _settings.logErrors);
       $('#spellchecking').prop('checked', _settings.spellchecking);
 
-      $('#displaySplit').prop('checked', _settings.display.split);
+      $('#display-split').prop('checked', _settings.display.split);
       $('#display-splitLive').prop('checked', _settings.display.splitLive);
+
+      $('#display-roundedOverlays').prop('checked', _settings.display.roundedOverlays);
 
       //$('#font').selectpicker('val', _settings.font);
       $('#font').val(_settings.font);
@@ -521,9 +523,6 @@
               _settings.backupLoad |= 4;
             if ($('#backup-load-settings').prop('checked'))
               _settings.backupLoad |= 8;
-            break;
-          case 'displaySplit':
-            _settings.display.split = this.checked;
             break;
           default:
             var id = $(this).attr('id').split("-");
@@ -1070,15 +1069,18 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="displaySplit" /> Split scroll
-              <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
+              <input type="checkbox" id="display-roundedOverlays" /> Enable rounded overlays
             </label>
           </div>
 
           <div class="col-sm-6 form-group">
             <label class="control-label">
+              <input type="checkbox" id="display-split" /> Split scroll
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
               <input type="checkbox" id="display-splitLive" /> Split scroll live update
-              <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
             </label>
           </div>
 

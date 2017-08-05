@@ -22,8 +22,9 @@ Reset - Resetting will revert all settings back to default values
 - `Echo commands` Will display commands as they are sent to the mud
 - `Enable URL detection` Attempt to detect urls and convert them into links that can be clicked to.
 - `Focus to command input on click` Will auto focus to the command input when the display area is clicked.
-- `Split scroll` **Experimental** Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
-- `Split scroll live update` **Experimental**  determines how the split screen updates as resize bar is adjusted, if on it will update once resize bar released, if slow resizing enable this as it should reduce cpu load during drag
+- `Enable rounded overlays` disable or enable rounded corner effect for selection and find highlighting
+- `Split scroll` Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
+- `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update once resize bar released, if slow resizing enable this as it should reduce cpu load during drag
 - `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
 
 ## Colors

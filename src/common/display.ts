@@ -663,6 +663,15 @@ export class Display extends EventEmitter {
             this.emit('moved');
         });
 
+        if (options && options != null) {
+            if (options.enableSplit != null)
+                this.enableSplit = options.enableSplit;
+            if (options.enableSplitLive != null)
+                this.splitLive = options.enableSplitLive;
+            if (options.enableRoundedRanges != null)
+                this.roundedRanges = options.enableRoundedRanges;
+        }
+
         this.doUpdate(UpdateType.update);
         //setTimeout(() => { this.update(); }, 0);
         //this.update();
