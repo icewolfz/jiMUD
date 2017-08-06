@@ -28,10 +28,10 @@
 - `Name` the name of the alias, this is used to execute an alias
 - `Style` how the value is processed
   - `Text` send value as is
-  - `Parse` do standard parsing, allows %0 ... %n to access arguments, or %name
+  - `Parse` do standard parsing, allows %0 ... %n to access arguments, or %name or $name, [may use alterative ${}/%{} block syntax](functions.md)
   - `Script` the value is javascript, it will evaluate and any thing returned will be sent to the mud. the value is wrapped as a function and any matched patterns are passed as arguments, use standard arguments[#] to access.
 - `Value` the value to send to the mud
-- `Params` this allows you to name arguments in a comma delimited list, each word in the list is the same as the %#
+- `Params` this allows you to name arguments in a comma delimited list, each word in the list is the same as the %# and accessed using $name, %name, ${name}, or %{name}
 - `Priority` the sort order of aliases
 - `Append arguments` append any unused arguments to the end of the value before sending to the mud
 - `Multi` this allows you to have aliases of all the same name, and if false to stop executing on this alias
@@ -56,7 +56,7 @@
 - `Pattern` the pattern to match against
 - `Style` how the value is processed
   - `Text` send value as is
-  - `Parse` do standard parsing, allows %0 ... %n to access arguments regex matches
+  - `Parse` do standard parsing, allows %0 ... %n to access arguments regex matches, [may use alterative ${}/%{} block syntax](functions.md)
   - `Script` the value is javascript, it will evaluate and any thing returned will be sent to the mud, the value is wrapped as a function and any matched patterns are passed as arguments, use standard arguments[#] to access.
 - `Value` the value to send to the mud
 - `Test` Allows you to test your pattern against a string and return results and any arguments found
@@ -111,35 +111,3 @@
 - `Send to Mud` send the value to the mud
 - `Append to Command` append value to the end of the command input
 - `Daisy Chain` this will append the value to the command line if it ends with a space then send the command line to the mud, if no space it will be handled as a standard macro and send the value.
-
-### Parsed Predefined variables
-
-- `${selected}` - selected text
-- `${selectedword}` - word under mouse when right clicked
-- `${selectedline}` - line under mouse when right clicked
-- `${selectedurl}` - url under mouse when right clicked
-- `${selword}` same as $selectedword
-- `${selline}` sane as $selline
-- `${selurl}` same as $selected url
-- `${copied}` return clipboard text
-- `${variable.lower}` - force variable to all lower case by appending .lower
-- `${variable.upper}` - force variable to all upper case by appending .lower
-- `${variable.proper}` - force variable to proper casing by appending .proper
-- `${repeatnum}` - returns the current index during #nnn
-- `${i}` - same as repeatnum
-- `${cr}` - replace with carriage return
-- `${lf}` - replace with line feed
-- `${crlf}` - replace with carriage return and linefeed
-- `${expression}` - evaluate the math expression and return the results when [allow evaluate is enabled](preferences.md#Scripting)
-
-### Parsed functions
-- `${lower(TEXT)}` - force TEXT into lower case, for example ${lower(${selword})} is the same as ${selword.lower}
-- `${upper(TEXT)}` - force TEXT into upper case
-- `${proper(TEXT)}` - force TEXT into proper casing
-- `${eval(expression)}` - evaluate the expression and return the results, a long version of `${expression}`
-- `${dice(xdy+n)}` - roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-- `${diceavg(xdy+n)}` the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-- `${dicemin(xdy+n)}` the minimum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-- `${dicemax(xdy+n)}` the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-- `${dicedev(xdy+n)}` return standard deviation of dice sqrt((y^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-- `${zdicedev(xdy+n)}` return zMUD/cMUD standard deviation of dice sqrt(((y-1)^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier

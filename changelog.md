@@ -1,6 +1,7 @@
 ## Changelog
 ##### 0.4.11
 - **New:**
+  - Added function doc file to explain functions and list predefined variables
   - Add intern corner support for overlays (selection, find)
   - Preference: Enable rounded overlays, disable or enable rounded corner effect for selection and find highlighting
   - ${eval(expression)} to allow evaluation a math expression when ${expression} is disabled

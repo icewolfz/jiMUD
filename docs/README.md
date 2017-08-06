@@ -55,6 +55,7 @@ Basic questions answered about jiMUD
 - [Profiles](profiles.md)
 - [Speedpaths](speedpaths.md)
 - [Commands](commands.md)
+- [Functions](functions.md)
 - [Preferences](preferences.md)
 - [Scripting](scripting.md)
 - [Customizing](customizing.md)
