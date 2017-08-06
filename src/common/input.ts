@@ -1603,6 +1603,8 @@ export class Input extends EventEmitter {
                 return res[2].toUpperCase();
             case 'proper':
                 return ProperCase(res[2]);
+            case 'eval':
+                return '' + mathjs.eval(this.parseOutgoing(res[2]), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
         }
         return null;
     }

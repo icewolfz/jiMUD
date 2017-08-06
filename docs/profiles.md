@@ -133,4 +133,5 @@
 - `${cr}` - replace with carriage return
 - `${lf}` - replace with line feed
 - `${crlf}` - replace with carriage return and linefeed
-- `${expression}` - evaluate the math expression and return the results
+- `${expression}` - evaluate the math expression and return the results when [allow evaluate is enabled](preferences.md#Scripting)
+- `${eval(expression)}` - evaluate the expression and return the results, a long version of `${expression}`
