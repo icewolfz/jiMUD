@@ -1081,10 +1081,10 @@ export class Input extends EventEmitter {
                             return out;
                         }
                         if (str !== null) {
-                            if (str.length > 1)
+                            if (str.startsWith('#'))
                                 out += '#' + this.parseOutgoing(str.substr(1));
                             else
-                                out += str;
+                                out += this.parseOutgoing(str);
                         }
                         str = '';
                         start = true;
@@ -1113,7 +1113,7 @@ export class Input extends EventEmitter {
                             if (eAlias && findAlias)
                                 alias += '%';
                             else
-                                out += '%';
+                                str += '%';
                             state = ParseState.none;
                             break;
                         case '*':
@@ -1121,13 +1121,13 @@ export class Input extends EventEmitter {
                                 if (eAlias && findAlias)
                                     alias += this.stack.args.slice(1).join(' ');
                                 else
-                                    out += this.stack.args.slice(1).join(' ');
+                                    str += this.stack.args.slice(1).join(' ');
                                 this.stack.used = this.stack.args.length;
                             }
                             if (eAlias && findAlias)
                                 alias += '%*';
                             else
-                                out += '%*';
+                                str += '%*';
                             state = ParseState.none;
                             break;
                         case '-':
@@ -1159,14 +1159,14 @@ export class Input extends EventEmitter {
                                 if (eAlias && findAlias)
                                     alias += tmp;
                                 else
-                                    out += tmp;
+                                    str += tmp;
                                 idx--;
                             }
                             else {
                                 if (eAlias && findAlias)
                                     alias += '%';
                                 else
-                                    out += '%';
+                                    str += '%';
                                 idx -= arg.length || 1;
                             }
                             state = ParseState.none;
@@ -1216,10 +1216,10 @@ export class Input extends EventEmitter {
                                 }
                             }
                         }
-                        if (tmp2 && eAlias && findAlias)
+                        if (tmp2 != null && eAlias && findAlias)
                             alias += tmp2;
-                        else if (tmp2)
-                            out += tmp2;
+                        else if (tmp2 != null)
+                            str += tmp2;
                         state = 0;
                         arg = '';
                     }
@@ -1246,7 +1246,7 @@ export class Input extends EventEmitter {
                     if (eAlias && findAlias)
                         alias += tmp2;
                     else
-                        out += tmp2;
+                        str += tmp2;
                     state = ParseState.none;
                     break;
                 case ParseState.paramsD:
@@ -1259,7 +1259,7 @@ export class Input extends EventEmitter {
                         if (eAlias && findAlias)
                             alias += '$' + c;
                         else
-                            out += '$' + c;
+                            str += '$' + c;
                     }
                     else {
                         arg = c;
@@ -1272,7 +1272,7 @@ export class Input extends EventEmitter {
                             if (eAlias && findAlias)
                                 alias += this.stack.named[arg];
                             else
-                                out += this.stack.named[arg];
+                                str += this.stack.named[arg];
                         }
                         idx--;
                         state = ParseState.none;
@@ -1293,7 +1293,7 @@ export class Input extends EventEmitter {
                     if (eAlias && findAlias)
                         alias += tmp2;
                     else
-                        out += tmp2;
+                        str += tmp2;
                     state = ParseState.none;
                     break;
                 case ParseState.paramsDBlock:
@@ -1338,10 +1338,10 @@ export class Input extends EventEmitter {
                                 }
                             }
                         }
-                        if (tmp2 && eAlias && findAlias)
+                        if (tmp2 != null && eAlias && findAlias)
                             alias += tmp2;
-                        else if (tmp2)
-                            out += tmp2;
+                        else if (tmp2 != null)
+                            str += tmp2;
                         state = ParseState.none;
                         arg = '';
                     }
@@ -1366,7 +1366,7 @@ export class Input extends EventEmitter {
                     if (eAlias && findAlias)
                         alias += tmp2;
                     else
-                        out += tmp2;
+                        str += tmp2;
                     state = ParseState.none;
                     break;
                 default:
@@ -1709,6 +1709,10 @@ export class Input extends EventEmitter {
                     return '' + sum;
                 }
                 return null;
+                //diceavg
+                //dicemin
+                //dicemax
+                //dicedev
         }
         return null;
     }
@@ -2027,7 +2031,7 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (alias.style) {
             case 1:
-                this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append });
+                this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
                 ret = this.parseOutgoing(alias.value);
                 this._stack.pop();
                 break;
@@ -2243,7 +2247,7 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (trigger.style) {
             case 1:
-                this._stack.push({ args: args, named: [] });
+                this._stack.push({ args: args, named: [], used: 0 });
                 ret = this.parseOutgoing(trigger.value);
                 this._stack.pop();
                 break;
@@ -2307,10 +2311,18 @@ export class Input extends EventEmitter {
 
     public executeWait(text, delay: number, eAlias?: boolean, stacking?: boolean) {
         if (!text || text.length === 0) return;
+        const s = { args: 0, named: 0, used: this.stack.used, append: this.stack.append };
+        if (this.stack.args)
+            s.args = this.stack.args.slice();
+        if (this.stack.named)
+            s.named = this.stack.named.slice();
+
         if (delay < 0)
             delay = 0;
         setTimeout(() => {
+            this._stack.push(s);
             let ret = this.parseOutgoing(text, eAlias, stacking);
+            this._stack.pop();
             if (ret == null || typeof ret === 'undefined' || ret.length === 0) return;
             if (!ret.endsWith('\n'))
                 ret = ret + '\n';

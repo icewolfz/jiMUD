@@ -21,6 +21,7 @@
   - #show was converting text into binary
   - #show was trying to decompress string when MCCP was enabled
   - Parsing was recoded to properly handled ${}, %{}, %*, and %# variables with proper stack tracking
+  - #wait would have broken %# values, fixed with new proper parsing and stack
 ##### 0.4.10 2017-08-03
 - **Change:**
   - When window shown it will now focus on command input
