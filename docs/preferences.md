@@ -42,13 +42,6 @@ Reset - Resetting will revert all settings back to default values
 - `Font size` The font size for the command input box
 - `Keep Last Command` This leaves the last command entered into the command input and selected it, if disabled it will be cleared
 - `History Size` The number of items to keep in command history when navigating using the up/down arrow.
-- `Command Stacking` 
-  - `Character` The character to use when repeating command into multiple commands.
-  - `Enable` This will enable command stacking systems and use the command stacking character to know where to break a command into a list commands.
-- `Speedpaths`
-  - `Character` The character that is used to determine if the command is a speedpath to expand, default is !
-  - `Enable` Weather or not to expand speedpaths, if disabled the line is parsed as normal command
-  - `Parse` Parse each command as if it was sent from the command line, if disabled each command is sent to the mud as is.
 - `Newline shortcut` A shortcut for adding newlines to command input
   - `None` no shortcut enter always sends command
   - `Ctrl + Enter` add newline on ctrl+enter
@@ -119,19 +112,37 @@ Controls what is captured into the chat window
 
 ## Status
 
-- `Show Lagmeter` Weather to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
+- `Show Lagmeter` Whether to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Show Experience Needed as Progressbar` display the experience needed value as a progress bar
 
 ## Scripting
 
 - `Allow evaluate` will enable ${expression} evaluation
-- `Allow escape` will enable escape charcter `\` when parsing certain text formats
 - `Parse single quotes as strings` Treat single quotes as string encasing, meaning all text found inside single quotes are treated as is and not parsed.
 - `Parse double quotes as strings` Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
 
+## Scripting > Special characters
+
+- `Command Stacking` 
+  - `Character` The character to use when repeating command into multiple commands.
+  - `Enable` This will enable command stacking systems and use the command stacking character to know where to break a command into a list commands.
+- `Speedpaths`
+  - `Character` The character that is used to determine if the command is a speedpath to expand, default is !
+  - `Enable` Whether or not to expand speedpaths, if disabled the line is parsed as normal command
+  - `Parse` Parse each command as if it was sent from the command line, if disabled each command is sent to the mud as is.
+- `Command`
+ - `Character` The character to use with build in client commands
+ - `Enable` This will enable or disable command systems
+- `Escape`
+  - `Character` The character to use when escaping $%"'{ or special characters
+  - `Enable` Enable escaping of characters
+- `Verbatim`
+  - `Character` The character used at the start of a line to siginify the line should be sent as is starting after the verbatim character
+  - `Enabled` Enable or disable verbatim system
+
 ## Advanced
 
-- `Connect to development` Connect to the developement mud.
+- `Connect to development` Connect to the development mud.
 - `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
 - `Enable GMCP Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
 - `Enable debug` Will display debug data to the dev tool console

@@ -160,7 +160,7 @@ export class Settings {
 
     public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
-    public commandStacking: boolean = true;
+
     public logWhat: Log = Log.Html;
     public keepLastCommand: boolean = true;
     public enableMXP: boolean = true;
@@ -169,10 +169,7 @@ export class Settings {
     public enableUTF8: boolean = true;
     public enableDebug: boolean = false;
     public parseCommands: boolean = true;
-    public enableSpeedpaths: boolean = true;
-    public parseSpeedpaths: boolean = true;
 
-    public enableFunctions: boolean = true;
 
     public logErrors: boolean = true;
     public reportCrashes: boolean = false;
@@ -186,10 +183,22 @@ export class Settings {
     public cmdfont: string = '\'Courier New\', Courier, monospace';
     public font: string = '\'Courier New\', Courier, monospace';
 
+    public commandStacking: boolean = true;
     public commandStackingChar: string = ';';
+
+    public enableSpeedpaths: boolean = true;
+    public parseSpeedpaths: boolean = true;
     public speedpathsChar: string = '!';
-    public functionChar: string = '#';
+
+    public enableCommands: boolean = true;
+    public commandChar: string = '#';
+
+    public allowEscape: boolean = true;
     public escapeChar: string = '\\';
+
+    public enableVerbatim: boolean = true;
+    public verbatimChar: string = '`';
+
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;
 
@@ -200,7 +209,6 @@ export class Settings {
     public theme = path.join('{themes}', 'default');
 
     public allowEval: boolean = true;
-    public allowEscape: boolean = true;
 
     public windows = {};
     public buttons = {

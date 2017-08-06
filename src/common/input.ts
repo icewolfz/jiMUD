@@ -34,7 +34,8 @@ enum ParseState {
     paramsDBlock = 12,
     paramsDEscape = 13,
     paramsDNamed = 14,
-    escape = 15
+    escape = 15,
+    verbatim = 16
 }
 
 export class Input extends EventEmitter {
@@ -935,14 +936,17 @@ export class Input extends EventEmitter {
         let alias: string = '';
         let AliasesCached;
         let state = 0;
+        //store as local vars to speed up parsing
         const aliases = this.client.aliases;
         const stackingChar: string = this.client.options.commandStackingChar;
         const spChar: string = this.client.options.speedpathsChar;
         const ePaths: boolean = this.client.options.enableSpeedpaths;
-        const eFn: boolean = this.client.options.enableFunctions;
-        const fnChar: string = this.client.options.functionChar;
+        const eCmd: boolean = this.client.options.enableCommands;
+        const cmdChar: string = this.client.options.commandChar;
         const eEscape: boolean = this.client.options.allowEscape;
         const escChar: string = this.client.options.escapeChar;
+        const verbatimChar: string = this.client.options.verbatimChar;
+        const eVerbatim: boolean = this.client.options.enableVerbatim;
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -1088,11 +1092,6 @@ export class Input extends EventEmitter {
                         }
                         str = '';
                         start = true;
-                    }
-                    else if (idx === 1 && c === spChar) {
-                        state = ParseState.none;
-                        idx--;
-                        start = false;
                     }
                     else {
                         str += c;
@@ -1357,7 +1356,7 @@ export class Input extends EventEmitter {
                         arg += c;
                     break;
                 case ParseState.escape:
-                    if (c === escChar || c === stackingChar)
+                    if (c === escChar || c === stackingChar || c === verbatimChar)
                         tmp2 = c;
                     else if ('$%"\'{'.indexOf(c) !== -1)
                         tmp2 = c;
@@ -1368,6 +1367,18 @@ export class Input extends EventEmitter {
                     else
                         str += tmp2;
                     state = ParseState.none;
+                    break;
+                case ParseState.verbatim:
+                    if (c === '\n') {
+                        state = ParseState.none;
+                        out += str;
+                        str = '';
+                        start = true;
+                    }
+                    else {
+                        str += c;
+                        start = false;
+                    }
                     break;
                 default:
                     if (eEscape && c === escChar) {
@@ -1387,8 +1398,12 @@ export class Input extends EventEmitter {
                         arg = '';
                         start = false;
                     }
-                    else if (eFn && start && c === fnChar) {
+                    else if (eCmd && start && c === cmdChar) {
                         state = ParseState.function;
+                        start = false;
+                    }
+                    else if (eVerbatim && start && c === verbatimChar) {
+                        state = ParseState.verbatim;
                         start = false;
                     }
                     else if (ePaths && start && c === spChar) {
@@ -1566,6 +1581,8 @@ export class Input extends EventEmitter {
             if (str !== null) out += str;
             else if (out.length === 0) return null;
         }
+        else if (state === ParseState.verbatim)
+            out += str;
         else if (alias.length > 0 && eAlias && findAlias) {
             if (str.length > 0)
                 alias += str;

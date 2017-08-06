@@ -13,10 +13,19 @@
     - ${dicemax(**x**d**y**__+n__)} the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
     - ${dicedev(**x**d**y**__+n__)} return standard deviation of dice sqrt((y^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
     - ${zdicedev(**x**d**y**__+n__)} return zMUD/cMUD standard deviation of dice sqrt(((y-1)^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+    - Verbatim system, you can now start a line of text with a ` and all text after that to a newline will be sent as is to the mud with no parsing or manipulation
+    - Preferences:
+      - Escape character, allows changing which character is used for escaping
+      - Command character, allow you to change the # character for commands
+      - Enable commands, disable command system
+      - Verbatim character, change which character is used to mark the start of a verbatim block
+      - Enable verbatim, control if verbatim system is enabled
 - **Change:**
   - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
   - Remove experimental tags for scroll and scroll live preferences
   - Recoded $varibles storage to be dynamic
+  - Preferences:
+    - Move allow escape, command stacking, and speed path preferences to scripting > special characters
 - **Fixed:**
   - Alias, context, triggers, button, and macro sort order was not correct, most noticeable when using context menus
   - ${i}/${repeatnum} always returning 0

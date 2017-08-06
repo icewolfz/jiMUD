@@ -160,7 +160,12 @@
             ]
           },
           { text: 'Status' },
-          { text: 'Scripting' },
+          {
+            text: 'Scripting',
+            nodes: [
+              { text: 'Special characters', dataAttr: { title: 'Scripting > Special characters' } },
+            ]
+          },
           {
             text: 'Advanced',
             nodes: [
@@ -286,7 +291,7 @@
       $('#autoConnect').prop('checked', _settings.autoConnect);
       $('#autoLogin').prop('checked', _settings.autoLogin);
       $('#allowEval').prop('checked', _settings.allowEval);
-      $('#allowEscape').prop('checked', _settings.allowEscape);
+
       $('#autoConnectDelay').val(_settings.autoConnectDelay);
       $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
       $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
@@ -325,6 +330,15 @@
       $('#commandHistorySize').val(_settings.commandHistorySize);
       $('#commandStacking').prop('checked', _settings.commandStacking);
       $('#commandStackingChar').val(_settings.commandStackingChar);
+
+      $('#enableCommands').prop('checked', _settings.enableCommands);
+      $('#commandChar').val(_settings.commandChar);
+
+      $('#allowEscape').prop('checked', _settings.allowEscape);
+      $('#escapeChar').val(_settings.escapeChar);
+
+      $('#enableVerbatim').prop('checked', _settings.enableVerbatim);
+      $('#verbatimChar').val(_settings.verbatimChar);
 
       $('#enableSpeedpaths').prop('checked', _settings.enableSpeedpaths);
       $('#speedpathsChar').val(_settings.speedpathsChar);
@@ -1320,35 +1334,7 @@
             </label>
           </div>
 
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
-              Command stacking
-              <div class="input-group" style="width: 40px">
-                <input type="text" id="commandStackingChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
-                <div class="input-group-addon">
-                  <label>
-                    <input type="checkbox" id="commandStacking" /> Enable</label>
-                </div>
-              </div>
-            </label>
-          </div>
 
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
-              Speedpaths
-              <div class="input-group" style="width: 40px">
-                <input type="text" id="speedpathsChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
-                <div class="input-group-addon" style="border-left: 0px">
-                  <label>
-                    <input type="checkbox" id="enableSpeedpaths" /> Enable</label>
-                </div>
-                <div class="input-group-addon">
-                  <label>
-                    <input type="checkbox" id="parseSpeedpaths" /> Parse</label>
-                </div>
-              </div>
-            </label>
-          </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="keepLastCommand" /> Keep last command
@@ -1671,7 +1657,6 @@
             </label>
           </div>
         </div>
-
         <div role="tabpanel" class="pref-pane" id="scripting">
           <div class="col-sm-6 form-group">
             <label class="control-label">
@@ -1680,15 +1665,9 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="allowEscape" /> Allow Escape
-            </label>
-          </div>
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
               <input type="checkbox" id="parseSingleQuotes" /> Parse single quotes as string
             </label>
           </div>
-
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="parseDoubleQuotes" /> Parse double quotes as string
@@ -1809,14 +1788,89 @@
             </div>
           </div>
         </div>
+        <div role="tabpanel" class="pref-pane" id="special-characters">
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              Command stacking
+              <div class="input-group" style="width: 40px">
+                <input type="text" id="commandStackingChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
+                <div class="input-group-addon">
+                  <label>
+                    <input type="checkbox" id="commandStacking" /> Enable</label>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              Speedpaths
+              <div class="input-group" style="width: 40px">
+                <input type="text" id="speedpathsChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
+                <div class="input-group-addon" style="border-left: 0px">
+                  <label>
+                    <input type="checkbox" id="enableSpeedpaths" /> Enable</label>
+                </div>
+                <div class="input-group-addon">
+                  <label>
+                    <input type="checkbox" id="parseSpeedpaths" /> Parse</label>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div role="tabpanel" class="pref-pane" id="special-characters">
+            <div class="col-sm-6 form-group">
+              <label class="control-label">
+                Command
+                <div class="input-group" style="width: 40px">
+                  <input type="text" id="commandChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
+                  <div class="input-group-addon">
+                    <label>
+                      <input type="checkbox" id="enableCommands" /> Enable</label>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div role="tabpanel" class="pref-pane" id="special-characters">
+            <div class="col-sm-6 form-group">
+              <label class="control-label">
+                Escape
+                <div class="input-group" style="width: 40px">
+                  <input type="text" id="escapeChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
+                  <div class="input-group-addon">
+                    <label>
+                      <input type="checkbox" id="allowEscape" /> Enable</label>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div role="tabpanel" class="pref-pane" id="special-characters">
+            <div class="col-sm-6 form-group">
+              <label class="control-label">
+                Verbatim
+                <div class="input-group" style="width: 40px">
+                  <input type="text" id="verbatimChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
+                  <div class="input-group-addon">
+                    <label>
+                      <input type="checkbox" id="enableVerbatim" /> Enable</label>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
-  </div>
-  <div class="dialog-footer">
-    <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
-    <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
-    <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
-  </div>
+    <div class="dialog-footer">
+      <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
+      <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
+      <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
+    </div>
 </body>
 
 </html>
