@@ -189,6 +189,7 @@ export class Settings {
     public commandStackingChar: string = ';';
     public speedpathsChar: string = '!';
     public functionChar: string = '#';
+    public escapeChar: string = '\\';
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;
 

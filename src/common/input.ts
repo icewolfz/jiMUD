@@ -33,7 +33,8 @@ enum ParseState {
     paramsD = 11,
     paramsDBlock = 12,
     paramsDEscape = 13,
-    paramsDNamed = 14
+    paramsDNamed = 14,
+    escape = 15
 }
 
 export class Input extends EventEmitter {
@@ -941,6 +942,7 @@ export class Input extends EventEmitter {
         const eFn: boolean = this.client.options.enableFunctions;
         const fnChar: string = this.client.options.functionChar;
         const eEscape: boolean = this.client.options.allowEscape;
+        const escChar: string = this.client.options.escapeChar;
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -1101,7 +1103,7 @@ export class Input extends EventEmitter {
                         state = ParseState.paramsPBlock;
                         continue;
                     }
-                    if (eEscape && c === '\\' && arg.length === 0) {
+                    if (eEscape && c === escChar && arg.length === 0) {
                         state = ParseState.paramsPEscape;
                         continue;
                     }
@@ -1214,10 +1216,10 @@ export class Input extends EventEmitter {
                 case ParseState.paramsPEscape:
                     if (c === '{')
                         out += '%{';
-                    else if (c === '\\')
-                        out += '%\\';
+                    else if (c === escChar)
+                        out += '%' + escChar;
                     else {
-                        out += '%\\';
+                        out += '%' + escChar;
                         idx--;
                     }
                     state = ParseState.none;
@@ -1225,7 +1227,7 @@ export class Input extends EventEmitter {
                 case ParseState.paramsD:
                     if (c === '{')
                         state = ParseState.paramsDBlock;
-                    else if (eEscape && c === '\\')
+                    else if (eEscape && c === escChar)
                         state = ParseState.paramsDEscape;
                     else if (!this.stack.named || c.match(/[^a-zA-Z_$]/g)) {
                         state = ParseState.none;
@@ -1250,10 +1252,10 @@ export class Input extends EventEmitter {
                 case ParseState.paramsDEscape:
                     if (c === '{')
                         out += `\${`;
-                    else if (c === '\\')
-                        out += '$\\';
+                    else if (c === escChar)
+                        out += '$' + escChar;
                     else {
-                        out += '$\\';
+                        out += '$' + escChar;
                         idx--;
                     }
                     state = ParseState.none;
@@ -1313,8 +1315,21 @@ export class Input extends EventEmitter {
                     else
                         arg += c;
                     break;
+                case ParseState.escape:
+                    if (c === escChar)
+                        out += escChar;
+                    else if ('$%"\'{'.indexOf(c) !== -1)
+                        out += c;
+                    else
+                        out += escChar + c;
+                    state = ParseState.none;
+                    break;
                 default:
-                    if (c === '%') {
+                    if (eEscape && c === escChar) {
+                        state = ParseState.escape;
+                        continue;
+                    }
+                    else if (c === '%') {
                         state = ParseState.paramsP;
                         _neg = false;
                         arg = '';
@@ -1433,7 +1448,9 @@ export class Input extends EventEmitter {
                     break;
             }
         }
-        if (state === ParseState.paramsDNamed && arg.length > 0) {
+        if (state === ParseState.escape)
+            str += escChar;
+        else if (state === ParseState.paramsDNamed && arg.length > 0) {
             if (this.stack.named && this.stack.named[arg])
                 str += this.stack.named[arg];
             else
@@ -1567,6 +1584,8 @@ export class Input extends EventEmitter {
 
     public parseVariable(text) {
         switch (text) {
+            case 'esc':
+                return '\x1b';
             case 'cr':
                 return '\n';
             case 'lf':
