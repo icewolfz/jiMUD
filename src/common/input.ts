@@ -950,6 +950,7 @@ export class Input extends EventEmitter {
         let tmp;
         let start: boolean = true;
         let _neg: boolean = false;
+        let nest: number = 0;
         const pd: boolean = this.client.options.parseDoubleQuotes;
         const ps: boolean = this.client.options.parseSingleQuotes;
 
@@ -1149,7 +1150,7 @@ export class Input extends EventEmitter {
                     }
                     break;
                 case ParseState.paramsPBlock:
-                    if (c === '}') {
+                    if (c === '}' && nest === 0) {
                         if (arg === 'i')
                             out += window.repeatnum;
                         else if (arg === 'repeatnum')
@@ -1191,6 +1192,14 @@ export class Input extends EventEmitter {
                         }
                         state = 0;
                         arg = '';
+                    }
+                    else if (c === '{') {
+                        nest++;
+                        arg += c;
+                    }
+                    else if (c === '}') {
+                        nest--;
+                        arg += c;
                     }
                     else
                         arg += c;
@@ -1243,7 +1252,7 @@ export class Input extends EventEmitter {
                     state = ParseState.none;
                     break;
                 case ParseState.paramsDBlock:
-                    if (c === '}') {
+                    if (c === '}' && nest === 0) {
                         if (arg === 'i')
                             out += window.repeatnum;
                         else if (arg === 'repeatnum')
@@ -1285,6 +1294,14 @@ export class Input extends EventEmitter {
                         }
                         state = ParseState.none;
                         arg = '';
+                    }
+                    else if (c === '{') {
+                        nest++;
+                        arg += c;
+                    }
+                    else if (c === '}') {
+                        nest--;
+                        arg += c;
                     }
                     else
                         arg += c;
@@ -1598,11 +1615,11 @@ export class Input extends EventEmitter {
         if (!res || !res.length) return null;
         switch (res[1]) {
             case 'lower':
-                return res[2].toLowerCase();
+                return this.parseOutgoing(res[2]).toLowerCase();
             case 'upper':
-                return res[2].toUpperCase();
+                return this.parseOutgoing(res[2].toUpperCase());
             case 'proper':
-                return ProperCase(res[2]);
+                return ProperCase(this.parseOutgoing(res[2]));
             case 'eval':
                 return '' + mathjs.eval(this.parseOutgoing(res[2]), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
         }

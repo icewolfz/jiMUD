@@ -3,7 +3,8 @@
 - **New:**
   - Add intern corner support for overlays (selection, find)
   - Preference: Enable rounded overlays, disable or enable rounded corner effect for selection and find highlighting
-  - Added ${eval(expression)} to allow evaluation a math expression when ${expression} is disabled
+  - ${eval(expression)} to allow evaluation a math expression when ${expression} is disabled
+  - Proper nested parsing for ${} variables, for example ${lower(${copied})} will now properly work
 - **Change:**
   - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
   - Remove experimental tags for scroll and scroll live preferences
