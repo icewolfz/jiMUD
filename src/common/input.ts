@@ -1643,9 +1643,9 @@ export class Input extends EventEmitter {
             case 'copied':
                 return clipboard.readText('selection') || '';
             case 'copied.lower':
-                return clipboard.readText('selection').toLowerCase() || '';
+                return (clipboard.readText('selection') || '').toLowerCase();
             case 'copied.upper':
-                return clipboard.readText('selection').toUpperCase() || '';
+                return (clipboard.readText('selection') || '').toUpperCase();
             case 'copied.proper':
                 return ProperCase(clipboard.readText('selection') || '');
             case 'i':
@@ -1658,7 +1658,7 @@ export class Input extends EventEmitter {
             case 'selurl':
             case 'selline':
             case 'selword':
-                return window['$' + text];
+                return window['$' + text] || '';
             case 'selected.lower':
             case 'selectedurl.lower':
             case 'selectedline.lower':
@@ -1666,7 +1666,7 @@ export class Input extends EventEmitter {
             case 'selurl.lower':
             case 'selline.lower':
             case 'selword.lower':
-                return window['$' + text].toLowerCase();
+                return (window['$' + text.substr(0, text.length - 6)] || '').toLowerCase();
             case 'selected.upper':
             case 'selectedurl.upper':
             case 'selectedline.upper':
@@ -1674,7 +1674,7 @@ export class Input extends EventEmitter {
             case 'selurl.upper':
             case 'selline.upper':
             case 'selword.upper':
-                return window['$' + text].toUpperCase();
+                return (window['$' + text.substr(0, text.length - 6)] || '').toUpperCase();
             case 'selected.proper':
             case 'selectedurl.proper':
             case 'selectedline.proper':
@@ -1682,7 +1682,7 @@ export class Input extends EventEmitter {
             case 'selurl.proper':
             case 'selline.proper':
             case 'selword.proper':
-                return ProperCase(window['$' + text]);
+                return ProperCase(window['$' + text.substr(0, text.length - 7)]);
         }
         const re = new RegExp('^([a-zA-Z]+)\\((.*)\\)$', 'g');
         let res = re.exec(text);
@@ -1691,7 +1691,7 @@ export class Input extends EventEmitter {
             case 'lower':
                 return this.parseOutgoing(res[2]).toLowerCase();
             case 'upper':
-                return this.parseOutgoing(res[2].toUpperCase());
+                return this.parseOutgoing(res[2]).toUpperCase();
             case 'proper':
                 return ProperCase(this.parseOutgoing(res[2]));
             case 'eval':
