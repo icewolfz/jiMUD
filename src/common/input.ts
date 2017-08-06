@@ -1697,7 +1697,7 @@ export class Input extends EventEmitter {
             case 'eval':
                 return '' + mathjs.eval(this.parseOutgoing(res[2]), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
             case 'dice':
-                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
                 if (res && res.length > 2) {
                     const c = parseInt(res[1]);
                     let sides;
@@ -1724,7 +1724,7 @@ export class Input extends EventEmitter {
             case 'diceavg':
                 //The average of any XdY is X*(Y+1)/2.
                 //(min + max) / 2 * a + m
-                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
                 if (res && res.length > 2) {
                     const c = parseInt(res[1]);
                     let min = 1;
@@ -1746,7 +1746,7 @@ export class Input extends EventEmitter {
                 }
                 return null;
             case 'dicemin':
-                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
                 if (res && res.length > 2) {
                     const c = parseInt(res[1]);
                     let min = 1;
@@ -1760,7 +1760,7 @@ export class Input extends EventEmitter {
                 }
                 return null;
             case 'dicemax':
-                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
                 if (res && res.length > 2) {
                     const c = parseInt(res[1]);
                     let max;
@@ -1778,7 +1778,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'zdicedev':
             case 'dicedev':
-                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
                 if (res && res.length > 2) {
                     const c = parseInt(res[1]);
                     let max;
