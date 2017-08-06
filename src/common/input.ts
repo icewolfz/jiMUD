@@ -1316,8 +1316,8 @@ export class Input extends EventEmitter {
                         arg += c;
                     break;
                 case ParseState.escape:
-                    if (c === escChar)
-                        out += escChar;
+                    if (c === escChar || c === stackingChar)
+                        out += c;
                     else if ('$%"\'{'.indexOf(c) !== -1)
                         out += c;
                     else
