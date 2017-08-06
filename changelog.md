@@ -5,6 +5,9 @@
   - Preference: Enable rounded overlays, disable or enable rounded corner effect for selection and find highlighting
   - ${eval(expression)} to allow evaluation a math expression when ${expression} is disabled
   - Add proper escape system with parser changes, characters: $%"'{\ and command stack character, to escape a character simpling just do \CHARACTER
+  - Functions:
+    - ${dice(**x**d**y**__+n__)}, roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+      - example: ${dice(2d6+5)}, rolls 2, 6 sided dice and returns the sum + 5
 - **Change:**
   - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
   - Remove experimental tags for scroll and scroll live preferences

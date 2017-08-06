@@ -135,3 +135,4 @@
 - `${crlf}` - replace with carriage return and linefeed
 - `${expression}` - evaluate the math expression and return the results when [allow evaluate is enabled](preferences.md#Scripting)
 - `${eval(expression)}` - evaluate the expression and return the results, a long version of `${expression}`
+- `${dice(xdy+n)}` - roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier

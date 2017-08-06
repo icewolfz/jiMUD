@@ -1636,8 +1636,8 @@ export class Input extends EventEmitter {
             case 'selword.proper':
                 return ProperCase(window['$' + text]);
         }
-        const re = new RegExp('([a-zA-Z]+)\\((.*)\\)', 'g');
-        const res = re.exec(text);
+        const re = new RegExp('^([a-zA-Z]+)\\((.*)\\)$', 'g');
+        let res = re.exec(text);
         if (!res || !res.length) return null;
         switch (res[1]) {
             case 'lower':
@@ -1648,6 +1648,19 @@ export class Input extends EventEmitter {
                 return ProperCase(this.parseOutgoing(res[2]));
             case 'eval':
                 return '' + mathjs.eval(this.parseOutgoing(res[2]), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+            case 'dice':
+                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                if (res && res.length > 2) {
+                    const c = parseInt(res[1]);
+                    const sides = parseInt(res[2]);
+                    let sum = 0;
+                    for (let i = 0; i < c; i++)
+                        sum += ~~(Math.random() * sides) + 1;
+                    if (res.length > 3 && res[3])
+                        return mathjs.eval(sum + res[3]);
+                    return '' + sum;
+                }
+                return null;
         }
         return null;
     }
