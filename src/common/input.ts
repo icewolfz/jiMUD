@@ -952,6 +952,7 @@ export class Input extends EventEmitter {
         let al: number;
         let idx: number = 0;
         let tmp;
+        let tmp2;
         let start: boolean = true;
         let _neg: boolean = false;
         let nest: number = 0;
@@ -1109,14 +1110,22 @@ export class Input extends EventEmitter {
                     }
                     switch (c) {
                         case '%':
-                            out += '%';
+                            if (eAlias && findAlias)
+                                alias += '%';
+                            else
+                                out += '%';
                             state = ParseState.none;
                             break;
                         case '*':
                             if (args) {
-                                out += this.stack.args.slice(1).join(' ');
+                                if (eAlias && findAlias)
+                                    alias += this.stack.args.slice(1).join(' ');
+                                else
+                                    out += this.stack.args.slice(1).join(' ');
                                 this.stack.used = this.stack.args.length;
                             }
+                            if (eAlias && findAlias)
+                                alias += '%*';
                             else
                                 out += '%*';
                             state = ParseState.none;
@@ -1140,17 +1149,24 @@ export class Input extends EventEmitter {
                             if (args && arg.length > 0) {
                                 tmp = parseInt(arg, 10);
                                 if (_neg && tmp < this.stack.args.length)
-                                    out += this.stack.args.slice(arg).join(' ');
+                                    tmp = this.stack.args.slice(arg).join(' ');
                                 else if (tmp < this.stack.args.length)
-                                    out += this.stack.args[tmp];
+                                    tmp = this.stack.args[tmp];
                                 if (_neg)
                                     this.stack.used = args.length;
                                 else if (arg > this.stack.used)
                                     this.stack.used = arg;
+                                if (eAlias && findAlias)
+                                    alias += tmp;
+                                else
+                                    out += tmp;
                                 idx--;
                             }
                             else {
-                                out += '%';
+                                if (eAlias && findAlias)
+                                    alias += '%';
+                                else
+                                    out += '%';
                                 idx -= arg.length || 1;
                             }
                             state = ParseState.none;
@@ -1160,25 +1176,26 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.paramsPBlock:
                     if (c === '}' && nest === 0) {
+                        tmp = null;
                         if (arg === 'i')
-                            out += window.repeatnum;
+                            tmp2 = window.repeatnum;
                         else if (arg === 'repeatnum')
-                            out += window.repeatnum;
+                            tmp2 = window.repeatnum;
                         else if (this.stack.args && arg === '*') {
-                            out += this.stack.args.slice(1).join(' ');
+                            tmp2 = this.stack.args.slice(1).join(' ');
                             this.stack.used = this.stack.args.length;
                         }
                         else if (this.stack.named && this.stack.named.hasOwnProperty(arg))
-                            out += this.stack.named[arg];
+                            tmp2 = this.stack.named[arg];
                         else {
                             if (this.stack.args && !isNaN(arg)) {
                                 arg = parseInt(arg, 10);
                                 if (arg < 0) {
-                                    out += this.stack.args.slice(arg).join(' ');
+                                    tmp2 = this.stack.args.slice(arg).join(' ');
                                     this.stack.used = this.stack.args.length;
                                 }
                                 else {
-                                    out += this.stack.args[arg];
+                                    tmp2 = this.stack.args[arg];
                                     if (arg > this.stack.used)
                                         this.stack.used = arg;
                                 }
@@ -1186,19 +1203,23 @@ export class Input extends EventEmitter {
                             else {
                                 tmp = this.parseVariable(arg);
                                 if (tmp)
-                                    out += tmp;
+                                    tmp2 = tmp;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
-                                        out += '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, this.stack.named));
+                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, this.stack.named));
                                     else
-                                        out += '' + mathjs.eval(this.parseOutgoing(arg), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
                                 }
                                 else {
-                                    out += '%';
+                                    tmp2 += '%';
                                     idx = idx - arg.length - 2;
                                 }
                             }
                         }
+                        if (tmp2 && eAlias && findAlias)
+                            alias += tmp2;
+                        else if (tmp2)
+                            out += tmp2;
                         state = 0;
                         arg = '';
                     }
@@ -1215,13 +1236,17 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.paramsPEscape:
                     if (c === '{')
-                        out += '%{';
+                        tmp2 = '%{';
                     else if (c === escChar)
-                        out += '%' + escChar;
+                        tmp2 = '%' + escChar;
                     else {
-                        out += '%' + escChar;
+                        tmp2 = '%' + escChar;
                         idx--;
                     }
+                    if (eAlias && findAlias)
+                        alias += tmp2;
+                    else
+                        out += tmp2;
                     state = ParseState.none;
                     break;
                 case ParseState.paramsD:
@@ -1231,7 +1256,10 @@ export class Input extends EventEmitter {
                         state = ParseState.paramsDEscape;
                     else if (!this.stack.named || c.match(/[^a-zA-Z_$]/g)) {
                         state = ParseState.none;
-                        out += '$' + c;
+                        if (eAlias && findAlias)
+                            alias += '$' + c;
+                        else
+                            out += '$' + c;
                     }
                     else {
                         arg = c;
@@ -1240,8 +1268,12 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.paramsDNamed:
                     if (c.match(/[^a-zA-Z0-9_]/g)) {
-                        if (this.stack.named.hasOwnProperty(arg))
-                            out += this.stack.named[arg];
+                        if (this.stack.named.hasOwnProperty(arg)) {
+                            if (eAlias && findAlias)
+                                alias += this.stack.named[arg];
+                            else
+                                out += this.stack.named[arg];
+                        }
                         idx--;
                         state = ParseState.none;
                         arg = '';
@@ -1251,36 +1283,41 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.paramsDEscape:
                     if (c === '{')
-                        out += `\${`;
+                        tmp2 = `\${`;
                     else if (c === escChar)
-                        out += '$' + escChar;
+                        tmp2 = '$' + escChar;
                     else {
-                        out += '$' + escChar;
+                        tmp2 = '$' + escChar;
                         idx--;
                     }
+                    if (eAlias && findAlias)
+                        alias += tmp2;
+                    else
+                        out += tmp2;
                     state = ParseState.none;
                     break;
                 case ParseState.paramsDBlock:
                     if (c === '}' && nest === 0) {
+                        tmp2 = null;
                         if (arg === 'i')
-                            out += window.repeatnum;
+                            tmp2 = window.repeatnum;
                         else if (arg === 'repeatnum')
-                            out += window.repeatnum;
+                            tmp2 = window.repeatnum;
                         else if (this.stack.args && arg === '*') {
-                            out += this.stack.args.slice(1).join(' ');
+                            tmp2 = this.stack.args.slice(1).join(' ');
                             this.stack.used = args.length;
                         }
                         else if (this.stack.named && this.stack.named.hasOwnProperty(arg))
-                            out += this.stack.named[arg];
+                            tmp2 = this.stack.named[arg];
                         else {
                             if (args && !isNaN(arg)) {
                                 arg = parseInt(arg, 10);
                                 if (arg < 0) {
-                                    out += this.stack.args.slice(arg).join(' ');
+                                    tmp2 = this.stack.args.slice(arg).join(' ');
                                     this.stack.used = this.stack.args.length;
                                 }
                                 else {
-                                    out += this.stack.args[arg];
+                                    tmp2 = this.stack.args[arg];
                                     if (arg > this.stack.used)
                                         this.stack.used = arg;
                                 }
@@ -1288,19 +1325,23 @@ export class Input extends EventEmitter {
                             else {
                                 c = this.parseVariable(arg);
                                 if (c)
-                                    out += c;
+                                    tmp2 = c;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
-                                        out += '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, this.stack.named));
+                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, this.stack.named));
                                     else
-                                        out += '' + mathjs.eval(this.parseOutgoing(arg), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
                                 }
                                 else {
-                                    out += '$';
+                                    tmp2 = '$';
                                     idx = idx - arg.length - 2;
                                 }
                             }
                         }
+                        if (tmp2 && eAlias && findAlias)
+                            alias += tmp2;
+                        else if (tmp2)
+                            out += tmp2;
                         state = ParseState.none;
                         arg = '';
                     }
@@ -1317,27 +1358,34 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.escape:
                     if (c === escChar || c === stackingChar)
-                        out += c;
+                        tmp2 = c;
                     else if ('$%"\'{'.indexOf(c) !== -1)
-                        out += c;
+                        tmp2 = c;
                     else
-                        out += escChar + c;
+                        tmp2 = escChar + c;
+                    if (eAlias && findAlias)
+                        alias += tmp2;
+                    else
+                        out += tmp2;
                     state = ParseState.none;
                     break;
                 default:
                     if (eEscape && c === escChar) {
                         state = ParseState.escape;
+                        start = false;
                         continue;
                     }
                     else if (c === '%') {
                         state = ParseState.paramsP;
                         _neg = false;
                         arg = '';
+                        start = false;
                     }
                     else if (c === '$') {
                         state = ParseState.paramsD;
                         _neg = false;
                         arg = '';
+                        start = false;
                     }
                     else if (eFn && start && c === fnChar) {
                         state = ParseState.function;
