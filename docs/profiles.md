@@ -125,14 +125,21 @@
 - `${variable.lower}` - force variable to all lower case by appending .lower
 - `${variable.upper}` - force variable to all upper case by appending .lower
 - `${variable.proper}` - force variable to proper casing by appending .proper
-- `${lower(TEXT)}` - force TEXT into lower case, for example ${lower(${selword})} is the same as ${selword.lower}
-- `${upper(TEXT)}` - force TEXT into upper case
-- `${proper(TEXT)}` - force TEXT into proper casing
 - `${repeatnum}` - returns the current index during #nnn
 - `${i}` - same as repeatnum
 - `${cr}` - replace with carriage return
 - `${lf}` - replace with line feed
 - `${crlf}` - replace with carriage return and linefeed
 - `${expression}` - evaluate the math expression and return the results when [allow evaluate is enabled](preferences.md#Scripting)
+
+### Parsed functions
+- `${lower(TEXT)}` - force TEXT into lower case, for example ${lower(${selword})} is the same as ${selword.lower}
+- `${upper(TEXT)}` - force TEXT into upper case
+- `${proper(TEXT)}` - force TEXT into proper casing
 - `${eval(expression)}` - evaluate the expression and return the results, a long version of `${expression}`
 - `${dice(xdy+n)}` - roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+- `${diceavg(xdy+n)}` the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+- `${dicemin(xdy+n)}` the minimum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+- `${dicemax(xdy+n)}` the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+- `${dicedev(xdy+n)}` return standard deviation of dice sqrt((y^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+- `${zdicedev(xdy+n)}` return zMUD/cMUD standard deviation of dice sqrt(((y-1)^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier

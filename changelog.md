@@ -8,6 +8,11 @@
   - Functions:
     - ${dice(**x**d**y**__+n__)}, roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
       - example: ${dice(2d6+5)}, rolls 2, 6 sided dice and returns the sum + 5
+    - ${diceavg(**x**d**y**__+n__)} the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+    - ${dicemin(**x**d**y**__+n__)} the minimum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+    - ${dicemax(**x**d**y**__+n__)} the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+    - ${dicedev(**x**d**y**__+n__)} return standard deviation of dice sqrt((y^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+    - ${zdicedev(**x**d**y**__+n__)} return zMUD/cMUD standard deviation of dice sqrt(((y-1)^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
 - **Change:**
   - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
   - Remove experimental tags for scroll and scroll live preferences

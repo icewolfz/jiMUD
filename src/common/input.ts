@@ -1700,21 +1700,116 @@ export class Input extends EventEmitter {
                 res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
                 if (res && res.length > 2) {
                     const c = parseInt(res[1]);
-                    const sides = parseInt(res[2]);
+                    let sides;
+                    if (res[2] === 'F' || res[2] === 'f')
+                        sides = 'F';
+                    else if (res[2] === '%')
+                        sides = 100;
+                    else
+                        sides = parseInt(res[2]);
                     let sum = 0;
-                    for (let i = 0; i < c; i++)
-                        sum += ~~(Math.random() * sides) + 1;
+                    for (let i = 0; i < c; i++) {
+                        if (sides === 'F')
+                            sum += this.fudgeDice();
+                        else
+                            sum += ~~(Math.random() * sides) + 1;
+                    }
+                    if (res[2] === '%')
+                        sum /= 100;
                     if (res.length > 3 && res[3])
                         return mathjs.eval(sum + res[3]);
                     return '' + sum;
                 }
                 return null;
-                //diceavg
-                //dicemin
-                //dicemax
-                //dicedev
+            case 'diceavg':
+                //The average of any XdY is X*(Y+1)/2.
+                //(min + max) / 2 * a + m
+                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                if (res && res.length > 2) {
+                    const c = parseInt(res[1]);
+                    let min = 1;
+                    let max;
+                    if (res[2] === 'F' || res[2] === 'f') {
+                        min = -1;
+                        max = 1;
+                    }
+                    else if (res[2] === '%') {
+                        min = 0;
+                        max = 1;
+                    }
+                    else
+                        max = parseInt(res[2]);
+
+                    if (res.length > 3 && res[3])
+                        return mathjs.eval(((min + max) / 2 * c) + res[3]);
+                    return '' + ((min + max) / 2 * c);
+                }
+                return null;
+            case 'dicemin':
+                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                if (res && res.length > 2) {
+                    const c = parseInt(res[1]);
+                    let min = 1;
+                    if (res[2] === 'F' || res[2] === 'f')
+                        min = -1;
+                    else if (res[2] === '%')
+                        min = 0;
+                    if (res.length > 3 && res[3])
+                        return mathjs.eval((min * c) + res[3]);
+                    return '' + (min * c);
+                }
+                return null;
+            case 'dicemax':
+                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                if (res && res.length > 2) {
+                    const c = parseInt(res[1]);
+                    let max;
+                    if (res[2] === 'F' || res[2] === 'f')
+                        max = 1;
+                    else if (res[2] === '%')
+                        max = 1;
+                    else
+                        max = parseInt(res[2]);
+
+                    if (res.length > 3 && res[3])
+                        return mathjs.eval((max * c) + res[3]);
+                    return '' + (max * c);
+                }
+                return null;
+            case 'zdicedev':
+            case 'dicedev':
+                res = /(\d+)d(\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
+                if (res && res.length > 2) {
+                    const c = parseInt(res[1]);
+                    let max;
+                    if (res[2] === 'F' || res[2] === 'f')
+                        max = 6;
+                    else if (res[2] === '%')
+                        max = 1;
+                    else
+                        max = parseInt(res[2]);
+                    //zmud formual seems to be 0 index based
+                    if (res[1] === 'zdicedev')
+                        max--;
+                    if (res.length > 3 && res[3])
+                        return mathjs.eval(Math.sqrt((max * max - 1) / 12 * c) + res[3]);
+                    return '' + Math.sqrt((max * max - 1) / 12 * c);
+                }
+                return null;
         }
         return null;
+    }
+
+    private fudgeDice() {
+        switch (~~(Math.random() * 6) + 1) {
+            case 1:
+            case 4:
+                return -1;
+            case 3:
+            case 2:
+                return 1;
+        }
+        return 0;
     }
 
     public ParseString(text: string, args?, named?, append?: boolean) {
