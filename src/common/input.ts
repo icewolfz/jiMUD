@@ -26,7 +26,14 @@ enum ParseState {
     aliasArgumentsDouble = 4,
     aliasArgumentsSingle = 5,
     path = 6,
-    function = 7
+    function = 7,
+    paramsP = 8,
+    paramsPBlock = 9,
+    paramsPEscape = 10,
+    paramsD = 11,
+    paramsDBlock = 12,
+    paramsDEscape = 13,
+    paramsDNamed = 14
 }
 
 export class Input extends EventEmitter {
@@ -45,7 +52,7 @@ export class Input extends EventEmitter {
 
     get stack() {
         if (this._stack.length === 0)
-            return { args: 0, named: 0 };
+            this._stack.push({ args: 0, named: 0, used: 0, append: false });
         return this._stack[this._stack.length - 1];
     }
 
@@ -931,15 +938,18 @@ export class Input extends EventEmitter {
         const ePaths: boolean = this.client.options.enableSpeedpaths;
         const eFn: boolean = this.client.options.enableFunctions;
         const fnChar: string = this.client.options.functionChar;
+        const eEscape: boolean = this.client.options.allowEscape;
         let args = [];
-        let arg: string = '';
+        let arg: any = '';
         let findAlias: boolean = true;
         let out: string = '';
         let a;
         let c: string;
         let al: number;
         let idx: number = 0;
+        let tmp;
         let start: boolean = true;
+        let _neg: boolean = false;
         const pd: boolean = this.client.options.parseDoubleQuotes;
         const ps: boolean = this.client.options.parseSingleQuotes;
 
@@ -966,7 +976,7 @@ export class Input extends EventEmitter {
                     if (eAlias && findAlias)
                         alias += c;
                     else
-                        str += c;
+                        out += c;
                     start = false;
                     break;
                 case ParseState.singleQuoted:
@@ -976,7 +986,7 @@ export class Input extends EventEmitter {
                     if (eAlias && findAlias)
                         alias += c;
                     else
-                        str += c;
+                        out += c;
                     start = false;
                     break;
                 case ParseState.aliasArguments:
@@ -1078,8 +1088,219 @@ export class Input extends EventEmitter {
                         start = false;
                     }
                     break;
+                case ParseState.paramsP:
+                    if (c === '{' && arg.length === 0) {
+                        state = ParseState.paramsPBlock;
+                        continue;
+                    }
+                    if (eEscape && c === '\\' && arg.length === 0) {
+                        state = ParseState.paramsPEscape;
+                        continue;
+                    }
+                    switch (c) {
+                        case '%':
+                            out += '%';
+                            state = ParseState.none;
+                            break;
+                        case '*':
+                            if (args) {
+                                out += this.stack.args.slice(1).join(' ');
+                                this.stack.used = this.stack.args.length;
+                            }
+                            else
+                                out += '%*';
+                            state = ParseState.none;
+                            break;
+                        case '-':
+                            _neg = true;
+                            break;
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                        case '8':
+                        case '9':
+                            arg += c;
+                            break;
+                        default:
+                            if (args && arg.length > 0) {
+                                tmp = parseInt(arg, 10);
+                                if (_neg && tmp < this.stack.args.length)
+                                    out += this.stack.args.slice(arg).join(' ');
+                                else if (tmp < this.stack.args.length)
+                                    out += this.stack.args[tmp];
+                                if (_neg)
+                                    this.stack.used = args.length;
+                                else if (arg > this.stack.used)
+                                    this.stack.used = arg;
+                                idx--;
+                            }
+                            else {
+                                out += '%';
+                                idx -= arg.length || 1;
+                            }
+                            state = ParseState.none;
+                            arg = '';
+                            break;
+                    }
+                    break;
+                case ParseState.paramsPBlock:
+                    if (c === '}') {
+                        if (arg === 'i')
+                            out += window.repeatnum;
+                        else if (arg === 'repeatnum')
+                            out += window.repeatnum;
+                        else if (this.stack.args && arg === '*') {
+                            out += this.stack.args.slice(1).join(' ');
+                            this.stack.used = this.stack.args.length;
+                        }
+                        else if (this.stack.named && this.stack.named.hasOwnProperty(arg))
+                            out += this.stack.named[arg];
+                        else {
+                            if (this.stack.args && !isNaN(arg)) {
+                                arg = parseInt(arg, 10);
+                                if (arg < 0) {
+                                    out += this.stack.args.slice(arg).join(' ');
+                                    this.stack.used = this.stack.args.length;
+                                }
+                                else {
+                                    out += this.stack.args[arg];
+                                    if (arg > this.stack.used)
+                                        this.stack.used = arg;
+                                }
+                            }
+                            else {
+                                tmp = this.parseVariable(arg);
+                                if (tmp)
+                                    out += tmp;
+                                else if (this.client.options.allowEval) {
+                                    if (this.stack.named)
+                                        out += '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, this.stack.named));
+                                    else
+                                        out += '' + mathjs.eval(this.parseOutgoing(arg), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+                                }
+                                else {
+                                    out += '%';
+                                    idx = idx - arg.length - 2;
+                                }
+                            }
+                        }
+                        state = 0;
+                        arg = '';
+                    }
+                    else
+                        arg += c;
+                    break;
+                case ParseState.paramsPEscape:
+                    if (c === '{')
+                        out += '%{';
+                    else if (c === '\\')
+                        out += '%\\';
+                    else {
+                        out += '%\\';
+                        idx--;
+                    }
+                    state = ParseState.none;
+                    break;
+                case ParseState.paramsD:
+                    if (c === '{')
+                        state = ParseState.paramsDBlock;
+                    else if (eEscape && c === '\\')
+                        state = ParseState.paramsDEscape;
+                    else if (!this.stack.named || c.match(/[^a-zA-Z_$]/g)) {
+                        state = ParseState.none;
+                        out += '$' + c;
+                    }
+                    else {
+                        arg = c;
+                        state = ParseState.paramsDNamed;
+                    }
+                    break;
+                case ParseState.paramsDNamed:
+                    if (c.match(/[^a-zA-Z0-9_]/g)) {
+                        if (this.stack.named.hasOwnProperty(arg))
+                            out += this.stack.named[arg];
+                        idx--;
+                        state = ParseState.none;
+                        arg = '';
+                    }
+                    else
+                        arg += c;
+                    break;
+                case ParseState.paramsDEscape:
+                    if (c === '{')
+                        out += `\${`;
+                    else if (c === '\\')
+                        out += '$\\';
+                    else {
+                        out += '$\\';
+                        idx--;
+                    }
+                    state = ParseState.none;
+                    break;
+                case ParseState.paramsDBlock:
+                    if (c === '}') {
+                        if (arg === 'i')
+                            out += window.repeatnum;
+                        else if (arg === 'repeatnum')
+                            out += window.repeatnum;
+                        else if (this.stack.args && arg === '*') {
+                            out += this.stack.args.slice(1).join(' ');
+                            this.stack.used = args.length;
+                        }
+                        else if (this.stack.named && this.stack.named.hasOwnProperty(arg))
+                            out += this.stack.named[arg];
+                        else {
+                            if (args && !isNaN(arg)) {
+                                arg = parseInt(arg, 10);
+                                if (arg < 0) {
+                                    out += this.stack.args.slice(arg).join(' ');
+                                    this.stack.used = this.stack.args.length;
+                                }
+                                else {
+                                    out += this.stack.args[arg];
+                                    if (arg > this.stack.used)
+                                        this.stack.used = arg;
+                                }
+                            }
+                            else {
+                                c = this.parseVariable(arg);
+                                if (c)
+                                    out += c;
+                                else if (this.client.options.allowEval) {
+                                    if (this.stack.named)
+                                        out += '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, this.stack.named));
+                                    else
+                                        out += '' + mathjs.eval(this.parseOutgoing(arg), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+                                }
+                                else {
+                                    out += '$';
+                                    idx = idx - arg.length - 2;
+                                }
+                            }
+                        }
+                        state = ParseState.none;
+                        arg = '';
+                    }
+                    else
+                        arg += c;
+                    break;
                 default:
-                    if (eFn && start && c === fnChar) {
+                    if (c === '%') {
+                        state = ParseState.paramsP;
+                        _neg = false;
+                        arg = '';
+                    }
+                    else if (c === '$') {
+                        state = ParseState.paramsD;
+                        _neg = false;
+                        arg = '';
+                    }
+                    else if (eFn && start && c === fnChar) {
                         state = ParseState.function;
                         start = false;
                     }
@@ -1188,7 +1409,75 @@ export class Input extends EventEmitter {
                     break;
             }
         }
-        if (alias.length > 0 && eAlias && findAlias) {
+        if (state === ParseState.paramsDNamed && arg.length > 0) {
+            if (this.stack.named && this.stack.named[arg])
+                str += this.stack.named[arg];
+            else
+                str += '$' + arg;
+        }
+        else if (state === ParseState.paramsP && arg.length > 0) {
+            if (this.stack.args) {
+                arg = parseInt(arg, 10);
+                if (_neg && arg < this.stack.args.length)
+                    str += this.stack.args.slice(arg).join(' ');
+                else if (arg < this.stack.args.length)
+                    str += this.stack.args[arg];
+                if (_neg)
+                    this.stack.used = this.stack.args.length;
+                else if (arg > this.stack.used)
+                    this.stack.used = arg;
+            }
+            else
+                str += '%' + arg;
+        }
+        else if (state === ParseState.paramsPBlock) {
+            str += '%{' + arg;
+        }
+        else if (state === ParseState.paramsD && arg.length > 0) {
+            if (this.stack.args) {
+                arg = parseInt(arg, 10);
+                if (_neg && arg < this.stack.args.length)
+                    str += this.stack.args.slice(arg).join(' ');
+                else if (arg < this.stack.args.length)
+                    str += this.stack.args[arg];
+                if (_neg)
+                    this.stack.used = this.stack.args.length;
+                else if (arg > this.stack.used)
+                    this.stack.used = arg;
+            }
+            else
+                str += '$' + arg;
+        }
+        else if (state === ParseState.paramsDBlock) {
+            str += `\${` + arg;
+        }
+
+        if (this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
+            let r = false;
+            if (str.endsWith('\n')) {
+                str = str.substring(0, str.length - 1);
+                r = true;
+            }
+            if (!str.endsWith(' '))
+                str += ' ';
+            if (this.stack.used < 1)
+                str += this.stack.args.slice(1).join(' ');
+            else
+                str += this.stack.args.slice(this.stack.used + 1).join(' ');
+            if (r) str += '\n';
+        }
+
+        if (state === ParseState.function) {
+            str = this.executeScript('#' + str);
+            if (typeof str === 'number') {
+                this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
+                if (out.length === 0) return null;
+                return out;
+            }
+            if (str !== null) out += str;
+            else if (out.length === 0) return null;
+        }
+        else if (alias.length > 0 && eAlias && findAlias) {
             if (str.length > 0)
                 alias += str;
             AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', alias);
@@ -1263,37 +1552,54 @@ export class Input extends EventEmitter {
                 return '\r\n';
             case 'copied':
                 return clipboard.readText('selection') || '';
-            case 'upper':
-                return text.toUpperCase();
+            case 'copied.lower':
+                return clipboard.readText('selection').toLowerCase() || '';
+            case 'copied.upper':
+                return clipboard.readText('selection').toUpperCase() || '';
+            case 'copied.proper':
+                return ProperCase(clipboard.readText('selection') || '');
+            case 'i':
+            case 'repeatnum':
+                return window.repeatnum;
+            case 'selected':
+            case 'selectedurl':
+            case 'selectedline':
+            case 'selectedword':
+            case 'selurl':
+            case 'selline':
+            case 'selword':
+                return window['$' + text];
+            case 'selected.lower':
+            case 'selectedurl.lower':
+            case 'selectedline.lower':
+            case 'selectedword.lower':
+            case 'selurl.lower':
+            case 'selline.lower':
+            case 'selword.lower':
+                return window['$' + text].toLowerCase();
+            case 'selected.upper':
+            case 'selectedurl.upper':
+            case 'selectedline.upper':
+            case 'selectedword.upper':
+            case 'selurl.upper':
+            case 'selline.upper':
+            case 'selword.upper':
+                return window['$' + text].toUpperCase();
+            case 'selected.proper':
+            case 'selectedurl.proper':
+            case 'selectedline.proper':
+            case 'selectedword.proper':
+            case 'selurl.proper':
+            case 'selline.proper':
+            case 'selword.proper':
+                return ProperCase(window['$' + text]);
         }
         return null;
         /*
-        text = text.replace(/(\%|\$)\{cr\}/g, '\n');
-        text = text.replace(/(\%|\$)\{lf\}/g, '\r');
-        text = text.replace(/(\%|\$)\{crlf\}/g, '\r\n');
-        text = text.replace(/(\%|\$)\{copied\}/g, copied);
-        text = text.replace(/(\%|\$)\{copied.lower\}/g, copied);
-        text = text.replace(/(\%|\$)\{copied.upper\}/g, copied.toUpperCase());
-        text = text.replace(/(\%|\$)\{copied.proper\}/g, ProperCase(copied));
-        //text = text.replace(/(\%|\$)\{(repeatnum|i)\}/g, window.repeatnum);
-
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword)\}/g, (v, e, w) => { return window['$' + w]; });
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).lower\}/g, (v, e, w) => { return window['$' + w].toLowerCase(); });
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).upper\}/g, (v, e, w) => { return window['$' + w].toUpperCase(); });
-        text = text.replace(/(\%|\$)\{(selected|selectedurl|selectedline|selectedword|selurl|selline|selword).proper\}/g, (v, e, w) => { return ProperCase(window['$' + w]); });
-
         text = text.replace(/(\%|\$)\{lower\((.*)\)\}/g, (v, e, w) => { return w.toLowerCase(); });
         text = text.replace(/(\%|\$)\{upper\((.*)\)\}/g, (v, e, w) => { return w.toUpperCase(); });
         text = text.replace(/(\%|\$)\{proper\((.*)\)\}/g, (v, e, w) => { return ProperCase(w); });
 */
-        /*
-        if (this.client.options.allowEscape) {
-            text = text.replace(/\%\\{/g, '%{');
-            text = text.replace(/\$\\{/g, `\${`);
-            text = text.replace(/\%\\\\/g, '%\\');
-            text = text.replace(/\$\\\\/g, `\$\\`);
-        }
-        */
     }
 
     public ParseString(text: string, args?, named?, append?: boolean) {
@@ -1536,7 +1842,7 @@ export class Input extends EventEmitter {
             if (named && named[arg])
                 str += named[arg];
             else
-                str += '%' + arg;
+                str += '$' + arg;
         }
         else if (state === 1 && arg.length > 0) {
             if (args) {
@@ -1610,8 +1916,8 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (alias.style) {
             case 1:
-                this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args) });
-                ret = this.parseOutgoing(this.ParseString(alias.value, args, this.GetNamedArguments(alias.params, args), alias.append));
+                this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append });
+                ret = this.parseOutgoing(alias.value);
                 this._stack.pop();
                 break;
             case 2:
@@ -1815,7 +2121,7 @@ export class Input extends EventEmitter {
                 }
             }
         }
-        return this.ParseString(raw, 0, 0, false);
+        return raw;
     }
 
     public ExecuteTrigger(trigger, args, r: boolean, idx) {
@@ -1825,7 +2131,7 @@ export class Input extends EventEmitter {
         switch (trigger.style) {
             case 1:
                 this._stack.push({ args: args, named: [] });
-                ret = this.parseOutgoing(this.ParseString(trigger.value, args, [], false));
+                ret = this.parseOutgoing(trigger.value);
                 this._stack.pop();
                 break;
             case 2:
