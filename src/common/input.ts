@@ -71,7 +71,6 @@ export class Input extends EventEmitter {
         if (!client)
             throw new Error('Invalid client!');
         this.client = client;
-        window.repeatnum = 0;
         this._tests = new Tests(client);
         this._commandHistory = [];
         $(document).keydown((event) => {
@@ -474,9 +473,9 @@ export class Input extends EventEmitter {
                             return e.replace(/\\\'/g, '"');
                         });
                     if (args.length === 1)
-                        this.client.notify(args[0], null);
+                        this.client.notify(this.parseOutgoing(args[0]), null);
                     else
-                        this.client.notify(args[0], args.slice(1).join(' '));
+                        this.client.notify(this.parseOutgoing(args[0]), this.parseOutgoing(args.slice(1).join(' ')));
                 }
                 return null;
             case 'idle':
@@ -515,7 +514,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'playmusic':
             case 'playm':
-                args = args.join(' ');
+                args = this.parseOutgoing(args.join(' '));
                 tmp = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
                 i = args.lastIndexOf('/');
                 if (i === -1)
@@ -528,7 +527,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'playsound':
             case 'plays':
-                args = args.join(' ');
+                args = this.parseOutgoing(args.join(' '));
                 tmp = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
                 i = args.lastIndexOf('/');
                 if (i === -1)
@@ -554,27 +553,27 @@ export class Input extends EventEmitter {
                 return null;
             case 'showprompt':
             case 'showp':
-                args = args.join(' ');
+                args = this.parseOutgoing(args.join(' '));
                 this.client.telnet.receivedData(Buffer.from(args), true);
                 this.client.telnet.prompt = true;
                 return null;
             case 'show':
             case 'sh':
-                args = args.join(' ') + '\n';
+                args = this.parseOutgoing(args.join(' ') + '\n');
                 this.client.telnet.receivedData(Buffer.from(args), true);
                 return null;
             case 'sayprompt':
             case 'sayp':
             case 'echoprompt':
             case 'echop':
-                args = args.join(' ');
+                args = this.parseOutgoing(args.join(' '));
                 this.client.print('\x1b[-7;-8m' + args + '\x1b[0m', false);
                 return null;
             case 'say':
             case 'sa':
             case 'echo':
             case 'ec':
-                args = args.join(' ');
+                args = this.parseOutgoing(args.join(' '));
                 if (this.client.telnet.prompt)
                     this.client.print('\n\x1b[-7;-8m' + args + '\x1b[0m\n', false);
                 else
@@ -589,7 +588,7 @@ export class Input extends EventEmitter {
                     throw new Error('Must supply an alias value');
                 else {
                     items = this.client.activeProfile.aliases;
-                    n = args[0];
+                    n = this.parseOutgoing(args[0]);
                     args = args.slice(1).join(' ');
                     if (/^"(.*)"$/.exec(args) !== null || /^'(.*)'$/.exec(args) !== null)
                         args = args.substring(1, args.length - 1);
@@ -632,7 +631,7 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#una\x1b[0;-11;-12mlias name');
                 else {
                     items = this.client.activeProfile.aliases;
-                    n = args.join(' ');
+                    n = this.parseOutgoing(args.join(' '));
                     if (/^\d+$/.exec(n)) {
                         tmp = n;
                         n = parseInt(n, 10);
@@ -671,8 +670,8 @@ export class Input extends EventEmitter {
                 else if (args.length === 1)
                     throw new Error('Must supply a setsetting value');
                 else {
-                    n = args[0];
-                    args = args.slice(1).join(' ');
+                    n = this.parseOutgoing(args[0]);
+                    args = this.parseOutgoing(args.slice(1).join(' '));
                     if (/^"(.*)"$/.exec(args) !== null || /^'(.*)'$/.exec(args) !== null)
                         args = args.substring(1, args.length - 1);
                     if (/^\d+$/.exec(n)) {
@@ -756,7 +755,7 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m#gets\x1b[0;-11;-12metting name');
                 else {
-                    n = args.join(' ');
+                    n = this.parseOutgoing(args.join(' '));
                     if (/^\d+$/.exec(n)) {
                         n = parseInt(n, 10);
                         if (n < 0 || n >= SettingList.length)
@@ -837,6 +836,7 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
                 else if (args.length === 1) {
+                    args[0] = this.parseOutgoing(args[0]);
                     if (!this.client.profiles.toggle(args[0])) {
                         if (!this.client.profiles.contains(args[0]))
                             throw new Error('Profile not found');
@@ -850,10 +850,12 @@ export class Input extends EventEmitter {
                         args = args[0] + ' is disabled';
                 }
                 else {
+                    args[0] = this.parseOutgoing(args[0]);
                     if (!this.client.profiles[args[0]])
                         throw new Error('Profile not found');
                     if (!args[1])
                         throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
+                    args[1] = this.parseOutgoing(args[1]);
                     switch (args[1].toLowerCase()) {
                         case 'enable':
                         case 'on':
@@ -912,7 +914,7 @@ export class Input extends EventEmitter {
                 if (n != null && n.length > 0)
                     tmp.push(n);
             }
-            window.repeatnum = 0;
+            window.repeatnum = undefined;
             if (tmp.length > 0)
                 return tmp.join('\n');
             return null;
@@ -1075,7 +1077,12 @@ export class Input extends EventEmitter {
                             if (out.length === 0) return null;
                             return out;
                         }
-                        if (str !== null) out += str;
+                        if (str !== null) {
+                            if (str.length > 1)
+                                out += '#' + this.parseOutgoing(str.substr(1));
+                            else
+                                out += str;
+                        }
                         str = '';
                         start = true;
                     }

@@ -22,7 +22,7 @@
     //cSpell:ignore ismap hellip selectall lagmeter
     if (window.module) module.module;
 
-    ['$selected', '$selectedurl', '$selectedline', '$selectedword'].map((a) => {
+    ['repeatnum', '$selected', '$selectedurl', '$selectedline', '$selectedword'].map((a) => {
       Object.defineProperty(window, a, {
         get: function () {
           if (!client || !client.variables) return undefined;
@@ -33,22 +33,6 @@
           if (!client.variables)
             client.variables = {};
           client.variables[a] = val;
-        },
-        configurable: true
-      });
-    });
-
-    ['repeatnum', 'i'].map((a) => {
-      Object.defineProperty(window, a, {
-        get: function () {
-          if (!client || !client.variables) return 0;
-          return client.variables.repeatnum;
-        },
-        set: function (val) {
-          if (!client) return;
-          if (!client.variables)
-            client.variables = {};
-          client.variables.repeatnum = val;
         },
         configurable: true
       });
@@ -92,6 +76,20 @@
         if (!client.variables)
           client.variables = {};
         client.variables.$selectedword = val;
+      },
+      configurable: true
+    });
+
+    Object.defineProperty(window, 'i', {
+      get: function () {
+        if (!client || !client.variables) return undefined;
+        return client.variables.repeatnum;
+      },
+      set: function (val) {
+        if (!client) return;
+        if (!client.variables)
+          client.variables = {};
+        client.variables.repeatnum = val;
       },
       configurable: true
     });
