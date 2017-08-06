@@ -1010,7 +1010,7 @@ export class Input extends EventEmitter {
                             args.push(arg);
                         al = AliasesCached.length;
                         for (a = 0; a < al; a++) {
-                            str = this.executeScript(this.ExecuteAlias(AliasesCached[a], args));
+                            str = this.ExecuteAlias(AliasesCached[a], args);
                             if (typeof str === 'number') {
                                 this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                                 if (out.length === 0) return null;
@@ -1372,7 +1372,7 @@ export class Input extends EventEmitter {
                                 //move to alias parsing
                                 al = AliasesCached.length;
                                 for (a = 0; a < al; a++) {
-                                    str = this.executeScript(this.ExecuteAlias(AliasesCached[a], args));
+                                    str = this.ExecuteAlias(AliasesCached[a], args);
                                     if (typeof str === 'number') {
                                         this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                                         if (out.length === 0) return null;
@@ -1388,7 +1388,7 @@ export class Input extends EventEmitter {
                             }
                             else //else not an alias so normal space
                             {
-                                str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true));
+                                str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true);
                                 if (typeof str === 'number') {
                                     this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                                     if (out.length === 0) return null;
@@ -1401,7 +1401,7 @@ export class Input extends EventEmitter {
                             //no longer look for an alias
                         }
                         else {
-                            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true));
+                            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true);
                             if (typeof str === 'number') {
                                 this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                                 if (out.length === 0) return null;
@@ -1504,7 +1504,7 @@ export class Input extends EventEmitter {
                 args.push(alias);
                 al = AliasesCached.length;
                 for (a = 0; a < al; a++) {
-                    str = this.executeScript(this.ExecuteAlias(AliasesCached[a], args));
+                    str = this.ExecuteAlias(AliasesCached[a], args);
                     if (typeof str === 'number') {
                         this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                         if (out.length === 0) return null;
@@ -1517,7 +1517,7 @@ export class Input extends EventEmitter {
             }
             else //else not an alias so normal space
             {
-                str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true));
+                str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true);
                 if (typeof str === 'number') {
                     this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                     if (out.length === 0) return null;
@@ -1531,7 +1531,7 @@ export class Input extends EventEmitter {
         else if (alias.length > 0) {
             if (str.length > 0)
                 alias += str;
-            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true));
+            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true);
             if (typeof str === 'number') {
                 this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                 if (out.length === 0) return null;
@@ -1541,7 +1541,7 @@ export class Input extends EventEmitter {
             else if (out.length === 0) return null;
         }
         else if (str.length > 0) {
-            str = this.executeScript(this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true));
+            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true);
             if (typeof str === 'number') {
                 this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                 if (out.length === 0) return null;
@@ -1948,6 +1948,8 @@ export class Input extends EventEmitter {
                 /*jslint evil: true */
                 const f = new Function('try { ' + alias.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                 ret = f.apply(this.client, this.GetNamedArguments(alias.params, args, alias.append));
+                if (typeof ret === 'string')
+                    ret = this.parseOutgoing(ret);
                 break;
             default:
                 ret = alias.value;
@@ -2163,6 +2165,8 @@ export class Input extends EventEmitter {
                     /*jslint evil: true */
                     this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                 ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                if (typeof ret === 'string')
+                    ret = this.parseOutgoing(ret);
                 break;
             default:
                 ret = trigger.value;
