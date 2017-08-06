@@ -1310,7 +1310,7 @@
       var ret;// = '';
       switch (item.style) {
         case 1:
-          ret = client.ParseString(client.parseOutgoing(item.value), 0, 0, false);
+          ret = client.parseOutgoing(item.value);
           break;
         case 2:
           /*jslint evil: true */
@@ -1346,7 +1346,7 @@
       var ret;// = '';
       switch (button.style) {
         case 1:
-          ret = client.ParseString(client.parseOutgoing(button.value), 0, 0, false);
+          ret = client.parseOutgoing(button.value);
           break;
         case 2:
           /*jslint evil: true */

@@ -1542,7 +1542,6 @@ export class Input extends EventEmitter {
     }
 
     public parseVariable(text) {
-        //@TODO re-code someday to be part of the parser engine instead of simple regex
         switch (text) {
             case 'cr':
                 return '\n';
@@ -1594,12 +1593,18 @@ export class Input extends EventEmitter {
             case 'selword.proper':
                 return ProperCase(window['$' + text]);
         }
+        const re = new RegExp('([a-zA-Z]+)\\((.*)\\)', 'g');
+        const res = re.exec(text);
+        if (!res || !res.length) return null;
+        switch (res[1]) {
+            case 'lower':
+                return res[2].toLowerCase();
+            case 'upper':
+                return res[2].toUpperCase();
+            case 'proper':
+                return ProperCase(res[2]);
+        }
         return null;
-        /*
-        text = text.replace(/(\%|\$)\{lower\((.*)\)\}/g, (v, e, w) => { return w.toLowerCase(); });
-        text = text.replace(/(\%|\$)\{upper\((.*)\)\}/g, (v, e, w) => { return w.toUpperCase(); });
-        text = text.replace(/(\%|\$)\{proper\((.*)\)\}/g, (v, e, w) => { return ProperCase(w); });
-*/
     }
 
     public ParseString(text: string, args?, named?, append?: boolean) {
