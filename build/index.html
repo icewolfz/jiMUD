@@ -634,6 +634,14 @@
               client.clear();
             }
           }));
+          if (client.options.enableDebug || remote.getGlobal('debug')) {
+            c.append(new MenuItem({ type: 'separator' }));
+            c.append(new MenuItem({
+              label: 'Inspect', click: () => {
+                remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+              }
+            }));
+          }
         }
         if (c.items.length > 0)
           c.popup(remote.getCurrentWindow());
@@ -1134,7 +1142,14 @@
             toggleView("lagmeter");
           }
         }));
-
+        if (client.options.enableDebug || remote.getGlobal('debug')) {
+          c.append(new MenuItem({ type: 'separator' }));
+          c.append(new MenuItem({
+            label: 'Inspect', click: () => {
+              remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+            }
+          }));
+        }
         c.popup(remote.getCurrentWindow());
       });
 
@@ -1214,7 +1229,14 @@
             toggleView("button.user");
           }
         }));
-
+        if (client.options.enableDebug || remote.getGlobal('debug')) {
+          c.append(new MenuItem({ type: 'separator' }));
+          c.append(new MenuItem({
+            label: 'Inspect', click: () => {
+              remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+            }
+          }));
+        }
         c.popup(remote.getCurrentWindow());
       });
 
@@ -1231,6 +1253,14 @@
           { type: 'separator' },
           { role: 'selectall' },
         ]);
+        if (client.options.enableDebug || remote.getGlobal('debug')) {
+          inputMenu.append(new MenuItem({ type: 'separator' }));
+          inputMenu.append(new MenuItem({
+            label: 'Inspect', click: () => {
+              remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+            }
+          }));
+        }
         var word = e.currentTarget.value.substring(e.currentTarget.selectionStart, e.currentTarget.selectionEnd);
         var ol = word.length;
         word = word.trimRight();

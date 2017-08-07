@@ -15,7 +15,7 @@ const { TrayClick } = require('./js/types');
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win, winWho, winMap, winProfiles, winEditor, winChat;//winHelp
-let set, mapperMax = false, editorMax = false, chatMax = false, debug = false;
+let set, mapperMax = false, editorMax = false, chatMax = false;
 let chatReady = false;
 let reload = null;
 let tray = null;
@@ -31,6 +31,7 @@ global.profiles = null;
 global.character = null;
 global.characterPass = null;
 global.title = '';
+global.debug = false;
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
@@ -1201,7 +1202,7 @@ function createWindow() {
     }
     options.show = false;
     const w = new BrowserWindow(options);
-    if (debug)
+    if (global.debug)
       w.webContents.openDevTools();
     w.setMenu(null);
     w.once('ready-to-show', () => {
@@ -1358,7 +1359,7 @@ app.on('ready', () => {
       case "--debug":
       case "-d":
       case "--d":
-        debug = true;
+        global.debug = true;
         break;
     }
 
@@ -2061,7 +2062,7 @@ function showPrefs() {
     slashes: true
   }));
 
-  if (debug)
+  if (global.debug)
     pref.webContents.openDevTools();
 
   pref.once('ready-to-show', () => {
@@ -2128,7 +2129,7 @@ function createMapper(show) {
     states['mapper'].maximized = false;
   });
 
-  if (debug)
+  if (global.debug)
     winMap.webContents.openDevTools();
 
   winMap.once('ready-to-show', () => {
@@ -2201,7 +2202,7 @@ function showProfiles() {
   if (s.fullscreen)
     winProfiles.setFullScreen(s.fullscreen);
 
-  if (debug)
+  if (global.debug)
     winProfiles.webContents.openDevTools();
 
   winProfiles.setMenu(null);
@@ -2301,7 +2302,7 @@ function createEditor(show) {
     states['editor'].maximized = false;
   });
 
-  if (debug)
+  if (global.debug)
     winEditor.webContents.openDevTools();
 
   winEditor.once('ready-to-show', () => {
@@ -2401,7 +2402,7 @@ function createChat(show) {
     states['chat'].maximized = false;
   });
 
-  if (debug)
+  if (global.debug)
     winChat.webContents.openDevTools();
 
   winChat.once('ready-to-show', () => {
@@ -2530,7 +2531,7 @@ function createNewWindow(name, options) {
     }
     options.show = false;
     const w = new BrowserWindow(options);
-    if (debug)
+    if (global.debug)
       w.webContents.openDevTools();
     w.setMenu(null);
     w.once('ready-to-show', () => {
@@ -2551,7 +2552,7 @@ function createNewWindow(name, options) {
     event.newGuest = w;
   });
 
-  if (debug)
+  if (global.debug)
     windows[name].window.webContents.openDevTools();
 
   windows[name].window.once('ready-to-show', () => {
@@ -2633,7 +2634,7 @@ function showColor(args) {
     slashes: true
   }));
 
-  if (debug)
+  if (global.debug)
     cp.webContents.openDevTools();
 
   cp.once('ready-to-show', () => {
@@ -2673,7 +2674,7 @@ function loadCharacters(noLoad) {
 
 function logError(err, skipClient) {
   var msg = '';
-  if (debug)
+  if (global.debug)
     console.error(err);
   if (err.stack)
     msg = err.stack;

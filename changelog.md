@@ -23,6 +23,7 @@
       - Verbatim character, change which character is used to mark the start of a verbatim block
       - Enable verbatim, control if verbatim system is enabled
   - Updated command doc to list all test commands
+  - Inspect item for button bar, input, display default, and status bar context menus when enable debug is on or when --debug has been set to allow easier debugging of GUI
 - **Change:**
   - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
   - Remove experimental tags for scroll and scroll live preferences
