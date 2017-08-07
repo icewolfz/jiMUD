@@ -286,12 +286,10 @@ export class Input extends EventEmitter {
     public executeScript(txt: string) {
         if (txt == null)
             return txt;
-        const tTxt: string = txt.trim();
+        const tTxt: string = txt.trim().substr(1);
         if (this._tests.TestFunctions[tTxt]) {
-            if (this._tests.TestFunctions[tTxt]) {
-                this._tests.TestFunctions[tTxt].apply(this._tests, []);
-                return null;
-            }
+            this._tests.TestFunctions[tTxt].apply(this._tests, []);
+            return null;
         }
 
         let state: number = 0;

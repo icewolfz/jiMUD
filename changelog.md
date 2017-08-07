@@ -22,11 +22,13 @@
       - Enable commands, disable command system
       - Verbatim character, change which character is used to mark the start of a verbatim block
       - Enable verbatim, control if verbatim system is enabled
+  - Updated command doc to list all test commands
 - **Change:**
   - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
   - Remove experimental tags for scroll and scroll live preferences
   - Preferences:
     - Move allow escape, command stacking, and speed path preferences to scripting > special characters
+  - Test commands now follow standard format of #Test????? where ??? is the differnt test name, use #TestList to see a list of all test commands
 - **Fixed:**
   - Alias, context, triggers, button, and macro sort order was not correct, most noticeable when using context menus
   - ${i}/${repeatnum} always returning 0

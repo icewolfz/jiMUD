@@ -54,3 +54,24 @@
 - `#gag number` or `#ga` gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
   - `number` if >= 0 it will gag current line and that number of incoming lines, if negative it will gag the # of lines before current line
 - `#ungag` or `#ung` clear previous #gag command settings
+
+## Test commands
+
+Test commands allow you to debug or test features of the client
+
+- `#TestList` List all test commands
+- `#TestColors` Display a basic ANSI color table
+- `#TestColorsDetails` Display a more detailed ANSI color table
+- `#TestXTerm` Display an XTerm test pattern
+- `#TestMXP` Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) support by displaying several [MXP](https://www.gammon.com.au/mushclient/mxp.htm) tags
+- `#TestMXP2` Test custom elements
+- `#TestMXPExpire` Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) link expiring
+- `#TestMXPColors` Display a full list of all supported [MXP](https://www.gammon.com.au/mushclient/mxp.htm) color names
+- `#TestMXPElements` Test more [MXP](https://www.gammon.com.au/mushclient/mxp.htm) custom elements
+- `#TestMXPLines` Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) line tagging support
+- `#TestMapper` Test mapper by generating a test area named `Doc Build Samples Area`, with 3 x 3 room square with different settings set for each room.
+- `#TestFANSI` Test [FANSI](http://fansi.org/Index.aspx) support
+- `#TestURLDetect` Test auto url detection by displaying random urls and formats
+- `#TestXTermRGB` Display a more detailed XTerm color pattern
+- `#TestSize` Test the current width and height of the client in characters by repeating `w` for # of columns as line 0 and displaying the numbers 1 to height - 1
+- `#TestSpeed` Test the speed of the client by running the commands #TestMXPColors, #TestMXP, #TestColors, #TestColorsDetails, #TestXTerm, #TestXTermRGB 10 times taking the time it took to parse, then display. After all test have been ran it will display 0 to 9 and each time and an avg time. **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.

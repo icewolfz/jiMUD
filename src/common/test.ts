@@ -40,17 +40,17 @@ export class Tests extends EventEmitter {
         super();
         this.Client = client;
 
-        this.TestFunctions['TestList()'] = function () {
-            let sample = 'Test functions:\n';
+        this.TestFunctions['TestList'] = function () {
+            let sample = 'Test commands:\n';
             let t;
             for (t in this.TestFunctions) {
                 if (!this.TestFunctions.hasOwnProperty(t)) continue;
-                sample += '\t' + t + '\n';
+                sample += `\t${this.Client.options.commandChar + t}\n`;
             }
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestColors()'] = function () {
+        this.TestFunctions['TestColors'] = function () {
             let r;
             let sample = 'Colors and Styles\n-------------------------------------------------------------------------------------------\n';
             for (r = 30; r < 38; r++) {
@@ -87,7 +87,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestColorsDetails()'] = function () {
+        this.TestFunctions['TestColorsDetails'] = function () {
             let sample = '';
             if (this.Client.telnet.prompt)
                 sample = '\n';
@@ -138,7 +138,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestXTerm()'] = function (title) {
+        this.TestFunctions['TestXTerm'] = function (title) {
             let r;
             let g;
             let b;
@@ -179,7 +179,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestMXP()'] = function () {
+        this.TestFunctions['TestMXP'] = function () {
             let sample = 'Text Formatting\n';
             sample += '\t\x1B[6z';
             sample += '<!--Test-->&lt;!--Test--&gt;\n';
@@ -257,22 +257,142 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestSize()'] = function () {
-            const ws = this.Client.WindowSize;
-            let sample = ws.width + 'x' + ws.height + ' ';
-            ws.width -= sample.length;
-            for (let w = 0; w < ws.width; w++)
-                sample += 'w';
-            for (let h = 1; h < ws.height; h++)
-                sample += '\n' + h;
+        this.TestFunctions['TestMXP2'] = function () {
+            let sample = '\x1B[6z';
+            sample += '<!-- Elements to support the Automapper -->';
+            sample += '<!ELEMENT RName \'<FONT COLOR=Red><B>\' FLAG="RoomName">';
+            sample += '<!ELEMENT RDesc FLAG=\'RoomDesc\'>';
+            sample += '<!ELEMENT RExits \'<FONT COLOR=Blue>\' FLAG=\'RoomExit\'>';
+            sample += '<!-- The next element is used to define a room exit link that sends ';
+            sample += 'the exit direction to the MUD if the user clicks on it -->';
+            sample += '<!ELEMENT Ex \'<SEND>\'>';
+            sample += '<!ELEMENT Chat \'<FONT COLOR=Gray>\' OPEN>';
+            sample += '<!ELEMENT Gossip \'<FONT COLOR=Cyan>\' OPEN>';
+            sample += '<!-- in addition to standard HTML Color specifications, you can use ';
+            sample += 'color attribute names such as blink -->';
+            sample += '<!ELEMENT ImmChan \'<FONT COLOR=Red,Blink>\'>';
+            sample += '<!ELEMENT Auction \'<FONT COLOR=Purple>\' OPEN>';
+            sample += '<!ELEMENT Group \'<FONT COLOR=Blue>\' OPEN>';
+            sample += '<!-- the next elements deal with the MUD prompt -->';
+            sample += '<!ELEMENT Prompt FLAG="Prompt">';
+            sample += '<!ELEMENT Hp FLAG="Set hp">';
+            sample += '<!ELEMENT MaxHp FLAG="Set maxhp">';
+            sample += '<!ELEMENT Mana FLAG="Set mana">';
+            sample += '<!ELEMENT MaxMana FLAG="Set maxmana">';
+            sample += '<!-- now the MUD text -->';
+            sample += '<RName>The Main Temple</RName>\n';
+            sample += '<RDesc>This is the main hall of the MUD where everyone starts.\n';
+            sample += 'Marble arches lead south into the town, and there is a <i>lovely</i>\n';
+            sample += '<send "drink &text;">fountain</send> in the center of the temple,</RDesc>\n';
+            sample += '<RExits>Exits: <Ex>N</Ex>, <Ex>S</Ex>, <Ex>E</Ex>, <Ex>W</Ex></RExits>\n\n';
+            sample += '<Prompt>[<Hp>100</Hp>/<MaxHp>120</MaxHp>hp <Mana>50</Mana>/<MaxMana>55</MaxMana>mana]</Prompt>\n<hr>';
+            sample += '<!ELEMENT boldtext \'<COLOR &col;><B>\' ATT=\'col=red\'>';
+            sample += '<boldtext>This is bold red</boldtext>\n';
+            sample += '<boldtext col=blue>This is bold blue text</boldtext>\n';
+            sample += '<boldtext blue>This is also bold blue text</boldtext>\n';
+            sample += '\x1B[0z';
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestMXPExpire()'] = function () {
+        this.TestFunctions['TestMXPExpire'] = function () {
             this.Client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt>\x1B[0z\n', true);
         };
 
-        this.TestFunctions['TestMapper()'] = () => {
+        this.TestFunctions['TestMXPColors'] = function () {
+            const colors = ['IndianRed', 'LightCoral', 'Salmon', 'DarkSalmon', 'LightSalmon',
+                'Crimson', 'Red', 'FireBrick', 'DarkRed', 'Pink', 'LightPink', 'HotPink', 'DeepPink',
+                'MediumVioletRed', 'PaleVioletRed', 'LightSalmon', 'Coral', 'Tomato', 'OrangeRed',
+                'DarkOrange', 'Orange', 'Gold', 'Yellow', 'LightYellow', 'LemonChiffon',
+                'LightGoldenrodYellow', 'PapayaWhip', 'Moccasin', 'PeachPuff', 'PaleGoldenrod',
+                'Khaki', 'DarkKhaki', 'Lavender', 'Thistle', 'Plum', 'Violet', 'Orchid', 'Fuchsia',
+                'Magenta', 'MediumOrchid', 'MediumPurple', 'BlueViolet', 'DarkViolet',
+                'DarkOrchid', 'DarkMagenta', 'Purple', 'Indigo', 'SlateBlue', 'DarkSlateBlue',
+                'MediumSlateBlue', 'GreenYellow', 'Chartreuse', 'LawnGreen', 'Lime', 'LimeGreen',
+                'PaleGreen', 'LightGreen', 'MediumSpringGreen', 'SpringGreen', 'MediumSeaGreen',
+                'SeaGreen', 'ForestGreen', 'Green', 'DarkGreen', 'YellowGreen', 'OliveDrab',
+                'Olive', 'DarkOliveGreen', 'MediumAquamarine', 'DarkSeaGreen', 'LightSeaGreen',
+                'DarkCyan', 'Teal', 'Aqua', 'Cyan', 'LightCyan', 'PaleTurquoise', 'Aquamarine',
+                'Turquoise', 'MediumTurquoise', 'DarkTurquoise', 'CadetBlue', 'SteelBlue',
+                'LightSteelBlue', 'PowderBlue', 'LightBlue', 'SkyBlue', 'LightSkyBlue',
+                'DeepSkyBlue', 'DodgerBlue', 'CornflowerBlue', 'MediumSlateBlue', 'RoyalBlue',
+                'Blue', 'MediumBlue', 'DarkBlue', 'Navy', 'MidnightBlue', 'Cornsilk',
+                'BlanchedAlmond', 'Bisque', 'NavajoWhite', 'Wheat', 'BurlyWood', 'Tan',
+                'RosyBrown', 'SandyBrown', 'Goldenrod', 'DarkGoldenrod', 'Peru', 'Chocolate',
+                'SaddleBrown', 'Sienna', 'Brown', 'Maroon', 'White', 'Snow', 'Honeydew',
+                'MintCream', 'Azure', 'AliceBlue', 'GhostWhite', 'WhiteSmoke', 'Seashell',
+                'Beige', 'OldLace', 'FloralWhite', 'Ivory', 'AntiqueWhite', 'Linen',
+                'LavenderBlush', 'MistyRose', 'Gainsboro', 'LightGrey', 'Silver', 'DarkGray',
+                'Gray', 'DimGray', 'LightSlateGray', 'SlateGray', 'DarkSlateGray', 'Black'];
+            let sample = '\x1B[6z';
+            const cl = colors.length - 1;
+            for (let c = 0; c < cl; c++) {
+                sample += '' + colors[c] + ': ';
+                sample += Array(22 - colors[c].length).join(' ');
+                sample += '<C ' + colors[c] + '>Fore</C> ';
+                sample += '<C black ' + colors[c] + '>Back</C> ';
+                sample += '<h><C ' + colors[c] + '>High</C></h> ';
+                sample += '<b><C ' + colors[c] + '>Bold</C></b> ';
+                sample += '<C ' + colors[c] + '>\x1b[1mAnsiBold\x1b[0m ';
+                sample += '\x1b[2mFaint\x1b[0m ';
+                sample += '\x1b[3mItalic\x1b[0m ';
+                sample += '\x1b[4mUnderline\x1b[0m ';
+                sample += '\x1b[5mFlash\x1b[0m ';
+                sample += '\x1b[7mInverse\x1b[0m ';
+                sample += '\x1b[8mConceal\x1b[0m ';
+                sample += '\x1b[9mStrikeout\x1b[0m ';
+                sample += '\x1b[21mDoubleUnderline\x1b[0m ';
+                sample += '\x1b[53mOverline\x1b[0m';
+                sample += '</C>\n';
+            }
+            sample += 'Black: ';
+            sample += Array(17).join(' ');
+            sample += '<C Black silver>Fore</C> ';
+            sample += '<C silver Black>Back</C> ';
+            sample += '<h><C Black silver>High</C></h> ';
+            sample += '<b><C Black silver>Bold</C></b> ';
+            sample += '<C Black silver>\x1b[1mAnsiBold\x1b[0m ';
+            sample += '\x1b[2mFaint\x1b[0m ';
+            sample += '\x1b[3mItalic\x1b[0m ';
+            sample += '\x1b[4mUnderline\x1b[0m ';
+            sample += '\x1b[5mFlash\x1b[0m ';
+            sample += '\x1b[7mInverse\x1b[0m ';
+            sample += '\x1b[8mConceal\x1b[0m ';
+            sample += '\x1b[9mStrikeout\x1b[0m ';
+            sample += '\x1b[21mDoubleUnderline\x1b[0m ';
+            sample += '\x1b[53mOverline\x1b[0m';
+            sample += '</C>\n';
+            sample += '\x1B[0z';
+            this.Client.print(sample, true);
+        };
+
+        this.TestFunctions['TestMXPElements'] = function () {
+            let sample = '\x1B[6z';
+            sample += 'Custom Element\n';
+            sample += '\t<!ELEMENT help \'<send href="help &text;">\'>&lt;!ELEMENT help \'&lt;send href="help &amp;text;"&gt;\'&gt;\n';
+            sample += '\t&lt;help&gt;test&lt;/help&gt; = <help>test</help>\n';
+            sample += '\t<!ELEMENT redbu \'<c red><b><u>\'>&lt;!ELEMENT redbu \'&lt;c red&gt;&lt;b&gt;&lt;u&gt;\'&gt;\n';
+            sample += '\t&lt;redbu&gt;test&lt;/redbu&gt; = <redbu>test</redbu>\n';
+            sample += '\x1B[0z';
+            this.Client.print(sample, true);
+        };
+
+        this.TestFunctions['TestMXPLines'] = function () {
+            let sample = '\x1B[6z';
+            sample += '<!ELEMENT Auction \'<FONT COLOR=red>\' TAG=20 OPEN>';
+            sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
+            sample += '\x1B[6z<Auction>Also, a gold ring is being auctioned.</Auction>';
+            sample += '<!ELEMENT Auction TAG=20>\n';
+            sample += '<!TAG 20 Fore=red>\n';
+            sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
+            sample += '\x1B[6z<Auction>Also, a gold ring is being auctioned.</Auction>\n';
+            sample += '\x1B[6z<!TAG 20 Fore=blue>\n';
+            sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
+            sample += '\x1B[6z<Auction>Also, a gold ring is being auctioned.</Auction>\n';
+            sample += '\x1B[0z';
+            this.Client.print(sample, true);
+        };
+
+        this.TestFunctions['TestMapper'] = () => {
             const { ipcRenderer } = require('electron');
             ipcRenderer.send('GMCP-received', {
                 mod: 'Room.Info', obj: {
@@ -423,101 +543,7 @@ export class Tests extends EventEmitter {
             });
         };
 
-        this.TestFunctions['TestMXPColors()'] = function () {
-            const colors = ['IndianRed', 'LightCoral', 'Salmon', 'DarkSalmon', 'LightSalmon',
-                'Crimson', 'Red', 'FireBrick', 'DarkRed', 'Pink', 'LightPink', 'HotPink', 'DeepPink',
-                'MediumVioletRed', 'PaleVioletRed', 'LightSalmon', 'Coral', 'Tomato', 'OrangeRed',
-                'DarkOrange', 'Orange', 'Gold', 'Yellow', 'LightYellow', 'LemonChiffon',
-                'LightGoldenrodYellow', 'PapayaWhip', 'Moccasin', 'PeachPuff', 'PaleGoldenrod',
-                'Khaki', 'DarkKhaki', 'Lavender', 'Thistle', 'Plum', 'Violet', 'Orchid', 'Fuchsia',
-                'Magenta', 'MediumOrchid', 'MediumPurple', 'BlueViolet', 'DarkViolet',
-                'DarkOrchid', 'DarkMagenta', 'Purple', 'Indigo', 'SlateBlue', 'DarkSlateBlue',
-                'MediumSlateBlue', 'GreenYellow', 'Chartreuse', 'LawnGreen', 'Lime', 'LimeGreen',
-                'PaleGreen', 'LightGreen', 'MediumSpringGreen', 'SpringGreen', 'MediumSeaGreen',
-                'SeaGreen', 'ForestGreen', 'Green', 'DarkGreen', 'YellowGreen', 'OliveDrab',
-                'Olive', 'DarkOliveGreen', 'MediumAquamarine', 'DarkSeaGreen', 'LightSeaGreen',
-                'DarkCyan', 'Teal', 'Aqua', 'Cyan', 'LightCyan', 'PaleTurquoise', 'Aquamarine',
-                'Turquoise', 'MediumTurquoise', 'DarkTurquoise', 'CadetBlue', 'SteelBlue',
-                'LightSteelBlue', 'PowderBlue', 'LightBlue', 'SkyBlue', 'LightSkyBlue',
-                'DeepSkyBlue', 'DodgerBlue', 'CornflowerBlue', 'MediumSlateBlue', 'RoyalBlue',
-                'Blue', 'MediumBlue', 'DarkBlue', 'Navy', 'MidnightBlue', 'Cornsilk',
-                'BlanchedAlmond', 'Bisque', 'NavajoWhite', 'Wheat', 'BurlyWood', 'Tan',
-                'RosyBrown', 'SandyBrown', 'Goldenrod', 'DarkGoldenrod', 'Peru', 'Chocolate',
-                'SaddleBrown', 'Sienna', 'Brown', 'Maroon', 'White', 'Snow', 'Honeydew',
-                'MintCream', 'Azure', 'AliceBlue', 'GhostWhite', 'WhiteSmoke', 'Seashell',
-                'Beige', 'OldLace', 'FloralWhite', 'Ivory', 'AntiqueWhite', 'Linen',
-                'LavenderBlush', 'MistyRose', 'Gainsboro', 'LightGrey', 'Silver', 'DarkGray',
-                'Gray', 'DimGray', 'LightSlateGray', 'SlateGray', 'DarkSlateGray', 'Black'];
-            let sample = '\x1B[6z';
-            const cl = colors.length - 1;
-            for (let c = 0; c < cl; c++) {
-                sample += '' + colors[c] + ': ';
-                sample += Array(22 - colors[c].length).join(' ');
-                sample += '<C ' + colors[c] + '>Fore</C> ';
-                sample += '<C black ' + colors[c] + '>Back</C> ';
-                sample += '<h><C ' + colors[c] + '>High</C></h> ';
-                sample += '<b><C ' + colors[c] + '>Bold</C></b> ';
-                sample += '<C ' + colors[c] + '>\x1b[1mAnsiBold\x1b[0m ';
-                sample += '\x1b[2mFaint\x1b[0m ';
-                sample += '\x1b[3mItalic\x1b[0m ';
-                sample += '\x1b[4mUnderline\x1b[0m ';
-                sample += '\x1b[5mFlash\x1b[0m ';
-                sample += '\x1b[7mInverse\x1b[0m ';
-                sample += '\x1b[8mConceal\x1b[0m ';
-                sample += '\x1b[9mStrikeout\x1b[0m ';
-                sample += '\x1b[21mDoubleUnderline\x1b[0m ';
-                sample += '\x1b[53mOverline\x1b[0m';
-                sample += '</C>\n';
-            }
-            sample += 'Black: ';
-            sample += Array(17).join(' ');
-            sample += '<C Black silver>Fore</C> ';
-            sample += '<C silver Black>Back</C> ';
-            sample += '<h><C Black silver>High</C></h> ';
-            sample += '<b><C Black silver>Bold</C></b> ';
-            sample += '<C Black silver>\x1b[1mAnsiBold\x1b[0m ';
-            sample += '\x1b[2mFaint\x1b[0m ';
-            sample += '\x1b[3mItalic\x1b[0m ';
-            sample += '\x1b[4mUnderline\x1b[0m ';
-            sample += '\x1b[5mFlash\x1b[0m ';
-            sample += '\x1b[7mInverse\x1b[0m ';
-            sample += '\x1b[8mConceal\x1b[0m ';
-            sample += '\x1b[9mStrikeout\x1b[0m ';
-            sample += '\x1b[21mDoubleUnderline\x1b[0m ';
-            sample += '\x1b[53mOverline\x1b[0m';
-            sample += '</C>\n';
-            sample += '\x1B[0z';
-            this.Client.print(sample, true);
-        };
-
-        this.TestFunctions['TestMXPElements()'] = function () {
-            let sample = '\x1B[6z';
-            sample += 'Custom Element\n';
-            sample += '\t<!ELEMENT help \'<send href="help &text;">\'>&lt;!ELEMENT help \'&lt;send href="help &amp;text;"&gt;\'&gt;\n';
-            sample += '\t&lt;help&gt;test&lt;/help&gt; = <help>test</help>\n';
-            sample += '\t<!ELEMENT redbu \'<c red><b><u>\'>&lt;!ELEMENT redbu \'&lt;c red&gt;&lt;b&gt;&lt;u&gt;\'&gt;\n';
-            sample += '\t&lt;redbu&gt;test&lt;/redbu&gt; = <redbu>test</redbu>\n';
-            sample += '\x1B[0z';
-            this.Client.print(sample, true);
-        };
-
-        this.TestFunctions['TestMXPLines()'] = function () {
-            let sample = '\x1B[6z';
-            sample += '<!ELEMENT Auction \'<FONT COLOR=red>\' TAG=20 OPEN>';
-            sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
-            sample += '\x1B[6z<Auction>Also, a gold ring is being auctioned.</Auction>';
-            sample += '<!ELEMENT Auction TAG=20>\n';
-            sample += '<!TAG 20 Fore=red>\n';
-            sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
-            sample += '\x1B[6z<Auction>Also, a gold ring is being auctioned.</Auction>\n';
-            sample += '\x1B[6z<!TAG 20 Fore=blue>\n';
-            sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
-            sample += '\x1B[6z<Auction>Also, a gold ring is being auctioned.</Auction>\n';
-            sample += '\x1B[0z';
-            this.Client.print(sample, true);
-        };
-
-        this.TestFunctions['TestFANSI()'] = function () {
+        this.TestFunctions['TestFANSI'] = function () {
             let sample = '';
             let i;
             sample = String.fromCharCode(1);
@@ -547,44 +573,7 @@ export class Tests extends EventEmitter {
             this.Client.display.displayControlCodes = dcc;
         };
 
-        this.TestFunctions['TestMXP2()'] = function () {
-            let sample = '\x1B[6z';
-            sample += '<!-- Elements to support the Automapper -->';
-            sample += '<!ELEMENT RName \'<FONT COLOR=Red><B>\' FLAG="RoomName">';
-            sample += '<!ELEMENT RDesc FLAG=\'RoomDesc\'>';
-            sample += '<!ELEMENT RExits \'<FONT COLOR=Blue>\' FLAG=\'RoomExit\'>';
-            sample += '<!-- The next element is used to define a room exit link that sends ';
-            sample += 'the exit direction to the MUD if the user clicks on it -->';
-            sample += '<!ELEMENT Ex \'<SEND>\'>';
-            sample += '<!ELEMENT Chat \'<FONT COLOR=Gray>\' OPEN>';
-            sample += '<!ELEMENT Gossip \'<FONT COLOR=Cyan>\' OPEN>';
-            sample += '<!-- in addition to standard HTML Color specifications, you can use ';
-            sample += 'color attribute names such as blink -->';
-            sample += '<!ELEMENT ImmChan \'<FONT COLOR=Red,Blink>\'>';
-            sample += '<!ELEMENT Auction \'<FONT COLOR=Purple>\' OPEN>';
-            sample += '<!ELEMENT Group \'<FONT COLOR=Blue>\' OPEN>';
-            sample += '<!-- the next elements deal with the MUD prompt -->';
-            sample += '<!ELEMENT Prompt FLAG="Prompt">';
-            sample += '<!ELEMENT Hp FLAG="Set hp">';
-            sample += '<!ELEMENT MaxHp FLAG="Set maxhp">';
-            sample += '<!ELEMENT Mana FLAG="Set mana">';
-            sample += '<!ELEMENT MaxMana FLAG="Set maxmana">';
-            sample += '<!-- now the MUD text -->';
-            sample += '<RName>The Main Temple</RName>\n';
-            sample += '<RDesc>This is the main hall of the MUD where everyone starts.\n';
-            sample += 'Marble arches lead south into the town, and there is a <i>lovely</i>\n';
-            sample += '<send "drink &text;">fountain</send> in the center of the temple,</RDesc>\n';
-            sample += '<RExits>Exits: <Ex>N</Ex>, <Ex>S</Ex>, <Ex>E</Ex>, <Ex>W</Ex></RExits>\n\n';
-            sample += '<Prompt>[<Hp>100</Hp>/<MaxHp>120</MaxHp>hp <Mana>50</Mana>/<MaxMana>55</MaxMana>mana]</Prompt>\n<hr>';
-            sample += '<!ELEMENT boldtext \'<COLOR &col;><B>\' ATT=\'col=red\'>';
-            sample += '<boldtext>This is bold red</boldtext>\n';
-            sample += '<boldtext col=blue>This is bold blue text</boldtext>\n';
-            sample += '<boldtext blue>This is also bold blue text</boldtext>\n';
-            sample += '\x1B[0z';
-            this.Client.print(sample, true);
-        };
-
-        this.TestFunctions['TestURLDetect()'] = function () {
+        this.TestFunctions['TestURLDetect'] = function () {
             let sample = '\x1B[0mhttp://www.google.com\n';
             sample += '\thttp://www.google.com\x1B[44m\n';
             sample += 'http://www.google.com\n';
@@ -608,7 +597,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestXTermRGB()'] = function () {
+        this.TestFunctions['TestXTermRGB'] = function () {
             let sample = '';
             let r;
             let g;
@@ -628,15 +617,42 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestSpeed()'] = function () {
+        this.TestFunctions['TestSize'] = function () {
+            const ws = this.Client.WindowSize;
+            let sample = ws.width + 'x' + ws.height + ' ';
+            ws.width -= sample.length;
+            for (let w = 0; w < ws.width; w++)
+                sample += 'w';
+            for (let h = 1; h < ws.height; h++)
+                sample += '\n' + h;
+            this.Client.print(sample, true);
+        };
+
+        this.TestFunctions['TestSpeed'] = function () {
             const sample = [];
+            const commands = this.Client.options.commandChar + ['TestMXPColors', 'TestMXP', 'TestColors', 'TestColorsDetails', 'TestXTerm', 'TestXTermRGB'].join('\n' + this.Client.options.commandChar);
+            const e = this.Client.options.enableCommands;
+            this.Client.options.enableCommands = true;
+            let avg = 0;
+            let max = 0;
+            let min = 0;
+            let t;
             for (let i = 0; i < 10; i++) {
                 const start = new Date().getTime();
-                this.Client.sendCommand('TestMXPColors();TestMXP();TestColors();TestColorsDetails();TestXTerm();TestXTermRGB()');
+                this.Client.sendCommand(commands);
                 const end = new Date().getTime();
-                sample.push(`${i} - ${end - start}`);
+                t = end - start;
+                avg += t;
+                if (t > max) max = t;
+                if (!min || t < min) min = t;
+                sample.push(`${i} - ${t}`);
             }
+            avg /= 10;
+            sample.push(`Average - ${avg}`);
+            sample.push(`Min - ${min}`);
+            sample.push(`Max - ${max}`);
             this.Client.print(sample.join('\n') + '\n', true);
+            this.Client.options.enableCommands = e;
         };
     }
 }
