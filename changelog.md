@@ -1,27 +1,29 @@
-## Changelog
-##### 0.4.11
+# Changelog
+
+## 0.4.11
+
 - **New:**
   - Added function doc file to explain functions and list predefined variables
   - Add intern corner support for overlays (selection, find)
   - Preference: Enable rounded overlays, disable or enable rounded corner effect for selection and find highlighting
   - ${eval(expression)} to allow evaluation a math expression when ${expression} is disabled
-  - Add proper escape system with parser changes, characters: $%"'{\ and command stack character, to escape a character simpling just do \CHARACTER
-  - Expressions now allow the function dice to be used as if normal math function, eg: ${5 + dice(2d6) * 5} is the same as ${5 + ${dice(2d6)} * 5}
+  - Add proper escape system with parser changes, characters: $%"'{\ and command stack character, to escape a character simply just do \CHARACTER
+  - Expressions now allow the function dice to be used as if normal math function, eg: `${5 + dice(2d6) * 5}` is the same as `${5 + ${dice(2d6)} * 5}`
   - Functions:
     - ${dice(**x**d**y**__+n__)}, roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
       - example: ${dice(2d6+5)}, rolls 2, 6 sided dice and returns the sum + 5
     - ${diceavg(**x**d**y**__+n__)} the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
     - ${dicemin(**x**d**y**__+n__)} the minimum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
     - ${dicemax(**x**d**y**__+n__)} the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-    - ${dicedev(**x**d**y**__+n__)} return standard deviation of dice sqrt((y^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-    - ${zdicedev(**x**d**y**__+n__)} return zMUD/cMUD standard deviation of dice sqrt(((y-1)^2-1)/12 * x), x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+    - ${dicedev(**x**d**y**__+n__)} return standard deviation of dice `sqrt((y^2-1)/12 * x)`, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+    - ${zdicedev(**x**d**y**__+n__)} return zMUD/cMUD standard deviation of dice `sqrt(((y-1)^2-1)/12 * x)`, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
     - Verbatim system, you can now start a line of text with a ` and all text after that to a newline will be sent as is to the mud with no parsing or manipulation
-    - Preferences:
-      - Escape character, allows changing which character is used for escaping
-      - Command character, allow you to change the # character for commands
-      - Enable commands, disable command system
-      - Verbatim character, change which character is used to mark the start of a verbatim block
-      - Enable verbatim, control if verbatim system is enabled
+  - Preferences:
+    - Escape character, allows changing which character is used for escaping
+    - Command character, allow you to change the # character for commands
+    - Enable commands, disable command system
+    - Verbatim character, change which character is used to mark the start of a verbatim block
+    - Enable verbatim, control if verbatim system is enabled
   - Updated command doc to list all test commands
   - Inspect item for button bar, input, display default, and status bar context menus when enable debug is on or when --debug has been set to allow easier debugging of GUI
 - **Change:**
@@ -29,7 +31,7 @@
   - Remove experimental tags for scroll and scroll live preferences
   - Preferences:
     - Move allow escape, command stacking, and speed path preferences to scripting > special characters
-  - Test commands now follow standard format of #Test????? where ??? is the differnt test name, use #TestList to see a list of all test commands
+  - Test commands now follow standard format of #Test????? where ??? is the different test name, use #TestList to see a list of all test commands
 - **Fixed:**
   - Alias, context, triggers, button, and macro sort order was not correct, most noticeable when using context menus
   - ${i}/${repeatnum} always returning 0
@@ -41,19 +43,23 @@
   - Parsing was re-coded to properly handled ${}, %{}, %*, and %# variables with proper stack tracking
   - #wait would have broken %# values, fixed with new proper parsing and stack
   - selected, selectedword, selword, selectedline, selline, selectedurl, selurl, and copied now return the correct values when used outside of context menus
-##### 0.4.10 2017-08-03
+
+## 0.4.10 2017-08-03
+
 - **Change:**
   - When window shown it will now focus on command input
   - Window now receive focus when tray show is triggered
 - **Fixed:**
   - Backup: attempt to fix paths when imported when defaults are used
-  - Immortal tools: 
+  - Immortal tools:
     - Not correctly ignoring fswin node module
     - Set a min size for panel size when loading
     - When loading window was not correctly passing options
     - When saving options, options not correctly applied to active window
     - Remote drag and drop on linux was broken
-##### 0.4.9 2017-07-30
+
+## 0.4.9 2017-07-30
+
 - **New:**
   - Auto login system if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
   - Immortal tools: create new empty local file
@@ -81,11 +87,10 @@
   - Add [client.raise('event', args, delay)](docs/scripting.md#Basic-function-list) function to emit custom events
   - Add [client.show()](docs/scripting.md#Basic-function-list) function to show the window
   - Add [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
-  - Add [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show 
+  - Add [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show
   - Added ${#}, %{#}, %{*}, ${*} formats to match {} variable format
   - Added proper %\{, $\{ escape system
-  - New scripting setting scripting for allow expression/evaluate and moved parse double/single quote options there
-value returned
+  - New scripting setting scripting for allow expression/evaluate and moved parse double/single quote options there value returned
 - **Change:**
   - Immortal tools: focusing on local or remote path text box will now auto select all text
   - Profile manger
@@ -98,14 +103,16 @@ value returned
   - Character manager was not reloading the loaded character when changes happened
   - Character name was not being set when using character manager on initial load
   - Profile manger: initial profile enabled checkbox in treeview where not being set
-  - Immortal tools: 
+  - Immortal tools:
     - Select on finish now clears previous selected items
     - A memory leak when running mkdir commands
     - An issue when maximizing and un-maximizing window
     - Queue no longer works from newest to oldest, it now correctly uploads oldest in queue first
   - Auto connect will now correctly fire when changing character settings based on if connected or not
   - Fixed a bug in echoing system and it restoring the previous ansi state
-##### 0.4.8 2017-07-25
+
+## 0.4.8 2017-07-25
+
 - **New:**
   - Immortal tools:
     - Focus files on finish upload/download
@@ -123,7 +130,9 @@ value returned
     - Selection state is no longer lost when local or remote files are updated
     - Remote list is now properly reinitialized when the mud sends init code
     - Error when dropping files for remote upload
-##### 0.4.7 2017-07-24
+
+## 0.4.7 2017-07-24
+
 - **New:**
   - Tray: added profile manager and preference to menu
   - Auto connect delay - new option to allow control how of long to wait before auto connecting
@@ -147,7 +156,9 @@ value returned
   - Backup: remote backup should now save all settings
   - Bug with display window size
   - Chat capture: fix some issues causing it not to display text
-##### 0.4.6 2017-07-21
+
+## 0.4.6 2017-07-21
+
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar
   - Mapper
@@ -183,9 +194,11 @@ value returned
     - Making a new remote directory was not correctly setting the path
     - Issue when dragging and dropping remote files
     - When running backup remote command from context or menu and bak folder did not exist was setting wrong path when created in remote list
-##### 0.4.5 2017-07-14
+
+## 0.4.5 2017-07-14
+
 - **New:**
-  - Context menu: 
+  - Context menu:
     - Urls now add open/copy url/copy text.
     - MXP links add open/copy text
   - Tray icon support
@@ -204,17 +217,23 @@ value returned
   - $selectedurl was always empty when right clicking a link
   - Buttons, aliases, triggers, macros, and context should now be properly sorted by priorities. All items are first sorted by profile priority then by type priority.
   - Mapper window progress task bar
-##### 0.4.4 2017-07-12
+
+## 0.4.4 2017-07-12
+
 - **New:**
   - Immortal tools: current queue progress now supports windows task bar progress
   - Mapper: import task bar progress should now support separate window update + main client on task bar
 - **Fixed:**
   - Mapper: during code cleanup moved to a stricter compare (===) and the mud sends a # while it is stored as a string in the mapper, it now converts remote data into string
   - Profile manager: During code cleanup deleted a line of code that broke macro editor
-##### 0.4.3 2017-07-08
+
+## 0.4.3 2017-07-08
+
 - **Fixed:**
   -Advanced editor was broken due to previous code cleanups
-##### 0.4.2 2017-07-07
+
+## 0.4.2 2017-07-07
+
 - **New:**
   - Immortal tools:
     - Rename local and remote files
@@ -236,12 +255,14 @@ value returned
     - Fixed an issue when editing macros and key is always None.
     - #alias/#unalias notify profile manager directly now notifying that profiles have changed.
   - Minor bug fixes related to cleaning code.
-##### 0.4.1 2017-07-03
+
+## 0.4.1 2017-07-03
+
 - **New:**
   - Immortal tools
     - Download files and open in an editor
     - Upload files
-    - Delete files, local files moved to trash, remote deleted permanently 
+    - Delete files, local files moved to trash, remote deleted permanently
   - Paste special, allows pasting text with different modifiers like adding post/pre fixes to each line
 - **Change:**
   - Updated to electron 1.7.4 beta
@@ -251,26 +272,32 @@ value returned
   - MSP: fixed an issue with mal-formed urls breaking streaming sound
   - MSP: fixed playing notification message not displaying duration dime
   - Fixed issues with paste menu item not pasting into command input
-##### 0.4.0 2017-06-23
+
+## 0.4.0 2017-06-23
+
 - **New:**
   - Display control
     - Faster then old system by nearly 50% when processing
     - Fixes find all highlighting performance issues
     - Cleaner text selection effect
     - Better experimental scroll support
-  - Logging  
+  - Logging
     - Log html - Log html to a separate log file
     - Log text - Log text to a separate log file
     - Log raw - Log raw ansi to a separate log file.
     - Format Timestamp in file name using moment
   - Chat capture find text
-##### 0.3.3 2017-06-21
+
+## 0.3.3 2017-06-21
+
 - **Fixed:**
   - Fixed options undefined errors
   - Log mapper errors to log file when log errors enabled
   - Fixed issues with error log not correctly logging the error message
   - Attempted fixes to mapper losing data
-##### 0.3.2 2017-06-16
+
+## 0.3.2 2017-06-16
+
 - **New:**
   - Add enable spellchecking preference to allow spell checking to be turned off
 - **Change:**
@@ -280,17 +307,21 @@ value returned
   - Updated to electron 1.7.3 beta
 - **Fixed:**
   - Fix bell Unicode character display
-  - Editor: 
+  - Editor:
     - New lines where not correctly being sent when sending as formatted text
     - Trailing newlines where being cut off
     - Fix flashing format not being sent when flashing disabled
   - Fix a bug in aliases and macros when script style was used, would error due to strict type comparison
   - Fix a bug in aliases, macros, and triggers when script style returns a non string/null/undefined
-##### 0.3.1 - 2017-05-30
+
+## 0.3.1 - 2017-05-30
+
 - **Fixed:**
   - Character manager: file not found issues, will now properly check if characters file exist before accessing it
   - Do not attempt to access user data folder until app is ready, fixes character folder creation checks
-##### 0.3.0 - 2017-05-30
+
+## 0.3.0 - 2017-05-30
+
 - **New:**
   - Split scroll, **Experimental**  this will allow you to scroll while displaying the most recent lines at the bottom with option live update or post update
   - Basic error logging to appdata/jiMUD/jimud.error.log when enabled from preferences > advanced > log errors
@@ -330,32 +361,40 @@ value returned
   - Fixed uncaught errors not being displayed
   - Fixed a bug when changing settings it would reset connect button while still connected
   - Issues with ansi parser and line heights, empty lines had wrong pixel hight throwing off other calculations, now all newlines are wrapped in basic ansi formatting to ensure empty lines have exactly the same height as all other lines.
-##### 0.2.4 - 2017-05-22
+
+## 0.2.4 - 2017-05-22
+
 - **Changed:**
   - Profile manager: treeview should now sort by profile name, with default always being first
 - **Fixed:**
-  - Profile manger: 
+  - Profile manger:
     - importing from file was broken, now will ask to replace, do nothing, or copy if name exist instead of defaulting to copy
     - Undo/redo of adding profiles was broken when you undo an add then redid it would break and lose profile
   - Trigger cache was not clearing when profiles enabled/disabled
-##### 0.2.3 - 2017-05-21
+
+## 0.2.3 - 2017-05-21
+
 - **New:**
   - Add some of the newer settings to set/getsetting commands
 - **Changed:**
-  - Adjusted dark theme scrollbars
+  - Adjusted dark theme scroll bars
   - Lock button now sets style to "on" when scroll lock enabled
 - **Fixed:**
-  - Mapper: 
+  - Mapper:
     - Area navigation was not updating
     - Walk button/context item should be enabled as long as current and selected room are set now just when path highlighted
     - Highlight button/context item are only enabled if current room/selected room and are not the same
-##### 0.2.2 - 2017-05-20
+
+## 0.2.2 - 2017-05-20
+
 - **Fixed:**
   - Default profile appearing twice in menu on first load
   - Backup:
     - loading wrong url when using development setting
     - corrupted load data due to a previous bug fix with data type
-##### 0.2.1 - 2017-05-20
+
+## 0.2.1 - 2017-05-20
+
 - **Changed:**
   - Adjusted dark mouse over colors to be more visible
   - Mapper window will now show when a backup import triggers to show mapper progress
@@ -366,7 +405,9 @@ value returned
   - A bug in backup when ajax error happens and not being able to abort load/save
   - A bug when importing legacy profiles and settings not correctly converting to boolean datatype
   - Backup settings where not being applied until a restart
-##### 0.2.0 - 2017-05-19
+
+## 0.2.0 - 2017-05-19
+
 - **New:**
   - Add ${variable.FUNCTION} format support to allow similar format to javascript.
   - Add find text system to main client
@@ -396,7 +437,9 @@ value returned
   - Mapper
     - Fixed a javascript bug when clicking cancel button on progress dialogs
     - Import dialog would not close when imported data had no rooms
-##### 0.1.9 - 2017-05-14
+
+## 0.1.9 - 2017-05-14
+
 - **New:**
   - User context menus, create custom items for the right click display menu
   - new variables in javascript
@@ -451,7 +494,9 @@ value returned
   - View > Status menu items now work to toggle what is displayed
   - Fixed a bug in display being in a frame and parser capturing previous line fragments
   - Fixed a bug that when always on top was turned off for chat, mapper, advanced editor windows would stay open after main client was closed, now all windows are closed when main client window is closed.
-##### 0.1.8 - 2017-05-11
+
+## 0.1.8 - 2017-05-11
+
 - **New:**
   - Allow negative numbers for experience needed in status display
   - Mapper Load in memory will now save to disk every 15 minutes
@@ -465,9 +510,11 @@ value returned
   - Profile manger
     - An issue with treeview context menu
     - A bug with the add new item button
-##### 0.1.7 - 2017-05-09
+
+## 0.1.7 - 2017-05-09
+
 - **New:**
-  - Chat window 
+  - Chat window
     - Capture lines/tells/room talk and related reviews, including related settings to control the window and what to capture into the new chat window.
     - Independent logging using logging settings to create a separate log.
   - Added log gagged lines option.
@@ -486,9 +533,11 @@ value returned
   - Fix preference context menus
   - Fixed bug with newline/prompt when executing triggers
   - A bug in needed xp being -#
-##### 0.1.6 - 2017-05-07
+
+## 0.1.6 - 2017-05-07
+
 - **New:**
-  - Advanced editor 
+  - Advanced editor
     - Now supports Overline (ctrl+o), Double Underline (ctrl+d), Flash (ctrl+f), and Reverse (ctrl+r) styles
     - Added send as command no echo for both formatted and verbatim
     - Can now be opened using Ctrl+A
@@ -516,10 +565,10 @@ value returned
   - Changed how options are reloaded for main client, instead of a direct call, fire event
   - Rearranged the profile manager interface to simply and condense code
   - Cleaned up profile manager code to reduce size and improve load speeds
-- **Fixed:**  
-  - Context menus in advanced editor have been converted into native context menus, fixing menus being cut off in small window size  
+- **Fixed:**
+  - Context menus in advanced editor have been converted into native context menus, fixing menus being cut off in small window size
   - When underline would remove double underline effect when following double underline ansi attribute
-  - Status > Visible menu check was not updating to show current state  
+  - Status > Visible menu check was not updating to show current state
   - Advanced editor
     - Should strip all unsupported HTML tags when sending pasted text.
     - Will properly convert pre tags and preserve newlines
@@ -528,7 +577,9 @@ value returned
     - When editing a macro they where not correctly being saved
     - Better color detection for pasted formatted text, it will now attempt to find the closet color supported in the 256 colors
     - Changing the item style will now correctly change the editor mode again
-##### 0.1.5 - 2017-05-01
+
+## 0.1.5 - 2017-05-01
+
 - **New:**
   - Advanced editor has been added
     - Supports full WYSIWYG style for bold, italic, underline, strikeout, and all colors by simple select text and clicking a button
@@ -539,7 +590,7 @@ value returned
       - Formatted verbatim (No echo) - send formatted with no parsing and no echo
       - Text verbatim (No echo) - strip all formatting and send with no parsing and no echo
       - Raw formatted (No echo) - send formatted text as raw data
-      - Raw text (No echo) - send text as raw data    
+      - Raw text (No echo) - send text as raw data
   - Basic context menu for all editable fields
   - When closing profile manager will ask to save changes when using the window close button
   - When closing client will now warn if still connected with option to never ask again
@@ -553,11 +604,13 @@ value returned
     - Profiles where not deleted correctly
     - Copy/cut/paste should once again work with input areas when they have focus
   - Properly working Linux packages
-##### 0.1.4 - 2017-04-29
+
+## 0.1.4 - 2017-04-29
+
 - **New:**
   - Application icon, temporary for now will create a better one in th future
-  - Profile manager 
-    - Properly tracks all changes for future undo/redo stack        
+  - Profile manager
+    - Properly tracks all changes for future undo/redo stack
     - Ask to save changes on cancel, with option to never ask again
     - Cut/Copy/Paste/Delete now work
     - Treeview context menu
@@ -569,7 +622,9 @@ value returned
   - When changing enable TYPE on profile editor it would not update treeview check state
   - When saving profiles and closing, if invalid profile name supplied it would not save profile, now it will properly cancel save until name fixed
   - When cloning a profile default macros where appended.
-##### 0.1.3 - 2017-04-26
+
+## 0.1.3 - 2017-04-26
+
 - **Changed:**
   - Mapper Clear/Walk path are now disabled when no path highlighted
 - **Fixed:**
@@ -577,7 +632,9 @@ value returned
   - Profile cloning was erroring do to calling the wrong collections
   - Client was emitting wrong event when new text was added to display causing
   - triggers and anything that relied on that event to fail
-##### 0.1.2 - 2017-04-25
+
+## 0.1.2 - 2017-04-25
+
 - **New:**
   - Trainer mapper npc type
 - **Changed:**
@@ -586,11 +643,15 @@ value returned
   - Mapper saving open/close state
   - Missing RGBColor module for settings dialog
   - Window size not being sent to mud when resized
-##### 0.1.1 - 2017-04-24
+
+## 0.1.1 - 2017-04-24
+
 - **Fixed:**
   - Profile menu looking for a profile folder when does not exist
   - Turned off debug mode by default
 - **Changed:**
   - Upgraded to electron 1.6.7
-##### 0.1.0 - 2017-04-24
+
+## 0.1.0 - 2017-04-24
+
 - Initial release
