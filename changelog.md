@@ -25,7 +25,6 @@
 - **Change:**
   - Context menu is now cached when profiles are loaded, this may increase load time/memory by small amount but allows context menu to open nearly instantly where before it had a minor delay when rebuilding the menu each time.
   - Remove experimental tags for scroll and scroll live preferences
-  - Recoded $varibles storage to be dynamic
   - Preferences:
     - Move allow escape, command stacking, and speed path preferences to scripting > special characters
 - **Fixed:**
@@ -36,8 +35,9 @@
   - %/${name} where not being processed
   - #show was converting text into binary
   - #show was trying to decompress string when MCCP was enabled
-  - Parsing was recoded to properly handled ${}, %{}, %*, and %# variables with proper stack tracking
+  - Parsing was re-coded to properly handled ${}, %{}, %*, and %# variables with proper stack tracking
   - #wait would have broken %# values, fixed with new proper parsing and stack
+  - selected, selectedword, selword, selectedline, selline, selectedurl, selurl, and copied now return the correct values when used outside of context menus
 ##### 0.4.10 2017-08-03
 - **Change:**
   - When window shown it will now focus on command input

@@ -23,6 +23,7 @@ declare let $selectedword: string;
 declare let $selurl: string;
 declare let $selline: string;
 declare let $selword: string;
+declare let $copied: string;
 
 interface JQuery {
 	hasHorizontalScrollBar(): boolean;
@@ -35,4 +36,5 @@ interface JQuery {
 interface Window {
 	i: any;
 	repeatnum: any;
+	$copied: string;
 }

@@ -22,7 +22,7 @@
     //cSpell:ignore ismap hellip selectall lagmeter
     if (window.module) module.module;
 
-    ['repeatnum', '$selected', '$selectedurl', '$selectedline', '$selectedword'].map((a) => {
+    ['repeatnum'].map((a) => {
       Object.defineProperty(window, a, {
         get: function () {
           if (!client || !client.variables) return undefined;
@@ -38,44 +38,62 @@
       });
     });
 
-    Object.defineProperty(window, '$selurl', {
-      get: function () {
-        if (!client || !client.variables) return undefined;
-        return client.variables.$selectedurl;
-      },
-      set: function (val) {
-        if (!client) return;
-        if (!client.variables)
-          client.variables = {};
-        client.variables.$selectedurl = val;
-      },
-      configurable: true
+    ['$selectedword', '$selword'].map((a) => {
+      Object.defineProperty(window, a, {
+        get: function () {
+          if (!lastMouse) return '';
+          var line = $(lastMouse.srcElement).closest('.line').text();
+          var x = (lastMouse.pageX - client.display._elJ.offset().left) + client.display._elJ.scrollLeft();
+          x = Math.floor(x / client.display._charWidth);
+
+          var sPos = x, ePos = x;
+          while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+            sPos--;
+            if (sPos < 0)
+              break;
+          }
+          sPos++;
+          var ll = line.length;
+          while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < ll) {
+            ePos++;
+          }
+          if (sPos + ePos - sPos > ll)
+            return '';
+          return line.substring(sPos, ePos);
+        },
+        configurable: true
+      });
     });
 
-    Object.defineProperty(window, '$selline', {
-      get: function () {
-        if (!client || !client.variables) return undefined;
-        return client.variables.$selectedline;
-      },
-      set: function (val) {
-        if (!client) return;
-        if (!client.variables)
-          client.variables = {};
-        client.variables.$selectedline = val;
-      },
-      configurable: true
+    ['$selectedurl', '$selurl'].map((a) => {
+      Object.defineProperty(window, a, {
+        get: function () {
+          if (!lastMouse) return '';
+          var parent = $(lastMouse.srcElement.parentNode);
+          if (parent && parent.hasClass('URLLink'))
+            return parent.title;
+          else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+            return parent.data('href');
+          return '';
+        },
+        configurable: true
+      });
     });
 
-    Object.defineProperty(window, '$selword', {
+    ['$selectedline', '$selline'].map((a) => {
+      Object.defineProperty(window, a, {
+        get: function () {
+          if (!lastMouse) return '';
+          return $(lastMouse.srcElement).closest('.line').text();
+        },
+        configurable: true
+      });
+    });
+
+    Object.defineProperty(window, '$selected', {
       get: function () {
-        if (!client || !client.variables) return undefined;
-        return client.variables.$selectedword;
-      },
-      set: function (val) {
-        if (!client) return;
-        if (!client.variables)
-          client.variables = {};
-        client.variables.$selectedword = val;
+        if (!client) return '';
+        return client.display.selection;
       },
       configurable: true
     });
@@ -94,6 +112,14 @@
       configurable: true
     });
 
+    Object.defineProperty(window, '$copied', {
+      get: function () {
+        return clipboard.readText('selection') || '';
+      },
+      configurable: true
+    });
+
+
     const Client = require('./js/client.js').Client;
     const Status = require('./js/status.js').Status;
     const Backup = require('./js/backup.js').Backup;
@@ -107,6 +133,7 @@
 
     var spellchecker;
     var autoConnectID;
+    var lastMouse;
     var set = Settings.load(remote.getGlobal('settingsFile'));
     if (set.spellchecking)
       loadSpellchecker();
@@ -121,6 +148,9 @@
     var _noCapture = false;
     var _cLoading = false;
     var _context;
+    var _selword = '';
+    var _selurl = '';
+    var _selline = '';
 
     window.onerror = function (msg, url, line) {
       if (client) {
@@ -135,6 +165,10 @@
         console.log("Line: " + line);
       }
       return true;
+    };
+
+    window.onmousemove = function (e) {
+      lastMouse = e;
     };
 
     webFrame.setSpellCheckProvider("en-US", true, {
@@ -533,10 +567,8 @@
 
       client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
 
-      window.$selected = '';
       window.$selectedurl = '';
       window.$selectedline = '';
-      window.$selectedword = '';
 
       if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
         client.enabledProfiles = remote.getGlobal('profiles');
@@ -553,43 +585,13 @@
       });
 
       client.display._el.addEventListener('contextmenu', (e) => {
+        lastMouse = e;
         e.preventDefault();
         var parent = $(e.srcElement.parentNode);
-        window.$selected = client.display.selection;
-        window.$copied = clipboard.readText('selection');
-        if (parent && parent.hasClass('URLLink'))
-          window.$selectedurl = parent.title;
-        else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
-          window.$selectedurl = parent.data('href');
-        else
-          window.$selectedurl = '';
-
-
-        window.$selectedline = $(e.srcElement).closest('.line').text();
-
-        var line = $(e.srcElement).closest('.line').text();
-        var x = (e.pageX - client.display._elJ.offset().left) + client.display._elJ.scrollLeft();
-        x = Math.floor(x / client.display._charWidth);
-
-        var sPos = x, ePos = x;
-        while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
-          sPos--;
-          if (sPos < 0)
-            break;
-        }
-        sPos++;
-        var ll = line.length;
-        while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < ll) {
-          ePos++;
-        }
-
-        if (sPos + ePos - sPos > ll)
-          window.$selectedword = '';
-        else
-          window.$selectedword = line.substring(sPos, ePos);
-
+        _selword = window.$selword;
+        _selurl = window.$_selurl;
+        _selline = window.$_selline;
         var c = new Menu();
-
         if (!_context)
           buildContextMenu();
         _context.map((item) => {
@@ -1306,6 +1308,14 @@
       if (!item) return;
       if (!item.enabled) return false;
       var ret;// = '';
+      client._input.vStackPush({
+        selword: _selword,
+        selurl: _selurl,
+        selline: _selline,
+        selectedword: _selword,
+        selectedurl: _selurl,
+        selectedline: _selline
+      });
       switch (item.style) {
         case 1:
           ret = client.parseOutgoing(item.value);
@@ -1321,6 +1331,7 @@
           ret = item.value;
           break;
       }
+      client._input.vStackPop();
       if (ret == null)
         return true;
       if (item.send) {

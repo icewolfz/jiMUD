@@ -2,7 +2,6 @@
 //cSpell:ignore stopallsound, stopa, showprompt, showp, sayprompt, sayp, echoprompt, echop, unalias, setsetting, getsetting, profilelist
 //cSpell:ignore keycode
 import EventEmitter = require('events');
-import { clipboard } from 'electron';
 import { MacroModifiers } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority } from './library';
 import { Client } from './client';
@@ -61,6 +60,7 @@ export class Input extends EventEmitter {
     private _gag: number = 0;
     private _gagID: NodeJS.Timer = null;
     private _stack = [];
+    private _vStack = [];
 
     public client: Client = null;
 
@@ -68,6 +68,20 @@ export class Input extends EventEmitter {
         if (this._stack.length === 0)
             this._stack.push({ args: 0, named: 0, used: 0, append: false });
         return this._stack[this._stack.length - 1];
+    }
+
+    get vStack() {
+        if (this._vStack.length === 0)
+            return {};
+        return this._vStack[this._vStack.length - 1];
+    }
+
+    public vStackPush(obj) {
+        this._vStack.push(obj);
+    }
+
+    public vStackPop() {
+        this._vStack.pop();
     }
 
     get scrollLock(): boolean {
@@ -1233,7 +1247,6 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.paramsPBlock:
                     if (c === '}' && nest === 0) {
-                        tmp = null;
                         if (arg === 'i')
                             tmp2 = window.repeatnum;
                         else if (arg === 'repeatnum')
@@ -1259,7 +1272,7 @@ export class Input extends EventEmitter {
                             }
                             else {
                                 tmp = this.parseVariable(arg);
-                                if (tmp)
+                                if (tmp != null)
                                     tmp2 = tmp;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
@@ -1381,7 +1394,7 @@ export class Input extends EventEmitter {
                             }
                             else {
                                 c = this.parseVariable(arg);
-                                if (c)
+                                if (c != null)
                                     tmp2 = c;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
@@ -1716,13 +1729,13 @@ export class Input extends EventEmitter {
             case 'crlf':
                 return '\r\n';
             case 'copied':
-                return clipboard.readText('selection') || '';
+                return window.$copied;
             case 'copied.lower':
-                return (clipboard.readText('selection') || '').toLowerCase();
+                return window.$copied.toLowerCase();
             case 'copied.upper':
-                return (clipboard.readText('selection') || '').toUpperCase();
+                return window.$copied.toUpperCase();
             case 'copied.proper':
-                return ProperCase(clipboard.readText('selection') || '');
+                return ProperCase(window.$copied);
             case 'i':
             case 'repeatnum':
                 return window.repeatnum;
@@ -1733,7 +1746,7 @@ export class Input extends EventEmitter {
             case 'selurl':
             case 'selline':
             case 'selword':
-                return window['$' + text] || '';
+                return this.vStack['$' + text] || window['$' + text] || '';
             case 'selected.lower':
             case 'selectedurl.lower':
             case 'selectedline.lower':
@@ -1741,7 +1754,7 @@ export class Input extends EventEmitter {
             case 'selurl.lower':
             case 'selline.lower':
             case 'selword.lower':
-                return (window['$' + text.substr(0, text.length - 6)] || '').toLowerCase();
+                return (this.vStack['$' + text.substr(0, text.length - 6)] || window['$' + text.substr(0, text.length - 6)] || '').toLowerCase();
             case 'selected.upper':
             case 'selectedurl.upper':
             case 'selectedline.upper':
@@ -1749,7 +1762,7 @@ export class Input extends EventEmitter {
             case 'selurl.upper':
             case 'selline.upper':
             case 'selword.upper':
-                return (window['$' + text.substr(0, text.length - 6)] || '').toUpperCase();
+                return (this.vStack['$' + text.substr(0, text.length - 6)] || window['$' + text.substr(0, text.length - 6)] || '').toUpperCase();
             case 'selected.proper':
             case 'selectedurl.proper':
             case 'selectedline.proper':
@@ -1757,7 +1770,7 @@ export class Input extends EventEmitter {
             case 'selurl.proper':
             case 'selline.proper':
             case 'selword.proper':
-                return ProperCase(window['$' + text.substr(0, text.length - 7)]);
+                return ProperCase(this.vStack['$' + text.substr(0, text.length - 7)] || window['$' + text.substr(0, text.length - 7)]);
         }
         const re = new RegExp('^([a-zA-Z]+)\\((.*)\\)$', 'g');
         let res = re.exec(text);
