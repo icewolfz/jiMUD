@@ -160,7 +160,6 @@ export class Settings {
 
     public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
-
     public logWhat: Log = Log.Html;
     public keepLastCommand: boolean = true;
     public enableMXP: boolean = true;
@@ -169,7 +168,6 @@ export class Settings {
     public enableUTF8: boolean = true;
     public enableDebug: boolean = false;
     public parseCommands: boolean = true;
-
 
     public logErrors: boolean = true;
     public reportCrashes: boolean = false;
