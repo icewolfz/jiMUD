@@ -6,6 +6,7 @@
   - Preference: Enable rounded overlays, disable or enable rounded corner effect for selection and find highlighting
   - ${eval(expression)} to allow evaluation a math expression when ${expression} is disabled
   - Add proper escape system with parser changes, characters: $%"'{\ and command stack character, to escape a character simpling just do \CHARACTER
+  - Expressions now allow the function dice to be used as if normal math function, eg: ${5 + dice(2d6) * 5} is the same as ${5 + ${dice(2d6)} * 5}
   - Functions:
     - ${dice(**x**d**y**__+n__)}, roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
       - example: ${dice(2d6+5)}, rolls 2, 6 sided dice and returns the sum + 5

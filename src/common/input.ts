@@ -18,6 +18,18 @@ function ProperCase(str) {
     return str.replace(/\w*\S*/g, (txt) => { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
 }
 
+function fudgeDice() {
+    switch (~~(Math.random() * 6) + 1) {
+        case 1:
+        case 4:
+            return -1;
+        case 3:
+        case 2:
+            return 1;
+    }
+    return 0;
+}
+
 enum ParseState {
     none = 0,
     doubleQuoted = 1,
@@ -73,6 +85,52 @@ export class Input extends EventEmitter {
         if (!client)
             throw new Error('Invalid client!');
         this.client = client;
+
+        const dice: any = (args, math, scope) => {
+            let res;
+            let c;
+            let sides;
+            let mod;
+            if (args.length === 1) {
+                res = /(\d+)\s+d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0].toString());
+                if (!res || res.length < 3) throw new Error('Invalid dice');
+                c = parseInt(res[1]);
+                sides = res[2];
+                if (res.length > 3 && args[2])
+                    mod = mathjs.eval(res[3]);
+            }
+            else if (args.length > 1) {
+                c = parseInt(args[0].toString());
+                sides = args[1].toString().trim();
+                if (sides !== 'F' && sides !== '%')
+                    sides = args[1].compile().eval(scope);
+                if (args.length > 2)
+                    mod = args[2].compile().eval(scope);
+            }
+            else
+                throw new Error('Invalid arguments to dice');
+            let sum = 0;
+            for (let i = 0; i < c; i++) {
+                if (sides === 'F')
+                    sum += fudgeDice();
+                else if (sides === '%')
+                    sum += ~~(Math.random() * 100) + 1;
+                else
+                    sum += ~~(Math.random() * sides) + 1;
+            }
+            if (sides === '%')
+                sum /= 100;
+            if (mod)
+                return mathjs.eval(sum + mod);
+            return sum;
+        };
+
+        dice.rawArgs = true;
+
+        mathjs.import({
+            dice: dice
+        });
+
         this._tests = new Tests(client);
         this._commandHistory = [];
         $(document).keydown((event) => {
@@ -1704,6 +1762,12 @@ export class Input extends EventEmitter {
         const re = new RegExp('^([a-zA-Z]+)\\((.*)\\)$', 'g');
         let res = re.exec(text);
         if (!res || !res.length) return null;
+        let c;
+        let sides;
+        let mod;
+        let args;
+        let min;
+        let max;
         switch (res[1]) {
             case 'lower':
                 return this.parseOutgoing(res[2]).toLowerCase();
@@ -1714,119 +1778,178 @@ export class Input extends EventEmitter {
             case 'eval':
                 return '' + mathjs.eval(this.parseOutgoing(res[2]), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
             case 'dice':
-                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
-                if (res && res.length > 2) {
-                    const c = parseInt(res[1]);
-                    let sides;
-                    if (res[2] === 'F' || res[2] === 'f')
-                        sides = 'F';
-                    else if (res[2] === '%')
-                        sides = 100;
-                    else
-                        sides = parseInt(res[2]);
-                    let sum = 0;
-                    for (let i = 0; i < c; i++) {
-                        if (sides === 'F')
-                            sum += this.fudgeDice();
-                        else
-                            sum += ~~(Math.random() * sides) + 1;
-                    }
-                    if (res[2] === '%')
-                        sum /= 100;
-                    if (res.length > 3 && res[3])
-                        return mathjs.eval(sum + res[3]);
-                    return '' + sum;
+                args = this.parseOutgoing(res[2]).split(',');
+                if (args.length === 0) throw new Error('Invalid dice');
+                if (args.length === 1) {
+                    res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
+                    if (!res || res.length < 3) return null;
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
                 }
-                return null;
+                else if (args.length < 4) {
+                    c = parseInt(args[0]);
+                    sides = args[1].trim();
+                    if (args.length > 2)
+                        mod = args[2].trim();
+                }
+                else
+                    throw new Error('Too many arguments');
+
+                if (sides === 'F' || sides === 'f')
+                    sides = 'F';
+                else if (sides === '%')
+                    sides = 100;
+                else
+                    sides = parseInt(sides);
+
+                let sum = 0;
+                for (let i = 0; i < c; i++) {
+                    if (sides === 'F')
+                        sum += fudgeDice();
+                    else if (sides === '%')
+                        sum += ~~(Math.random() * 100) + 1;
+                    else
+                        sum += ~~(Math.random() * sides) + 1;
+                }
+                if (sides === '%')
+                    sum /= 100;
+                if (mod)
+                    return mathjs.eval(sum + mod);
+                return '' + sum;
             case 'diceavg':
                 //The average of any XdY is X*(Y+1)/2.
                 //(min + max) / 2 * a + m
-                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
-                if (res && res.length > 2) {
-                    const c = parseInt(res[1]);
-                    let min = 1;
-                    let max;
-                    if (res[2] === 'F' || res[2] === 'f') {
-                        min = -1;
-                        max = 1;
-                    }
-                    else if (res[2] === '%') {
-                        min = 0;
-                        max = 1;
-                    }
-                    else
-                        max = parseInt(res[2]);
-
-                    if (res.length > 3 && res[3])
-                        return mathjs.eval(((min + max) / 2 * c) + res[3]);
-                    return '' + ((min + max) / 2 * c);
+                args = this.parseOutgoing(res[2]).split(',');
+                if (args.length === 0) throw new Error('Invalid dice');
+                if (args.length === 1) {
+                    res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
+                    if (!res || res.length < 3) return null;
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
                 }
-                return null;
+                else if (args.length < 4) {
+                    c = parseInt(args[0]);
+                    sides = args[1].trim();
+                    if (args.length > 2)
+                        mod = args[2].trim();
+                }
+                else
+                    throw new Error('Too many arguments');
+                min = 1;
+                if (sides === 'F' || sides === 'f') {
+                    min = -1;
+                    max = 1;
+                }
+                else if (sides === '%') {
+                    min = 0;
+                    max = 1;
+                }
+                else
+                    max = parseInt(sides);
+
+                if (mod)
+                    return mathjs.eval(((min + max) / 2 * c) + mod);
+                return '' + ((min + max) / 2 * c);
             case 'dicemin':
-                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
-                if (res && res.length > 2) {
-                    const c = parseInt(res[1]);
-                    let min = 1;
-                    if (res[2] === 'F' || res[2] === 'f')
-                        min = -1;
-                    else if (res[2] === '%')
-                        min = 0;
-                    if (res.length > 3 && res[3])
-                        return mathjs.eval((min * c) + res[3]);
-                    return '' + (min * c);
+                args = this.parseOutgoing(res[2]).split(',');
+                if (args.length === 0) throw new Error('Invalid dice');
+                if (args.length === 1) {
+                    res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
+                    if (!res || res.length < 3) return null;
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
                 }
-                return null;
-            case 'dicemax':
-                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
-                if (res && res.length > 2) {
-                    const c = parseInt(res[1]);
-                    let max;
-                    if (res[2] === 'F' || res[2] === 'f')
-                        max = 1;
-                    else if (res[2] === '%')
-                        max = 1;
-                    else
-                        max = parseInt(res[2]);
+                else if (args.length < 4) {
+                    c = parseInt(args[0]);
+                    sides = args[1].trim();
+                    if (args.length > 2)
+                        mod = args[2];
+                }
+                else
+                    throw new Error('Too many arguments');
+                min = 1;
+                if (sides === 'F' || sides === 'f')
+                    min = -1;
+                else if (sides === '%')
+                    min = 0;
+                else
+                    sides = parseInt(sides);
 
-                    if (res.length > 3 && res[3])
-                        return mathjs.eval((max * c) + res[3]);
-                    return '' + (max * c);
+                if (mod)
+                    return mathjs.eval((min * c) + mod);
+                return '' + (min * c);
+            case 'dicemax':
+                args = this.parseOutgoing(res[2]).split(',');
+                if (args.length === 0) throw new Error('Invalid dice');
+                if (args.length === 1) {
+                    res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
+                    if (!res || res.length < 3) return null;
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
                 }
-                return null;
+                else if (args.length < 4) {
+                    c = parseInt(args[0]);
+                    sides = args[1].trim();
+                    if (args.length > 2)
+                        mod = args[2].trim();
+                }
+                else
+                    throw new Error('Too many arguments');
+
+                if (sides === 'F' || sides === 'f')
+                    max = 1;
+                else if (sides === '%')
+                    max = 1;
+                else
+                    max = parseInt(sides);
+                if (mod)
+                    return mathjs.eval((max * c) + mod);
+                return '' + (max * c);
             case 'zdicedev':
             case 'dicedev':
-                res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(this.parseOutgoing(res[2]));
-                if (res && res.length > 2) {
-                    const c = parseInt(res[1]);
-                    let max;
-                    if (res[2] === 'F' || res[2] === 'f')
-                        max = 6;
-                    else if (res[2] === '%')
-                        max = 1;
-                    else
-                        max = parseInt(res[2]);
-                    //zmud formual seems to be 0 index based
-                    if (res[1] === 'zdicedev')
-                        max--;
-                    if (res.length > 3 && res[3])
-                        return mathjs.eval(Math.sqrt((max * max - 1) / 12 * c) + res[3]);
-                    return '' + Math.sqrt((max * max - 1) / 12 * c);
+                const fun = res[1];
+                args = this.parseOutgoing(res[2]).split(',');
+                if (args.length === 0) throw new Error('Invalid dice');
+                if (args.length === 1) {
+                    res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
+                    if (!res || res.length < 3) return null;
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
                 }
-                return null;
+                else if (args.length < 4) {
+                    c = parseInt(args[0]);
+                    sides = args[1].trim();
+                    if (args.length > 2)
+                        mod = args[2].trim();
+                }
+                else
+                    throw new Error('Too many aguments');
+
+                if (sides === 'F' || sides === 'f')
+                    max = 6;
+                else if (sides === '%')
+                    max = 1;
+                else
+                    max = parseInt(sides);
+
+                //zmud formual seems to be 0 index based
+                if (fun === 'zdicedev')
+                    max--;
+                if (mod)
+                    return mathjs.eval(Math.sqrt((max * max - 1) / 12 * c) + mod);
+                return '' + Math.sqrt((max * max - 1) / 12 * c);
         }
         return null;
-    }
-
-    private fudgeDice() {
-        switch (~~(Math.random() * 6) + 1) {
-            case 1:
-            case 4:
-                return -1;
-            case 3:
-            case 2:
-                return 1;
-        }
-        return 0;
     }
 
     public ParseString(text: string, args?, named?, append?: boolean) {
