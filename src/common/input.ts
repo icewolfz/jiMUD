@@ -1326,10 +1326,11 @@ export class Input extends EventEmitter {
                         state = ParseState.paramsDEscape;
                     else if (!this.stack.named || c.match(/[^a-zA-Z_$]/g)) {
                         state = ParseState.none;
+                        idx--;
                         if (eAlias && findAlias)
-                            alias += '$' + c;
+                            alias += '$';
                         else
-                            str += '$' + c;
+                            str += '$';
                     }
                     else {
                         arg = c;
@@ -1587,8 +1588,11 @@ export class Input extends EventEmitter {
         else if (state === ParseState.paramsDNamed && arg.length > 0) {
             if (this.stack.named && this.stack.named[arg])
                 str += this.stack.named[arg];
-            else
-                str += '$' + arg;
+            else {
+                arg = this.parseOutgoing(arg);
+                str += '$';
+                if (arg != null) str += arg;
+            }
         }
         else if (state === ParseState.paramsP && arg.length > 0) {
             if (this.stack.args) {
@@ -1602,11 +1606,16 @@ export class Input extends EventEmitter {
                 else if (arg > this.stack.used)
                     this.stack.used = arg;
             }
-            else
-                str += '%' + arg;
+            else {
+                arg = this.parseOutgoing(arg);
+                str += '%';
+                if (arg != null) str += arg;
+            }
         }
         else if (state === ParseState.paramsPBlock) {
-            str += '%{' + arg;
+            arg = this.parseOutgoing(arg);
+            str += '%{';
+            if (arg != null) str += arg;
         }
         else if (state === ParseState.paramsD && arg.length > 0) {
             if (this.stack.args) {
@@ -1620,13 +1629,22 @@ export class Input extends EventEmitter {
                 else if (arg > this.stack.used)
                     this.stack.used = arg;
             }
-            else
-                str += '$' + arg;
+            else {
+                arg = this.parseOutgoing(arg);
+                str += '$';
+                if (arg != null) str += arg;
+            }
         }
         else if (state === ParseState.paramsDBlock) {
-            str += `\${` + arg;
+            arg = this.parseOutgoing(arg);
+            str += `\${`;
+            if (arg != null) str += arg;
         }
-
+        else if (state === ParseState.path) {
+            str = this.ProcessPath(str);
+            if (str !== null) out += str;
+            str = '';
+        }
         if (this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
             let r = false;
             if (str.endsWith('\n')) {
