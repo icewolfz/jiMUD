@@ -1,11 +1,12 @@
 # Scripting
 
 jiMUD allows you to use javascript for macros, trigger, aliases, buttons, or context items. This allows
-for powerful and more advanced featuers over the basic #functions and just sending text.
+for powerful and more advanced features over the basic #functions and just sending text.
 
 To use scripting you just have to select script as the type from the type dropdown in the item editor.
 
-# Predefined varibles:
+## Predefined variables
+
 - `$selected` - selected text
 - `$selectedword` - word under mouse when right clicked
 - `$selectedline` - line under mouse when right clicked
@@ -14,7 +15,8 @@ To use scripting you just have to select script as the type from the type dropdo
 - `$selline` sane as $selline
 - `$selurl` same as $selected url
 
-# Basic function list:
+## Basic function list
+
 - `client.beep()` play system beep sound
 - `client.readClipboard()` read text from clipboard, can also access from window.readClipboard()
 - `client.writeClipboard(text)` write text to clipboard, can also access from window.writeClipboard(text)
@@ -36,9 +38,9 @@ To use scripting you just have to select script as the type from the type dropdo
 - `client.notify(title, message, options)` display a windows notification for systems that support it, options are optional
   - `title` the title of the notification
   - `message` the message to display
-  - `options` addtional options to customize the display [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
+  - `options` additional options to customize the display [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
     - `dir` - auto, rtl, ltr
-    - `icon` - full icon path, supports {varibales}
+    - `icon` - full icon path, supports {variables}
 - `client.raise(event, args, delay)` fire an event with optional delay and arguments
   - `event` the event name to fire
   - `args` an optional array of arguments to pass to the event, if you do not want to pass arguments but want a delay just pass 0 or []
@@ -47,16 +49,17 @@ To use scripting you just have to select script as the type from the type dropdo
 - `client.show()` show client
 - `client.hide()` hide client
 - `client.toggle()` toggle hide and show
+
 ### **WARNING**: you can effect the client if you access the wrong function, so any function used other then this list may caused unknown results and could cause the client to stop working
 
-Notice how all the functions have a client. in front of them, this is the client object that has all functions related to the client. For backward compatiblit with the ShadowMUD
+Notice how all the functions have a client. in front of them, this is the client object that has all functions related to the client. For backward compatible with the ShadowMUD
 web client we also support OoMUD and this for non ES6 arrow function formats.
 
 ## Scripting Examples
 
-#### Emulate #wait command from zMUD/cMUD
+### Emulate #wait command from zMUD/cMUD
 
-```
+```javascript
 setTimeout(()=> {
   //send a command to the mud
   client.sendCommand("say Hello world.");
@@ -71,7 +74,8 @@ setTimeout(()=> {
 ```
 
 #### Mono grayscale rainbow text alias
-```
+
+```javascript
 /*
 Start mono gray-scale rainbow example
 
@@ -94,22 +98,22 @@ for(var i=0; i&lt;20; i++)
   if(3+i &lt; 10)
     colors[i] = "%^mono0"+(3+i)+"%^";
   else
-  	colors[i] = "%^mono"+(3+i)+"%^";
+    colors[i] = "%^mono"+(3+i)+"%^";
   if(23-i &lt; 10)
-  	colors[i+20] = "%^mono0"+(23-i)+"%^";
+    colors[i+20] = "%^mono0"+(23-i)+"%^";
   else
-  	colors[i+20] = "%^mono"+(23-i)+"%^";
+    colors[i+20] = "%^mono"+(23-i)+"%^";
 }
 
-//start at arguments 2 since 0 is full line, and 1 is the line, 
+//start at arguments 2 since 0 is full line, and 1 is the line,
 //so any thing after 2 is the text we want
 var args = Array.prototype.slice.call(arguments);
 var oldstr = args.slice(2).join(" ");
 
-for(var c = 0; c&lt;oldstr.length;c++) 
+for(var c = 0; c&lt;oldstr.length;c++)
 {
-	var i = (c+offset)%colors.length;
-	str += colors[i]+oldstr.charAt(c); 
+  var i = (c+offset)%colors.length;
+  str += colors[i]+oldstr.charAt(c);
 }
 this.sendCommand(line + " " + str);
 //End mono grayscale example

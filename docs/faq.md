@@ -1,13 +1,21 @@
 
 # FAQ
+
 ## I am having trouble with the client, what do I do?
+
 You should always make sure you have the latest version.
 If you are getting garbled or missing text try disabling MCCP, MXP, or UTF-8 in the [Telnet settings](preferences.md#telnet) then disconnect and reconnect, if still happens try reinstalling or opening an issue.
+
 ## I am getting 'TypeError - some message. ', what does it mean?
-This means there is an error, most of the time the error is from a broken profile item with bad or invalid javascript.        
+
+This means there is an error, most of the time the error is from a broken profile item with bad or invalid javascript.
+
 ## If your question is not listed:
+
 Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using the jiMUD or the [ShadowMUD web client](http://www,shadowmud.com/mud.php)
+
 ## What predefined variables can be use for paths
+
 * `{home}` User's home directory.
 * `{path}` The current application directory.
 * `{appData}` Per-user application data directory, which by default points to:
@@ -23,7 +31,9 @@ Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using 
 * `{pictures}` Directory for a user's pictures.
 * `{videos}` Directory for a user's videos.
 * `{assets}` Directory for accessing client assets, ***Read only***
+
 ## Setting keys, value type and default value
+
 Setting                     | Type    | Default
 ----------------------------|---------|-------------
 bufferSize                  | integer | 5000

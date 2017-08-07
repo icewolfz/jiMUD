@@ -5,9 +5,9 @@ Reset - Resetting will revert all settings back to default values
 ## General
 
 - `Auto connect onload` This will cause the client to try and connect as soon as the client has finished loading.
-- `Auto connect delay` This determins the delay before an auto connect happens
+- `Auto connect delay` This determines the delay before an auto connect happens
 - `Auto create character` When connecting to mud and if it returns a character name, create/load character
-- `Auto login` Attempt to auto login using characer and supplied password from character manager
+- `Auto login` Attempt to auto login using character and supplied password from character manager
 - `Show character manager onload` open the character manager when the client first loads.
 - `Enable spellchecking` support spellchecking in command line and advanced editor
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
@@ -17,7 +17,7 @@ Reset - Resetting will revert all settings back to default values
 
 - `Font` The font for the display area, mono spaced fonts work the best.
 - `Font size` The font size for the display area
-- `Enable flashing text` Enable ansi flashing/blinking text, when disabled flashing text appears as underlined text **note** this can cause a preformance hit when enabled.
+- `Enable flashing text` Enable ansi flashing/blinking text, when disabled flashing text appears as underlined text **note** this can cause a performance hit when enabled.
 - `Auto copy selected to clipboard` This will copy selected text to the clipboard automatically when mouse released and then clear selection
 - `Echo commands` Will display commands as they are sent to the mud
 - `Enable URL detection` Attempt to detect urls and convert them into links that can be clicked to.
@@ -54,9 +54,10 @@ Reset - Resetting will revert all settings back to default values
 - `Enable Logging` Enable logger, can also be toggled by the log icon on the toolbar.
 - `Pre-pend current buffer starting to log` Will pre-pend the current text on display to the log when started
 - `Enable Logging of offline text` Log text when not connected.
-- `Create logs for every connection` This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session. 
+- `Create logs for every connection` This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session.
 - `Log gagged lines` This forces the logger to include any lines that may have been hidden, for example when capture chat is enabled the lines are removed from the main flow, this setting will enable you keep them or keep the log as only whats on the display.
 - `Save path` The location to save log files to, **note** path must exist supports
+
 [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
 
 ## Telnet
@@ -64,7 +65,7 @@ Reset - Resetting will revert all settings back to default values
 Settings to control how to handle telnet options and emulation
 
 - `MUD Compression Protocol (MCCP)` Disables or enables MUD Client Compression Protocol, this allows the mud to send all data as compressed to save bandwidth, only disable if you seem to have issues or need to try and save some local resources.
-- `UTF-8` Disables or enables UTF8 processing, disabling it may gain you some cpu or speed but you cuold get garbled or incorrectly displayed text.
+- `UTF-8` Disables or enables UTF8 processing, disabling it may gain you some cpu or speed but you could get garbled or incorrectly displayed text.
 - `MUD eXtension Protocol (MXP)` Disables or enables MUD eXtension Protocol parsing and telnet option
 - `Echo` Disable or enables Echo option to display/hide text when server requests
 - `MUD Sound Protocol (MSP)` Disable or enable MSP
@@ -92,6 +93,7 @@ Settings to control how to handle telnet options and emulation
 - `Always on top of all windows` Force mapper to always be on top of all windows
 
 ## Chat
+
 Controls what is captured into the chat window
 
 - `Capture tells` Causes all tells, emoteto and any related lines.
@@ -123,7 +125,7 @@ Controls what is captured into the chat window
 
 ## Scripting > Special characters
 
-- `Command Stacking` 
+- `Command Stacking`
   - `Character` The character to use when repeating command into multiple commands.
   - `Enable` This will enable command stacking systems and use the command stacking character to know where to break a command into a list commands.
 - `Speedpaths`
@@ -131,13 +133,13 @@ Controls what is captured into the chat window
   - `Enable` Whether or not to expand speedpaths, if disabled the line is parsed as normal command
   - `Parse` Parse each command as if it was sent from the command line, if disabled each command is sent to the mud as is.
 - `Command`
- - `Character` The character to use with build in client commands
- - `Enable` This will enable or disable command systems
+  - `Character` The character to use with build in client commands
+  - `Enable` This will enable or disable command systems
 - `Escape`
   - `Character` The character to use when escaping $%"'{ or special characters
   - `Enable` Enable escaping of characters
 - `Verbatim`
-  - `Character` The character used at the start of a line to siginify the line should be sent as is starting after the verbatim character
+  - `Character` The character used at the start of a line to signify the line should be sent as is starting after the verbatim character
   - `Enabled` Enable or disable verbatim system
 
 ## Advanced

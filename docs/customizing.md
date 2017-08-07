@@ -1,22 +1,28 @@
 # Customizing
 
 When loading the client will look for and load three files in jiMUD's data directory:
+
 - `%APPDATA%\jiMUD` on Windows
 - `$XDG_CONFIG_HOME/jiMUD` or `~/.config/jiMUD` on Linux
 - `~/Library/Application Support/jiMUD` on macOS
 
-## user.css 
+## user.css
+
 Allows for custom css to adjust or change the client interface, you may need to use !important rule modifier but all css should be loaded after main client css. Supports [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths), 
 for example you can do `.class{ background-image: {assets}/icons/map.png}` to load the map icon.
 
 ## monster.css
+
 Allows you to create monster css classes to set monster icons, can also be done in user.css but this allow for a cleaner separation, this code is loaded after user.css. 
 
 ## user.js
+
 Runs javascript code after the client finishes loading allowing to define custom functions and other javascript options.
 
-#### CSS monster / party member class names
+### CSS monster / party member class names
+
 jiMUD assigns all monster/party member icons with a list of supported css classes based on monster/player data supplied from the mud in order of broad to more detailed naming all.
+
 - Monster classes
   - `.monster-class` the monster's class if it has one
   - `.monster-gender` the monster's gender, `.monster-male`, `.monster-female`, or `.monster-it`
@@ -29,9 +35,10 @@ jiMUD assigns all monster/party member icons with a list of supported css classe
   - `.party-race` the monster's race, for example `.party-elf`
   - `.party-guild` the monster's guild
   - `.party-name` the monster's name
+
 #### Examples
 
-```
+```css
 .monster-cerberus {
     /*image is set by background-image*/
     background-image: url({assets}/monsters/32x32-2.PNG);
@@ -48,4 +55,5 @@ jiMUD assigns all monster/party member icons with a list of supported css classe
     background-size: 32px 32px;
 }
 ```
+
 **Note**: if the class, race, guild, or name contain non supported characters they are stripped out, for example `Old Man` would be `monster-OldMan`, notice the casing remains. Supported characters: a-z, A-Z, 0-9, _, and -

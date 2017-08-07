@@ -1,7 +1,7 @@
 # Profile manager
 
 - `Refresh` reload all profiles
-- `Add` add new item based on current selected item or choosen from list
+- `Add` add new item based on current selected item or chosen from menu
 - `Undo` undo last change
 - `Redo` redo previous change
 - `Cut` cut selected item
@@ -14,6 +14,7 @@
   - `Import` import profiles
 
 ## Profiles
+
 - `Enable Triggers` enable/disable triggers from being executed as text is received or sent to the mud for the selected profile
 - `Enable Aliases` enable/disable aliases from being executed before text is sent to the mud. for the selected profile
 - `Enable Macros` enable/disable keyboard macros when keys are key combinations are pressed for the selected profile
@@ -81,6 +82,7 @@
 - `Trigger on Prompt` this causes the trigger to execute if prompt/partial line of text.
 
 ## Buttons
+
 - `Preview` - a preview of how the button will look
 - `Enable` enable/disable button
 - `Caption` The button caption to display for tooltip
@@ -97,6 +99,7 @@
 - `Stretch icon` this will cause the icon to be stretched and fill all space on a button
 
 ## Context
+
 - `Preview` - a preview of how the icon will look
 - `Enable` enable/disable context item
 - `Caption` The context menu caption to display for tooltip
