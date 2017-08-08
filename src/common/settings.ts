@@ -57,6 +57,7 @@ export class Chat {
     public alwaysOnTopClient: boolean = true;
     public log: boolean = false;
     public persistent: boolean = false;
+    public gag: boolean = true;
 }
 
 /*

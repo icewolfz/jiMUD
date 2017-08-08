@@ -373,6 +373,7 @@
 
       $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
       $('#chat-persistent').prop('checked', _settings.chat.persistent);
+      $('#chat-gag').prop('checked', _settings.chat.gag);
 
       $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
       $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
@@ -1556,6 +1557,13 @@
               </label>
             </div>
           </div>
+          <div class="col-sm-12 form-group" style="margin:0;padding:0">
+            <div class="col-sm-6 form-group">
+              <label class="control-label">
+                <input type="checkbox" id="chat-gag" /> Gag
+              </label>
+            </div>
+          </div>          
           <hr>
           <div class="col-sm-12 form-group" style="margin:0;padding:0">
             <div class="col-sm-3 form-group">

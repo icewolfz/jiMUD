@@ -715,7 +715,7 @@
         //capture indented text
         if (capture > 0 && data.line.startsWith("    ")) {
           ipcRenderer.send('chat', data);
-          data.gagged = true;
+          data.gagged = client.options.chat.gag;
           return;
         }
         //search capture review blocks
@@ -726,13 +726,13 @@
             continue;
           captureReview = 1;
           ipcRenderer.send('chat', data);
-          data.gagged = true;
+          data.gagged = client.options.chat.gag;
           return;
         }
         //if in a review capture until end review
         if (captureReview > 0) {
           ipcRenderer.send('chat', data);
-          data.gagged = true;
+          data.gagged = client.options.chat.gag;
           res = /^-=-=- End Review -=-=-$/.exec(data.line);
           if (res && res.length > 0)
             captureReview = -1;
@@ -741,7 +741,7 @@
         //review requires 1 extra capture to get the current date/time
         if (captureReview === -1) {
           ipcRenderer.send('chat', data);
-          data.gagged = true;
+          data.gagged = client.options.chat.gag;
           captureReview = 0;
           return;
         }
@@ -756,7 +756,7 @@
             capture--;
           capture++;
           ipcRenderer.send('chat', data);
-          data.gagged = true;
+          data.gagged = client.options.chat.gag;
           return;
         }
         //no matching capture so if in capture mode reduce
