@@ -714,7 +714,7 @@
         if (_noCapture) return;
         //capture indented text
         if (capture > 0 && data.line.startsWith("    ")) {
-          ipcRenderer.send('chat', data);
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           return;
         }
@@ -725,13 +725,13 @@
           if (!res || res.length === 0)
             continue;
           captureReview = 1;
-          ipcRenderer.send('chat', data);
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           return;
         }
         //if in a review capture until end review
         if (captureReview > 0) {
-          ipcRenderer.send('chat', data);
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           res = /^-=-=- End Review -=-=-$/.exec(data.line);
           if (res && res.length > 0)
@@ -740,7 +740,7 @@
         }
         //review requires 1 extra capture to get the current date/time
         if (captureReview === -1) {
-          ipcRenderer.send('chat', data);
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           captureReview = 0;
           return;
@@ -755,7 +755,7 @@
           if (capture > 0)
             capture--;
           capture++;
-          ipcRenderer.send('chat', data);
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           return;
         }
@@ -1328,8 +1328,13 @@
       client.display.RegularExpression = client.options.find.regex;
       if (client.options.find.show)
         client.display.showFind();
-      if(client.options.showEditor)
+      if (client.options.showEditor)
         showEditor();
+      if (client.options.showChat)
+        showChat();
+      else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+        ipcRenderer.send('create-window', 'chat', chatOptions());
+
       if (client.options.showCharacterManager)
         showCharacters();
       client.raise('opened');
@@ -1543,6 +1548,12 @@
     ipcRenderer.on('change-options', (event, file) => {
       client.settingsFile = remote.getGlobal('settingsFile');
       autoConnect();
+      if (client.options.showEditor)
+        showEditor();
+      if (client.options.showChat)
+        showChat();
+      else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+        ipcRenderer.send('create-window', 'chat', chatOptions());
     });
 
     ipcRenderer.on('setting-changed', (event, data) => {
@@ -1559,6 +1570,8 @@
       else if (data.type === "chat") {
         client.options.chat[data.name] = data.value;
         client.saveOptions();
+        if (data.value && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines')) 
+          ipcRenderer.send('create-window', 'chat', chatOptions());
       }
       else if (data.type === "extensions") {
         client.options.extensions[data.name] = data.value;
@@ -1677,6 +1690,18 @@
       }
       else
         ipcRenderer.send('show-window', 'editor', { show: true, file: 'editor.html', width: 300, height: 225, icon: 'edit', alwaysOnTopClient: true });
+    }
+
+    function chatOptions(show) {
+      if (client.options.windows['chat'] && client.options.windows['chat'].options) {
+        client.options.windows['chat'].options.show = show ? true : false;
+        return client.options.windows['chat'].options;
+      }
+      return { show: show, file: 'chat.html', width: 300, height: 225, icon: 'chat', alwaysOnTopClient: true };
+    }
+
+    function showChat() {
+      ipcRenderer.send('show-window', 'chat', chatOptions(true));
     }
 
     $(document).ready(init);

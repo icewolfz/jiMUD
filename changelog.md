@@ -3,7 +3,9 @@
 ## 0.5.0
 
 - **Change:**
-  - Editor window is now stored dynamically to reduce code, settings have been reset
+  - Windows:
+    - Editor is now stored dynamically to reduce code, settings have been reset
+    - Chat is now dynamic, window settings reset
 
 ## 0.4.11
 
