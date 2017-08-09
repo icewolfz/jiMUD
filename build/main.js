@@ -1066,15 +1066,7 @@ function createWindow() {
       else if (result === 2) {
         set = settings.Settings.load(global.settingsFile);
         set.windows['main'] = getWindowState('main', win);
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.executeJavaScript('closing();');
-          windows[name].window.webContents.executeJavaScript('closed();');
-          set.windows[name] = getWindowState(name, windows[name].window);
-          set.windows[name].options = copyWindowOptions(name);
-          windows[name].window.destroy();
-        }
+        closeWindows();
         logError(`Client unresponsive, closed.\n`, true);
         set.save(global.settingsFile);
         win.destroy();
@@ -1185,16 +1177,7 @@ function createWindow() {
   win.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.windows['main'] = getWindowState('main', win);
-
-    for (var name in windows) {
-      if (!windows.hasOwnProperty(name) || !windows[name].window)
-        continue;
-      windows[name].window.webContents.executeJavaScript('closing();');
-      windows[name].window.webContents.executeJavaScript('closed();');
-      set.windows[name] = getWindowState(name, windows[name].window);
-      set.windows[name].options = copyWindowOptions(name);
-      windows[name].window.destroy();
-    }
+    closeWindows();
     set.save(global.settingsFile);
   });
 }
@@ -1320,14 +1303,7 @@ ipcMain.on('load-default', (event) => {
 
   set = settings.Settings.load(global.settingsFile);
 
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.executeJavaScript('closed();');
-    set.windows[name] = getWindowState(name, windows[name].window);
-    set.windows[name].options = copyWindowOptions(name);
-    windows[name].window.destroy();
-  }
+  closeWindows();
   if (win && win.webContents)
     win.webContents.send('change-options', global.settingsFile);
 });
@@ -1340,14 +1316,7 @@ ipcMain.on('load-char', (event, char) => {
   set = settings.Settings.load(global.settingsFile);
   if (win && win.webContents)
     win.webContents.send('load-char', char);
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.executeJavaScript('closed();');
-    set.windows[name] = getWindowState(name, windows[name].window);
-    set.windows[name].options = copyWindowOptions(name);
-    windows[name].window.destroy();
-  }
+  closeWindows();
   if (win && win.webContents)
     win.webContents.send('change-options', global.settingsFile);
 });
@@ -1947,11 +1916,11 @@ function createNewWindow(name, options) {
     if (win && win.webContents) {
       win.webContents.executeJavaScript(`childClosed('${path.join(__dirname, (windows[name].file || (name + '.html'))).replace(/\\/g, '\\\\')}', '${name}');`);
     }
-
     windows[name].window.webContents.executeJavaScript('closing();');
+    windows[name].window.webContents.executeJavaScript('closed();');
+    windows[name].show = false;
     set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, windows[name].window);
-    windows[name].show = false;
     set.windows[name].options = copyWindowOptions(name);
     set.save(global.settingsFile);
     if (windows[name].persistent) {
@@ -2080,4 +2049,16 @@ function copyWindowOptions(name) {
     ops[op] = windows[name][op];
   }
   return ops;
+}
+
+function closeWindows() {
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.executeJavaScript('closing();');
+    windows[name].window.webContents.executeJavaScript('closed();');
+    set.windows[name] = getWindowState(name, windows[name].window);
+    set.windows[name].options = copyWindowOptions(name);
+    windows[name].window.destroy();
+  }
 }
