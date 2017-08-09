@@ -119,16 +119,16 @@
       configurable: true
     });
 
+
     const Client = require('./js/client.js').Client;
     const Status = require('./js/status.js').Status;
     const Backup = require('./js/backup.js').Backup;
     const { Settings } = require('./js/settings');
     const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
-    const { dialog, Menu, MenuItem, nativeImage, BrowserWindow } = remote;
+    const { dialog, Menu, MenuItem, nativeImage } = remote;
     const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require("./js/library.js");
     //    const fs = require('fs');
     const path = require('path');
-    const url = require('url');
     const { version } = require("../package.json");
 
     var spellchecker;
@@ -148,29 +148,11 @@
     var _noCapture = false;
     var _cLoading = false;
     var _pLoading = false;
+    var _profilesOpen = false;
     var _context;
     var _selword = '';
     var _selurl = '';
     var _selline = '';
-    var windows = {};
-    var states = {};
-
-    const selectionMenu = Menu.buildFromTemplate([
-      { role: 'copy' },
-      { type: 'separator' },
-      { role: 'selectall' },
-    ]);
-
-    const inputMenu = Menu.buildFromTemplate([
-      { role: 'undo' },
-      { role: 'redo' },
-      { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' },
-      { type: 'separator' },
-      { role: 'selectall' },
-    ]);
 
     window.onerror = function (msg, url, line) {
       if (client) {
@@ -370,6 +352,7 @@
       }
     }
 
+
     function loadTheme(theme) {
       theme = parseTemplate(theme) + ".css";
       if (!isFileSync(theme))
@@ -378,6 +361,7 @@
       if (el.attr('href') != theme)
         el.attr('href', theme);
     }
+
 
     function updateInterface() {
       loadTheme(client.options.theme);
@@ -584,6 +568,7 @@
       };
 
       client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
+
       window.$selectedurl = '';
       window.$selectedline = '';
 
@@ -731,7 +716,7 @@
         if (_noCapture) return;
         //capture indented text
         if (capture > 0 && data.line.startsWith("    ")) {
-          sendChat(data, chatOptions());
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           return;
         }
@@ -742,13 +727,13 @@
           if (!res || res.length === 0)
             continue;
           captureReview = 1;
-          sendChat(data, chatOptions());
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           return;
         }
         //if in a review capture until end review
         if (captureReview > 0) {
-          sendChat(data, chatOptions());
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           res = /^-=-=- End Review -=-=-$/.exec(data.line);
           if (res && res.length > 0)
@@ -757,7 +742,7 @@
         }
         //review requires 1 extra capture to get the current date/time
         if (captureReview === -1) {
-          sendChat(data, chatOptions());
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           captureReview = 0;
           return;
@@ -772,7 +757,7 @@
           if (capture > 0)
             capture--;
           capture++;
-          sendChat(data, chatOptions());
+          ipcRenderer.send('chat', data, chatOptions());
           data.gagged = client.options.chat.gag;
           return;
         }
@@ -889,21 +874,13 @@
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
         ipcRenderer.send('set-overlay', 0);
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.send('closed');
-        }
+        ipcRenderer.send('closed');
         _logger.postMessage({ action: 'connected', args: client.connected });
         _logger.postMessage({ action: 'stop' });
       });
 
       client.on('connected', () => {
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.send('connected');
-        }
+        ipcRenderer.send('connected');
         _logger.postMessage({ action: 'connected', args: client.connected });
         _logger.postMessage({
           action: 'start', args: {
@@ -933,27 +910,15 @@
           ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
           $("#immortal").css('display', "block");
         }
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.send('GMCP-received', { mod: mod, obj: obj });
-        }
+        ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
       });
 
       client.on('item-added', (type, profile, item) => {
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.send('profile-item-added', type, profile, item);
-        }
+        ipcRenderer.send('profile-item-added', type, profile, item);
       });
 
       client.on('item-removed', (type, profile, idx) => {
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.send('profile-item-removed', type, profile, idx);
-        }
+        ipcRenderer.send('profile-item-removed', type, profile, idx);
       });
 
       _backup = new Backup(client, remote.getGlobal('mapFile'));
@@ -962,11 +927,7 @@
 
       _backup.on('progress-start', (title) => {
         ipcRenderer.send('set-progress', { value: 0 });
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.send('flush');
-        }
+        ipcRenderer.send('flush');
         $("#Progressbar").html('<progress max="100"></progress>');
         $("#ProgressTitle").html(title || "Importing data&hellip;");
         $("#Progress")[0].showModal();
@@ -1003,11 +964,7 @@
       });
 
       _backup.on('import-map', (data) => {
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.send('import', data);
-        }
+        ipcRenderer.send('import-map', data);
       });
 
       _backup.on('imported-profiles', (data) => {
@@ -1044,11 +1001,6 @@
         if (client.options.autoCreateCharacter)
           ipcRenderer.send('change-char', title);
         _logger.postMessage({ action: 'name', args: title });
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.send('set-title', title);
-        }
         ipcRenderer.send('set-title', title);
       });
       if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
@@ -1072,8 +1024,8 @@
         }
       });
       window.onbeforeunload = function () {
-        if (windows['profiles'] && windows['profiles'].window) {
-          dialog.showMessageBox(windows['profiles'].window, {
+        if (_profilesOpen) {
+          ipcRenderer.send('show-dialog', 'profiles', {
             type: 'warning',
             title: 'Close profile manager',
             message: 'You must close the profile manager before you can exit.'
@@ -1093,7 +1045,6 @@
           if (choice === 2) {
             client.raise('closed');
             client.options.askonclose = false;
-            unloadWindows();
             client.saveOptions();
             return;
           }
@@ -1101,9 +1052,6 @@
             return 'no';
         }
         client.raise('closed');
-        client.options.windows['main'] = getWindowState('main', remote.getCurrentWindow());
-        unloadWindows();
-        client.saveOptions();
         return;
       };
 
@@ -1395,24 +1343,15 @@
       if (client.options.showChat)
         showChat();
       else if ((client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent) || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
-        createWindow('chat', chatOptions());
+        ipcRenderer.send('create-window', 'chat', chatOptions());
 
       if (client.options.showMapper)
         showMapper();
       else if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
-        createWindow('mapper', mapperOptions());
-
-      for (var name in client.options.windows) {
-        if (!client.options.windows[name] || !client.options.windows[name].options) continue;
-        if (client.options.windows[name].options.show)
-          showWindow(name, client.options.windows[name].options);
-        else if (client.options.windows[name].options.persistent)
-          createWindow(name, client.options.windows[name].options);
-      }
+        ipcRenderer.send('create-window', 'mapper', mapperOptions());
 
       if (client.options.showCharacterManager)
         showCharacters();
-
       client.raise('opened');
     }
 
@@ -1612,20 +1551,6 @@
         _logger.postMessage({ action: 'name', args: char });
         $("#character-name").text(char);
       }
-      unloadWindows();
-    });
-
-    ipcRenderer.on('set-color', (event, type, color) => {
-      for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
-          continue;
-        windows[name].window.webContents.send('set-color', type, color);
-      }
-    });
-
-    ipcRenderer.on('set-progress-window', (event, window, args) => {
-      if (windows[window] && windows[window].window)
-        windows[window].window.setProgressBar(args.value, args.options);
     });
 
     ipcRenderer.on('load-default', (event) => {
@@ -1633,7 +1558,6 @@
         _logger.postMessage({ action: 'name', args: '' });
         $("#character-name").text("&nbsp;");
       }
-      unloadWindows();
     });
 
     ipcRenderer.on('change-options', (event, file) => {
@@ -1644,12 +1568,12 @@
       if (client.options.showChat)
         showChat();
       else if ((client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent) || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
-        createWindow('chat', chatOptions());
+        ipcRenderer.send('create-window', 'chat', chatOptions());
 
       if (client.options.showMapper)
         showMapper();
       else if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
-        createWindow('mapper', mapperOptions());
+        ipcRenderer.send('create-window', 'mapper', mapperOptions());
     });
 
     ipcRenderer.on('setting-changed', (event, data) => {
@@ -1657,7 +1581,7 @@
         client.options.mapper[data.name] = data.value;
         client.saveOptions();
         if (data.name == "enabled" && data.value)
-          createWindow('mapper', mapperOptions());
+          ipcRenderer.send('create-window', 'mapper', mapperOptions());
       }
       else if (data.type === "profiles") {
         client.options.profiles[data.name] = data.value;
@@ -1669,7 +1593,7 @@
         client.options.chat[data.name] = data.value;
         client.saveOptions();
         if (data.value && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines'))
-          createWindow('chat', chatOptions());
+          ipcRenderer.send('create-window', 'chat', chatOptions());
       }
       else if (data.type === "extensions") {
         client.options.extensions[data.name] = data.value;
@@ -1684,32 +1608,7 @@
         client.options.windows[data.name].options.persistent = data.value.persistent;
         client.options.windows[data.name].options.alwaysOnTop = data.value.alwaysOnTop;
         client.saveOptions();
-
-        for (name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-
-          if (name === data.name) {
-            windows[name].alwaysOnTopClient = data.value.alwaysOnTopClient;
-            windows[name].persistent = data.value.persistent;
-            windows[name].alwaysOnTop = data.value.alwaysOnTop;
-          }
-          if (windows[name].window)
-            windows[name].window.webContents.send('setting-changed', data);
-          if (windows[name].window.setParentWindow)
-            windows[name].window.setParentWindow(windows[name].alwaysOnTopClient ? remote.getCurrentWindow() : null);
-          windows[name].window.setSkipTaskbar((windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false);
-          if (windows[name].persistent)
-            createWindow(name, windows[name]);
-        }
       }
-      else if (data.type === "extensions")
-        for (name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          if (windows[name].window)
-            windows[name].window.webContents.send('setting-changed', data);
-        }
     });
 
     ipcRenderer.on('send-background', (event, command) => {
@@ -1755,11 +1654,6 @@
       });
       buildButtons();
       updateMenu();
-      for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window || !windows[name].window.webContents)
-          continue;
-        windows[name].window.webContents.send('reload-profiles');
-      }
     });
 
     ipcRenderer.on('reload-options', (event) => {
@@ -1779,27 +1673,8 @@
       });
       buildButtons();
       updateMenu();
-      for (var name in windows) {
-        if (!windows.hasOwnProperty(name))
-          continue;
-        if (!windows[name].window) {
-          if (client.options.windows[name].options.show)
-            showWindow(name, client.options.windows[name].options);
-          else if (client.options.windows[name].options.persistent)
-            createWindow(name, client.options.windows[name].options);
-          else
-            continue;
-        }
-        else {
-          windows[name].window.webContents.send('reload-options');
-          if (windows[name].window.setParentWindow)
-            windows[name].window.setParentWindow(client.options.windows[name].options.alwaysOnTopClient ? remote.getCurrentWindow() : null);
-          windows[name].window.setAlwaysOnTop(client.options.windows[name].options.alwaysOnTop);
-          windows[name].window.setSkipTaskbar((client.options.windows[name].options.alwaysOnTopClient || client.options.windows[name].options.alwaysOnTop) ? true : false);
-        }
-      }
       if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
-        createWindow('mapper', mapperOptions());
+        ipcRenderer.send('create-window', 'mapper', mapperOptions());
     });
 
     ipcRenderer.on('debug', (event, msg) => {
@@ -1814,6 +1689,8 @@
     function childClosed(url, name) {
       if (path.basename(url) === 'characters.html')
         _cLoading = false;
+      else if (path.basename(url) === 'profiles.html')
+        _profilesOpen = false;
       else if (path.basename(url) === 'prefs.html')
         _pLoading = false;
     }
@@ -1833,29 +1710,30 @@
     function showImmortalTools() {
       if (client.options.windows['immortal'] && client.options.windows['immortal'].options) {
         client.options.windows['immortal'].options.show = true;
-        showWindow('immortal', client.options.windows['immortal'].options);
+        ipcRenderer.send('show-window', 'immortal', client.options.windows['immortal'].options);
       }
       else
-        showWindow('immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
+        ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
     }
 
     function showProfiles() {
+      _profilesOpen = true;
       if (client.options.windows['profiles'] && client.options.windows['profiles'].options) {
         client.options.windows['profiles'].options.show = true;
-        showWindow('profiles', client.options.windows['profiles'].options);
+        ipcRenderer.send('show-window', 'profiles', client.options.windows['profiles'].options);
       }
       else
-        showWindow('profiles', { show: true, file: 'profiles.html', icon: 'profiles', alwaysOnTopClient: true });
+        ipcRenderer.send('show-window', 'profiles', { show: true, file: 'profiles.html', icon: 'profiles', alwaysOnTopClient: true });
     }
 
     function showEditor() {
-      //showWindow('editor')
+      //ipcRenderer.send('show-window', 'editor')
       if (client.options.windows['editor'] && client.options.windows['editor'].options) {
         client.options.windows['editor'].options.show = true;
-        showWindow('editor', client.options.windows['editor'].options);
+        ipcRenderer.send('show-window', 'editor', client.options.windows['editor'].options);
       }
       else
-        showWindow('editor', { show: true, file: 'editor.html', width: 300, height: 225, icon: 'edit', alwaysOnTopClient: true });
+        ipcRenderer.send('show-window', 'editor', { show: true, file: 'editor.html', width: 300, height: 225, icon: 'edit', alwaysOnTopClient: true });
     }
 
     function chatOptions(show) {
@@ -1867,7 +1745,7 @@
     }
 
     function showChat() {
-      showWindow('chat', chatOptions(true));
+      ipcRenderer.send('show-window', 'chat', chatOptions(true));
     }
 
     function mapperOptions(show) {
@@ -1879,7 +1757,7 @@
     }
 
     function showMapper() {
-      showWindow('mapper', mapperOptions(true));
+      ipcRenderer.send('show-window', 'mapper', mapperOptions(true));
     }
 
     $(document).ready(init);
@@ -1968,279 +1846,6 @@
     function autoConnect() {
       if (!autoConnectID && client.options.autoConnect && !client.connected)
         autoConnectID = setTimeout(function () { client.connect(); autoConnectID = null; }, client.options.autoConnectDelay);
-    }
-
-    function showWindow(name, options) {
-      if (!client.options.windows[name])
-        client.options.windows[name] = {};
-      client.options.windows[name].show = true;
-      if (!options)
-        options = { show: true };
-      else {
-        options = Object.assign({}, options || {});
-        options.show = true;
-      }
-
-      if (windows[name] && windows[name].window) {
-        if (windows[name].max)
-          windows[name].window.maximize();
-        else
-          windows[name].window.show();
-        windows[name].max = false;
-        client.saveOptions();
-      }
-      else
-        createWindow(name, options);
-    }
-
-    function createWindow(name, options) {
-      if (windows[name] && windows[name.window])
-        return;
-      options = Object.assign({}, options || {});
-      var s = loadWindowState(name);
-      if (options.hasOwnProperty('width')) {
-        s.width = options.width;
-        delete options.width;
-      }
-      if (options.hasOwnProperty('height')) {
-        s.height = options.height;
-        delete options.height;
-      }
-      if (options.hasOwnProperty('x')) {
-        s.x = options.x;
-        delete options.x;
-      }
-      if (options.hasOwnProperty('y')) {
-        s.y = options.y;
-        delete options.y;
-      }
-      windows[name] = options;
-      windows[name].window = new BrowserWindow({
-        parent: windows[name].alwaysOnTopClient ? remote.getCurrentWindow() : null,
-        title: options.title || name,
-        x: s.x,
-        y: s.y,
-        width: s.width,
-        height: s.height,
-        backgroundColor: options.background || '#000',
-        show: false,
-        skipTaskbar: (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png')
-      });
-
-      windows[name].window.webContents.on('crashed', (event, killed) => {
-        client.error(`${name} crashed, killed: ${killed}\n`, true);
-      });
-
-      if (s.fullscreen)
-        windows[name].window.setFullScreen(s.fullscreen);
-
-      windows[name].window.setMenu(options.menu || null);
-
-      windows[name].window.loadURL(url.format({
-        pathname: path.join(__dirname, (windows[name].file || (name + '.html'))),
-        protocol: 'file:',
-        slashes: true
-      }));
-
-      windows[name].window.on('closed', () => {
-        windows[name].window = null;
-        windows[name].ready = false;
-      });
-
-      windows[name].window.on('resize', () => {
-        if (!windows[name].window.isMaximized() && !windows[name].window.isFullScreen())
-          trackWindowState(name, windows[name].window);
-      });
-
-      windows[name].window.on('move', () => {
-        trackWindowState(name, windows[name].window);
-      });
-
-      windows[name].window.on('maximize', () => {
-        trackWindowState(name, windows[name].window);
-      });
-
-      windows[name].window.on('maximize', () => {
-        trackWindowState(name, windows[name].window);
-        states[name].maximized = true;
-      });
-
-      windows[name].window.on('unmaximize', () => {
-        trackWindowState(name, windows[name].window);
-        states[name].maximized = false;
-      });
-
-      windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
-        event.preventDefault();
-        if (frameName === 'modal') {
-          // open window as modal
-          Object.assign(options, {
-            modal: true,
-            parent: windows[name].window,
-            movable: false,
-            minimizable: false,
-            maximizable: false,
-            skipTaskbar: true,
-            resizable: false
-          });
-
-          var b = windows[name].window.getBounds();
-          options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
-          options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
-        }
-        options.show = false;
-        const w = new BrowserWindow(options);
-        if (remote.getGlobal('debug'))
-          w.webContents.openDevTools();
-        w.setMenu(null);
-        w.once('ready-to-show', () => {
-          addInputContext(w);
-          w.show();
-        });
-        w.webContents.on('crashed', (event, killed) => {
-          client.error(`${url} crashed, killed: ${killed}\n`, true);
-        });
-
-        w.on('close', () => {
-          if (w.getParentWindow()) {
-            w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
-          }
-        });
-
-        w.loadURL(url);
-        event.newGuest = w;
-      });
-
-      if (remote.getGlobal('debug'))
-        windows[name].window.webContents.openDevTools();
-
-      windows[name].window.once('ready-to-show', () => {
-        if (!options.noInput)
-          addInputContext(windows[name].window);
-        if (options.show) {
-          if (s.maximized)
-            windows[name].window.maximize();
-          else
-            windows[name].window.show();
-        }
-        else
-          windows[name].max = s.maximized;
-        windows[name].ready = true;
-      });
-
-      windows[name].window.on('close', (e) => {
-        windows[name].window.webContents.executeJavaScript('closing();');
-        client.options.windows[name] = getWindowState(name, windows[name].window);
-        windows[name].show = false;
-        client.options.windows[name].options = copyWindowOptions(name);
-        client.saveOptions();
-        if (windows[name].persistent) {
-          e.preventDefault();
-          windows[name].window.hide();
-        }
-      });
-    }
-
-    function getWindowState(id, window) {
-      var bounds = states[id];
-      if (!window)
-        return states[id];
-      return {
-        x: bounds.x,
-        y: bounds.y,
-        width: bounds.width,
-        height: bounds.height,
-        fullscreen: window.isFullScreen(),
-        maximized: window.isMaximized(),
-        devTools: window.webContents.isDevToolsOpened()
-      };
-    }
-
-    function loadWindowState(window) {
-      if (!client.options.windows || !client.options.windows[window])
-        return {
-          x: 0,
-          y: 0,
-          width: 800,
-          height: 600,
-        };
-      states[window] = {
-        x: client.options.windows[window].x,
-        y: client.options.windows[window].y,
-        width: client.options.windows[window].width,
-        height: client.options.windows[window].height,
-      };
-      return client.options.windows[window];
-    }
-
-    function trackWindowState(id, window) {
-      if (!window) return states[id];
-      var bounds = window.getBounds();
-      if (!states[id])
-        states[id] = {
-          x: bounds.x,
-          y: bounds.y,
-          width: bounds.width,
-          height: bounds.height
-        };
-      else {
-        states[id].x = bounds.x;
-        states[id].y = bounds.y;
-        states[id].width = bounds.width;
-        states[id].height = bounds.height;
-      }
-    }
-
-    function copyWindowOptions(name) {
-      if (!name || !windows[name]) return {};
-      var ops = {};
-      for (var op in windows[name]) {
-        if (!windows[name].hasOwnProperty(op) || op === "window")
-          continue;
-        ops[op] = windows[name][op];
-      }
-      return ops;
-    }
-
-    function addInputContext(window) {
-      window.webContents.on('context-menu', (e, props) => {
-        const { selectionText, isEditable } = props;
-        if (isEditable) {
-          inputMenu.popup(window);
-        } else if (selectionText && selectionText.trim() !== '') {
-          selectionMenu.popup(window);
-        }
-      });
-    }
-
-    function sendChat(text, args) {
-      for (var name in windows) {
-        if (!windows.hasOwnProperty(name))
-          continue;
-        if (!windows[name].window) {
-          if (args) {
-            createWindow(name, args);
-            setTimeout(() => { windows[name].window.webContents.send('chat', text); }, 100);
-          }
-        }
-        else if (!windows[name].ready)
-          setTimeout(() => { windows[name].window.webContents.send('chat', text); }, 100);
-        else
-          windows[name].window.webContents.send('chat', text);
-      }
-    }
-
-    function unloadWindows() {
-      for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
-          continue;
-        windows[name].window.webContents.executeJavaScript('closing();');
-        windows[name].window.webContents.executeJavaScript('closed();');
-        client.options.windows[name] = getWindowState(name, windows[name].window);
-        client.options.windows[name].options = copyWindowOptions(name);
-        windows[name].window.destroy();
-      }
     }
   </script>
 </head>
