@@ -147,6 +147,7 @@
     var _captures = [], _captureReviews = [];
     var _noCapture = false;
     var _cLoading = false;
+    var _profilesOpen = false;
     var _context;
     var _selword = '';
     var _selurl = '';
@@ -1022,6 +1023,14 @@
         }
       });
       window.onbeforeunload = function () {
+        if (_profilesOpen) {
+          ipcRenderer.send('show-dialog', 'profiles', {
+            type: 'warning',
+            title: 'Close profile manager',
+            message: 'You must close the profile manager before you can exit.'
+          });
+          return 'no';
+        }
         if (client.options.askonclose && client.connected) {
           var choice = dialog.showMessageBox(
             remote.getCurrentWindow(),
@@ -1570,7 +1579,7 @@
       else if (data.type === "chat") {
         client.options.chat[data.name] = data.value;
         client.saveOptions();
-        if (data.value && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines')) 
+        if (data.value && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines'))
           ipcRenderer.send('create-window', 'chat', chatOptions());
       }
       else if (data.type === "extensions") {
@@ -1665,6 +1674,8 @@
     function childClosed(url, name) {
       if (path.basename(url) === 'characters.html')
         _cLoading = false;
+      if (path.basename(url) === 'profiles.html')
+        _profilesOpen = false;
     }
 
     function showCharacters() {
@@ -1680,6 +1691,16 @@
       }
       else
         ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
+    }
+
+    function showProfiles() {
+      _profilesOpen = true;
+      if (client.options.windows['profiles'] && client.options.windows['profiles'].options) {
+        client.options.windows['profiles'].options.show = true;
+        ipcRenderer.send('show-window', 'profiles', client.options.windows['profiles'].options);
+      }
+      else
+        ipcRenderer.send('show-window', 'profiles', { show: true, file: 'profiles.html', icon: 'profiles', alwaysOnTopClient: true });
     }
 
     function showEditor() {

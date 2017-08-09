@@ -6,6 +6,7 @@
   - Windows:
     - Editor is now stored dynamically to reduce code, settings have been reset
     - Chat is now dynamic, window settings reset
+    - Profile manager is now dynamic, window settings reset
 
 ## 0.4.11
 

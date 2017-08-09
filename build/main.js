@@ -13,7 +13,7 @@ const { TrayClick } = require('./js/types');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winMap, winProfiles;
+let win, winMap;
 let set, mapperMax = false;
 let reload = null;
 let tray = null;
@@ -32,8 +32,7 @@ global.debug = false;
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
-  'mapper': { x: 0, y: 0, width: 800, height: 600 },
-  'profiles': { x: 0, y: 0, width: 800, height: 600 },
+  'mapper': { x: 0, y: 0, width: 800, height: 600 }
 };
 
 process.on('uncaughtException', (err) => {
@@ -718,9 +717,10 @@ function createMenu() {
   profiles.submenu.push(
     {
       label: '&Manage...',
-      click: showProfiles,
+      click: () => {
+        win.webContents.executeJavaScript('showProfiles()');
+      },
       accelerator: 'CmdOrCtrl+P'
-
     });
   menubar = Menu.buildFromTemplate(menuTemp);
   win.setMenu(menubar);
@@ -774,7 +774,9 @@ function createTray() {
     },
     {
       label: '&Manage profiles...',
-      click: showProfiles,
+      click: () => {
+        win.webContents.executeJavaScript('showProfiles()');
+      }
     },
     { type: 'separator' },
     {
@@ -1190,17 +1192,6 @@ function createWindow() {
     set = settings.Settings.load(global.settingsFile);
     set.windows['main'] = getWindowState('main', win);
 
-    if (winProfiles) {
-      e.preventDefault();
-      dialog.showMessageBox(winProfiles, {
-        type: 'warning',
-        title: 'Close profile manager',
-        message: 'You must close the profile manager before you can exit.'
-      });
-      set.save(global.settingsFile);
-      return;
-    }
-
     if (winMap) {
       set.windows['mapper'] = getWindowState('mapper', winMap);
       winMap.webContents.executeJavaScript('save();');
@@ -1414,9 +1405,6 @@ ipcMain.on('reload-options', () => {
   else if (set.mapper.enabled)
     createMapper();
 
-  if (winProfiles)
-    winProfiles.webContents.send('reload-options');
-
   for (var name in windows) {
     if (!windows.hasOwnProperty(name))
       continue;
@@ -1440,8 +1428,6 @@ ipcMain.on('reload-options', () => {
 
 ipcMain.on('set-title', (event, title) => {
   global.title = title;
-  if (winProfiles)
-    winProfiles.webContents.send('set-title', title);
   if (winMap)
     winMap.webContents.send('set-title', title);
   for (var name in windows) {
@@ -1452,9 +1438,7 @@ ipcMain.on('set-title', (event, title) => {
   updateTray();
 });
 
-ipcMain.on('closed', (event) => {
-  if (winProfiles)
-    winProfiles.webContents.send('closed');
+ipcMain.on('closed', () => {
   if (winMap)
     winMap.webContents.send('closed');
   for (var name in windows) {
@@ -1464,9 +1448,7 @@ ipcMain.on('closed', (event) => {
   }
 });
 
-ipcMain.on('connected', (event) => {
-  if (winProfiles)
-    winProfiles.webContents.send('connected');
+ipcMain.on('connected', () => {
   if (winMap)
     winMap.webContents.send('connected');
   for (var name in windows) {
@@ -1646,14 +1628,19 @@ ipcMain.on('show-window', (event, window, args) => {
     showPrefs();
   else if (window === "mapper")
     showMapper();
-  else if (window === "profiles")
-    showProfiles();
   else if (window === "color")
     showColor(args);
   else if (windows[window] && windows[window].window)
     showWindow(window, windows[window]);
   else
     createNewWindow(window, args);
+});
+
+ipcMain.on('show-dialog', (event, window, args) => {
+  if (windows[window] && windows[window].window)
+    dialog.showMessageBox(windows[window].window, args || {});
+  else
+    dialog.showMessageBox(win, args || {});
 });
 
 ipcMain.on('create-window', (event, window, args) => {
@@ -1681,13 +1668,19 @@ ipcMain.on('reload-characters', (event) => {
 });
 
 ipcMain.on('profile-item-added', (event, type, profile, item) => {
-  if (winProfiles)
-    winProfiles.webContents.send('profile-item-added', type, profile, item);
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.send('profile-item-added', type, profile, item);
+  }
 });
 
 ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
-  if (winProfiles)
-    winProfiles.webContents.send('profile-item-removed', type, profile, idx);
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.send('profile-item-removed', type, profile, idx);
+  }
 });
 
 ipcMain.on('ondragstart', (event, files, icon) => {
@@ -2021,82 +2014,6 @@ function showMapper() {
   }
   else
     createMapper(true);
-}
-
-function showProfiles() {
-  if (winProfiles != null) {
-    winProfiles.show();
-    return;
-  }
-  var s = loadWindowState('profiles');
-  winProfiles = new BrowserWindow({
-    parent: win,
-    x: s.x,
-    y: s.y,
-    width: s.width,
-    height: s.height,
-    movable: true,
-    minimizable: true,
-    maximizable: true,
-    skipTaskbar: true,
-    resizable: true,
-    title: 'Profile Manger',
-    icon: path.join(__dirname, '../assets/icons/png/profiles.png'),
-    show: false
-  });
-
-  winProfiles.webContents.on('crashed', (event, killed) => {
-    logError(`Profile manager crashed, killed: ${killed}\n`, true);
-  });
-
-  if (s.fullscreen)
-    winProfiles.setFullScreen(s.fullscreen);
-
-  if (global.debug)
-    winProfiles.webContents.openDevTools();
-
-  winProfiles.setMenu(null);
-  winProfiles.on('closed', () => {
-    winProfiles = null;
-  });
-  winProfiles.loadURL(url.format({
-    pathname: path.join(__dirname, 'profiles.html'),
-    protocol: 'file:',
-    slashes: true
-  }));
-  winProfiles.once('ready-to-show', () => {
-    //addInputContext(winProfiles);
-    if (s.maximized)
-      winProfiles.maximize();
-    else
-      winProfiles.show();
-  });
-
-  winProfiles.on('close', (e) => {
-    set = settings.Settings.load(global.settingsFile);
-    set.windows['profiles'] = getWindowState('profiles', winProfiles);
-    set.save(global.settingsFile);
-  });
-
-  winProfiles.on('resize', () => {
-    if (!winProfiles.isMaximized() && !winProfiles.isFullScreen())
-      trackWindowState('profiles', winProfiles);
-  });
-
-  winProfiles.on('move', () => {
-    trackWindowState('profiles', winProfiles);
-  });
-
-  winProfiles.on('maximize', () => {
-    trackWindowState('profiles', winProfiles);
-    states['profiles'].maximized = true;
-  });
-
-  winProfiles.on('unmaximize', () => {
-    trackWindowState('profiles', winProfiles);
-    states['profiles'].maximized = false;
-  });
-
 }
 
 function createNewWindow(name, options) {
