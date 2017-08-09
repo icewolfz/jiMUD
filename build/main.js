@@ -1255,7 +1255,7 @@ function createWindow() {
 
     if (set.showMapper)
       showMapper();
-    else if (set.chat.persistent || set.mapper.enabled)
+    else if (set.mapper.persistent || set.mapper.enabled)
       createMapper();
 
     if (set.showEditor)
