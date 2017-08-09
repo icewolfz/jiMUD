@@ -1562,9 +1562,23 @@ ipcMain.on('reload-options', () => {
     winEditor.webContents.send('reload-options');
 
   for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
+    if (!windows.hasOwnProperty(name))
       continue;
-    windows[name].window.webContents.send('reload-options');
+    if (!windows[name].window) {
+      if (set.windows[name].options.show)
+        showWindow(name, set.windows[name].options);
+      else if (set.windows[name].options.persistent)
+        createWindow(name, set.windows[name].options);
+      else
+        continue;
+    }
+    else {
+      windows[name].window.webContents.send('reload-options');
+      if (windows[name].window.setParentWindow)
+        windows[name].window.setParentWindow(set.windows[name].options.alwaysOnTopClient ? win : null);
+      windows[name].window.setAlwaysOnTop(set.windows[name].options.alwaysOnTop);
+      windows[name].window.setSkipTaskbar((set.windows[name].options.alwaysOnTopClient || set.windows[name].options.alwaysOnTop) ? true : false);
+    }
   }
 });
 
