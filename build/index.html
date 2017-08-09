@@ -119,23 +119,6 @@
       configurable: true
     });
 
-    const selectionMenu = Menu.buildFromTemplate([
-      { role: 'copy' },
-      { type: 'separator' },
-      { role: 'selectall' },
-    ]);
-
-    const inputMenu = Menu.buildFromTemplate([
-      { role: 'undo' },
-      { role: 'redo' },
-      { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' },
-      { type: 'separator' },
-      { role: 'selectall' },
-    ]);
-
     const Client = require('./js/client.js').Client;
     const Status = require('./js/status.js').Status;
     const Backup = require('./js/backup.js').Backup;
@@ -172,6 +155,23 @@
     var _selline = '';
     var windows = {};
     var states = {};
+
+    const selectionMenu = Menu.buildFromTemplate([
+      { role: 'copy' },
+      { type: 'separator' },
+      { role: 'selectall' },
+    ]);
+
+    const inputMenu = Menu.buildFromTemplate([
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { type: 'separator' },
+      { role: 'selectall' },
+    ]);
 
     window.onerror = function (msg, url, line) {
       if (client) {
