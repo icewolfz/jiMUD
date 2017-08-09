@@ -371,7 +371,6 @@
       }
     }
 
-
     function loadTheme(theme) {
       theme = parseTemplate(theme) + ".css";
       if (!isFileSync(theme))
@@ -380,7 +379,6 @@
       if (el.attr('href') != theme)
         el.attr('href', theme);
     }
-
 
     function updateInterface() {
       loadTheme(client.options.theme);
@@ -735,7 +733,7 @@
         if (_noCapture) return;
         //capture indented text
         if (capture > 0 && data.line.startsWith("    ")) {
-          ipcRenderer.send('chat', data, chatOptions());
+          sendChat(data, chatOptions());
           data.gagged = client.options.chat.gag;
           return;
         }
@@ -746,13 +744,13 @@
           if (!res || res.length === 0)
             continue;
           captureReview = 1;
-          ipcRenderer.send('chat', data, chatOptions());
+          sendChat(data, chatOptions());
           data.gagged = client.options.chat.gag;
           return;
         }
         //if in a review capture until end review
         if (captureReview > 0) {
-          ipcRenderer.send('chat', data, chatOptions());
+          sendChat(data, chatOptions());
           data.gagged = client.options.chat.gag;
           res = /^-=-=- End Review -=-=-$/.exec(data.line);
           if (res && res.length > 0)
@@ -761,7 +759,7 @@
         }
         //review requires 1 extra capture to get the current date/time
         if (captureReview === -1) {
-          ipcRenderer.send('chat', data, chatOptions());
+          sendChat(data, chatOptions());
           data.gagged = client.options.chat.gag;
           captureReview = 0;
           return;
@@ -776,7 +774,7 @@
           if (capture > 0)
             capture--;
           capture++;
-          ipcRenderer.send('chat', data, chatOptions());
+          sendChat(data, chatOptions());
           data.gagged = client.options.chat.gag;
           return;
         }
@@ -893,13 +891,21 @@
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
         ipcRenderer.send('set-overlay', 0);
-        ipcRenderer.send('closed');
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.send('closed');
+        }
         _logger.postMessage({ action: 'connected', args: client.connected });
         _logger.postMessage({ action: 'stop' });
       });
 
       client.on('connected', () => {
-        ipcRenderer.send('connected');
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.send('connected');
+        }
         _logger.postMessage({ action: 'connected', args: client.connected });
         _logger.postMessage({
           action: 'start', args: {
@@ -929,15 +935,27 @@
           ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
           $("#immortal").css('display', "block");
         }
-        ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.send('GMCP-received', { mod: mod, obj: obj });
+        }
       });
 
       client.on('item-added', (type, profile, item) => {
-        ipcRenderer.send('profile-item-added', type, profile, item);
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.send('profile-item-added', type, profile, item);
+        }
       });
 
       client.on('item-removed', (type, profile, idx) => {
-        ipcRenderer.send('profile-item-removed', type, profile, idx);
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.send('profile-item-removed', type, profile, idx);
+        }
       });
 
       _backup = new Backup(client, remote.getGlobal('mapFile'));
@@ -946,7 +964,11 @@
 
       _backup.on('progress-start', (title) => {
         ipcRenderer.send('set-progress', { value: 0 });
-        ipcRenderer.send('flush');
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.send('flush');
+        }
         $("#Progressbar").html('<progress max="100"></progress>');
         $("#ProgressTitle").html(title || "Importing data&hellip;");
         $("#Progress")[0].showModal();
@@ -983,7 +1005,11 @@
       });
 
       _backup.on('import-map', (data) => {
-        ipcRenderer.send('import-map', data);
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.send('import', data);
+        }
       });
 
       _backup.on('imported-profiles', (data) => {
@@ -1020,6 +1046,11 @@
         if (client.options.autoCreateCharacter)
           ipcRenderer.send('change-char', title);
         _logger.postMessage({ action: 'name', args: title });
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.send('set-title', title);
+        }
         ipcRenderer.send('set-title', title);
       });
       if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
@@ -1044,7 +1075,7 @@
       });
       window.onbeforeunload = function () {
         if (_profilesOpen) {
-          ipcRenderer.send('show-dialog', 'profiles', {
+          dialog.showMessageBox(windows['profiles'].window, {
             type: 'warning',
             title: 'Close profile manager',
             message: 'You must close the profile manager before you can exit.'
@@ -1609,10 +1640,31 @@
       }
     });
 
+    ipcRenderer.on('set-color', (event, type, color) => {
+      for (var name in windows) {
+        if (!windows.hasOwnProperty(name) || !windows[name].window)
+          continue;
+        windows[name].window.webContents.send('set-color', type, color);
+      }
+    });
+
+    ipcRenderer.on('set-progress-window', (event, window, args) => {
+      if (windows[window] && windows[window].window)
+        windows[window].window.setProgressBar(args.value, args.options);
+    });
+
     ipcRenderer.on('load-default', (event) => {
       if (!client.connected) {
         _logger.postMessage({ action: 'name', args: '' });
         $("#character-name").text("&nbsp;");
+      }
+      for (var name in windows) {
+        if (!windows.hasOwnProperty(name) || !windows[name].window)
+          continue;
+        windows[name].window.webContents.executeJavaScript('closed();');
+        client.options.windows[name] = getWindowState(name, windows[name].window);
+        client.options.windows[name].options = copyWindowOptions(name);
+        windows[name].window.destroy();
       }
     });
 
@@ -1664,7 +1716,32 @@
         client.options.windows[data.name].options.persistent = data.value.persistent;
         client.options.windows[data.name].options.alwaysOnTop = data.value.alwaysOnTop;
         client.saveOptions();
+
+        for (name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+
+          if (name === data.name) {
+            windows[name].alwaysOnTopClient = data.value.alwaysOnTopClient;
+            windows[name].persistent = data.value.persistent;
+            windows[name].alwaysOnTop = data.value.alwaysOnTop;
+          }
+          if (windows[name].window)
+            windows[name].window.webContents.send('setting-changed', data);
+          if (windows[name].window.setParentWindow)
+            windows[name].window.setParentWindow(windows[name].alwaysOnTopClient ? remote.getCurrentWindow() : null);
+          windows[name].window.setSkipTaskbar((windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false);
+          if (windows[name].persistent)
+            createWindow(name, windows[name]);
+        }
       }
+      else if (data.type === "extensions")
+        for (name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          if (windows[name].window)
+            windows[name].window.webContents.send('setting-changed', data);
+        }
     });
 
     ipcRenderer.on('send-background', (event, command) => {
@@ -1710,6 +1787,11 @@
       });
       buildButtons();
       updateMenu();
+      for (var name in windows) {
+        if (!windows.hasOwnProperty(name) || !windows[name].window || !windows[name].window.webContents)
+          continue;
+        windows[name].window.webContents.send('reload-profiles');
+      }
     });
 
     ipcRenderer.on('reload-options', (event) => {
@@ -1734,18 +1816,18 @@
           continue;
         if (!windows[name].window) {
           if (client.options.windows[name].options.show)
-            showWindow(name, set.windows[name].options);
-          else if (set.windows[name].options.persistent)
-            createWindow(name, set.windows[name].options);
+            showWindow(name, client.options.windows[name].options);
+          else if (client.options.windows[name].options.persistent)
+            createWindow(name, client.options.windows[name].options);
           else
             continue;
         }
         else {
           windows[name].window.webContents.send('reload-options');
           if (windows[name].window.setParentWindow)
-            windows[name].window.setParentWindow(set.windows[name].options.alwaysOnTopClient ? remote.getCurrentWindow() : null);
-          windows[name].window.setAlwaysOnTop(set.windows[name].options.alwaysOnTop);
-          windows[name].window.setSkipTaskbar((set.windows[name].options.alwaysOnTopClient || set.windows[name].options.alwaysOnTop) ? true : false);
+            windows[name].window.setParentWindow(client.options.windows[name].options.alwaysOnTopClient ? remote.getCurrentWindow() : null);
+          windows[name].window.setAlwaysOnTop(client.options.windows[name].options.alwaysOnTop);
+          windows[name].window.setSkipTaskbar((client.options.windows[name].options.alwaysOnTopClient || client.options.windows[name].options.alwaysOnTop) ? true : false);
         }
       }
       if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
@@ -2163,6 +2245,23 @@
           selectionMenu.popup(window);
         }
       });
+    }
+
+    function sendChat(text, args) {
+      for (var name in windows) {
+        if (!windows.hasOwnProperty(name))
+          continue;
+        if (!windows[name].window) {
+          if (args) {
+            createWindow(name, args);
+            setTimeout(() => { windows[name].window.webContents.send('chat', text); }, 100);
+          }
+        }
+        else if (!windows[name].ready)
+          setTimeout(() => { windows[name].window.webContents.send('chat', text); }, 100);
+        else
+          windows[name].window.webContents.send('chat', text);
+      }
     }
   </script>
 </head>
