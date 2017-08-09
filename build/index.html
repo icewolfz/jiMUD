@@ -1413,18 +1413,11 @@
         createWindow('mapper', mapperOptions());
 
       for (var name in client.options.windows) {
-        if (client.options.windows[name].options) {
-          if (client.options.windows[name].options.show)
-            showWindow(name, client.options.windows[name].options);
-          else if (client.options.windows[name].options.persistent)
-            createWindow(name, client.options.windows[name].options);
-        }
-        else {
-          if (client.options.windows[name].show)
-            showWindow(name, client.options.windows[name]);
-          else if (client.options.windows[name].persistent)
-            createWindow(name, client.options.windows[name]);
-        }
+        if (!client.options.windows[name] || !client.options.windows[name].options) continue;
+        if (client.options.windows[name].options.show)
+          showWindow(name, client.options.windows[name].options);
+        else if (client.options.windows[name].options.persistent)
+          createWindow(name, client.options.windows[name].options);
       }
 
       if (client.options.showCharacterManager)
