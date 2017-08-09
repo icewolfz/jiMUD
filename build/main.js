@@ -1944,6 +1944,10 @@ function createNewWindow(name, options) {
   });
 
   windows[name].window.on('close', (e) => {
+    if (win && win.webContents) {
+      win.webContents.executeJavaScript(`childClosed('${path.join(__dirname, (windows[name].file || (name + '.html'))).replace(/\\/g, '\\\\')}', '${name}');`);
+    }
+
     windows[name].window.webContents.executeJavaScript('closing();');
     set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, windows[name].window);

@@ -1687,12 +1687,17 @@
     });
 
     function childClosed(url, name) {
-      if (path.basename(url) === 'characters.html')
-        _cLoading = false;
-      else if (path.basename(url) === 'profiles.html')
+      if (name === "profiles")
         _profilesOpen = false;
-      else if (path.basename(url) === 'prefs.html')
-        _pLoading = false;
+      else {
+        var basename = path.basename(url);
+        if (basename === 'characters.html')
+          _cLoading = false;
+        else if (basename === 'profiles.html')
+          _profilesOpen = false;
+        else if (basename === 'prefs.html')
+          _pLoading = false;
+      }
     }
 
     function showCharacters() {
