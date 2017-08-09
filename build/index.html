@@ -119,16 +119,33 @@
       configurable: true
     });
 
+    const selectionMenu = Menu.buildFromTemplate([
+      { role: 'copy' },
+      { type: 'separator' },
+      { role: 'selectall' },
+    ]);
+
+    const inputMenu = Menu.buildFromTemplate([
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { type: 'separator' },
+      { role: 'selectall' },
+    ]);
 
     const Client = require('./js/client.js').Client;
     const Status = require('./js/status.js').Status;
     const Backup = require('./js/backup.js').Backup;
     const { Settings } = require('./js/settings');
     const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
-    const { dialog, Menu, MenuItem, nativeImage } = remote;
+    const { dialog, Menu, MenuItem, nativeImage, BrowserWindow } = remote;
     const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require("./js/library.js");
     //    const fs = require('fs');
     const path = require('path');
+    const url = require('url');
     const { version } = require("../package.json");
 
     var spellchecker;
@@ -153,6 +170,8 @@
     var _selword = '';
     var _selurl = '';
     var _selline = '';
+    var windows = {};
+    var states = {};
 
     window.onerror = function (msg, url, line) {
       if (client) {
@@ -781,7 +800,7 @@
       client.on('toggle', () => {
         var win = remote.getCurrentWindow();
         if (win.isVisible()) {
-          if (set.hideOnMinimize)
+          if (client.options.hideOnMinimize)
             win.hide();
           else
             win.minimize();
@@ -1846,6 +1865,228 @@
     function autoConnect() {
       if (!autoConnectID && client.options.autoConnect && !client.connected)
         autoConnectID = setTimeout(function () { client.connect(); autoConnectID = null; }, client.options.autoConnectDelay);
+    }
+
+    function createWindow(name, options) {
+      if (windows[name] && windows[name.window])
+        return;
+      //BrowserWindow
+      if (!options) options = {};
+      var s = loadWindowState(name);
+      if (options.hasOwnProperty('width')) {
+        s.width = options.width;
+        delete options.width;
+      }
+      if (options.hasOwnProperty('height')) {
+        s.height = options.height;
+        delete options.height;
+      }
+      if (options.hasOwnProperty('x')) {
+        s.x = options.x;
+        delete options.x;
+      }
+      if (options.hasOwnProperty('y')) {
+        s.y = options.y;
+        delete options.y;
+      }
+      windows[name] = options;
+      windows[name].window = new BrowserWindow({
+        parent: windows[name].alwaysOnTopClient ? remote.getCurrentWindow() : null,
+        title: options.title || name,
+        x: s.x,
+        y: s.y,
+        width: s.width,
+        height: s.height,
+        backgroundColor: options.background || '#000',
+        show: false,
+        skipTaskbar: (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false,
+        icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png')
+      });
+
+      windows[name].window.webContents.on('crashed', (event, killed) => {
+        client.error(`${name} crashed, killed: ${killed}\n`, true);
+      });
+
+      if (s.fullscreen)
+        windows[name].window.setFullScreen(s.fullscreen);
+
+      windows[name].window.setMenu(options.menu || null);
+
+      windows[name].window.loadURL(url.format({
+        pathname: path.join(__dirname, (windows[name].file || (name + '.html'))),
+        protocol: 'file:',
+        slashes: true
+      }));
+
+      windows[name].window.on('closed', () => {
+        windows[name].window = null;
+        windows[name].ready = false;
+      });
+
+      windows[name].window.on('resize', () => {
+        if (!windows[name].window.isMaximized() && !windows[name].window.isFullScreen())
+          trackWindowState(name, windows[name].window);
+      });
+
+      windows[name].window.on('move', () => {
+        trackWindowState(name, windows[name].window);
+      });
+
+      windows[name].window.on('maximize', () => {
+        trackWindowState(name, windows[name].window);
+      });
+
+      windows[name].window.on('maximize', () => {
+        trackWindowState(name, windows[name].window);
+        states[name].maximized = true;
+      });
+
+      windows[name].window.on('unmaximize', () => {
+        trackWindowState(name, windows[name].window);
+        states[name].maximized = false;
+      });
+
+      windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+        event.preventDefault();
+        if (frameName === 'modal') {
+          // open window as modal
+          Object.assign(options, {
+            modal: true,
+            parent: windows[name].window,
+            movable: false,
+            minimizable: false,
+            maximizable: false,
+            skipTaskbar: true,
+            resizable: false
+          });
+
+          var b = windows[name].window.getBounds();
+          options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
+          options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
+        }
+        options.show = false;
+        const w = new BrowserWindow(options);
+        if (global.debug)
+          w.webContents.openDevTools();
+        w.setMenu(null);
+        w.once('ready-to-show', () => {
+          addInputContext(w);
+          w.show();
+        });
+        w.webContents.on('crashed', (event, killed) => {
+          client.error(`${url} crashed, killed: ${killed}\n`, true);
+        });
+
+        w.on('close', () => {
+          if (w.getParentWindow()) {
+            w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
+          }
+        });
+
+        w.loadURL(url);
+        event.newGuest = w;
+      });
+
+      if (global.debug)
+        windows[name].window.webContents.openDevTools();
+
+      windows[name].window.once('ready-to-show', () => {
+        if (!options.noInput)
+          addInputContext(windows[name].window);
+        if (options.show) {
+          if (s.maximized)
+            windows[name].window.maximize();
+          else
+            windows[name].window.show();
+        }
+        else
+          windows[name].max = s.maximized;
+        windows[name].ready = true;
+      });
+
+      windows[name].window.on('close', (e) => {
+        windows[name].window.webContents.executeJavaScript('closing();');
+        client.options.windows[name] = getWindowState(name, windows[name].window);
+        windows[name].show = false;
+        client.options.windows[name].options = copyWindowOptions(name);
+        client.saveOptions();
+        if (windows[name].persistent) {
+          e.preventDefault();
+          windows[name].window.hide();
+        }
+      });
+    }
+
+    function getWindowState(id, window) {
+      var bounds = states[id];
+      if (!window)
+        return states[id];
+      return {
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        fullscreen: window.isFullScreen(),
+        maximized: window.isMaximized(),
+        devTools: window.webContents.isDevToolsOpened()
+      };
+    }
+
+    function loadWindowState(window) {
+      if (!client.options.windows || !client.options.windows[window])
+        return {
+          x: 0,
+          y: 0,
+          width: 800,
+          height: 600,
+        };
+      states[window] = {
+        x: client.options.windows[window].x,
+        y: client.options.windows[window].y,
+        width: client.options.windows[window].width,
+        height: client.options.windows[window].height,
+      };
+      return client.options.windows[window];
+    }
+
+    function trackWindowState(id, window) {
+      if (!window) return states[id];
+      var bounds = window.getBounds();
+      if (!states[id])
+        states[id] = {
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height
+        };
+      else {
+        states[id].x = bounds.x;
+        states[id].y = bounds.y;
+        states[id].width = bounds.width;
+        states[id].height = bounds.height;
+      }
+    }
+
+    function copyWindowOptions(name) {
+      if (!name || !windows[name]) return {};
+      var ops = {};
+      for (var op in windows[name]) {
+        if (!windows[name].hasOwnProperty(op) || op === "window")
+          continue;
+        ops[op] = windows[name][op];
+      }
+      return ops;
+    }
+
+    function addInputContext(window) {
+      window.webContents.on('context-menu', (e, props) => {
+        const { selectionText, isEditable } = props;
+        if (isEditable) {
+          inputMenu.popup(window);
+        } else if (selectionText && selectionText.trim() !== '') {
+          selectionMenu.popup(window);
+        }
+      });
     }
   </script>
 </head>
