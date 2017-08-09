@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0
+
+- **Change:**
+  - Editor window is now stored dynamically to reduce code, settings have been reset
+
 ## 0.4.11
 
 - **New:**

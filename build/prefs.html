@@ -355,7 +355,10 @@
       $('#logPath').val(_settings.logPath);
       $('#logTimeFormat').val(_settings.logTimeFormat);
 
-      $("#editorPersistent").prop('checked', _settings.editorPersistent);
+      if (_settings.windows['editor'] && _settings.windows['editor'].options)
+        $("#editor-persistent").prop('checked', _settings.windows['editor'].options.persistent);
+      else
+        $("#editor-persistent").prop('checked', false);
 
       $('#MapperSplitArea').prop('checked', _settings.mapper.split);
       $('#mapFollow').prop('checked', _settings.mapper.follow);
@@ -441,6 +444,13 @@
 
       $('input[type="checkbox"]').change(function () {
         switch ($(this).attr('id')) {
+          case 'editor-persistent':
+            if (!_settings.windows['editor'])
+             _settings.windows['editor'] = { options: {} };
+            else if(!_settings.windows['editor'].options)
+              _settings.windows['editor'] = {};
+            _settings.windows['editor'].options.persistent;
+            break;
           case 'chat-alwaysOnTop':
             _settings.chat.alwaysOnTop = this.checked;
             break;
@@ -998,7 +1008,7 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="editorPersistent" /> Persistent advanced editor
+              <input type="checkbox" id="editor-persistent" /> Persistent advanced editor
             </label>
           </div>
           <div class="col-sm-6 form-group">

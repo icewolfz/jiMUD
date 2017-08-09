@@ -9,13 +9,12 @@ const url = require('url');
 const settings = require('./js/settings');
 const { TrayClick } = require('./js/types');
 
-
 //require('electron-local-crash-reporter').start();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winMap, winProfiles, winEditor, winChat;
-let set, mapperMax = false, editorMax = false, chatMax = false;
+let win, winMap, winProfiles, winChat;
+let set, mapperMax = false, chatMax = false;
 let chatReady = false;
 let reload = null;
 let tray = null;
@@ -36,7 +35,6 @@ let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
   'mapper': { x: 0, y: 0, width: 800, height: 600 },
   'profiles': { x: 0, y: 0, width: 800, height: 600 },
-  'editor': { x: 0, y: 0, width: 300, height: 225 },
   'chat': { x: 0, y: 0, width: 300, height: 225 },
 };
 
@@ -468,7 +466,9 @@ var menuTemp = [
       {
         label: '&Advanced editor...',
         id: 'editor',
-        click: showEditor,
+        click: () => {
+          win.webContents.executeJavaScript('showEditor()');
+        },
         accelerator: 'CmdOrCtrl+E'
       },
       {
@@ -1064,10 +1064,6 @@ function createWindow() {
           winMap.webContents.executeJavaScript('save();');
           winMap.destroy();
         }
-        if (winEditor) {
-          set.windows['editor'] = getWindowState('editor', winEditor);
-          winEditor.destroy();
-        }
         if (winChat) {
           set.windows['chat'] = getWindowState('chat', winChat);
           winChat.destroy();
@@ -1176,10 +1172,6 @@ function createWindow() {
     else if (set.mapper.persistent || set.mapper.enabled)
       createMapper();
 
-    if (set.showEditor)
-      showEditor();
-    else if (set.editorPersistent)
-      createEditor();
     if (set.showChat)
       showChat();
     else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
@@ -1220,10 +1212,6 @@ function createWindow() {
       set.windows['mapper'] = getWindowState('mapper', winMap);
       winMap.webContents.executeJavaScript('save();');
       winMap.destroy();
-    }
-    if (winEditor) {
-      set.windows['editor'] = getWindowState('editor', winEditor);
-      winEditor.destroy();
     }
     if (winChat) {
       set.windows['chat'] = getWindowState('chat', winChat);
@@ -1367,9 +1355,6 @@ ipcMain.on('load-default', (event) => {
     winMap.webContents.executeJavaScript('save();');
     winMap.destroy();
   }
-
-  if (winEditor)
-    winEditor.destroy();
   if (winChat)
     winChat.destroy();
   for (var name in windows) {
@@ -1388,10 +1373,6 @@ ipcMain.on('load-default', (event) => {
   else if (set.chat.persistent || set.mapper.enabled)
     createMapper();
 
-  if (set.showEditor)
-    showEditor();
-  else if (set.editorPersistent)
-    createEditor();
   if (set.showChat)
     showChat();
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
@@ -1412,8 +1393,6 @@ ipcMain.on('load-char', (event, char) => {
     winMap.destroy();
   }
 
-  if (winEditor)
-    winEditor.destroy();
   if (winChat)
     winChat.destroy();
   for (var name in windows) {
@@ -1432,10 +1411,6 @@ ipcMain.on('load-char', (event, char) => {
   else if (set.chat.persistent || set.mapper.enabled)
     createMapper();
 
-  if (set.showEditor)
-    showEditor();
-  else if (set.editorPersistent)
-    createEditor();
   if (set.showChat)
     showChat();
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
@@ -1472,8 +1447,6 @@ ipcMain.on('reload-options', () => {
 
   if (winProfiles)
     winProfiles.webContents.send('reload-options');
-  if (winEditor)
-    winEditor.webContents.send('reload-options');
 
   for (var name in windows) {
     if (!windows.hasOwnProperty(name))
@@ -1502,8 +1475,6 @@ ipcMain.on('set-title', (event, title) => {
     winChat.webContents.send('set-title', title);
   if (winProfiles)
     winProfiles.webContents.send('set-title', title);
-  if (winEditor)
-    winEditor.webContents.send('set-title', title);
   if (winMap)
     winMap.webContents.send('set-title', title);
   for (var name in windows) {
@@ -1519,8 +1490,6 @@ ipcMain.on('closed', (event) => {
     winChat.webContents.send('closed');
   if (winProfiles)
     winProfiles.webContents.send('closed');
-  if (winEditor)
-    winEditor.webContents.send('closed');
   if (winMap)
     winMap.webContents.send('closed');
   for (var name in windows) {
@@ -1535,8 +1504,6 @@ ipcMain.on('connected', (event) => {
     winChat.webContents.send('connected');
   if (winProfiles)
     winProfiles.webContents.send('connected');
-  if (winEditor)
-    winEditor.webContents.send('connected');
   if (winMap)
     winMap.webContents.send('connected');
   for (var name in windows) {
@@ -1547,8 +1514,11 @@ ipcMain.on('connected', (event) => {
 });
 
 ipcMain.on('set-color', (event, type, color) => {
-  if (winEditor)
-    winEditor.webContents.send('set-color', type, color);
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.send('set-color', type, color);
+  }
 });
 
 ipcMain.on('send-background', (event, command) => {
@@ -1724,8 +1694,6 @@ ipcMain.on('show-window', (event, window, args) => {
     showPrefs();
   else if (window === "mapper")
     showMapper();
-  else if (window === "editor")
-    showEditor();
   else if (window === "profiles")
     showProfiles();
   else if (window === "chat")
@@ -2177,102 +2145,6 @@ function showProfiles() {
 
 }
 
-function createEditor(show) {
-  if (winEditor) return;
-  var s = loadWindowState('editor');
-  winEditor = new BrowserWindow({
-    parent: win,
-    title: 'Advanced Editor',
-    x: s.x,
-    y: s.y,
-    width: s.width,
-    height: s.height,
-    backgroundColor: '#000',
-    show: false,
-    skipTaskbar: false,
-    icon: path.join(__dirname, '../assets/icons/png/edit.png')
-  });
-
-  winEditor.webContents.on('crashed', (event, killed) => {
-    logError(`Advanced editor crashed, killed: ${killed}\n`, true);
-  });
-
-  if (s.fullscreen)
-    winEditor.setFullScreen(s.fullscreen);
-
-  winEditor.setMenu(null);
-  winEditor.loadURL(url.format({
-    pathname: path.join(__dirname, 'editor.html'),
-    protocol: 'file:',
-    slashes: true
-  }));
-
-  winEditor.on('closed', () => {
-    winEditor = null;
-  });
-
-  winEditor.on('resize', () => {
-    if (!winEditor.isMaximized() && !winEditor.isFullScreen())
-      trackWindowState('editor', winEditor);
-  });
-
-  winEditor.on('move', () => {
-    trackWindowState('editor', winEditor);
-  });
-
-  winEditor.on('maximize', () => {
-    trackWindowState('editor', winEditor);
-    states['editor'].maximized = true;
-  });
-
-  winEditor.on('unmaximize', () => {
-    trackWindowState('editor', winEditor);
-    states['editor'].maximized = false;
-  });
-
-  if (global.debug)
-    winEditor.webContents.openDevTools();
-
-  winEditor.once('ready-to-show', () => {
-    addInputContext(winEditor);
-    if (show) {
-      if (s.maximized)
-        winEditor.maximize();
-      else
-        winEditor.show();
-    }
-    else
-      editorMax = s.maximized;
-  });
-
-  winEditor.on('close', (e) => {
-    set = settings.Settings.load(global.settingsFile);
-    set.showEditor = false;
-    set.windows['editor'] = getWindowState('editor', winEditor);
-    set.save(global.settingsFile);
-    winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
-    if (set.editorPersistent) {
-      e.preventDefault();
-      winEditor.hide();
-    }
-  });
-}
-
-function showEditor() {
-  set = settings.Settings.load(global.settingsFile);
-  set.showEditor = true;
-  set.save(global.settingsFile);
-  if (winEditor != null) {
-    if (editorMax)
-      winEditor.maximize();
-    else
-      winEditor.show();
-    editorMax = false;
-  }
-  else
-    createEditor(true);
-}
-
 function createChat(show) {
   if (winChat) return;
   var s = loadWindowState('chat');
@@ -2382,6 +2254,22 @@ function createNewWindow(name, options) {
     return;
   if (!options) options = {};
   var s = loadWindowState(name);
+  if (options.hasOwnProperty('width')) {
+    s.width = options.width;
+    delete options.width;
+  }
+  if (options.hasOwnProperty('height')) {
+    s.height = options.height;
+    delete options.height;
+  }
+  if (options.hasOwnProperty('x')) {
+    s.x = options.x;
+    delete options.x;
+  }
+  if (options.hasOwnProperty('y')) {
+    s.y = options.y;
+    delete options.y;
+  }
   windows[name] = options;
   windows[name].window = new BrowserWindow({
     parent: windows[name].alwaysOnTopClient ? win : null,
@@ -2535,7 +2423,7 @@ function showWindow(name, options) {
 
 function showColor(args) {
   let cp = new BrowserWindow({
-    parent: args.window || winEditor || win,
+    parent: args.window || win,
     modal: true,
     width: 326,
     height: 296,

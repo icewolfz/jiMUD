@@ -1065,6 +1065,10 @@
             else
                 tinymce.activeEditor.plugins["shadowmud"].applyFormat(type, "#" + color);
         });
+
+        function closed() {
+            tinymce.activeEditor.setContent('');
+        }
     </script>
 </head>
 

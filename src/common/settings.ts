@@ -125,13 +125,11 @@ export let SettingList: any[] = [
     ['allowEscape', 0, 1, true],
     ['AutoCopySelectedToClipboard', 0, 1, false],
     ['enableDebug', 0, 1, false],
-    ['editorPersistent', 0, 1, false],
     ['askonclose', 0, 1, true],
     ['dev', 0, 1, false]
 ];
 
 export class Settings {
-    public editorPersistent: boolean = false;
     public AutoCopySelectedToClipboard: boolean = false;
     public autoCreateCharacter: boolean = false;
     public askonclose: boolean = true;

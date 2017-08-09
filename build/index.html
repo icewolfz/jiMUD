@@ -1328,7 +1328,8 @@
       client.display.RegularExpression = client.options.find.regex;
       if (client.options.find.show)
         client.display.showFind();
-
+      if(client.options.showEditor)
+        showEditor();
       if (client.options.showCharacterManager)
         showCharacters();
       client.raise('opened');
@@ -1666,7 +1667,16 @@
       }
       else
         ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
-      //window.open('immortal.html', '', 'backgroundColor=#fff,height=600,width=800,icon=' + path.join(__dirname, '../assets/icons/png/ied.png'));
+    }
+
+    function showEditor() {
+      //ipcRenderer.send('show-window', 'editor')
+      if (client.options.windows['editor'] && client.options.windows['editor'].options) {
+        client.options.windows['editor'].options.show = true;
+        ipcRenderer.send('show-window', 'editor', client.options.windows['editor'].options);
+      }
+      else
+        ipcRenderer.send('show-window', 'editor', { show: true, file: 'editor.html', width: 300, height: 225, icon: 'edit', alwaysOnTopClient: true });
     }
 
     $(document).ready(init);
@@ -1768,7 +1778,7 @@
     <div id="commandbox">
       <textarea type="text" id="commandinput" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
     </div>
-    <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
+    <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="showEditor();">
       <i class="fa fa-edit"></i>
     </a>
   </div>
