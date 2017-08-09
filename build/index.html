@@ -779,7 +779,7 @@
       client.on('toggle', () => {
         var win = remote.getCurrentWindow();
         if (win.isVisible()) {
-          if (set.hideOnMinimize)
+          if (client.options.hideOnMinimize)
             win.hide();
           else
             win.minimize();
