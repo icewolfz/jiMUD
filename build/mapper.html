@@ -22,12 +22,13 @@
     const { remote, ipcRenderer } = require('electron');
     const { nativeImage, dialog, Menu, MenuItem } = remote;
     const { Settings } = require('./js/settings');
+    const { Menubar } = require('./js/menubar');
     const fs = require('fs');
 
     var roomEditor = false;
     var importType = ImportType.Replace;
 
-    var menu = [
+    var menubar = new Menubar([
       {
         label: '&File',
         id: 'file',
@@ -100,60 +101,10 @@
         ]
       }
 
-    ];
-
-    var menubar = Menu.buildFromTemplate(menu);
-    remote.getCurrentWindow().setMenu(menubar);
+    ]);
 
     var mapper;
     var MapperNavDown = false;
-
-    function updateMenuItem(args) {
-      var item, i = 0, items;
-      var tItem, tItems;
-      if (args == null || args.menu == null) return;
-
-      if (!Array.isArray(args.menu))
-        args.menu = args.menu.split('|');
-
-      items = menubar.items;
-      tItems = menu;
-      for (i = 0; i < args.menu.length; i++) {
-        if (!items || items.length === 0) break;
-        for (var m = 0; m < items.length; m++) {
-          if (!items[m]) continue;
-          if (items[m].id === args.menu[i] || items[m].label.toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
-            item = items[m];
-            tItem = tItems[m];
-            if (item.submenu) {
-              items = item.submenu.items;
-              tItems = tItem.submenu;
-            }
-            else
-              items = null;
-            break;
-          }
-        }
-      }
-      if (!item)
-        return;
-      if (args.enabled != null)
-        item.enabled = args.enabled ? true : false;
-      if (args.checked != null)
-        item.checked = args.checked ? true : false;
-      if (args.icon != null)
-        item.icon = args.icon;
-      if (args.visible != null)
-        item.visible = args.visible ? true : false;
-      if (args.position != null)
-        item.position = args.position;
-
-      tItem.enabled = item.enabled;
-      tItem.checked = item.checked;
-      tItem.icon = item.icon;
-      tItem.visible = item.visible;
-      tItem.position = item.position;
-    }
 
     function MapperNavClicked(x, y) {
       if (!MapperNavDown) return;
@@ -239,13 +190,13 @@
 
       mapper.on('path-shown', () => {
         $("#btn-clear").prop('disabled', false);
-        updateMenuItem({ menu: 'actions|walk path', enabled: false });
+        menubar.updateItem('actions|walk path', { enabled: false });
         //$("#btn-walk").prop('disabled', false);
       });
 
       mapper.on('path-cleared', () => {
         $("#btn-clear").prop('disabled', true);
-        updateMenuItem({ menu: 'actions|walk path', enabled: true });
+        menubar.updateItem('actions|walk path', { enabled: true });
         //$("#btn-walk").prop('disabled', true);
       });
 
@@ -306,9 +257,9 @@
         $("#btn-walk").prop('disabled', !(mapper.current.ID && room.ID && mapper.current.ID != room.ID));
         $("#btn-highlight").prop('disabled', !(mapper.current.ID && room.ID && mapper.current.ID != room.ID));
 
-        updateMenuItem({ menu: 'edit|Remove current room', enabled: mapper.current.ID && room.ID });
-        updateMenuItem({ menu: 'actions|highlight path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
-        updateMenuItem({ menu: 'actions|walk path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
+        menubar.updateItem('edit|Remove current room', { enabled: mapper.current.ID && room.ID });
+        menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
+        menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
       });
 
       mapper.on('room-selected', (room) => {
@@ -321,9 +272,9 @@
           $("#mapper-room button").prop("disabled", true);
           $("#mapper-room textarea").prop("disabled", true);
 
-          updateMenuItem({ menu: 'edit|Remove selected room', enabled: false });
-          updateMenuItem({ menu: 'actions|highlight path', enabled: false });
-          updateMenuItem({ menu: 'actions|walk path', enabled: false });
+          menubar.updateItem('edit|Remove selected room', { enabled: false });
+          menubar.updateItem('actions|highlight path', { enabled: false });
+          menubar.updateItem('actions|walk path', { enabled: false });
 
 
           $("#reX").val('');
@@ -359,9 +310,9 @@
           $("#mapper-room button").prop("disabled", false);
           $("#mapper-room textarea").prop("disabled", false);
 
-          updateMenuItem({ menu: 'edit|Remove selected room', enabled: true });
-          updateMenuItem({ menu: 'actions|highlight path', enabled: mapper.current.ID && mapper.current.ID != room.ID });
-          updateMenuItem({ menu: 'actions|walk path', enabled: mapper.current.ID && mapper.current.ID != room.ID });
+          menubar.updateItem('edit|Remove selected room', { enabled: true });
+          menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
+          menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
 
           $("#reX").val(room.X || room.x);
           $("#reY").val(room.Y || room.y);
@@ -658,7 +609,7 @@
       else
         $('#btn-enable').removeClass('active');
       $('#btn-enable').prop('aria-pressed', mapper.enabled);
-      updateMenuItem({ menu: 'file|enabled', checked: mapper.enabled });
+      menubar.updateItem('file|enabled', { checked: mapper.enabled });
     }
 
     function toggleFollow() {
@@ -668,7 +619,7 @@
       else
         $('#btn-follow').removeClass('active');
       $('#btn-follow').prop('aria-pressed', mapper.follow);
-      updateMenuItem({ menu: 'actions|follow', checked: mapper.follow });
+      menubar.updateItem('actions|follow', { checked: mapper.follow });
     }
 
     function toggleLegend() {
@@ -678,7 +629,7 @@
       else
         $('#btn-legend').removeClass('active');
       $('#btn-legend').prop('aria-pressed', mapper.showLegend);
-      updateMenuItem({ menu: 'view|legend', checked: mapper.showLegend });
+      menubar.updateItem('view|legend', { checked: mapper.showLegend });
     }
 
     function toggleRooms() {
@@ -697,7 +648,7 @@
       ipcRenderer.send('setting-changed', { type: 'mapper', name: 'room', value: roomEditor });
 
       $('#btn-room').prop('aria-pressed', roomEditor);
-      updateMenuItem({ menu: 'view|room properties', checked: roomEditor });
+      menubar.updateItem('view|room properties', { checked: roomEditor });
     }
 
     function refreshMap() {
@@ -712,7 +663,7 @@
       else
         $('#btn-split').removeClass('active');
       $('#btn-split').prop('aria-pressed', mapper.splitArea);
-      updateMenuItem({ menu: 'view|split areas', checked: mapper.splitArea });
+      menubar.updateItem('view|split areas', { checked: mapper.splitArea });
     }
 
     function toggleFillWalls() {
@@ -722,7 +673,7 @@
       else
         $('#btn-fill').removeClass('active');
       $('#btn-fill').prop('aria-pressed', mapper.fillWalls);
-      updateMenuItem({ menu: 'view|fill walls', checked: mapper.fillWalls });
+      menubar.updateItem('view|fill walls', { checked: mapper.fillWalls });
     }
 
     function exportImage() {
