@@ -13,8 +13,8 @@ const { TrayClick } = require('./js/types');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winMap;
-let set, mapperMax = false;
+let win;
+let set;
 let reload = null;
 let tray = null;
 let overlay = 0;
@@ -31,8 +31,7 @@ global.title = '';
 global.debug = false;
 
 let states = {
-  'main': { x: 0, y: 0, width: 800, height: 600 },
-  'mapper': { x: 0, y: 0, width: 800, height: 600 }
+  'main': { x: 0, y: 0, width: 800, height: 600 }
 };
 
 process.on('uncaughtException', (err) => {
@@ -490,7 +489,9 @@ var menuTemp = [
 
       {
         label: '&Map...',
-        click: showMapper,
+        click: () => {
+          win.webContents.executeJavaScript('showMapper()');
+        },
         accelerator: 'CmdOrCtrl+T'
       },
       { type: 'separator' },
@@ -1065,11 +1066,6 @@ function createWindow() {
       else if (result === 2) {
         set = settings.Settings.load(global.settingsFile);
         set.windows['main'] = getWindowState('main', win);
-        if (winMap) {
-          set.windows['mapper'] = getWindowState('mapper', winMap);
-          winMap.webContents.executeJavaScript('save();');
-          winMap.destroy();
-        }
         for (var name in windows) {
           if (!windows.hasOwnProperty(name) || !windows[name].window)
             continue;
@@ -1169,12 +1165,6 @@ function createWindow() {
     else
       win.show();
 
-    if (set.showMapper)
-      showMapper();
-    else if (set.mapper.persistent || set.mapper.enabled)
-      createMapper();
-
-
     for (var name in set.windows) {
       if (set.windows[name].options) {
         if (set.windows[name].options.show)
@@ -1196,11 +1186,6 @@ function createWindow() {
     set = settings.Settings.load(global.settingsFile);
     set.windows['main'] = getWindowState('main', win);
 
-    if (winMap) {
-      set.windows['mapper'] = getWindowState('mapper', winMap);
-      winMap.webContents.executeJavaScript('save();');
-      winMap.destroy();
-    }
     for (var name in windows) {
       if (!windows.hasOwnProperty(name) || !windows[name].window)
         continue;
@@ -1335,10 +1320,6 @@ ipcMain.on('load-default', (event) => {
 
   set = settings.Settings.load(global.settingsFile);
 
-  if (winMap) {
-    winMap.webContents.executeJavaScript('save();');
-    winMap.destroy();
-  }
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -1349,11 +1330,6 @@ ipcMain.on('load-default', (event) => {
   }
   if (win && win.webContents)
     win.webContents.send('change-options', global.settingsFile);
-
-  if (set.showMapper)
-    showMapper();
-  else if (set.mapper.persistent || set.mapper.enabled)
-    createMapper();
 });
 
 ipcMain.on('load-char', (event, char) => {
@@ -1364,12 +1340,6 @@ ipcMain.on('load-char', (event, char) => {
   set = settings.Settings.load(global.settingsFile);
   if (win && win.webContents)
     win.webContents.send('load-char', char);
-
-  if (winMap) {
-    winMap.webContents.executeJavaScript('save();');
-    winMap.destroy();
-  }
-
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -1380,12 +1350,6 @@ ipcMain.on('load-char', (event, char) => {
   }
   if (win && win.webContents)
     win.webContents.send('change-options', global.settingsFile);
-
-  if (set.showMapper)
-    showMapper();
-  else if (set.mapper.persistent || set.mapper.enabled)
-    createMapper();
-
 });
 
 ipcMain.on('reload-options', () => {
@@ -1398,16 +1362,6 @@ ipcMain.on('reload-options', () => {
     tray.destroy();
     tray = null;
   }
-
-  if (winMap) {
-    winMap.webContents.send('reload-options');
-    if (winMap.setParentWindow)
-      winMap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
-    winMap.setAlwaysOnTop(set.mapper.alwaysOnTop);
-    winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
-  }
-  else if (set.mapper.enabled)
-    createMapper();
 
   for (var name in windows) {
     if (!windows.hasOwnProperty(name))
@@ -1432,8 +1386,6 @@ ipcMain.on('reload-options', () => {
 
 ipcMain.on('set-title', (event, title) => {
   global.title = title;
-  if (winMap)
-    winMap.webContents.send('set-title', title);
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -1443,8 +1395,6 @@ ipcMain.on('set-title', (event, title) => {
 });
 
 ipcMain.on('closed', () => {
-  if (winMap)
-    winMap.webContents.send('closed');
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -1453,8 +1403,6 @@ ipcMain.on('closed', () => {
 });
 
 ipcMain.on('connected', () => {
-  if (winMap)
-    winMap.webContents.send('connected');
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -1538,23 +1486,6 @@ ipcMain.on('chat', (event, text, args) => {
 });
 
 ipcMain.on('setting-changed', (event, data) => {
-  if (data.type === "mapper" && data.name === "alwaysOnTopClient") {
-    if (winMap.setParentWindow)
-      winMap.setParentWindow(data.value ? win : null);
-    winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
-  }
-  if (data.type === "mapper" && data.name === "setAlwaysOnTop") {
-    winMap.setAlwaysOnTop(data.value);
-    winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
-  }
-  if (win && event.sender != win.webContents)
-    win.webContents.send('setting-changed', data);
-  if (winMap && event.sender != winMap.webContents)
-    winMap.webContents.send('setting-changed', data);
-
-  if (data.type === "mapper" && data.name === "enabled" && !winMap && data.value)
-    createMapper();
-
   var name;
   if (data.type === "windows")
     for (name in windows) {
@@ -1584,8 +1515,6 @@ ipcMain.on('setting-changed', (event, data) => {
 });
 
 ipcMain.on('GMCP-received', (event, data) => {
-  if (winMap)
-    winMap.webContents.send('GMCP-received', data);
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -1619,18 +1548,12 @@ ipcMain.on('set-progress', (event, args) => {
 });
 
 ipcMain.on('set-progress-window', (event, window, args) => {
-  if (window == "mapper") {
-    if (winMap)
-      winMap.setProgressBar(args.value, args.options);
-  }
-  else if (windows[window] && windows[window].window)
+  if (windows[window] && windows[window].window)
     windows[window].window.setProgressBar(args.value, args.options);
 });
 
 ipcMain.on('show-window', (event, window, args) => {
-  if (window === "mapper")
-    showMapper();
-  else if (window === "color")
+  if (window === "color")
     showColor(args);
   else if (windows[window] && windows[window].window)
     showWindow(window, windows[window]);
@@ -1650,13 +1573,19 @@ ipcMain.on('create-window', (event, window, args) => {
 });
 
 ipcMain.on('import-map', (event, data) => {
-  if (winMap)
-    winMap.webContents.send('import', data);
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.send('import', data);
+  }
 });
 
 ipcMain.on('flush', (event) => {
-  if (winMap)
-    winMap.webContents.send('flush');
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.send('flush');
+  }
 });
 
 ipcMain.on('flush-end', (event) => {
@@ -1876,104 +1805,6 @@ function isFileSync(aPath) {
       throw e;
     }
   }
-}
-
-function createMapper(show) {
-  if (winMap) return;
-  var s = loadWindowState('mapper');
-  winMap = new BrowserWindow({
-    parent: set.mapper.alwaysOnTopClient ? win : null,
-    alwaysOnTop: set.mapper.alwaysOnTop,
-    title: 'Mapper',
-    x: s.x,
-    y: s.y,
-    width: s.width,
-    height: s.height,
-    backgroundColor: '#eae4d6',
-    show: false,
-    skipTaskbar: (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false,
-    icon: path.join(__dirname, '../assets/icons/png/map.png')
-  });
-
-  if (s.fullscreen)
-    winMap.setFullScreen(s.fullscreen);
-
-  winMap.setMenu(null);
-  winMap.loadURL(url.format({
-    pathname: path.join(__dirname, 'mapper.html'),
-    protocol: 'file:',
-    slashes: true
-  }));
-
-  winMap.webContents.on('crashed', (event, killed) => {
-    logError(`Mapper crashed, killed: ${killed}\n`, true);
-  });
-
-  winMap.on('closed', () => {
-    winMap = null;
-  });
-
-  winMap.on('resize', () => {
-    if (!winMap.isMaximized() && !winMap.isFullScreen())
-      trackWindowState('mapper', winMap);
-  });
-
-  winMap.on('move', () => {
-    trackWindowState('mapper', winMap);
-  });
-
-  winMap.on('maximize', () => {
-    trackWindowState('mapper', winMap);
-    states['mapper'].maximized = true;
-  });
-
-  winMap.on('unmaximize', () => {
-    trackWindowState('mapper', winMap);
-    states['mapper'].maximized = false;
-  });
-
-  if (global.debug)
-    winMap.webContents.openDevTools();
-
-  winMap.once('ready-to-show', () => {
-    addInputContext(winMap);
-    if (show) {
-      if (s.maximized)
-        winMap.maximize();
-      else
-        winMap.show();
-    }
-    else
-      mapperMax = s.maximized;
-  });
-
-  winMap.on('close', (e) => {
-    set = settings.Settings.load(global.settingsFile);
-    if (win != null)
-      set.showMapper = false;
-    set.windows['mapper'] = getWindowState('mapper', winMap);
-    set.save(global.settingsFile);
-    winMap.webContents.executeJavaScript('save();');
-    if (set.mapper.enabled || set.mapper.persistent) {
-      e.preventDefault();
-      winMap.hide();
-    }
-  });
-}
-
-function showMapper() {
-  set = settings.Settings.load(global.settingsFile);
-  set.showMapper = true;
-  set.save(global.settingsFile);
-  if (winMap != null) {
-    if (mapperMax)
-      winMap.maximize();
-    else
-      winMap.show();
-    mapperMax = false;
-  }
-  else
-    createMapper(true);
 }
 
 function createNewWindow(name, options) {

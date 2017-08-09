@@ -1342,16 +1342,12 @@
         showEditor();
       if (client.options.showChat)
         showChat();
-      else if (client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
-        ipcRenderer.send('create-window', 'chat', chatOptions());
-      else if (client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent)
+      else if ((client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent) || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
         ipcRenderer.send('create-window', 'chat', chatOptions());
 
       if (client.options.showMapper)
         showMapper();
-      else if (client.options.mapper.enabled)
-        ipcRenderer.send('create-window', 'mapper', mapperOptions());
-      else if (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent)
+      else if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
         ipcRenderer.send('create-window', 'mapper', mapperOptions());
 
       if (client.options.showCharacterManager)
@@ -1571,16 +1567,21 @@
         showEditor();
       if (client.options.showChat)
         showChat();
-      else if (client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+      else if ((client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent) || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
         ipcRenderer.send('create-window', 'chat', chatOptions());
-      else if (client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent)
-        ipcRenderer.send('create-window', 'chat', chatOptions());
+
+      if (client.options.showMapper)
+        showMapper();
+      else if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
+        ipcRenderer.send('create-window', 'mapper', mapperOptions());
     });
 
     ipcRenderer.on('setting-changed', (event, data) => {
       if (data.type === "mapper") {
         client.options.mapper[data.name] = data.value;
         client.saveOptions();
+        if (data.name == "enabled" && data.value)
+          ipcRenderer.send('create-window', 'mapper', mapperOptions());
       }
       else if (data.type === "profiles") {
         client.options.profiles[data.name] = data.value;
@@ -1672,6 +1673,8 @@
       });
       buildButtons();
       updateMenu();
+      if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
+        ipcRenderer.send('create-window', 'mapper', mapperOptions());
     });
 
     ipcRenderer.on('debug', (event, msg) => {
@@ -1750,7 +1753,7 @@
         client.options.windows['mapper'].options.show = show ? true : false;
         return client.options.windows['mapper'].options;
       }
-      return { show: show, file: 'mapper.html', width: 300, height: 225, icon: 'map', alwaysOnTopClient: true };
+      return { show: show, background: '#eae4d6', file: 'mapper.html', icon: 'map', alwaysOnTopClient: true };
     }
 
     function showMapper() {
