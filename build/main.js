@@ -1165,37 +1165,9 @@ function createWindow() {
     else
       win.show();
 
-    for (var name in set.windows) {
-      if (set.windows[name].options) {
-        if (set.windows[name].options.show)
-          showWindow(name, set.windows[name].options);
-        else if (set.windows[name].options.persistent)
-          createNewWindow(name, set.windows[name].options);
-      }
-      else {
-        if (set.windows[name].show)
-          showWindow(name, set.windows[name]);
-        else if (set.windows[name].persistent)
-          createNewWindow(name, set.windows[name]);
-      }
-    }
-
   });
 
   win.on('close', (e) => {
-    set = settings.Settings.load(global.settingsFile);
-    set.windows['main'] = getWindowState('main', win);
-
-    for (var name in windows) {
-      if (!windows.hasOwnProperty(name) || !windows[name].window)
-        continue;
-      windows[name].window.webContents.executeJavaScript('closing();');
-      windows[name].window.webContents.executeJavaScript('closed();');
-      set.windows[name] = getWindowState(name, windows[name].window);
-      set.windows[name].options = copyWindowOptions(name);
-      windows[name].window.destroy();
-    }
-    set.save(global.settingsFile);
   });
 }
 
@@ -1337,17 +1309,8 @@ ipcMain.on('load-char', (event, char) => {
   if (char === global.character)
     return;
   loadCharacter(char);
-  set = settings.Settings.load(global.settingsFile);
   if (win && win.webContents)
     win.webContents.send('load-char', char);
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.executeJavaScript('closed();');
-    set.windows[name] = getWindowState(name, windows[name].window);
-    set.windows[name].options = copyWindowOptions(name);
-    windows[name].window.destroy();
-  }
   if (win && win.webContents)
     win.webContents.send('change-options', global.settingsFile);
 });
@@ -1361,26 +1324,6 @@ ipcMain.on('reload-options', () => {
   else if (!set.showTrayIcon && tray) {
     tray.destroy();
     tray = null;
-  }
-
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name))
-      continue;
-    if (!windows[name].window) {
-      if (set.windows[name].options.show)
-        showWindow(name, set.windows[name].options);
-      else if (set.windows[name].options.persistent)
-        createNewWindow(name, set.windows[name].options);
-      else
-        return;
-    }
-    else {
-      windows[name].window.webContents.send('reload-options');
-      if (windows[name].window.setParentWindow)
-        windows[name].window.setParentWindow(set.windows[name].options.alwaysOnTopClient ? win : null);
-      windows[name].window.setAlwaysOnTop(set.windows[name].options.alwaysOnTop);
-      windows[name].window.setSkipTaskbar((set.windows[name].options.alwaysOnTopClient || set.windows[name].options.alwaysOnTop) ? true : false);
-    }
   }
 });
 

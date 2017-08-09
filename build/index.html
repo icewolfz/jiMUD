@@ -1071,6 +1071,18 @@
             return 'no';
         }
         client.raise('closed');
+        client.options.windows['main'] = getWindowState('main', remote.getCurrentWindow());
+
+        for (var name in windows) {
+          if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+          windows[name].window.webContents.executeJavaScript('closing();');
+          windows[name].window.webContents.executeJavaScript('closed();');
+          client.options.windows[name] = getWindowState(name, windows[name].window);
+          client.options.windows[name].options = copyWindowOptions(name);
+          windows[name].window.destroy();
+        }
+        client.saveOptions();
         return;
       };
 
@@ -1362,15 +1374,31 @@
       if (client.options.showChat)
         showChat();
       else if ((client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent) || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
-        ipcRenderer.send('create-window', 'chat', chatOptions());
+        createWindow('chat', chatOptions());
 
       if (client.options.showMapper)
         showMapper();
       else if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
-        ipcRenderer.send('create-window', 'mapper', mapperOptions());
+        createWindow('mapper', mapperOptions());
+
+      for (var name in client.options.windows) {
+        if (client.options.windows[name].options) {
+          if (client.options.windows[name].options.show)
+            showWindow(name, client.options.windows[name].options);
+          else if (client.options.windows[name].options.persistent)
+            createWindow(name, client.options.windows[name].options);
+        }
+        else {
+          if (client.options.windows[name].show)
+            showWindow(name, client.options.windows[name]);
+          else if (client.options.windows[name].persistent)
+            createWindow(name, client.options.windows[name]);
+        }
+      }
 
       if (client.options.showCharacterManager)
         showCharacters();
+
       client.raise('opened');
     }
 
@@ -1570,6 +1598,15 @@
         _logger.postMessage({ action: 'name', args: char });
         $("#character-name").text(char);
       }
+      for (var name in windows) {
+        if (!windows.hasOwnProperty(name) || !windows[name].window)
+          continue;
+        windows[name].window.webContents.executeJavaScript('closed();');
+        client.options.windows[name] = getWindowState(name, windows[name].window);
+        client.options.windows[name].options = copyWindowOptions(name);
+        windows[name].window.destroy();
+        client.saveOptions();
+      }
     });
 
     ipcRenderer.on('load-default', (event) => {
@@ -1587,12 +1624,12 @@
       if (client.options.showChat)
         showChat();
       else if ((client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent) || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
-        ipcRenderer.send('create-window', 'chat', chatOptions());
+        createWindow('chat', chatOptions());
 
       if (client.options.showMapper)
         showMapper();
       else if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
-        ipcRenderer.send('create-window', 'mapper', mapperOptions());
+        createWindow('mapper', mapperOptions());
     });
 
     ipcRenderer.on('setting-changed', (event, data) => {
@@ -1600,7 +1637,7 @@
         client.options.mapper[data.name] = data.value;
         client.saveOptions();
         if (data.name == "enabled" && data.value)
-          ipcRenderer.send('create-window', 'mapper', mapperOptions());
+          createWindow('mapper', mapperOptions());
       }
       else if (data.type === "profiles") {
         client.options.profiles[data.name] = data.value;
@@ -1612,7 +1649,7 @@
         client.options.chat[data.name] = data.value;
         client.saveOptions();
         if (data.value && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines'))
-          ipcRenderer.send('create-window', 'chat', chatOptions());
+          createWindow('chat', chatOptions());
       }
       else if (data.type === "extensions") {
         client.options.extensions[data.name] = data.value;
@@ -1692,8 +1729,27 @@
       });
       buildButtons();
       updateMenu();
+      for (var name in windows) {
+        if (!windows.hasOwnProperty(name))
+          continue;
+        if (!windows[name].window) {
+          if (client.options.windows[name].options.show)
+            showWindow(name, set.windows[name].options);
+          else if (set.windows[name].options.persistent)
+            createWindow(name, set.windows[name].options);
+          else
+            continue;
+        }
+        else {
+          windows[name].window.webContents.send('reload-options');
+          if (windows[name].window.setParentWindow)
+            windows[name].window.setParentWindow(set.windows[name].options.alwaysOnTopClient ? remote.getCurrentWindow() : null);
+          windows[name].window.setAlwaysOnTop(set.windows[name].options.alwaysOnTop);
+          windows[name].window.setSkipTaskbar((set.windows[name].options.alwaysOnTopClient || set.windows[name].options.alwaysOnTop) ? true : false);
+        }
+      }
       if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
-        ipcRenderer.send('create-window', 'mapper', mapperOptions());
+        createWindow('mapper', mapperOptions());
     });
 
     ipcRenderer.on('debug', (event, msg) => {
@@ -1729,30 +1785,30 @@
     function showImmortalTools() {
       if (client.options.windows['immortal'] && client.options.windows['immortal'].options) {
         client.options.windows['immortal'].options.show = true;
-        ipcRenderer.send('show-window', 'immortal', client.options.windows['immortal'].options);
+        showWindow('immortal', client.options.windows['immortal'].options);
       }
       else
-        ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
+        showWindow('immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
     }
 
     function showProfiles() {
       _profilesOpen = true;
       if (client.options.windows['profiles'] && client.options.windows['profiles'].options) {
         client.options.windows['profiles'].options.show = true;
-        ipcRenderer.send('show-window', 'profiles', client.options.windows['profiles'].options);
+        showWindow('profiles', client.options.windows['profiles'].options);
       }
       else
-        ipcRenderer.send('show-window', 'profiles', { show: true, file: 'profiles.html', icon: 'profiles', alwaysOnTopClient: true });
+        showWindow('profiles', { show: true, file: 'profiles.html', icon: 'profiles', alwaysOnTopClient: true });
     }
 
     function showEditor() {
-      //ipcRenderer.send('show-window', 'editor')
+      //showWindow('editor')
       if (client.options.windows['editor'] && client.options.windows['editor'].options) {
         client.options.windows['editor'].options.show = true;
-        ipcRenderer.send('show-window', 'editor', client.options.windows['editor'].options);
+        showWindow('editor', client.options.windows['editor'].options);
       }
       else
-        ipcRenderer.send('show-window', 'editor', { show: true, file: 'editor.html', width: 300, height: 225, icon: 'edit', alwaysOnTopClient: true });
+        showWindow('editor', { show: true, file: 'editor.html', width: 300, height: 225, icon: 'edit', alwaysOnTopClient: true });
     }
 
     function chatOptions(show) {
@@ -1764,7 +1820,7 @@
     }
 
     function showChat() {
-      ipcRenderer.send('show-window', 'chat', chatOptions(true));
+      showWindow('chat', chatOptions(true));
     }
 
     function mapperOptions(show) {
@@ -1776,7 +1832,7 @@
     }
 
     function showMapper() {
-      ipcRenderer.send('show-window', 'mapper', mapperOptions(true));
+      showWindow('mapper', mapperOptions(true));
     }
 
     $(document).ready(init);
@@ -1865,6 +1921,26 @@
     function autoConnect() {
       if (!autoConnectID && client.options.autoConnect && !client.connected)
         autoConnectID = setTimeout(function () { client.connect(); autoConnectID = null; }, client.options.autoConnectDelay);
+    }
+
+    function showWindow(name, options) {
+      if (!client.options.windows[name])
+        client.options.windows[name] = {};
+      client.options.windows[name].show = true;
+      client.options.save(global.settingsFile);
+      if (!options)
+        options = { show: true };
+      else
+        options.show = true;
+      if (windows[name] && windows[name].window) {
+        if (windows[name].max)
+          windows[name].window.maximize();
+        else
+          windows[name].window.show();
+        windows[name].max = false;
+      }
+      else
+        createWindow(name, options);
     }
 
     function createWindow(name, options) {
