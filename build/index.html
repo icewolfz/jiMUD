@@ -1344,6 +1344,11 @@
       else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
         ipcRenderer.send('create-window', 'chat', chatOptions());
 
+      if (client.options.showMapper)
+        showMapper();
+      else if (client.options.mapper.persistent || client.options.mapper.enabled)
+        ipcRenderer.send('create-window', 'mapper', mapperOptions(true));
+
       if (client.options.showCharacterManager)
         showCharacters();
       client.raise('opened');
@@ -1723,6 +1728,18 @@
 
     function showChat() {
       ipcRenderer.send('show-window', 'chat', chatOptions(true));
+    }
+
+    function mapperOptions(show) {
+      if (client.options.windows['mapper'] && client.options.windows['mapper'].options) {
+        client.options.windows['mapper'].options.show = show ? true : false;
+        return client.options.windows['mapper'].options;
+      }
+      return { show: show, file: 'mapper.html', width: 300, height: 225, icon: 'map', alwaysOnTopClient: true };
+    }
+
+    function showMapper() {
+      ipcRenderer.send('show-window', 'mapper', mapperOptions(true));
     }
 
     $(document).ready(init);
