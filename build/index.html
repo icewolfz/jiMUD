@@ -147,6 +147,7 @@
     var _captures = [], _captureReviews = [];
     var _noCapture = false;
     var _cLoading = false;
+    var _pLoading = false;
     var _profilesOpen = false;
     var _context;
     var _selword = '';
@@ -1341,13 +1342,17 @@
         showEditor();
       if (client.options.showChat)
         showChat();
-      else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+      else if (client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+        ipcRenderer.send('create-window', 'chat', chatOptions());
+      else if (client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent)
         ipcRenderer.send('create-window', 'chat', chatOptions());
 
       if (client.options.showMapper)
         showMapper();
-      else if (client.options.mapper.persistent || client.options.mapper.enabled)
-        ipcRenderer.send('create-window', 'mapper', mapperOptions(true));
+      else if (client.options.mapper.enabled)
+        ipcRenderer.send('create-window', 'mapper', mapperOptions());
+      else if (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent)
+        ipcRenderer.send('create-window', 'mapper', mapperOptions());
 
       if (client.options.showCharacterManager)
         showCharacters();
@@ -1679,14 +1684,22 @@
     function childClosed(url, name) {
       if (path.basename(url) === 'characters.html')
         _cLoading = false;
-      if (path.basename(url) === 'profiles.html')
+      else if (path.basename(url) === 'profiles.html')
         _profilesOpen = false;
+      else if (path.basename(url) === 'prefs.html')
+        _pLoading = false;
     }
 
     function showCharacters() {
       if (_cLoading) return;
       _cLoading = true;
       window.open('characters.html', 'modal', 'backgroundColor=#fff,height=400,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+    }
+
+    function showPrefs() {
+      if (_pLoading) return;
+      _pLoading = true;
+      window.open('prefs.html', 'modal', 'backgroundColor=#fff,height=420,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
     }
 
     function showImmortalTools() {
@@ -1864,7 +1877,7 @@
     <a href="javascript:void(0)" title="Immortal Tools" id="immortal" class="button" onclick="showImmortalTools()" style="display: none">
       <i class="fa fa-code-fork"></i>
     </a>
-    <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
+    <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="showPrefs();">
       <i class="fa fa-gears"></i>
     </a>
     <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="toggleLogging();">
@@ -1879,7 +1892,7 @@
     <a href="javascript:void(0)" title="Lock display" id="lock" class="button" onclick="client.toggleScrollLock()">
       <i class="fa fa-lock"></i>
     </a>
-    <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');">
+    <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="showMapper();">
       <i class="fa fa-map"></i>
     </a>
     <div id="user-buttons"></div>

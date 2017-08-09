@@ -7,6 +7,7 @@
     - Editor is now stored dynamically to reduce code, settings have been reset
     - Chat is now dynamic, window settings reset
     - Profile manager is now dynamic, window settings reset
+    - Preference dialog now uses dynamic dialog system like character manager
 
 ## 0.4.11
 

@@ -115,7 +115,9 @@ var menuTemp = [
         label: '&Preferences...',
         id: 'preferences',
         accelerator: "CmdOrCtrl+Comma",
-        click: showPrefs
+        click: () => {
+          win.webContents.executeJavaScript('showPrefs()');
+        }
       },
       {
         type: 'separator'
@@ -781,7 +783,9 @@ function createTray() {
     { type: 'separator' },
     {
       label: '&Preferences...',
-      click: showPrefs
+      click: () => {
+        win.webContents.executeJavaScript('showPrefs()');
+      }
     },
     { type: 'separator' },
     {
@@ -1624,9 +1628,7 @@ ipcMain.on('set-progress-window', (event, window, args) => {
 });
 
 ipcMain.on('show-window', (event, window, args) => {
-  if (window === "prefs")
-    showPrefs();
-  else if (window === "mapper")
+  if (window === "mapper")
     showMapper();
   else if (window === "color")
     showColor(args);
@@ -1874,48 +1876,6 @@ function isFileSync(aPath) {
       throw e;
     }
   }
-}
-
-function showPrefs() {
-  var b = win.getBounds();
-
-  let pref = new BrowserWindow({
-    parent: win,
-    modal: true,
-    x: Math.floor(b.x + b.width / 2 - 400),
-    y: Math.floor(b.y + b.height / 2 - 210),
-    width: 800,
-    height: 420,
-    movable: false,
-    minimizable: false,
-    maximizable: false,
-    skipTaskbar: true,
-    resizable: false,
-    title: 'Preferences',
-    icon: path.join(__dirname, '../assets/icons/png/preferences.png')
-  });
-  //pref.webContents.openDevTools()
-  pref.setMenu(null);
-  pref.on('closed', () => {
-    pref = null;
-  });
-  pref.loadURL(url.format({
-    pathname: path.join(__dirname, 'prefs.html'),
-    protocol: 'file:',
-    slashes: true
-  }));
-
-  if (global.debug)
-    pref.webContents.openDevTools();
-
-  pref.once('ready-to-show', () => {
-    pref.show();
-  });
-
-  pref.webContents.on('crashed', (event, killed) => {
-    logError(`Preferences crashed, killed: ${killed}\n`, true);
-  });
-  addInputContext(pref);
 }
 
 function createMapper(show) {
