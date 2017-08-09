@@ -14,8 +14,6 @@ export class Mapper {
     public importType = 1;
     public vscroll: number = 0;
     public hscroll: number = 0;
-    public alwaysOnTop: boolean = false;
-    public alwaysOnTopClient: boolean = true;
     public memory: boolean = false;
     public memorySavePeriod: number = 900000;
     public active =
@@ -27,7 +25,6 @@ export class Mapper {
         area: null,
         zone: 0
     };
-    public persistent: boolean = true;
 }
 
 export class Profiles {
@@ -53,10 +50,7 @@ export class Chat {
     public captureTalk: boolean = false;
     //list of lines to capture
     public lines: string[] = [];
-    public alwaysOnTop: boolean = false;
-    public alwaysOnTopClient: boolean = true;
     public log: boolean = false;
-    public persistent: boolean = false;
     public gag: boolean = true;
 }
 

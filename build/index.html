@@ -1571,7 +1571,9 @@
         showEditor();
       if (client.options.showChat)
         showChat();
-      else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+      else if (client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+        ipcRenderer.send('create-window', 'chat', chatOptions());
+      else if (client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent)
         ipcRenderer.send('create-window', 'chat', chatOptions());
     });
 

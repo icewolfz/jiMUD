@@ -366,20 +366,38 @@
       $('#mapLegend').prop('checked', _settings.mapper.legend);
       $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
 
-      $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
+      if (_settings.windows['mapper'] && _settings.windows['mapper'].options) {
+        $('#mapper-persistent').prop('checked', _settings.windows['mapper'].options.persistent);
+        $('#mapper-alwaysOnTop').prop('checked', _settings.windows['mapper'].options.alwaysOnTop);
+        $('#mapper-alwaysOnTopClient').prop('checked', _settings.windows['chat'].options.alwaysOnTopClient);
+      }
+      else {
+        $('#mapper-persistent').prop('checked', true);
+        $('#mapper-alwaysOnTop').prop('checked', false);
+        $('#mapper-alwaysOnTopClient').prop('checked', true);
+      }
+
       $('#mapper-memory').prop('checked', _settings.mapper.memory);
       $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
-      $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
 
       $('#mapper-importTypeReplace').prop('checked', _settings.mapper.importType === 1);
       $('#mapper-importTypeMerge').prop('checked', _settings.mapper.importType === 0);
 
-      $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
-      $('#chat-persistent').prop('checked', _settings.chat.persistent);
+
       $('#chat-gag').prop('checked', _settings.chat.gag);
 
-      $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
-      $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
+      if (_settings.windows['chat'] && _settings.windows['chat'].options) {
+        $('#chat-persistent').prop('checked', _settings.windows['chat'].options.persistent);
+        $('#chat-alwaysOnTop').prop('checked', _settings.windows['chat'].options.alwaysOnTop);
+        $('#chat-alwaysOnTopClient').prop('checked', _settings.windows['chat'].options.alwaysOnTopClient);
+      }
+      else {
+        $('#chat-persistent').prop('checked', false);
+        $('#chat-alwaysOnTop').prop('checked', false);
+        $('#chat-alwaysOnTopClient').prop('checked', true);
+      }
+
+
       $('#chat-captureLines').prop('checked', _settings.chat.captureLines);
       $('#chat-captureReviews').prop('checked', _settings.chat.captureReviews);
       $('#chat-captureTells').prop('checked', _settings.chat.captureTells);
@@ -446,21 +464,36 @@
         switch ($(this).attr('id')) {
           case 'editor-persistent':
             if (!_settings.windows['editor'])
-             _settings.windows['editor'] = { options: {} };
-            else if(!_settings.windows['editor'].options)
+              _settings.windows['editor'] = { options: {} };
+            else if (!_settings.windows['editor'].options)
               _settings.windows['editor'] = {};
             _settings.windows['editor'].options.persistent;
             break;
           case 'chat-alwaysOnTop':
-            _settings.chat.alwaysOnTop = this.checked;
+            if (!_settings.windows['chat'])
+              _settings.windows['chat'] = { options: {} };
+            else if (!_settings.windows['chat'].options)
+              _settings.windows['chat'] = {};
+
+            _settings.windows['chat'].alwaysOnTop = this.checked;
             break;
           case 'chat-alwaysOnTopClient':
-            _settings.chat.alwaysOnTopClient = this.checked;
+            if (!_settings.windows['chat'])
+              _settings.windows['chat'] = { options: {} };
+            else if (!_settings.windows['chat'].options)
+              _settings.windows['chat'] = {};
+            _settings.windows['chat'].alwaysOnTopClient = this.checked;
+            break;
+          case "chat-persistent":
+            if (!_settings.windows['chat'])
+              _settings.windows['chat'] = { options: {} };
+            else if (!_settings.windows['chat'].options)
+              _settings.windows['chat'] = {};
+            _settings.windows['chat'].persistent = this.checked;
             break;
           case 'chat-captureLines':
             _settings.chat.captureLines = this.checked;
             $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
-
             $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
             $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
             break;
@@ -473,17 +506,27 @@
           case 'chat-captureTalk':
             _settings.chat.captureTalk = this.checked;
             break;
-          case "chat-persistent":
-            _settings.chat.persistent = this.checked;
-            break;
+
           case "mapper-persistent":
-            _settings.mapper.persistent = this.checked;
+            if (!_settings.windows['mapper'])
+              _settings.windows['mapper'] = { options: {} };
+            else if (!_settings.windows['mapper'].options)
+              _settings.windows['mapper'] = {};
+            _settings.windows['mapper'].persistent = this.checked;
             break;
           case 'mapper-alwaysOnTop':
-            _settings.mapper.alwaysOnTop = this.checked;
+            if (!_settings.windows['mapper'])
+              _settings.windows['mapper'] = { options: {} };
+            else if (!_settings.windows['mapper'].options)
+              _settings.windows['mapper'] = {};
+            _settings.windows['mapper'].alwaysOnTop = this.checked;
             break;
           case 'mapper-alwaysOnTopClient':
-            _settings.mapper.alwaysOnTopClient = this.checked;
+            if (!_settings.windows['mapper'])
+              _settings.windows['mapper'] = { options: {} };
+            else if (!_settings.windows['mapper'].options)
+              _settings.windows['mapper'] = {};
+            _settings.windows['mapper'].alwaysOnTopClient = this.checked;
             break;
           case 'mapper-importTypeReplace':
             _settings.mapper.importType = 1;
