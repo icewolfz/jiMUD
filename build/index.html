@@ -148,7 +148,6 @@
     var _noCapture = false;
     var _cLoading = false;
     var _pLoading = false;
-    var _profilesOpen = false;
     var _context;
     var _selword = '';
     var _selurl = '';
@@ -585,7 +584,6 @@
       };
 
       client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
-
       window.$selectedurl = '';
       window.$selectedline = '';
 
@@ -1074,7 +1072,7 @@
         }
       });
       window.onbeforeunload = function () {
-        if (_profilesOpen) {
+        if (windows['profiles'] && windows['profiles'].window) {
           dialog.showMessageBox(windows['profiles'].window, {
             type: 'warning',
             title: 'Close profile manager',
@@ -1095,6 +1093,7 @@
           if (choice === 2) {
             client.raise('closed');
             client.options.askonclose = false;
+            unloadWindows();
             client.saveOptions();
             return;
           }
@@ -1103,16 +1102,7 @@
         }
         client.raise('closed');
         client.options.windows['main'] = getWindowState('main', remote.getCurrentWindow());
-
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.executeJavaScript('closing();');
-          windows[name].window.webContents.executeJavaScript('closed();');
-          client.options.windows[name] = getWindowState(name, windows[name].window);
-          client.options.windows[name].options = copyWindowOptions(name);
-          windows[name].window.destroy();
-        }
+        unloadWindows();
         client.saveOptions();
         return;
       };
@@ -1622,15 +1612,7 @@
         _logger.postMessage({ action: 'name', args: char });
         $("#character-name").text(char);
       }
-      for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
-          continue;
-        windows[name].window.webContents.executeJavaScript('closed();');
-        client.options.windows[name] = getWindowState(name, windows[name].window);
-        client.options.windows[name].options = copyWindowOptions(name);
-        windows[name].window.destroy();
-        client.saveOptions();
-      }
+      unloadWindows();
     });
 
     ipcRenderer.on('set-color', (event, type, color) => {
@@ -1651,14 +1633,7 @@
         _logger.postMessage({ action: 'name', args: '' });
         $("#character-name").text("&nbsp;");
       }
-      for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
-          continue;
-        windows[name].window.webContents.executeJavaScript('closed();');
-        client.options.windows[name] = getWindowState(name, windows[name].window);
-        client.options.windows[name].options = copyWindowOptions(name);
-        windows[name].window.destroy();
-      }
+      unloadWindows();
     });
 
     ipcRenderer.on('change-options', (event, file) => {
@@ -1839,8 +1814,6 @@
     function childClosed(url, name) {
       if (path.basename(url) === 'characters.html')
         _cLoading = false;
-      else if (path.basename(url) === 'profiles.html')
-        _profilesOpen = false;
       else if (path.basename(url) === 'prefs.html')
         _pLoading = false;
     }
@@ -1867,7 +1840,6 @@
     }
 
     function showProfiles() {
-      _profilesOpen = true;
       if (client.options.windows['profiles'] && client.options.windows['profiles'].options) {
         client.options.windows['profiles'].options.show = true;
         showWindow('profiles', client.options.windows['profiles'].options);
@@ -2002,17 +1974,20 @@
       if (!client.options.windows[name])
         client.options.windows[name] = {};
       client.options.windows[name].show = true;
-      client.options.save(global.settingsFile);
       if (!options)
         options = { show: true };
-      else
+      else {
+        options = Object.assign({}, options || {});
         options.show = true;
+      }
+
       if (windows[name] && windows[name].window) {
         if (windows[name].max)
           windows[name].window.maximize();
         else
           windows[name].window.show();
         windows[name].max = false;
+        client.saveOptions();
       }
       else
         createWindow(name, options);
@@ -2021,8 +1996,7 @@
     function createWindow(name, options) {
       if (windows[name] && windows[name.window])
         return;
-      //BrowserWindow
-      if (!options) options = {};
+      options = Object.assign({}, options || {});
       var s = loadWindowState(name);
       if (options.hasOwnProperty('width')) {
         s.width = options.width;
@@ -2117,7 +2091,7 @@
         }
         options.show = false;
         const w = new BrowserWindow(options);
-        if (global.debug)
+        if (remote.getGlobal('debug'))
           w.webContents.openDevTools();
         w.setMenu(null);
         w.once('ready-to-show', () => {
@@ -2138,7 +2112,7 @@
         event.newGuest = w;
       });
 
-      if (global.debug)
+      if (remote.getGlobal('debug'))
         windows[name].window.webContents.openDevTools();
 
       windows[name].window.once('ready-to-show', () => {
@@ -2254,6 +2228,18 @@
           setTimeout(() => { windows[name].window.webContents.send('chat', text); }, 100);
         else
           windows[name].window.webContents.send('chat', text);
+      }
+    }
+
+    function unloadWindows() {
+      for (var name in windows) {
+        if (!windows.hasOwnProperty(name) || !windows[name].window)
+          continue;
+        windows[name].window.webContents.executeJavaScript('closing();');
+        windows[name].window.webContents.executeJavaScript('closed();');
+        client.options.windows[name] = getWindowState(name, windows[name].window);
+        client.options.windows[name].options = copyWindowOptions(name);
+        windows[name].window.destroy();
       }
     }
   </script>
