@@ -2385,11 +2385,8 @@ function createNewWindow(name, options) {
     windows[name].ready = true;
   });
 
-  windows[name].window.on('closed', () => {
-    windows[name].window = null;
-  });
-
   windows[name].window.on('close', (e) => {
+    windows[name].window.webContents.executeJavaScript('closing();');
     set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, windows[name].window);
     windows[name].show = false;
