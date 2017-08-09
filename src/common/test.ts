@@ -393,9 +393,8 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions['TestMapper'] = () => {
-            const { ipcRenderer } = require('electron');
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
+            client.emit('received-GMCP',
+                'Room.Info', {
                     details: [],
                     doors: {},
                     prevroom: { num: 0, dir: '', area: '' },
@@ -407,10 +406,9 @@ export class Tests extends EventEmitter {
                     name: 'Sample room 1',
                     num: 1968208336,
                     indoors: 0
-                }
-            });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
+                });
+            client.emit('received-GMCP',
+                'Room.Info', {
                     details: [],
                     doors: {},
                     prevroom: { num: 1968208336, dir: 'east', area: 'Doc Build Samples Area' },
@@ -424,10 +422,9 @@ export class Tests extends EventEmitter {
                     name: 'Sample room 2',
                     num: -329701270,
                     indoors: 0
-                }
-            });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
+                });
+            client.emit('received-GMCP',
+                'Room.Info', {
                     details: [],
                     doors: {},
                     prevroom: { num: -329701270, dir: 'east', area: 'Doc Build Samples Area' },
@@ -440,10 +437,9 @@ export class Tests extends EventEmitter {
                     name: 'Sample room 3',
                     num: -1688332036,
                     indoors: 0
-                }
-            });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
+                });
+            client.emit('received-GMCP',
+                'Room.Info', {
                     details: [],
                     doors: {},
                     prevroom: { num: -1688332036, dir: 'south', area: 'Doc Build Samples Area' },
@@ -456,10 +452,9 @@ export class Tests extends EventEmitter {
                     }, name: 'Sample room 6',
                     num: -348853133,
                     indoors: 0
-                }
-            });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
+                });
+            client.emit('received-GMCP',
+                'Room.Info', {
                     details: [],
                     doors: {},
                     prevroom: { num: -348853133, dir: 'west', area: 'Doc Build Samples Area' },
@@ -474,10 +469,9 @@ export class Tests extends EventEmitter {
                     name: 'Sample room 5',
                     num: 1916648905,
                     indoors: 1
-                }
-            });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
+                });
+            client.emit('received-GMCP',
+                'Room.Info', {
                     details: [],
                     doors: {},
                     prevroom: { num: 1916648905, dir: 'west', area: 'Doc Build Samples Area' },
@@ -491,10 +485,10 @@ export class Tests extends EventEmitter {
                     name: 'Sample room 4',
                     num: 87723359,
                     indoors: 0
-                }
-            });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
+
+                });
+            client.emit('received-GMCP',
+                'Room.Info', {
                     details: [],
                     doors: {},
                     prevroom: { num: 87723359, dir: 'south', area: 'Doc Build Samples Area' },
@@ -507,10 +501,9 @@ export class Tests extends EventEmitter {
                     name: 'Sample room 7',
                     num: -1674322715,
                     indoors: 0
-                }
-            });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
+                });
+            client.emit('received-GMCP',
+                'Room.Info', {
                     details: [],
                     doors: {},
                     prevroom: { num: -1674322715, dir: 'east', area: 'Doc Build Samples Area' },
@@ -524,10 +517,9 @@ export class Tests extends EventEmitter {
                     name: 'Sample room 8',
                     num: 210551156,
                     indoors: 0
-                }
-            });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
+                });
+            client.emit('received-GMCP',
+                'Room.Info', {
                     details: [],
                     doors: {},
                     prevroom: { num: 210551156, dir: 'east', area: 'Doc Build Samples Area' },
@@ -539,8 +531,7 @@ export class Tests extends EventEmitter {
                     name: 'Sample room 9',
                     num: 2072768994,
                     indoors: 0
-                }
-            });
+                });
         };
 
         this.TestFunctions['TestFANSI'] = function () {
