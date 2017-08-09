@@ -1362,8 +1362,8 @@ ipcMain.on('reload-profiles', (event) => {
 });
 
 ipcMain.on('setting-changed', (event, data) => {
-  if (win && win.webContents)
-    win.webContents.send('setting-changed');
+  if (win && event.sender != win.webContents)
+    win.webContents.send('setting-changed', data);
 });
 
 ipcMain.on('update-menuitem', (event, args) => {
