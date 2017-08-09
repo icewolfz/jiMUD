@@ -14,14 +14,13 @@ const { TrayClick } = require('./js/types');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winWho, winMap, winProfiles, winEditor, winChat;//winHelp
+let win, winMap, winProfiles, winEditor, winChat;
 let set, mapperMax = false, editorMax = false, chatMax = false;
 let chatReady = false;
 let reload = null;
 let tray = null;
 let overlay = 0;
 let windows = {};
-let quiting = false;
 
 app.setAppUserModelId('jiMUD');
 
@@ -35,7 +34,6 @@ global.debug = false;
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
-  'help': { x: 0, y: 0, width: 800, height: 600 },
   'mapper': { x: 0, y: 0, width: 800, height: 600 },
   'profiles': { x: 0, y: 0, width: 800, height: 600 },
   'editor': { x: 0, y: 0, width: 300, height: 225 },
@@ -224,10 +222,6 @@ var menuTemp = [
       {
         label: '&Who is on?',
         click: () => {
-          if (winWho) {
-            winWho.show();
-            return;
-          }
           shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
         }
       },
@@ -515,8 +509,6 @@ var menuTemp = [
       {
         label: '&ShadowMUD',
         click: () => {
-          //showHelpWindow('http://www.shadowmud.com:1130/help', 'ShadowMUD Help');
-          //showHelpWindow('http://www.shadowmud.com/OoMUD/smhelp.php', 'ShadowMUD Help');
           shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
         }
       },
@@ -679,76 +671,6 @@ function addInputContext(window) {
   });
 }
 
-/*
-function showHelpWindow(url, title) {
-  if (winHelp != null) {
-    winHelp.title = title;
-    winHelp.loadURL(url);
-    winHelp.show();
-    return;
-  }
-  var s = loadWindowState('help');
-  if (!title || title.length === 0)
-    title = "Help";
-  winHelp = new BrowserWindow({
-    parent: win,
-    title: title,
-    x: s.x,
-    y: s.y,
-    width: s.width,
-    height: s.height,
-    backgroundColor: '#000',
-    show: false, skipTaskbar: false
-  });
-
-  winHelp.webContents.on('crashed', (event, killed) => {
-    logError(`Help crashed, killed: ${killed}\n`, true);
-  });
-
-
-  if (s.fullscreen)
-    winHelp.setFullScreen(s.fullscreen);
-
-  winHelp.setMenu(null);
-  winHelp.loadURL(url);
-  winHelp.on('closed', () => {
-    winHelp = null;
-  });
-
-  winHelp.on('resize', () => {
-    if (!winHelp.isMaximized() && !winHelp.isFullScreen())
-      trackWindowState('help', winHelp);
-  });
-
-  winHelp.on('move', () => {
-    trackWindowState('help', winHelp);
-  });
-
-  winHelp.on('unmaximize', () => {
-    trackWindowState('help', winHelp);
-  });
-
-  if (s.devTools)
-    winHelp.webContents.openDevTools();
-
-  winHelp.once('ready-to-show', () => {
-    addInputContext(winHelp);
-    if (url != null && url.length != 0) {
-      if (s.maximized)
-        winHelp.maximize();
-      else
-        winHelp.show();
-    }
-  });
-
-  winHelp.on('close', () => {
-    set = settings.Settings.load(global.settingsFile);
-    set.windows['help'] = getWindowState('help', winHelp);
-    set.save(global.settingsFile);
-  });
-}
-*/
-
 function createMenu() {
   var profiles;
   for (var m = 0; m < menuTemp.length; m++) {
@@ -863,10 +785,6 @@ function createTray() {
     {
       label: '&Who is on?',
       click: () => {
-        if (winWho) {
-          winWho.show();
-          return;
-        }
         shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
       }
     },
@@ -1255,7 +1173,7 @@ function createWindow() {
 
     if (set.showMapper)
       showMapper();
-    else if (set.chat.persistent || set.mapper.enabled)
+    else if (set.mapper.persistent || set.mapper.enabled)
       createMapper();
 
     if (set.showEditor)
@@ -1424,10 +1342,6 @@ app.on('activate', () => {
   }
 });
 
-app.on('before-quit', () => {
-  quiting = true;
-});
-
 ipcMain.on('reload', (event, char) => {
   //already loaded so no need to reload
   if (char === global.character)
@@ -1562,9 +1476,23 @@ ipcMain.on('reload-options', () => {
     winEditor.webContents.send('reload-options');
 
   for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
+    if (!windows.hasOwnProperty(name))
       continue;
-    windows[name].window.webContents.send('reload-options');
+    if (!windows[name].window) {
+      if (set.windows[name].options.show)
+        showWindow(name, set.windows[name].options);
+      else if (set.windows[name].options.persistent)
+        createNewWindow(name, set.windows[name].options);
+      else
+        return;
+    }
+    else {
+      windows[name].window.webContents.send('reload-options');
+      if (windows[name].window.setParentWindow)
+        windows[name].window.setParentWindow(set.windows[name].options.alwaysOnTopClient ? win : null);
+      windows[name].window.setAlwaysOnTop(set.windows[name].options.alwaysOnTop);
+      windows[name].window.setSkipTaskbar((set.windows[name].options.alwaysOnTopClient || set.windows[name].options.alwaysOnTop) ? true : false);
+    }
   }
 });
 
