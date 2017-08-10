@@ -15,635 +15,21 @@ const { TrayClick } = require('./js/types');
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
 let set;
-let reload = null;
 let tray = null;
 let overlay = 0;
-let windows = {};
 
 app.setAppUserModelId('jiMUD');
 
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
-global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
-global.profiles = null;
-global.character = null;
-global.characterPass = null;
 global.title = '';
 global.debug = false;
+global.clients = {};
 
-let states = {
-  'main': { x: 0, y: 0, width: 800, height: 600 }
-};
+let state = { x: 0, y: 0, width: 800, height: 600 };
 
 process.on('uncaughtException', (err) => {
   logError(err);
 });
-
-var characters;
-
-function loadCharacter(char) {
-  if (!characters)
-    characters = { load: 0, characters: {} };
-  if (!characters.characters[char]) {
-    characters.characters[char] = { settings: path.join("{characters}", char + ".json"), map: path.join("{characters}", char + ".map") };
-    var d = settings.Settings.load(parseTemplate(path.join("{data}", "settings.json")));
-    d.save(parseTemplate(characters.characters[char].settings));
-    fs.writeFileSync(path.join(app.getPath('userData'), "characters.json"), JSON.stringify(characters));
-    if (isFileSync(parseTemplate(path.join("{data}", "map.sqlite")))) {
-      copyFile(parseTemplate(path.join("{data}", "map.sqlite")), parseTemplate(characters.characters[char].map));
-    }
-  }
-  global.character = char;
-  global.settingsFile = parseTemplate(characters.characters[char].settings);
-  global.mapFile = parseTemplate(characters.characters[char].map);
-  global.characterPass = characters.characters[char].password || '';
-  global.title = char;
-  updateTray();
-}
-
-var menuTemp = [
-  //File
-  {
-    label: '&File',
-    id: 'file',
-    submenu: [
-      {
-        label: "&Connect",
-        id: "connect",
-        accelerator: "CmdOrCtrl+N",
-        click: () => {
-          win.webContents.executeJavaScript('client.connect()');
-        }
-      },
-      {
-        label: "&Disconnect",
-        id: "disconnect",
-        accelerator: "CmdOrCtrl+D",
-        enabled: false,
-        click: () => {
-          win.webContents.executeJavaScript('client.close()');
-        }
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: "Ch&aracters...",
-        id: "characters",
-        accelerator: "CmdOrCtrl+H",
-        click: () => {
-          win.webContents.executeJavaScript('showCharacters()');
-        }
-      },
-      { type: 'separator' },
-      {
-        label: '&Log',
-        id: "log",
-        type: 'checkbox',
-        checked: false,
-        click: () => {
-          win.webContents.executeJavaScript('toggleLogging()');
-        }
-      },
-      {
-        label: '&View logs...'
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: '&Preferences...',
-        id: 'preferences',
-        accelerator: "CmdOrCtrl+Comma",
-        click: () => {
-          win.webContents.executeJavaScript('showPrefs()');
-        }
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: 'E&xit',
-        role: 'quit'
-      }
-    ]
-  },
-  //Edit
-  {
-    label: '&Edit',
-    id: 'edit',
-    submenu: [
-      {
-        role: 'undo'
-      },
-      {
-        role: 'redo'
-      },
-      {
-        type: 'separator'
-      },
-      {
-        role: 'cut'
-      },
-      {
-        role: 'copy'
-      },
-      {
-        label: 'Paste',
-        accelerator: 'CmdOrCtrl+V',
-        click: () => {
-          win.webContents.executeJavaScript('paste()');
-        }
-      },
-      {
-        label: 'Paste special',
-        accelerator: 'CmdOrCtrl+Shift+V',
-        click: () => {
-          win.webContents.executeJavaScript('pasteSpecial()');
-        }
-      },
-      /*
-      {
-        role: 'pasteandmatchstyle'
-      },
-      */
-      {
-        role: 'delete'
-      },
-      {
-        label: 'Select All',
-        accelerator: 'CmdOrCtrl+A',
-        click: () => {
-          win.webContents.executeJavaScript('selectAll()');
-        }
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: 'Clear',
-        click: () => {
-          win.webContents.executeJavaScript('client.clear()');
-        }
-      },
-      { type: 'separator' },
-      {
-        label: 'Find',
-        accelerator: 'CmdOrCtrl+F',
-        click: () => {
-          win.webContents.executeJavaScript('client.display.showFind()');
-        }
-      },
-    ]
-  },
-  //Profiles
-  {
-    label: '&Profiles',
-    id: 'profiles',
-    submenu: []
-  },
-  //View
-  {
-    label: '&View',
-    id: 'view',
-    submenu: [
-      {
-        label: '&Lock',
-        id: "lock",
-        type: 'checkbox',
-        checked: false,
-        click: () => {
-          win.webContents.executeJavaScript('client.toggleScrollLock()');
-        }
-      },
-      {
-        label: '&Who is on?',
-        click: () => {
-          shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
-        }
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: '&Status',
-        id: 'status',
-        submenu: [
-          {
-            label: '&Visible',
-            id: "statusvisible",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("status")');
-            }
-          },
-          {
-            label: '&Refresh',
-            id: "refresh",
-            click: () => {
-              win.webContents.executeJavaScript('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');');
-            }
-          },
-          { type: 'separator' },
-          {
-            label: '&Weather',
-            id: "weather",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("weather")');
-            }
-          },
-          {
-            label: '&Limbs',
-            id: "limbsmenu",
-            submenu: [
-              {
-                label: '&Visible',
-                id: "limbs",
-                type: 'checkbox',
-                checked: true,
-                click: () => {
-                  win.webContents.executeJavaScript('toggleView("limbs")');
-                }
-              },
-              { type: 'separator' },
-              {
-                label: '&Health',
-                id: "limbhealth",
-                type: 'checkbox',
-                checked: true,
-                click: () => {
-                  win.webContents.executeJavaScript('toggleView("limbhealth")');
-                }
-              },
-              {
-                label: '&Armor',
-                id: "limbarmor",
-                type: 'checkbox',
-                checked: true,
-                click: () => {
-                  win.webContents.executeJavaScript('toggleView("limbarmor")');
-                }
-              },
-            ]
-          },
-          {
-            label: '&Health',
-            id: "health",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("health")');
-            }
-          },
-          {
-            label: '&Experience',
-            id: "experience",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("experience")');
-            }
-          },
-          {
-            label: '&Party Health',
-            id: "partyhealth",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("partyhealth")');
-            }
-          },
-          {
-            label: '&Combat Health',
-            id: "combathealth",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("combathealth")');
-            }
-          },
-          {
-            label: '&Lagmeter',
-            id: "lagmeter",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("lagmeter")');
-            }
-          }
-        ]
-      },
-      {
-        label: '&Buttons',
-        id: 'buttons',
-        /*        
-        type: 'checkbox',
-        checked: true,        
-        click: () => {
-          win.webContents.executeJavaScript('toggleView("buttons")');
-        },
-        */
-        submenu: [
-          {
-            label: '&Visible',
-            id: "buttonsvisible",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("buttons")');
-            }
-          },
-          { type: 'separator' },
-          {
-            label: '&Connect',
-            id: "connectbutton",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("button.connect")');
-            }
-          },
-          {
-            label: '&Characters',
-            id: "charactersbutton",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("button.characters")');
-            }
-          },
-          {
-            label: '&Preferences',
-            id: "preferencesbutton",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("button.preferences")');
-            }
-          },
-          {
-            label: '&Log',
-            id: "logbutton",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("button.log")');
-            }
-          },
-          {
-            label: '&Clear',
-            id: "clearbutton",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("button.clear")');
-            }
-          },
-          {
-            label: '&Lock',
-            id: "lockbutton",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("button.lock")');
-            }
-          },
-          {
-            label: '&Map',
-            id: "mapbutton",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("button.map")');
-            }
-          },
-          {
-            label: '&User buttons',
-            id: "userbutton",
-            type: 'checkbox',
-            checked: true,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("button.user")');
-            }
-          },
-        ]
-      },
-      {
-        type: 'separator'
-      },
-      {
-        role: 'toggledevtools'
-      },
-      {
-        type: 'separator'
-      },
-      {
-        role: 'resetzoom'
-      },
-      {
-        role: 'zoomin'
-      },
-      {
-        role: 'zoomout'
-      },
-      {
-        type: 'separator'
-      },
-      {
-        role: 'togglefullscreen'
-      }
-    ]
-  },
-  //Window
-  {
-    role: 'window',
-    id: 'window',
-    submenu: [
-      {
-        label: '&Advanced editor...',
-        id: 'editor',
-        click: () => {
-          win.webContents.executeJavaScript('showEditor()');
-        },
-        accelerator: 'CmdOrCtrl+E'
-      },
-      {
-        label: '&Chat...',
-        id: 'chat',
-        click: () => {
-          win.webContents.executeJavaScript('showChat()');
-        },
-        accelerator: 'CmdOrCtrl+L'
-      },
-      {
-        label: '&Immortal tools...',
-        id: 'immortal',
-        click: () => {
-          win.webContents.executeJavaScript('showImmortalTools()');
-        },
-        visible: false,
-        accelerator: 'CmdOrCtrl+I'
-      },
-
-      {
-        label: '&Map...',
-        click: () => {
-          win.webContents.executeJavaScript('showMapper()');
-        },
-        accelerator: 'CmdOrCtrl+T'
-      },
-      { type: 'separator' },
-      {
-        role: 'minimize'
-      },
-      {
-        role: 'close'
-      }
-    ]
-  },
-  //Help
-  {
-    label: '&Help',
-    role: 'help',
-    submenu: [
-      {
-        label: '&ShadowMUD',
-        click: () => {
-          shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
-        }
-      },
-      {
-        label: '&jiMUD',
-        click: () => {
-          shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
-        }
-      },
-      { type: 'separator' },
-      {
-        label: '&About...',
-        click: () => {
-          var b = win.getBounds();
-
-          let about = new BrowserWindow({
-            parent: win,
-            modal: true,
-            x: Math.floor(b.x + b.width / 2 - 225),
-            y: Math.floor(b.y + b.height / 2 - 200),
-            width: 450,
-            height: 400,
-            movable: false,
-            minimizable: false,
-            maximizable: false,
-            skipTaskbar: true,
-            resizable: false,
-            title: 'About jiMUD',
-            icon: path.join(__dirname, '../assets/icons/png/64x64.png')
-          });
-          about.webContents.on('crashed', (event, killed) => {
-            logError(`About crashed, killed: ${killed}\n`, true);
-          });
-
-          about.setMenu(null);
-          about.on('closed', () => {
-            about = null;
-          });
-
-          // and load the index.html of the app.
-          about.loadURL(url.format({
-            pathname: path.join(__dirname, 'about.html'),
-            protocol: 'file:',
-            slashes: true
-          }));
-
-          about.once('ready-to-show', () => {
-            about.show();
-          });
-        }
-      }
-    ]
-  }
-];
-
-if (process.platform === 'darwin') {
-  menuTemp.unshift({
-    label: app.getName(),
-    submenu: [
-      {
-        role: 'about'
-      },
-      {
-        type: 'separator'
-      },
-      {
-        role: 'services',
-        submenu: []
-      },
-      {
-        type: 'separator'
-      },
-      {
-        role: 'hide'
-      },
-      {
-        role: 'hideothers'
-      },
-      {
-        role: 'unhide'
-      },
-      {
-        type: 'separator'
-      },
-      {
-        role: 'quit'
-      }
-    ]
-  });
-  // Edit menu.
-  menuTemp[2].submenu.push(
-    {
-      type: 'separator'
-    },
-    {
-      label: 'Speech',
-      submenu: [
-        {
-          role: 'startspeaking'
-        },
-        {
-          role: 'stopspeaking'
-        }
-      ]
-    }
-  );
-  // Window menu.
-  menuTemp[5].submenu = [
-    {
-      label: 'Close',
-      accelerator: 'CmdOrCtrl+W',
-      role: 'close'
-    },
-    {
-      label: 'Minimize',
-      accelerator: 'CmdOrCtrl+M',
-      role: 'minimize'
-    },
-    {
-      label: 'Zoom',
-      role: 'zoom'
-    },
-    {
-      type: 'separator'
-    },
-    {
-      label: 'Bring All to Front',
-      role: 'front'
-    }
-  ];
-}
-
-let menubar;
 
 const selectionMenu = Menu.buildFromTemplate([
   { role: 'copy' },
@@ -673,63 +59,6 @@ function addInputContext(window) {
   });
 }
 
-function createMenu() {
-  var profiles;
-  for (var m = 0; m < menuTemp.length; m++) {
-    if (menuTemp[m].id === "profiles") {
-      profiles = menuTemp[m];
-      break;
-    }
-  }
-  profiles.submenu = [];
-  profiles.submenu.push(
-    {
-      label: 'Default',
-      type: 'checkbox',
-      checked: false,
-      id: 'default',
-      click: () => {
-        win.webContents.executeJavaScript('client.toggleProfile("default")');
-      }
-    });
-
-  var p = path.join(app.getPath('userData'), "profiles");
-  if (isDirSync(p)) {
-    var files = fs.readdirSync(p);
-    for (var i = 0; i < files.length; i++) {
-      if (path.extname(files[i]) === ".json") {
-        if (files[i].toLowerCase() === "default.json")
-          continue;
-        profiles.submenu.push(
-          {
-            label: path.basename(files[i], ".json"),
-            type: 'checkbox',
-            checked: false,
-            id: path.basename(files[i], ".json").toLowerCase(),
-            click: (menuItem, browserWindow, event) => {
-              win.webContents.executeJavaScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")');
-            }
-          });
-      }
-    }
-  }
-  profiles.submenu.push(
-    {
-      type: 'separator'
-    });
-  profiles.submenu.push(
-    {
-      label: '&Manage...',
-      click: () => {
-        win.webContents.executeJavaScript('showProfiles()');
-      },
-      accelerator: 'CmdOrCtrl+P'
-    });
-  menubar = Menu.buildFromTemplate(menuTemp);
-  win.setMenu(menubar);
-  win.webContents.send('menu-reload');
-}
-
 function createTray() {
   if (!set)
     set = settings.Settings.load(global.settingsFile);
@@ -739,8 +68,7 @@ function createTray() {
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '&Show window...', click: () => {
-        let s = getWindowState('main');
-        if (!s) getWindowState('main', win);
+        let s = getWindowState();
         if (s.maximized)
           win.maximize();
         else
@@ -763,8 +91,7 @@ function createTray() {
       label: "Ch&aracters...",
       id: "characters",
       click: () => {
-        let s = getWindowState('main');
-        if (!s) getWindowState('main', win);
+        let s = getWindowState();
         if (s.maximized)
           win.maximize();
         else
@@ -863,8 +190,7 @@ function createTray() {
   tray.setContextMenu(contextMenu);
 
   tray.on('click', () => {
-    let s = getWindowState('main');
-    if (!s) getWindowState('main', win);
+    let s = getWindowState();
     switch (set.trayClick) {
       case TrayClick.show:
         if (s.maximized)
@@ -905,8 +231,7 @@ function createTray() {
   });
 
   tray.on('double-click', () => {
-    let s = getWindowState('main');
-    if (!s) getWindowState('main', win);
+    let s = getWindowState();
     switch (set.trayClick) {
       case TrayClick.show:
         if (s.maximized)
@@ -985,21 +310,9 @@ function updateTray() {
 }
 
 function createWindow() {
-  /*
-  if(set.reportCrashes)
-  {
-    const {crashReporter} = require('electron')
-    crashReporter.start({
-      productName: 'jiMUD',
-      companyName: 'jiMUD',
-      submitURL: 'http://localhost:3000/api/app-crashes',
-      uploadToServer: true
-    })
-  }
-  */
   if (!set)
     set = settings.Settings.load(global.settingsFile);
-  var s = loadWindowState('main');
+  var s = loadWindowState();
   // Create the browser window.
   win = new BrowserWindow({
     title: 'jiMUD',
@@ -1014,6 +327,7 @@ function createWindow() {
       nodeIntegrationInWorker: true
     }
   });
+  win.setMenu(null);
   if (s.fullscreen)
     win.setFullScreen(s.fullscreen);
   // and load the index.html of the app.
@@ -1023,32 +337,28 @@ function createWindow() {
     slashes: true
   }));
 
-  createMenu();
-  loadMenu();
-  //win.setOverlayIcon(path.join(__dirname, '/../assets/icons/jimud.png'), 'Connected');
-
   // Open the DevTools.
-  if (s.devTools)
-    win.webContents.openDevTools();
+  //if (s.devTools)
+  win.webContents.openDevTools();
 
   win.on('resize', () => {
     if (!win.isMaximized() && !win.isFullScreen())
-      trackWindowState('main', win);
+      trackWindowState();
   });
 
   win.on('move', () => {
     if (!win.isMaximized() && !win.isFullScreen())
-      trackWindowState('main', win);
+      trackWindowState();
   });
 
   win.on('maximize', () => {
-    trackWindowState('main', win);
-    states['main'].maximized = true;
+    trackWindowState();
+    state.maximized = true;
   });
 
   win.on('unmaximize', () => {
-    trackWindowState('main', win);
-    states['main'].maximized = false;
+    trackWindowState();
+    state.maximized = false;
   });
 
   win.on('unresponsive', () => {
@@ -1065,7 +375,7 @@ function createWindow() {
       }
       else if (result === 2) {
         set = settings.Settings.load(global.settingsFile);
-        set.windows['main'] = getWindowState('main', win);
+        set.windows['main'] = getWindowState();
         closeWindows();
         logError(`Client unresponsive, closed.\n`, true);
         set.save(global.settingsFile);
@@ -1129,9 +439,6 @@ function createWindow() {
 
   // Emitted when the window is closed.
   win.on('closed', () => {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
     win = null;
   });
 
@@ -1156,27 +463,11 @@ function createWindow() {
       win.maximize();
     else
       win.show();
-
-    for (var name in set.windows) {
-      if (set.windows[name].options) {
-        if (set.windows[name].options.show)
-          showWindow(name, set.windows[name].options);
-        else if (set.windows[name].options.persistent)
-          createNewWindow(name, set.windows[name].options);
-      }
-      else {
-        if (set.windows[name].show)
-          showWindow(name, set.windows[name]);
-        else if (set.windows[name].persistent)
-          createNewWindow(name, set.windows[name]);
-      }
-    }
-
   });
 
   win.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
-    set.windows['main'] = getWindowState('main', win);
+    set.windows['main'] = getWindowState();
     closeWindows();
     set.save(global.settingsFile);
   });
@@ -1187,11 +478,6 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  if (!existsSync(path.join(app.getPath('userData'), "characters")))
-    fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
-
-  loadCharacters();
-
   process.argv.forEach((val, index) => {
     switch (val) {
       case "-h":
@@ -1220,53 +506,13 @@ app.on('ready', () => {
         global.debug = true;
         break;
     }
-
-    if (val.startsWith("--character=") || val.startsWith("--character:")) {
-      global.character = val.substring(12);
-      loadCharacter(global.character);
-    }
-    if (val.startsWith("-c=") || val.startsWith("-c:")) {
-      global.character = val.substring(3);
-      loadCharacter(global.character);
-    }
-
-    if (val.startsWith("--settings=") || val.startsWith("--settings:"))
-      global.settingsFile = parseTemplate(val.substring(11));
-    if (val.startsWith("-settings=") || val.startsWith("-settings:"))
-      global.settingsFile = parseTemplate(val.substring(10));
-    if (val.startsWith("-s=") || val.startsWith("-s:"))
-      global.settingsFile = parseTemplate(val.substring(3));
-    if (val.startsWith("-sf=") || val.startsWith("-sf:"))
-      global.settingsFile = parseTemplate(val.substring(4));
-
-    if (val.startsWith("--map=") || val.startsWith("--map:"))
-      global.mapFile = parseTemplate(val.substring(6));
-    if (val.startsWith("-map=") || val.startsWith("-map:"))
-      global.mapFile = parseTemplate(val.substring(5));
-    if (val.startsWith("-m=") || val.startsWith("-m:"))
-      global.mapFile = parseTemplate(val.substring(3));
-    if (val.startsWith("-mf=") || val.startsWith("-mf:"))
-      global.mapFile = parseTemplate(val.substring(4));
-
-    if (val.startsWith("--profiles=") || val.startsWith("--profiles:"))
-      global.profiles = parseTemplate(val.substring(11)).split(',');
-    if (val.startsWith("-pf=") || val.startsWith("-pf:"))
-      global.profiles = parseTemplate(val.substring(4)).split(',');
   });
-
   createTray();
   createWindow();
 });
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
-  //asked to reload with a different character
-  if (reload) {
-    loadCharacter(reload);
-    createWindow();
-    reload = null;
-    return;
-  }
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
@@ -1282,217 +528,86 @@ app.on('activate', () => {
   }
 });
 
-ipcMain.on('reload', (event, char) => {
-  //already loaded so no need to reload
-  if (char === global.character)
-    return;
-  reload = char;
-  win.close();
-});
-
-ipcMain.on('load-default', (event) => {
-  //already loaded so no need to switch
-  var sf = parseTemplate(path.join("{data}", "settings.json"));
-  var mf = parseTemplate(path.join("{data}", "map.sqlite"));
-  if (sf === global.settingsFile && mf === global.mapFile)
-    return;
+ipcMain.on('reload-options', (client, settingsFile) => {
   if (win && win.webContents)
-    win.webContents.send('load-default');
-  global.settingsFile = sf;
-  global.mapFile = mf;
-
-  set = settings.Settings.load(global.settingsFile);
-
-  closeWindows();
-  if (win && win.webContents)
-    win.webContents.send('change-options', global.settingsFile);
-});
-
-ipcMain.on('load-char', (event, char) => {
-  //already loaded so no need to switch
-  if (char === global.character)
-    return;
-  loadCharacter(char);
-  set = settings.Settings.load(global.settingsFile);
-  if (win && win.webContents)
-    win.webContents.send('load-char', char);
-  closeWindows();
-  if (win && win.webContents)
-    win.webContents.send('change-options', global.settingsFile);
-});
-
-ipcMain.on('reload-options', () => {
-  if (win && win.webContents)
-    win.webContents.send('reload-options');
-  set = settings.Settings.load(global.settingsFile);
-  if (set.showTrayIcon && !tray)
-    createTray();
-  else if (!set.showTrayIcon && tray) {
-    tray.destroy();
-    tray = null;
-  }
-
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name))
-      continue;
-    if (!windows[name].window) {
-      if (set.windows[name].options.show)
-        showWindow(name, set.windows[name].options);
-      else if (set.windows[name].options.persistent)
-        createNewWindow(name, set.windows[name].options);
-      else
-        return;
-    }
-    else {
-      windows[name].window.webContents.send('reload-options');
-      if (windows[name].window.setParentWindow)
-        windows[name].window.setParentWindow(set.windows[name].options.alwaysOnTopClient ? win : null);
-      windows[name].window.setAlwaysOnTop(set.windows[name].options.alwaysOnTop);
-      windows[name].window.setSkipTaskbar((set.windows[name].options.alwaysOnTopClient || set.windows[name].options.alwaysOnTop) ? true : false);
+    win.webContents.send('reload-options', client, settingsFile);
+  if (settingsFile === global.settingsFile) {
+    set = settings.Settings.load(global.settingsFile);
+    if (set.showTrayIcon && !tray)
+      createTray();
+    else if (!set.showTrayIcon && tray) {
+      tray.destroy();
+      tray = null;
     }
   }
 });
 
 ipcMain.on('set-title', (event, title) => {
   global.title = title;
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('set-title', title);
-  }
   updateTray();
 });
 
-ipcMain.on('closed', () => {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('closed');
-  }
+ipcMain.on('closed', (client) => {
 });
 
-ipcMain.on('connected', () => {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('connected');
-  }
+ipcMain.on('connected', (client) => {
 });
 
-ipcMain.on('set-color', (event, type, color) => {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('set-color', type, color);
-  }
+ipcMain.on('set-color', (event, type, color, client) => {
+  win.webContents.send('reload-options', type, color, client);
 });
 
-ipcMain.on('send-background', (event, command) => {
+ipcMain.on('send-background', (event, command, client) => {
   if (win && win.webContents)
-    win.webContents.send('send-background', command);
+    win.webContents.send('send-background', command, client);
 });
 
-ipcMain.on('send-command', (event, command) => {
+ipcMain.on('send-command', (event, command, client) => {
   if (win && win.webContents)
-    win.webContents.send('send-command', command);
+    win.webContents.send('send-command', command, client);
 });
 
-ipcMain.on('send-gmcp', (event, data) => {
+ipcMain.on('send-gmcp', (event, data, client) => {
   if (win && win.webContents)
-    win.webContents.send('send-gmcp', data);
+    win.webContents.send('send-gmcp', data, client);
 });
 
-ipcMain.on('send-raw', (event, raw) => {
+ipcMain.on('send-raw', (event, raw, client) => {
   if (win && win.webContents)
-    win.webContents.send('send-raw', raw);
+    win.webContents.send('send-raw', raw, client);
 });
 
-ipcMain.on('send', (event, raw, echo) => {
+ipcMain.on('send', (event, raw, echo, client) => {
   if (win && win.webContents)
-    win.webContents.send('send', raw, echo);
+    win.webContents.send('send', raw, echo, client);
 });
 
 ipcMain.on('log', (event, raw) => {
   console.log(raw);
 });
 
-ipcMain.on('debug', (event, msg) => {
+ipcMain.on('debug', (event, msg, client) => {
   if (win && win.webContents)
-    win.webContents.send('debug', msg);
+    win.webContents.send('debug', msg, client);
 });
 
-ipcMain.on('error', (event, err) => {
+ipcMain.on('error', (event, err, client) => {
   if (win && win.webContents)
-    win.webContents.send('error', err);
+    win.webContents.send('error', err, client);
 });
 
 ipcMain.on('reload-profiles', (event) => {
-  createMenu();
   if (win && win.webContents)
     win.webContents.send('reload-profiles');
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window || !windows[name].window.webContents)
-      continue;
-    windows[name].window.webContents.send('reload-profiles');
-  }
 });
 
-ipcMain.on('chat', (event, text, args) => {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name))
-      continue;
-    if (!windows[name].window) {
-      if (args) {
-        createNewWindow(name, args);
-        setTimeout(() => { windows[name].window.webContents.send('chat', text); }, 100);
-      }
-    }
-    else if (!windows[name].ready)
-      setTimeout(() => { windows[name].window.webContents.send('chat', text); }, 100);
-    else
-      windows[name].window.webContents.send('chat', text);
-  }
+ipcMain.on('setting-changed', (event, data, client) => {
+  if (win && win.webContents)
+    win.webContents.send('setting-changed', data, client);
 });
 
-ipcMain.on('setting-changed', (event, data) => {
-  var name;
-  if (data.type === "windows")
-    for (name in windows) {
-      if (!windows.hasOwnProperty(name) || !windows[name].window)
-        continue;
+ipcMain.on('GMCP-received', (event, data, client) => {
 
-      if (name === data.name) {
-        windows[name].alwaysOnTopClient = data.value.alwaysOnTopClient;
-        windows[name].persistent = data.value.persistent;
-        windows[name].alwaysOnTop = data.value.alwaysOnTop;
-      }
-      if (windows[name].window)
-        windows[name].window.webContents.send('setting-changed', data);
-      if (windows[name].window.setParentWindow)
-        windows[name].window.setParentWindow(windows[name].alwaysOnTopClient ? win : null);
-      windows[name].window.setSkipTaskbar((windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false);
-      if (windows[name].persistent)
-        createNewWindow(name, windows[name]);
-    }
-  if (data.type === "extensions")
-    for (name in windows) {
-      if (!windows.hasOwnProperty(name) || !windows[name].window)
-        continue;
-      if (windows[name].window)
-        windows[name].window.webContents.send('setting-changed', data);
-    }
-});
-
-ipcMain.on('GMCP-received', (event, data) => {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('GMCP-received', data);
-  }
-});
-
-ipcMain.on('update-menuitem', (event, args) => {
-  updateMenuItem(args);
 });
 
 ipcMain.on('set-overlay', (event, args) => {
@@ -1516,71 +631,41 @@ ipcMain.on('set-progress', (event, args) => {
     win.setProgressBar(args.value, args.options);
 });
 
-ipcMain.on('set-progress-window', (event, window, args) => {
-  if (windows[window] && windows[window].window)
-    windows[window].window.setProgressBar(args.value, args.options);
-});
-
-ipcMain.on('show-window', (event, window, args) => {
-  if (window === "color")
-    showColor(args);
-  else if (windows[window] && windows[window].window)
-    showWindow(window, windows[window]);
-  else
-    createNewWindow(window, args);
-});
-
-ipcMain.on('show-dialog', (event, window, args) => {
-  if (windows[window] && windows[window].window)
-    dialog.showMessageBox(windows[window].window, args || {});
-  else
-    dialog.showMessageBox(win, args || {});
-});
-
-ipcMain.on('create-window', (event, window, args) => {
-  createNewWindow(window, args);
-});
-
-ipcMain.on('import-map', (event, data) => {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('import', data);
-  }
-});
-
-ipcMain.on('flush', (event) => {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('flush');
-  }
-});
-
-ipcMain.on('flush-end', (event) => {
+ipcMain.on('set-progress-window', (event, window, args, client) => {
   if (win && win.webContents)
-    win.webContents.send('flush-end');
+    win.webContents.send('setting-changed', window, args, client);
 });
 
-ipcMain.on('reload-characters', (event) => {
-  loadCharacters(true);
-  loadCharacter(global.character);
+ipcMain.on('show-window', (event, window, args, state, client) => {
+  if (!global.clients || !global.clients[client]) return;
+  if (window === "color")
+    showColor(args, client);
+  else if (global.clients[client][window] && global.clients[client][window].window)
+    showWindow(window, global.clients[client][window], client);
+  else
+    createNewWindow(window, args, state, client);
+});
+
+ipcMain.on('create-window', (event, window, args, state, client) => {
+  createNewWindow(window, args, state, client);
+});
+
+ipcMain.on('flush', (event, client) => {
+});
+
+ipcMain.on('flush-end', (event, client) => {
+  if (win && win.webContents)
+    win.webContents.send('flush-end', client);
 });
 
 ipcMain.on('profile-item-added', (event, type, profile, item) => {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('profile-item-added', type, profile, item);
-  }
+  if (win && win.webContents)
+    win.webContents.send('profile-item-added', type, profile, item);
 });
 
 ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('profile-item-removed', type, profile, idx);
-  }
+  if (win && win.webContents)
+    win.webContents.send('profile-item-added', type, profile, idx);
 });
 
 ipcMain.on('ondragstart', (event, files, icon) => {
@@ -1602,117 +687,73 @@ ipcMain.on('ondragstart', (event, files, icon) => {
     });
 });
 
-function updateMenuItem(args) {
-  var item, i = 0, items;
-  var tItem, tItems;
-  if (!menubar || args == null || args.menu == null) return;
+ipcMain.on('add', (event, id) => {
+  if (!global.clients[id])
+    global.clients[id] = {};
+});
 
-  if (!Array.isArray(args.menu))
-    args.menu = args.menu.split('|');
-
-  items = menubar.items;
-  tItems = menuTemp;
-  for (i = 0; i < args.menu.length; i++) {
-    if (!items || items.length === 0) break;
-    for (var m = 0; m < items.length; m++) {
-      if (!items[m].id) continue;
-      if (items[m].id === args.menu[i]) {
-        item = items[m];
-        tItem = tItems[m];
-        if (item.submenu) {
-          items = item.submenu.items;
-          tItems = tItem.submenu;
-        }
-        else
-          items = null;
-        break;
-      }
-    }
-  }
-  if (!item)
+ipcMain.on('remove', (event, id) => {
+  if (!global.clients[id])
     return;
-  if (args.enabled != null)
-    item.enabled = args.enabled ? true : false;
-  if (args.checked != null)
-    item.checked = args.checked ? true : false;
-  if (args.icon != null)
-    item.icon = args.icon;
-  if (args.visible != null)
-    item.visible = args.visible ? true : false;
-  if (args.position != null)
-    item.position = args.position;
+  delete global.clients[id];
+});
 
-  tItem.enabled = item.enabled;
-  tItem.checked = item.checked;
-  tItem.icon = item.icon;
-  tItem.visible = item.visible;
-  tItem.position = item.position;
-}
+ipcMain.on('get-window', (events, name, client) => {
+  if (!global.clients || !global.clients[client])
+    events.returnValue = null;
+  events.returnValue = global.clients[client][name].window;
+  if (win)
+    win.webContents.send('get-window', events.returnValue);
+});
 
-function loadMenu() {
-  set = settings.Settings.load(global.settingsFile);
-  updateMenuItem({ menu: ['view', 'status', 'statusvisible'], checked: set.showStatus });
-  updateMenuItem({ menu: ['view', 'status', 'weather'], checked: set.showStatusWeather });
-  updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: set.showStatusLimbs });
-  updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !set.showArmor });
-  updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: set.showArmor });
-
-  updateMenuItem({ menu: ['view', 'status', 'health'], checked: set.showStatusHealth });
-  updateMenuItem({ menu: ['view', 'status', 'experience'], checked: set.showStatusExperience });
-  updateMenuItem({ menu: ['view', 'status', 'partyhealth'], checked: set.showStatusPartyHealth });
-  updateMenuItem({ menu: ['view', 'status', 'combathealth'], checked: set.showStatusCombatHealth });
-  updateMenuItem({ menu: ['view', 'status', 'lagmeter'], checked: set.lagMeter });
-  updateMenuItem({ menu: ['view', 'buttons'], checked: set.showButtonBar });
-}
-
-function getWindowState(id, window) {
-  var bounds = states[id];
-  if (!window)
-    return states[id];
+function getWindowState() {
+  var bounds = state;
+  if (!win)
+    return bounds;
   return {
     x: bounds.x,
     y: bounds.y,
     width: bounds.width,
     height: bounds.height,
-    fullscreen: window.isFullScreen(),
-    maximized: window.isMaximized(),
-    devTools: window.webContents.isDevToolsOpened()
+    fullscreen: win.isFullScreen(),
+    maximized: win.isMaximized(),
+    devTools: win.webContents.isDevToolsOpened()
   };
 }
 
-function loadWindowState(window) {
+function loadWindowState() {
   set = settings.Settings.load(global.settingsFile);
-  if (!set.windows || !set.windows[window])
+  if (!set.windows || !set.windows['main'])
     return {
       x: 0,
       y: 0,
       width: 800,
       height: 600,
     };
-  states[window] = {
-    x: set.windows[window].x,
-    y: set.windows[window].y,
-    width: set.windows[window].width,
-    height: set.windows[window].height,
+  state = {
+    x: set.windows['main'].x,
+    y: set.windows['main'].y,
+    width: set.windows['main'].width,
+    height: set.windows['main'].height,
   };
-  return set.windows[window];
+  return set.windows['main'];
 }
 
-function trackWindowState(id, window) {
-  if (!window) return states[id];
-  var bounds = window.getBounds();
-  if (!states[id])
-    states[id] = {
+function trackWindowState() {
+  if (!win) return state;
+  var bounds = win.getBounds();
+  if (!state)
+    state = {
       x: bounds.x,
       y: bounds.y,
       width: bounds.width,
       height: bounds.height
     };
   else {
-    states[id].x = bounds.x;
-    states[id].y = bounds.y;
-    states[id].width = bounds.width;
-    states[id].height = bounds.height;
+    state.x = bounds.x;
+    state.y = bounds.y;
+    state.width = bounds.width;
+    state.height = bounds.height;
   }
 }
 
@@ -1742,125 +783,73 @@ function parseTemplate(str, data) {
   return str;
 }
 
-function isDirSync(aPath) {
-  try {
-    return fs.statSync(aPath).isDirectory();
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      return false;
-    } else {
-      throw e;
-    }
-  }
-}
-
-function existsSync(filename) {
-  try {
-    fs.statSync(filename);
-    return true;
-  } catch (ex) {
-    return false;
-  }
-}
-
-
-function isFileSync(aPath) {
-  try {
-    return fs.statSync(aPath).isFile();
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      return false;
-    } else {
-      throw e;
-    }
-  }
-}
-
-function createNewWindow(name, options) {
-  if (windows[name] && windows[name].window)
+function createNewWindow(name, options, state, client) {
+  if (!global.clients || !global.clients[client]) return;
+  if (global.clients[client][name] && global.clients[client][name].window)
     return;
   if (!options) options = {};
-  var s = loadWindowState(name);
-  if (options.hasOwnProperty('width')) {
-    s.width = options.width;
-    delete options.width;
-  }
-  if (options.hasOwnProperty('height')) {
-    s.height = options.height;
-    delete options.height;
-  }
-  if (options.hasOwnProperty('x')) {
-    s.x = options.x;
-    delete options.x;
-  }
-  if (options.hasOwnProperty('y')) {
-    s.y = options.y;
-    delete options.y;
-  }
-  windows[name] = options;
-  windows[name].window = new BrowserWindow({
-    parent: windows[name].alwaysOnTopClient ? win : null,
+  global.clients[client][name] = options;
+  global.clients[client][name].window = new BrowserWindow({
+    parent: global.clients[client][name].alwaysOnTopClient ? win : null,
     title: options.title || name,
-    x: s.x,
-    y: s.y,
-    width: s.width,
-    height: s.height,
+    x: state.x,
+    y: state.y,
+    width: state.width,
+    height: state.height,
     backgroundColor: options.background || '#000',
     show: false,
-    skipTaskbar: (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false,
+    skipTaskbar: (global.clients[client][name].alwaysOnTopClient || global.clients[client][name].alwaysOnTop) ? true : false,
     icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png')
   });
 
-  windows[name].window.webContents.on('crashed', (event, killed) => {
+  global.clients[client][name].window.webContents.on('crashed', (event, killed) => {
     logError(`${name} crashed, killed: ${killed}\n`, true);
   });
 
-  if (s.fullscreen)
-    windows[name].window.setFullScreen(s.fullscreen);
+  if (state.fullscreen)
+    global.clients[client][name].window.setFullScreen(state.fullscreen);
 
-  windows[name].window.setMenu(options.menu || null);
+  global.clients[client][name].window.setMenu(options.menu || null);
 
-  windows[name].window.loadURL(url.format({
-    pathname: path.join(__dirname, (windows[name].file || (name + '.html'))),
+  global.clients[client][name].window.loadURL(url.format({
+    pathname: path.join(__dirname, (global.clients[client][name].file || (name + '.html'))),
     protocol: 'file:',
     slashes: true
   }));
 
-  windows[name].window.on('closed', () => {
-    windows[name].window = null;
-    windows[name].ready = false;
+  global.clients[client][name].window.on('closed', () => {
+    global.clients[client][name].window = null;
+    global.clients[client][name].ready = false;
   });
 
-  windows[name].window.on('resize', () => {
-    if (!windows[name].window.isMaximized() && !windows[name].window.isFullScreen())
-      trackWindowState(name, windows[name].window);
+  global.clients[client][name].window.on('resize', () => {
+    if (!global.clients[client][name].window.isMaximized() && !global.clients[client][name].window.isFullScreen())
+      win.webContents.send('track-window-state', name, client);
   });
 
-  windows[name].window.on('move', () => {
-    trackWindowState(name, windows[name].window);
+  global.clients[client][name].window.on('move', () => {
+    win.webContents.send('track-window-state', name, client);
   });
 
-  windows[name].window.on('maximize', () => {
-    trackWindowState(name, windows[name].window);
+  global.clients[client][name].window.on('maximize', () => {
+    win.webContents.send('track-window-state', name, client);
   });
 
-  windows[name].window.on('maximize', () => {
-    trackWindowState(name, windows[name].window);
-    states[name].maximized = true;
+  global.clients[client][name].window.on('maximize', () => {
+    win.webContents.send('track-window-state', name, client, { maximized: true });
   });
 
-  windows[name].window.on('unmaximize', () => {
-    trackWindowState(name, windows[name].window);
-    states[name].maximized = false;
+  global.clients[client][name].window.on('unmaximize', () => {
+    win.webContents.send('track-window-state', name, client, { maximized: false });
   });
 
-  windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+  global.clients[client][name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
     event.preventDefault();
     if (frameName === 'modal') {
       // open window as modal
       Object.assign(options, {
         modal: true,
-        parent: windows[name].window,
+        parent: global.clients[client][name].window,
         movable: false,
         minimizable: false,
         maximizable: false,
@@ -1868,7 +857,7 @@ function createNewWindow(name, options) {
         resizable: false
       });
 
-      var b = windows[name].window.getBounds();
+      var b = global.clients[client][name].window.getBounds();
       options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
       options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
     }
@@ -1896,60 +885,52 @@ function createNewWindow(name, options) {
   });
 
   if (global.debug)
-    windows[name].window.webContents.openDevTools();
+    global.clients[client][name].window.webContents.openDevTools();
 
-  windows[name].window.once('ready-to-show', () => {
+  global.clients[client][name].window.once('ready-to-show', () => {
     if (!options.noInput)
-      addInputContext(windows[name].window);
+      addInputContext(global.clients[client][name].window);
     if (options.show) {
-      if (s.maximized)
-        windows[name].window.maximize();
+      if (state.maximized)
+        global.clients[client][name].window.maximize();
       else
-        windows[name].window.show();
+        global.clients[client][name].window.show();
     }
     else
-      windows[name].max = s.maximized;
-    windows[name].ready = true;
+      global.clients[client][name].max = state.maximized;
+    global.clients[client][name].ready = true;
   });
 
-  windows[name].window.on('close', (e) => {
+  global.clients[client][name].window.on('close', (e) => {
     if (win && win.webContents) {
-      win.webContents.executeJavaScript(`childClosed('${path.join(__dirname, (windows[name].file || (name + '.html'))).replace(/\\/g, '\\\\')}', '${name}');`);
+      win.webContents.executeJavaScript(`childClosed('${path.join(__dirname, (global.clients[client][name].file || (name + '.html'))).replace(/\\/g, '\\\\')}', '${name}');`);
     }
-    windows[name].window.webContents.executeJavaScript('closing();');
-    windows[name].window.webContents.executeJavaScript('closed();');
-    windows[name].show = false;
-    set = settings.Settings.load(global.settingsFile);
-    set.windows[name] = getWindowState(name, windows[name].window);
-    set.windows[name].options = copyWindowOptions(name);
-    set.save(global.settingsFile);
-    if (windows[name].persistent) {
+    global.clients[client][name].window.webContents.executeJavaScript('closing();');
+    global.clients[client][name].window.webContents.executeJavaScript('closed();');
+    global.clients[client][name].show = false;
+    win.webContents.send('save-window', name, copyWindowOptions(global.clients[client][name]), getClientWindowState(global.clients[client][name].window), client);
+    if (global.clients[client][name].persistent) {
       e.preventDefault();
-      windows[name].window.hide();
+      global.clients[client][name].window.hide();
     }
   });
 }
 
-function showWindow(name, options) {
-  set = settings.Settings.load(global.settingsFile);
-  options.show = true;
-  if (!set.windows[name])
-    set.windows[name] = {};
-  set.windows[name].show = true;
-  set.save(global.settingsFile);
+function showWindow(name, options, state, client) {
+  win.webContents.send('update-window-options', name, { show: true }, client);
   if (!options) options = { show: true };
-  if (windows[name] && windows[name].window) {
-    if (windows[name].max)
-      windows[name].window.maximize();
+  if (global.clients[client][name] && global.clients[client][name].window) {
+    if (global.clients[client][name].max)
+      global.clients[client][name].window.maximize();
     else
-      windows[name].window.show();
-    windows[name].max = false;
+      global.clients[client][name].window.show();
+    global.clients[client][name].max = false;
   }
   else
-    createNewWindow(name, options);
+    createNewWindow(name, options, state, client);
 }
 
-function showColor(args) {
+function showColor(args, client) {
   let cp = new BrowserWindow({
     parent: args.window || win,
     modal: true,
@@ -1987,35 +968,6 @@ function showColor(args) {
   });
 }
 
-function copyFile(src, dest) {
-
-  let readStream = fs.createReadStream(src);
-
-  readStream.once('error', (err) => {
-    console.log(err);
-  });
-
-  readStream.once('end', () => { });
-
-  readStream.pipe(fs.createWriteStream(dest));
-}
-
-function loadCharacters(noLoad) {
-  if (isFileSync(path.join(app.getPath('userData'), "characters.json"))) {
-    characters = fs.readFileSync(path.join(app.getPath('userData'), "characters.json"), 'utf-8');
-    if (characters.length > 0) {
-      try {
-        characters = JSON.parse(characters);
-      }
-      catch (e) {
-        console.log('Could not load: \'characters.json\'');
-      }
-      if (!noLoad && characters.load)
-        loadCharacter(characters.load);
-    }
-  }
-}
-
 function logError(err, skipClient) {
   var msg = '';
   if (global.debug)
@@ -2040,25 +992,47 @@ function logError(err, skipClient) {
   }
 }
 
-function copyWindowOptions(name) {
-  if (!name || !windows[name]) return {};
+function closeWindows() {
+  for (var client in global.clients)
+    for (var name in global.clients[client]) {
+      if (!global.clients[client].hasOwnProperty(name) || !global.clients[client][name].window)
+        continue;
+      global.clients[client][name].window.webContents.executeJavaScript('closing();');
+      global.clients[client][name].window.webContents.executeJavaScript('closed();');
+      win.webContents.send('save-window', name, copyWindowOptions(global.clients[client][name]), getClientWindowState(global.clients[client][name].window), client);
+      global.clients[client][name].window.destroy();
+    }
+}
+
+function isFileSync(aPath) {
+  try {
+    return fs.statSync(aPath).isFile();
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      return false;
+    } else {
+      throw e;
+    }
+  }
+}
+
+function copyWindowOptions(window) {
+  if (!window) return {};
   var ops = {};
-  for (var op in windows[name]) {
-    if (!windows[name].hasOwnProperty(op) || op === "window")
+  for (var op in window) {
+    if (!window.hasOwnProperty(op) || op === "window")
       continue;
-    ops[op] = windows[name][op];
+    ops[op] = window[op];
   }
   return ops;
 }
 
-function closeWindows() {
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.executeJavaScript('closing();');
-    windows[name].window.webContents.executeJavaScript('closed();');
-    set.windows[name] = getWindowState(name, windows[name].window);
-    set.windows[name].options = copyWindowOptions(name);
-    windows[name].window.destroy();
-  }
+function getClientWindowState(window) {
+  if (!window)
+    return 0;
+  return {
+    fullscreen: window.isFullScreen(),
+    maximized: window.isMaximized(),
+    devTools: window.webContents.isDevToolsOpened()
+  };
 }
