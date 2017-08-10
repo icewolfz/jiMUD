@@ -3,6 +3,10 @@ import EventEmitter = require('events');
 import { Client } from './client';
 const { URL } = require('url');
 
+export enum UpdateType {
+    none = 0, resize = 1, scroll = 2
+}
+
 export interface ClientMangerOptions {
     container?;
 }
@@ -28,6 +32,7 @@ export class ClientManager extends EventEmitter {
     private _id: number = 0;
     private $scrollLeft: HTMLAnchorElement;
     private $scrollRight: HTMLAnchorElement;
+    private _updating: UpdateType = UpdateType.none;
 
     public get hideTabstrip(): boolean {
         return this._hideTabstrip;
@@ -49,14 +54,38 @@ export class ClientManager extends EventEmitter {
             this.setParent(document.body);
 
         window.addEventListener('resize', (e) => {
-            this.resize();
+            this.doUpdate(UpdateType.resize);
         });
         document.addEventListener('DOMContentLoaded', () => {
-            this.resize();
+            this.doUpdate(UpdateType.resize);
         }, false);
     }
 
     public resize() {
+        let tl = this.tabs.length;
+        if (tl < 0)
+            tl = 1;
+        this.$scrollLeft.classList.add('hidden');
+        this.$scrollRight.classList.add('hidden');
+        let tWidth = 100;
+        let w = 100;
+        for (let t = 0; t < tl; t++) {
+            this.tabs[t].title.style.overflow = 'visible';
+            tWidth = this.tabs[t].title.scrollWidth || this.tabs[t].title.clientWidth;
+            //adjust for icon and close buttons
+            tWidth += 44;
+            if (tWidth > w)
+                w = tWidth;
+            this.tabs[t].title.style.overflow = 'hidden';
+        }
+
+        if (w > 200)
+            w = 200;
+        for (let t = 0; t < tl; t++) {
+            this.tabs[t].tab.style.width = `${w}px`;
+            this.tabs[t].title.style.maxWidth = `${w - 22}px`;
+        }
+
         if (this.$tabstrip.scrollWidth > window.innerWidth) {
             this.$tabstrip.classList.add('scroll');
             this.$scrollLeft.classList.remove('hidden');
@@ -64,8 +93,6 @@ export class ClientManager extends EventEmitter {
         }
         else {
             this.$tabstrip.classList.remove('scroll');
-            this.$scrollLeft.classList.add('hidden');
-            this.$scrollRight.classList.add('hidden');
         }
     }
 
@@ -153,7 +180,7 @@ export class ClientManager extends EventEmitter {
             id: --this._id,
             title: document.createElement('div'),
             icon: document.createElement('div'),
-            iconCls: ''
+            iconCls: 'disconnected-icon'
         };
 
         tab.tab.id = 'cm-tab' + tab.id;
@@ -187,6 +214,7 @@ export class ClientManager extends EventEmitter {
         tab.pane.innerHTML = `<h1>${tab.id}</h1>`;
         tab.title.classList.add('title');
         tab.icon.classList.add('icon');
+        tab.icon.classList.add(tab.iconCls);
 
         this.$tabstrip.appendChild(tab.tab);
         this.$tabpane.appendChild(tab.pane);
@@ -196,6 +224,7 @@ export class ClientManager extends EventEmitter {
         this.setTabTitle(`${host}:${port}`);
         this.updateStripState();
         this.emit('add', { index: this.tabs.length - 1, id: tab.id, tab: tab });
+        this.doUpdate(UpdateType.resize);
     }
 
     public removeClient(tab) {
@@ -210,7 +239,7 @@ export class ClientManager extends EventEmitter {
         this.$tabpane.removeChild(tab.pane);
         this.tabs.slice(idx, 1);
         this.switchToTabByIndex(idx--);
-        this.resize();
+        this.doUpdate(UpdateType.resize);
     }
 
     public switchToTabByIndex(idx) {
@@ -324,4 +353,21 @@ export class ClientManager extends EventEmitter {
         }
     }
 
+    private doUpdate(type?: UpdateType) {
+        if (!type) return;
+        this._updating |= type;
+        if (this._updating === UpdateType.none)
+            return;
+        window.requestAnimationFrame(() => {
+            if ((this._updating & UpdateType.resize) === UpdateType.resize) {
+                this.resize();
+                this._updating &= ~UpdateType.resize;
+            }
+            if ((this._updating & UpdateType.scroll) === UpdateType.scroll) {
+                //TODO add scroll
+                this._updating &= ~UpdateType.scroll;
+            }
+            this.doUpdate(this._updating);
+        });
+    }
 }
