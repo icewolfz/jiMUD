@@ -49,6 +49,14 @@
       id: 'file',
       submenu: [
         {
+          label: "&New Connection",
+          accelerator: "CmdOrCtrl+Shift+N",
+          click: () => {
+            manager.addClient("www.shadowmud.com", 1030);
+          }
+        },
+        { type: 'separator' },
+        {
           label: "&Connect",
           id: "connect",
           accelerator: "CmdOrCtrl+N",
@@ -65,9 +73,7 @@
 
           }
         },
-        {
-          type: 'separator'
-        },
+        { type: 'separator' },
         {
           label: "Ch&aracters...",
           id: "characters",

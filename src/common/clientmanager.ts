@@ -349,6 +349,7 @@ export class ClientManager extends EventEmitter {
         };
 
         tab.tab.id = 'cm-tab' + tab.id;
+        tab.tab.tabIndex = 0;
         tab.tab.classList.add('cm-tab');
         tab.tab.appendChild(tab.icon);
         tab.tab.appendChild(tab.title);
@@ -440,6 +441,7 @@ export class ClientManager extends EventEmitter {
         this.active.tab.classList.add('active');
         this.active.pane.classList.add('active');
         this.emit('activated', { index: this.getTabIndex(this.active), tab: this.active });
+        this.active.tab.focus();
         this.doUpdate(UpdateType.scrollToTab);
     }
 
