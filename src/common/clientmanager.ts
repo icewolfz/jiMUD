@@ -26,8 +26,8 @@ export class ClientManager extends EventEmitter {
     private $el: HTMLElement;
     private $tabstrip: HTMLElement;
     private $tabpane: HTMLElement;
-    private tabs: Tab[] = [];
-    private active: Tab;
+    public tabs: Tab[] = [];
+    public active: Tab;
     private _hideTabstrip: boolean = true;
     private _id: number = 0;
     private $scrollLeft: HTMLAnchorElement;
@@ -62,6 +62,27 @@ export class ClientManager extends EventEmitter {
         document.addEventListener('DOMContentLoaded', () => {
             this.doUpdate(UpdateType.resize);
         }, false);
+        document.addEventListener('keydown', (e) => {
+            let idx;
+            if (e.defaultPrevented)
+                return;
+            if (!e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) {
+                if (e.which === 87) {
+                    this.removeClient(this.active);
+                    e.preventDefault();
+                }
+                else if (e.which === 9) {
+                    idx = this.getTabIndex(this.active);
+                    if (idx === -1) return;
+                    idx++;
+                    if (idx === this.tabs.length)
+                        idx = 0;
+                    this.switchToTabByIndex(idx);
+                    e.preventDefault();
+                }
+            }
+        });
+
     }
 
     public resize() {
@@ -249,6 +270,7 @@ export class ClientManager extends EventEmitter {
             tab = this.getTab(tab);
         if (!tab) return;
         const idx = this.getTabIndex(tab);
+        if (idx === -1) return;
         let i = 0;
         //TODO formual should be width - padding + borders, caluatle padding/border sizes
         i = idx * (tab.tab.clientWidth - 8);
@@ -330,6 +352,7 @@ export class ClientManager extends EventEmitter {
         tab = this.getTab(tab);
         if (!tab) return;
         let idx = this.getTabIndex(tab);
+        if (idx === -1) return;
         const e = { index: idx, id: tab.id, tab: tab, cancel: false };
         this.emit('remove', e);
         if (e.cancel)
@@ -408,6 +431,8 @@ export class ClientManager extends EventEmitter {
         let t;
         if (typeof idx !== 'number') {
             for (t = 0; t < tl; t++) {
+                if (this.tabs[t] === idx)
+                    return this.tabs[t];
                 if (this.tabs[t].client === idx)
                     return this.tabs[t];
                 if (this.tabs[t].tab === idx)
@@ -443,13 +468,13 @@ export class ClientManager extends EventEmitter {
                 if (this.tabs[t].id === tab)
                     return t;
             }
-            return null;
+            return -1;
         }
         for (t = 0; t < tl; t++) {
             if (this.tabs[t].id === tab)
                 return t;
         }
-        return null;
+        return -1;
     }
 
     private updateStripState() {
