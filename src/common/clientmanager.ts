@@ -69,18 +69,22 @@ export class ClientManager extends EventEmitter {
         this.$scrollRight.classList.add('hidden');
         let tWidth = 100;
         let w = 100;
+
         for (let t = 0; t < tl; t++) {
             this.tabs[t].title.style.overflow = 'visible';
+            this.tabs[t].title.style.width = 'auto';
             tWidth = this.tabs[t].title.scrollWidth || this.tabs[t].title.clientWidth;
             //adjust for icon and close buttons
             tWidth += 44;
             if (tWidth > w)
                 w = tWidth;
-            this.tabs[t].title.style.overflow = 'hidden';
+            this.tabs[t].title.style.overflow = '';
+            this.tabs[t].title.style.width = '';
         }
-
-        if (w > 200)
-            w = 200;
+        /*
+                if (w > 200)
+                    w = 200;
+                */
         for (let t = 0; t < tl; t++) {
             this.tabs[t].tab.style.width = `${w}px`;
             this.tabs[t].title.style.maxWidth = `${w - 22}px`;
@@ -90,6 +94,14 @@ export class ClientManager extends EventEmitter {
             this.$tabstrip.classList.add('scroll');
             this.$scrollLeft.classList.remove('hidden');
             this.$scrollRight.classList.remove('hidden');
+            if (this.$tabstrip.scrollLeft === 0)
+                this.$scrollLeft.classList.add('disabled');
+            else
+                this.$scrollLeft.classList.remove('disabled');
+            if (this.$tabstrip.scrollLeft >= this.$tabstrip.scrollWidth)
+                this.$scrollRight.classList.add('disabled');
+            else
+                this.$scrollRight.classList.remove('disabled');
         }
         else {
             this.$tabstrip.classList.remove('scroll');
@@ -124,10 +136,10 @@ export class ClientManager extends EventEmitter {
         this.$el.className = 'cm';
         this.$parent.appendChild(this.$el);
 
-        this.$tabstrip = document.createElement('div');
+        this.$tabstrip = document.createElement('ul');
         this.$tabstrip.id = 'cm-tabstrip';
         this.$tabstrip.className = 'cm-tabstrip';
-
+        this.$tabstrip.innerHTML = '<span id="cm-tabstrip-gap"></span>';
         this.$scrollLeft = document.createElement('a');
         this.$scrollLeft.innerHTML = '<i class="fa fa-caret-left"></i>';
         this.$scrollLeft.id = 'cm-scroll-left';
@@ -175,7 +187,7 @@ export class ClientManager extends EventEmitter {
         }
         const tab: Tab = {
             client: null,
-            tab: document.createElement('div'),
+            tab: document.createElement('li'),
             pane: document.createElement('div'),
             id: --this._id,
             title: document.createElement('div'),
@@ -237,8 +249,13 @@ export class ClientManager extends EventEmitter {
             return;
         this.$tabstrip.removeChild(tab.tab);
         this.$tabpane.removeChild(tab.pane);
-        this.tabs.slice(idx, 1);
-        this.switchToTabByIndex(idx--);
+        this.tabs.splice(idx, 1);
+        if (tab.id === this.active.id) {
+            if (idx >= this.tabs.length)
+                idx--;
+            this.switchToTabByIndex(idx);
+        }
+        this.updateStripState();
         this.doUpdate(UpdateType.resize);
     }
 
@@ -326,11 +343,15 @@ export class ClientManager extends EventEmitter {
         let t;
         if (typeof tab !== 'number') {
             for (t = 0; t < tl; t++) {
+                if (this.tabs[t] === tab)
+                    return t;
                 if (this.tabs[t].client === tab)
                     return t;
                 if (this.tabs[t].tab === tab)
                     return t;
                 if (this.tabs[t].pane === tab)
+                    return t;
+                if (this.tabs[t].id === tab)
                     return t;
             }
             return null;

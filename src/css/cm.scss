@@ -2,7 +2,7 @@ $images: "./../../assets";
 $borderColor: rgb(204, 204, 204);
 $color: #333;
 $tabBackground: menu;
-$tabHeight: 24;
+$tabHeight: 26;
 
 .cm {
     position: absolute;
@@ -18,50 +18,127 @@ $tabHeight: 24;
     top: 0;
     right: 0;
     height: #{$tabHeight}px;
-    border-bottom: 1px solid $borderColor;
-    background: $tabBackground;
+    background-color: $tabBackground;
     white-space: nowrap;
     overflow: hidden;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    line-height: #{$tabHeight}px;
+    padding: 0 10px;
+    padding-top: 2px;
 }
 
-.cm-tabstrip > div {
-    display: inline-block;
-    border-right: 1px solid $borderColor;
-    margin-top: 2px;
-    height: #{$tabHeight - 2}px;
-    position: relative;
-    cursor: pointer;
-    margin-left: 2px;
-    margin-right: 2px;    
-    
+.cm-tabstrip:before {
+    z-index: 1;
 }
 
-.cm-tabstrip > div:last-child {}
-
-.cm-tabstrip > div:first-child {
-    border-left: 1px solid $borderColor;
-}
-
-.cm-tabstrip > div.active {
+.cm-tabstrip:after {
+    position: absolute;
+    content: "";
+    width: 100%;
+    bottom: 0;
+    left: 0;
     border-bottom: 1px solid $borderColor;
-    background-color: $borderColor;
+    z-index: 1;
+}
+
+.cm-tabstrip li {
+    position: relative;
+    border: 1px solid $borderColor;
+    display: inline-block;
+    z-index: 0;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 #FFF;
+    text-shadow: 0 1px #FFF;
+    margin: 0 -5px;
+    background-color: menu;
+    padding-right: 10px;
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.cm-tabstrip li:before,
+.cm-tabstrip li:after {
+    position: absolute;
+    bottom: -1px;
+    width: 6px;
+    height: 6px;
+    content: " ";
+}
+
+.cm-tabstrip li:before {
+    left: -6px;
+}
+
+.cm-tabstrip li:after {
+    right: -6px;
+}
+
+.cm-tabstrip li:after, .cm-tabstrip li:before {
+    border: 1px solid $borderColor;
+}
+
+.cm-tabstrip li:before {
+    border-bottom-right-radius: 6px;
+    border-width: 0 1px 1px 0;
+    box-shadow: 2px 2px 0 menu;
+}
+
+.cm-tabstrip li:after {
+    border-bottom-left-radius: 6px;
+    border-width: 0 0 1px 1px;
+    box-shadow: -2px 2px 0 menu;
+}
+
+.cm-tabstrip li.active:before {
+    box-shadow: 2px 2px 0 window;
+}
+
+.tabcm-tabstriprow li.active:after {
+    box-shadow: -2px 2px 0 window;
+}
+
+#cm-tabstrip-gap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0px;
+    border-bottom: 1px solid $borderColor;
+    display: block;
+}
+
+.cm-tabstrip li.active {
     color: WindowText;
     height: #{$tabHeight}px;
     background-color: window;
+    z-index: 2;
+    border-bottom-color: window;
+    padding-right: 0px;
+    padding-top: 4px;
+    opacity: 1;
 }
 
-.cm-tabstrip > div > .title {
+.cm-tabstrip li .title {
     margin-left: 22px;
-    margin-top: 3px;
     margin-right: 20px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
     font-family: -apple-system,BlinkMacSystemFont,Segoe WPC,Segoe UI,HelveticaNeue-Light,Ubuntu,Droid Sans,sans-serif;
     font-size: 11px;
+    margin-top: -2px;
 }
 
-.cm-tabstrip > div > .icon {
+.cm-tabstrip li.active .title {
+    margin-top: -4px;
+    position: relative;
+    top: -1px;    
+}
+
+.cm-tabstrip li .icon {
     width: 16px;
     height: 16px;
     top: 3px;
@@ -70,16 +147,21 @@ $tabHeight: 24;
     background-size: 16px 16px;
 }
 
-.cm-tabstrip > div > .close {
+.cm-tabstrip li .close {
     top: 3px;
-    right: 4px;
+    right: 14px;
     position: absolute;
     font-size: 15px;
     font-weight: normal;
     display: block;
 }
 
-.cm-tabstrip > div.active > .close, .cm-tabstrip > div:hover > .close {
+.cm-tabstrip li.active .close {
+    top: 3px;
+    right: 4px;
+}
+
+.cm-tabstrip li.active .close, .cm-tabstrip li:hover .close {
     display: block;
 }
 
@@ -89,7 +171,7 @@ $tabHeight: 24;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: darkcyan;
+    background-color: black;
 }
 
 .cm-tabpane-container.full {
@@ -115,7 +197,7 @@ $tabHeight: 24;
 
 #cm-scroll-left, #cm-scroll-right {
     position: absolute;
-    bottom: 0;
+    bottom: 0px;
     height: #{$tabHeight}px;
     display: block;
     width: 12px;
@@ -124,6 +206,8 @@ $tabHeight: 24;
     font-size: 18px;
     text-align: center;
     margin-top: 6px;
+    border-top: 1px solid $borderColor;
+    border-bottom: 1px solid $borderColor;
 }
 
 #cm-scroll-left:hover, #cm-scroll-right:hover {
@@ -133,15 +217,27 @@ $tabHeight: 24;
 
 #cm-scroll-left {
     left: 0;
+    border-right: 1px solid $borderColor;
+    box-shadow: 3px 8px 8px 0px rgba(0, 0, 0, 0.75);
+    z-index: 5;
+}
+
+#cm-scroll-left.disabled, #cm-scroll-right.disabled {
+    pointer-events: none;
+    box-shadow: none;
+    display: none;
 }
 
 #cm-scroll-right {
     right: 0;
+    border-left: 1px solid $borderColor;
+    box-shadow: -3px 8px 8px 0px rgba(0, 0, 0, 0.75);
+    z-index: 5;
 }
 
 .cm-tabstrip.scroll {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 13px;
+    padding-right: 13px;
 }
 
 .connected-icon {
