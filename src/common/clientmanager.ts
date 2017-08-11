@@ -1,6 +1,8 @@
 
 import EventEmitter = require('events');
 import { Client } from './client';
+import { remote } from 'electron';
+const { Menu, MenuItem } = remote;
 const { URL } = require('url');
 
 export enum UpdateType {
@@ -32,7 +34,8 @@ export class ClientManager extends EventEmitter {
     private _id: number = 0;
     private $scrollLeft: HTMLAnchorElement;
     private $scrollRight: HTMLAnchorElement;
-    private $scrollDropdown: HTMLAnchorElement;
+    private $scrollDropdown: HTMLButtonElement;
+    private $scrollMenu: HTMLUListElement;
     private _updating: UpdateType = UpdateType.none;
     private _scroll: number = 0;
     private _scrollTimer: NodeJS.Timer;
@@ -58,6 +61,7 @@ export class ClientManager extends EventEmitter {
 
         window.addEventListener('resize', (e) => {
             this.doUpdate(UpdateType.resize);
+            this.$scrollMenu.style.maxHeight = (this.$tabpane.clientHeight - 4) + 'px';
         });
         document.addEventListener('DOMContentLoaded', () => {
             this.doUpdate(UpdateType.resize);
@@ -82,7 +86,7 @@ export class ClientManager extends EventEmitter {
                 }
             }
         });
-
+        window.addEventListener('blur', () => { $('.dropdown.open').removeClass('open'); });
     }
 
     public resize() {
@@ -149,6 +153,7 @@ export class ClientManager extends EventEmitter {
             this.$scrollLeft.classList.add('hidden');
             this.$scrollRight.classList.add('hidden');
             this.$scrollDropdown.classList.add('hidden');
+            $('.dropdown.open').removeClass('open');
         }
     }
 
@@ -222,16 +227,53 @@ export class ClientManager extends EventEmitter {
         this.$scrollRight.classList.add('hidden');
         this.$el.appendChild(this.$scrollRight);
 
-        this.$scrollDropdown = document.createElement('a');
+        const d = document.createElement('div');
+        d.classList.add('dropdown');
+        d.id = 'cm-scroll-dropdown-container';
+
+        this.$scrollDropdown = document.createElement('button');
         this.$scrollDropdown.innerHTML = '<i class="fa fa-caret-down"></i>';
         this.$scrollDropdown.id = 'cm-scroll-dropdown';
-        this.$scrollDropdown.href = 'javascript:void(0)';
+        this.$scrollDropdown.classList.add('dropdown-toggle');
+        this.$scrollDropdown.dataset.toggle = 'dropdown';
+        this.$scrollDropdown.setAttribute('aria-haspopup', 'true');
+        this.$scrollDropdown.setAttribute('aria-expanded', 'true');
         this.$scrollDropdown.onclick = (e) => {
-            //TODO add drop down menu
+            e.stopPropagation();
+            e.preventDefault();
+            const menu = $(this.$scrollMenu);
+            menu.empty();
+            const tl = this.tabs.length;
+            for (let t = 0; t < tl; t++) {
+                if (this.tabs[t] === this.active)
+                    menu.append(`<li><a href="#" class="active" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.tabs[t].icon.className}"></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.tabs[t].title.innerHTML}</span></a></li>`);
+                else
+                    menu.append(`<li><a href="#" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.tabs[t].icon.className}"></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.tabs[t].title.innerHTML}</span></a></li>`);
+            }
+            //$(this.$scrollDropdown).trigger('click.bs.dropdown');
         };
         this.$scrollDropdown.classList.add('hidden');
-        this.$el.appendChild(this.$scrollDropdown);
+        d.appendChild(this.$scrollDropdown);
 
+        this.$scrollMenu = document.createElement('ul');
+        this.$scrollMenu.id = 'cm-scroll-menu';
+        this.$scrollMenu.dataset.container = 'body';
+        this.$scrollMenu.classList.add('dropdown-menu');
+        this.$scrollMenu.classList.add('pull-right');
+        this.$scrollMenu.setAttribute('aria-labelledby', 'cm-scroll-dropdown');
+        this.$scrollMenu.onclick = (e) => {
+            let el;
+            if (!e.target)
+                return;
+            el = e.target;
+            if (el.tagName !== 'A')
+                el = el.parentNode;
+            if (!el.dataset || !el.dataset.index)
+                return;
+            this.switchToTabByIndex(parseInt(el.dataset.index, 10));
+        };
+        d.appendChild(this.$scrollMenu);
+        this.$el.appendChild(d);
         this.$el.appendChild(this.$tabstrip);
 
         this.$tabpane = document.createElement('div');
@@ -247,7 +289,9 @@ export class ClientManager extends EventEmitter {
             if (!this.active)
                 this.switchToTabByIndex(this.tabs.length - 1);
         }
+        this.$scrollMenu.style.maxHeight = (this.$tabpane.clientHeight - 4) + 'px';
         this.updateStripState();
+        $('.dropdown-toggle').dropdown();
     }
 
     private scrollTabs(amt) {
@@ -335,7 +379,6 @@ export class ClientManager extends EventEmitter {
         tab.pane.innerHTML = `<h1>${tab.id}</h1>`;
         tab.title.classList.add('title');
         tab.icon.classList.add('icon');
-        tab.icon.classList.add(tab.iconCls);
 
         this.$tabstrip.appendChild(tab.tab);
         this.$tabpane.appendChild(tab.pane);
@@ -343,6 +386,7 @@ export class ClientManager extends EventEmitter {
         this.switchToTabByIndex(this.tabs.length - 1);
 
         this.setTabTitle(`${host}:${port}`);
+        this.setTabIcon(tab.iconCls);
         this.updateStripState();
         this.emit('add', { index: this.tabs.length - 1, id: tab.id, tab: tab });
         this.doUpdate(UpdateType.resize);
@@ -399,24 +443,25 @@ export class ClientManager extends EventEmitter {
         this.doUpdate(UpdateType.scrollToTab);
     }
 
-    public setTabTitle(text, idx?) {
-        let tab;
-        if (idx === undefined)
+    public setTabTitle(text, tab?) {
+        if (tab === undefined)
             tab = this.active;
         else
-            tab = this.getTab(idx);
+            tab = this.getTab(tab);
         if (!tab) return;
         tab.title.innerHTML = text;
-        tab.tab.title = text;
+        tab.tab.title = tab.title.innerText;
+        const idx = this.getTabIndex(tab);
+        $(`#cm-scroll-dropdownmenu-${idx}-title`).html(text);
     }
 
-    public setTabIcon(icon, idx?) {
-        let tab;
-        if (idx === undefined)
+    public setTabIcon(icon, tab?) {
+        if (tab === undefined)
             tab = this.active;
         else
-            tab = this.getTab(idx);
+            tab = this.getTab(tab);
         if (!tab) return;
+        const idx = this.getTabIndex(tab);
         if (tab.iconCls.startsWith('fa-'))
             tab.icon.classList.remove('fa');
         tab.icon.classList.remove(tab.iconCls);
@@ -424,6 +469,8 @@ export class ClientManager extends EventEmitter {
         if (tab.iconCls.startsWith('fa-'))
             tab.icon.classList.add('fa');
         tab.icon.classList.add(icon);
+        $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
+        $(`#cm-scroll-dropdownmenu-${idx}-icon`).addClass(tab.icon.className);
     }
 
     public getTab(idx) {

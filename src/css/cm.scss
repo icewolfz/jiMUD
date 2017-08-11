@@ -152,6 +152,16 @@ $tabHeight: 26;
     background-size: 16px 16px;
 }
 
+#cm-scroll-menu .icon {
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    background-size: 16px 16px;
+    display: inline-block;
+    position: relative;
+    top: 2px;    
+}
+
 .cm-tabstrip li .close {
     top: 3px;
     right: 14px;
@@ -204,6 +214,21 @@ $tabHeight: 26;
     margin-top: 6px;
 }
 
+#cm-scroll-dropdown-container {
+    position: absolute;
+    top: 0px;
+    height: #{$tabHeight}px;
+    display: block;
+    width: 12px;
+    z-index: 1;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    padding: 0;
+    border-top: transparent 1px soild;
+    outline: none;
+}
+
 #cm-scroll-left, #cm-scroll-right, #cm-scroll-dropdown {
     position: absolute;
     top: 0px;
@@ -216,10 +241,15 @@ $tabHeight: 26;
     text-align: center;
     color: black;
     text-shadow: 0px 1px #fff;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    padding: 0;
     border-top: $borderColor 1px solid;
+    outline: none;
 }
 
-#cm-scroll-left:hover, #cm-scroll-right:hover, #cm-scroll-dropdown:hover {
+#cm-scroll-left:hover, #cm-scroll-right:hover, #cm-scroll-dropdown:hover, #cm-scroll-dropdown-container.open #cm-scroll-dropdown {
     background-color: $borderColor;
     color: white;
 }
@@ -247,13 +277,13 @@ $tabHeight: 26;
     z-index: 5;
 }
 
-#cm-scroll-dropdown {
+#cm-scroll-dropdown, #cm-scroll-dropdown-container {
     right: 0;
     z-index: 5;
 }
 
-#cm-scroll-dropdown .fa {
-    margin-top: 6px;
+#cm-scroll-menu {
+    overflow: auto;
 }
 
 .cm-tabstrip.scroll {
@@ -271,4 +301,14 @@ $tabHeight: 26;
 
 .disconnected-icon {
     background-image: url(#{$images}/icons/png/disconnected2.png);
+}
+
+.dropdown-menu > li > a:focus, .dropdown-menu > li > a.active {
+    background-color: #e8e8e8;
+    background-image: -webkit-linear-gradient(top, #f5f5f5 0, #e8e8e8 100%);
+    background-image: -o-linear-gradient(top, #f5f5f5 0, #e8e8e8 100%);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5), to(#e8e8e8));
+    background-image: linear-gradient(to bottom, #f5f5f5 0, #e8e8e8 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#ffe8e8e8', GradientType=0);
+    background-repeat: repeat-x;
 }
