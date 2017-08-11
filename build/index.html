@@ -663,6 +663,10 @@
   });
 
   manager.on('remove', (e) => {
+    if (manager.tabs.length === 1) {
+      e.cancel = true;
+      return;
+    }
     ipcRenderer.send('remove', e.id);
   });
 
