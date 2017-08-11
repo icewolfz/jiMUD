@@ -27,6 +27,7 @@ $tabHeight: 26;
     line-height: #{$tabHeight}px;
     padding: 0 10px;
     padding-top: 2px;
+    border-top: $borderColor 1px solid;
 }
 
 .cm-tabstrip:before {
@@ -100,6 +101,10 @@ $tabHeight: 26;
     box-shadow: -2px 2px 0 window;
 }
 
+.cm-tabstrip li:last-child {
+    padding-right: 0px;
+}
+
 #cm-tabstrip-gap {
     position: absolute;
     bottom: 0;
@@ -135,7 +140,7 @@ $tabHeight: 26;
 .cm-tabstrip li.active .title {
     margin-top: -4px;
     position: relative;
-    top: -1px;    
+    top: -1px;
 }
 
 .cm-tabstrip li .icon {
@@ -154,6 +159,10 @@ $tabHeight: 26;
     font-size: 15px;
     font-weight: normal;
     display: block;
+}
+
+.cm-tabstrip li:last-child .close {
+    right: 4px;
 }
 
 .cm-tabstrip li.active .close {
@@ -192,25 +201,25 @@ $tabHeight: 26;
 }
 
 #cm-scroll-left .fa, #cm-scroll-right .fa {
-    margin-top: 4px;
+    margin-top: 8px;
 }
 
-#cm-scroll-left, #cm-scroll-right {
+#cm-scroll-left, #cm-scroll-right, #cm-scroll-dropdown {
     position: absolute;
-    bottom: 0px;
+    top: 0px;
     height: #{$tabHeight}px;
     display: block;
     width: 12px;
     background-color: $tabBackground;
     z-index: 1;
-    font-size: 18px;
+    font-size: 13px;
     text-align: center;
-    margin-top: 6px;
-    border-top: 1px solid $borderColor;
-    border-bottom: 1px solid $borderColor;
+    color: black;
+    text-shadow: 0px 1px #fff;
+    border-top: $borderColor 1px solid;
 }
 
-#cm-scroll-left:hover, #cm-scroll-right:hover {
+#cm-scroll-left:hover, #cm-scroll-right:hover, #cm-scroll-dropdown:hover {
     background-color: $borderColor;
     color: white;
 }
@@ -225,19 +234,31 @@ $tabHeight: 26;
 #cm-scroll-left.disabled, #cm-scroll-right.disabled {
     pointer-events: none;
     box-shadow: none;
-    display: none;
+    border-color: transparent;
+    color: rgb(224, 222, 222);
+    text-shadow: -1px -1px #fff;
+    border-top: $borderColor 1px solid;
 }
 
 #cm-scroll-right {
-    right: 0;
+    right: 12px;
     border-left: 1px solid $borderColor;
     box-shadow: -3px 8px 8px 0px rgba(0, 0, 0, 0.75);
     z-index: 5;
 }
 
+#cm-scroll-dropdown {
+    right: 0;
+    z-index: 5;
+}
+
+#cm-scroll-dropdown .fa {
+    margin-top: 7px;
+}
+
 .cm-tabstrip.scroll {
-    padding-left: 13px;
-    padding-right: 13px;
+    padding-left: 20px;
+    padding-right: 32px;
 }
 
 .connected-icon {

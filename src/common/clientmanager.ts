@@ -4,7 +4,7 @@ import { Client } from './client';
 const { URL } = require('url');
 
 export enum UpdateType {
-    none = 0, resize = 1, scroll = 2
+    none = 0, resize = 1, scroll = 2, scrollToTab = 4
 }
 
 export interface ClientMangerOptions {
@@ -32,7 +32,10 @@ export class ClientManager extends EventEmitter {
     private _id: number = 0;
     private $scrollLeft: HTMLAnchorElement;
     private $scrollRight: HTMLAnchorElement;
+    private $scrollDropdown: HTMLAnchorElement;
     private _updating: UpdateType = UpdateType.none;
+    private _scroll: number = 0;
+    private _scrollTimer: NodeJS.Timer;
 
     public get hideTabstrip(): boolean {
         return this._hideTabstrip;
@@ -67,6 +70,7 @@ export class ClientManager extends EventEmitter {
             tl = 1;
         this.$scrollLeft.classList.add('hidden');
         this.$scrollRight.classList.add('hidden');
+        this.$scrollDropdown.classList.add('hidden');
         let tWidth = 100;
         let w = 100;
 
@@ -90,21 +94,40 @@ export class ClientManager extends EventEmitter {
             this.tabs[t].title.style.maxWidth = `${w - 22}px`;
         }
 
-        if (this.$tabstrip.scrollWidth > window.innerWidth) {
+        if (this.$tabstrip.scrollWidth > this.$parent.clientWidth)
             this.$tabstrip.classList.add('scroll');
+        else
+            this.$tabstrip.classList.remove('scroll');
+        if (this._scroll < 0)
+            this._scroll = 0;
+        if (this._scroll > this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth)
+            this._scroll = this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth;
+        this.updateScrollButtons();
+    }
+
+    public updateScrollButtons() {
+        if (this.$tabstrip.scrollWidth > this.$parent.clientWidth) {
             this.$scrollLeft.classList.remove('hidden');
             this.$scrollRight.classList.remove('hidden');
+            this.$scrollDropdown.classList.remove('hidden');
             if (this.$tabstrip.scrollLeft === 0)
                 this.$scrollLeft.classList.add('disabled');
             else
                 this.$scrollLeft.classList.remove('disabled');
-            if (this.$tabstrip.scrollLeft >= this.$tabstrip.scrollWidth)
+            if (this.$tabstrip.scrollLeft >= this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth) {
                 this.$scrollRight.classList.add('disabled');
-            else
+                this.$scrollDropdown.classList.add('single');
+            }
+            else {
                 this.$scrollRight.classList.remove('disabled');
+                this.$scrollDropdown.classList.remove('single');
+            }
         }
         else {
             this.$tabstrip.classList.remove('scroll');
+            this.$scrollLeft.classList.add('hidden');
+            this.$scrollRight.classList.add('hidden');
+            this.$scrollDropdown.classList.add('hidden');
         }
     }
 
@@ -139,25 +162,54 @@ export class ClientManager extends EventEmitter {
         this.$tabstrip = document.createElement('ul');
         this.$tabstrip.id = 'cm-tabstrip';
         this.$tabstrip.className = 'cm-tabstrip';
-        this.$tabstrip.innerHTML = '<span id="cm-tabstrip-gap"></span>';
+        this.$tabstrip.addEventListener('wheel', (event) => {
+            this._scroll += (event.deltaY || event.deltaX);
+            if (this._scroll < 0)
+                this._scroll = 0;
+            else if (this._scroll > this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth)
+                this._scroll = this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth;
+            this.doUpdate(UpdateType.scroll);
+        });
         this.$scrollLeft = document.createElement('a');
-        this.$scrollLeft.innerHTML = '<i class="fa fa-caret-left"></i>';
+        this.$scrollLeft.innerHTML = '<i class="fa fa-chevron-left"></i>';
         this.$scrollLeft.id = 'cm-scroll-left';
         this.$scrollLeft.href = 'javascript:void(0)';
-        this.$scrollLeft.onclick = () => {
-            return;
+        this.$scrollLeft.onmousedown = (e) => {
+            if (e.button !== 0)
+                return;
+            if (this._scroll > 0)
+                this.scrollTabs(-16);
+        };
+        this.$scrollLeft.onmouseup = (e) => {
+            clearTimeout(this._scrollTimer);
         };
         this.$scrollLeft.classList.add('hidden');
-        this.$tabstrip.appendChild(this.$scrollLeft);
+        this.$el.appendChild(this.$scrollLeft);
         this.$scrollRight = document.createElement('a');
-        this.$scrollRight.innerHTML = '<i class="fa fa-caret-right"></i>';
+        this.$scrollRight.innerHTML = '<i class="fa fa-chevron-right"></i>';
         this.$scrollRight.id = 'cm-scroll-right';
         this.$scrollRight.href = 'javascript:void(0)';
-        this.$scrollRight.onclick = () => {
-            return;
+        this.$scrollRight.onmousedown = (e) => {
+            if (e.button !== 0)
+                return;
+            if (this._scroll < this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth)
+                this.scrollTabs(16);
+        };
+        this.$scrollRight.onmouseup = (e) => {
+            clearTimeout(this._scrollTimer);
         };
         this.$scrollRight.classList.add('hidden');
-        this.$tabstrip.appendChild(this.$scrollRight);
+        this.$el.appendChild(this.$scrollRight);
+
+        this.$scrollDropdown = document.createElement('a');
+        this.$scrollDropdown.innerHTML = '<i class="fa fa-caret-down"></i>';
+        this.$scrollDropdown.id = 'cm-scroll-dropdown';
+        this.$scrollDropdown.href = 'javascript:void(0)';
+        this.$scrollDropdown.onclick = (e) => {
+            //TODO add drop down menu
+        };
+        this.$scrollDropdown.classList.add('hidden');
+        this.$el.appendChild(this.$scrollDropdown);
 
         this.$el.appendChild(this.$tabstrip);
 
@@ -175,6 +227,41 @@ export class ClientManager extends EventEmitter {
                 this.switchToTabByIndex(this.tabs.length - 1);
         }
         this.updateStripState();
+    }
+
+    private scrollTabs(amt) {
+        this._scrollTimer = setTimeout(() => {
+            this._scroll += amt;
+            if (this._scroll < 0)
+                this._scroll = 0;
+            else if (this._scroll > this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth)
+                this._scroll = this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth;
+            else
+                this.scrollTabs(amt);
+            this.doUpdate(UpdateType.scroll);
+        }, 100);
+    }
+
+    private scrollToTab(tab?) {
+        if (!tab)
+            tab = this.active;
+        else
+            tab = this.getTab(tab);
+        if (!tab) return;
+        const idx = this.getTabIndex(tab);
+        let i = 0;
+        //TODO formual should be width - padding + borders, caluatle padding/border sizes
+        i = idx * (tab.tab.clientWidth - 8);
+        if (i <= this._scroll) {
+            this._scroll = i - 10;
+        }
+        else {
+            i += tab.tab.clientWidth - 8;
+            //50 is tab strip right padding + width of scroll button + shadow width + drop down with
+            if (i >= this._scroll + this.$tabstrip.clientWidth - 58)
+                this._scroll = i + 58 - this.$tabstrip.clientWidth;
+        }
+        this.doUpdate(UpdateType.scroll);
     }
 
     public addClient(host: string, port?: number) {
@@ -271,6 +358,7 @@ export class ClientManager extends EventEmitter {
         this.active.tab.classList.add('active');
         this.active.pane.classList.add('active');
         this.emit('activated', { index: idx, tab: this.active });
+        this.doUpdate(UpdateType.scrollToTab);
     }
 
     public switchToTab(tab) {
@@ -285,6 +373,7 @@ export class ClientManager extends EventEmitter {
         this.active.tab.classList.add('active');
         this.active.pane.classList.add('active');
         this.emit('activated', { index: this.getTabIndex(this.active), tab: this.active });
+        this.doUpdate(UpdateType.scrollToTab);
     }
 
     public setTabTitle(text, idx?) {
@@ -382,11 +471,19 @@ export class ClientManager extends EventEmitter {
         window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.resize) === UpdateType.resize) {
                 this.resize();
+                this.$tabstrip.scrollLeft = this._scroll;
+                this.updateScrollButtons();
                 this._updating &= ~UpdateType.resize;
+                this._updating &= ~UpdateType.scroll;
             }
             if ((this._updating & UpdateType.scroll) === UpdateType.scroll) {
-                //TODO add scroll
+                this.$tabstrip.scrollLeft = this._scroll;
+                this.updateScrollButtons();
                 this._updating &= ~UpdateType.scroll;
+            }
+            if ((this._updating & UpdateType.scrollToTab) === UpdateType.scrollToTab) {
+                this.scrollToTab();
+                this._updating &= ~UpdateType.scrollToTab;
             }
             this.doUpdate(this._updating);
         });
