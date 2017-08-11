@@ -1,7 +1,7 @@
 $images: "./../../assets";
 $borderColor: rgb(204, 204, 204);
 $color: #333;
-$tabBackground: rgb(240, 240, 240);
+$tabBackground: menu;
 $tabHeight: 24;
 
 .cm {
@@ -31,6 +31,9 @@ $tabHeight: 24;
     height: #{$tabHeight - 2}px;
     position: relative;
     cursor: pointer;
+    margin-left: 2px;
+    margin-right: 2px;    
+    
 }
 
 .cm-tabstrip > div:last-child {}
@@ -42,8 +45,9 @@ $tabHeight: 24;
 .cm-tabstrip > div.active {
     border-bottom: 1px solid $borderColor;
     background-color: $borderColor;
-    color: white;
+    color: WindowText;
     height: #{$tabHeight}px;
+    background-color: window;
 }
 
 .cm-tabstrip > div > .title {
