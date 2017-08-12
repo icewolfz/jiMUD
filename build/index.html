@@ -53,6 +53,16 @@
           accelerator: "CmdOrCtrl+Shift+N",
           click: () => {
             manager.addClient("www.shadowmud.com", 1030);
+            $('.dropdown.open').removeClass('open');
+          }
+        },
+        {
+          label: "C&lose Connection",
+          accelerator: "CmdOrCtrl+W",
+          enabled: false,
+          click: () => {
+            manager.removeClient(this.active);
+            $('.dropdown.open').removeClass('open');
           }
         },
         { type: 'separator' },
@@ -61,7 +71,7 @@
           id: "connect",
           accelerator: "CmdOrCtrl+N",
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         {
@@ -70,7 +80,7 @@
           accelerator: "CmdOrCtrl+D",
           enabled: false,
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         { type: 'separator' },
@@ -79,7 +89,7 @@
           id: "characters",
           accelerator: "CmdOrCtrl+H",
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         { type: 'separator' },
@@ -89,11 +99,14 @@
           type: 'checkbox',
           checked: false,
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         {
-          label: '&View logs...'
+          label: '&View logs...',
+          click: () => {
+            $('.dropdown.open').removeClass('open');
+          }
         },
         {
           type: 'separator'
@@ -103,7 +116,7 @@
           id: 'preferences',
           accelerator: "CmdOrCtrl+Comma",
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         {
@@ -121,32 +134,44 @@
       id: 'edit',
       submenu: [
         {
-          role: 'undo'
+          role: 'undo',
+          click: () => {
+            $('.dropdown.open').removeClass('open');
+          }
         },
         {
-          role: 'redo'
+          role: 'redo',
+          click: () => {
+            $('.dropdown.open').removeClass('open');
+          }
         },
         {
           type: 'separator'
         },
         {
-          role: 'cut'
+          role: 'cut',
+          click: () => {
+            $('.dropdown.open').removeClass('open');
+          }
         },
         {
-          role: 'copy'
+          role: 'copy',
+          click: () => {
+            $('.dropdown.open').removeClass('open');
+          }
         },
         {
           label: 'Paste',
           accelerator: 'CmdOrCtrl+V',
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         {
           label: 'Paste special',
           accelerator: 'CmdOrCtrl+Shift+V',
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         {
@@ -156,7 +181,7 @@
           label: 'Select All',
           accelerator: 'CmdOrCtrl+A',
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         {
@@ -165,7 +190,7 @@
         {
           label: 'Clear',
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         { type: 'separator' },
@@ -173,7 +198,7 @@
           label: 'Find',
           accelerator: 'CmdOrCtrl+F',
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
       ]
@@ -195,13 +220,14 @@
           type: 'checkbox',
           checked: false,
           click: () => {
-
+            $('.dropdown.open').removeClass('open');
           }
         },
         {
           label: '&Who is on?',
           click: () => {
             shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
+            $('.dropdown.open').removeClass('open');
           }
         },
         {
@@ -217,14 +243,14 @@
               type: 'checkbox',
               checked: true,
               click: () => {
-
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
               label: '&Refresh',
               id: "refresh",
               click: () => {
-
+                $('.dropdown.open').removeClass('open');
               }
             },
             { type: 'separator' },
@@ -234,7 +260,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
-
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -247,7 +273,7 @@
                   type: 'checkbox',
                   checked: true,
                   click: () => {
-
+                    $('.dropdown.open').removeClass('open');
                   }
                 },
                 { type: 'separator' },
@@ -257,7 +283,7 @@
                   type: 'checkbox',
                   checked: true,
                   click: () => {
-
+                    $('.dropdown.open').removeClass('open');
                   }
                 },
                 {
@@ -266,7 +292,7 @@
                   type: 'checkbox',
                   checked: true,
                   click: () => {
-
+                    $('.dropdown.open').removeClass('open');
                   }
                 },
               ]
@@ -277,7 +303,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
-
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -286,7 +312,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
-
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -295,7 +321,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
-
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -304,7 +330,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
-
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -313,7 +339,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
-
+                $('.dropdown.open').removeClass('open');
               }
             }
           ]
@@ -328,6 +354,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
+                $('.dropdown.open').removeClass('open');
               }
             },
             { type: 'separator' },
@@ -337,6 +364,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -345,6 +373,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -353,6 +382,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -361,6 +391,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -369,6 +400,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -377,6 +409,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -385,6 +418,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
+                $('.dropdown.open').removeClass('open');
               }
             },
             {
@@ -393,6 +427,7 @@
               type: 'checkbox',
               checked: true,
               click: () => {
+                $('.dropdown.open').removeClass('open');
               }
             },
           ]
@@ -432,6 +467,7 @@
           label: '&Advanced editor...',
           id: 'editor',
           click: () => {
+            $('.dropdown.open').removeClass('open');
           },
           accelerator: 'CmdOrCtrl+E'
         },
@@ -439,6 +475,7 @@
           label: '&Chat...',
           id: 'chat',
           click: () => {
+            $('.dropdown.open').removeClass('open');
           },
           accelerator: 'CmdOrCtrl+L'
         },
@@ -446,6 +483,7 @@
           label: '&Immortal tools...',
           id: 'immortal',
           click: () => {
+            $('.dropdown.open').removeClass('open');
           },
           visible: false,
           accelerator: 'CmdOrCtrl+I'
@@ -454,6 +492,7 @@
         {
           label: '&Map...',
           click: () => {
+            $('.dropdown.open').removeClass('open');
           },
           accelerator: 'CmdOrCtrl+T'
         },
@@ -474,12 +513,14 @@
         {
           label: '&ShadowMUD',
           click: () => {
+            $('.dropdown.open').removeClass('open');
             shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
           }
         },
         {
           label: '&jiMUD',
           click: () => {
+            $('.dropdown.open').removeClass('open');
             shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
           }
         },
@@ -487,6 +528,7 @@
         {
           label: '&About...',
           click: () => {
+            $('.dropdown.open').removeClass('open');
             var b = remote.getCurrentWindow().getBounds();
 
             let about = new BrowserWindow({
@@ -534,7 +576,46 @@
       label: 'jiMUD',
       submenu: [
         {
-          role: 'about'
+          label: 'about',
+          click: () => {
+            $('.dropdown.open').removeClass('open');
+            var b = remote.getCurrentWindow().getBounds();
+
+            let about = new BrowserWindow({
+              parent: remote.getCurrentWindow(),
+              modal: true,
+              x: Math.floor(b.x + b.width / 2 - 225),
+              y: Math.floor(b.y + b.height / 2 - 200),
+              width: 450,
+              height: 400,
+              movable: false,
+              minimizable: false,
+              maximizable: false,
+              skipTaskbar: true,
+              resizable: false,
+              title: 'About jiMUD',
+              icon: path.join(__dirname, '../assets/icons/png/64x64.png')
+            });
+            about.webContents.on('crashed', (event, killed) => {
+              //ipcRenderer.send('error', `About crashed, killed: ${killed}\n`, true);
+            });
+
+            about.setMenu(null);
+            about.on('closed', () => {
+              about = null;
+            });
+
+            // and load the index.html of the app.
+            about.loadURL(url.format({
+              pathname: path.join(__dirname, 'about.html'),
+              protocol: 'file:',
+              slashes: true
+            }));
+
+            about.once('ready-to-show', () => {
+              about.show();
+            });
+          }
         },
         {
           type: 'separator'
@@ -622,7 +703,7 @@
         checked: false,
         id: 'default',
         click: () => {
-
+          $('.dropdown.open').removeClass('open');
         }
       });
 
@@ -640,7 +721,7 @@
               checked: false,
               id: path.basename(files[i], ".json").toLowerCase(),
               click: (menuItem, browserWindow, event) => {
-
+                $('.dropdown.open').removeClass('open');
               }
             });
         }
@@ -654,7 +735,7 @@
       {
         label: '&Manage...',
         click: () => {
-
+          $('.dropdown.open').removeClass('open');
         },
         accelerator: 'CmdOrCtrl+P'
       });
@@ -667,9 +748,11 @@
   var manager = new ClientManager();
   manager.on('add', (e) => {
     ipcRenderer.send('add', e.id);
+    menubar.updateItem('file|close connection', { enabled: manager.tabs.length > 1 });
   });
 
   manager.on('remove', (e) => {
+    menubar.updateItem('file|close connection', { enabled: manager.tabs.length > 1 });
     if (manager.tabs.length === 1) {
       e.cancel = true;
       return;
@@ -679,14 +762,14 @@
 
   for (var x = 0; x < 10; x++) {
     manager.addClient("www.shadowmud.com", 1030);
-
   }
   console.log(remote.getGlobal('clients'));
 
-  window.onbeforeunload = function () {
+  window.onbeforeunload = () => {
     let tl = manager.tabs.length;
     for (var t = 0; t < tl; t++)
       ipcRenderer.send('remove', manager.tabs[t].id);
+    $('.dropdown.open').removeClass('open');
   };
 
 </script>
