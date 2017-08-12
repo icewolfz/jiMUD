@@ -62,7 +62,7 @@ export class Menubar {
         let item;
         let items;
         let tItem;
-        if (menu) return;
+        if (!menu) return;
 
         items = this.getItem(menu, ItemType.both);
         if (!items) return;
