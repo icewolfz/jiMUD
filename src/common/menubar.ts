@@ -31,7 +31,7 @@ export class Menubar {
         if (!Array.isArray(menu))
             menu = menu.split('|');
         items = this._menubar.items;
-        tItems = menu;
+        tItems = this.menu;
         for (i = 0; i < menu.length; i++) {
             if (!items || items.length === 0) break;
             for (let m = 0; m < items.length; m++) {

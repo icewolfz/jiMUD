@@ -61,7 +61,7 @@
           accelerator: "CmdOrCtrl+W",
           enabled: false,
           click: () => {
-            manager.removeClient(this.active);
+            manager.removeClient(manager.active);
             $('.dropdown.open').removeClass('open');
           }
         },
@@ -752,11 +752,12 @@
   });
 
   manager.on('remove', (e) => {
-    menubar.updateItem('file|close connection', { enabled: manager.tabs.length > 1 });
     if (manager.tabs.length === 1) {
       e.cancel = true;
+      menubar.updateItem('file|close connection', { enabled: false });
       return;
     }
+    menubar.updateItem('file|close connection', { enabled: (manager.tabs.length - 1) > 1 });
     ipcRenderer.send('remove', e.id);
   });
 
