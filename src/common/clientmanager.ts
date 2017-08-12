@@ -188,6 +188,11 @@ export class ClientManager extends EventEmitter {
         this.$tabstrip = document.createElement('ul');
         this.$tabstrip.id = 'cm-tabstrip';
         this.$tabstrip.className = 'cm-tabstrip';
+        this.$tabstrip.addEventListener('contextmenu', (e) => {
+            this.emit('contextmenu');
+            e.preventDefault();
+            e.stopPropagation();
+        });
         this.$tabstrip.addEventListener('wheel', (event) => {
             this._scroll += (event.deltaY || event.deltaX);
             if (this._scroll < 0)
@@ -353,14 +358,17 @@ export class ClientManager extends EventEmitter {
         tab.tab.classList.add('cm-tab');
         tab.tab.appendChild(tab.icon);
         tab.tab.appendChild(tab.title);
+        tab.tab.draggable = true;
         tab.tab.onclick = () => {
             const e = { id: tab.id, tab: tab, preventDefault: false };
             this.emit('tab-click', e);
             if (e.preventDefault) return;
             this.switchToTab(tab.id);
         };
-        tab.tab.oncontextmenu = () => {
+        tab.tab.oncontextmenu = (e) => {
             this.emit('tab-contextmenu', tab.id, tab);
+            e.preventDefault();
+            e.stopPropagation();
         };
         tab.tab.ondblclick = (e) => {
             this.emit('tab-dblclick', tab.id, tab);
