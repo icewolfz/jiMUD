@@ -24,7 +24,15 @@ interface ItemCache {
     defaultContext: boolean;
 }
 
+export interface ClientOptions {
+    parent?;
+    id?;
+    settings?;
+}
+
 export class Client extends EventEmitter {
+    public id: any = 'client';
+    private $parent: HTMLElement;
     private lineID = '.line';
     private _enableDebug: boolean = false;
     private _input: Input;
@@ -290,13 +298,96 @@ export class Client extends EventEmitter {
         this.clearCache();
     }
 
-    constructor(display, command, settings?: string) {
-        super();
-        if (command == null || typeof command === 'undefined') {
-            throw new Error('Missing command input');
+    public setParent(parent?: string | JQuery | HTMLElement) {
+        if (typeof parent === 'string') {
+            if (parent.startsWith('#'))
+                this.$parent = document.getElementById(parent.substr(1));
+            else
+                this.$parent = document.getElementById(parent);
         }
+        else if (parent instanceof $)
+            this.$parent = parent[0];
+        else if (parent instanceof HTMLElement)
+            this.$parent = parent;
+        if (!this.$parent)
+            this.$parent = document.body;
+        if (this.id === undefined)
+            this.id = this.$parent.id;
+        this.createClient();
+    }
 
-        this.display = new Display(display);
+    public createClient() {
+        let $el;
+        let $child: (HTMLDivElement | HTMLAnchorElement);
+        let $child2;
+        //create display control
+        $el = document.createElement('div');
+        $el.id = 'display-' + this.id;
+        $el.classList.add('display');
+        this.$parent.appendChild($el);
+        this.display = new Display($el);
+        $el = document.createElement('div');
+        $el.id = 'display-border-' + this.id;
+        $el.classList.add('display-border');
+        this.$parent.appendChild($el);
+        //create command input area
+        $el = document.createElement('div');
+        $el.id = 'command-' + this.id;
+        $el.classList.add('command');
+        this.$parent.appendChild($el);
+        $child = document.createElement('div');
+        $child.id = 'commandleft-' + this.id;
+        $child.classList.add('commandleft');
+        $el.appendChild($child);
+        $child = document.createElement('div');
+        $child.id = 'commandright-' + this.id;
+        $child.classList.add('commandright');
+        $el.appendChild($child);
+        $child = document.createElement('div');
+        $child.id = 'commandbox-' + this.id;
+        $child.classList.add('commandbox');
+        $el.appendChild($child);
+
+        this.commandInput = document.createElement('textarea');
+        this.commandInput.id = 'commandinput-' + this.id;
+        this.commandInput.classList.add('commandinput');
+        this.commandInput.setAttribute('spellcheck', 'true');
+        this.commandInput.setAttribute('wrap', 'off');
+        this.commandInput.setAttribute('cols', '20');
+        this.commandInput.setAttribute('rows', '20');
+        $child.appendChild(this.commandInput);
+        this.commandInput = $(this.commandInput);
+
+        $child = document.createElement('a');
+        $child.id = 'advedit-' + this.id;
+        $child.classList.add('commandbox');
+        $child.href = 'javascript:void(0)';
+        $child.title = 'Show advanced editor';
+        $child.classList.add('button');
+        $child.classList.add('button-sm');
+        $child.onclick = () => {
+            this.emit('show-editor');
+        };
+        $el.appendChild($child);
+        $child2 = document.createElement('i');
+        $child2.classList.add('fa');
+        $child2.classList.add('fa-edit');
+        $child.appendChild($child2);
+        //create button bar
+
+    }
+
+    constructor(options?: ClientOptions) {
+        super();
+        if (options) {
+            this.id = options.id || 'client';
+            this.setParent(options.parent);
+        }
+        else
+            this.setParent();
+        if (parent == null || typeof parent === 'undefined') {
+            throw new Error('Missing parent');
+        }
 
         this.display.click((event) => {
             if (this.options.CommandonClick)
@@ -307,12 +398,6 @@ export class Client extends EventEmitter {
             this.options.display.splitHeight = h;
             this.saveOptions();
         });
-
-        if (typeof command === 'string')
-            this.commandInput = $(command);
-        else
-            this.commandInput = command;
-
         this.MSP = new MSP();
         this.MSP.forcedDefaultMusicURL = '';
         this.MSP.forcedDefaultSoundURL = '';
@@ -481,8 +566,8 @@ export class Client extends EventEmitter {
             this.MSP.sound(data);
             this.emit('sound', data);
         });
-        if (settings && settings.length > 0)
-            this._settingsFile = settings;
+        if (options && options.settings && options.settings.length > 0)
+            this._settingsFile = options.settings;
         this.loadOptions();
         this.loadProfiles();
         this.emit('initialized');

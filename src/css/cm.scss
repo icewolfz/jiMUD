@@ -199,7 +199,7 @@ $tabHeight: 26;
 }
 
 .cm-tabpane {
-    display: none;
+    visibility: hidden;
     position: absolute;
     top: 0;
     left: 0;
@@ -208,7 +208,7 @@ $tabHeight: 26;
 }
 
 .cm-tabpane.active {
-    display: block;
+    visibility: visible;
 }
 
 #cm-scroll-left .fa, #cm-scroll-right .fa {

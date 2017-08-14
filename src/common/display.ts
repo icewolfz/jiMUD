@@ -104,9 +104,9 @@ export class Display extends EventEmitter {
     private _mxpSendFunction;
     private _mxpTooltipFunction;
 
-    get parent() {
+    public get parent() {
         if (!this._el) return null;
-        return this._el.parentElement;
+        return this._el.parentElement || this._el.parentNode;
     }
 
     get roundedRanges(): boolean { return this._roundedRanges; }
@@ -132,8 +132,10 @@ export class Display extends EventEmitter {
         if (!this.split && value) {
             this.split = document.createElement('div');
             this.split.id = id + '-split-frame';
+            this.split.classList.add('display-split-frame');
             this.split.bar = document.createElement('div');
             this.split.bar.id = id + '-split-bar';
+            this.split.bar.classList.add('display-split-bar');
             this.split.background = document.createElement('div');
             this.split.overlay = document.createElement('div');
             this.split.view = document.createElement('div');
@@ -190,6 +192,7 @@ export class Display extends EventEmitter {
                 e.cancelBubble = true;
                 this.split.ghostBar = document.createElement('div');
                 this.split.ghostBar.id = id + '-split-ghost-bar';
+                this.split.ghostBar.classList.add('display-split-ghost-bar');
                 this.split.ghostBar.style.top = (this.offset(this.split).top - 4) + 'px';
                 this.split.ghostBar.style.display = this.splitLive ? 'none' : 'block';
                 this._el.appendChild(this.split.ghostBar);
@@ -308,27 +311,31 @@ export class Display extends EventEmitter {
             this._el = display;
         else
             throw new Error('Display must be an id, element or jquery object');
-
+        this._el.classList.add('display');
         this._elJ = $(this._el);
 
         this._background = document.createElement('div');
         this._background.id = this._el.id + '-background';
+        this._background.classList.add('display-background');
         this._el.appendChild(this._background);
 
         this._overlay = document.createElement('div');
         this._overlay.id = this._el.id + '-overlay';
+        this._overlay.classList.add('display-overlay');
         this._el.appendChild(this._overlay);
 
         this._view = document.createElement('div');
         this._view.id = this._el.id + '-view';
+        this._view.classList.add('display-view');
         this._el.appendChild(this._view);
 
         this._character = document.createElement('div');
-        this._character.id = 'Character';
+        this._character.id = this._el.id + '-character';
+        this._character.classList.add('character');
         this._character.className = 'ansi';
         this._character.style.borderBottom = '1px solid black';
         this._character.innerText = 'W';
-        document.body.appendChild(this._character);
+        this._el.parentElement.appendChild(this._character);
 
         this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
@@ -731,7 +738,7 @@ export class Display extends EventEmitter {
         window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.scroll) === UpdateType.scroll) {
                 if (this.split) {
-                    if (this._VScroll.position >= this._VScroll.scrollSize - this._padding[0]) {
+                    if (this._VScroll.position >= this._VScroll.scrollSize - this._padding[0] - this._padding[2]) {
                         this.split.style.display = '';
                         this.split.shown = false;
                         this.emit('scroll-lock', false);
@@ -2072,7 +2079,10 @@ export class ScrollBar extends EventEmitter {
 
     get size(): number { return this._visible ? 12 : 0; }
 
-    get position(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
+    get position(): number {
+        const p = this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]);
+        return p > 0 ? p : 0;
+    }
 
     get offset(): number { return this._offset; }
     set offset(value: number) {

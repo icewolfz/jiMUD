@@ -99,52 +99,52 @@ export class Input extends EventEmitter {
         if (!client)
             throw new Error('Invalid client!');
         this.client = client;
-
-        const dice: any = (args, math, scope) => {
-            let res;
-            let c;
-            let sides;
-            let mod;
-            if (args.length === 1) {
-                res = /(\d+)\s+d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0].toString());
-                if (!res || res.length < 3) throw new Error('Invalid dice');
-                c = parseInt(res[1]);
-                sides = res[2];
-                if (res.length > 3 && args[2])
-                    mod = mathjs.eval(res[3]);
-            }
-            else if (args.length > 1) {
-                c = parseInt(args[0].toString());
-                sides = args[1].toString().trim();
-                if (sides !== 'F' && sides !== '%')
-                    sides = args[1].compile().eval(scope);
-                if (args.length > 2)
-                    mod = args[2].compile().eval(scope);
-            }
-            else
-                throw new Error('Invalid arguments to dice');
-            let sum = 0;
-            for (let i = 0; i < c; i++) {
-                if (sides === 'F')
-                    sum += fudgeDice();
-                else if (sides === '%')
-                    sum += ~~(Math.random() * 100) + 1;
+        if (!mathjs.dice) {
+            const dice: any = (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                if (args.length === 1) {
+                    res = /(\d+)\s+d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0].toString());
+                    if (!res || res.length < 3) throw new Error('Invalid dice');
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3 && args[2])
+                        mod = mathjs.eval(res[3]);
+                }
+                else if (args.length > 1) {
+                    c = parseInt(args[0].toString());
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().eval(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().eval(scope);
+                }
                 else
-                    sum += ~~(Math.random() * sides) + 1;
-            }
-            if (sides === '%')
-                sum /= 100;
-            if (mod)
-                return mathjs.eval(sum + mod);
-            return sum;
-        };
+                    throw new Error('Invalid arguments to dice');
+                let sum = 0;
+                for (let i = 0; i < c; i++) {
+                    if (sides === 'F')
+                        sum += fudgeDice();
+                    else if (sides === '%')
+                        sum += ~~(Math.random() * 100) + 1;
+                    else
+                        sum += ~~(Math.random() * sides) + 1;
+                }
+                if (sides === '%')
+                    sum /= 100;
+                if (mod)
+                    return mathjs.eval(sum + mod);
+                return sum;
+            };
 
-        dice.rawArgs = true;
+            dice.rawArgs = true;
 
-        mathjs.import({
-            dice: dice
-        });
-
+            mathjs.import({
+                dice: dice
+            });
+        }
         this._tests = new Tests(client);
         this._commandHistory = [];
         $(document).keydown((event) => {

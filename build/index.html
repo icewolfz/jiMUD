@@ -34,14 +34,12 @@
   const path = require('path');
   const fs = require('fs');
   const url = require('url');
-  /*
   window.onerror = function (msg, url, line) {
     console.log("Message: " + msg);
     console.log("Url: " + url);
     console.log("Line: " + line);
     return true;
   };
-  */
 
   var menuTemp = [
     //File
@@ -750,6 +748,7 @@
   manager.on('add', (e) => {
     ipcRenderer.send('add', e.id);
     e.panel.pane.innerHTML = `<h1 style="color:white">${e.id}</h1>`;
+    e.panel.client = new Client({id:e.id, parent: e.panel.pane});
     menubar.updateItem('file|close connection', { enabled: manager.panels.length > 1 });
   });
 
@@ -778,7 +777,7 @@
   window.onbeforeunload = () => {
     let tl = manager.panels.length;
     for (var t = 0; t < tl; t++)
-      ipcRenderer.send('remove', manager.tabs[t].id);
+      ipcRenderer.send('remove', manager.panels[t].id);
     $('.dropdown.open').removeClass('open');
   };
 

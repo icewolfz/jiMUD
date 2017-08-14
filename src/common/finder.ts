@@ -1,7 +1,7 @@
 //cSpell:words keycode
 import EventEmitter = require('events');
-import { Display } from './display.js';
-import { OverlayRange } from './types.js';
+import { Display } from './display';
+import { OverlayRange } from './types';
 
 export class Finder extends EventEmitter {
     private _display: Display;
@@ -17,10 +17,10 @@ export class Finder extends EventEmitter {
     private _all = false;
     private _parent;
 
-    constructor(display) {
+    constructor(display: Display) {
         super();
         this._display = display;
-        this._parent = display.parent();
+        this._parent = display.parent;
         this.createControl();
 
         $(window.document).keyup((e) => {
