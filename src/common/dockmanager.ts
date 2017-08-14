@@ -1,6 +1,5 @@
 
 import EventEmitter = require('events');
-import { Client } from './client';
 import { remote } from 'electron';
 const { Menu, MenuItem } = remote;
 const { URL } = require('url');
@@ -9,12 +8,11 @@ export enum UpdateType {
     none = 0, resize = 1, scroll = 2, scrollToTab = 4
 }
 
-export interface ClientMangerOptions {
+export interface DockMangerOptions {
     container?;
 }
 
-export interface Tab {
-    client: Client;
+export interface Panel {
     tab: HTMLElement;
     pane: HTMLElement;
     id: number;
@@ -23,13 +21,13 @@ export interface Tab {
     iconCls: string;
 }
 
-export class ClientManager extends EventEmitter {
+export class DockManager extends EventEmitter {
     private $parent: HTMLElement;
     private $el: HTMLElement;
     private $tabstrip: HTMLElement;
     private $tabpane: HTMLElement;
-    public tabs: Tab[] = [];
-    public active: Tab;
+    public panels: Panel[] = [];
+    public active: Panel;
     private _hideTabstrip: boolean = true;
     private _id: number = 0;
     private $scrollLeft: HTMLAnchorElement;
@@ -66,22 +64,30 @@ export class ClientManager extends EventEmitter {
         document.addEventListener('DOMContentLoaded', () => {
             this.doUpdate(UpdateType.resize);
         }, false);
+        document.addEventListener('keyup', (e) => {
+            const tl = this.panels.length;
+            this.emit('keyup', e);
+            if (e.defaultPrevented)
+                return;
+        });
         document.addEventListener('keydown', (e) => {
             let idx;
+            const tl = this.panels.length;
+            this.emit('keydown', e);
             if (e.defaultPrevented)
                 return;
             if (!e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) {
                 if (e.which === 87) {
-                    this.removeClient(this.active);
+                    this.removePanel(this.active);
                     e.preventDefault();
                 }
                 else if (e.which === 9) {
-                    idx = this.getTabIndex(this.active);
+                    idx = this.getPanelIndex(this.active);
                     if (idx === -1) return;
                     idx++;
-                    if (idx === this.tabs.length)
+                    if (idx === this.panels.length)
                         idx = 0;
-                    this.switchToTabByIndex(idx);
+                    this.switchToPanelByIndex(idx);
                     e.preventDefault();
                 }
             }
@@ -90,7 +96,7 @@ export class ClientManager extends EventEmitter {
     }
 
     public resize() {
-        let tl = this.tabs.length;
+        let tl = this.panels.length;
         if (tl < 0)
             tl = 1;
         this.$scrollLeft.classList.add('hidden');
@@ -100,23 +106,23 @@ export class ClientManager extends EventEmitter {
         let w = 100;
 
         for (let t = 0; t < tl; t++) {
-            this.tabs[t].title.style.overflow = 'visible';
-            this.tabs[t].title.style.width = 'auto';
-            tWidth = this.tabs[t].title.scrollWidth || this.tabs[t].title.clientWidth;
+            this.panels[t].title.style.overflow = 'visible';
+            this.panels[t].title.style.width = 'auto';
+            tWidth = this.panels[t].title.scrollWidth || this.panels[t].title.clientWidth;
             //adjust for icon and close buttons
             tWidth += 44;
             if (tWidth > w)
                 w = tWidth;
-            this.tabs[t].title.style.overflow = '';
-            this.tabs[t].title.style.width = '';
+            this.panels[t].title.style.overflow = '';
+            this.panels[t].title.style.width = '';
         }
         /*
                 if (w > 200)
                     w = 200;
                 */
         for (let t = 0; t < tl; t++) {
-            this.tabs[t].tab.style.width = `${w}px`;
-            this.tabs[t].title.style.maxWidth = `${w - 22}px`;
+            this.panels[t].tab.style.width = `${w}px`;
+            this.panels[t].title.style.maxWidth = `${w - 22}px`;
         }
 
         if (this.$tabstrip.scrollWidth > this.$parent.clientWidth)
@@ -248,12 +254,12 @@ export class ClientManager extends EventEmitter {
             e.preventDefault();
             const menu = $(this.$scrollMenu);
             menu.empty();
-            const tl = this.tabs.length;
+            const tl = this.panels.length;
             for (let t = 0; t < tl; t++) {
-                if (this.tabs[t] === this.active)
-                    menu.append(`<li><a href="#" class="active" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.tabs[t].icon.className}"></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.tabs[t].title.innerHTML}</span></a></li>`);
+                if (this.panels[t] === this.active)
+                    menu.append(`<li><a href="#" class="active" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
                 else
-                    menu.append(`<li><a href="#" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.tabs[t].icon.className}"></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.tabs[t].title.innerHTML}</span></a></li>`);
+                    menu.append(`<li><a href="#" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
             }
             //$(this.$scrollDropdown).trigger('click.bs.dropdown');
         };
@@ -275,7 +281,7 @@ export class ClientManager extends EventEmitter {
                 el = el.parentNode;
             if (!el.dataset || !el.dataset.index)
                 return;
-            this.switchToTabByIndex(parseInt(el.dataset.index, 10));
+            this.switchToPanelByIndex(parseInt(el.dataset.index, 10));
         };
         d.appendChild(this.$scrollMenu);
         this.$el.appendChild(d);
@@ -285,14 +291,14 @@ export class ClientManager extends EventEmitter {
         this.$tabpane.id = 'cm-tabpane';
         this.$tabpane.className = 'cm-tabpane-container';
         this.$el.appendChild(this.$tabpane);
-        if (this.tabs.length > 0) {
-            const tl = this.tabs.length;
+        if (this.panels.length > 0) {
+            const tl = this.panels.length;
             for (let t = 0; t < tl; t++) {
-                this.$tabstrip.appendChild(this.tabs[t].tab);
-                this.$tabpane.appendChild(this.tabs[t].pane);
+                this.$tabstrip.appendChild(this.panels[t].tab);
+                this.$tabpane.appendChild(this.panels[t].pane);
             }
             if (!this.active)
-                this.switchToTabByIndex(this.tabs.length - 1);
+                this.switchToPanelByIndex(this.panels.length - 1);
         }
         this.$scrollMenu.style.maxHeight = (this.$tabpane.clientHeight - 4) + 'px';
         this.updateStripState();
@@ -312,22 +318,22 @@ export class ClientManager extends EventEmitter {
         }, 100);
     }
 
-    private scrollToTab(tab?) {
-        if (!tab)
-            tab = this.active;
+    private scrollToTab(panel?) {
+        if (!panel)
+            panel = this.active;
         else
-            tab = this.getTab(tab);
-        if (!tab) return;
-        const idx = this.getTabIndex(tab);
+            panel = this.getPanel(panel);
+        if (!panel) return;
+        const idx = this.getPanelIndex(panel);
         if (idx === -1) return;
         let i = 0;
         //TODO formual should be width - padding + borders, caluatle padding/border sizes
-        i = idx * (tab.tab.clientWidth - 8);
+        i = idx * (panel.tab.clientWidth - 8);
         if (i <= this._scroll) {
             this._scroll = i - 10;
         }
         else {
-            i += tab.tab.clientWidth - 8;
+            i += panel.tab.clientWidth - 8;
             //50 is tab strip right padding + width of scroll button + shadow width + drop down with
             if (i >= this._scroll + this.$tabstrip.clientWidth - 58)
                 this._scroll = i + 58 - this.$tabstrip.clientWidth;
@@ -335,43 +341,35 @@ export class ClientManager extends EventEmitter {
         this.doUpdate(UpdateType.scroll);
     }
 
-    public addClient(host: string, port?: number) {
-        if (!host)
-            throw new Error('Invalid host');
-        if (!port) {
-            const u = new URL(host);
-            port = u.port || 23;
-            host = u.hostname;
-        }
-        const tab: Tab = {
-            client: null,
+    public addPanel(title?: string, icon?: string) {
+        const panel: Panel = {
             tab: document.createElement('li'),
             pane: document.createElement('div'),
             id: --this._id,
             title: document.createElement('div'),
             icon: document.createElement('div'),
-            iconCls: 'disconnected-icon'
+            iconCls: icon || 'disconnected-icon'
         };
 
-        tab.tab.id = 'cm-tab' + tab.id;
-        tab.tab.tabIndex = 0;
-        tab.tab.classList.add('cm-tab');
-        tab.tab.appendChild(tab.icon);
-        tab.tab.appendChild(tab.title);
-        tab.tab.draggable = true;
-        tab.tab.onclick = () => {
-            const e = { id: tab.id, tab: tab, preventDefault: false };
+        panel.tab.id = 'cm-tab' + panel.id;
+        panel.tab.tabIndex = 0;
+        panel.tab.classList.add('cm-tab');
+        panel.tab.draggable = true;
+        panel.tab.appendChild(panel.icon);
+        panel.tab.appendChild(panel.title);
+        panel.tab.onclick = () => {
+            const e = { id: panel.id, panel: panel, preventDefault: false };
             this.emit('tab-click', e);
             if (e.preventDefault) return;
-            this.switchToTab(tab.id);
+            this.switchToPanel(panel.id);
         };
-        tab.tab.oncontextmenu = (e) => {
-            this.emit('tab-contextmenu', tab.id, tab);
+        panel.tab.oncontextmenu = (e) => {
+            this.emit('tab-contextmenu', panel.id, panel);
             e.preventDefault();
             e.stopPropagation();
         };
-        tab.tab.ondblclick = (e) => {
-            this.emit('tab-dblclick', tab.id, tab);
+        panel.tab.ondblclick = (e) => {
+            this.emit('tab-dblclick', panel.id, panel);
         };
 
         const close = document.createElement('i');
@@ -379,99 +377,100 @@ export class ClientManager extends EventEmitter {
         close.classList.add('fa');
         close.classList.add('fa-times');
         close.onclick = () => {
-            this.removeClient(tab.id);
+            this.removePanel(panel.id);
         };
-        tab.tab.appendChild(close);
+        panel.tab.appendChild(close);
 
-        tab.pane.id = 'cm-tabpane' + tab.id;
-        tab.pane.classList.add('cm-tabpane');
-        tab.pane.innerHTML = `<h1>${tab.id}</h1>`;
-        tab.title.classList.add('title');
-        tab.icon.classList.add('icon');
+        panel.pane.id = 'cm-tabpane' + panel.id;
+        panel.pane.classList.add('cm-tabpane');
+        panel.pane.innerHTML = `<h1 style="color:white">${panel.id}</h1>`;
+        panel.title.classList.add('title');
+        panel.icon.classList.add('icon');
 
-        this.$tabstrip.appendChild(tab.tab);
-        this.$tabpane.appendChild(tab.pane);
-        this.tabs.push(tab);
-        this.switchToTabByIndex(this.tabs.length - 1);
+        this.$tabstrip.appendChild(panel.tab);
+        this.$tabpane.appendChild(panel.pane);
+        this.panels.push(panel);
+        this.switchToPanelByIndex(this.panels.length - 1);
 
-        this.setTabTitle(`${host}:${port}`);
-        this.setTabIcon(tab.iconCls);
+        this.setPanelTitle(title || '');
+        this.setPanelIcon(panel.iconCls);
         this.updateStripState();
-        this.emit('add', { index: this.tabs.length - 1, id: tab.id, tab: tab });
+        this.emit('add', { index: this.panels.length - 1, id: panel.id, panel: panel });
         this.doUpdate(UpdateType.resize);
+        return panel;
     }
 
-    public removeClient(tab) {
-        tab = this.getTab(tab);
-        if (!tab) return;
-        let idx = this.getTabIndex(tab);
+    public removePanel(panel) {
+        panel = this.getPanel(panel);
+        if (!panel) return;
+        let idx = this.getPanelIndex(panel);
         if (idx === -1) return;
-        const e = { index: idx, id: tab.id, tab: tab, cancel: false };
+        const e = { index: idx, id: panel.id, panel: panel, cancel: false };
         this.emit('remove', e);
         if (e.cancel)
             return;
-        this.$tabstrip.removeChild(tab.tab);
-        this.$tabpane.removeChild(tab.pane);
-        this.tabs.splice(idx, 1);
-        if (tab.id === this.active.id) {
-            if (idx >= this.tabs.length)
+        this.$tabstrip.removeChild(panel.tab);
+        this.$tabpane.removeChild(panel.pane);
+        this.panels.splice(idx, 1);
+        if (panel.id === this.active.id) {
+            if (idx >= this.panels.length)
                 idx--;
-            this.switchToTabByIndex(idx);
+            this.switchToPanelByIndex(idx);
         }
         this.updateStripState();
         this.doUpdate(UpdateType.resize);
     }
 
-    public switchToTabByIndex(idx) {
-        if (idx < 0 || idx >= this.tabs.length)
+    public switchToPanelByIndex(idx) {
+        if (idx < 0 || idx >= this.panels.length)
             return;
         if (this.active) {
             this.active.tab.classList.remove('active');
             this.active.pane.classList.remove('active');
-            this.emit('deactivated', { index: this.getTabIndex(this.active), tab: this.active });
+            this.emit('deactivated', { index: this.getPanelIndex(this.active), panel: this.active });
         }
-        this.active = this.tabs[idx];
+        this.active = this.panels[idx];
         this.active.tab.classList.add('active');
         this.active.pane.classList.add('active');
-        this.emit('activated', { index: idx, tab: this.active });
+        this.emit('activated', { index: idx, panel: this.active });
         this.doUpdate(UpdateType.scrollToTab);
     }
 
-    public switchToTab(tab) {
-        tab = this.getTab(tab);
-        if (!tab) return;
+    public switchToPanel(panel) {
+        panel = this.getPanel(panel);
+        if (!panel) return;
         if (this.active) {
             this.active.tab.classList.remove('active');
             this.active.pane.classList.remove('active');
-            this.emit('deactivated', { index: this.getTabIndex(this.active), tab: this.active });
+            this.emit('deactivated', { index: this.getPanelIndex(this.active), panel: this.active });
         }
-        this.active = tab;
+        this.active = panel;
         this.active.tab.classList.add('active');
         this.active.pane.classList.add('active');
-        this.emit('activated', { index: this.getTabIndex(this.active), tab: this.active });
+        this.emit('activated', { index: this.getPanelIndex(this.active), panel: this.active });
         this.active.tab.focus();
         this.doUpdate(UpdateType.scrollToTab);
     }
 
-    public setTabTitle(text, tab?) {
+    public setPanelTitle(text, tab?) {
         if (tab === undefined)
             tab = this.active;
         else
-            tab = this.getTab(tab);
+            tab = this.getPanel(tab);
         if (!tab) return;
         tab.title.innerHTML = text;
         tab.tab.title = tab.title.innerText;
-        const idx = this.getTabIndex(tab);
+        const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdownmenu-${idx}-title`).html(text);
     }
 
-    public setTabIcon(icon, tab?) {
+    public setPanelIcon(icon, tab?) {
         if (tab === undefined)
             tab = this.active;
         else
-            tab = this.getTab(tab);
+            tab = this.getPanel(tab);
         if (!tab) return;
-        const idx = this.getTabIndex(tab);
+        const idx = this.getPanelIndex(tab);
         if (tab.iconCls.startsWith('fa-'))
             tab.icon.classList.remove('fa');
         tab.icon.classList.remove(tab.iconCls);
@@ -483,59 +482,55 @@ export class ClientManager extends EventEmitter {
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).addClass(tab.icon.className);
     }
 
-    public getTab(idx) {
-        const tl = this.tabs.length;
+    public getPanel(idx) {
+        const tl = this.panels.length;
         let t;
         if (typeof idx !== 'number') {
             for (t = 0; t < tl; t++) {
-                if (this.tabs[t] === idx)
-                    return this.tabs[t];
-                if (this.tabs[t].client === idx)
-                    return this.tabs[t];
-                if (this.tabs[t].tab === idx)
-                    return this.tabs[t];
-                if (this.tabs[t].pane === idx)
-                    return this.tabs[t];
+                if (this.panels[t] === idx)
+                    return this.panels[t];
+                if (this.panels[t].tab === idx)
+                    return this.panels[t];
+                if (this.panels[t].pane === idx)
+                    return this.panels[t];
             }
             return null;
         }
-        else if (idx < 0 || idx >= this.tabs.length) {
+        else if (idx < 0 || idx >= this.panels.length) {
             for (t = 0; t < tl; t++) {
-                if (this.tabs[t].id === idx)
-                    return this.tabs[t];
+                if (this.panels[t].id === idx)
+                    return this.panels[t];
             }
             return null;
         }
-        return this.tabs[idx];
+        return this.panels[idx];
     }
 
-    public getTabIndex(tab) {
-        const tl = this.tabs.length;
+    public getPanelIndex(tab) {
+        const tl = this.panels.length;
         let t;
         if (typeof tab !== 'number') {
             for (t = 0; t < tl; t++) {
-                if (this.tabs[t] === tab)
+                if (this.panels[t] === tab)
                     return t;
-                if (this.tabs[t].client === tab)
+                if (this.panels[t].tab === tab)
                     return t;
-                if (this.tabs[t].tab === tab)
+                if (this.panels[t].pane === tab)
                     return t;
-                if (this.tabs[t].pane === tab)
-                    return t;
-                if (this.tabs[t].id === tab)
+                if (this.panels[t].id === tab)
                     return t;
             }
             return -1;
         }
         for (t = 0; t < tl; t++) {
-            if (this.tabs[t].id === tab)
+            if (this.panels[t].id === tab)
                 return t;
         }
         return -1;
     }
 
     private updateStripState() {
-        if (!this._hideTabstrip || this.tabs.length > 1) {
+        if (!this._hideTabstrip || this.panels.length > 1) {
             this.$tabstrip.classList.remove('hidden');
             this.$tabpane.classList.remove('full');
         }

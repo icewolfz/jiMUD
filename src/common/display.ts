@@ -104,6 +104,11 @@ export class Display extends EventEmitter {
     private _mxpSendFunction;
     private _mxpTooltipFunction;
 
+    get parent() {
+        if (!this._el) return null;
+        return this._el.parentElement;
+    }
+
     get roundedRanges(): boolean { return this._roundedRanges; }
     set roundedRanges(value: boolean) {
         if (value !== this._roundedRanges) {
@@ -645,12 +650,14 @@ export class Display extends EventEmitter {
         this._finder.on('regex', () => {
             this.emit('regex');
         });
-
         this._finder.on('shown', () => {
             this.emit('shown');
         });
         this._finder.on('closed', () => {
             this.emit('closed');
+        });
+        this._finder.on('closing', (e) => {
+            this.emit('closing', e);
         });
 
         this._finder.on('found-results', () => {

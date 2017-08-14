@@ -5,7 +5,6 @@ import { OverlayRange } from './types.js';
 
 export class Finder extends EventEmitter {
     private _display: Display;
-    private _document;
     private _control;
 
     private _timer;
@@ -16,16 +15,17 @@ export class Finder extends EventEmitter {
     private _reverse;
     private _regex;
     private _all = false;
+    private _parent;
 
     constructor(display) {
         super();
         this._display = display;
-        this._document = display._el.ownerDocument;
+        this._parent = display.parent();
         this.createControl();
 
         $(window.document).keyup((e) => {
             if (e.keyCode === 27) { // escape key maps to keycode `27`
-                this.hide();
+                this.hide('escape');
             }
         });
 
@@ -43,6 +43,18 @@ export class Finder extends EventEmitter {
         });
 
         //create box
+    }
+
+    get parent() { return this._parent || window.document.body; }
+    set parent(value) {
+        if (value !== this._parent) {
+            if (this._parent)
+                this._parent.removeChild(this._control[0]);
+            this._parent = value;
+            if (!this._parent)
+                this._parent = this._display.parent || window.document.body;
+            this._parent.appendChild(this._control[0]);
+        }
     }
 
     get MatchCase(): boolean {
@@ -135,7 +147,7 @@ export class Finder extends EventEmitter {
     private createControl() {
         this._control = $('<div id="find"><input placeholder="Find" /><button id="find-case" title="Match Case">Aa</button><button id="find-word" title="Match Whole Word">Aa|</button><button id="find-regex" title="Use Regular Expression">.*</button><button id="find-all" title="Highlight all matches"><i class="fa fa-paint-brush"></i></button><div id="find-count"></div><button id="find-prev" title="Previous Match" disabled="disabled"><i class="fa fa-arrow-down"></i></button><button id="find-next" title="Next Match" disabled="disabled"><i class="fa fa-arrow-up"></i></button><button id="find-selection" title="Find in selection" disabled="disabled"><i class="fa fa-align-left"></i></button><button id="find-reverse" title="Search Down"><i class="fa fa-caret-down"></i></button><button id="find-close" title="Close"><i class="fa fa-close"></i></button></div>');
         $('#find-close', this._control).on('click', () => {
-            this.hide();
+            this.hide('button');
         });
         $('#find-prev', this._control).on('click', () => {
             this.gotoPrevious();
@@ -158,10 +170,14 @@ export class Finder extends EventEmitter {
         $('#find-regex', this._control).on('click', () => {
             this.RegularExpression = !this.RegularExpression;
         });
-        window.document.body.appendChild(this._control[0]);
+        this.parent.appendChild(this._control[0]);
     }
 
     public show() {
+        const e = { preventDefault: false };
+        this.emit('showing', e);
+        if (e.preventDefault)
+            return;
         this._control.slideDown();
         const sel = this._display.selection;
         if (sel.length)
@@ -171,7 +187,11 @@ export class Finder extends EventEmitter {
         this.emit('shown');
     }
 
-    public hide() {
+    public hide(source?) {
+        const e = { preventDefault: false, source: source };
+        this.emit('closing', e);
+        if (e.preventDefault)
+            return;
         this._control.slideUp(() => {
             $('input', this._control).val('');
             this.clear();
