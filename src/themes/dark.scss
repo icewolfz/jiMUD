@@ -717,7 +717,7 @@ body {
 
 /** button stats */
 
-#advedit {
+.advedit {
     top: 3px;
     right: 3px;
     text-align: center;
@@ -728,15 +728,15 @@ body {
     width: 16px;
 }
 
-#advedit .fa {
+.advedit .fa {
     margin-top: 1px;
 }
 
-#advedit:hover {
+.advedit:hover {
     background-color: #3f3f46;
 }
 
-#advedit:active {
+.advedit:active {
     background-color: #2a2d2e;
 }
 

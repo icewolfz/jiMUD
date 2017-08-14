@@ -360,7 +360,7 @@ export class Client extends EventEmitter {
 
         $child = document.createElement('a');
         $child.id = 'advedit-' + this.id;
-        $child.classList.add('commandbox');
+        $child.classList.add('advedit');
         $child.href = 'javascript:void(0)';
         $child.title = 'Show advanced editor';
         $child.classList.add('button');
