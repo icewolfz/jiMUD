@@ -53,7 +53,7 @@
           label: "&New Connection",
           accelerator: "CmdOrCtrl+Shift+N",
           click: () => {
-            manager.addPanel("www.shadowmud.com", 1030);
+            manager.addPanel("www.shadowmud.com:1030");
             $('.dropdown.open').removeClass('open');
           }
         },
@@ -62,7 +62,7 @@
           accelerator: "CmdOrCtrl+W",
           enabled: false,
           click: () => {
-            manager.removePanel(manager.active);
+            manager.removePanel();
             $('.dropdown.open').removeClass('open');
           }
         },
@@ -749,16 +749,17 @@
   var manager = new DockManager();
   manager.on('add', (e) => {
     ipcRenderer.send('add', e.id);
-    menubar.updateItem('file|close connection', { enabled: manager.tabs.length > 1 });
+    e.panel.pane.innerHTML = `<h1 style="color:white">${e.id}</h1>`;
+    menubar.updateItem('file|close connection', { enabled: manager.panels.length > 1 });
   });
 
   manager.on('remove', (e) => {
-    if (manager.tabs.length === 1) {
+    if (manager.panels.length === 1) {
       e.cancel = true;
       menubar.updateItem('file|close connection', { enabled: false });
       return;
     }
-    menubar.updateItem('file|close connection', { enabled: (manager.tabs.length - 1) > 1 });
+    menubar.updateItem('file|close connection', { enabled: (manager.panels.length - 1) > 1 });
     ipcRenderer.send('remove', e.id);
   });
 
@@ -775,7 +776,7 @@
   console.log(remote.getGlobal('clients'));
 
   window.onbeforeunload = () => {
-    let tl = manager.tabs.length;
+    let tl = manager.panels.length;
     for (var t = 0; t < tl; t++)
       ipcRenderer.send('remove', manager.tabs[t].id);
     $('.dropdown.open').removeClass('open');

@@ -383,7 +383,6 @@ export class DockManager extends EventEmitter {
 
         panel.pane.id = 'cm-tabpane' + panel.id;
         panel.pane.classList.add('cm-tabpane');
-        panel.pane.innerHTML = `<h1 style="color:white">${panel.id}</h1>`;
         panel.title.classList.add('title');
         panel.icon.classList.add('icon');
 
@@ -400,8 +399,11 @@ export class DockManager extends EventEmitter {
         return panel;
     }
 
-    public removePanel(panel) {
-        panel = this.getPanel(panel);
+    public removePanel(panel?) {
+        if (panel === undefined)
+            panel = this.active;
+        else
+            panel = this.getPanel(panel);
         if (!panel) return;
         let idx = this.getPanelIndex(panel);
         if (idx === -1) return;
