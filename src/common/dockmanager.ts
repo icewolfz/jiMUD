@@ -360,7 +360,7 @@ export class DockManager extends EventEmitter {
         panel.tab.onclick = () => {
             const e = { id: panel.id, panel: panel, preventDefault: false };
             this.emit('tab-click', e);
-            if (e.preventDefault) return;
+            if (e.preventDefault || this.active === panel) return;
             this.switchToPanel(panel.id);
         };
         panel.tab.oncontextmenu = (e) => {
@@ -429,12 +429,12 @@ export class DockManager extends EventEmitter {
         if (this.active) {
             this.active.tab.classList.remove('active');
             this.active.pane.classList.remove('active');
-            this.emit('deactivated', { index: this.getPanelIndex(this.active), panel: this.active });
+            this.emit('deactivated', { index: this.getPanelIndex(this.active), id: this.active.id, panel: this.active });
         }
         this.active = this.panels[idx];
         this.active.tab.classList.add('active');
         this.active.pane.classList.add('active');
-        this.emit('activated', { index: idx, panel: this.active });
+        this.emit('activated', { index: idx, id: this.active.id, panel: this.active });
         this.doUpdate(UpdateType.scrollToTab);
     }
 
@@ -444,12 +444,12 @@ export class DockManager extends EventEmitter {
         if (this.active) {
             this.active.tab.classList.remove('active');
             this.active.pane.classList.remove('active');
-            this.emit('deactivated', { index: this.getPanelIndex(this.active), panel: this.active });
+            this.emit('deactivated', { index: this.getPanelIndex(this.active), id: this.active.id, panel: this.active });
         }
         this.active = panel;
         this.active.tab.classList.add('active');
         this.active.pane.classList.add('active');
-        this.emit('activated', { index: this.getPanelIndex(this.active), panel: this.active });
+        this.emit('activated', { index: this.getPanelIndex(this.active), id: this.active.id, panel: this.active });
         this.active.tab.focus();
         this.doUpdate(UpdateType.scrollToTab);
     }

@@ -14,6 +14,7 @@ import { Display } from './display';
 const { version } = require('../../package.json');
 const path = require('path');
 const fs = require('fs');
+const url = require('url');
 
 interface ItemCache {
     triggers: Trigger[];
@@ -28,6 +29,13 @@ export interface ClientOptions {
     parent?;
     id?;
     settings?;
+    host?: string;
+    port?: number;
+    username?: string;
+    password?: string;
+    map?: string;
+    profiles?: string[];
+
 }
 
 export class Client extends EventEmitter {
@@ -38,6 +46,8 @@ export class Client extends EventEmitter {
     private _input: Input;
     private _auto: NodeJS.Timer = null;
     private _autoError: boolean = false;
+    private _user: string;
+    private _pass: string;
     private _settingsFile: string = parseTemplate(path.join('{data}', 'settings.json'));
     private _itemCache: ItemCache = {
         triggers: null,
@@ -430,6 +440,23 @@ export class Client extends EventEmitter {
         this.commandInput.focus();
 
         this.telnet = new Telnet();
+        if (options) {
+            if (options.host && options.host.length > 0) {
+                const u = new url.parse(options.host);
+                this.telnet.host = u.hostname;
+                this.telnet.port = parseInt(u.port || '23');
+                this._user = u.username;
+                this._pass = u.password;
+                if (u.protocol && u.protocol !== 'telnet:')
+                    throw new Error('Invalid url');
+            }
+            if (options.port)
+                this.telnet.port = options.port;
+            if (options.username)
+                this._user = options.username;
+            if (options.password)
+                this._pass = options.password;
+        }
         this.telnet.terminal = 'jiMUD';
         this.telnet.version = version;
         this.telnet.on('error', (err) => {

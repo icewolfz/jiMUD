@@ -484,13 +484,15 @@ app.on('ready', () => {
       case "--help":
       case "-?":
       case "/?":
-        console.log('-h, --help                    Print console help');
-        console.log('-d, --debug                   Enable dev tools for all windows');
-        console.log('-s=[file], --setting=[file]   Override default setting file');
-        console.log('-mf=[file], --map=[file]      Override default map file');
-        console.log('-c=[name], --character=[name] Allows you to load/create a character from character database');
-        console.log('-pf=[list], --profiles[]      Set which profiles will be enabled, if not found will default');
-        console.log('-v, --version                 Print current version');
+        console.log('Usage: jiMUD [options] [telnet://[user[:password]@]server[:port]]\n');
+        console.log('Options:');
+        console.log('  -h, --help                    Print console help');
+        console.log('  -d, --debug                   Enable dev tools for all windows');
+        console.log('  -s=[file], --setting=[file]   Override default setting file');
+        console.log('  -mf=[file], --map=[file]      Override default map file');
+        console.log('  -c=[list], --character=[list] A comma delimited list of characters to load/create');
+        console.log('  -pf=[list], --profiles[list]  A comma delimited list of profiles to use instead of selected');
+        console.log('  -v, --version                 Print current version');
         app.quit();
         return;
       case "--version":

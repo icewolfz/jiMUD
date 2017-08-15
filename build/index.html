@@ -26,7 +26,7 @@
   if (window.module) module.module;
 
   const { DockManager } = require('./js/dockmanager');
-  const { Client } = require('./js/client');
+  const { Client, ClientOptions } = require('./js/client');
   const { Menubar } = require('./js/menubar');
   const { shell, ipcRenderer, remote, webFrame } = require('electron');
   const { dialog, BrowserWindow } = remote;
@@ -34,12 +34,14 @@
   const path = require('path');
   const fs = require('fs');
   const url = require('url');
+  /*
   window.onerror = function (msg, url, line) {
     console.log("Message: " + msg);
     console.log("Url: " + url);
     console.log("Line: " + line);
     return true;
   };
+  */
 
   var menuTemp = [
     //File
@@ -51,7 +53,7 @@
           label: "&New Connection",
           accelerator: "CmdOrCtrl+Shift+N",
           click: () => {
-            manager.addPanel("www.shadowmud.com:1030");
+            createClient('telnet://www.shadowmud.com:1030', manager.addPanel("www.shadowmud.com:1030"));
             $('.dropdown.open').removeClass('open');
           }
         },
@@ -743,12 +745,17 @@
 
   createMenu();
 
-  //remote.process.argv
+  function createClient(host, panel) {
+    panel.client = new Client(Object.assign({ id: panel.id, parent: panel.pane, host: host }, clientoptions));
+    menubar.updateItem('file|connect', { enabled: !panel.client.connected });
+    menubar.updateItem('file|disconnect', { enabled: panel.client.connected });
+  }
+
+  var clientoptions = {};
   var manager = new DockManager();
   manager.on('add', (e) => {
     ipcRenderer.send('add', e.id);
     e.panel.pane.innerHTML = `<h1 style="color:white;text-align:center;z-index:10000;position: relative;font-size:10em">${e.id}</h1>`;
-    e.panel.client = new Client({ id: e.id, parent: e.panel.pane });
     menubar.updateItem('file|close connection', { enabled: manager.panels.length > 1 });
   });
 
@@ -762,6 +769,16 @@
     ipcRenderer.send('remove', e.id);
   });
 
+  manager.on('activated', (e) => {
+    if (!e.panel.client) return;
+    menubar.updateItem('file|connect', { enabled: !e.panel.client.connected });
+    menubar.updateItem('file|disconnect', { enabled: e.panel.client.connected });
+  });
+
+  manager.on('deactivated', (e) => {
+
+  });
+
   manager.on('keyup', (e) => {
     if (manager.active)
       manager.active.client.emit('keyup', e);
@@ -771,9 +788,55 @@
       manager.active.client.emit('keydown', e);
   });
 
-  for (var x = 0; x < 10; x++) {
-    manager.addPanel("www.shadowmud.com:1030");
-  }
+  var args = remote.process.argv;
+
+  if (remote.process.defaultApp)
+    args = args.splice(2);
+  args.forEach((val, index) => {
+    var set = val.split('=');
+    switch (set[0]) {
+      case '-d':
+      case '-debug':
+      case '--d':
+      case '--debug':
+        break;
+      case '-c':
+      case '-character':
+      case '-characters':
+      case '--c':
+      case '--character':
+      case '--characters':
+        break;
+      case '-s':
+      case '-setting':
+      case '--s':
+      case '--setting':
+        clientoptions.settings = set[1];
+        break;
+      case '-mf':
+      case '-map':
+      case '--mf':
+      case '--map':
+        clientoptions.map = set[1];
+        break;
+      case '-pf':
+      case '-profiles':
+      case '--pf':
+      case '--profiles':
+        clientoptions.profiles = set[1].split(',');
+        break;
+      default:
+        if (!val.startsWith('telnet://'))
+          createClient('telnet://' + val, manager.addPanel(val));
+        else
+          createClient(val, manager.addPanel(val));
+        break;
+    }
+  });
+
+  if (manager.panels.length === 0)
+    createClient('telnet://www.shadowmud.com:1030', manager.addPanel("www.shadowmud.com:1030"));
+
   console.log(remote.getGlobal('clients'));
 
   window.onbeforeunload = () => {
