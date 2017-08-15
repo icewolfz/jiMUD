@@ -64,7 +64,7 @@ body {
     border: 1px solid adadad;
 }
 
-#buttonbar {
+.buttonbar {
     top: 0px;
     left: 0px;
     bottom: 0px;
@@ -816,49 +816,49 @@ body {
     text-decoration: none;
 }
 
-#connect img {
+.connect img {
     background: url(#{$images}/icons/png/connect.black.png) no-repeat;
     padding-left: 50px;
     background-position: 5px -1px;
 }
 
-#disconnect img {
+.disconnect img {
     padding-left: 50px;
     background: url(#{$images}/icons/png/disconnect.black.png) no-repeat;
     background-position: 3px -3px;
 }
 
-#preferences img {
+.preferences img {
     padding-left: 50px;
     background: url(#{$images}/icons/png/preferences.black.png) no-repeat;
     background-position: 5px -1px;
 }
 
-#log img {
+.log img {
     padding-left: 50px;
     background: url(#{$images}/icons/png/log.black.png) no-repeat;
     background-position: 5px -1px;
 }
 
-#clear img {
+.clear img {
     padding-left: 50px;
     background: url(#{$images}/icons/png/clear.black.png) no-repeat;
     background-position: 5px -1px;
 }
 
-#lock[title="Unlock display"] img {
+.lock[title="Unlock display"] img {
     padding-left: 50px;
     background: url(#{$images}/icons/png/unlock.black.png) no-repeat;
     background-position: 5px -1px;
 }
 
-#lock[title="Lock display"] img {
+.lock[title="Lock display"] img {
     padding-left: 50px;
     background: url(#{$images}/icons/png/lock.black.png) no-repeat;
     background-position: 5px -1px;
 }
 
-#map img {
+.map img {
     padding-left: 50px;
     background: url(#{$images}/icons/png/map.black.png) no-repeat;
     background-position: 5px -1px;

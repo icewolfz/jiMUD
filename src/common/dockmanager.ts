@@ -245,7 +245,7 @@ export class DockManager extends EventEmitter {
         this.$scrollDropdown = document.createElement('button');
         this.$scrollDropdown.innerHTML = '<i class="fa fa-caret-down"></i>';
         this.$scrollDropdown.id = 'cm-scroll-dropdown';
-        this.$scrollDropdown.classList.add('dropdown-toggle');
+        this.$scrollDropdown.classList.add('dropdown-toggle', 'hidden');
         this.$scrollDropdown.dataset.toggle = 'dropdown';
         this.$scrollDropdown.setAttribute('aria-haspopup', 'true');
         this.$scrollDropdown.setAttribute('aria-expanded', 'true');
@@ -263,14 +263,12 @@ export class DockManager extends EventEmitter {
             }
             //$(this.$scrollDropdown).trigger('click.bs.dropdown');
         };
-        this.$scrollDropdown.classList.add('hidden');
         d.appendChild(this.$scrollDropdown);
 
         this.$scrollMenu = document.createElement('ul');
         this.$scrollMenu.id = 'cm-scroll-menu';
         this.$scrollMenu.dataset.container = 'body';
-        this.$scrollMenu.classList.add('dropdown-menu');
-        this.$scrollMenu.classList.add('pull-right');
+        this.$scrollMenu.classList.add('dropdown-menu', 'pull-right');
         this.$scrollMenu.setAttribute('aria-labelledby', 'cm-scroll-dropdown');
         this.$scrollMenu.onclick = (e) => {
             let el;
@@ -373,9 +371,7 @@ export class DockManager extends EventEmitter {
         };
 
         const close = document.createElement('i');
-        close.classList.add('close');
-        close.classList.add('fa');
-        close.classList.add('fa-times');
+        close.classList.add('close', 'fa', 'fa-times');
         close.onclick = () => {
             this.removePanel(panel.id);
         };

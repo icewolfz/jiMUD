@@ -331,8 +331,7 @@ export class Display extends EventEmitter {
 
         this._character = document.createElement('div');
         this._character.id = this._el.id + '-character';
-        this._character.classList.add('character');
-        this._character.classList.add('ansi');
+        this._character.classList.add('character', 'ansi');
         this._character.style.borderBottom = '1px solid black';
         this._character.innerText = 'W';
         this._el.parentElement.appendChild(this._character);

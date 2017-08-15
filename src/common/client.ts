@@ -328,7 +328,7 @@ export class Client extends EventEmitter {
 
     public createClient() {
         let $el;
-        let $child: (HTMLDivElement | HTMLAnchorElement);
+        let $child: any;
         let $child2;
         //create display control
         $el = document.createElement('div');
@@ -373,18 +373,100 @@ export class Client extends EventEmitter {
         $child.classList.add('advedit');
         $child.href = 'javascript:void(0)';
         $child.title = 'Show advanced editor';
-        $child.classList.add('button');
-        $child.classList.add('button-sm');
+        $child.classList.add('button', 'button-sm');
         $child.onclick = () => {
             this.emit('show-editor');
         };
         $el.appendChild($child);
         $child2 = document.createElement('i');
-        $child2.classList.add('fa');
-        $child2.classList.add('fa-edit');
+        $child2.classList.add('fa', 'fa-edit');
         $child.appendChild($child2);
         //create button bar
+        $el = document.createElement('div');
+        $el.id = 'buttonbar-' + this.id;
+        $el.classList.add('buttonbar');
+        this.$parent.appendChild($el);
+        $child = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        $child.setAttribute('width', '16');
+        $child.setAttribute('height', '16');
+        $child.setAttribute('viewBox', '-0.6 -0.6 17 16');
+        $child2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        $child2.setAttribute('d', 'M16 0c0 0.5 0 1.1 0 1.6 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.2 0.1 0.6 0 0.8 0 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.6 0 0.8 -0.1 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.8 0-1.6 0-2.4 0 -0.1-0.2 0.1-0.7 0-0.8s-0.7 0.1-0.8 0 0.1-0.7 0-0.8c-0.1-0.1-0.8 0.1-0.8 0 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.2-0.1-0.6 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.2-0.1 0.6 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.3-0.1 0.5 0 0.8 0 0.1-0.2-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.7 0.1 0.8 0c0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.6 0.1 0.8 0C15.5 0 15.8 0 16 0z');
+        $child.appendChild($child2);
+        $child2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        $child2.setAttribute('d', 'M6.4 8c0.3 0 0.5 0 0.8 0 0.1 0 0.7-0.1 0.8 0 0.1 0.2-0.1 0.6 0 0.8 0.1 0.2-0.1 0.7 0 0.8 0 0 0.8 0 0.8 0 -0.1 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.8 0 0.8 -0.2 0.1-0.6 0-0.8 0 -0.3 0-0.5 0-0.8 0 -0.2 0-0.7-0.1-0.8 0 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.3 0-0.5 0-0.8 0 -0.1 0-0.7 0.1-0.8 0 -0.1-0.2 0.1-0.6 0-0.8 0.2-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8c0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1 0-0.7 0-0.8 0-0.3 0-0.5 0-0.8 0-0.2-0.1-0.6 0-0.8 0-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8s0.7 0.1 0.8 0 -0.1-0.6 0-0.8c0.3 0 0.5 0 0.8 0 0.1-0.2-0.1-0.6 0-0.8 0 0 0.8 0 0.8 0C6.6 7.4 6.3 7.9 6.4 8z');
+        $child.appendChild($child2);
 
+        $el.appendChild(this.createButton('Connect', $child, 'connect', () => {
+            this.connect();
+        }));
+        $child = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        $child.setAttribute('width', '16');
+        $child.setAttribute('height', '16');
+        $child.setAttribute('viewBox', '-0.6 -0.6 17 16');
+        $child2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        $child2.setAttribute('d', 'M16 0c0 0.5 0 1.1 0 1.6 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.8-0.1-0.8 0 -0.1 0.2 0 0.6 0 0.8 0 0.3 0 0.5 0 0.8 0 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.7-0.1-0.8 0s0.1 0.7 0 0.8c-0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.3 0-0.5 0-0.8 0 -0.1 0-0.7 0.1-0.8 0 -0.1-0.2 0.1-0.6 0-0.8 -0.2-0.1-0.6 0.1-0.8 0 -0.1-0.1 0.1-0.7 0-0.8 -0.1-0.1-0.7 0.1-0.8 0 -0.1-0.1 0-0.6 0-0.8 0-0.2 0-0.6 0-0.8 0-0.3 0-0.5 0-0.8 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.2-0.1 0.6 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.1 0-0.1-0.7 0-0.8 0.1-0.1 0.7 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.6 0.1 0.8 0C15.5 0 15.7 0 16 0z');
+        $child.appendChild($child2);
+        $child2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        $child2.setAttribute('d', 'M6.4 10.4c0.2 0.1 0.6-0.1 0.8 0 0.1 0.1 0 0.7 0 0.8 0 0.3 0 0.5 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.1 0.1 0.8 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.1 0-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.8 0 0.8 -0.2 0.1-0.6 0-0.8 0 -0.2 0-0.6-0.1-0.8 0 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.3 0-0.5 0-0.8 0 0-0.5 0-1.1 0-1.6 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0-0.3 0-0.5 0-0.8 0-0.2-0.1-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.8 0.1 0.8 0 0.1-0.2 0-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0.3 0 0.5 0 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.1 0 0.8 0 0.8 0 0.1 0.1-0.1 0.7 0 0.8 0.2 0.1 0.6-0.1 0.8 0 0.2 0.1 0.7-0.1 0.8 0C6.5 9.8 6.3 10.3 6.4 10.4z');
+        $child.appendChild($child2);
+        $el.appendChild(this.createButton('Disconnect', $child, 'disconnect', () => {
+            this.close();
+        }, true));
+        $el.appendChild(this.createButton('Characters', 'fa-user', 'characters', () => {
+            //
+        }));
+        $el.appendChild(this.createButton('Immortal Tools', 'fa-code-fork', 'immortal', () => {
+            //
+        }, true));
+        $el.appendChild(this.createButton('Preferences', 'fa-gears', 'preferences', () => {
+            //
+        }));
+        $el.appendChild(this.createButton('Toggle logging', 'fa-file-text-o', 'log', () => {
+            //
+        }));
+        $child = document.createElement('span');
+        $child.classList.add('fa-stack');
+        $child2 = document.createElement('i');
+        $child2.classList.add('fa', 'fa-file-o', 'fa-stack-2x');
+        $child.appendChild($child2);
+        $child2 = document.createElement('i');
+        $child2.classList.add('fa', 'fa-times', 'fa-stack-2x');
+        $child.appendChild($child2);
+        $el.appendChild(this.createButton('Clear display', $child, 'clear', () => {
+            //
+        }));
+        $el.appendChild(this.createButton('Lock display', 'fa-lock', 'lock', () => {
+            //
+        }));
+        $el.appendChild(this.createButton('Show mapper', 'fa-map', 'map', () => {
+            //
+        }));
+        $el = document.createElement('div');
+        $el.id = 'user-buttons-' + this.id;
+        $el.classList.add('user-buttons');
+        this.$parent.appendChild($el);
+        //Status
+    }
+
+    public createButton(title, icon, id, click, hidden?: boolean): HTMLAnchorElement {
+        const a = document.createElement('a');
+        a.title = title;
+        a.id = id;
+        a.classList.add('button', id);
+        a.onclick = click;
+        if (hidden)
+            a.style.display = 'none';
+        if (typeof icon === 'string') {
+            const $l = document.createElement('i');
+            if (icon.startsWith('fa-'))
+                $l.classList.add('fa');
+            $l.classList.add(icon);
+            a.appendChild($l);
+        }
+        else
+            a.appendChild(icon);
+        return a;
     }
 
     constructor(options?: ClientOptions) {
