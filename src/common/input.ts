@@ -147,7 +147,7 @@ export class Input extends EventEmitter {
         }
         this._tests = new Tests(client);
         this._commandHistory = [];
-        $(document).keydown((event) => {
+        this.client.on('keydown', (event) => {
             if (!this.isLocked && this.ProcessMacros(event.which, event.altKey, event.ctrlKey, event.shiftKey, event.metaKey)) {
                 event.preventDefault();
                 event.stopPropagation();

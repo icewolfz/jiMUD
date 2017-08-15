@@ -747,8 +747,8 @@
   var manager = new DockManager();
   manager.on('add', (e) => {
     ipcRenderer.send('add', e.id);
-    e.panel.pane.innerHTML = `<h1 style="color:white">${e.id}</h1>`;
-    e.panel.client = new Client({id:e.id, parent: e.panel.pane});
+    e.panel.pane.innerHTML = `<h1 style="color:white" style="z-index:10000;">${e.id  }</h1>`;
+    e.panel.client = new Client({ id: e.id, parent: e.panel.pane });
     menubar.updateItem('file|close connection', { enabled: manager.panels.length > 1 });
   });
 
@@ -763,10 +763,12 @@
   });
 
   manager.on('keyup', (e) => {
-
+    if (manager.active)
+      manager.active.client.emit('keyup', e);
   });
   manager.on('keydown', (e) => {
-
+    if (manager.active)
+      manager.active.client.emit('keydown', e);
   });
 
   for (var x = 0; x < 10; x++) {
