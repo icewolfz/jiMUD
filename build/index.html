@@ -73,18 +73,25 @@
   const { Menubar } = require('./js/menubar');
   const { shell, ipcRenderer, remote, webFrame } = require('electron');
   const { dialog, BrowserWindow } = remote;
-  const { parseTemplate, isFileSync, isDirSync } = require("./js/library.js");
+  const { parseTemplate, isFileSync, isDirSync } = require("./js/library");
+  const { Settings } = require('./js/settings');
   const path = require('path');
   const fs = require('fs');
   const url = require('url');
-  /*
   window.onerror = function (msg, url, line) {
-    console.log("Message: " + msg);
-    console.log("Url: " + url);
-    console.log("Line: " + line);
+    if (manager && manager.panels.length > 0) {
+      if (msg.startsWith('Uncaught Error: '))
+        manager.active.client.error(`${msg.substr(16)}`);
+      else
+        manager.active.client.error(`${msg}`);
+    }
+    else {
+      console.log("Message: " + msg);
+      console.log("Url: " + url);
+      console.log("Line: " + line);
+    }
     return true;
   };
-  */
 
   var menuTemp = [
     //File
@@ -245,6 +252,7 @@
           accelerator: 'CmdOrCtrl+F',
           click: () => {
             $('.dropdown.open').removeClass('open');
+            manager.active.client.display.showFind();
           }
         },
       ]
@@ -792,11 +800,42 @@
 
   function createClient(host, panel) {
     panel.client = new Client(Object.assign({ id: panel.id, parent: panel.pane, host: host }, clientoptions));
+    panel.client.on('find-closing', (e) => {
+      if (panel.client.id !== manager.active.id)
+        e.preventDefault = true;
+    });
     menubar.updateItem('file|connect', { enabled: !panel.client.connected });
     menubar.updateItem('file|disconnect', { enabled: panel.client.connected });
   }
 
+  function loadTheme(theme) {
+    theme = parseTemplate(theme) + ".css";
+    if (!isFileSync(theme))
+      theme = parseTemplate(path.join("{themes}", "default")) + ".css";
+    var el = $("#theme");
+    if (el.attr('href') != theme)
+      el.attr('href', theme);
+  }
+
+  function loadSpellchecker() {
+    try {
+      spellchecker = require('spellchecker');
+    }
+    catch (ex) {
+      if (!manager || manager.panels.length === 0)
+        setTimeout(() => {
+          if (!!manager || manager.panels.length === 0)
+            console.log(ex);
+          else
+            manager.active.client.error(ex);
+        }, 1000);
+    }
+  }
+
+  var spellchecker;
   var clientoptions = {};
+  loadTheme(ipcRenderer.sendSync('get-setting', 'theme'));
+  //var options = Settings.load(remote.getGlobal('settingsFile'));
   var manager = new DockManager();
   manager.on('add', (e) => {
     ipcRenderer.send('add', e.id);

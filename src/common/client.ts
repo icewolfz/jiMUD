@@ -490,6 +490,11 @@ export class Client extends EventEmitter {
             this.options.display.splitHeight = h;
             this.saveOptions();
         });
+
+        this.display.on('closing', (e) => {
+            this.emit('find-closing', e);
+        });
+
         this.MSP = new MSP();
         this.MSP.forcedDefaultMusicURL = '';
         this.MSP.forcedDefaultSoundURL = '';

@@ -530,7 +530,7 @@ app.on('activate', () => {
   }
 });
 
-ipcMain.on('reload-options', (client, settingsFile) => {
+ipcMain.on('reload-options', (event, client, settingsFile) => {
   if (win && win.webContents)
     win.webContents.send('reload-options', client, settingsFile);
   if (settingsFile === global.settingsFile) {
@@ -544,15 +544,21 @@ ipcMain.on('reload-options', (client, settingsFile) => {
   }
 });
 
+ipcMain.on('get-setting', (event, setting) => {
+  if (!set)
+    set = settings.Settings.load(global.settingsFile);
+  event.returnValue = set[setting];
+});
+
 ipcMain.on('set-title', (event, title) => {
   global.title = title;
   updateTray();
 });
 
-ipcMain.on('closed', (client) => {
+ipcMain.on('closed', (event, client) => {
 });
 
-ipcMain.on('connected', (client) => {
+ipcMain.on('connected', (event, client) => {
 });
 
 ipcMain.on('set-color', (event, type, color, client) => {
