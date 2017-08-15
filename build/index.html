@@ -747,7 +747,7 @@
   var manager = new DockManager();
   manager.on('add', (e) => {
     ipcRenderer.send('add', e.id);
-    e.panel.pane.innerHTML = `<h1 style="color:white" style="z-index:10000;">${e.id  }</h1>`;
+    e.panel.pane.innerHTML = `<h1 style="color:white;text-align:center;z-index:10000;position: relative;font-size:10em">${e.id}</h1>`;
     e.panel.client = new Client({ id: e.id, parent: e.panel.pane });
     menubar.updateItem('file|close connection', { enabled: manager.panels.length > 1 });
   });
