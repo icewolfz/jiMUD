@@ -340,6 +340,7 @@ export class DockManager extends EventEmitter {
     }
 
     public addPanel(title?: string, icon?: string) {
+        $('.dropdown.open').removeClass('open');
         const panel: Panel = {
             tab: document.createElement('li'),
             pane: document.createElement('div'),
@@ -386,7 +387,6 @@ export class DockManager extends EventEmitter {
         this.$tabpane.appendChild(panel.pane);
         this.panels.push(panel);
         this.switchToPanelByIndex(this.panels.length - 1);
-
         this.setPanelTitle(title || '');
         this.setPanelIcon(panel.iconCls);
         this.updateStripState();
@@ -407,6 +407,7 @@ export class DockManager extends EventEmitter {
         this.emit('remove', e);
         if (e.cancel)
             return;
+        $('.dropdown.open').removeClass('open');
         this.$tabstrip.removeChild(panel.tab);
         this.$tabpane.removeChild(panel.pane);
         this.panels.splice(idx, 1);
