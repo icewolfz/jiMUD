@@ -92,7 +92,7 @@
     //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
     const { parseTemplate, templatePath, existsSync } = require('./js/library');
     const { TrayClick } = require('./js/types');
-    const Settings = require('./js/settings').Settings;
+    const { Settings, Mapper, Chat } = require('./js/settings');
     const { remote, ipcRenderer } = require('electron');
     const { dialog } = remote;
     const RGBColor = require('rgbcolor');
@@ -288,6 +288,7 @@
     }
 
     function loadSettings() {
+      var name;
       $('#autoConnect').prop('checked', _settings.autoConnect);
       $('#autoLogin').prop('checked', _settings.autoLogin);
       $('#allowEval').prop('checked', _settings.allowEval);
@@ -355,41 +356,54 @@
       $('#logPath').val(_settings.logPath);
       $('#logTimeFormat').val(_settings.logTimeFormat);
 
-      $("#editorPersistent").prop('checked', _settings.editorPersistent);
+      for (var window in _settings.windows) {
+        if (!_settings.windows.hasOwnProperty(window) || !_settings.windows[window].options)
+          continue;
+        for (name in _settings.windows[window].options) {
+          if (!_settings.windows[window].options.hasOwnProperty(name))
+            continue;
+          if (typeof _settings.windows[window].options[name] === 'boolean')
+            $(`#${window}-${name}`).prop('checked', _settings.windows[window].options[name]);
+          else
+            $(`#${window}-${name}`).val(_settings.windows[window].options[name]);
+        }
+      }
 
-      $('#MapperSplitArea').prop('checked', _settings.mapper.split);
-      $('#mapFollow').prop('checked', _settings.mapper.follow);
-      $('#mapEnabled').prop('checked', _settings.mapper.enabled);
-      $('#mapLegend').prop('checked', _settings.mapper.legend);
-      $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
+      if (!_settings.windows["mapper"] || !_settings.windows["mapper"].options) {
+        $('#mapper-persistent').prop('checked', true);
+        $('#mapper-alwaysOnTop').prop('checked', false);
+        $('#mapper-alwaysOnTopClient').prop('checked', true);
+        $('#mapper-show').prop('checked', true);
+      }
+      else {
+        $('#mapper-persistent').prop('checked', _settings.windows["mapper"].options.persistent);
+        $('#mapper-alwaysOnTop').prop('checked', _settings.windows["mapper"].options.alwaysOnTop);
+        $('#mapper-alwaysOnTopClient').prop('checked', _settings.windows["mapper"].options.alwaysOnTopClient);
+        $('#mapper-show').prop('checked', _settings.windows["mapper"].options.show);
+      }
+      if (!_settings.extensions["mapper"])
+        _settings.extensions["mapper"] = new Mapper();
+      if (!_settings.extensions["chat"])
+        _settings.extensions["chat"] = new Chat();
 
-      $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
-      $('#mapper-memory').prop('checked', _settings.mapper.memory);
-      $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
-      $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
+      for (var ext in _settings.extensions) {
+        if (!_settings.extensions.hasOwnProperty(ext) || !_settings.extensions[ext])
+          continue;
+        for (name in _settings.extensions[ext]) {
+          if (!_settings.extensions[ext].hasOwnProperty(name))
+            continue;
+          if (typeof _settings.extensions[ext][name] === 'boolean')
+            $(`#${ext}-${name}`).prop('checked', _settings.extensions[ext][name]);
+          else if (Array.isArray(_settings.extensions[ext][name]))
+            $(`#${ext}-${name}`).val(_settings.extensions[ext][name].join(','));
+          else
+            $(`#${ext}-${name}`).val(_settings.extensions[ext][name]);
+        }
 
-      $('#mapper-importTypeReplace').prop('checked', _settings.mapper.importType === 1);
-      $('#mapper-importTypeMerge').prop('checked', _settings.mapper.importType === 0);
+      }
+      $('#mapper-importTypeReplace').prop('checked', _settings.extensions["mapper"].importType === 1);
+      $('#mapper-importTypeMerge').prop('checked', _settings.extensions["mapper"].importType === 0);
 
-      $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
-      $('#chat-persistent').prop('checked', _settings.chat.persistent);
-      $('#chat-gag').prop('checked', _settings.chat.gag);
-
-      $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
-      $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
-      $('#chat-captureLines').prop('checked', _settings.chat.captureLines);
-      $('#chat-captureReviews').prop('checked', _settings.chat.captureReviews);
-      $('#chat-captureTells').prop('checked', _settings.chat.captureTells);
-      $('#chat-captureTalk').prop('checked', _settings.chat.captureTalk);
-      $('#chat-captureAllLines').prop('checked', _settings.chat.captureAllLines);
-      $('#chat-selective').prop('checked', !_settings.chat.captureAllLines);
-      $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
-      $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
-      $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
-
-      $('#chat-lines').val(_settings.chat.lines.join(','));
-
-      $('#showMapper').prop('checked', _settings.showMapper);
       $('#commandDelay').val(_settings.commandDelay);
       $('#commandDelayCount').val(_settings.commandDelayCount);
 
@@ -440,40 +454,38 @@
       $('#theme').selectpicker('render');
 
       $('input[type="checkbox"]').change(function () {
+        var id;
         switch ($(this).attr('id')) {
           case 'chat-alwaysOnTop':
-            _settings.chat.alwaysOnTop = this.checked;
-            break;
           case 'chat-alwaysOnTopClient':
-            _settings.chat.alwaysOnTopClient = this.checked;
+          case "chat-persistent":
+          case 'chat-show':
+            id = $(this).attr('id').split("-");
+            if (!_settings.windows["chat"])
+              _settings.windows["chat"] = {};
+            if (!_settings.windows["chat"].options)
+              _settings.windows["chat"].options = {};
+            _settings.windows["chat"].options[id[1]] = this.checked;
             break;
           case 'chat-captureLines':
-            _settings.chat.captureLines = this.checked;
-            $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
-
-            $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
-            $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
-            break;
-          case 'chat-captureReviews':
-            _settings.chat.captureReviews = this.checked;
-            break;
-          case 'chat-captureTells':
-            _settings.chat.captureTells = this.checked;
-            break;
-          case 'chat-captureTalk':
-            _settings.chat.captureTalk = this.checked;
-            break;
-          case "chat-persistent":
-            _settings.chat.persistent = this.checked;
-            break;
-          case "mapper-persistent":
-            _settings.mapper.persistent = this.checked;
+            id = $(this).attr('id').split("-");
+            if (!_settings.extensions["chat"])
+              _settings.extensions["chat"] = new Chat();
+            _settings.extensions["chat"][id[1]] = this.checked;
+            $("#chat-lines").prop('readonly', !_settings.extensions["chat"].captureLines || _settings.extensions["chat"].captureAllLines);
+            $("#chat-selective").prop('disabled', !_settings.extensions["chat"].captureLines);
+            $("#chat-captureAllLines").prop('disabled', !_settings.extensions["chat"].captureLines);
             break;
           case 'mapper-alwaysOnTop':
-            _settings.mapper.alwaysOnTop = this.checked;
-            break;
+          case "mapper-persistent":
           case 'mapper-alwaysOnTopClient':
-            _settings.mapper.alwaysOnTopClient = this.checked;
+          case 'mapper-show':
+            id = $(this).attr('id').split("-");
+            if (!_settings.windows["mapper"])
+              _settings.windows["mapper"] = {};
+            if (!_settings.windows["mapper"].options)
+              _settings.windows["mapper"].options = {};
+            _settings.windows["mapper"].options[id[1]] = this.checked;
             break;
           case 'mapper-importTypeReplace':
             _settings.mapper.importType = 1;
@@ -481,23 +493,10 @@
           case 'mapper-importTypMerge':
             _settings.mapper.importType = 0;
             break;
-          case 'MapperSplitArea':
-            _settings.mapper.split = this.checked;
-            break;
-          case 'mapFollow':
-            _settings.mapper.follow = this.checked;
-            break;
-          case 'mapEnabled':
-            _settings.mapper.enabled = this.checked;
-            break;
-          case 'MapperFillWalls':
-            _settings.mapper.fill = this.checked;
-            break;
-          case 'mapLegend':
-            _settings.mapper.legend = this.checked;
-            break;
           case 'mapper-memory':
-            _settings.mapper.memory = this.checked;
+            if (!_settings.extensions["mapper"])
+              _settings.extensions["mapper"] = new Mapper();
+            _settings.extensions["mapper"].memory = this.checked;
             if (this.checked) {
               dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'warning',
@@ -540,9 +539,17 @@
               _settings.backupLoad |= 8;
             break;
           default:
-            var id = $(this).attr('id').split("-");
-            if (id.length === 2)
-              _settings[id[0]][id[1]] = this.checked;
+            id = $(this).attr('id').split("-");
+            if (id.length === 2) {
+              if (id[0] === 'mapper' || id[0] === 'chat') {
+                id = $(this).attr('id').split("-");
+                if (!_settings.extensions[id[0]])
+                  _settings.extensions[id[0]] = {};
+                _settings.extensions[id[0]][id[1]] = this.checked;
+              }
+              else
+                _settings[id[0]][id[1]] = this.checked;
+            }
             else
               _settings[id[0]] = this.checked;
             break;
@@ -612,22 +619,43 @@
               _settings.trayDblClick = TrayClick.menu;
             break;
           case 'chat-selective':
-            _settings.chat.captureAllLines = !this.checked;
-            $("#chat-lines").prop('readonly', !_settings.chat.captureLines || !this.checked);
+            _settings.extensions["chat"].captureAllLines = !this.checked;
+            $("#chat-lines").prop('readonly', !_settings.extensions["chat"].captureLines || !this.checked);
             break;
           case 'chat-captureAllLines':
-            _settings.chat.captureAllLines = this.checked;
-            $("#chat-lines").prop('readonly', !_settings.chat.captureLines || this.checked);
+            _settings.extensions["chat"].captureAllLines = this.checked;
+            $("#chat-lines").prop('readonly', !_settings.extensions["chat"].captureLines || this.checked);
             break;
         }
       });
 
       $('input[type="text"]').change(function () {
-        _settings[$(this).attr('id')] = $(this).val();
+        var id = $(this).attr('id').split("-");
+        if (id.length === 2) {
+          if (id[0] === 'mapper' || id[0] === 'chat') {
+            id = $(this).attr('id').split("-");
+            if (!_settings.extensions[id[0]])
+              _settings.extensions[id[0]] = new Mapper();
+            _settings.extensions[id[0]][id[1]] = $(this).val();
+          }
+          else
+            _settings[id[0]][id[1]] = $(this).val();
+        }
+        else
+          _settings[id[0]] = $(this).val();
       });
       $('input[type="number"]').change(function () {
-        if ($(this).attr('id') === 'mapper-memorySavePeriod')
-          _settings.mapper.memorySavePeriod = parseInt($(this).val(), 10);
+        var id = $(this).attr('id').split("-");
+        if (id.length === 2) {
+          if (id[0] === 'mapper' || id[0] === 'chat') {
+            id = $(this).attr('id').split("-");
+            if (!_settings.extensions[id[0]])
+              _settings.extensions[id[0]] = new Mapper();
+            _settings.extensions[id[0]][id[1]] = parseInt($(this).val(), 10);
+          }
+          else
+            _settings[id[0]][id[1]] = parseInt($(this).val(), 10);
+        }
         else
           _settings[$(this).attr('id')] = parseInt($(this).val(), 10);
       });
@@ -641,7 +669,19 @@
       $('.selectpicker').change(function () {
         if ($(this).attr('id') === 'colorScheme')
           return;
-        _settings[$(this).attr('id')] = $(this).val();
+        var id = $(this).attr('id').split("-");
+        if (id.length === 2) {
+          if (id[0] === 'mapper' || id[0] === 'chat') {
+            id = $(this).attr('id').split("-");
+            if (!_settings.extensions[id[0]])
+              _settings.extensions[id[0]] = new Mapper();
+            _settings.extensions[id[0]][id[1]] = $(this).val();
+          }
+          else
+            _settings[id[0]][id[1]] = $(this).val();
+        }
+        else
+          _settings[$(this).attr('id')] = $(this).val();
       });
     }
 
@@ -941,7 +981,7 @@
     }
 
     function saveSettings() {
-      _settings.chat.lines = $("#chat-lines").val().split(',');
+      _settings.extensions["chat"].lines = $("#chat-lines").val().split(',');
       _settings.save(remote.getGlobal('settingsFile'));
       ipcRenderer.send('reload-options');
       window.close();
@@ -998,7 +1038,7 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="editorPersistent" /> Persistent advanced editor
+              <input type="checkbox" id="editor-persistent" /> Persistent advanced editor
             </label>
           </div>
           <div class="col-sm-6 form-group">
@@ -1437,28 +1477,28 @@
         <div role="tabpanel" class="pref-pane" id="mapper">
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="mapEnabled" /> Enable mapper
+              <input type="checkbox" id="mapper-enabled" /> Enable mapper
             </label>
           </div>
 
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="mapFollow" /> Follow player
+              <input type="checkbox" id="mapper-follow" /> Follow player
             </label>
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="mapLegend" /> Show legend
+              <input type="checkbox" id="mapper-legned" /> Show legend
             </label>
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="MapperSplitArea" /> Split areas
+              <input type="checkbox" id="mapper-split" /> Split areas
             </label>
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="MapperFillWalls" /> Display walls
+              <input type="checkbox" id="mapper.fill" /> Display walls
             </label>
           </div>
           <div class="col-sm-6 form-group">
@@ -1511,7 +1551,7 @@
         <div role="tabpanel" class="pref-pane" id="mapper-window">
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="showMapper" /> Open on load
+              <input type="checkbox" id="mapper-show" /> Open on load
             </label>
           </div>
           <div class="col-sm-6 form-group">
@@ -1590,6 +1630,11 @@
         </div>
         <div role="tabpanel" class="pref-pane" id="chat-window">
           <div class="col-sm-12 form-group" style="margin:0;padding:0">
+            <div class="col-sm-6 form-group">
+              <label class="control-label">
+                <input type="checkbox" id="chat-show" /> Open on load
+              </label>
+            </div>
             <div class="col-sm-6 form-group">
               <label class="control-label">
                 <input type="checkbox" id="chat-alwaysOnTopClient" /> Always on top of the main window
