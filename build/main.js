@@ -21,7 +21,7 @@ let reload = null;
 let tray = null;
 let overlay = 0;
 let windows = {};
-let quiting = false;
+let loadid;
 
 app.setAppUserModelId('jiMUD');
 
@@ -1254,16 +1254,16 @@ function createWindow() {
       win.show();
 
     if (set.showMapper)
-      showMapper();
+      showMapper(true);
     else if (set.mapper.persistent || set.mapper.enabled)
       createMapper();
 
     if (set.showEditor)
-      showEditor();
+      showEditor(true);
     else if (set.editorPersistent)
       createEditor();
     if (set.showChat)
-      showChat();
+      showChat(true);
     else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
       createChat();
     for (var name in set.windows) {
@@ -1280,7 +1280,6 @@ function createWindow() {
           createNewWindow(name, set.windows[name]);
       }
     }
-
   });
 
   win.on('close', (e) => {
@@ -1425,7 +1424,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
-  quiting = true;
+
 });
 
 ipcMain.on('reload', (event, char) => {
@@ -2089,7 +2088,7 @@ function showPrefs() {
   addInputContext(pref);
 }
 
-function createMapper(show) {
+function createMapper(show, loading) {
   if (winMap) return;
   var s = loadWindowState('mapper');
   winMap = new BrowserWindow({
@@ -2156,6 +2155,10 @@ function createMapper(show) {
     }
     else
       mapperMax = s.maximized;
+    if (loading) {
+      clearTimeout(loadid);
+      loadid = setTimeout(() => { win.focus(); }, 500);
+    }
   });
 
   winMap.on('close', (e) => {
@@ -2172,7 +2175,7 @@ function createMapper(show) {
   });
 }
 
-function showMapper() {
+function showMapper(loading) {
   set = settings.Settings.load(global.settingsFile);
   set.showMapper = true;
   set.save(global.settingsFile);
@@ -2182,9 +2185,13 @@ function showMapper() {
     else
       winMap.show();
     mapperMax = false;
+    if (loading) {
+      clearTimeout(loadid);
+      loadid = setTimeout(() => { win.focus(); }, 500);
+    }
   }
   else
-    createMapper(true);
+    createMapper(true, loading);
 }
 
 function showProfiles() {
@@ -2263,7 +2270,7 @@ function showProfiles() {
 
 }
 
-function createEditor(show) {
+function createEditor(show, loading) {
   if (winEditor) return;
   var s = loadWindowState('editor');
   winEditor = new BrowserWindow({
@@ -2329,6 +2336,10 @@ function createEditor(show) {
     }
     else
       editorMax = s.maximized;
+    if (loading) {
+      clearTimeout(loadid);
+      loadid = setTimeout(() => { win.focus(); }, 500);
+    }
   });
 
   winEditor.on('close', (e) => {
@@ -2344,7 +2355,7 @@ function createEditor(show) {
   });
 }
 
-function showEditor() {
+function showEditor(loading) {
   set = settings.Settings.load(global.settingsFile);
   set.showEditor = true;
   set.save(global.settingsFile);
@@ -2354,12 +2365,16 @@ function showEditor() {
     else
       winEditor.show();
     editorMax = false;
+    if (loading) {
+      clearTimeout(loadid);
+      loadid = setTimeout(() => { win.focus(); }, 500);
+    }
   }
   else
-    createEditor(true);
+    createEditor(true, loading);
 }
 
-function createChat(show) {
+function createChat(show, loading) {
   if (winChat) return;
   var s = loadWindowState('chat');
   winChat = new BrowserWindow({
@@ -2430,6 +2445,10 @@ function createChat(show) {
     else
       chatMax = s.maximized;
     chatReady = true;
+    if (loading) {
+      clearTimeout(loadid);
+      loadid = setTimeout(() => { win.focus(); }, 500);
+    }
   });
 
   winChat.on('closed', () => {
@@ -2448,7 +2467,7 @@ function createChat(show) {
   });
 }
 
-function showChat() {
+function showChat(loading) {
   set = settings.Settings.load(global.settingsFile);
   set.showChat = true;
   set.save(global.settingsFile);
@@ -2458,9 +2477,13 @@ function showChat() {
     else
       winChat.show();
     chatMax = false;
+    if (loading) {
+      clearTimeout(loadid);
+      loadid = setTimeout(() => { win.focus(); }, 500);
+    }
   }
   else
-    createChat(true);
+    createChat(true, loading);
 }
 
 function createNewWindow(name, options) {

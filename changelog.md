@@ -47,6 +47,7 @@
   - Mapper persistance setting was not correctly restored always
   - Tray toggle was not correctly done when using #toggleclient
   - Backup loading would break when trying to load settings from main using a dev connection
+  - Onload focus on main window instead of chat/mapper/editor windows
 
 ## 0.4.10 2017-08-03
 
