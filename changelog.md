@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.11
+## 0.4.11 2017-08-16
 
 - **New:**
   - Added function doc file to explain functions and list predefined variables
