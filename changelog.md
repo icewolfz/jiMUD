@@ -9,7 +9,7 @@
     - Profile manager is now dynamic, window settings reset
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
-    
+
 ## 0.4.11
 
 - **New:**
@@ -56,6 +56,13 @@
   - selected, selectedword, selword, selectedline, selline, selectedurl, selurl, and copied now return the correct values when used outside of context menus
   - Mapper persistance setting was not correctly restored always
   - Backup loading would break when trying to load settings from main using a dev connection
+  - Onload focus on main window instead of chat/mapper/editor windows
+  - Tray toggle was not correctly done when using #toggleclient
+  - Backup:
+    - Loading would break when trying to load settings from main using a dev connection
+    - Profile buttons where not being correctly restored and being appended to triggers
+    - Profile context items whre not being restored
+    - Profile default context option was not being restored
   - Onload focus on main window instead of chat/mapper/editor windows
 
 ## 0.4.10 2017-08-03
