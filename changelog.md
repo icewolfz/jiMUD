@@ -55,7 +55,9 @@
   - #wait would have broken %# values, fixed with new proper parsing and stack
   - selected, selectedword, selword, selectedline, selline, selectedurl, selurl, and copied now return the correct values when used outside of context menus
   - Mapper persistance setting was not correctly restored always
-  
+  - Backup loading would break when trying to load settings from main using a dev connection
+  - Onload focus on main window instead of chat/mapper/editor windows
+
 ## 0.4.10 2017-08-03
 
 - **Change:**

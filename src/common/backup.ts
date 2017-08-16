@@ -15,6 +15,7 @@ export class Backup extends EventEmitter {
     private _user;
     private _action;
     private _save;
+    private _port;
 
     public mapFile: string = path.join(parseTemplate('{data}'), 'map.sqlite');
 
@@ -22,7 +23,7 @@ export class Backup extends EventEmitter {
     public saveSelection: BackupSelection = BackupSelection.All;
 
     get URL(): string {
-        if (this.client.port === 1035)
+        if (this._port === 1035)
             return 'http://shadowmud.com:1132/client';
         return 'http://shadowmud.com:1130/client';
     }
@@ -34,15 +35,13 @@ export class Backup extends EventEmitter {
         this.client = client;
         this.client.telnet.GMCPSupports.push('Client 1');
 
-        /*
         this.client.on('connected', () => {
-            this.reset();
+            this._port = this.client.port;
         });
 
         this.client.on('closed', () => {
-            this.reset();
+            this._port = this.client.port;
         });
-        */
 
         this.client.on('received-GMCP', (mod, obj) => {
             if (mod.toLowerCase() !== 'client') return;
@@ -71,6 +70,7 @@ export class Backup extends EventEmitter {
         });
         if (map && map.length > 0)
             this.mapFile = map;
+        this._port = this.client.port;
     }
 
     public save(version?: number) {
