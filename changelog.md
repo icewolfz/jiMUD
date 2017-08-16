@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Backup exported macro display code wrong
+  - Profile manager editor title text overflowed and filled background
 
 ## 0.4.11 2017-08-16
 
