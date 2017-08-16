@@ -75,6 +75,7 @@
   const { dialog, BrowserWindow } = remote;
   const { parseTemplate, isFileSync, isDirSync } = require("./js/library");
   const { Settings } = require('./js/settings');
+  const { Characters } = require('./js/characters');
   const path = require('path');
   const fs = require('fs');
   const url = require('url');
@@ -798,8 +799,8 @@
 
   createMenu();
 
-  function createClient(host, panel) {
-    panel.client = new Client(Object.assign({ id: panel.id, parent: panel.pane, host: host }, clientoptions));
+  function createClient(host, panel, options) {
+    panel.client = new Client(Object.assign({ id: panel.id, parent: panel.pane, host: host }, clientoptions, options));
     panel.client.on('find-closing', (e) => {
       if (panel.client.id !== manager.active.id)
         e.preventDefault = true;
@@ -829,6 +830,23 @@
           else
             manager.active.client.error(ex);
         }, 1000);
+    }
+  }
+
+  function loadCharacters(characters) {
+    if (!characters || characters.length === 0)
+      return;
+    var char = 0, cl = characters.length;
+    for (; char < cl; char++) {
+      var opts = {};
+      opts.username = characters[c].Name;
+      //TODO decode password
+      opts.password = characters[c].password;
+      opts.port = characters[c].port;
+      if (characters[c].UseAddress)
+        createClient(characters[c].address, manager.addPanel(characters[c].Name), opts);
+      else
+        createClient(characters[c].host, manager.addPanel(characters[c].Name), opts);
     }
   }
 
@@ -877,6 +895,8 @@
 
   if (remote.process.defaultApp)
     args = args.splice(2);
+  var chars = [];
+  var conns = [];
   args.forEach((val, index) => {
     var set = val.split('=');
     switch (set[0]) {
@@ -891,6 +911,7 @@
       case '--c':
       case '--character':
       case '--characters':
+        chars.push(set[1]);
         break;
       case '-s':
       case '-setting':
@@ -912,12 +933,39 @@
         break;
       default:
         if (!val.startsWith('telnet://'))
-          createClient('telnet://' + val, manager.addPanel(val));
+          conns.push('telnet://' + val);
         else
-          createClient(val, manager.addPanel(val));
+          conns.push(val);
         break;
     }
   });
+  var c, cl = conns.length;
+  for (c = 0; c < cl; c++)
+    createClient(conns[c], manager.addPanel(conns[c]));
+
+  c = new Characters();
+  if (chars.lenth > 0)
+    c.get(chars, (characters) => {
+      if (!characters || characters.length === 0) {
+        c.close();
+        c = null;
+        return;
+      }
+      loadCharacters(characters);
+      c.close();
+      c = null;
+    });
+  else
+    c.getAutoloading((characters) => {
+      if (!characters || characters.length === 0) {
+        c.close();
+        c = null;
+        return;
+      }
+      loadCharacters(characters);
+      c.close();
+      c = null;
+    });
 
   if (manager.panels.length === 0)
     createClient('telnet://www.shadowmud.com:1030', manager.addPanel("www.shadowmud.com:1030"));
