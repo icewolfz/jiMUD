@@ -46,7 +46,11 @@
   - selected, selectedword, selword, selectedline, selline, selectedurl, selurl, and copied now return the correct values when used outside of context menus
   - Mapper persistance setting was not correctly restored always
   - Tray toggle was not correctly done when using #toggleclient
-  - Backup loading would break when trying to load settings from main using a dev connection
+  - Backup:
+    - Loading would break when trying to load settings from main using a dev connection
+    - Profile buttons where not being correctly restored and being appended to triggers
+    - Profile context items whre not being restored
+    - Profile default context option was not being restored
   - Onload focus on main window instead of chat/mapper/editor windows
 
 ## 0.4.10 2017-08-03

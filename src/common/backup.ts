@@ -3,7 +3,7 @@ import EventEmitter = require('events');
 import { Client } from './client';
 import { parseTemplate, existsSync } from './library';
 import { BackupSelection, Log } from './types';
-import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
+import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle, Context } from './profile';
 const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3');
@@ -329,6 +329,7 @@ export class Backup extends EventEmitter {
                     p.enableMacros = data.profiles[keys[k]].enableMacros ? true : false;
                     p.enableTriggers = data.profiles[keys[k]].enableTriggers ? true : false;
                     p.enableAliases = data.profiles[keys[k]].enableAliases ? true : false;
+                    p.enableDefaultContext = data.profiles[keys[k]].enableDefaultContext ? true : false;
                     p.macros = [];
                     let l = data.profiles[keys[k]].macros.length;
                     let item;
@@ -394,7 +395,17 @@ export class Backup extends EventEmitter {
                         if (l > 0) {
                             for (let m = 0; m < l; m++) {
                                 item = new Button(data.profiles[keys[k]].buttons[m]);
-                                p.triggers.push(item);
+                                p.buttons.push(item);
+                            }
+                        }
+                    }
+
+                    if (data.profiles[keys[k]].contexts) {
+                        l = data.profiles[keys[k]].contexts.length;
+                        if (l > 0) {
+                            for (let m = 0; m < l; m++) {
+                                item = new Context(data.profiles[keys[k]].contexts[m]);
+                                p.contexts.push(item);
                             }
                         }
                     }

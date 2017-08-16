@@ -63,7 +63,8 @@
     "rebuild:linux64": "./node_modules/.bin/electron-rebuild -a=x64 -f -p",
     "rebuild:linuxarm": "./node_modules/.bin/electron-rebuild -a=arm -f -p",
     "sass": "node-sass src/css/ -o build/css/ --output-style compressed",
-    "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed"
+    "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed",
+    "clean:code": "del /q .\\out\\*.js && del /q .\\build\\js\\*.js"
   },
   "devDependencies": {
     "@types/bootstrap": "^3.3.34",
