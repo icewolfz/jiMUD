@@ -80,14 +80,15 @@ export class Backup extends EventEmitter {
                 version: version,
                 profiles: this.client.profiles.clone(2),
                 settings: {
-                    mapEnabled: this.client.options.mapper.enabled,
-                    mapFollow: this.client.options.mapper.follow,
-                    legend: this.client.options.mapper.legend,
-                    MapperSplitArea: this.client.options.mapper.split,
-                    MapperFillWalls: this.client.options.mapper.fill,
-                    vscroll: this.client.options.mapper.vscroll,
-                    hscroll: this.client.options.mapper.hscroll,
-                    mapperMemory: this.client.options.mapper.memory,
+                    mapEnabled: true,
+                    mapFollow: true,
+                    legend: false,
+                    MapperSplitArea: false,
+                    MapperFillWalls: false,
+                    vscroll: 0,
+                    hscroll: 0,
+                    mapperMemory: false,
+                    MapperOpen: false,
                     showScriptErrors: this.client.options.showScriptErrors,
                     title: this.client.options.title,
                     flashing: this.client.options.flashing,
@@ -131,13 +132,24 @@ export class Backup extends EventEmitter {
                     logPath: this.client.options.logPath,
                     scrollLocked: this.client.options.scrollLocked,
                     showStatus: this.client.options.showStatus,
-                    MapperOpen: this.client.options.showMapper,
                     showCharacterManager: this.client.options.showCharacterManager,
                     logErrors: this.client.options.logErrors
                 },
                 map: {}
             };
 
+            if (this.client.options.extensions['mapper']) {
+                data.settings.mapEnabled = this.client.options.extensions['mapper'].enabled;
+                data.settings.mapFollow = this.client.options.extensions['mapper'].follow;
+                data.settings.legend = this.client.options.extensions['mapper'].legend;
+                data.settings.MapperSplitArea = this.client.options.extensions['mapper'].split;
+                data.settings.MapperFillWalls = this.client.options.extensions['mapper'].fill;
+                data.settings.vscroll = this.client.options.extensions['mapper'].vscroll;
+                data.settings.hscroll = this.client.options.extensions['mapper'].hscroll;
+                data.settings.mapperMemory = this.client.options.extensions['mapper'].memory;
+            }
+            if (this.client.options.windows['mapper'] && this.client.options.windows['mapper'].options)
+                data.settings.MapperOpen = this.client.options.windows['mapper'].options.show;
             let prop;
             let prop2;
 
@@ -409,14 +421,14 @@ export class Backup extends EventEmitter {
             }
 
             if ((this.loadSelection & BackupSelection.Settings) === BackupSelection.Settings) {
-                this.client.options.mapper.enabled = data.settings.mapEnabled ? true : false;
-                this.client.options.mapper.follow = data.settings.mapFollow ? true : false;
-                this.client.options.mapper.legend = data.settings.legend ? true : false;
-                this.client.options.mapper.split = data.settings.MapperSplitArea ? true : false;
-                this.client.options.mapper.fill = data.settings.MapperFillWalls ? true : false;
-                this.client.options.mapper.vscroll = data.settings.vscroll;
-                this.client.options.mapper.hscroll = data.settings.hscroll;
-                this.client.options.mapper.memory = data.settings.mapperMemory ? true : false;
+                this.client.options.extensions['mapper'].enabled = data.settings.mapEnabled ? true : false;
+                this.client.options.extensions['mapper'].follow = data.settings.mapFollow ? true : false;
+                this.client.options.extensions['mapper'].legend = data.settings.legend ? true : false;
+                this.client.options.extensions['mapper'].split = data.settings.MapperSplitArea ? true : false;
+                this.client.options.extensions['mapper'].fill = data.settings.MapperFillWalls ? true : false;
+                this.client.options.extensions['mapper'].vscroll = data.settings.vscroll;
+                this.client.options.extensions['mapper'].hscroll = data.settings.hscroll;
+                this.client.options.extensions['mapper'].memory = data.settings.mapperMemory ? true : false;
                 this.client.options.showScriptErrors = data.settings.showScriptErrors ? true : false;
                 if (data.settings.title)
                     this.client.options.title = data.settings.title;
@@ -468,7 +480,24 @@ export class Backup extends EventEmitter {
 
                 this.client.options.scrollLocked = data.settings.scrollLocked ? true : false;
                 this.client.options.showStatus = data.settings.showStatus ? true : false;
-                this.client.options.showMapper = data.settings.MapperOpen ? true : false;
+                if (!this.client.options.windows['mapper'])
+                    this.client.options.windows['mapper'] = {
+                        options: {
+                            alwaysOnTop: false,
+                            alwaysOnTopClient: true,
+                            persistent: true,
+                            show: false
+                        }
+                    };
+                if (!this.client.options.windows['mapper'].options)
+                    this.client.options.windows['mapper'].options = {
+                        alwaysOnTop: false,
+                        alwaysOnTopClient: true,
+                        persistent: true,
+                        show: false
+                    };
+
+                this.client.options.windows['mapper'].options.show = data.settings.MapperOpen ? true : false;
                 this.client.options.showCharacterManager = data.settings.showCharacterManager ? true : false;
                 this.client.options.logErrors = data.settings.showCharacterManager ? true : false;
 
@@ -479,7 +508,7 @@ export class Backup extends EventEmitter {
                     if (!this.client.options.hasOwnProperty(prop) || !data.settings.hasOwnProperty(prop)) {
                         continue;
                     }
-                    if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
+                    if (prop === 'extensions' || prop === 'profiles' || prop === 'buttons' || prop === 'find' || prop === 'display') {
                         for (prop2 in this.client.options[prop]) {
                             if (!this.client.options[prop].hasOwnProperty(prop2)) {
                                 continue;

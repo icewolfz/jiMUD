@@ -25,6 +25,7 @@ export class Mapper {
         area: null,
         zone: 0
     };
+
 }
 
 export class Profiles {
@@ -119,6 +120,7 @@ export let SettingList: any[] = [
     ['allowEscape', 0, 1, true],
     ['AutoCopySelectedToClipboard', 0, 1, false],
     ['enableDebug', 0, 1, false],
+    ['editorPersistent', 0, 1, false],
     ['askonclose', 0, 1, true],
     ['dev', 0, 1, false]
 ];
@@ -128,9 +130,7 @@ export class Settings {
     public autoCreateCharacter: boolean = false;
     public askonclose: boolean = true;
     public dev: boolean = false;
-    public mapper: Mapper = new Mapper();
     public profiles: Profiles = new Profiles();
-    public chat: Chat = new Chat();
     public showScriptErrors: boolean = false;
     public title: string = '$t';
     public flashing: boolean = false;
@@ -201,7 +201,30 @@ export class Settings {
 
     public allowEval: boolean = true;
 
-    public windows = {};
+    public windows = {
+        mapper: {
+            options: {
+                alwaysOnTop: false,
+                alwaysOnTopClient: true,
+                persistent: true,
+                show: false
+            }
+        },
+        chat: {
+            options: {
+                alwaysOnTop: false,
+                alwaysOnTopClient: true,
+                persistent: false,
+                show: false
+            }
+        },
+        editor: {
+            alwaysOnTop: false,
+            alwaysOnTopClient: true,
+            persistent: false,
+            show: false
+        }
+    };
     public buttons = {
         connect: true,
         characters: true,
@@ -230,7 +253,8 @@ export class Settings {
     };
 
     public extensions = {
-
+        mapper: new Mapper(),
+        chat: new Chat()
     };
 
     public backupLoad: BackupSelection = BackupSelection.All;
@@ -238,10 +262,7 @@ export class Settings {
 
     public scrollLocked: boolean = false;
     public showStatus: boolean = true;
-    public showMapper: boolean = false;
     public showCharacterManager: boolean = false;
-    public showChat: boolean = false;
-    public showEditor: boolean = false;
     public showArmor: boolean = false;
     public showStatusWeather: boolean = true;
     public showStatusLimbs: boolean = true;
@@ -291,7 +312,7 @@ export class Settings {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
+            if (prop === 'extensions' || prop === 'profiles' || prop === 'buttons' || prop === 'find' || prop === 'display') {
                 for (prop2 in data[prop]) {
                     if (!data[prop].hasOwnProperty(prop2)) {
                         continue;
