@@ -14,6 +14,8 @@ export class Mapper {
     public importType = 1;
     public vscroll: number = 0;
     public hscroll: number = 0;
+    public alwaysOnTop: boolean = false;
+    public alwaysOnTopClient: boolean = true;
     public memory: boolean = false;
     public memorySavePeriod: number = 900000;
     public active =
@@ -25,7 +27,7 @@ export class Mapper {
         area: null,
         zone: 0
     };
-
+    public persistent: boolean = true;
 }
 
 export class Profiles {
@@ -51,7 +53,10 @@ export class Chat {
     public captureTalk: boolean = false;
     //list of lines to capture
     public lines: string[] = [];
+    public alwaysOnTop: boolean = false;
+    public alwaysOnTopClient: boolean = true;
     public log: boolean = false;
+    public persistent: boolean = false;
     public gag: boolean = true;
 }
 
@@ -126,11 +131,14 @@ export let SettingList: any[] = [
 ];
 
 export class Settings {
+    public editorPersistent: boolean = false;
     public AutoCopySelectedToClipboard: boolean = false;
     public autoCreateCharacter: boolean = false;
     public askonclose: boolean = true;
     public dev: boolean = false;
+    public mapper: Mapper = new Mapper();
     public profiles: Profiles = new Profiles();
+    public chat: Chat = new Chat();
     public showScriptErrors: boolean = false;
     public title: string = '$t';
     public flashing: boolean = false;
@@ -201,30 +209,7 @@ export class Settings {
 
     public allowEval: boolean = true;
 
-    public windows = {
-        mapper: {
-            options: {
-                alwaysOnTop: false,
-                alwaysOnTopClient: true,
-                persistent: true,
-                show: true
-            }
-        },
-        chat: {
-            options: {
-                alwaysOnTop: false,
-                alwaysOnTopClient: true,
-                persistent: false,
-                show: false
-            }
-        },
-        editor: {
-            alwaysOnTop: false,
-            alwaysOnTopClient: true,
-            persistent: false,
-            show: false
-        }
-    };
+    public windows = {};
     public buttons = {
         connect: true,
         characters: true,
@@ -253,8 +238,7 @@ export class Settings {
     };
 
     public extensions = {
-        mapper: new Mapper(),
-        chat: new Chat()
+
     };
 
     public backupLoad: BackupSelection = BackupSelection.All;
@@ -262,7 +246,10 @@ export class Settings {
 
     public scrollLocked: boolean = false;
     public showStatus: boolean = true;
+    public showMapper: boolean = false;
     public showCharacterManager: boolean = false;
+    public showChat: boolean = false;
+    public showEditor: boolean = false;
     public showArmor: boolean = false;
     public showStatusWeather: boolean = true;
     public showStatusLimbs: boolean = true;
@@ -312,7 +299,7 @@ export class Settings {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'extensions' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
+            if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
                 for (prop2 in data[prop]) {
                     if (!data[prop].hasOwnProperty(prop2)) {
                         continue;
