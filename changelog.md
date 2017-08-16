@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.12 2017-08-16
+
+- **Fixed:**
+  - Backup exported macro display code wrong
+
 ## 0.4.11 2017-08-16
 
 - **New:**

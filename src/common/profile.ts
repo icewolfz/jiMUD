@@ -566,7 +566,7 @@ export class Profile {
                         name: this.macros[i].name,
                         group: this.macros[i].group,
                         enabled: this.macros[i].enabled,
-                        display: 'if(item.key : : :  0) return "None", return keyCodeToChar[item.key]',
+                        display: 'if(item.key === 0) return "None", return keyCodeToChar[item.key]',
                         displaytype: 1,
                         modifiers: this.macros[i].modifiers,
                         chain: this.macros[i].chain,
