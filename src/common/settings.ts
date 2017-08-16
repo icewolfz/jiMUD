@@ -153,6 +153,7 @@ export let SettingList: any[] = [
 ];
 
 export class Settings {
+    public version: number = 1;
     public AutoCopySelectedToClipboard: boolean = false;
     public autoCreateCharacter: boolean = false;
     public askonclose: boolean = true;
@@ -237,12 +238,15 @@ export class Settings {
             }
         },
         editor: {
-            alwaysOnTop: false,
-            alwaysOnTopClient: true,
-            persistent: false,
-            show: false
+            options: {
+                alwaysOnTop: false,
+                alwaysOnTopClient: true,
+                persistent: false,
+                show: false
+            }
         }
     };
+
     public buttons = {
         connect: true,
         characters: true,
@@ -317,6 +321,91 @@ export class Settings {
         const settings = new Settings();
         let prop;
         let prop2;
+        if (!data.version) {
+            settings.extensions['status'].lagMeter = data.lagMeter;
+            delete data.lagMeter;
+            settings.extensions['status'].ping = data.enablePing;
+            delete data.enablePing;
+            settings.extensions['status'].show = data.showStatus;
+            delete data.showStatus;
+            settings.extensions['status'].showArmor = data.showArmor;
+            delete data.showArmor;
+            settings.extensions['status'].showWeather = data.showStatusWeather;
+            delete data.showStatusWeather;
+            settings.extensions['status'].showLimbs = data.showStatusLimbs;
+            delete data.showStatusLimbs;
+            settings.extensions['status'].showHealth = data.showStatusHealth;
+            delete data.showStatusHealth;
+            settings.extensions['status'].showExperience = data.showStatusExperience;
+            delete data.showStatusExperience;
+            settings.extensions['status'].showPartyHealth = data.showStatusPartyHealth;
+            delete data.showStatusPartyHealth;
+            settings.extensions['status'].showCombatHealth = data.showStatusCombatHealth;
+            delete data.showStatusCombatHealth;
+            settings.extensions['status'].allowNegativeNumberNeeded = data.allowNegativeNumberNeeded;
+            delete data.allowNegativeNumberNeeded;
+            settings.extensions['status'].experienceNeededProgressbar = data.statusExperienceNeededProgressbar;
+            delete data.statusExperienceNeededProgressbar;
+
+            settings.logging.enabled = data.logEnabled;
+            delete data.logEnabled;
+            settings.logging.offline = data.logOffline;
+            delete data.logOffline;
+            settings.logging.prepend = data.logPrepend;
+            delete data.logPrepend;
+            settings.logging.gagged = data.logGagged;
+            delete data.logGagged;
+            settings.logging.timeFormat = data.logTimeFormat;
+            delete data.logTimeFormat;
+            settings.logging.what = data.logWhat;
+            delete data.logWhat;
+            settings.logging.errors = data.logErrors;
+            delete data.logErrors;
+            settings.logging.uniqueOnConnect = data.logUniqueOnConnect;
+            delete data.logUniqueOnConnect;
+            settings.logging.path = data.logPath;
+            delete data.logPath;
+
+            settings.windows.editor.options.persistent = data.editorPersistent;
+            delete data.editorPersistent;
+            settings.windows.editor.options.show = data.showEditor;
+            delete data.showEditor;
+
+            settings.windows.mapper.options.alwaysOnTop = data.mapper.alwaysOnTop;
+            delete data.mapper.alwaysOnTop;
+            settings.windows.mapper.options.alwaysOnTopClient = data.mapper.alwaysOnTopClient;
+            delete data.mapper.alwaysOnTopClient;
+            settings.windows.mapper.options.persistent = data.mapper.persistent;
+            delete data.mapper.persistent;
+            settings.windows.mapper.options.show = data.showMapper;
+            delete data.showMapper;
+
+            for (prop in data['mapper']) {
+                if (!data['mapper'][prop].hasOwnProperty(prop)) {
+                    continue;
+                }
+                settings.extensions['mapper'] = data['mapper'][prop];
+            }
+            delete data.mapper;
+
+            settings.windows.chat.options.alwaysOnTop = data.chat.alwaysOnTop;
+            delete data.chat.alwaysOnTop;
+            settings.windows.chat.options.alwaysOnTopClient = data.chat.alwaysOnTopClient;
+            delete data.chat.alwaysOnTopClient;
+            settings.windows.chat.options.persistent = data.chat.persistent;
+            delete data.chat.persistent;
+            settings.windows.chat.options.show = data.showChat;
+            delete data.showChat;
+
+            for (prop in data['chat']) {
+                if (!data['chat'][prop].hasOwnProperty(prop)) {
+                    continue;
+                }
+                settings.extensions['chat'] = data['chat'][prop];
+            }
+            delete data.chat;
+            data.version = 1;
+        }
 
         for (prop in data) {
             if (!data.hasOwnProperty(prop)) {
