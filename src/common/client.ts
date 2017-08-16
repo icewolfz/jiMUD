@@ -820,7 +820,7 @@ export class Client extends EventEmitter {
 
         this.echo('Error: ' + msg, AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
 
-        if (this.options.logErrors) {
+        if (this.options.logging.errors) {
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), new Date().toLocaleString() + '\n', { flag: 'a' });
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
         }

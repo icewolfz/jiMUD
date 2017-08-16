@@ -92,12 +92,12 @@ export class Backup extends EventEmitter {
                     showScriptErrors: this.client.options.showScriptErrors,
                     title: this.client.options.title,
                     flashing: this.client.options.flashing,
-                    lagMeter: this.client.options.lagMeter,
-                    enablePing: this.client.options.enablePing,
+                    lagMeter: true,
+                    enablePing: true,
                     parseSingleQuotes: this.client.options.parseSingleQuotes,
-                    logEnabled: this.client.options.logEnabled,
-                    logOffline: this.client.options.logOffline,
-                    logPrepend: this.client.options.logPrepend,
+                    logEnabled: this.client.options.logging.enabled,
+                    logOffline: this.client.options.logging.offline,
+                    logPrepend: this.client.options.logging.prepend,
                     notifyMSPPlay: this.client.options.notifyMSPPlay,
                     bufferSize: this.client.options.bufferSize,
                     commandHistorySize: this.client.options.commandHistorySize,
@@ -106,7 +106,7 @@ export class Backup extends EventEmitter {
                     autoConnectDelay: this.client.options.autoConnectDelay,
                     commandEcho: this.client.options.commandEcho,
                     commandStacking: this.client.options.commandStacking,
-                    htmlLog: (this.client.options.logWhat & Log.Html) === Log.Html,
+                    htmlLog: (this.client.options.logging.what & Log.Html) === Log.Html,
                     keepLastCommand: this.client.options.keepLastCommand,
                     enableMXP: this.client.options.enableMXP,
                     enableMSP: this.client.options.enableMSP,
@@ -117,7 +117,7 @@ export class Backup extends EventEmitter {
                     enableSpeedpaths: this.client.options.enableSpeedpaths,
                     parseSpeedpaths: this.client.options.parseSpeedpaths,
                     parseDoubleQuotes: this.client.options.parseDoubleQuotes,
-                    logUniqueOnConnect: this.client.options.logUniqueOnConnect,
+                    logUniqueOnConnect: this.client.options.logging.uniqueOnConnect,
                     enableURLDetection: this.client.options.enableURLDetection,
                     CommandonClick: this.client.options.CommandonClick,
                     cmdfontSize: this.client.options.cmdfontSize,
@@ -129,14 +129,20 @@ export class Backup extends EventEmitter {
                     commandDelay: this.client.options.commandDelay,
                     commandDelayCount: this.client.options.commandDelayCount,
                     soundPath: this.client.options.soundPath,
-                    logPath: this.client.options.logPath,
+                    logPath: this.client.options.logging.path,
                     scrollLocked: this.client.options.scrollLocked,
-                    showStatus: this.client.options.showStatus,
+                    showStatus: true,
                     showCharacterManager: this.client.options.showCharacterManager,
-                    logErrors: this.client.options.logErrors
+                    logErrors: this.client.options.logging.errors
                 },
                 map: {}
             };
+
+            if (this.client.options.extensions['status']) {
+                data.settings.showStatus = this.client.options.extensions['status'].show;
+                data.settings.lagMeter = this.client.options.extensions['status'].lagMeter;
+                data.settings.enablePing = this.client.options.extensions['status'].ping;
+            }
 
             if (this.client.options.extensions['mapper']) {
                 data.settings.mapEnabled = this.client.options.extensions['mapper'].enabled;
@@ -443,12 +449,12 @@ export class Backup extends EventEmitter {
                 if (data.settings.title)
                     this.client.options.title = data.settings.title;
                 this.client.options.flashing = data.settings.flashing ? true : false;
-                this.client.options.lagMeter = data.settings.lagMeter ? true : false;
-                this.client.options.enablePing = data.settings.enablePing ? true : false;
+                this.client.options.extensions['status'].lagMeter = data.settings.lagMeter ? true : false;
+                this.client.options.extensions['status'].ping = data.settings.enablePing ? true : false;
                 this.client.options.parseSingleQuotes = data.settings.parseSingleQuotes ? true : false;
-                this.client.options.logEnabled = data.settings.logEnabled ? true : false;
-                this.client.options.logOffline = data.settings.logOffline ? true : false;
-                this.client.options.logPrepend = data.settings.logPrepend ? true : false;
+                this.client.options.logging.enabled = data.settings.logEnabled ? true : false;
+                this.client.options.logging.offline = data.settings.logOffline ? true : false;
+                this.client.options.logging.prepend = data.settings.logPrepend ? true : false;
                 this.client.options.notifyMSPPlay = data.settings.notifyMSPPlay ? true : false;
                 this.client.options.bufferSize = data.settings.bufferSize;
                 this.client.options.commandHistorySize = data.settings.commandHistorySize;
@@ -457,7 +463,7 @@ export class Backup extends EventEmitter {
                 this.client.options.autoConnectDelay = data.settings.autoConnectDelay || 600;
                 this.client.options.commandEcho = data.settings.commandEcho ? true : false;
                 this.client.options.commandStacking = data.settings.commandStacking ? true : false;
-                this.client.options.logWhat = data.settings ? Log.Html : Log.None;
+                this.client.options.logging.what = data.settings ? Log.Html : Log.None;
                 this.client.options.keepLastCommand = data.settings.keepLastCommand ? true : false;
                 this.client.options.enableMXP = data.settings.enableMXP ? true : false;
                 this.client.options.enableMSP = data.settings.enableMSP ? true : false;
@@ -469,7 +475,7 @@ export class Backup extends EventEmitter {
                 this.client.options.parseSpeedpaths = data.settings.parseSpeedpaths ? true : false;
 
                 this.client.options.parseDoubleQuotes = data.settings.parseDoubleQuotes ? true : false;
-                this.client.options.logUniqueOnConnect = data.settings.logUniqueOnConnect ? true : false;
+                this.client.options.logging.uniqueOnConnect = data.settings.logUniqueOnConnect ? true : false;
                 this.client.options.enableURLDetection = data.settings.enableURLDetection ? true : false;
                 this.client.options.CommandonClick = data.settings.CommandonClick ? true : false;
                 this.client.options.cmdfontSize = data.settings.cmdfontSize;
@@ -486,10 +492,10 @@ export class Backup extends EventEmitter {
                 if (data.settings.soundPath)
                     this.client.options.soundPath = data.settings.soundPath;
                 if (data.settings.logPath)
-                    this.client.options.logPath = data.settings.logPath;
+                    this.client.options.logging.path = data.settings.logPath;
 
                 this.client.options.scrollLocked = data.settings.scrollLocked ? true : false;
-                this.client.options.showStatus = data.settings.showStatus ? true : false;
+                this.client.options.extensions['status'].show = data.settings.showStatus ? true : false;
                 if (!this.client.options.windows['mapper'])
                     this.client.options.windows['mapper'] = {
                         options: {
@@ -509,7 +515,7 @@ export class Backup extends EventEmitter {
 
                 this.client.options.windows['mapper'].options.show = data.settings.MapperOpen ? true : false;
                 this.client.options.showCharacterManager = data.settings.showCharacterManager ? true : false;
-                this.client.options.logErrors = data.settings.showCharacterManager ? true : false;
+                this.client.options.logging.errors = data.settings.showCharacterManager ? true : false;
 
                 let prop;
                 let prop2;
@@ -537,16 +543,16 @@ export class Backup extends EventEmitter {
                         this.client.options.theme = this.client.options.theme.replace(/\//g, '\\');
                     if (this.client.options.soundPath.startsWith('{data}'))
                         this.client.options.soundPath = this.client.options.soundPath.replace(/\//g, '\\');
-                    if (this.client.options.logPath.startsWith('{data}'))
-                        this.client.options.logPath = this.client.options.logPath.replace(/\//g, '\\');
+                    if (this.client.options.logging.path.startsWith('{data}'))
+                        this.client.options.logging.path = this.client.options.logging.path.replace(/\//g, '\\');
                 }
                 else {
                     if (this.client.options.theme.startsWith('{themes}'))
                         this.client.options.theme = this.client.options.theme.replace(/\\/g, '/');
                     if (this.client.options.soundPath.startsWith('{data}'))
                         this.client.options.soundPath = this.client.options.soundPath.replace(/\\/g, '/');
-                    if (this.client.options.logPath.startsWith('{data}'))
-                        this.client.options.logPath = this.client.options.logPath.replace(/\\/g, '/');
+                    if (this.client.options.logging.path.startsWith('{data}'))
+                        this.client.options.logging.path = this.client.options.logging.path.replace(/\\/g, '/');
                 }
                 this.client.clearCache();
                 this.client.saveOptions();

@@ -55,6 +55,33 @@ export class Chat {
     public gag: boolean = true;
 }
 
+export class Status {
+    public show: boolean = true;
+    public showArmor: boolean = false;
+    public showWeather: boolean = true;
+    public showLimbs: boolean = true;
+    public showHealth: boolean = true;
+    public showExperience: boolean = true;
+    public showPartyHealth: boolean = true;
+    public showCombatHealth: boolean = true;
+    public experienceNeededProgressbar: boolean = false;
+    public allowNegativeNumberNeeded = false;
+    public lagMeter: boolean = true;
+    public ping: boolean = true;
+}
+
+export class Logging {
+    public enabled: boolean = false;
+    public offline: boolean = false;
+    public prepend: boolean = false;
+    public gagged: boolean = false;
+    public timeFormat: string = 'YYYYMMDD-HHmmss';
+    public what: Log = Log.Html;
+    public errors: boolean = true;
+    public uniqueOnConnect: boolean = true;
+    public path = path.join('{data}', 'logs');
+}
+
 /*
 format: setting, key, type, default value, max length
 types:
@@ -134,14 +161,7 @@ export class Settings {
     public showScriptErrors: boolean = false;
     public title: string = '$t';
     public flashing: boolean = false;
-    public lagMeter: boolean = true;
-    public enablePing: boolean = true;
     public parseSingleQuotes: boolean = false;
-    public logEnabled: boolean = false;
-    public logOffline: boolean = false;
-    public logPrepend: boolean = false;
-    public logGagged: boolean = false;
-    public logTimeFormat: string = 'YYYYMMDD-HHmmss';
     public notifyMSPPlay: boolean = false;
     public bufferSize: number = 5000;
     public commandHistorySize: number = 20;
@@ -153,7 +173,6 @@ export class Settings {
 
     public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
-    public logWhat: Log = Log.Html;
     public keepLastCommand: boolean = true;
     public enableMXP: boolean = true;
     public enableMSP: boolean = true;
@@ -162,11 +181,9 @@ export class Settings {
     public enableDebug: boolean = false;
     public parseCommands: boolean = true;
 
-    public logErrors: boolean = true;
     public reportCrashes: boolean = false;
 
     public parseDoubleQuotes: boolean = true;
-    public logUniqueOnConnect: boolean = true;
     public enableURLDetection: boolean = true;
     public CommandonClick: boolean = true;
     public cmdfontSize: string = '1em';
@@ -196,10 +213,11 @@ export class Settings {
     public colors: string[] = [];
 
     public soundPath = path.join('{data}', 'sounds');
-    public logPath = path.join('{data}', 'logs');
     public theme = path.join('{themes}', 'default');
 
     public allowEval: boolean = true;
+
+    public logging = new Logging();
 
     public windows = {
         mapper: {
@@ -254,28 +272,20 @@ export class Settings {
 
     public extensions = {
         mapper: new Mapper(),
-        chat: new Chat()
+        chat: new Chat(),
+        status: new Status()
     };
 
     public backupLoad: BackupSelection = BackupSelection.All;
     public backupSave: BackupSelection = BackupSelection.All;
 
     public scrollLocked: boolean = false;
-    public showStatus: boolean = true;
+
     public showCharacterManager: boolean = false;
-    public showArmor: boolean = false;
-    public showStatusWeather: boolean = true;
-    public showStatusLimbs: boolean = true;
-    public showStatusHealth: boolean = true;
-    public showStatusExperience: boolean = true;
-    public showStatusPartyHealth: boolean = true;
-    public showStatusCombatHealth: boolean = true;
     public showButtonBar: boolean = true;
-    public allowNegativeNumberNeeded = false;
     public spellchecking: boolean = true;
     public hideOnMinimize: boolean = false;
     public showTrayIcon: boolean = false;
-    public statusExperienceNeededProgressbar: boolean = false;
 
     public trayClick: TrayClick = TrayClick.show;
     public trayDblClick: TrayClick = TrayClick.none;
@@ -312,7 +322,7 @@ export class Settings {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'extensions' || prop === 'profiles' || prop === 'buttons' || prop === 'find' || prop === 'display') {
+            if (prop === 'extensions' || prop === 'profiles' || prop === 'buttons' || prop === 'find' || prop === 'display' || prop === 'logging') {
                 for (prop2 in data[prop]) {
                     if (!data[prop].hasOwnProperty(prop2)) {
                         continue;

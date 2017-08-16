@@ -994,7 +994,7 @@ function logError(err, skipClient) {
 
   if (win && win.webContents && !skipClient)
     win.webContents.send('error', msg);
-  else if (set && set.logErrors) {
+  else if (set && set.logging.errors) {
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + '\n', { flag: 'a' });
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), msg + '\n', { flag: 'a' });
   }

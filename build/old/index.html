@@ -549,7 +549,7 @@
             break;
           case 'toggled':
             if (client) {
-              client.options.logEnabled = e.data.args;
+              client.options.logging.enabled = e.data.args;
               client.saveOptions();
             }
             break;
@@ -825,15 +825,15 @@
         if (_logger)
           _logger.postMessage({
             action: 'options', args: {
-              path: parseTemplate(client.options.logPath),
-              offline: client.options.logOffline,
-              gagged: client.options.logGagged,
-              enabled: client.options.logEnabled,
-              unique: client.options.logUniqueOnConnect,
-              prepend: client.options.logPrepend,
-              what: client.options.logWhat,
+              path: parseTemplate(client.options.logging.path),
+              offline: client.options.logging.offline,
+              gagged: client.options.logging.gagged,
+              enabled: client.options.logging.enabled,
+              unique: client.options.logging.uniqueOnConnect,
+              prepend: client.options.logging.prepend,
+              what: client.options.logging.what,
               debug: client.options.enableDebug,
-              format: client.options.logTimeFormat
+              format: client.options.logging.timeFormat
             }
           });
       });
@@ -1011,15 +1011,15 @@
       buildCaptures();
       _logger.postMessage({
         action: 'options', args: {
-          path: parseTemplate(client.options.logPath),
-          offline: client.options.logOffline,
-          gagged: client.options.logGagged,
-          enabled: client.options.logEnabled,
-          unique: client.options.logUniqueOnConnect,
-          prepend: client.options.logPrepend,
-          what: client.options.logWhat,
+          path: parseTemplate(client.options.logging.path),
+          offline: client.options.logging.offline,
+          gagged: client.options.logging.gagged,
+          enabled: client.options.logging.enabled,
+          unique: client.options.logging.uniqueOnConnect,
+          prepend: client.options.logging.prepend,
+          what: client.options.logging.what,
           debug: client.options.enableDebug,
-          format: client.options.logTimeFormat
+          format: client.options.logging.timeFormat
         }
       });
       window.onbeforeunload = function () {
@@ -1640,15 +1640,15 @@
       client.loadOptions();
       _logger.postMessage({
         action: 'options', args: {
-          path: parseTemplate(client.options.logPath),
-          offline: client.options.logOffline,
-          gagged: client.options.logGagged,
-          enabled: client.options.logEnabled,
-          unique: client.options.logUniqueOnConnect,
-          prepend: client.options.logPrepend,
-          what: client.options.logWhat,
+          path: parseTemplate(client.options.logging.path),
+          offline: client.options.logging.offline,
+          gagged: client.options.logging.gagged,
+          enabled: client.options.logging.enabled,
+          unique: client.options.logging.uniqueOnConnect,
+          prepend: client.options.logging.prepend,
+          what: client.options.logging.what,
           debug: client.options.enableDebug,
-          format: client.options.logTimeFormat
+          format: client.options.logging.timeFormat
         }
       });
       buildButtons();
@@ -1658,16 +1658,16 @@
     ipcRenderer.on('reload-options', (event) => {
       client.loadOptions();
       _logger.postMessage({
-        action: 'options', args: {
-          path: parseTemplate(client.options.logPath),
-          offline: client.options.logOffline,
-          gagged: client.options.logGagged,
-          enabled: client.options.logEnabled,
-          unique: client.options.logUniqueOnConnect,
-          prepend: client.options.logPrepend,
-          what: client.options.logWhat,
+        action: 'options', args:{
+          path: parseTemplate(client.options.logging.path),
+          offline: client.options.logging.offline,
+          gagged: client.options.logging.gagged,
+          enabled: client.options.logging.enabled,
+          unique: client.options.logging.uniqueOnConnect,
+          prepend: client.options.logging.prepend,
+          what: client.options.logging.what,
           debug: client.options.enableDebug,
-          format: client.options.logTimeFormat
+          format: client.options.logging.timeFormat
         }
       });
       buildButtons();

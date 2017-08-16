@@ -92,7 +92,7 @@
     //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
     const { parseTemplate, templatePath, existsSync } = require('./js/library');
     const { TrayClick } = require('./js/types');
-    const { Settings, Mapper, Chat } = require('./js/settings');
+    const { Settings, Mapper, Chat, Status } = require('./js/settings');
     const { remote, ipcRenderer } = require('electron');
     const { dialog } = remote;
     const RGBColor = require('rgbcolor');
@@ -297,12 +297,10 @@
       $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
       $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
       $('#dev').prop('checked', _settings.dev);
-      $('#lagMeter').prop('checked', _settings.lagMeter);
-      $('#enablePing').prop('checked', _settings.enablePing);
       $('#showScriptErrors').prop('checked', _settings.showScriptErrors);
       $('#enableDebug').prop('checked', _settings.enableDebug);
-      $('#allowNegativeNumberNeeded').prop('checked', _settings.allowNegativeNumberNeeded);
-      $('#logErrors').prop('checked', _settings.logErrors);
+      
+      $('#logging-errors').prop('checked', _settings.logging.errors);
       $('#spellchecking').prop('checked', _settings.spellchecking);
 
       $('#display-split').prop('checked', _settings.display.split);
@@ -348,13 +346,13 @@
       $('#parseDoubleQuotes').prop('checked', _settings.parseDoubleQuotes);
       $('#parseSingleQuotes').prop('checked', _settings.parseSingleQuotes);
 
-      $('#logEnabled').prop('checked', _settings.logEnabled);
-      $('#logGagged').prop('checked', _settings.logEnabled);
-      $('#logPrepend').prop('checked', _settings.logPrepend);
-      $('#logOffline').prop('checked', _settings.logOffline);
-      $('#logUniqueOnConnect').prop('checked', _settings.logUniqueOnConnect);
-      $('#logPath').val(_settings.logPath);
-      $('#logTimeFormat').val(_settings.logTimeFormat);
+      $('#logging-enabled').prop('checked', _settings.logging.enabled);
+      $('#logging-gagged').prop('checked', _settings.logging.gagged);
+      $('#logging-prepend').prop('checked', _settings.logging.prepend);
+      $('#logging-offline').prop('checked', _settings.logging.offline);
+      $('#logging-uniqueOnConnect').prop('checked', _settings.logging.uniqueOnConnect);
+      $('#logging-path').val(_settings.logging.path);
+      $('#logging-timeFormat').val(_settings.logging.timeFormat);
 
       for (var window in _settings.windows) {
         if (!_settings.windows.hasOwnProperty(window) || !_settings.windows[window].options)
@@ -385,6 +383,8 @@
         _settings.extensions["mapper"] = new Mapper();
       if (!_settings.extensions["chat"])
         _settings.extensions["chat"] = new Chat();
+        if (!_settings.extensions["status"])
+        _settings.extensions["status"] = new Status();
 
       for (var ext in _settings.extensions) {
         if (!_settings.extensions.hasOwnProperty(ext) || !_settings.extensions[ext])
@@ -399,7 +399,6 @@
           else
             $(`#${ext}-${name}`).val(_settings.extensions[ext][name]);
         }
-
       }
       $('#mapper-importTypeReplace').prop('checked', _settings.extensions["mapper"].importType === 1);
       $('#mapper-importTypeMerge').prop('checked', _settings.extensions["mapper"].importType === 0);
@@ -413,7 +412,6 @@
       $('#enableEcho').prop('checked', _settings.enableEcho);
       $('#enableMSP').prop('checked', _settings.enableMSP);
       $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
-      $('#statusExperienceNeededProgressbar').prop('checked', _settings.statusExperienceNeededProgressbar);
       $('#hideOnMinimize').prop('checked', _settings.hideOnMinimize);
       $('#showTrayIcon').prop('checked', _settings.showTrayIcon);
 
@@ -425,9 +423,9 @@
       $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) === 4);
       $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) === 8);
 
-      $('#logWhat-html').prop('checked', (_settings.logWhat & 1) === 1);
-      $('#logWhat-text').prop('checked', (_settings.logWhat & 2) === 2);
-      $('#logWhat-raw').prop('checked', (_settings.logWhat & 4) === 4);
+      $('#logWhat-html').prop('checked', (_settings.logging.what & 1) === 1);
+      $('#logWhat-text').prop('checked', (_settings.logging.what & 2) === 2);
+      $('#logWhat-raw').prop('checked', (_settings.logging.what & 4) === 4);
 
       $('#newlineShortcut-0').prop('checked', _settings.newlineShortcut === 0);
       $('#newlineShortcut-1').prop('checked', _settings.newlineShortcut === 1);
@@ -508,13 +506,13 @@
           case 'logWhat-html':
           case 'logWhat-text':
           case 'logWhat-raw':
-            _settings.logWhat = 0;
+            _settings.logging.what = 0;
             if ($('#logWhat-html').prop('checked'))
-              _settings.logWhat |= 1;
+              _settings.logging.what |= 1;
             if ($('#logWhat-text').prop('checked'))
-              _settings.logWhat |= 2;
+              _settings.logging.what |= 2;
             if ($('#logWhat-raw').prop('checked'))
-              _settings.logWhat |= 4;
+              _settings.logging.what |= 4;
             break;
           case 'backup-save-settings':
           case 'backup-save-profiles':
@@ -538,10 +536,11 @@
             if ($('#backup-load-settings').prop('checked'))
               _settings.backupLoad |= 8;
             break;
+
           default:
             id = $(this).attr('id').split("-");
             if (id.length === 2) {
-              if (id[0] === 'mapper' || id[0] === 'chat') {
+              if (id[0] === 'mapper' || id[0] === 'chat' || id[0] === 'status') {
                 id = $(this).attr('id').split("-");
                 if (!_settings.extensions[id[0]])
                   _settings.extensions[id[0]] = {};
@@ -1407,33 +1406,33 @@
 
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="logEnabled" /> Enable logging
+              <input type="checkbox" id="logging-enabled" /> Enable logging
             </label>
           </div>
 
 
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="logPrepend" /> Pre-pend current buffer to log
+              <input type="checkbox" id="logging-prepend" /> Pre-pend current buffer to log
             </label>
           </div>
 
 
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="logOffline" /> Enable logging of offline text
+              <input type="checkbox" id="logging-offline" /> Enable logging of offline text
             </label>
           </div>
 
 
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="logUniqueOnConnect" /> Create log for every connection
+              <input type="checkbox" id="logging-uniqueOnConnect" /> Create log for every connection
             </label>
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="logEnabled" /> Log gagged lines
+              <input type="checkbox" id="logging-gagged" /> Log gagged lines
             </label>
           </div>
           <div class="col-sm-6 form-group">
@@ -1455,7 +1454,7 @@
           <div class="col-sm-12 form-group">
             <label class="control-label" style="width:100%">
               Date/time format
-              <input type="text" id="logTimeFormat" style="width:100%" class="input-sm form-control" />
+              <input type="text" id="logging-timeFormat" style="width:100%" class="input-sm form-control" />
             </label>
             <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
           </div>
@@ -1464,7 +1463,7 @@
             <label class="control-label" style="width:100%">
               Save path
               <div class="input-group">
-                <input type="text" id="logPath" style="width:100%" class="input-sm form-control" />
+                <input type="text" id="logging-path" style="width:100%" class="input-sm form-control" />
                 <span class="input-group-btn">
                   <button class="btn btn-default btn-sm" type="button" id="btn-logPath">
                     &hellip;
@@ -1688,23 +1687,23 @@
         <div role="tabpanel" class="pref-pane" id="status">
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="lagMeter" /> Show lagmeter
+              <input type="checkbox" id="status-lagMeter" /> Show lagmeter
             </label>
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="enablePing" /> Enable GMCP ping for lagmeter
+              <input type="checkbox" id="status-ping" /> Enable GMCP ping for lagmeter
             </label>
           </div>
 
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="statusExperienceNeededProgressbar" /> Show Experience Needed as Progressbar
+              <input type="checkbox" id="status-experienceNeededProgressbar" /> Show Experience Needed as Progressbar
             </label>
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="allowNegativeNumberNeeded" /> Allow negative number for experience needed
+              <input type="checkbox" id="status-allowNegativeNumberNeeded" /> Allow negative number for experience needed
             </label>
           </div>
         </div>
@@ -1743,7 +1742,7 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="logErrors" /> Log errors
+              <input type="checkbox" id="logging-errors" /> Log errors
             </label>
           </div>
 
