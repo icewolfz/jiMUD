@@ -9,6 +9,12 @@
     - Profile manager is now dynamic, window settings reset
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
+    
+## 0.4.12 2017-08-16
+
+- **Fixed:**
+  - Backup exported macro display code wrong
+  - Profile manager editor title text overflowed and filled background
 
 ## 0.4.11 2017-08-16
 

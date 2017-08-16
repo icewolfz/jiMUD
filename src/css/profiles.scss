@@ -14,8 +14,20 @@ body {
     padding-bottom: 2px;
 }
 
+#content .panel-heading {
+    height: 30px;
+    padding: 5px;
+}
+
 #editor-title {
     display: inline-block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;    
+
+    position: absolute;
+    left: 5px;
+    right: 25px;
 }
 
 #editor-title::first-letter {
