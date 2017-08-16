@@ -64,7 +64,9 @@
     "rebuild:linuxarm": "./node_modules/.bin/electron-rebuild -a=arm -f -p",
     "sass": "node-sass src/css/ -o build/css/ --output-style compressed",
     "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed",
-    "clean:code": "del /q .\\out\\*.js && del /q .\\build\\js\\*.js"
+    "clean": "npm run clean:code && npm run clean:css",
+    "clean:code": "del /q .\\out\\*.js && del /q .\\build\\js\\*.js",
+    "clean:css": "del /q .\\build\\css\\*.css"
   },
   "devDependencies": {
     "@types/bootstrap": "^3.3.34",
