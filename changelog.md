@@ -3,7 +3,8 @@
 ## 0.5.0
 
 - **New:**
-  - New Windows 10 console color scheme
+  - Multi tab interface to allow logging easier with more then one character with out having to load multiple copies of client
+  - Multi mud support, log into any mud
 - **Change:**
   - Windows:
     - Editor is now stored dynamically to reduce code, settings have been reset
@@ -11,7 +12,15 @@
     - Profile manager is now dynamic, window settings reset
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
-    
+
+## 0.4.13
+
+- **New:**
+  - Add new Windows 10 color scheme
+  - Added Current color scheme to reset colors back to original colors
+- **Fixed:**
+  - When picking a predefined color scheme it was not saving
+
 ## 0.4.12 2017-08-16
 
 - **Fixed:**
@@ -69,7 +78,7 @@
   - Backup:
     - Loading would break when trying to load settings from main using a dev connection
     - Profile buttons where not being correctly restored and being appended to triggers
-    - Profile context items whre not being restored
+    - Profile context items where not being restored
     - Profile default context option was not being restored
   - Onload focus on main window instead of chat/mapper/editor windows
 

@@ -99,6 +99,7 @@
     const path = require('path');
     const fs = require('fs');
     var fontManager;
+    var currentColors;
     try {
       fontManager = require('font-manager');
     }
@@ -236,8 +237,9 @@
       loadThemes();
       loadSettings();
 
-      $("#colorScheme").parent().find('.dropdown-menu.inner li').click(() => {
-        $("#colorScheme").change();
+      $("#colorScheme").parent().find('.dropdown-menu.inner li').click(function () {
+        //$("#colorScheme").change();
+        updateScheme($(this).index());
       });
       $("#btn-logPath").on('click', () => {
         dialog.showOpenDialog(remote.getCurrentWindow(), {
@@ -642,13 +644,13 @@
 
     function LoadColors() {
       $("#colorScheme").val("0");
-      var colors = _settings.colors;
+      currentColors = _settings.colors.slice();
       var _colors = Settings.getColors();
       var c;
       for (c = 0; c < 16; c++)
-        setColor("color" + c, colors[c] || _colors[c]);
+        setColor("color" + c, currentColors[c] || _colors[c], true);
       for (c = 256; c < 280; c++)
-        setColor("color" + c, colors[c] || _colors[c]);
+        setColor("color" + c, currentColors[c] || _colors[c], true);
     }
 
     function resetSettings() {
@@ -656,7 +658,7 @@
       loadSettings();
     }
 
-    function setColor(id, color) {
+    function setColor(id, color, noChange) {
       if (!color || typeof color === 'undefined' || color.length === 0) {
         $("#" + id).val('');
       }
@@ -667,11 +669,22 @@
         else
           $("#" + id).val(color.toHex());
       }
+      if (!noChange)
+        $("#" + id).trigger('change');
     }
 
     function updateScheme(idx) {
+      var _colors;
+      var c;
       switch (idx) {
-        case 1://Classic
+        case 0:
+          _colors = Settings.getColors();
+          for (c = 0; c < 16; c++)
+            setColor("color" + c, currentColors[c] || _colors[c]);
+          for (c = 256; c < 280; c++)
+            setColor("color" + c, currentColors[c] || _colors[c]);
+          break;
+        case 2://Classic
           setColor("color0", "rgb(0,0,0)"); //black fore
           setColor("color1", "rgb(128, 0, 0)");//red fore
           setColor("color2", "rgb(0, 128, 0)");//green fore
@@ -713,7 +726,7 @@
           setColor("color278", "rgb(128, 0, 0)");//ErrorFore
           setColor("color279", "rgb(192, 192, 192)");//ErrorBack          
           break;
-        case 2://VGA
+        case 3://VGA
           setColor("color0", "rgb(0,0,0)"); //black fore
           setColor("color1", "rgb(170, 0, 0)");//red fore
           setColor("color2", "rgb(0, 170, 0)");//green fore
@@ -755,7 +768,7 @@
           setColor("color278", "rgb(170, 0, 0)");//ErrorFore
           setColor("color279", "rgb(170, 170, 170)");//ErrorBack
           break;
-        case 3://Terminal.app
+        case 4://Terminal.app
           setColor("color0", "rgb(0,0,0)"); //black fore
           setColor("color1", "rgb(194, 54, 33)");//red fore
           setColor("color2", "rgb(37, 188, 36)");//green fore
@@ -797,7 +810,7 @@
           setColor("color278", "rgb(194, 54, 33)");//ErrorFore
           setColor("color279", "rgb(203, 204, 205)");//ErrorBack    	
           break;
-        case 4://PuTTY
+        case 5://PuTTY
           setColor("color0", "rgb(0,0,0)"); //black fore
           setColor("color1", "rgb(187, 0, 0)");//red fore
           setColor("color2", "rgb(0, 187, 0)");//green fore
@@ -839,7 +852,7 @@
           setColor("color278", "rgb(187, 0, 0)");//ErrorFore
           setColor("color279", "rgb(187, 187, 187)");//ErrorBack    	   
           break;
-        case 5://mIRC
+        case 6://mIRC
           setColor("color0", "rgb(0,0,0)"); //black fore
           setColor("color1", "rgb(127, 0, 0)");//red fore
           setColor("color2", "rgb(0, 147, 0)");//green fore
@@ -881,7 +894,7 @@
           setColor("color278", "rgb(127, 0, 0)");//ErrorFore
           setColor("color279", "rgb(210, 210, 210)");//ErrorBack    	    	
           break;
-        case 6://xterm
+        case 7://xterm
           setColor("color0", "rgb(0,0,0)"); //black fore
           setColor("color1", "rgb(205, 0, 0)");//red fore
           setColor("color2", "rgb(0, 205, 0)");//green fore
@@ -923,7 +936,7 @@
           setColor("color278", "rgb(205, 0, 0)");//ErrorFore
           setColor("color279", "rgb(229, 229, 229)");//ErrorBack    	    	   
           break;
-        case 7: //Win 10
+        case 8: //Win 10
           setColor("color0", "rgb(12,12,12)"); //black fore
           setColor("color1", "rgb(197,15,31)");//red fore
           setColor("color2", "rgb(19,161,14)");//green fore
@@ -966,8 +979,7 @@
           setColor("color279", "rgb(204,204,204)");//ErrorBack         
           break;
         default:
-          var _colors = Settings.getColors();
-          var c;
+          _colors = Settings.getColors();
           for (c = 0; c < 16; c++)
             setColor("color" + c, _colors[c]);
           for (c = 256; c < 280; c++)
@@ -1139,15 +1151,16 @@
         <div role="tabpanel" class="pref-pane" id="colors">
           <div class="col-sm-4 form-group">
             <label>Color scheme
-              <select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" onchange="updateScheme(this.options.selectedIndex)" data-width="auto">
-                <option value="0">Default</option>
-                <option>Classic</option>
-                <option>VGA</option>
-                <option>Terminal.app</option>
-                <option>PuTTY</option>
-                <option>mIRC</option>
-                <option>xterm</option>
-                <options>Windows 10</option>
+              <select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" data-width="auto">
+                <option value="0">Current</option>
+                <option value="1">Default</option>
+                <option value="2">Classic</option>
+                <option value="3">VGA</option>
+                <option value="4">Terminal.app</option>
+                <option value="5">PuTTY</option>
+                <option value="6">mIRC</option>
+                <option value="7">xterm</option>
+                <option value="8">Windows 10</option>
               </select>
             </label>
             <div class="col-sm-12 form-group" style="text-align:center">
