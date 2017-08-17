@@ -1,7 +1,6 @@
 //cSpell:words submenu, pasteandmatchstyle, statusvisible, lagmeter, taskbar, 
 //cSpell:ignore prefs, partyhealth, combathealth
-const { app, BrowserWindow, shell } = require('electron');
-const { Tray, dialog, Menu } = require('electron');
+const { app, BrowserWindow, shell, Tray, dialog, Menu  } = require('electron');
 const ipcMain = require('electron').ipcMain;
 const path = require('path');
 const fs = require('fs');

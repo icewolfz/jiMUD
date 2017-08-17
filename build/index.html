@@ -71,14 +71,19 @@
   const { DockManager } = require('./js/dockmanager');
   const { Client, ClientOptions } = require('./js/client');
   const { Menubar } = require('./js/menubar');
-  const { shell, ipcRenderer, remote, webFrame } = require('electron');
+  const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
   const { dialog, BrowserWindow } = remote;
   const { parseTemplate, isFileSync, isDirSync } = require("./js/library");
   const { Settings } = require('./js/settings');
   const { Characters } = require('./js/characters');
+  
   const path = require('path');
   const fs = require('fs');
   const url = require('url');
+
+  window.readClipboard = () => { return clipboard.readText('selection') || ''; };
+  window.writeClipboard = (txt) => { clipboard.writeText(txt || '', 'selection'); };
+
   window.onerror = function (msg, url, line) {
     if (manager && manager.panels.length > 0) {
       if (msg.startsWith('Uncaught Error: '))
