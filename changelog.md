@@ -2,6 +2,8 @@
 
 ## 0.5.0
 
+- **New:**
+  - New Windows 10 console color scheme
 - **Change:**
   - Windows:
     - Editor is now stored dynamically to reduce code, settings have been reset

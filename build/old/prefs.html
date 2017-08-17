@@ -289,23 +289,16 @@
 
     function loadSettings() {
       var name;
-      $('#autoConnect').prop('checked', _settings.autoConnect);
-      $('#autoLogin').prop('checked', _settings.autoLogin);
-      $('#allowEval').prop('checked', _settings.allowEval);
-
-      $('#autoConnectDelay').val(_settings.autoConnectDelay);
-      $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
-      $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
-      $('#dev').prop('checked', _settings.dev);
-      $('#showScriptErrors').prop('checked', _settings.showScriptErrors);
-      $('#enableDebug').prop('checked', _settings.enableDebug);
-      
-      $('#logging-errors').prop('checked', _settings.logging.errors);
-      $('#spellchecking').prop('checked', _settings.spellchecking);
-
+      for (name in _settings) {
+        if (!_settings.hasOwnProperty(window)) continue;
+        if (name === 'display' || name === 'logging' || name === 'windows' || name === 'extensions') continue;
+        if (typeof _settings[name] === 'boolean')
+          $(`#${name}`).prop('checked', _settings[name]);
+        else
+          $(`#${name}`).val(_settings[name]);
+      }
       $('#display-split').prop('checked', _settings.display.split);
       $('#display-splitLive').prop('checked', _settings.display.splitLive);
-
       $('#display-roundedOverlays').prop('checked', _settings.display.roundedOverlays);
 
       //$('#font').selectpicker('val', _settings.font);
@@ -318,34 +311,7 @@
       $('#cmdfont').selectpicker('render');
       $('#cmdfontSize').val(_settings.cmdfontSize);
       $('#cmdfont').change();
-      $('#commandEcho').prop('checked', _settings.commandEcho);
-      $('#AutoCopySelectedToClipboard').prop('checked', _settings.AutoCopySelectedToClipboard);
-      $('#flashing').prop('checked', _settings.flashing);
-      $('#enableURLDetection').prop('checked', _settings.enableURLDetection);
-      $('#CommandonClick').prop('checked', _settings.CommandonClick);
-      $('#bufferSize').val(_settings.bufferSize);
       LoadColors();
-      $('#keepLastCommand').prop('checked', _settings.keepLastCommand);
-      $('#commandHistorySize').val(_settings.commandHistorySize);
-      $('#commandStacking').prop('checked', _settings.commandStacking);
-      $('#commandStackingChar').val(_settings.commandStackingChar);
-
-      $('#enableCommands').prop('checked', _settings.enableCommands);
-      $('#commandChar').val(_settings.commandChar);
-
-      $('#allowEscape').prop('checked', _settings.allowEscape);
-      $('#escapeChar').val(_settings.escapeChar);
-
-      $('#enableVerbatim').prop('checked', _settings.enableVerbatim);
-      $('#verbatimChar').val(_settings.verbatimChar);
-
-      $('#enableSpeedpaths').prop('checked', _settings.enableSpeedpaths);
-      $('#speedpathsChar').val(_settings.speedpathsChar);
-      $('#parseSpeedpaths').prop('checked', _settings.parseSpeedpaths);
-
-      $('#parseDoubleQuotes').prop('checked', _settings.parseDoubleQuotes);
-      $('#parseSingleQuotes').prop('checked', _settings.parseSingleQuotes);
-
       $('#logging-enabled').prop('checked', _settings.logging.enabled);
       $('#logging-gagged').prop('checked', _settings.logging.gagged);
       $('#logging-prepend').prop('checked', _settings.logging.prepend);
@@ -383,7 +349,7 @@
         _settings.extensions["mapper"] = new Mapper();
       if (!_settings.extensions["chat"])
         _settings.extensions["chat"] = new Chat();
-        if (!_settings.extensions["status"])
+      if (!_settings.extensions["status"])
         _settings.extensions["status"] = new Status();
 
       for (var ext in _settings.extensions) {
@@ -402,18 +368,6 @@
       }
       $('#mapper-importTypeReplace').prop('checked', _settings.extensions["mapper"].importType === 1);
       $('#mapper-importTypeMerge').prop('checked', _settings.extensions["mapper"].importType === 0);
-
-      $('#commandDelay').val(_settings.commandDelay);
-      $('#commandDelayCount').val(_settings.commandDelayCount);
-
-      $('#enableMCCP').prop('checked', _settings.enableMCCP);
-      $('#enableUTF8').prop('checked', _settings.enableUTF8);
-      $('#enableMXP').prop('checked', _settings.enableMXP);
-      $('#enableEcho').prop('checked', _settings.enableEcho);
-      $('#enableMSP').prop('checked', _settings.enableMSP);
-      $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
-      $('#hideOnMinimize').prop('checked', _settings.hideOnMinimize);
-      $('#showTrayIcon').prop('checked', _settings.showTrayIcon);
 
       $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) === 2);
       $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) === 4);
@@ -643,6 +597,7 @@
         else
           _settings[id[0]] = $(this).val();
       });
+
       $('input[type="number"]').change(function () {
         var id = $(this).attr('id').split("-");
         if (id.length === 2) {
@@ -658,6 +613,7 @@
         else
           _settings[$(this).attr('id')] = parseInt($(this).val(), 10);
       });
+
       $('input[type="color"]').change(function () {
         var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
         var color = new RGBColor($(this).val());
@@ -693,7 +649,6 @@
         setColor("color" + c, colors[c] || _colors[c]);
       for (c = 256; c < 280; c++)
         setColor("color" + c, colors[c] || _colors[c]);
-
     }
 
     function resetSettings() {
@@ -968,6 +923,48 @@
           setColor("color278", "rgb(205, 0, 0)");//ErrorFore
           setColor("color279", "rgb(229, 229, 229)");//ErrorBack    	    	   
           break;
+        case 7: //Win 10
+          setColor("color0", "rgb(12,12,12)"); //black fore
+          setColor("color1", "rgb(197,15,31)");//red fore
+          setColor("color2", "rgb(19,161,14)");//green fore
+          setColor("color3", "rgb(193,156,0)");//yellow fore
+          setColor("color4", "rgb(0,55,218)");//blue fore
+          setColor("color5", "rgb(136,23,152)");//magenta fore
+          setColor("color6", "rgb(58,150,221)");//cyan fore
+          setColor("color7", "rgb(204,204,204)");//white fore
+          setColor("color8", "rgb(118,118,118)");//black  bold
+          setColor("color9", "rgb(231,72,86)"); //Red bold
+          setColor("color10", "rgb(22,198,12)"); //green bold
+          setColor("color11", "rgb(249,241,165)");//yellow bold
+          setColor("color12", "rgb(59,120,255)");//blue bold
+          setColor("color13", "rgb(180,0,158)");//magenta bold
+          setColor("color14", "rgb(97,214,214)");//cyan bold
+          setColor("color15", "rgb(242,242,242)");//white bold
+          setColor("color256", "rgb(12,12,12)");//black faint
+          setColor("color257", "rgb(99, 8, 15)");//red  faint
+          setColor("color258", "rgb(10, 81, 7)");//green faint
+          setColor("color259", "rgb(97, 78, 0)");//yellow faint
+          setColor("color260", "rgb(0, 28, 109)");//blue faint
+          setColor("color261", "rgb(68, 12, 76)");//magenta faint
+          setColor("color262", "rgb(29, 75, 111)");//cyan faint
+          setColor("color263", "rgb(102, 102, 102)");//white faint	 
+          setColor("color264", "rgb(12,12,12)"); //BackgroundBlack
+          setColor("color265", "rgb(197,15,31)");//red back
+          setColor("color266", "rgb(19,161,14)");//greenback
+          setColor("color267", "rgb(193,156,0)");//yellow back
+          setColor("color268", "rgb(0,55,218)");//blue back
+          setColor("color269", "rgb(136,23,152)");//magenta back
+          setColor("color270", "rgb(58,150,221)");//cyan back
+          setColor("color271", "rgb(204,204,204)");//white back		
+          setColor("color272", "rgb(12,12,12)"); //iceMudInfoBackground
+          setColor("color273", "rgb(97,214,214)");//iceMudInfoText
+          setColor("color274", "rgb(12,12,12)"); //LocalEchoBackground
+          setColor("color275", "rgb(249,241,165)");//LocalEchoText
+          setColor("color276", "rgb(12,12,12)");//DefaultBack
+          setColor("color277", "rgb(204,204,204)");//DefaultFore	 	 
+          setColor("color278", "rgb(197,15,31)");//ErrorFore
+          setColor("color279", "rgb(204,204,204)");//ErrorBack         
+          break;
         default:
           var _colors = Settings.getColors();
           var c;
@@ -1150,6 +1147,7 @@
                 <option>PuTTY</option>
                 <option>mIRC</option>
                 <option>xterm</option>
+                <options>Windows 10</option>
               </select>
             </label>
             <div class="col-sm-12 form-group" style="text-align:center">
