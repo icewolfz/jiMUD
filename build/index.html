@@ -94,6 +94,41 @@
     return true;
   };
 
+  window.onbeforeunload = () => {
+    $('.dropdown.open').removeClass('open');
+    if (_profilesOpen) {
+      dialog.showMessageBox({
+        type: 'warning',
+        title: 'Close profile manager',
+        message: 'You must close the profile manager before you can exit.'
+      });
+      return 'no';
+    }
+
+    let tl = manager.panels.length;
+    for (var t = 0; t < tl; t++) {
+      if(manager.panels[t].client.options.askonclose && manager.panels[t].client.connected) {
+        var choice = dialog.showMessageBox(remote.getCurrentWindow(),
+          {
+            type: 'warning',
+            title: 'Connected',
+            message: 'Closing will disconnect you from the mud, close anyway?',
+            buttons: ['Yes', 'No', 'Never ask again'],
+            defaultId: 1
+          });
+        if (choice === 2) {
+          manager.panels[t].client.options.askonclose = false;
+          manager.panels[t].client.saveOptions();
+        }
+        else if (choice !== 0)
+          return 'no';
+      }
+      manager.panels[t].client.raise('closed');
+      manager.panels[t].client.close();
+      ipcRenderer.send('remove', manager.panels[t].id);
+    }
+  };
+
   var menuTemp = [
     //File
     {
@@ -809,6 +844,25 @@
     menubar.updateItem('file|disconnect', { enabled: panel.client.connected });
   }
 
+  function childClosed(url, name, client) {
+    if (name === "profiles")
+      _profilesOpen = false;
+    else {
+      var basename = path.basename(url);
+      if (basename === 'characters.html')
+        _cLoading = false;
+      else if (basename === 'profiles.html')
+        _profilesOpen = false;
+      else if (basename === 'prefs.html')
+        _pLoading = false;
+      else {
+        var panel = manager.getPanel(client);
+        if (!panel) return;
+        panel.client.childClosed(url, name);
+      }
+    }
+  }
+
   function loadTheme(theme) {
     theme = parseTemplate(theme) + ".css";
     if (!isFileSync(theme))
@@ -852,6 +906,9 @@
 
   var spellchecker;
   var clientoptions = {};
+  var _cLoading = false;
+  var _pLoading = false;
+  var _profilesOpen = false;
   loadTheme(ipcRenderer.sendSync('get-setting', 'theme'));
   //var options = Settings.load(remote.getGlobal('settingsFile'));
   var manager = new DockManager();
@@ -971,13 +1028,6 @@
     createClient('telnet://www.shadowmud.com:1030', manager.addPanel("www.shadowmud.com:1030"));
 
   console.log(remote.getGlobal('clients'));
-
-  window.onbeforeunload = () => {
-    let tl = manager.panels.length;
-    for (var t = 0; t < tl; t++)
-      ipcRenderer.send('remove', manager.panels[t].id);
-    $('.dropdown.open').removeClass('open');
-  };
 
 </script>
 

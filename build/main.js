@@ -429,7 +429,7 @@ function createWindow() {
 
     w.on('closed', () => {
       if (win && win.webContents) {
-        win.webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
+        win.webContents.executeJavaScript(`childClosed('${url}', '${frameName}', '${options.client}');`);
       }
     });
 
@@ -884,7 +884,7 @@ function createNewWindow(name, options, state, client) {
 
     w.on('close', () => {
       if (w.getParentWindow()) {
-        w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
+        w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}', '${client}');`);
       }
     });
 
@@ -911,7 +911,7 @@ function createNewWindow(name, options, state, client) {
 
   global.clients[client][name].window.on('close', (e) => {
     if (win && win.webContents) {
-      win.webContents.executeJavaScript(`childClosed('${path.join(__dirname, (global.clients[client][name].file || (name + '.html'))).replace(/\\/g, '\\\\')}', '${name}');`);
+      win.webContents.executeJavaScript(`childClosed('${path.join(__dirname, (global.clients[client][name].file || (name + '.html'))).replace(/\\/g, '\\\\')}', '${name}', '${client}');`);
     }
     global.clients[client][name].window.webContents.executeJavaScript('closing();');
     global.clients[client][name].window.webContents.executeJavaScript('closed();');
