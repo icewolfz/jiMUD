@@ -598,6 +598,7 @@
 
       updateAreas();
       mapper.scrollTo(options.mapper.vscroll, options.mapper.hscroll);
+      ipcRenderer.send('send-gmcp', 'Room.Info');
     });
 
     ipcRenderer.on('GMCP-received', (event, data) => {
