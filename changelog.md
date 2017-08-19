@@ -23,6 +23,7 @@
 - **Fixed:**
   - When picking a predefined color scheme it was not saving
   - Display scrolling in split view or scroll lock when new text added
+  - #TestSize size was broken when new display added
 
 ## 0.4.12 2017-08-16
 

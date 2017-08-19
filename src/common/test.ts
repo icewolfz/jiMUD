@@ -618,7 +618,7 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions['TestSize'] = function () {
-            const ws = this.Client.WindowSize;
+            const ws = this.Client.display.WindowSize;
             let sample = ws.width + 'x' + ws.height + ' ';
             ws.width -= sample.length;
             for (let w = 0; w < ws.width; w++)
