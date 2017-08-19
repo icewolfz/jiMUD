@@ -494,6 +494,9 @@ export class Client extends EventEmitter {
         this.display.on('closing', (e) => {
             this.emit('find-closing', e);
         });
+        this.display.on('scroll-lock', (lock) => {
+            this.scrollLock = lock;
+        });
 
         this.MSP = new MSP();
         this.MSP.forcedDefaultMusicURL = '';
