@@ -1937,7 +1937,7 @@ export class Display extends EventEmitter {
         this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize >= 0;
         this._VScroll.offset = this._HScroll.visible ? this._HScroll.track.clientHeight : 0;
-        this._VScroll.resize();
+        this._VScroll.resize(this.split ? this.split.shown : this.scrollLock);
 
         if (!this._HScroll.visible && this._scrollCorner) {
             this._el.removeChild(this._scrollCorner);
@@ -2252,7 +2252,7 @@ export class ScrollBar extends EventEmitter {
         this.updatePosition(this.maxPosition);
     }
 
-    public resize() {
+    public resize(locked?: boolean) {
         const pc = window.getComputedStyle(this._parent);
         this._padding = [
             parseInt(pc.getPropertyValue('padding-top')) || 0,
@@ -2262,7 +2262,7 @@ export class ScrollBar extends EventEmitter {
         ];
 
         //const m = this.maxPosition;
-        //const p = Math.ceil(this.position / this._ratio);
+        const p = Math.ceil(this.position / this._ratio);
         //p = (this.position / this.scrollSize) * this.maxPosition;
         //p = (p < 0 ? Math.floor(p) : Math.ceil(p));
         if (this._type === ScrollType.horizontal) {
@@ -2282,7 +2282,8 @@ export class ScrollBar extends EventEmitter {
             this.maxPosition = 0;
         //p = Math.ceil(p * (this.maxPosition / m));
         this.update();
-        //this.updatePosition(p || 0);
+        if (!locked)
+            this.updatePosition(p || 0);
     }
 
     public currentPosition() {

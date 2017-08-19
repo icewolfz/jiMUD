@@ -308,6 +308,10 @@ export class Client extends EventEmitter {
             this.saveOptions();
         });
 
+        this.display.on('scroll-lock', (lock) => {
+            this.scrollLock = lock;
+        });
+
         if (typeof command === 'string')
             this.commandInput = $(command);
         else
