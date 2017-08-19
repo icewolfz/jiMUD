@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.13
+## 0.4.13 2017-08-19
 
 - **New:**
   - Add new Windows 10 color scheme
