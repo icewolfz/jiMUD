@@ -19,6 +19,7 @@
   - Add new Windows 10 color scheme
   - Added Current color scheme to reset colors back to original colors
   - Add --disable-gpu command line arg
+  - Add linux Categories
 - **Fixed:**
   - When picking a predefined color scheme it was not saving
 
