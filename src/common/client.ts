@@ -740,8 +740,8 @@ export class Client extends EventEmitter {
         this.telnet.options.MXP = this.options.enableMXP;
         this.telnet.UTF8 = this.options.enableUTF8;
         this.telnet.options.ECHO = this.options.enableEcho;
-        this.telnet.enableLatency = this.options.lagMeter;
-        this.telnet.enablePing = this.options.enablePing;
+        this.telnet.enableLatency = this.options.extensions['status'].lagMeter;
+        this.telnet.enablePing = this.options.extensions['status'].ping;
 
         this.MSP.enabled = this.options.enableMSP;
         this.MSP.savePath = parseTemplate(this.options.soundPath);
