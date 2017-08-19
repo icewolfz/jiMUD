@@ -1335,9 +1335,6 @@ app.on('ready', () => {
 
   process.argv.forEach((val, index) => {
     switch (val) {
-      case "--disable-gpu":
-        app.disableHardwareAcceleration();
-        break;
       case "-h":
       case "--help":
       case "-?":
