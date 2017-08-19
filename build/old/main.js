@@ -1828,14 +1828,14 @@ ipcMain.on('import-map', (event, data) => {
     winMap.webContents.send('import', data);
 });
 
-ipcMain.on('flush', (event) => {
+ipcMain.on('flush', (event, sender) => {
   if (winMap)
-    winMap.webContents.send('flush');
+    winMap.webContents.send('flush', sender);
 });
 
-ipcMain.on('flush-end', (event) => {
+ipcMain.on('flush-end', (event, sender) => {
   if (win && win.webContents)
-    win.webContents.send('flush-end');
+    win.webContents.send('flush-end', sender);
 });
 
 ipcMain.on('reload-characters', (event) => {

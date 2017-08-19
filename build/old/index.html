@@ -648,15 +648,13 @@
           c.popup(remote.getCurrentWindow());
       }, false);
 
-      ['cut', 'copy', 'paste'].forEach(function (event) {
+      ['cut', 'copy'].forEach(function (event) {
         document.addEventListener(event, function (e) {
-          if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
-
-            if ($(document.activeElement).val().length > 0 || !client.display.hasSelection)
-              return;
-          }
-          if (client.display.hasSelection > 0)
+          if (client.display.hasSelection) {
             clipboard.writeText(client.display.selection, 'selection');
+            e.preventDefault();
+            e.stopPropagation();
+          }
         });
       });
 
@@ -926,7 +924,7 @@
 
       _backup.on('progress-start', (title) => {
         ipcRenderer.send('set-progress', { value: 0 });
-        ipcRenderer.send('flush');
+        ipcRenderer.send('flush', title);
         $("#Progressbar").html('<progress max="100"></progress>');
         $("#ProgressTitle").html(title || "Importing data&hellip;");
         $("#Progress")[0].showModal();
@@ -1545,6 +1543,13 @@
       }
     }
 
+    ipcRenderer.on('flush-end', (event, sender) => {
+      if (sender === 'Saving data')
+        _backup.save(2);
+      else if (sender === 'Loading data')
+        _backup.getChunk();
+    });
+
     ipcRenderer.on('load-char', (event, char) => {
       if (!client.connected) {
         _logger.postMessage({ action: 'name', args: char });
@@ -1658,7 +1663,7 @@
     ipcRenderer.on('reload-options', (event) => {
       client.loadOptions();
       _logger.postMessage({
-        action: 'options', args:{
+        action: 'options', args: {
           path: parseTemplate(client.options.logging.path),
           offline: client.options.logging.offline,
           gagged: client.options.logging.gagged,

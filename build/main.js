@@ -1,6 +1,6 @@
 //cSpell:words submenu, pasteandmatchstyle, statusvisible, lagmeter, taskbar, 
 //cSpell:ignore prefs, partyhealth, combathealth
-const { app, BrowserWindow, shell, Tray, dialog, Menu  } = require('electron');
+const { app, BrowserWindow, shell, Tray, dialog, Menu } = require('electron');
 const ipcMain = require('electron').ipcMain;
 const path = require('path');
 const fs = require('fs');
@@ -660,12 +660,15 @@ ipcMain.on('create-window', (event, window, args, state, client) => {
   createNewWindow(window, args, state, client);
 });
 
-ipcMain.on('flush', (event, client) => {
+ipcMain.on('flush', (event, sender, window, client) => {
+  if (!global.clients[client] || !global.clients[client][window])
+    return;
+  global.clients[client][window].window.webContents.send('flush-end', sender, client);
 });
 
-ipcMain.on('flush-end', (event, client) => {
+ipcMain.on('flush-end', (event, sender, window, client) => {
   if (win && win.webContents)
-    win.webContents.send('flush-end', client);
+    win.webContents.send('flush-end', sender, window, client);
 });
 
 ipcMain.on('profile-item-added', (event, type, profile, item) => {
