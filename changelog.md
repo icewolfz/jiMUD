@@ -7,6 +7,8 @@
   - Added Current color scheme to reset colors back to original colors
   - Add --disable-gpu command line arg
   - Add linux Categories
+- **Changed:**
+  - Changed how copy system works for main client
 - **Fixed:**
   - When picking a predefined color scheme it was not saving
   - Display scrolling in split view or scroll lock when new text added

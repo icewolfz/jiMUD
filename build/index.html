@@ -647,15 +647,14 @@
           c.popup(remote.getCurrentWindow());
       }, false);
 
-      ['cut', 'copy', 'paste'].forEach(function (event) {
+      ['cut', 'copy'].forEach(function (event) {
         document.addEventListener(event, function (e) {
-          if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
-
-            if ($(document.activeElement).val().length > 0 || !client.display.hasSelection)
-              return;
-          }
-          if (client.display.hasSelection > 0)
+          if (client.display.hasSelection)
+          {
             clipboard.writeText(client.display.selection, 'selection');
+            e.preventDefault();
+            e.stopPropagation();
+          }
         });
       });
 
