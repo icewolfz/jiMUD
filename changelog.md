@@ -12,6 +12,7 @@
   - Display scrolling in split view or scroll lock when new text added
   - #TestSize size was broken when new display added
   - Mapper will now send a room request for current every time it is loaded/reloaded/importing fixing the mapper from getting lost when connected and changing mapper settings
+  - Client saving was not correctly getting mapper data when in memory option was enabled
 
 ## 0.4.12 2017-08-16
 

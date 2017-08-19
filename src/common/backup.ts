@@ -52,7 +52,7 @@ export class Backup extends EventEmitter {
                     this._action = obj.action;
                     this.emit('progress-start', 'Saving data');
                     this._abort = false;
-                    this.save(2);
+                    //this.save(2);
                     break;
                 case 'load':
                     this._abort = false;
@@ -60,7 +60,7 @@ export class Backup extends EventEmitter {
                     this._action = obj.action;
                     this.emit('progress-start', 'Loading data');
                     this._save = [obj.chunks, obj.chunk, obj.size, ''];
-                    this.getChunk();
+                    //this.getChunk();
                     break;
                 case 'error':
                     this.emit('error', obj.error);

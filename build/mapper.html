@@ -623,9 +623,9 @@
       ipcRenderer.send('send-gmcp', 'Room.Info');
     });
 
-    ipcRenderer.on('flush', (event) => {
+    ipcRenderer.on('flush', (event, sender) => {
       save(() => {
-        ipcRenderer.send('flush-end');
+        ipcRenderer.send('flush-end', sender);
       });
     });
 
