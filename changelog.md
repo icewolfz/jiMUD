@@ -11,7 +11,7 @@
   - When picking a predefined color scheme it was not saving
   - Display scrolling in split view or scroll lock when new text added
   - #TestSize size was broken when new display added
-  - Mapper will now send a room request for current every time it is loaded/reloaded fixing the mapper from getting lost when connected and changing mapper settings
+  - Mapper will now send a room request for current every time it is loaded/reloaded/importing fixing the mapper from getting lost when connected and changing mapper settings
 
 ## 0.4.12 2017-08-16
 

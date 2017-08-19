@@ -400,6 +400,7 @@
           $("#mapProgress")[0].close();
           ipcRenderer.send('set-progress', { value: -1 });
           ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+          ipcRenderer.send('send-gmcp', 'Room.Info');
         }
       });
 
@@ -619,6 +620,7 @@
       ipcRenderer.send('set-progress', { value: 0 });
       ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
       mapper.import(data, importType);
+      ipcRenderer.send('send-gmcp', 'Room.Info');
     });
 
     ipcRenderer.on('flush', (event) => {
