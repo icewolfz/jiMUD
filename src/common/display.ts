@@ -2277,10 +2277,10 @@ export class ScrollBar extends EventEmitter {
             parseInt(pc.getPropertyValue('padding-left')) || 0
         ];
 
-        let p = 0;
-        const m = this.maxPosition;
-        p = (this.position / this.scrollSize) * this.maxPosition;
-        p = (p < 0 ? Math.floor(p) : Math.ceil(p));
+        //const m = this.maxPosition;
+        //const p = Math.ceil(this.position / this._ratio);
+        //p = (this.position / this.scrollSize) * this.maxPosition;
+        //p = (p < 0 ? Math.floor(p) : Math.ceil(p));
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
             this._parentSize = this._parent.clientWidth - this.offset - this._scrollOffset;
@@ -2296,9 +2296,9 @@ export class ScrollBar extends EventEmitter {
         this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
             this.maxPosition = 0;
-        p = Math.ceil(p * (this.maxPosition / m));
+        //p = Math.ceil(p * (this.maxPosition / m));
         this.update();
-        this.updatePosition(p || 0);
+        //this.updatePosition(p || 0);
     }
 
     public currentPosition() {

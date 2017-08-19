@@ -22,6 +22,7 @@
   - Add linux Categories
 - **Fixed:**
   - When picking a predefined color scheme it was not saving
+  - Display scrolling in split view or scroll lock when new text added
 
 ## 0.4.12 2017-08-16
 
