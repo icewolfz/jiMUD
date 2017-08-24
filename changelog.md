@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.14
+
+- **Fixed:**
+  - Hiding status display was not correctly resizing main display
+
 ## 0.4.13 2017-08-19
 
 - **New:**
