@@ -3,7 +3,7 @@
 ## 0.4.14
 
 - **Fixed:**
-  - Hiding status display was not correctly resizing main display
+  - Fix display width when status display hidden
 
 ## 0.4.13 2017-08-19
 
