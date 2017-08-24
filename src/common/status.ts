@@ -543,7 +543,7 @@ export class Status extends EventEmitter {
     }
 
     public updateInterface() {
-        $('#display-container').css('right', '');
+        $('#display').css('right', '');
         $('#display-border').css('right', '');
         $('#command').css('right', '');
         if (this.client.options.showStatus) {
@@ -558,9 +558,9 @@ export class Status extends EventEmitter {
             $('#status').css('display', 'none');
             $('#status-border').css('visibility', 'hidden');
             $('#status-border').css('display', 'none');
-            $('#display-container').css('right', (parseInt($('#display-container').css('right'), 10) - w) + 'px');
-            $('#display-border').css('right', (parseInt($('#display-border').css('right'), 10) - w) + 'px');
-            $('#command').css('right', (parseInt($('#command').css('right'), 10) - w) + 'px');
+            $('#display').css('right', ((parseInt($('#display').css('right'), 10) || 0) - w) + 'px');
+            $('#display-border').css('right', ((parseInt($('#display-border').css('right'), 10) || 0) - w) + 'px');
+            $('#command').css('right', ((parseInt($('#command').css('right'), 10) || 0) - w) + 'px');
             return;
         }
 
@@ -581,7 +581,7 @@ export class Status extends EventEmitter {
 
         if (this.client.options.showStatusWeather) {
             $('#environment').css('display', '');
-            top += $('#environment').outerHeight() + parseInt($('#environment').css('top'), 10);
+            top += $('#environment').outerHeight() + (parseInt($('#environment').css('top'), 10) || 0);
         }
         else
             $('#environment').css('display', 'none');
@@ -590,7 +590,7 @@ export class Status extends EventEmitter {
             $('#body').css('display', 'none');
         else {
             $('#body').css('display', '');
-            eTop = parseInt($('#body').css('top'), 10);
+            eTop = (parseInt($('#body').css('top'), 10) || 0);
             if (this.client.options.showStatusLimbs)
                 $('#limbs').css('display', '');
             else
@@ -605,7 +605,7 @@ export class Status extends EventEmitter {
 
         if (this.client.options.showStatusExperience) {
             $('#experience').css('display', '');
-            eTop = parseInt($('#experience').css('top'), 10);
+            eTop = (parseInt($('#experience').css('top'), 10) || 0);
             $('#experience').css('top', eTop + top);
             top += $('#experience').outerHeight() + eTop;
         }
@@ -622,14 +622,14 @@ export class Status extends EventEmitter {
         else
             $('#combat').css('display', 'none');
 
-        $('#bars').css('top', parseInt($('#bars').css('top'), 10) + top);
+        $('#bars').css('top', (parseInt($('#bars').css('top'), 10) || 0) + top);
 
         $('#bars').css('bottom', '');
         if (this.lagMeter && this.lagMeter.length > 0) {
             if (this.client.options.lagMeter) {
                 this.lagMeter.css('visibility', '');
                 this.lagMeter.css('display', '');
-                $('#bars').css('bottom', this.lagMeter.outerHeight() + parseInt(this.lagMeter.css('bottom'), 10) + parseInt($('#bars').css('bottom'), 10) + 'px');
+                $('#bars').css('bottom', this.lagMeter.outerHeight() + (parseInt(this.lagMeter.css('bottom'), 10) || 0) + (parseInt($('#bars').css('bottom'), 10) || 0) + 'px');
                 this.updateLagMeter(0, true);
             }
             else {

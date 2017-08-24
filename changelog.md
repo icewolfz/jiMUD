@@ -13,7 +13,12 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
-## 0.4.13
+## 0.4.14
+
+- **Fixed:**
+  - Fix display width when status display hidden
+
+## 0.4.13 2017-08-19
 
 - **New:**
   - Add new Windows 10 color scheme
