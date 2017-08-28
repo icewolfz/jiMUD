@@ -40,7 +40,7 @@
     "package:win32": "node_modules/.bin/build --pd=dist/jiMUD-win32-ia32/ --win --ia32 && ren \"dist\\jiMUD Setup %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows-x32.exe",
     "package:win64": "node_modules/.bin/build --pd=dist/jiMUD-win32-x64/ --win --x64 && ren \"dist\\jiMUD Setup %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows-x64.exe",
     "package:win32-all": "npm run package:win32 && sleep 2 && npm run package:winportable32",
-    "package:win64-all": "npm run package:win64 && sleep 2 && npm run package:winportable64",    
+    "package:win64-all": "npm run package:win64 && sleep 2 && npm run package:winportable64",
     "package:winportable": "npm run package:winportable32 && npm run package:winportable64",
     "package:winportable32": "node_modules/.bin/build --pd=dist/jiMUD-win32-ia32/ --win portable:ia32 && ren \"dist\\jiMUD %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows_portable-x32.exe",
     "package:winportable64": "node_modules/.bin/build --pd=dist/jiMUD-win32-x64/ --win portable:x64 && ren \"dist\\jiMUD %npm_package_version%.exe\" jiMUD_%npm_package_version%_Windows_portable-x64.exe",
@@ -89,7 +89,7 @@
     "electron-installer-dmg": "^0.2.1",
     "electron-local-crash-reporter": "^1.0.1",
     "electron-packager": "^8.7.2",
-    "electron-rebuild": "^1.5.7",
+    "electron-rebuild": "^1.6.0",
     "eslint": "^4.1.1",
     "eslint-plugin-html": "^3.0.0"
   },
