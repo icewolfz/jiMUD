@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Fix display width when status display hidden
+  - Added a trailing ; to the linux category
 
 ## 0.4.13 2017-08-19
 

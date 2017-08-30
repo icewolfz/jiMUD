@@ -97,7 +97,7 @@
     "linux": {
       "maintainer": "icewolfz",
       "icon": "./assets/icons/png/",
-      "category": "Game;Network",
+      "category": "Game;Network;",
       "synopsis": "MUD client coded in javascript."
     }
   },
