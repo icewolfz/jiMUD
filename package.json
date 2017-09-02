@@ -98,7 +98,14 @@
       "maintainer": "icewolfz",
       "icon": "./assets/icons/png/",
       "category": "Game;Network;",
-      "synopsis": "MUD client coded in javascript."
+      "synopsis": "MUD client coded in javascript.",
+      "extraResources": [
+        {
+          "from": "node_modules/spellchecker/vendor",
+          "to": "app.asar.unpacked/node_modules/spellchecker/vendor",
+          "filter": "**/*"
+        }
+      ]
     }
   },
   "dependencies": {
