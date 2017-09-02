@@ -181,7 +181,7 @@ export class Status extends EventEmitter {
             cls.push(prefix + this.sanitizeID(obj.guild));
         if (obj.name && obj.name.length > 0)
             cls.push(prefix + this.sanitizeID(obj.name));
-        return cls.join(' ');
+        return cls.join(' ').toLowerCase();
     }
 
     public setWeapon(limb, weapon) {
