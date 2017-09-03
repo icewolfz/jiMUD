@@ -19,6 +19,7 @@
   - Fix display width when status display hidden
   - Added a trailing ; to the linux category
   - Fix spell checker on linux
+  - Fixed parsing of double/single quotes as strings when ending of a command
 
 ## 0.4.13 2017-08-19
 

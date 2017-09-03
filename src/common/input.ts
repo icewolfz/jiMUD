@@ -1056,7 +1056,7 @@ export class Input extends EventEmitter {
                     if (eAlias && findAlias)
                         alias += c;
                     else
-                        out += c;
+                        str += c;
                     start = false;
                     break;
                 case ParseState.singleQuoted:
@@ -1066,7 +1066,7 @@ export class Input extends EventEmitter {
                     if (eAlias && findAlias)
                         alias += c;
                     else
-                        out += c;
+                        str += c;
                     start = false;
                     break;
                 case ParseState.aliasArguments:
