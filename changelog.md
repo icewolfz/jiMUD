@@ -1,20 +1,20 @@
 # Changelog
 
-## 0.4.14
+## 0.4.14 2017-09-04
 
 - **Fixed:**
-  - Fix display width when status display hidden
+  - Fixed display width when status display hidden
   - Added a trailing ; to the linux category
-  - Fix spell checker on linux
+  - Fixed spell checker on linux
   - Fixed parsing of double/single quotes as strings when ending of a command
 
 ## 0.4.13 2017-08-19
 
 - **New:**
-  - Add new Windows 10 color scheme
+  - Added new Windows 10 color scheme
   - Added Current color scheme to reset colors back to original colors
-  - Add --disable-gpu command line arg
-  - Add linux Categories
+  - Added --disable-gpu command line arg
+  - Added linux Categories
 - **Changed:**
   - Changed how copy system works for main client
 - **Fixed:**
@@ -34,7 +34,7 @@
 
 - **New:**
   - Added function doc file to explain functions and list predefined variables
-  - Add intern corner support for overlays (selection, find)
+  - Added intern corner support for overlays (selection, find)
   - Preference: Enable rounded overlays, disable or enable rounded corner effect for selection and find highlighting
   - ${eval(expression)} to allow evaluation a math expression when ${expression} is disabled
   - Add proper escape system with parser changes, characters: $%"'{\ and command stack character, to escape a character simply just do \CHARACTER
