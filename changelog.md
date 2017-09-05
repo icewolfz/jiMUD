@@ -13,21 +13,21 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
-## 0.4.14
+## 0.4.14 2017-09-04
 
 - **Fixed:**
-  - Fix display width when status display hidden
+  - Fixed display width when status display hidden
   - Added a trailing ; to the linux category
-  - Fix spell checker on linux
+  - Fixed spell checker on linux
   - Fixed parsing of double/single quotes as strings when ending of a command
 
 ## 0.4.13 2017-08-19
 
 - **New:**
-  - Add new Windows 10 color scheme
+  - Added new Windows 10 color scheme
   - Added Current color scheme to reset colors back to original colors
-  - Add --disable-gpu command line arg
-  - Add linux Categories
+  - Added --disable-gpu command line arg
+  - Added linux Categories
 - **Changed:**
   - Changed how copy system works for main client
 - **Fixed:**
@@ -47,7 +47,7 @@
 
 - **New:**
   - Added function doc file to explain functions and list predefined variables
-  - Add intern corner support for overlays (selection, find)
+  - Added intern corner support for overlays (selection, find)
   - Preference: Enable rounded overlays, disable or enable rounded corner effect for selection and find highlighting
   - ${eval(expression)} to allow evaluation a math expression when ${expression} is disabled
   - Add proper escape system with parser changes, characters: $%"'{\ and command stack character, to escape a character simply just do \CHARACTER
@@ -88,13 +88,11 @@
   - #wait would have broken %# values, fixed with new proper parsing and stack
   - selected, selectedword, selword, selectedline, selline, selectedurl, selurl, and copied now return the correct values when used outside of context menus
   - Mapper persistance setting was not correctly restored always
-  - Backup loading would break when trying to load settings from main using a dev connection
-  - Onload focus on main window instead of chat/mapper/editor windows
   - Tray toggle was not correctly done when using #toggleclient
   - Backup:
     - Loading would break when trying to load settings from main using a dev connection
     - Profile buttons where not being correctly restored and being appended to triggers
-    - Profile context items where not being restored
+    - Profile context items whre not being restored
     - Profile default context option was not being restored
   - Onload focus on main window instead of chat/mapper/editor windows
 
