@@ -72,8 +72,8 @@
   const { Client, ClientOptions } = require('./js/client');
   const { Menubar } = require('./js/menubar');
   const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
-  const { dialog, BrowserWindow } = remote;
-  const { parseTemplate, isFileSync, isDirSync } = require("./js/library");
+  const { dialog, BrowserWindow, Menu, MenuItem } = remote;
+  const { parseTemplate, isFileSync, isDirSync, setSelectionRange } = require("./js/library");
   const { Settings } = require('./js/settings');
   const { Characters } = require('./js/characters');
 
@@ -156,7 +156,7 @@
     let tl = manager.panels.length;
     for (var t = 0; t < tl; t++) {
       manager.panels[t].client.UpdateWindow();
-    }  
+    }
   };
 
   var menuTemp = [
@@ -934,6 +934,77 @@
     }
   }
 
+  function doLink(url) {
+    if (confirm("Open '" + url + "'?") === true)
+      shell.openExternal(url);
+  }
+
+  function doMXPLink(el, url) {
+    if (url.startsWith("OoMUD://") || url.startsWith("jiMUD://") || url.startsWith("client://"))
+      doMXPSend(0, el, url.substring(8));
+    else if (confirm("Open '" + url + "'?") === true)
+      shell.openExternal(url.replace("&text;", $(el).text()));
+  }
+
+  function doMXPSend(e, el, url, pmt, tt) {
+    el = $(el);
+    var im = el.find("img[ismap]");
+    var extra = '';
+    if (im.length > 0) {
+      var offset = im.offset();
+      var x = Math.floor(e.clientX - offset.left);
+      var y = Math.floor(e.clientY - offset.top);
+      extra = "?" + x + "," + y;
+    }
+
+    if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) === "[object Array]") {
+      var menu = new Menu();
+      var item;
+      for (var i = 0, il = url.length; i < il; i++) {
+        url[i] = url[i].replace("&text;", $(el).text());
+        if (i < tt.length) {
+          item = new MenuItem({
+            label: tt[i], click(item) {
+              MXPMenuHandler(item.cmd, pmt);
+            }
+          });
+        }
+        else {
+          item = new MenuItem({
+            label: url[i], click(item) {
+              MXPMenuHandler(item.cmd, pmt);
+            }
+          });
+        }
+        item.cmd = url[i] + extra;
+        menu.append(item);
+      }
+      menu.popup(remote.getCurrentWindow(), e.pageX, e.pageY);
+    }
+    else if (pmt) {
+      url = url.replace("&text;", $(el).text()) + extra;
+      manager.active.client.commandInput.val(url);
+      setSelectionRange(manager.active.client.commandInput[0], url.length, url.length);
+    }
+    else
+      manager.active.client.send(url.replace("&text;", $(el).text()) + extra + '\n', true);
+  }
+
+  function MXPMenuHandler(cmd, pmt) {
+    if (pmt) {
+      manager.active.client.commandInput.val(cmd);
+      setSelectionRange(manager.active.client.commandInput[0], cmd.length, cmd.length);
+    }
+    else
+      manager.active.client.send(cmd, true);
+  }
+
+
+  function doMXPTooltip(el) {
+    el = $(el);
+    el.prop("title", el.prop("title").replace("&text;", el.text()));
+  }
+
   var spellchecker;
   var clientoptions = {};
   var _cLoading = false;
@@ -943,6 +1014,7 @@
   loadTheme(ipcRenderer.sendSync('get-setting', 'theme'));
   //var options = Settings.load(remote.getGlobal('settingsFile'));
   var manager = new DockManager();
+
   manager.on('add', (e) => {
     ipcRenderer.send('add', e.id);
     //e.panel.pane.innerHTML = `<h1 style="color:white;text-align:center;z-index:10000;position: relative;font-size:10em">${e.id}</h1>`;
@@ -1063,9 +1135,8 @@
     });
 
   if (manager.panels.length === 0)
-    createClient('telnet://www.shadowmud.com:1030', manager.addPanel("www.shadowmud.com:1030"));
 
-  console.log(remote.getGlobal('clients'));
+    createClient('telnet://www.shadowmud.com:1030', manager.addPanel("www.shadowmud.com:1030"));
 
 </script>
 
