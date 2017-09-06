@@ -331,7 +331,7 @@ export class Status extends EventEmitter {
         $('#xp-value').text(this.info['EXPERIENCE']);
         $('#xp-banked').text(this.info['EXPERIENCE_BANKED']);
         if (this.info['EXPERIENCE_NEED'] < 0)
-            $('#need-value').text(this.client.options.allowNegativeNumberNeeded ? this.info['EXPERIENCE_NEED'] : 0);
+            $('#need-value').text(this.client.options.extensions['status'].allowNegativeNumberNeeded  ? this.info['EXPERIENCE_NEED'] : 0);
         else
             $('#need-value').text(this.info['EXPERIENCE_NEED']);
         this.updateBar('#need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.info['EXPERIENCE_NEED'].toString());
@@ -533,7 +533,7 @@ export class Status extends EventEmitter {
 
     public updateLagMeter(lag: number, force?: boolean) {
         if (!this.lagMeter || this.lagMeter.length === 0) return;
-        if (!this.client.options.lagMeter && !force) return;
+        if (!this.client.options.extensions['status'].lagMeter && !force) return;
         let p = 100;
         p = lag / 200 * 100;
         if (p > 100) p = 100;
@@ -546,7 +546,7 @@ export class Status extends EventEmitter {
         $('#display').css('right', '');
         $('#display-border').css('right', '');
         $('#command').css('right', '');
-        if (this.client.options.showStatus) {
+        if (this.client.options.extensions['status'].show) {
             $('#status').css('visibility', '');
             $('#status').css('display', '');
             $('#status-border').css('visibility', '');
@@ -564,7 +564,7 @@ export class Status extends EventEmitter {
             return;
         }
 
-        if (this.client.options.statusExperienceNeededProgressbar) {
+        if (this.client.options.extensions['status'].experienceNeededProgressbar) {
             $('#need-value').css('display', 'none');
             $('#need-percent').css('display', 'block');
         }
@@ -579,23 +579,23 @@ export class Status extends EventEmitter {
         $('#experience').css('top', '');
         $('#bars').css('top', '');
 
-        if (this.client.options.showStatusWeather) {
+        if (this.client.options.extensions['status'].showWeather) {
             $('#environment').css('display', '');
             top += $('#environment').outerHeight() + (parseInt($('#environment').css('top'), 10) || 0);
         }
         else
             $('#environment').css('display', 'none');
 
-        if (!this.client.options.showStatusLimbs && !this.client.options.showStatusHealth)
+        if (!this.client.options.extensions['status'].showLimbs && !this.client.options.extensions['status'].showHealth)
             $('#body').css('display', 'none');
         else {
             $('#body').css('display', '');
             eTop = (parseInt($('#body').css('top'), 10) || 0);
-            if (this.client.options.showStatusLimbs)
+            if (this.client.options.extensions['status'].showLimbs)
                 $('#limbs').css('display', '');
             else
                 $('#limbs').css('display', 'none');
-            if (this.client.options.showStatusHealth)
+            if (this.client.options.extensions['status'].showHealth)
                 $('#hp-status').css('display', '');
             else
                 $('#hp-status').css('display', 'none');
@@ -603,7 +603,7 @@ export class Status extends EventEmitter {
             top += $('#body').outerHeight() + eTop;
         }
 
-        if (this.client.options.showStatusExperience) {
+        if (this.client.options.extensions['status'].showExperience) {
             $('#experience').css('display', '');
             eTop = (parseInt($('#experience').css('top'), 10) || 0);
             $('#experience').css('top', eTop + top);
@@ -612,12 +612,12 @@ export class Status extends EventEmitter {
         else
             $('#experience').css('display', 'none');
 
-        if (this.client.options.showStatusPartyHealth)
+        if (this.client.options.extensions['status'].showPartyHealth)
             $('#party').css('display', '');
         else
             $('#party').css('display', 'none');
 
-        if (this.client.options.showStatusCombatHealth)
+        if (this.client.options.extensions['status'].showCombatHealth)
             $('#combat').css('display', '');
         else
             $('#combat').css('display', 'none');
@@ -626,7 +626,7 @@ export class Status extends EventEmitter {
 
         $('#bars').css('bottom', '');
         if (this.lagMeter && this.lagMeter.length > 0) {
-            if (this.client.options.lagMeter) {
+            if (this.client.options.extensions['status'].lagMeter) {
                 this.lagMeter.css('visibility', '');
                 this.lagMeter.css('display', '');
                 $('#bars').css('bottom', this.lagMeter.outerHeight() + (parseInt(this.lagMeter.css('bottom'), 10) || 0) + (parseInt($('#bars').css('bottom'), 10) || 0) + 'px');
