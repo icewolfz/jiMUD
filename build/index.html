@@ -866,6 +866,10 @@
 
   function createClient(host, panel, options) {
     panel.client = new Client(Object.assign({ id: panel.id, parent: panel.pane, host: host }, clientoptions, options));
+    panel.client.on('update-menuitem', (menu, item) => {
+      if(panel.id == manager.active.id)
+        menubar.updateItem(menu, item);
+    });
     panel.client.on('find-closing', (e) => {
       if (panel.client.id !== manager.active.id)
         e.preventDefault = true;

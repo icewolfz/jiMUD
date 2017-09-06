@@ -11,6 +11,7 @@ import { Input } from './input';
 import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context, TriggerType } from './profile';
 import { MSP } from './msp';
 import { Display } from './display';
+import { ipcRenderer } from 'electron';
 const { version } = require('../../package.json');
 const path = require('path');
 const fs = require('fs');
@@ -757,6 +758,7 @@ export class Client extends EventEmitter {
         this.display.roundedRanges = this.options.display.roundedOverlays;
         this.UpdateFonts();
         this.display.scrollDisplay();
+        this.updateInterface();
         this.emit('options-loaded');
     }
 
@@ -960,6 +962,15 @@ export class Client extends EventEmitter {
     public connect() {
         this._autoError = false;
         this.emit('connecting');
+        if (this.options.buttons.connect) {
+            $('#connect', this.$parent).css('display', 'none');
+            $('#disconnect', this.$parent).css('display', '');
+        }
+        this.emit('update-menuitem', ['file', 'connect'], { enabled: false });
+        this.emit('update-menuitem', ['file', 'disconnect'], { enabled: true });
+        this.emit('update-menuitem', ['window', 'immortal'], { visible: false });
+        ipcRenderer.send('set-overlay', 1);
+
         this.MSP.reset();
         this.display.ClearMXP();
         this.display.ResetMXPLine();
@@ -1023,5 +1034,9 @@ export class Client extends EventEmitter {
 
     public toggle() {
         this.emit('toggle');
+    }
+
+    private updateInterface() {
+        //
     }
 }
