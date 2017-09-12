@@ -96,6 +96,7 @@ The x, y, z, zone are generated when a room is first added to the map based on t
     - Move to a known good room then remove the poorly mapped room or rooms and remap beginning from the good room so that the rooms will be generated with proper generated coordinates.
 - `Mapper not loading` Possible corrupted map or error with mapper. You can determine the issue by loading jiMUD with the `--debug` command line argument to force the mapper developer tools to be opened and display any errors in the console.
 - `Mapper not saving` check folder permissions and ensure the data folder exist
+- `Auto walk out of order directions` Auto walk can sometimes get its directions out of order if computer is slow processing, fix by increasing the [Delay between directions](preferences.md#mapper) time until the problem is limited or disappears.
 
 ## Trouble shooting
 
