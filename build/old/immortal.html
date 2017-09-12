@@ -139,6 +139,7 @@
                                 click: () => {
                                     var selected = localTable.rows({ selected: true }).data().pluck('path');
                                     clipboard.writeText(selected.join('\n'), 'selection');
+                                    clipboard.writeText(selected.join('\n'));
                                 }
                             },
                             { type: 'separator' },
@@ -279,6 +280,7 @@
                                 click: () => {
                                     var selected = remoteTable.rows({ selected: true }).data().pluck('path');
                                     clipboard.writeText(selected.join('\n'), 'selection');
+                                    clipboard.writeText(selected.join('\n'));
                                 }
                             },
                             { type: 'separator' },
@@ -2299,6 +2301,7 @@
                     click: () => {
                         var selected = localTable.rows({ selected: true }).data().pluck('path');
                         clipboard.writeText(selected.join('\n'), 'selection');
+                        clipboard.writeText(selected.join('\n'));
                     }
                 }));
                 c.append(new MenuItem({ type: 'separator' }));
@@ -2433,6 +2436,7 @@
                     click: () => {
                         var selected = remoteTable.rows({ selected: true }).data().pluck('path');
                         clipboard.writeText(selected.join('\n'), 'selection');
+                        clipboard.writeText(selected.join('\n'));
                     }
                 }));
                 c.append(new MenuItem({ type: 'separator' }));

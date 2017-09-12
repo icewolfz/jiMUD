@@ -81,8 +81,8 @@
   const fs = require('fs');
   const url = require('url');
 
-  window.readClipboard = () => { return clipboard.readText('selection') || ''; };
-  window.writeClipboard = (txt) => { clipboard.writeText(txt || '', 'selection'); };
+  window.readClipboard = () => { return clipboard.readText('selection') || clipboard.readText() || ''; };
+  window.writeClipboard = (txt) => { clipboard.writeText(txt || ''); clipboard.writeText(txt || '', 'selection'); };
 
   window.onerror = function (msg, url, line) {
     if (manager && manager.panels.length > 0) {
