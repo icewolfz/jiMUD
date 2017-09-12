@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.15
+
+- **Fixed:**
+  - Copy was not working on linux
+
 ## 0.4.14 2017-09-04
 
 - **Fixed:**

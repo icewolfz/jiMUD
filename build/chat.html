@@ -79,6 +79,7 @@
             display.on('selection-done', () => {
                 if (options.AutoCopySelectedToClipboard && display.hasSelection) {
                     clipboard.writeText(display.selection, 'selection');
+                    clipboard.writeText(display.selection);
                     display.clearSelection();
                 }
             });
@@ -122,14 +123,20 @@
             ['copy'].forEach(function (event) {
                 document.addEventListener(event, function (e) {
                     if (display.hasSelection)
+                    {
                         clipboard.writeText(display.selection, 'selection');
+                        clipboard.writeText(display.selection);
+                    }
                 });
             });
         });
 
         function doCopy() {
             if (display.hasSelection)
+            {
                 clipboard.writeText(display.selection, 'selection');
+                clipboard.writeText(display.selection);
+            }
         }
 
         function doFind() {
