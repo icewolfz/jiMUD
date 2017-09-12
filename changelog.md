@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Copy was not working on linux
+  - Fix command argument parsing
   - Mapper:
     - Zone/level not updating when active room changed
 
