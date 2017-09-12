@@ -57,6 +57,26 @@ web client we also support OoMUD and this for non ES6 arrow function formats.
 
 ## Scripting Examples
 
+### Basic alarm
+
+- Name: alarm
+- Style: script
+- Value:
+
+```javascript
+/*
+Styax to use: <alarm [message] [seconds]>
+*/
+//store message in local variable so it can be passed to timer
+var message = arguments[1];
+//convert to number and multiply by 1000 to convert to milliseconds
+var ms = 1000 * parseInt(arguments[2], 10);
+setTimeout( function() {
+  //echo message to screen
+  client.sendCommand("#echo " + message);
+}, ms);
+```
+
 ### Emulate #wait command from zMUD/cMUD
 
 ```javascript
