@@ -37,6 +37,7 @@ Escaping allows you to prevent special characters from being parsed and allow th
 - `repeatnum` - returns the current index during #nnn
 - `i` - same as repeatnum
 - `cr` - replace with carriage return
+- `esc` - escape character, useful for creating ansi color codes
 - `lf` - replace with line feed
 - `crlf` - replace with carriage return and linefeed
 - `expression` - evaluate the math expression and return the results when [allow evaluate is enabled](preferences.md#scripting)
