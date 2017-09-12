@@ -300,6 +300,9 @@
 
       mapper.on('active-room-changed', (room) => {
         $("#select-area").val(mapper.active.area);
+        $("#MapLevel").val(mapper.active.z);
+        $("#MapZone").val(mapper.active.zone);
+        ipcRenderer.send('setting-changed', { type: 'mapper', name: 'active', value: room });
       });
 
       mapper.on('current-room-changed', (room) => {

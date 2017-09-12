@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - Copy was not working on linux
+  - Mapper:
+    - Zone/level not updating when active room changed
 
 ## 0.4.14 2017-09-04
 
