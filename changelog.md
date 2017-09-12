@@ -13,6 +13,14 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
+## 0.4.15
+
+- **Fixed:**
+  - Copy was not working on linux
+  - Fix command argument parsing
+  - Mapper:
+    - Zone/level not updating when active room changed
+
 ## 0.4.14 2017-09-04
 
 - **Fixed:**
