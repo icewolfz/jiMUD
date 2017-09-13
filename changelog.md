@@ -2,6 +2,9 @@
 
 ## 0.4.15
 
+- **Changed:**
+  - Updated electron to 1.8.0
+  - Updated spell checker and sqlite
 - **Fixed:**
   - Copy was not working on linux
   - Fix command argument parsing
