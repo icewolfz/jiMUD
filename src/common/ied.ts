@@ -582,7 +582,7 @@ export class IED extends EventEmitter {
             return true;
         if (skipwin)
             return false;
-        if (IED.windows) {
+        if (fswin && IED.windows) {
             const a = fswin.getAttributesSync(p);
             if (!a) return false;
             return a.IS_HIDDEN;
