@@ -19,7 +19,8 @@
   - Copy was not working on linux
   - Fix command argument parsing
   - Mapper:
-    - Zone/level not updating when active room changed
+    - Zone/level not updating when active room 
+  - Verbatim was failing to append new line characters
 
 ## 0.4.14 2017-09-04
 

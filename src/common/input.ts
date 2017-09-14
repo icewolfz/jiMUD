@@ -1441,7 +1441,7 @@ export class Input extends EventEmitter {
                 case ParseState.verbatim:
                     if (c === '\n') {
                         state = ParseState.none;
-                        out += str;
+                        out += str + c;
                         str = '';
                         start = true;
                     }
