@@ -9,7 +9,7 @@
   - Copy was not working on linux
   - Fix command argument parsing
   - Mapper:
-    - Zone/level not updating when active room 
+    - Zone/level not updating when active room
   - Verbatim was failing to append new line characters
   - Profile manger: Fix display of html characters in tree view
   - Fixed a bug in parsing %# arguments
