@@ -12,6 +12,7 @@
     - Zone/level not updating when active room 
   - Verbatim was failing to append new line characters
   - Profile manger: Fix display of html characters in tree view
+  - Fixed a bug in parsing %# arguments
 
 ## 0.4.14 2017-09-04
 
