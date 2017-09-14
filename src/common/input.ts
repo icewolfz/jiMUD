@@ -1186,7 +1186,7 @@ export class Input extends EventEmitter {
                             state = ParseState.none;
                             break;
                         case '*':
-                            if (args) {
+                            if (this.stack.args) {
                                 if (eAlias && findAlias)
                                     alias += this.stack.args.slice(1).join(' ');
                                 else
@@ -1215,14 +1215,14 @@ export class Input extends EventEmitter {
                             arg += c;
                             break;
                         default:
-                            if (args && arg.length > 0) {
+                            if (this.stack.args && arg.length > 0) {
                                 tmp = parseInt(arg, 10);
                                 if (_neg && tmp < this.stack.args.length)
                                     tmp = this.stack.args.slice(arg).join(' ');
                                 else if (tmp < this.stack.args.length)
                                     tmp = this.stack.args[tmp];
                                 if (_neg)
-                                    this.stack.used = args.length;
+                                    this.stack.used = this.stack.args.length;
                                 else if (arg > this.stack.used)
                                     this.stack.used = arg;
                                 if (eAlias && findAlias)
@@ -1236,7 +1236,7 @@ export class Input extends EventEmitter {
                                     alias += '%';
                                 else
                                     str += '%';
-                                idx -= arg.length || 1;
+                                    idx = idx - arg.length - 1;
                             }
                             state = ParseState.none;
                             arg = '';
