@@ -1,7 +1,7 @@
 //cSpell:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt, exportmenu
 import { shell, remote, ipcRenderer } from 'electron';
 const { dialog, Menu, MenuItem, nativeImage } = remote;
-import { FilterArrayByKeyValue, parseTemplate, keyCharToCode, keyCodeToChar, clone, isFileSync, isDirSync, existsSync } from './library';
+import { FilterArrayByKeyValue, parseTemplate, keyCharToCode, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode } from './library';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
 import { Settings } from './settings';
 import { Menubar } from './menubar';
@@ -504,7 +504,7 @@ function UpdateItemNode(item, updateNode?, old?) {
     //clone node
     let newNode = cloneNode(updateNode);
     //only text or check state effect node
-    newNode.text = GetDisplay(item);
+    newNode.text = htmlEncode(GetDisplay(item));
     newNode.state.checked = item.enabled;
     newNode.dataAttr.name = item.name;
     newNode.dataAttr.priority = item.priority;
@@ -816,7 +816,7 @@ function newItemNode(item, idx?: number, type?: string, profile?, p?: string) {
     if (!p)
         p = '' + idx;
     const node: any = {
-        text: GetDisplay(item),
+        text: htmlEncode(GetDisplay(item)),
         id: 'Profile' + profileID(profile) + key + p,
         dataAttr: {
             type: type,
@@ -3603,7 +3603,7 @@ function insertItem(type: string, key: string, item, idx: number, profile?: Prof
         //clone it, will remove invalid node data
         newNode = cloneNode(node);
         //update data to use new index
-        newNode.text = GetDisplay(profile[key][i]);
+        newNode.text = htmlEncode(GetDisplay(profile[key][i]));
         newNode.dataAttr.index = i + 1;
         newNode.id = 'Profile' + profileID(profile.name) + key + newNode.dataAttr.index;
         //store to add at one time
