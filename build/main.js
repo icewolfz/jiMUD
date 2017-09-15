@@ -622,6 +622,7 @@ ipcMain.on('GMCP-received', (event, data, client) => {
 
 ipcMain.on('set-overlay', (event, args) => {
   overlay = args;
+  if(!win) return;
   switch (args) {
     case 1:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
