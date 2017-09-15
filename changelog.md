@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.16
+## 0.4.16 2017-09-15
 
 - **Fixed:**
   - Downgrade to electron 1.7.7 to fix a crashing bug with 1.8.0
