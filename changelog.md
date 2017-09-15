@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.16
+
+- **Fixed:**
+ - Downgrade to electron 1.7.7
+
 ## 0.4.15 2017-09-14
 
 - **Changed:**
