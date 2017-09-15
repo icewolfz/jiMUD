@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.15
+## 0.4.15 2017-09-14
 
 - **Changed:**
   - Updated electron to 1.8.0
@@ -8,8 +8,7 @@
 - **Fixed:**
   - Copy was not working on linux
   - Fix command argument parsing
-  - Mapper:
-    - Zone/level not updating when active room
+  - Mapper: Zone/level not updating when active room
   - Verbatim was failing to append new line characters
   - Profile manger: Fix display of html characters in tree view
   - Fixed a bug in parsing %# arguments
