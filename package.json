@@ -78,7 +78,7 @@
     "babili": "^0.1.4",
     "devtron": "^1.4.0",
     "electron": "^1.8.0",
-    "electron-builder": "^19.27.7",
+    "electron-builder": "^19.26.0",
     "electron-installer-dmg": "^0.2.1",
     "electron-local-crash-reporter": "^1.0.2",
     "electron-packager": "^8.7.2",
