@@ -12,6 +12,10 @@
     - Profile manager is now dynamic, window settings reset
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
+## 0.4.16
+
+- **Fixed:**
+ - Downgrade to electron 1.7.7
 
 ## 0.4.15 2017-09-14
 
