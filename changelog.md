@@ -4,6 +4,10 @@
 
 - **New:**
   - Added preference to disable code editor in profile manager
+- **Fixed:**
+  - Mapper:
+    - Area navigation not updated when new area created
+    - Room property editor position not updating when toolbar wraps
 
 ## 0.4.16 2017-09-15
 
