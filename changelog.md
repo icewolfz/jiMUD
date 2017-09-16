@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.17
+## 0.4.17 2017-09-16
 
 - **New:**
   - Added preference to disable code editor in profile manager
