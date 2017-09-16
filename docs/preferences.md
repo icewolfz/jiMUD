@@ -153,6 +153,7 @@ Controls what is captured into the chat window
 - `Backup save` what to save when using remote backup systems
 - `Backup load` what to load when using remote backup systems
 - `Hide when minimized` will hide the main window and any window set as a child
+- `Enable profile manager code editor` disable or enable the code editor for the profile manager
 
 ## Advanced > Tray
 
