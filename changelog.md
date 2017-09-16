@@ -12,6 +12,12 @@
     - Profile manager is now dynamic, window settings reset
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
+
+## 0.4.17
+
+- **New:**
+  - Added preference to disable code editor in profile manager
+
 ## 0.4.16
 
 - **Fixed:**

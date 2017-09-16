@@ -26,6 +26,7 @@ let _enabled = [];
 let _never = true;
 let _close;
 let _loading = 0;
+let _ide = true;
 
 enum UpdateState {
     NoChange,
@@ -2097,6 +2098,7 @@ function loadOptions() {
     const options = Settings.load(remote.getGlobal('settingsFile'));
     _never = options.profiles.askoncancel;
     _enabled = options.profiles.enabled;
+    _ide = options.profiles.codeEditor;
 
     let theme = parseTemplate(options.theme) + '.css';
     if (!isFileSync(theme))
@@ -2334,12 +2336,6 @@ export function init() {
 
     loadActions(parseTemplate(path.join('{assets}', 'actions')), '');
 
-    initEditor('trigger-value');
-    initEditor('macro-value');
-    initEditor('alias-value');
-    initEditor('button-value');
-    initEditor('context-value');
-
     window.onbeforeunload = () => {
         if (close || _never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange))
             return;
@@ -2416,6 +2412,11 @@ export function init() {
         exportmenu.popup(remote.getCurrentWindow(), { x: x, y: y });
     });
     loadOptions();
+    initEditor('trigger-value');
+    initEditor('macro-value');
+    initEditor('alias-value');
+    initEditor('button-value');
+    initEditor('context-value');
     buildTreeview(getProfileData());
     $('#profile-tree').contextmenu((event) => {
         event.preventDefault();

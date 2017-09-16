@@ -37,6 +37,7 @@ export class Profiles {
     public macrosAdvanced: boolean = false;
     public contextsAdvanced: boolean = false;
     public enabled: string[] = [];
+    public codeEditor: boolean = true;
 }
 
 export class Chat {

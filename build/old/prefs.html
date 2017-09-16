@@ -302,6 +302,7 @@
       $('#display-split').prop('checked', _settings.display.split);
       $('#display-splitLive').prop('checked', _settings.display.splitLive);
       $('#display-roundedOverlays').prop('checked', _settings.display.roundedOverlays);
+      $('#profiles-codeEditor').prop('checked', _settings.profiles.codeEditor);
 
       //$('#font').selectpicker('val', _settings.font);
       $('#font').val(_settings.font);
@@ -1795,6 +1796,12 @@
             </label>
           </div>
 
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="profiles-codeEditor" /> Enable profile manager code editor
+            </label>
+            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Must close and reopen profile manger</span>
+          </div>
 
         </div>
         <div role="tabpanel" class="pref-pane" id="tray">
