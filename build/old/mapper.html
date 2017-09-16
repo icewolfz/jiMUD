@@ -250,7 +250,14 @@
       });
 
       mapper.on('active-room-changed', (room) => {
-        $("#select-area").val(mapper.active.area);
+        if (!($('#select-area option[value=' + room.area + ']').length > 0)) {
+          $("#select-area").append($('<option></option>').val(room.area).html(room.area));
+          $("#reArea").append($('<option></option>').val(room.area).html(room.area));
+        }
+        $("#select-area").val(room.area);
+        $("#MapLevel").val(room.z);
+        $("#MapZone").val(room.zone);
+        ipcRenderer.send('setting-changed', { type: 'mapper', name: 'active', value: room });
       });
 
       mapper.on('current-room-changed', (room) => {
@@ -440,6 +447,7 @@
 
       $(window).on('resize', () => {
         $("#mapper-body").css('top', $('#mapper-toolbar').outerHeight() + 'px');
+        $("#mapper-room").css('top', $('#mapper-toolbar').outerHeight() + 'px');
         if (roomEditor)
           mapper._canvas.width = $(window).width() - 60 - $('#mapper-room').outerWidth();
         else
@@ -641,6 +649,7 @@
         $("#mapper-room").css("display", "block");
         $("#mapper-body").css('right', $('#mapper-room').outerWidth() + "px");
         $('#btn-room').addClass('active');
+        $("#mapper-room").css('top', $('#mapper-toolbar').outerHeight() + 'px');
       }
       else {
         $("#mapper-room").css("display", '');
@@ -988,7 +997,7 @@
     }
 
     function closing() {
-       save();
+      save();
     }
   </script>
 </head>

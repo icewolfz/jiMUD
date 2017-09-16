@@ -17,11 +17,16 @@
 
 - **New:**
   - Added preference to disable code editor in profile manager
+- **Fixed:**
+  - Mapper:
+    - Area navigation not updated when new area created
+    - Room property editor position not updating when toolbar wraps
 
 ## 0.4.16
 
 - **Fixed:**
- - Downgrade to electron 1.7.7
+  - Downgrade to electron 1.7.7 to fix a crashing bug with 1.8.0
+  - An issue with auto connect not working
 
 ## 0.4.15 2017-09-14
 
