@@ -606,13 +606,13 @@
 
           if (parent && parent.hasClass('URLLink')) {
             c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
-            c.append(new MenuItem({ label: 'Copy url', click: () => { clipboard.writeText(parent.attr('title'));clipboard.writeText(parent.attr('title'), 'selection'); } }));
-            c.append(new MenuItem({ label: 'Copy url text', click: () => {  clipboard.writeText(parent.text());  clipboard.writeText(parent.text(), 'selection'); } }));
+            c.append(new MenuItem({ label: 'Copy url', click: () => { clipboard.writeText(parent.attr('title')); clipboard.writeText(parent.attr('title'), 'selection'); } }));
+            c.append(new MenuItem({ label: 'Copy url text', click: () => { clipboard.writeText(parent.text()); clipboard.writeText(parent.text(), 'selection'); } }));
             c.append(new MenuItem({ type: 'separator' }));
           }
           else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
             c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
-            c.append(new MenuItem({ label: 'Copy url', click: () => { clipboard.writeText(parent.data('href'));clipboard.writeText(parent.data('href'), 'selection'); } }));
+            c.append(new MenuItem({ label: 'Copy url', click: () => { clipboard.writeText(parent.data('href')); clipboard.writeText(parent.data('href'), 'selection'); } }));
             c.append(new MenuItem({ label: 'Copy url text', click: () => { clipboard.writeText(parent.text()); clipboard.writeText(parent.text(), 'selection'); } }));
             c.append(new MenuItem({ type: 'separator' }));
           }
@@ -1513,7 +1513,10 @@
           '^([a-zA-Z_-]*) is in combat and may not have heard you.$',
           '^([a-zA-Z_-]*) is in edit and may not be in a position to respond.$',
           '^([a-zA-Z_-]*) is arrested and can not respond.$',
-          '^\\*You emote to ([a-zA-Z_-]*):(.*)$');
+          '^\\*You emote to ([a-zA-Z_-]*):(.*)$',
+          '^([a-zA-Z_-]*) shouts in ([a-zA-Z_-]*):(.*)$',
+          '^You shout in ([a-zA-Z_-]*):(.*)$'
+        );
         if (client.options.chat.captureReviews)
           _captureReviews.push('^-=-=- Tell Review -=-=-$');
       }
