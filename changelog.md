@@ -4,6 +4,9 @@
 
 - **New:**
   - Add shout to tell captures for chat window
+- **Fixed:**
+  - Mapper:
+    - Area navigation drop down fails when area name contained a space
 
 ## 0.4.17 2017-09-16
 
