@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.18
+
+- **New:**
+  - Add shout to tell captures for chat window
+
 ## 0.4.17 2017-09-16
 
 - **New:**

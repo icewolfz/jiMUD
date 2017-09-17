@@ -96,7 +96,7 @@ Settings to control how to handle telnet options and emulation
 
 Controls what is captured into the chat window
 
-- `Capture tells` Causes all tells, emoteto and any related lines.
+- `Capture tells` Causes all tells, emoteto, shouts and any related lines.
 - `Capture talk` Capture all talking, which are says, yells, whispers, and speaking and any related lines.
 - `Capture reviews` Determines if line, say, or tell reviews are captured. The capturing is determined based on the settings enabled. Tell reviews are only captured if capture tells is enabled, say review with only capture say, all line reviews or selective reviews when enabled.
 - `Capture lines` Enable capture of chat lines

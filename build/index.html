@@ -1493,7 +1493,10 @@
           '^([a-zA-Z_-]*) is in combat and may not have heard you.$',
           '^([a-zA-Z_-]*) is in edit and may not be in a position to respond.$',
           '^([a-zA-Z_-]*) is arrested and can not respond.$',
-          '^\\*You emote to ([a-zA-Z_-]*):(.*)$');
+          '^\\*You emote to ([a-zA-Z_-]*):(.*)$',
+          '^([a-zA-Z_-]*) shouts in ([a-zA-Z_-]*):(.*)$',
+          '^You shout in ([a-zA-Z_-]*):(.*)$'
+          );
         if (client.options.chat.captureReviews)
           _captureReviews.push('^-=-=- Tell Review -=-=-$');
       }
