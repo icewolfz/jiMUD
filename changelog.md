@@ -13,13 +13,12 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
-## 0.4.18
+## 0.4.18 2017-09-18
 
 - **New:**
   - Chat capture: Add shout to tell captures for chat window
 - **Fixed:**
-  - Mapper:
-    - Area navigation drop down fails when area name contained a space
+  - Mapper: Area navigation drop down fails when area name contained a space
   - Chat capture: ignore fragmented lines due to split packets or mixed parsing
 
 ## 0.4.17
