@@ -3,10 +3,11 @@
 ## 0.4.18
 
 - **New:**
-  - Add shout to tell captures for chat window
+  - Chat capture: Add shout to tell captures for chat window
 - **Fixed:**
   - Mapper:
     - Area navigation drop down fails when area name contained a space
+  - Chat capture: ignore fragmented lines due to split packets or mixed parsing
 
 ## 0.4.17 2017-09-16
 

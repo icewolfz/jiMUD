@@ -695,7 +695,7 @@
             }
           }
         }
-        if (_captures.length === 0) return;
+        if (_captures.length === 0 || data.fragment) return;
         //custom capture to ignore who list
         res = /^(-*)\s*\[ .* matching users \]\s*(-*)$/.exec(data.line);
         if (res && res.length > 0) {
