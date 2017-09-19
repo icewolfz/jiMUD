@@ -69,7 +69,7 @@ export class Client extends EventEmitter {
     public options: Settings;
 
     public telnet: Telnet;
-    public profiles: ProfileCollection = new ProfileCollection();
+    public profiles: ProfileCollection;
     public connectTime: number = 0;
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
@@ -252,6 +252,8 @@ export class Client extends EventEmitter {
             this.profiles.add(Profile.Default);
             return;
         }
+        //clear out all current profiles
+        this.profiles = new ProfileCollection();
         //backward compat, if no enabled one just load all so enabled profile setting can be scanned
         //use direct setting instead of wrapper as wrapper assumes profiles are loaded if empty
         if (this.options.profiles.enabled.length === 0)

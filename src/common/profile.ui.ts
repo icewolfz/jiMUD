@@ -197,7 +197,7 @@ function AddNewProfile(d?: Boolean) {
         text: txt,
         id: 'Profile' + profileID(n),
         state: {
-            checked: _enabled.indexOf(n) !== -1
+            checked: true
         },
         dataAttr: {
             type: 'profile',
@@ -264,6 +264,8 @@ function AddNewProfile(d?: Boolean) {
     $('#profile-tree').treeview('addNode', [node, false, false]);
     pushUndo({ action: 'add', type: 'profile', item: [p.clone()] });
     _enabled.push(p.name.toLowerCase());
+    n = p.name;
+    _remove = _remove.filter((a) =>  { return a !== n; });
 }
 
 export function RunTester() {
@@ -3056,7 +3058,7 @@ function trashProfiles(p) {
     if (_remove.length > 0) {
         const rl = _remove.length;
         for (let r = 0; r < rl; r++) {
-            shell.moveItemToTrash(path.join(p, _remove[r] + '.json'));
+            shell.moveItemToTrash(path.join(p, _remove[r].toLowerCase() + '.json'));
         }
     }
 }
@@ -3081,6 +3083,7 @@ export function saveProfiles() {
                 const options = Settings.load(remote.getGlobal('settingsFile'));
                 options.profiles.enabled = _enabled;
                 options.save(remote.getGlobal('settingsFile'));
+                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
                 ipcRenderer.send('reload-profiles');
                 setTimeout(clearChanges, 500);
             }
@@ -3095,7 +3098,7 @@ export function saveProfiles() {
         const options = Settings.load(remote.getGlobal('settingsFile'));
         options.profiles.enabled = _enabled;
         options.save(remote.getGlobal('settingsFile'));
-
+        ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
         ipcRenderer.send('reload-profiles');
         setTimeout(clearChanges, 500);
     }
