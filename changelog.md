@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.19
+
+- **Fixed:**
+  - Profile manager:
+    - Where not correctly reloading deleted ones from memory.
+    - New profiles enabled checks where set to disabled, yet where 
+    - Removed profiled, then re-added new with same name didnt save correctly
+    - Linux: Was not correctly removing profile data files due to casing issues
+
 ## 0.4.18 2017-09-18
 
 - **New:**
