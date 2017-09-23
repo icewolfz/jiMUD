@@ -1506,36 +1506,36 @@
       _captures = [];
       _captureReviews = [];
       if (client.options.chat.captureTells) {
-        _captures.push('^([a-zA-Z_-]*) tells you:(.*)$',
-          '^You tell ([a-zA-Z_-]*):(.*)$',
-          '^\\*([a-zA-Z_-]*)(\\s?)(.*?)$',
-          '^([a-zA-Z_-]*) is idle, and may not have been paying attention.$',
-          '^([a-zA-Z_-]*) is in combat and may not have heard you.$',
-          '^([a-zA-Z_-]*) is in edit and may not be in a position to respond.$',
-          '^([a-zA-Z_-]*) is arrested and can not respond.$',
-          '^\\*You emote to ([a-zA-Z_-]*):(.*)$',
-          '^([a-zA-Z_-]*) shouts in ([a-zA-Z_-]*):(.*)$',
-          '^You shout in ([a-zA-Z_-]*):(.*)$'
+        _captures.push('^([a-zA-Z\'\\s_-]*) tells you:(.*)$',
+          '^You tell ([a-zA-Z\'\\s_-]*):(.*)$',
+          '^\\*([a-zA-Z\'\\s_-]*)(\\s?)(.*?)$',
+          '^([a-zA-Z\'\\s_-]*) is idle, and may not have been paying attention.$',
+          '^([a-zA-Z\'\\s_-]*) is in combat and may not have heard you.$',
+          '^([a-zA-Z\'\\s_-]*) is in edit and may not be in a position to respond.$',
+          '^([a-zA-Z\'\\s_-]*) is arrested and can not respond.$',
+          '^\\*You emote to ([a-zA-Z\'\\s_-]*):(.*)$',
+          '^([a-zA-Z\'\\s_-]*) shouts in ([a-zA-Z\'\\s_-]*):(.*)$',
+          '^You shout in ([a-zA-Z\'\\s_-]*):(.*)$'
         );
         if (client.options.chat.captureReviews)
           _captureReviews.push('^-=-=- Tell Review -=-=-$');
       }
       if (client.options.chat.captureTalk) {
-        _captures.push('^([a-zA-Z_-]*) says:(.*)$',
+        _captures.push('^([a-zA-Z\'\\s_-]*) says:(.*)$',
           '^You say:(.*)$',
-          '^([a-zA-Z_-]*) whispers to you:(.*)$',
-          'You whisper to ([a-zA-Z_-]*):(.*)',
-          '^([a-zA-Z_-]*) yells:(.*)$',
+          '^([a-zA-Z\'\\s_-]*) whispers to you:(.*)$',
+          'You whisper to ([a-zA-Z\'\\s_-]*):(.*)',
+          '^([a-zA-Z\'\\s_-]*) yells:(.*)$',
           '^You yell:(.*)$',
           'You say in (.*):(.*)',
-          '([a-zA-Z_-]*) says something in (.*).',
-          '([a-zA-Z_-]*) says in (.*):(.*)');
+          '([a-zA-Z\'\\s_-]*) says something in (.*).',
+          '([a-zA-Z\'\\s_-]*) says in (.*):(.*)');
         if (client.options.chat.captureReviews)
           _captureReviews.push('^-=-=- Say Review -=-=-$');
       }
       if (client.options.chat.captureLines) {
         if (client.options.chat.captureAllLines) {
-          _captures.push('^\\[([a-zA-Z_-]*)\\](.*)$');
+          _captures.push('^\\[([a-zA-Z\'\\s_-]*)\\](.*)$');
           if (client.options.chat.captureReviews)
             _captureReviews.push('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$');
         }
