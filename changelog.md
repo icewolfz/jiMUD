@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.19
+## 0.4.19 2017-09-25
 
 - **Fixed:**
   - Profile manager:
