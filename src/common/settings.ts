@@ -54,6 +54,9 @@ export class Chat {
     public lines: string[] = [];
     public log: boolean = false;
     public gag: boolean = true;
+    public zoom: number = 1.0;
+    public font: string = '\'Courier New\', Courier, monospace';
+    public fontSize: string = '1em';
 }
 
 export class Status {
