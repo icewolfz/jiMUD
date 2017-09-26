@@ -13,7 +13,7 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
-## 0.4.20
+## 0.4.20 2017-09-26
 
 - **New:**
   - Chat capture:
