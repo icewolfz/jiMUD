@@ -202,15 +202,21 @@
           ops = ops.join('');
           $('#font-system').append(ops);
           $('#cmdfont-system').append(ops);
+          $('#chat-font-system').append(ops);
 
           $('#font').selectpicker('refresh');
           $('#cmdfont').selectpicker('refresh');
+          $('#chat-font').selectpicker('refresh');
           $('#font').val(_settings.font);
           $('#font').selectpicker('render');
           $('#font').change();
-          $('#cmdfont').val(_settings.font);
+          $('#cmdfont').val(_settings.cmdfont);
           $('#cmdfont').selectpicker('render');
           $('#cmdfont').change();
+
+          $('#chat-font').val(_settings.chat.font);
+          $('#chat-font').selectpicker('render');
+          $('#chat-font').change();          
         });
       }
       $('#font').change(() => {
@@ -233,11 +239,21 @@
         $("#cmd-font-sample").css("font-size", $("#cmdfontSize").val());
       });
 
+      $('#chat-font').change(() => {
+        $("#chat-font-sample").css("font-family", $("#chat-font").val() + ", monospace");
+        $("#chat-font-sample").css("font-size", $("#chat-fontSize").val());
+      });
+
+      $('#chat-fontSize').change(() => {
+        $("#chat-font-sample").css("font-family", $("#chat-font").val() + ", monospace");
+        $("#chat-font-sample").css("font-size", $("#chat-fontSize").val());
+      });
+
       _settings = Settings.load(remote.getGlobal('settingsFile'));
       loadThemes();
       loadSettings();
 
-      $("#colorScheme").parent().find('.dropdown-menu.inner li').click(function() {
+      $("#colorScheme").parent().find('.dropdown-menu.inner li').click(function () {
         //$("#colorScheme").change();
         updateScheme($(this).index());
       });
@@ -322,6 +338,12 @@
       $('#cmdfont').selectpicker('render');
       $('#cmdfontSize').val(_settings.cmdfontSize);
       $('#cmdfont').change();
+      //$('#font').selectpicker('val', _settings.font);
+      $('#chat-font').val(_settings.chat.font);
+      $('#chat-font').selectpicker('render');
+      $('#chat-fontSize').val(_settings.chat.fontSize);
+      $('#chat-font').change();
+
       $('#commandEcho').prop('checked', _settings.commandEcho);
       $('#AutoCopySelectedToClipboard').prop('checked', _settings.AutoCopySelectedToClipboard);
       $('#flashing').prop('checked', _settings.flashing);
@@ -642,9 +664,19 @@
       });
 
       $('.selectpicker').change(function () {
-        if ($(this).attr('id') === 'colorScheme')
-          return;
-        _settings[$(this).attr('id')] = $(this).val();
+        switch ($(this).attr('id')) {
+          case 'colorScheme':
+            break;
+          case 'chat-font':
+            _settings.chat.font = $(this).val();
+            break;
+          case 'chat-fontSize':
+            _settings.chat.fontSize = $(this).val();
+            break;
+          default:
+            _settings[$(this).attr('id')] = $(this).val();
+            break;
+        }
       });
     }
 
@@ -1645,19 +1677,55 @@
 
         </div>
         <div role="tabpanel" class="pref-pane" id="chat-window">
-          <div class="col-sm-12 form-group" style="margin:0;padding:0">
-            <div class="col-sm-6 form-group">
-              <label class="control-label">
-                <input type="checkbox" id="chat-alwaysOnTopClient" /> Always on top of the main window
-                <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label class="control-label">Font
+                <br>
+                <select id="chat-font" class="form-control selectpicker" data-container="body" data-width="250px">
+                  <optgroup label="Basic">
+                    <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
+                    <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
+                    <option value="Georgia, serif">Georgia, serif</option>
+                    <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
+                    <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
+                    <option value="Arial, Helvetica, sans-serif">Arial, Helvetica, sans-serif</option>
+                    <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
+                    <option value="'Comic Sans MS', cursive, sans-serif">'Comic Sans MS', cursive, sans-serif</option>
+                    <option value="Impact, Charcoal, sans-serif">Impact, Charcoal, sans-serif</option>
+                    <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
+                    <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
+                    <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
+                    <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
+                  </optgroup>
+                  <optgroup id="chat-font-system" label="System">
+                  </optgroup>
+                </select>
               </label>
             </div>
-            <div class="col-sm-6 form-group">
-              <label class="control-label">
-                <input type="checkbox" id="chat-alwaysOnTop" /> Always on top of all windows
+            <div class="form-group">
+              <label class="control-label">Font size
+                <input type="text" class="input-sm form-control" id="chat-fontSize" style="width: 252px" />
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="control-label">Font sample
+                <div id="chat-font-sample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
               </label>
             </div>
           </div>
+
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="chat-alwaysOnTopClient" /> Always on top of the main window
+              <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="chat-alwaysOnTop" /> Always on top of all windows
+            </label>
+          </div>
+
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="chat-persistent" /> Persistent
