@@ -781,13 +781,13 @@ export class Mapper extends EventEmitter {
                     if (data.area === this.current.area) {
                         room.zone += this.current.zone;
                         this.updateCurrent(room, data);
-                        this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
+                        //this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
                         this._changed = true;
                     }
                     else
                         this.getFreeZone(room.x, room.y, room.z, this.current.zone, (zone) => {
                             this.updateCurrent(room, data);
-                            this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
+                            //this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
                             this._changed = true;
                         });
                 }

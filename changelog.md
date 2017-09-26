@@ -3,15 +3,17 @@
 ## 0.4.20
 
 - **Fixed:**
-  - Mapper: Fixed an issue when creating new zones.
+  - Mapper:
+    - Fixed an issue when creating new zones.
+    - Fixed an issue when adding new rooms it was attempting to add them twice
 
 ## 0.4.19 2017-09-25
 
 - **Fixed:**
   - Profile manager:
     - Where not correctly reloading deleted ones from memory.
-    - New profiles enabled checks where set to disabled, yet where 
-    - Removed profiled, then re-added new with same name didnt save correctly
+    - New profiles enabled checks where set to disabled, yet where
+    - Removed profiled, then re-added new with same name didn't save correctly
     - Linux: Was not correctly removing profile data files due to casing issues
   - Chat capture: capture name that include a ' and spaces
 
