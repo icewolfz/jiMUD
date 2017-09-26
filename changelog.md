@@ -6,7 +6,6 @@
   - Chat capture:
     - Add zoom in, out and reset buttons
     - Add font and font size settings
-
 - **Fixed:**
   - Mapper:
     - Fixed an issue when creating new zones.
