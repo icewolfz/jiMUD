@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.20
+
+- **Fixed:**
+  - Mapper: Fixed an issue when creating new zones.
+
 ## 0.4.19 2017-09-25
 
 - **Fixed:**

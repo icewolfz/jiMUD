@@ -713,7 +713,6 @@ export class Mapper extends EventEmitter {
 
     public processData(data) {
         try {
-            //this._db.serialize(() => {
             this._db.all('Select * FROM Rooms where ID = \'' + data.num + '\'', (err, rows) => {
                 let room;
                 if (!rows || rows.length === 0) {
@@ -779,15 +778,21 @@ export class Mapper extends EventEmitter {
                         room.y += this.current.y;
                         room.z += this.current.z;
                     }
-                    if (data.area === this.current.area)
+                    if (data.area === this.current.area) {
                         room.zone += this.current.zone;
+                        this.updateCurrent(room, data);
+                        this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
+                        this._changed = true;
+                    }
                     else
-                        room.zone += this.getFreeZone(room.x, room.y, room.z, this.current.zone);
-                    this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
-                    this._changed = true;
+                        this.getFreeZone(room.x, room.y, room.z, this.current.zone, (zone) => {
+                            this.updateCurrent(room, data);
+                            this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
+                            this._changed = true;
+                        });
                 }
                 else {
-                    room = {
+                    this.updateCurrent({
                         area: rows[0].Area,
                         details: rows[0].Details,
                         exits: {},
@@ -798,87 +803,92 @@ export class Mapper extends EventEmitter {
                         y: rows[0].Y,
                         z: rows[0].Z,
                         zone: rows[0].Zone
-                    };
+                    }, data);
                 }
-                room.ID = data.num;
-                room.area = data.area;
-                room.name = data.name;
-                room.env = data.environment;
-                room.indoors = data.indoors;
-                let exit;
-                for (exit in data.exits)
-                    room.exits[exit] = data.exits[exit];
-                //start with none
-                room.details = RoomDetails.None;
-                for (let x = 0; x < data.details.length; x++) {
-                    switch (data.details[x]) {
-                        case 'dock':
-                            room.details |= RoomDetails.Dock;
-                            break;
-                        case 'pier':
-                            room.details |= RoomDetails.Pier;
-                            break;
-                        case 'bank':
-                            room.details |= RoomDetails.Bank;
-                            break;
-                        case 'shop':
-                            room.details |= RoomDetails.Shop;
-                            break;
-                        case 'hospital':
-                            room.details |= RoomDetails.Hospital;
-                            break;
-                        case 'bar':
-                            room.details |= RoomDetails.Bar;
-                            break;
-                        case 'restaurant':
-                            room.details |= RoomDetails.Restaurant;
-                            break;
-                        case 'watersource':
-                            room.details |= RoomDetails.WaterSource;
-                            break;
-                        case 'trainer':
-                        case 'training':
-                        case 'advance':
-                            room.details |= RoomDetails.Trainer;
-                            break;
-                        case 'stable':
-                            room.details |= RoomDetails.Stable;
-                            break;
-                    }
-                }
-                room = this.sanitizeRoom(room);
-                this.addOrUpdateRoom(room);
-                this.current.ID = room.ID;
-                this.current.area = room.area;
-                this.current.x = room.x;
-                this.current.y = room.y;
-                this.current.z = room.z;
-                this.emit('current-room-changed', this.current);
-                this.current.zone = room.zone;
-                if (this.selected && this.selected.ID === room.ID)
-                    this.emit('room-selected', clone(room));
-                if (this.follow)
-                    this.focusCurrentRoom();
-                else
-                    this.setActive(clone(this.current));
-                this.refresh();
             });
-            //});
         }
         catch (e) {
             this.emit('error', e);
         }
     }
 
-    public getFreeZone(x, y, z, zone) {
+    private updateCurrent(room, data) {
+        room.ID = data.num;
+        room.area = data.area;
+        room.name = data.name;
+        room.env = data.environment;
+        room.indoors = data.indoors;
+        let exit;
+        for (exit in data.exits)
+            room.exits[exit] = data.exits[exit];
+        //start with none
+        room.details = RoomDetails.None;
+        for (let x = 0; x < data.details.length; x++) {
+            switch (data.details[x]) {
+                case 'dock':
+                    room.details |= RoomDetails.Dock;
+                    break;
+                case 'pier':
+                    room.details |= RoomDetails.Pier;
+                    break;
+                case 'bank':
+                    room.details |= RoomDetails.Bank;
+                    break;
+                case 'shop':
+                    room.details |= RoomDetails.Shop;
+                    break;
+                case 'hospital':
+                    room.details |= RoomDetails.Hospital;
+                    break;
+                case 'bar':
+                    room.details |= RoomDetails.Bar;
+                    break;
+                case 'restaurant':
+                    room.details |= RoomDetails.Restaurant;
+                    break;
+                case 'watersource':
+                    room.details |= RoomDetails.WaterSource;
+                    break;
+                case 'trainer':
+                case 'training':
+                case 'advance':
+                    room.details |= RoomDetails.Trainer;
+                    break;
+                case 'stable':
+                    room.details |= RoomDetails.Stable;
+                    break;
+            }
+        }
+        room = this.sanitizeRoom(room);
+        this.addOrUpdateRoom(room);
+        this.current.ID = room.ID;
+        this.current.area = room.area;
+        this.current.x = room.x;
+        this.current.y = room.y;
+        this.current.z = room.z;
+        this.emit('current-room-changed', this.current);
+        this.current.zone = room.zone;
+        if (this.selected && this.selected.ID === room.ID)
+            this.emit('room-selected', clone(room));
+        if (this.follow)
+            this.focusCurrentRoom();
+        else
+            this.setActive(clone(this.current));
+        this.refresh();
+    }
+
+    public getFreeZone(x, y, z, zone, callback) {
         if (!zone) zone = 0;
         this._db.serialize(() => {
-            this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
+            //this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
+            this._db.get('SELECT DISTINCT Zone FROM Rooms ORDER BY Zone DESC LIMIT 1', (err, row) => {
                 if (!row) return 0;
-                return row.Zone + 1;
+                if (callback)
+                    callback(row.Zone + 1);
             });
         });
-        return zone;
+        if (callback)
+            callback(zone);
     }
 
     public updateRoom(room) {
