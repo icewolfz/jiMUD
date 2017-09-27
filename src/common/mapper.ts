@@ -786,6 +786,7 @@ export class Mapper extends EventEmitter {
                     }
                     else
                         this.getFreeZone(room.x, room.y, room.z, this.current.zone, (zone) => {
+                            room.zone = zone;
                             this.updateCurrent(room, data);
                             //this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
                             this._changed = true;
@@ -882,13 +883,14 @@ export class Mapper extends EventEmitter {
         this._db.serialize(() => {
             //this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
             this._db.get('SELECT DISTINCT Zone FROM Rooms ORDER BY Zone DESC LIMIT 1', (err, row) => {
-                if (!row) return 0;
-                if (callback)
+                if (!row) {
+                    if (callback)
+                        callback(zone);
+                }
+                else if (callback)
                     callback(row.Zone + 1);
             });
         });
-        if (callback)
-            callback(zone);
     }
 
     public updateRoom(room) {
