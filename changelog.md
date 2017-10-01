@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.22
+
+- **Fixed:**
+  - Chat capture: Capture all lines no matter what characters they may contain when capture all lines is enabled
+
 ## 0.4.21 2017-09-26
 
 - **Fixed:**
