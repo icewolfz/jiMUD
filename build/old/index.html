@@ -1535,7 +1535,7 @@
       }
       if (client.options.chat.captureLines) {
         if (client.options.chat.captureAllLines) {
-          _captures.push('^\\[([a-zA-Z\'\\s_-]*)\\](.*)$');
+          _captures.push('^\\[(.*)\\](.*)$');
           if (client.options.chat.captureReviews)
             _captureReviews.push('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$');
         }

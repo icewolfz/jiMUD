@@ -13,6 +13,16 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
+## 0.4.22
+
+- **Fixed:**
+  - Chat capture: Capture all lines no matter what characters they may contain when capture all lines is enabled
+
+## 0.4.21 2017-09-26
+
+- **Fixed:**
+  - Mapper: Fix mapper new zone correctly this time
+  
 ## 0.4.20 2017-09-26
 
 - **New:**
