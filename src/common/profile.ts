@@ -120,6 +120,8 @@ export class Macro extends Item {
     public send: boolean = true;
     public modifiers: MacroModifiers = MacroModifiers.None;
     public chain: boolean = false;
+    public gamepad: number = -1;
+    public gamepadAxes: number = 0;
 
     constructor(data?) {
         super();

@@ -16,6 +16,10 @@ interface String {
 	splitQuote(sep: string, type?, escape?): string[];
 }
 
+interface Event {
+	gamepad: any;
+}
+
 declare let $selected: string;
 declare let $selectedurl: string;
 declare let $selectedline: string;
