@@ -4,6 +4,7 @@
 
 - **New:**
   - Experimental gamepad support
+  - Mapper: Added zoom in, zoom out, zoom reset, toggle developer tools, and toggle full screen
 - **Fixed:**
   - Chat capture: Capture all lines no matter what characters they may contain when capture all lines is enabled
   - Mapper: Fix zones not assigning right when moving to a new area
