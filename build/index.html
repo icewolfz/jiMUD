@@ -860,6 +860,7 @@
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
         ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: false });
+        $("#immortal").css('display', "none");
         ipcRenderer.send('set-overlay', 1);
       });
 
