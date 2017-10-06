@@ -30,12 +30,24 @@ export enum TriggerType {
 }
 
 export function MacroDisplay(item: Macro) {
+    const d = [];
+    if (item.gamepad > 0) {
+        d.push('Gamepad ' + item.gamepad);
+        if (item.key > 0)
+            d.push('Button ' + item.key);
+        else if (item.gamepadAxes < 0)
+            d.push('Axis ' + -item.gamepadAxes);
+        else if (item.gamepadAxes > 0)
+            d.push('Axis ' + item.gamepadAxes);
+        if (d.length === 1)
+            return 'None';
+        return d.join('+');
+    }
     if (item.key === 0) {
         if (item.name && item.name.length > 0)
             return 'None - ' + item.name;
         return 'None';
     }
-    const d = [];
     if ((item.modifiers & MacroModifiers.Ctrl) === MacroModifiers.Ctrl)
         d.push('Ctrl');
     if ((item.modifiers & MacroModifiers.Alt) === MacroModifiers.Alt)
@@ -120,7 +132,7 @@ export class Macro extends Item {
     public send: boolean = true;
     public modifiers: MacroModifiers = MacroModifiers.None;
     public chain: boolean = false;
-    public gamepad: number = -1;
+    public gamepad: number = 0;
     public gamepadAxes: number = 0;
 
     constructor(data?) {

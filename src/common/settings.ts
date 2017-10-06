@@ -220,6 +220,8 @@ export class Settings {
     public soundPath = path.join('{data}', 'sounds');
     public theme = path.join('{themes}', 'default');
 
+    public gamepads: boolean = false;
+
     public allowEval: boolean = true;
 
     public logging = new Logging();

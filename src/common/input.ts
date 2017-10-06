@@ -3,7 +3,7 @@
 //cSpell:ignore keycode
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority, clone } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Macro, Profile, TriggerType } from './profile';
@@ -61,6 +61,8 @@ export class Input extends EventEmitter {
     private _gagID: NodeJS.Timer = null;
     private _stack = [];
     private _vStack = [];
+    private _controllers = {};
+    private _controllersCount = 0;
 
     public client: Client = null;
 
@@ -170,6 +172,10 @@ export class Input extends EventEmitter {
             }
         });
 
+        this.client.on('options-loaded', () => {
+            this.updatePads();
+        });
+
         this.client.commandInput.keyup((event) => {
             if (event.which !== 27 && event.which !== 38 && event.which !== 40)
                 this._historyIdx = this._commandHistory.length;
@@ -261,6 +267,107 @@ export class Input extends EventEmitter {
             return true;
         });
 
+        window.addEventListener('gamepadconnected', (e) => {
+            this._controllers[e.gamepad.index] = { pad: e.gamepad, axes: clone(e.gamepad.axes), state: { axes: [], buttons: [] }, pstate: { axes: [], buttons: [] } };
+            this._controllersCount++;
+            this.updatePads();
+        });
+
+        window.addEventListener('gamepaddisconnected', (e) => {
+            delete this._controllers[e.gamepad.index];
+            this._controllersCount--;
+        });
+
+        const controllers = navigator.getGamepads();
+        let c = 0;
+        const cl = controllers.length;
+        for (; c < cl; c++) {
+            if (!controllers[c]) continue;
+            this._controllers[controllers[c].index] = { pad: controllers[c], axes: clone(controllers[c].axes), state: { axes: [], buttons: [] }, pstate: { axes: [], buttons: [] } };
+            this._controllersCount++;
+        }
+        this.updatePads();
+    }
+
+    private updatePads() {
+        if (this._controllersCount === 0 || !this.client.options.gamepads)
+            return;
+        const controllers = navigator.getGamepads();
+        let c = 0;
+        const cl = controllers.length;
+        for (; c < cl; c++) {
+            const controller = controllers[c];
+            if (!controller) continue;
+            const state = this._controllers[controller.index].state;
+            const axes = this._controllers[controller.index].axes;
+            const bl = controller.buttons.length;
+            let i;
+            const macros = FilterArrayByKeyValue(this.client.macros, 'gamepad', c + 1);
+            let m = 0;
+            const ml = macros.length;
+            if (ml === 0) continue;
+            for (i = 0; i < bl; i++) {
+                let val: any = controller.buttons[i];
+                let pressed;
+                if (typeof (val) === 'object') {
+                    pressed = val.pressed;
+                    val = val.value;
+                }
+                else
+                    pressed = val >= 0.5;
+                if (state.buttons[i]) {
+                    if (state.buttons[i].pressed !== pressed) {
+                        state.buttons[i].pressed = pressed;
+                        if (!pressed) {
+                            for (; m < ml; m++) {
+                                if (!macros[m].enabled) continue;
+                                if (macros[m].key !== i + 1) continue;
+                                if (this.ExecuteMacro(macros[m])) {
+                                    if (this._controllersCount > 0 || controllers.length > 0)
+                                        requestAnimationFrame(() => { this.updatePads(); });
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    state.buttons[i] = { pct: Math.round(val * 100), pressed: pressed };
+                }
+            }
+
+            const al = controller.axes.length;
+            let a = 0;
+            for (i = 0; i < al; i++) {
+                if (state.axes[i] !== controller.axes[i] && controller.axes[i] !== axes[i]) {
+                    state.axes[i] = controller.axes[i];
+                    if (state.axes[i] < -0.75) {
+                        a = -(i + 1);
+                    }
+                    else if (state.axes[i] > 0.75) {
+                        a = i + 1;
+                    }
+                }
+                else if (state.axes[i] < -0.75) {
+                    a = -(i + 1);
+                }
+                else if (state.axes[i] > 0.75) {
+                    a = i + 1;
+                }
+                if (a !== 0)
+                    for (; m < ml; m++) {
+                        if (!macros[m].enabled) continue;
+                        if (macros[m].gamepadAxes !== i + 1) continue;
+                        if (this.ExecuteMacro(macros[m])) {
+                            if (this._controllersCount > 0 || controllers.length > 0)
+                                requestAnimationFrame(() => { this.updatePads(); });
+                            return;
+                        }
+                    }
+            }
+        }
+        if (this._controllersCount > 0 || controllers.length > 0)
+            requestAnimationFrame(() => { this.updatePads(); });
     }
 
     get isLocked(): boolean {
@@ -1236,7 +1343,7 @@ export class Input extends EventEmitter {
                                     alias += '%';
                                 else
                                     str += '%';
-                                    idx = idx - arg.length - 1;
+                                idx = idx - arg.length - 1;
                             }
                             state = ParseState.none;
                             arg = '';
