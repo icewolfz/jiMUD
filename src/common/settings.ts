@@ -211,6 +211,8 @@ export class Settings {
     public logPath = path.join('{data}', 'logs');
     public theme = path.join('{themes}', 'default');
 
+    public gamepads: boolean = false;
+
     public allowEval: boolean = true;
 
     public windows = {};

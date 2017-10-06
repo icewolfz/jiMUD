@@ -22,15 +22,17 @@ let _redo = [];
 let _remove = [];
 let _enabled = [];
 let _never = true;
+let _gamepads = false;
 let _close;
 let _loading = 0;
 let _ide = true;
-/*
+let _macro = false;
+
 const _controllers = {};
 let _controllersCount = 0;
 
 window.addEventListener('gamepadconnected', (e) => {
-    _controllers[e.gamepad.index] = { pad: e.gamepad, axes: clone(e.gamepad.axes), state: { axes: [], buttons: [] }, pstate: { axes: [], buttons: [] } };
+    _controllers[e.gamepad.index] = { pad: e.gamepad, axes: clone(e.gamepad.axes), state: { axes: [], buttons: [] } };
     _controllersCount++;
     updatePads();
 });
@@ -41,6 +43,8 @@ window.addEventListener('gamepaddisconnected', (e) => {
 });
 
 function updatePads() {
+    if (_controllersCount === 0 || !_macro || !_gamepads)
+        return;
     const controllers = navigator.getGamepads();
     let c = 0;
     const cl = controllers.length;
@@ -48,13 +52,12 @@ function updatePads() {
         const controller = controllers[c];
         if (!controller) continue;
         const state = _controllers[controller.index].state;
-        const pstate = _controllers[controller.index].state;
-        const dpad = _controllers[controller.index].axes;
-        let l = controller.buttons.length;
+        const axes = _controllers[controller.index].axes;
+        const bl = controller.buttons.length;
         let i;
         let key = 0;
-        const d = ['Gamepad ' + c];
-        for (i = 0; i < l; i++) {
+        let d = '';
+        for (i = 0; i < bl; i++) {
             let val: any = controller.buttons[i];
             let pressed;
             if (typeof (val) === 'object') {
@@ -65,63 +68,59 @@ function updatePads() {
                 pressed = val >= 0.5;
             if (state.buttons[i]) {
                 if (state.buttons[i].pressed !== pressed) {
-                    //console.log(pressed ? `Button ${i} down` : `Button ${i} up`);
-                    //debug.val(pressed ? `Button ${i} down` : `Button ${i} up`);
                     state.buttons[i].pressed = pressed;
-                    //changed = true;
                 }
             }
             else {
                 state.buttons[i] = { pct: Math.round(val * 100), pressed: pressed };
-                //if (pressed)
-                //console.log(`Button ${i} down`);
-                //debug.val(`Button ${i} down`);
             }
-            if (pstate.buttons[i].pressed) {
-                d.push('Button ' + i);
-                key |= Math.pow(2, i);
+            if (pressed) {
+                d = 'Button ' + (i + 1);
+                key = i + 1;
             }
         }
-        l = controller.axes.length;
-        for (i = 0; i < l; i++) {
-            //const a = controller.axes[i] - dpad[i];
-            if (state.axes[i] !== controller.axes[i]) {
+        const al = controller.axes.length;
+        let a = 0;
+        for (i = 0; i < al; i++) {
+
+            if (state.axes[i] !== controller.axes[i] && controller.axes[i] !== axes[i]) {
                 state.axes[i] = controller.axes[i];
-                if (state.axes[i] < -0.75)
-                {
+                if (state.axes[i] < -0.75) {
                     //state.axes[i] = -1;
-                    d.push('Axes ' + i + ' Plus');
+                    d = 'Axis ' + (i + 1) + ' Minus';
+                    a = -(i + 1);
+                    key = 0;
                 }
-                else if (state.axes[i] > 0.75)
-                {
+                else if (state.axes[i] > 0.75) {
                     //state.axes[i] = 1;
-                    d.push('Axes ' + i + ' Minus');
+                    d = 'Axis ' + (i + 1) + ' Plus';
+                    a = i + 1;
+                    key = 0;
                 }
-                //else
-                    //state.axes[i] = 0;
             }
-            else if (state.axes[i] < -0.75)
-            {
-                //state.axes[i] = -1;
-                d.push('Axes ' + i + ' Plus');
+            else if (state.axes[i] < -0.75) {
+                a = -(i + 1);
+                key = 0;
+                d = 'Axis ' + (i + 1) + ' Minus';
             }
-            else if (state.axes[i] > 0.75)
-            {
-                //state.axes[i] = 1;
-                d.push('Axes ' + i + ' Minus');
+            else if (state.axes[i] > 0.75) {
+                a = i + 1;
+                key = 0;
+                d = 'Axis ' + (i + 1) + ' Plus';
             }
         }
-        if (d.length > 1) {
-            $('#macro-key').val(d.join('+'));
+        if (d.length > 0) {
+            $('#macro-key').val('Gamepad ' + (c + 1) + '+' + d);
             $('#macro-key').data('key', key);
             $('#macro-key').data('mod', 0);
-            $('#macro-key').data('gamepad', c);
+            $('#macro-key').data('gamepad', c + 1);
+            $('#macro-key').data('axes', a);
+            UpdateMacro();
         }
     }
     if (_controllersCount > 0 || controllers.length > 0)
         requestAnimationFrame(updatePads);
 }
-*/
 
 enum UpdateState {
     NoChange,
@@ -511,6 +510,18 @@ function MacroKeys(item) {
     if (item.key === 0)
         return 'None';
     const d = [];
+    if (item.gamepad > 0) {
+        d.push('Gamepad ' + item.gamepad);
+        if (item.key > 0)
+            d.push('Button ' + item.key);
+        else if (item.gamepadAxes < 0)
+            d.push('Axis ' + -item.gamepadAxes);
+        else if (item.gamepadAxes > 0)
+            d.push('Axis ' + item.gamepadAxes);
+        if (d.length === 1)
+            return 'None';
+        return d.join('+');
+    }
     if ((item.modifiers & MacroModifiers.Ctrl) === MacroModifiers.Ctrl)
         d.push('Ctrl');
     if ((item.modifiers & MacroModifiers.Alt) === MacroModifiers.Alt)
@@ -750,7 +761,7 @@ export function UpdateEditorMode(type) {
 }
 
 function UpdateMacro(customUndo?: boolean): UpdateState {
-    let data: any = UpdateItem(currentProfile.macros[currentNode.dataAttr.index], 'macro', { key: true });
+    let data: any = UpdateItem(currentProfile.macros[currentNode.dataAttr.index], 'macro', { key: true, gamepad: true, gamepadAxes: true });
     if (currentProfile.macros[currentNode.dataAttr.index].key !== parseInt($('#macro-key').data('key'), 10)) {
         if (!data) data = {};
         data.key = currentProfile.macros[currentNode.dataAttr.index].key;
@@ -760,6 +771,16 @@ function UpdateMacro(customUndo?: boolean): UpdateState {
         if (!data) data = {};
         data.modifiers = currentProfile.macros[currentNode.dataAttr.index].modifiers;
         currentProfile.macros[currentNode.dataAttr.index].modifiers = parseInt($('#macro-key').data('mod'), 10);
+    }
+    if (currentProfile.macros[currentNode.dataAttr.index].gamepad !== parseInt($('#macro-key').data('gamepad'), 10)) {
+        if (!data) data = {};
+        data.gamepad = currentProfile.macros[currentNode.dataAttr.index].gamepad;
+        currentProfile.macros[currentNode.dataAttr.index].gamepad = parseInt($('#macro-key').data('gamepad'), 10);
+    }
+    if (currentProfile.macros[currentNode.dataAttr.index].gamepadAxes !== parseInt($('#macro-key').data('axes'), 10)) {
+        if (!data) data = {};
+        data.gamepadAxes = currentProfile.macros[currentNode.dataAttr.index].gamepadAxes;
+        currentProfile.macros[currentNode.dataAttr.index].gamepadAxes = parseInt($('#macro-key').data('axes'), 10);
     }
     if (data) {
         UpdateItemNode(currentProfile.macros[currentNode.dataAttr.index], 0, data);
@@ -2249,6 +2270,8 @@ function loadOptions() {
     _never = options.profiles.askoncancel;
     _enabled = options.profiles.enabled;
     _ide = options.profiles.codeEditor;
+    _gamepads = options.gamepads;
+    updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
     if (!isFileSync(theme))
@@ -2441,8 +2464,17 @@ export function init() {
         $('#macro-key').data('key', e.which);
         $('#macro-key').data('mod', mod);
         $('#macro-key').data('gamepad', -1);
+        $('#macro-key').data('axes', 0);
         UpdateMacro();
         return false;
+    });
+
+    $('#macro-key').focus(() => {
+        _macro = true;
+        updatePads();
+    });
+    $('#macro-key').blur(() => {
+        _macro = false;
     });
 
     $('.btn-adv').click(function () {
@@ -3728,6 +3760,8 @@ function MacroValue(item, prop, el) {
     el.val(MacroKeys(item));
     el.data('key', item.key);
     el.data('mod', item.modifiers);
+    el.data('gamepad', item.gamepad);
+    el.data('axes', item.gamepadAxes);
 }
 
 function insertItem(type: string, key: string, item, idx: number, profile?: Profile, customUndo?: boolean) {
