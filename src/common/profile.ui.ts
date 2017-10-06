@@ -25,6 +25,103 @@ let _never = true;
 let _close;
 let _loading = 0;
 let _ide = true;
+/*
+const _controllers = {};
+let _controllersCount = 0;
+
+window.addEventListener('gamepadconnected', (e) => {
+    _controllers[e.gamepad.index] = { pad: e.gamepad, axes: clone(e.gamepad.axes), state: { axes: [], buttons: [] }, pstate: { axes: [], buttons: [] } };
+    _controllersCount++;
+    updatePads();
+});
+
+window.addEventListener('gamepaddisconnected', (e) => {
+    delete _controllers[e.gamepad.index];
+    _controllersCount--;
+});
+
+function updatePads() {
+    const controllers = navigator.getGamepads();
+    let c = 0;
+    const cl = controllers.length;
+    for (; c < cl; c++) {
+        const controller = controllers[c];
+        if (!controller) continue;
+        const state = _controllers[controller.index].state;
+        const pstate = _controllers[controller.index].state;
+        const dpad = _controllers[controller.index].axes;
+        let l = controller.buttons.length;
+        let i;
+        let key = 0;
+        const d = ['Gamepad ' + c];
+        for (i = 0; i < l; i++) {
+            let val: any = controller.buttons[i];
+            let pressed;
+            if (typeof (val) === 'object') {
+                pressed = val.pressed;
+                val = val.value;
+            }
+            else
+                pressed = val >= 0.5;
+            if (state.buttons[i]) {
+                if (state.buttons[i].pressed !== pressed) {
+                    //console.log(pressed ? `Button ${i} down` : `Button ${i} up`);
+                    //debug.val(pressed ? `Button ${i} down` : `Button ${i} up`);
+                    state.buttons[i].pressed = pressed;
+                    //changed = true;
+                }
+            }
+            else {
+                state.buttons[i] = { pct: Math.round(val * 100), pressed: pressed };
+                //if (pressed)
+                //console.log(`Button ${i} down`);
+                //debug.val(`Button ${i} down`);
+            }
+            if (pstate.buttons[i].pressed) {
+                d.push('Button ' + i);
+                key |= Math.pow(2, i);
+            }
+        }
+        l = controller.axes.length;
+        for (i = 0; i < l; i++) {
+            //const a = controller.axes[i] - dpad[i];
+            if (state.axes[i] !== controller.axes[i]) {
+                state.axes[i] = controller.axes[i];
+                if (state.axes[i] < -0.75)
+                {
+                    //state.axes[i] = -1;
+                    d.push('Axes ' + i + ' Plus');
+                }
+                else if (state.axes[i] > 0.75)
+                {
+                    //state.axes[i] = 1;
+                    d.push('Axes ' + i + ' Minus');
+                }
+                //else
+                    //state.axes[i] = 0;
+            }
+            else if (state.axes[i] < -0.75)
+            {
+                //state.axes[i] = -1;
+                d.push('Axes ' + i + ' Plus');
+            }
+            else if (state.axes[i] > 0.75)
+            {
+                //state.axes[i] = 1;
+                d.push('Axes ' + i + ' Minus');
+            }
+        }
+        if (d.length > 1) {
+            $('#macro-key').val(d.join('+'));
+            $('#macro-key').data('key', key);
+            $('#macro-key').data('mod', 0);
+            $('#macro-key').data('gamepad', c);
+        }
+    }
+    if (_controllersCount > 0 || controllers.length > 0)
+        requestAnimationFrame(updatePads);
+}
+*/
 
 enum UpdateState {
     NoChange,
@@ -316,7 +413,7 @@ function AddNewProfile(d?: Boolean) {
     pushUndo({ action: 'add', type: 'profile', item: [p.clone()] });
     _enabled.push(p.name.toLowerCase());
     n = p.name;
-    _remove = _remove.filter((a) =>  { return a !== n; });
+    _remove = _remove.filter((a) => { return a !== n; });
 }
 
 export function RunTester() {
@@ -2343,6 +2440,7 @@ export function init() {
         $('#macro-key').val(c.join('+'));
         $('#macro-key').data('key', e.which);
         $('#macro-key').data('mod', mod);
+        $('#macro-key').data('gamepad', -1);
         UpdateMacro();
         return false;
     });
