@@ -971,6 +971,7 @@ export class Client extends EventEmitter {
         this.emit('update-menuitem', ['file', 'connect'], { enabled: false });
         this.emit('update-menuitem', ['file', 'disconnect'], { enabled: true });
         this.emit('update-menuitem', ['window', 'immortal'], { visible: false });
+        $('#immortal').css('display', 'none');
         ipcRenderer.send('set-overlay', 1);
 
         this.MSP.reset();
