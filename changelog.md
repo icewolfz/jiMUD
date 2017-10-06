@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Chat capture: Capture all lines no matter what characters they may contain when capture all lines is enabled
+  - Mapper: Fix zones not assigning right when moving to a new area
 
 ## 0.4.21 2017-09-26
 
