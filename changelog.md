@@ -17,6 +17,9 @@
 
 - **Fixed:**
   - Chat capture: Capture all lines no matter what characters they may contain when capture all lines is enabled
+  - Mapper: Fix zones not assigning right when moving to a new area
+  - Immortal button not being hidden on disconnect then relogin with a non immortal login
+  - Backup system was not having the correct map file set when character was changed.
 
 ## 0.4.21 2017-09-26
 
