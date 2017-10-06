@@ -314,6 +314,8 @@
       $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
       $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
       $('#dev').prop('checked', _settings.dev);
+      $('#gamepads').prop('checked', _settings.gamepads);
+      
       $('#lagMeter').prop('checked', _settings.lagMeter);
       $('#enablePing').prop('checked', _settings.enablePing);
       $('#showScriptErrors').prop('checked', _settings.showScriptErrors);
@@ -1810,6 +1812,12 @@
               <input type="checkbox" id="dev" /> Connect to development
             </label>
           </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="gamepads" /> Enable gamepads
+              <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
+            </label>
+          </div>          
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="showScriptErrors" /> Show script errors

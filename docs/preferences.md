@@ -145,6 +145,7 @@ Controls what is captured into the chat window
 ## Advanced
 
 - `Connect to development` Connect to the development mud.
+- `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
 - `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
 - `Enable GMCP Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
 - `Enable debug` Will display debug data to the dev tool console
