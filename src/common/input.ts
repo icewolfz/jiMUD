@@ -63,6 +63,7 @@ export class Input extends EventEmitter {
     private _vStack = [];
     private _controllers = {};
     private _controllersCount = 0;
+    private _gamepadCaches = null;
 
     public client: Client = null;
 
@@ -268,6 +269,8 @@ export class Input extends EventEmitter {
         });
 
         window.addEventListener('gamepadconnected', (e) => {
+            if (!this._gamepadCaches)
+                this._gamepadCaches = [];
             this._controllers[e.gamepad.index] = { pad: e.gamepad, axes: clone(e.gamepad.axes), state: { axes: [], buttons: [] }, pstate: { axes: [], buttons: [] } };
             this._controllersCount++;
             this.updatePads();
@@ -302,7 +305,10 @@ export class Input extends EventEmitter {
             const axes = this._controllers[controller.index].axes;
             const bl = controller.buttons.length;
             let i;
-            const macros = FilterArrayByKeyValue(this.client.macros, 'gamepad', c + 1);
+            let macros;
+            if (!this._gamepadCaches[c])
+                this._gamepadCaches[c] = FilterArrayByKeyValue(this.client.macros, 'gamepad', c + 1);
+            macros = this._gamepadCaches[c];
             let m = 0;
             const ml = macros.length;
             if (ml === 0) continue;
@@ -2381,6 +2387,12 @@ export class Input extends EventEmitter {
                 return a.enabled;
             });
         }
+    }
+
+    public clearCaches() {
+        this._TriggerCache = null;
+        this._TriggerFunctionCache = {};
+        this._gamepadCaches = null;
     }
 
     public triggerEvent(event: string, args?) {

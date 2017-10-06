@@ -1003,7 +1003,7 @@ export class Client extends EventEmitter {
     }
 
     public clearCache() {
-        this._input.clearTriggerCache();
+        this._input.clearCaches();
         this._itemCache = {
             triggers: null,
             aliases: null,
