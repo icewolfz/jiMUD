@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.22
+## 0.4.22 2017-10-06
 
 - **New:**
   - Experimental gamepad support
