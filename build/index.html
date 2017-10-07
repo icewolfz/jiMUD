@@ -158,6 +158,10 @@
           client.error(`${msg.substr(16)}`);
         else
           client.error(`${msg}`);
+        if (client.options.enableDebug) {
+          client.error("Url: " + url);
+          client.error("Line: " + line);
+        }
       }
       else {
         console.log("Message: " + msg);
@@ -649,8 +653,7 @@
 
       ['cut', 'copy'].forEach(function (event) {
         document.addEventListener(event, function (e) {
-          if (client.display.hasSelection)
-          {
+          if (client.display.hasSelection) {
             window.writeClipboard(client.display.selection);
             e.preventDefault();
             e.stopPropagation();
@@ -1497,7 +1500,7 @@
           '^\\*You emote to ([a-zA-Z\'\\s_-]*):(.*)$',
           '^([a-zA-Z\'\\s_-]*) shouts in ([a-zA-Z\'\\s_-]*):(.*)$',
           '^You shout in ([a-zA-Z\'\\s_-]*):(.*)$'
-          );
+        );
         if (client.options.chat.captureReviews)
           _captureReviews.push('^-=-=- Tell Review -=-=-$');
       }
@@ -1529,10 +1532,10 @@
       }
     }
 
-    ipcRenderer.on('flush-end', (event, sender)=> {
-      if(sender === 'Saving data')
+    ipcRenderer.on('flush-end', (event, sender) => {
+      if (sender === 'Saving data')
         _backup.save(2);
-      else if(sender === 'Loading data')
+      else if (sender === 'Loading data')
         _backup.getChunk();
     });
 
