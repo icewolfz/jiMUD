@@ -90,6 +90,10 @@
         manager.active.client.error(`${msg.substr(16)}`);
       else
         manager.active.client.error(`${msg}`);
+      if (manager.active.client.options.enableDebug) {
+        manager.active.client.error("Url: " + url);
+        manager.active.client.error("Line: " + line);
+      }
     }
     else {
       console.log("Message: " + msg);
@@ -867,7 +871,7 @@
   function createClient(host, panel, options) {
     panel.client = new Client(Object.assign({ id: panel.id, parent: panel.pane, host: host }, clientoptions, options));
     panel.client.on('update-menuitem', (menu, item) => {
-      if(panel.id == manager.active.id)
+      if (panel.id == manager.active.id)
         menubar.updateItem(menu, item);
     });
     panel.client.on('find-closing', (e) => {
