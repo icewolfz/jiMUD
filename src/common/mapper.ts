@@ -904,7 +904,7 @@ export class Mapper extends EventEmitter {
         if (!zone) zone = 0;
         this._db.serialize(() => {
             //this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
-            this._db.get('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
+            this._db.get('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' AND Zone = ' + zone + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
                 if (!row) {
                     if (callback)
                         callback(false);
