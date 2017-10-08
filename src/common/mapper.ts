@@ -728,6 +728,7 @@ export class Mapper extends EventEmitter {
                         z: 0,
                         zone: 0
                     };
+                    room.zone = this.current.zone;
                     if (this.current.ID !== null) {
                         switch (data.prevroom.dir) {
                             case 'west':
@@ -780,15 +781,21 @@ export class Mapper extends EventEmitter {
                     }
                     if (data.area === this.current.area) {
                         this.updateCurrent(room, data);
-                        //this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
                         this._changed = true;
                     }
                     else
-                        this.getFreeZone(room.x, room.y, room.z, this.current.zone, (zone) => {
-                            room.zone = zone;
-                            this.updateCurrent(room, data);
-                            //this._db.run('INSERT INTO Rooms (ID) values (\'' + data.num + '\')');
-                            this._changed = true;
+                        this.roomExists(room.x, room.y, room.z, this.current.zone, (exist) => {
+                            if (exist || data.prevroom.zone) {
+                                this.getFreeZone(room.x, room.y, room.z, this.current.zone, (zone) => {
+                                    room.zone = zone;
+                                    this.updateCurrent(room, data);
+                                    this._changed = true;
+                                });
+                            }
+                            else {
+                                this.updateCurrent(room, data);
+                                this._changed = true;
+                            }
                         });
                 }
                 else {
@@ -866,8 +873,8 @@ export class Mapper extends EventEmitter {
         this.current.x = room.x;
         this.current.y = room.y;
         this.current.z = room.z;
-        this.emit('current-room-changed', this.current);
         this.current.zone = room.zone;
+        this.emit('current-room-changed', this.current);
         if (this.selected && this.selected.ID === room.ID)
             this.emit('room-selected', clone(room));
         if (this.follow)
@@ -881,13 +888,29 @@ export class Mapper extends EventEmitter {
         if (!zone) zone = 0;
         this._db.serialize(() => {
             //this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
-            this._db.get('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
+            //this._db.get('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
+            this._db.get('SELECT DISTINCT Zone FROM Rooms ORDER BY Zone DESC LIMIT 1', (err, row) => {
                 if (!row) {
                     if (callback)
                         callback(zone);
                 }
                 else if (callback)
                     callback(row.Zone + 1);
+            });
+        });
+    }
+
+    public roomExists(x, y, z, zone, callback) {
+        if (!zone) zone = 0;
+        this._db.serialize(() => {
+            //this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
+            this._db.get('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
+                if (!row) {
+                    if (callback)
+                        callback(false);
+                }
+                else if (callback)
+                    callback(true);
             });
         });
     }

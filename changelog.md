@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.23 2017-10-07
+
+- **Fixed:**
+  - Mapper: 
+    - Fix zone yet again, attempt to only change the zone if a room exist at coords
+    - Assign current zone to the new room
+
 ## 0.4.22 2017-10-06
 
 - **New:**
