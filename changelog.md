@@ -3,7 +3,7 @@
 ## 0.4.23 2017-10-07
 
 - **Fixed:**
-  - Mapper: 
+  - Mapper:
     - Fix zone yet again, attempt to only change the zone if a room exist at coords
     - Assign current zone to the new room
 
