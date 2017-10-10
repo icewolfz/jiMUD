@@ -711,6 +711,13 @@
           _noCapture = false;
           return;
         }
+        //locker/store list
+        res = /^(-*)$/.exec(data.line);
+        if (res && res.length > 0) {
+          capture = 0;
+          _noCapture = !_noCapture;
+          return;
+        }        
         if (_noCapture) return;
         //capture indented text
         if (capture > 0 && data.line.startsWith("    ")) {
