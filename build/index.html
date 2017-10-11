@@ -146,6 +146,7 @@
     var capture = 0, captureReview = 0;
     var _captures = [], _captureReviews = [];
     var _noCapture = false;
+    var _noCaptureStore = false;
     var _cLoading = false;
     var _context;
     var _selword = '';
@@ -713,15 +714,23 @@
           _noCapture = false;
           return;
         }
-        //locker/store list
-        res = /^(-*)$/.exec(data.line);
+
+        //locker/store list start
+        res = /^ {2}# {2}Item.*$/.exec(data.line);
         if (res && res.length > 0) {
           capture = 0;
-          _noCapture = !_noCapture;
+          _noCaptureStore = true;
+          return;
+        }
+        //locker/store list end
+        res = /^(-*)$/.exec(data.line);
+        if (_noCaptureStore && res && res.length > 0) {
+          capture = 0;
+          _noCaptureStore = false;
           return;
         }
 
-        if (_noCapture) return;
+        if (_noCapture || _noCaptureStore) return;
         //capture indented text
         if (capture > 0 && data.line.startsWith("    ")) {
           ipcRenderer.send('chat', data);
