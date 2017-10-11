@@ -162,9 +162,10 @@ export class Backup extends EventEmitter {
             if (rows) {
                 const rl = rows.length;
                 for (let r = 0; r < rl; r++) {
+                    rows[r].ID = parseInt(rows[r].ID, 10);
                     if (rooms[rows[r].ID]) {
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
-                            num: rows[r].DestID,
+                            num: parseInt(rows[r].DestID, 10),
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
                         };
@@ -181,7 +182,7 @@ export class Backup extends EventEmitter {
                         }
                         rooms[rows[r].ID].exits = {};
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
-                            num: rows[r].DestID,
+                            num: parseInt(rows[r].DestID, 10),
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
                         };

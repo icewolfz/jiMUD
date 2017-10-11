@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - Chat capture: ignore all lines between ------ for stores/lockers
+  - Backup: make sure room id is a number when saving
+  - Mapper: make sure room id is a number when exporting
 
 ## 0.4.23 2017-10-07
 
