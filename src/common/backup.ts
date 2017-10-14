@@ -78,7 +78,7 @@ export class Backup extends EventEmitter {
         _db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID', (err, rows) => {
             const data = {
                 version: version,
-                profiles: this.client.profiles.clone(2),
+                profiles: {},
                 settings: {
                     mapEnabled: true,
                     mapFollow: true,
@@ -158,6 +158,14 @@ export class Backup extends EventEmitter {
                 data.settings.MapperOpen = this.client.options.windows['mapper'].options.show;
             let prop;
             let prop2;
+
+            if (this.client.options.backupAllProfiles) {
+                const profiles = new ProfileCollection();
+                profiles.loadPath(path.join(parseTemplate('{data}'), 'profiles'));
+                data.profiles = profiles.clone(2);
+            }
+            else
+                data.profiles = this.client.profiles.clone(2);
 
             for (prop in this.client.options) {
                 if (!this.client.options.hasOwnProperty(prop)) {
