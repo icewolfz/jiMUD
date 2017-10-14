@@ -25,6 +25,7 @@ let _remove = [];
 let _enabled = [];
 let _never = true;
 let _gamepads = false;
+let _watch = true;
 let _close;
 let _loading = 0;
 let _ide = true;
@@ -2220,6 +2221,7 @@ function loadOptions() {
     _enabled = options.profiles.enabled;
     _ide = options.profiles.codeEditor;
     _gamepads = options.gamepads;
+    _watch = options.profiles.watchFiles;
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
@@ -2254,10 +2256,7 @@ export function init() {
         profiles.loadPath(p);
         if (!profiles.contains('default'))
             profiles.add(Profile.Default);
-        watcher = fs.watch(p, (type, file) => {
-            filesChanged = true;
-            $('#btn-refresh').addClass('btn-warning');
-        });
+        startWatcher(p);
     }
 
     $('#drag-bar').mousedown((e) => {
@@ -2878,6 +2877,18 @@ export function init() {
     });
 }
 
+function startWatcher(p: string) {
+    if (watcher) {
+        watcher.close();
+        watcher = null;
+    }
+    if (_watch)
+        watcher = fs.watch(p, (type, file) => {
+            filesChanged = true;
+            $('#btn-refresh').addClass('btn-warning');
+        });
+}
+
 function undoKeydown(e) {
     if (e.which === 90 && e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
         doUndo();
@@ -2961,12 +2972,7 @@ export function doRefresh() {
                     profiles.loadPath(p);
                     if (!profiles.contains('default'))
                         profiles.add(Profile.Default);
-                    if (watcher)
-                        watcher.close();
-                    watcher = fs.watch(p, (type, file) => {
-                        filesChanged = true;
-                        $('#btn-refresh').addClass('btn-warning');
-                    });
+                    startWatcher(p);
                 }
                 const options = Settings.load(remote.getGlobal('settingsFile'));
                 _enabled = options.profiles.enabled;
@@ -2986,12 +2992,7 @@ export function doRefresh() {
             profiles.loadPath(p);
             if (!profiles.contains('default'))
                 profiles.add(Profile.Default);
-            if (watcher)
-                watcher.close();
-            watcher = fs.watch(p, (type, file) => {
-                filesChanged = true;
-                $('#btn-refresh').addClass('btn-warning');
-            });
+            startWatcher(p);
         }
         const options = Settings.load(remote.getGlobal('settingsFile'));
         _enabled = options.profiles.enabled;

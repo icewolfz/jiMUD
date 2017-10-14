@@ -15,6 +15,8 @@
 
 ## 0.4.24
 
+- **New:**
+  - Preference: can now disable file watcher for profile manager.
 - **Fixed:**
   - Chat capture: ignore all lines between ------ for stores/lockers
   - Backup: make sure room id is a number when saving
