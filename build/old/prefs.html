@@ -320,6 +320,7 @@
       $('#display-splitLive').prop('checked', _settings.display.splitLive);
       $('#display-roundedOverlays').prop('checked', _settings.display.roundedOverlays);
       $('#profiles-codeEditor').prop('checked', _settings.profiles.codeEditor);
+      $('#profiles-watchFiles').prop('checked', _settings.profiles.watchFiles);
 
       //$('#font').selectpicker('val', _settings.font);
       $('#font').val(_settings.font);
@@ -1866,7 +1867,12 @@
             </label>
             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Must close and reopen profile manger</span>
           </div>
-
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="profiles-watchFiles" /> Enable profile manager file watcher
+            </label>
+            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Must close and reopen profile manger</span>
+          </div>
         </div>
         <div role="tabpanel" class="pref-pane" id="tray">
           <div class="col-sm-6 form-group">
