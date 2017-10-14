@@ -250,6 +250,7 @@ export class Settings {
 
     public backupLoad: BackupSelection = BackupSelection.All;
     public backupSave: BackupSelection = BackupSelection.All;
+    public backupAllProfiles = false;
 
     public scrollLocked: boolean = false;
     public showStatus: boolean = true;

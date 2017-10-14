@@ -153,6 +153,7 @@ Controls what is captured into the chat window
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Backup save` what to save when using remote backup systems
 - `Backup load` what to load when using remote backup systems
+- `Backup all profiles` backup all profiles or just enabled profiles
 - `Hide when minimized` will hide the main window and any window set as a child
 - `Enable profile manager code editor` disable or enable the code editor for the profile manager
 - `Enable profile manager file watcher` disable or enable watching for profile file changes to warn when saving overrides

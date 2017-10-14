@@ -4,6 +4,7 @@
 
 - **New:**
   - Preference: can now disable file watcher for profile manager.
+  - Backup all profiles: allow all profiles to be saved when using client save
 - **Fixed:**
   - Chat capture: ignore all lines between ------ for stores/lockers
   - Backup: make sure room id is a number when saving
