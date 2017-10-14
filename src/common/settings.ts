@@ -40,6 +40,7 @@ export class Profiles {
     public contextsAdvanced: boolean = false;
     public enabled: string[] = [];
     public codeEditor: boolean = true;
+    public watchFiles: boolean = true;
 }
 
 export class Chat {
