@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.24
+## 0.4.24 2017-10-14
 
 - **New:**
   - Preference: can now disable file watcher for profile manager.
