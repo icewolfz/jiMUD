@@ -432,6 +432,8 @@
       $('#hideOnMinimize').prop('checked', _settings.hideOnMinimize);
       $('#showTrayIcon').prop('checked', _settings.showTrayIcon);
 
+      $("#backupAllProfiles").prop('checked', _settings.backupAllProfiles);
+
       $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) === 2);
       $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) === 4);
       $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) === 8);
@@ -1866,7 +1868,11 @@
               </div>
             </div>
           </div>
-
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="backupAllProfiles" /> Backup all profiles
+            </label>
+          </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="hideOnMinimize" /> Hide when minimized
