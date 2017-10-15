@@ -145,7 +145,7 @@
     var capture = 0, captureReview = 0;
     var _captures = [], _captureReviews = [];
     var _noCapture = false;
-    var _noCaptureStore = false;
+    var _noCaptureStore = 0;
     var _cLoading = false;
     var _pLoading = false;
     var _profilesOpen = false;
@@ -714,20 +714,23 @@
         }
         //locker/store list start
         res = /^ {2}# {2}Item.*$/.exec(data.line);
-        if (res && res.length > 0) {
+        if (_noCaptureStore === 0 && res && res.length > 0) {
           capture = 0;
-          _noCaptureStore = true;
+          _noCaptureStore = 1;
           return;
         }
         //locker/store list end
         res = /^(-*)$/.exec(data.line);
-        if (_noCaptureStore && res && res.length > 0) {
+        if (_noCaptureStore > 1 && res && res.length > 0) {
           capture = 0;
-          _noCaptureStore = false;
-          return;
+          _noCaptureStore++;
         }
-       
-        if (_noCapture || _noCaptureStore) return;
+        if(_noCaptureStore > 2)
+        {
+          capture = 0;
+          _noCaptureStore = 0;
+        }
+        if (_noCapture || _noCaptureStore > 0) return;
         //capture indented text
         if (capture > 0 && data.line.startsWith("    ")) {
           ipcRenderer.send('chat', data, chatOptions());
