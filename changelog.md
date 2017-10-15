@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.25
+
+- **Fixed:**
+  - Chat capture: fix ignore captures for stores and lockers, use a counter instead of a simple flag
+
 ## 0.4.24 2017-10-14
 
 - **New:**
