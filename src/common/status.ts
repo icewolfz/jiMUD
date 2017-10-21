@@ -165,6 +165,7 @@ export class Status extends EventEmitter {
     }
 
     private sanitizeID(id: string) {
+        id = id.replace(/\s/gi, '-');
         return id.replace(/[^a-zA-Z0-9_-]/gi, '');
     }
 

@@ -13,6 +13,12 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
+## 0.4.25
+
+- **Fixed:**
+  - Chat capture: fix ignore captures for stores and lockers, use a counter instead of a simple flag
+  - Fix spaces in skill/weapon ids to convert to - so large sword and small sword icons work
+
 ## 0.4.24
 
 - **New:**
