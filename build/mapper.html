@@ -330,16 +330,22 @@
         $("#select-area").val(room.area);
         $("#MapLevel").val(room.z);
         $("#MapZone").val(room.zone);
+        $("#btn-walk").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+        $("#btn-highlight").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+
+        updateMenuItem({ menu: 'edit|Remove current room', enabled: mapper.current.ID && room.ID });
+        updateMenuItem({ menu: 'actions|highlight path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
+        updateMenuItem({ menu: 'actions|walk path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });        
         ipcRenderer.send('setting-changed', { type: 'mapper', name: 'active', value: room });
       });
 
       mapper.on('current-room-changed', (room) => {
-        $("#btn-walk").prop('disabled', !(mapper.current.ID && room.ID && mapper.current.ID != room.ID));
-        $("#btn-highlight").prop('disabled', !(mapper.current.ID && room.ID && mapper.current.ID != room.ID));
+        $("#btn-walk").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+        $("#btn-highlight").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
 
         updateMenuItem({ menu: 'edit|Remove current room', enabled: mapper.current.ID && room.ID });
-        updateMenuItem({ menu: 'actions|highlight path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
-        updateMenuItem({ menu: 'actions|walk path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
+        updateMenuItem({ menu: 'actions|highlight path', enabled: mapper.selected.ID && room.ID && mapper.selected.ID != room.ID });
+        updateMenuItem({ menu: 'actions|walk path', enabled: mapper.selected.ID && room.ID && mapper.selected.ID != room.ID });
       });
 
       mapper.on('room-selected', (room) => {
