@@ -18,6 +18,7 @@
 - **Fixed:**
   - Chat capture: fix ignore captures for stores and lockers, use a counter instead of a simple flag
   - Fix spaces in skill/weapon ids to convert to - so large sword and small sword icons work
+  - Mapper: auto walk buttons not correctly set to enabled when current room is diffrent from selected room
 
 ## 0.4.24
 
