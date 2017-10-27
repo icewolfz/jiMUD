@@ -40,6 +40,7 @@ export enum ImportType {
     Replace = 1
 }
 
+export enum UpdateType { none = 0, draw = 1 }
 class Rectangle {
 
     public location: Point;
@@ -102,7 +103,6 @@ interface MouseData {
 export class Mapper extends EventEmitter {
     private _canvas;
     private _context;
-    private _redraw: boolean = false;
     private _db;
     private _changed: boolean = false;
     private MousePrev: MouseData;
@@ -115,6 +115,7 @@ export class Mapper extends EventEmitter {
     private markers = {};
     private _cancelImport: boolean = false;
     private _mapFile = path.join(parseTemplate('{data}'), 'map.sqlite');
+    private _updating: UpdateType = UpdateType.none;
 
     public current: Room;
     public active: Room;
@@ -214,7 +215,7 @@ export class Mapper extends EventEmitter {
     set showLegend(value: boolean) {
         if (this._showLegend !== value) {
             this._showLegend = value;
-            this.draw();
+            this.doUpdate(UpdateType.draw);
             this.emit('setting-changed', 'legend', value);
         }
     }
@@ -223,7 +224,7 @@ export class Mapper extends EventEmitter {
     set splitArea(value: boolean) {
         if (this._splitArea !== value) {
             this._splitArea = value;
-            this.draw();
+            this.doUpdate(UpdateType.draw);
             this.emit('setting-changed', 'split', value);
         }
     }
@@ -233,7 +234,7 @@ export class Mapper extends EventEmitter {
     set fillWalls(value: boolean) {
         if (this._fillWalls !== value) {
             this._fillWalls = value;
-            this.draw();
+            this.doUpdate(UpdateType.draw);
             this.emit('setting-changed', 'fill', value);
         }
     }
@@ -326,8 +327,7 @@ export class Mapper extends EventEmitter {
                     this.emit('room-before-selected', clone(this.selected));
                     this.selected = room;
                     this.emit('room-selected', clone(room));
-                    if (!this._redraw)
-                        this.draw();
+                    this.doUpdate(UpdateType.draw);
                 });
             }
             this.MouseDrag.state = false;
@@ -340,8 +340,7 @@ export class Mapper extends EventEmitter {
         $(this._canvas).mouseleave((event) => {
             this.Mouse = this.getMapMousePos(event);
             if (this.drag) {
-                if (!this._redraw)
-                    this.draw();
+                this.doUpdate(UpdateType.draw);
                 this.drag = false;
                 $(this._canvas).css('cursor', 'default');
             }
@@ -378,7 +377,7 @@ export class Mapper extends EventEmitter {
     public scrollBy(x: number, y: number) {
         this.vscroll += x;
         this.hscroll += y;
-        this.draw();
+        this.doUpdate(UpdateType.draw);
         this.emit('setting-changed', 'vscroll', this.vscroll);
         this.emit('setting-changed', 'hscroll', this.hscroll);
     }
@@ -386,7 +385,7 @@ export class Mapper extends EventEmitter {
     public scrollTo(x: number, y: number) {
         this.vscroll = x;
         this.hscroll = y;
-        this.draw();
+        this.doUpdate(UpdateType.draw);
         this.emit('setting-changed', 'vscroll', this.vscroll);
         this.emit('setting-changed', 'hscroll', this.hscroll);
     }
@@ -449,7 +448,6 @@ export class Mapper extends EventEmitter {
         //cant get map canvas bail
         if (!canvas || !context) return;
 
-        this._redraw = true;
         const x = this.vscroll - (canvas.width / 32 / 2);
         const y = this.hscroll - (canvas.height / 32 / 2);
         const z = this.active.z || 0;
@@ -518,7 +516,6 @@ export class Mapper extends EventEmitter {
                 }
                 context.restore();
                 this.DrawLegend(context, 1, -4, 0);
-                this._redraw = false;
                 if (callback) callback();
             });
         }
@@ -570,7 +567,6 @@ export class Mapper extends EventEmitter {
                 }
                 context.restore();
                 this.DrawLegend(context, 1, -4, 0);
-                this._redraw = false;
                 if (callback) callback();
             });
         }
@@ -588,8 +584,7 @@ export class Mapper extends EventEmitter {
     }
 
     public refresh() {
-        if (!this._redraw)
-            this.draw();
+        this.doUpdate(UpdateType.draw);
         this.emit('refresh');
     }
 
@@ -615,7 +610,7 @@ export class Mapper extends EventEmitter {
         if (!room || !room.ID) room = this.selected;
         this.current = this.sanitizeRoom(clone(room));
         this.markers = {};
-        this.draw();
+        this.doUpdate(UpdateType.draw);
         this.emit('current-room-changed', this.current);
     }
 
@@ -645,7 +640,7 @@ export class Mapper extends EventEmitter {
     public setLevel(level: number) {
         if (level !== this.active.z) {
             this.active.z = level;
-            this.draw();
+            this.doUpdate(UpdateType.draw);
             this.emit('setting-changed', 'active', this.active);
         }
     }
@@ -653,7 +648,7 @@ export class Mapper extends EventEmitter {
     public setZone(zone: number) {
         if (zone !== this.active.zone) {
             this.active.zone = zone;
-            this.draw();
+            this.doUpdate(UpdateType.draw);
             this.emit('setting-changed', 'active', this.active);
         }
     }
@@ -1679,14 +1674,14 @@ export class Mapper extends EventEmitter {
                 }
             }
             this.emit('path-shown');
-            this.draw();
+            this.doUpdate(UpdateType.draw);
         });
     }
 
     public clearPath() {
         this.emit('path-cleared');
         this.markers = {};
-        this.draw();
+        this.doUpdate(UpdateType.draw);
     }
 
     public walkPath(destRoom?: Room) {
@@ -2135,5 +2130,19 @@ export class Mapper extends EventEmitter {
         }
         else if (callback)
             callback();
+    }
+
+    private doUpdate(type?: UpdateType) {
+        if (!type) return;
+        this._updating |= type;
+        if (this._updating === UpdateType.none)
+            return;
+        window.requestAnimationFrame(() => {
+            if ((this._updating & UpdateType.draw) === UpdateType.draw) {
+                this.draw();
+                this._updating &= ~UpdateType.draw;
+            }
+            this.doUpdate(this._updating);
+        });
     }
 }
