@@ -13,6 +13,12 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
+## 0.4.26 2017-10-27
+
+- **Fixed:**
+  - Chat capture: finally fix ignoring stores and lockers
+
+
 ## 0.4.25 2017-10-26
 
 - **Fixed:**

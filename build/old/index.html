@@ -721,7 +721,7 @@
         }
         //locker/store list end
         res = /^(-*)$/.exec(data.line);
-        if (_noCaptureStore > 1 && res && res.length > 0) {
+        if (_noCaptureStore > 0 && res && res.length > 0) {
           capture = 0;
           _noCaptureStore++;
         }
