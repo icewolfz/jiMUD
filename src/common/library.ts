@@ -70,8 +70,8 @@ export function stripParentheses(str) {
 }
 
 export function stripQuotes(str) {
-    str = str.replace(/^"(.+(?="$))"$/, '$1');
-    str = str.replace(/^'(.+(?='$))'$/, '$1');
+    str = str.replace(/^"(.+(?="$))?"$/, '$1');
+    str = str.replace(/^'(.+(?='$))?'$/, '$1');
     return str;
 }
 
