@@ -699,7 +699,7 @@
         }
         if (_captures.length === 0 || data.fragment) return;
         //custom capture to ignore who list
-        res = /^(-*)\s*\[ .* matching users \]\s*(-*)$/.exec(data.line);
+        res = /^(-*)\s*\[ (.*) matching (users|user) \]\s*(-*)$/.exec(data.line);
         if (res && res.length > 0) {
           capture = 0;
           _noCapture = true;
@@ -707,7 +707,7 @@
         }
         //end capture blocking for who list
         res = /^(-*)\s*\[ .* \]\s*(-*)$/.exec(data.line);
-        if (res && res.length > 0) {
+        if (_noCapture && res && res.length > 0) {
           capture = 0;
           _noCapture = false;
           return;
