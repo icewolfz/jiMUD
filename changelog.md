@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - MXP parsing replacing custom tags with ''
+  - Chat capture:
+    - Fixed capture of who list when only 1 user online
 
 ## 0.4.26 2017-10-27
 
