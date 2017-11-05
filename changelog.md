@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.27
+## 0.4.27 2017-11-04
 
 - **Fixed:**
   - MXP parsing replacing custom tags with ''
