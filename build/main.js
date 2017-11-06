@@ -1830,8 +1830,7 @@ ipcMain.on('import-map', (event, data) => {
   if (winMap)
     winMap.webContents.send('import', data);
   else if (data) {
-    createMapper();
-    setTimeout(() => { winMap.webContents.send('import', data); }, 500);
+    createMapper(false, false, () => { winMap.webContents.send('import', data); });
   }
 });
 
@@ -2097,7 +2096,7 @@ function showPrefs() {
   addInputContext(pref);
 }
 
-function createMapper(show, loading) {
+function createMapper(show, loading, loaded) {
   if (winMap) return;
   var s = loadWindowState('mapper');
   winMap = new BrowserWindow({
@@ -2168,6 +2167,8 @@ function createMapper(show, loading) {
       clearTimeout(loadid);
       loadid = setTimeout(() => { win.focus(); }, 500);
     }
+    if (loaded)
+      loaded();
   });
 
   winMap.on('close', (e) => {
