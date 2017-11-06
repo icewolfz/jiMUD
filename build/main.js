@@ -622,7 +622,7 @@ ipcMain.on('GMCP-received', (event, data, client) => {
 
 ipcMain.on('set-overlay', (event, args) => {
   overlay = args;
-  if(!win) return;
+  if (!win) return;
   switch (args) {
     case 1:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
@@ -662,9 +662,10 @@ ipcMain.on('create-window', (event, window, args, state, client) => {
 });
 
 ipcMain.on('flush', (event, sender, window, client) => {
-  if (!global.clients[client] || !global.clients[client][window])
-    return;
-  global.clients[client][window].window.webContents.send('flush-end', sender, client);
+  if (global.clients[client] && !global.clients[client][window])
+    global.clients[client][window].window.webContents.send('flush-end', sender, client);
+  else if (win && win.webContents)
+    win.webContents.send('flush-end', sender, window, client);
 });
 
 ipcMain.on('flush-end', (event, sender, window, client) => {
