@@ -4,8 +4,9 @@
 
 - **Fixed:**
   - Backup:
-    - Fixed hang when trying to load remote data and mapper window not created\
+    - Fixed hang when trying to load remote data and mapper window not created
     - Fixed importing map data if mapper disabled
+  - Tray icon no longer lingers in system tray when client closed.
 
 ## 0.4.27 2017-11-04
 
