@@ -1778,7 +1778,7 @@ ipcMain.on('update-menuitem', (event, args) => {
 
 ipcMain.on('set-overlay', (event, args) => {
   overlay = args;
-  if(!win) return;
+  if (!win) return;
   switch (args) {
     case 1:
       win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
@@ -1829,11 +1829,17 @@ ipcMain.on('show-window', (event, window, args) => {
 ipcMain.on('import-map', (event, data) => {
   if (winMap)
     winMap.webContents.send('import', data);
+  else if (data) {
+    createMapper();
+    setTimeout(() => { winMap.webContents.send('import', data); }, 500);
+  }
 });
 
 ipcMain.on('flush', (event, sender) => {
   if (winMap)
     winMap.webContents.send('flush', sender);
+  else if (win && win.webContents)
+    win.webContents.send('flush-end', sender);
 });
 
 ipcMain.on('flush-end', (event, sender) => {

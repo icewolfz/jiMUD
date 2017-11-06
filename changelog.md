@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.28
+
+- **Fixed:**
+  - Backup:
+    - Fixed hang when trying to load remote data and mapper window not created\
+    - Fixed importing map data if mapper disabled
+
 ## 0.4.27 2017-11-04
 
 - **Fixed:**
