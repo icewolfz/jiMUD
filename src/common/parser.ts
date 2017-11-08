@@ -2111,6 +2111,7 @@ export class Parser extends EventEmitter {
       tmp = this.GetCurrentStyle();
       tmp.tag = MXPTag.Custom;
       tmp.custom = e.name;
+      this.mxpStyles.push(tmp);
       arg = e.definition;
       sArgs = {};
       //setup default values
@@ -2157,7 +2158,7 @@ export class Parser extends EventEmitter {
         this.mxpState.capture--;
       }
 
-      //tmp = ClearMXPToTag(MXPTag.Custom, tag);
+      tmp = this.ClearMXPToTag(MXPTag.Custom, tag.substring(1));
       arg = e.closeDefinition;
 
       if (e.flag.length > 0) {
