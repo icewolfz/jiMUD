@@ -2111,7 +2111,6 @@ export class Parser extends EventEmitter {
       tmp = this.GetCurrentStyle();
       tmp.tag = MXPTag.Custom;
       tmp.custom = e.name;
-      this.mxpStyles.push(tmp);
       arg = e.definition;
       sArgs = {};
       //setup default values
