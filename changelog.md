@@ -13,7 +13,7 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
-## 0.4.28
+## 0.4.28 2017-11-15
 
 - **Fixed:**
   - Backup:
