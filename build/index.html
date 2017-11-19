@@ -728,8 +728,7 @@
           capture = 0;
           _noCaptureStore++;
         }
-        if(_noCaptureStore > 2)
-        {
+        if (_noCaptureStore > 2) {
           capture = 0;
           _noCaptureStore = 0;
         }
@@ -1044,7 +1043,47 @@
           format: client.options.logTimeFormat
         }
       });
-      window.onbeforeunload = function () {
+
+      let closeWindow = false;
+
+      window.onbeforeunload = function (evt) {
+        if (!closeWindow && client.options.askonclose && client.connected) {
+          evt.returnValue = false;
+
+          setTimeout(() => {
+            var choice = dialog.showMessageBox(
+              remote.getCurrentWindow(),
+              {
+                type: 'warning',
+                title: 'Connected',
+                message: 'Closing will disconnect you from the mud, close anyway?',
+                buttons: ['Yes', 'No', 'Never ask again'],
+                defaultId: 1
+              });
+            if (choice === 2) {
+              client.raise('closed');
+              client.options.askonclose = false;
+              client.saveOptions();
+              closeWindow = true;
+              remote.getCurrentWindow().close();
+              return;
+            }
+            if (choice !== 0) {
+              evt.returnValue = false;
+              return 'no';
+            }
+            client.raise('closed');
+            closeWindow = true;
+            remote.getCurrentWindow().close();
+          });
+          return;
+        }
+        client.raise('closed');
+        closeWindow = true;
+        remote.getCurrentWindow().close();
+        return;
+
+        /*
         if (client.options.askonclose && client.connected) {
           var choice = dialog.showMessageBox(
             remote.getCurrentWindow(),
@@ -1062,10 +1101,14 @@
             return;
           }
           if (choice !== 0)
+          {
+            evt.returnValue = false;
             return 'no';
+          }
         }
         client.raise('closed');
         return;
+        */
       };
 
       $("#status").on('contextmenu', (e) => {

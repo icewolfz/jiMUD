@@ -4,6 +4,8 @@
 
 - **New:**
   - Character manager: Added load default and close, and load and close buttons
+- **Fixed:**
+  - Close check was not correctly working and closed even if you said now when connected
 
 ## 0.4.28 2017-11-15
 
