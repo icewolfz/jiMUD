@@ -266,6 +266,7 @@
                 $("#btn-copy").prop('disabled', false);
                 $("#btn-delete").prop('disabled', false);
                 $("#btn-load").prop('disabled', false);
+                $("#btn-load-close").prop('disabled', false);
                 $("#character-editor input").prop('disabled', false);
                 $("#character-editor button").prop('disabled', false);
                 $("#settings").val(characters.characters[current].settings);
@@ -300,6 +301,7 @@
             $("#btn-copy").prop('disabled', true);
             $("#btn-delete").prop('disabled', true);
             $("#btn-load").prop('disabled', true);
+            $("#btn-load-close").prop('disabled', true);
             $("#character-editor input").prop('disabled', true);
             $("#character-editor input[type=text]").val('');
             $("#character-editor input[type=checkbox]").prop('checked', false);
@@ -701,11 +703,17 @@
             </button>
         </div>
         <div class="btn-group" role="group">
+            <button id="btn-load-default" type="button" class="btn btn-warning btn-xs" title="Load default and close" onclick="loadDefault();window.close()">
+                <i class="fa fa-fast-backward"></i>
+            </button>
             <button id="btn-load-default" type="button" class="btn btn-warning btn-xs" title="Load default" onclick="loadDefault()">
                 <i class="fa fa-step-backward"></i>
             </button>
             <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick="load()">
                 <i class="fa fa-play"></i>
+            </button>
+            <button id="btn-load-close" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load and close" onclick="load();window.close()">
+                <i class="fa fa-step-forward"></i>
             </button>
         </div>
     </div>
