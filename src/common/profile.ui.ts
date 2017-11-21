@@ -2518,25 +2518,31 @@ export function init() {
 
     loadActions(parseTemplate(path.join('{assets}', 'actions')), '');
 
-    window.onbeforeunload = () => {
-        if (close || _never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange))
+    window.onbeforeunload = (evt) => {
+        if (_close || !_never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange))
             return;
-        let choice = dialog.showMessageBox(
-            remote.getCurrentWindow(),
+        evt.returnValue = false;
+        setTimeout(() => {
+            const choice = dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Profiles changed',
+                    message: 'All unsaved changes will be lost, close?',
+                    buttons: ['Yes', 'No', 'Never ask again'],
+                    defaultId: 1
+                });
+            if (choice === 2)
+                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
+            if (choice === 0 || choice === 2)
             {
-                type: 'warning',
-                title: 'Profiles changed',
-                message: 'All unsaved changes will be lost, close?',
-                buttons: ['Yes', 'No', 'Never ask again'],
-                defaultId: 1
-            });
-        if (choice === 2) {
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
-            choice = 0;
-        }
-        if (choice === 0)
-            return;
-        return 'no';
+                _close = true;
+                remote.getCurrentWindow().close();
+                return;
+            }
+            evt.returnValue = false;
+            return 'no';
+        });
     };
 
     document.onkeydown = undoKeydown;
