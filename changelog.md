@@ -4,6 +4,8 @@
 
 - **New:**
   - Character manager: Added load default and close, and load and close buttons
+- **Changed:**
+  - When loading character a character it will now try and refocus on the main window if mapper, chat, or editor window are opened.
 - **Fixed:**
   - Close check was not correctly working and closed even if you said now when connected
 

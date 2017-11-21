@@ -1473,16 +1473,16 @@ ipcMain.on('load-default', (event) => {
     win.webContents.send('change-options', global.settingsFile);
 
   if (set.showMapper)
-    showMapper();
+    showMapper(true);
   else if (set.mapper.persistent || set.mapper.enabled)
     createMapper();
 
   if (set.showEditor)
-    showEditor();
+    showEditor(true);
   else if (set.editorPersistent)
     createEditor();
   if (set.showChat)
-    showChat();
+    showChat(true);
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
 });
@@ -1517,16 +1517,16 @@ ipcMain.on('load-char', (event, char) => {
     win.webContents.send('change-options', global.settingsFile);
 
   if (set.showMapper)
-    showMapper();
+    showMapper(true);
   else if (set.mapper.persistent || set.mapper.enabled)
     createMapper();
 
   if (set.showEditor)
-    showEditor();
+    showEditor(true);
   else if (set.editorPersistent)
     createEditor();
   if (set.showChat)
-    showChat();
+    showChat(true);
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
 });
