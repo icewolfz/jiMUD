@@ -111,6 +111,8 @@ export interface TelnetOptionsServer {
  * @property {Boolean} [enableLatency=false]	    - Attempt to calculate the latency between a send/receive, and if sent on receive send a GMCP ping back and attempt to get latency of a connection
  * @property {Number}  [latencyAvg=0]				- The average milliseconds between the last send and the current received data
  * @property {Number}  [enablePing=false]			- Enable GMCP ping back to better track latency
+ * @property {Number}  [keepAlive=false]            - Enable socket KeepAlive
+ * @property {Number}  [keepAliveDelay=0]           - Set socket KeepAlive delay in seconds
  * @property {Array}   GMCPSupports					- An array of supported GMCP modules for mat of "Modulate 0|1", defaults are "Core 1", "Char 1", "Char.Vitals 1", "Char.Experience 1"
  */
 export class Telnet extends EventEmitter {
@@ -122,6 +124,8 @@ export class Telnet extends EventEmitter {
     private _doPing: boolean = false;
     private _closed: boolean = true;
     private _zlib: boolean = false;
+    private _keepAlive: boolean = false;
+    private _keepAliveDelay: number = 0;
 
     public options: TelnetOptions = { MCCP: true, MXP: true, NAWS: true, MSDP: true, GMCP: true, MSSP: false, ECHO: true, TTYPE: true, EOR: true, NEWENVIRON: false, ZMP: false, ATCP: false, CHARSET: true };
     public host: string = '';
@@ -178,6 +182,40 @@ export class Telnet extends EventEmitter {
         if (!this.socket || typeof this.socket === 'undefined')
             return false;
         return this._connected;
+    }
+
+    /**
+     * @name keepalive
+     * @desc set socket keepalive
+     * @returns {boolean} is keepalive enabled
+     * @memberOf Telnet
+     */
+
+    get keepAlive(): boolean {
+        return this._keepAlive;
+    }
+
+    set keepAlive(value: boolean) {
+        this._keepAlive = value;
+        if (this.socket)
+            this.socket.setKeepAlive(this._keepAlive, this._keepAliveDelay);
+    }
+
+    /**
+     * @name keepaliveDelay
+     * @desc set socket keepalive delay
+     * @returns {number} current keepalive delay in seconds
+     * @memberOf Telnet
+     */
+
+    get keepAliveDelay(): number {
+        return this._keepAliveDelay;
+    }
+
+    set keepAliveDelay(value: number) {
+        this._keepAliveDelay = value;
+        if (this.socket)
+            this.socket.setKeepAlive(this._keepAlive, this._keepAliveDelay);
     }
 
     /**
@@ -1672,6 +1710,7 @@ export class Telnet extends EventEmitter {
         let _socket;
         try {
             _socket = new Socket({ allowHalfOpen: true });
+            _socket.setKeepAlive(this._keepAlive, this._keepAliveDelay);
             //_socket.setEncoding('binary');
             _socket.on('close', err => {
                 if (err)
