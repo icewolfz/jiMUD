@@ -19,14 +19,14 @@ export class Mapper {
     public memory: boolean = false;
     public memorySavePeriod: number = 900000;
     public active =
-    {
-        ID: null,
-        x: 0,
-        y: 0,
-        z: 0,
-        area: null,
-        zone: 0
-    };
+        {
+            ID: null,
+            x: 0,
+            y: 0,
+            z: 0,
+            area: null,
+            zone: 0
+        };
     public persistent: boolean = true;
 }
 
@@ -163,6 +163,9 @@ export class Settings {
     public autoConnectDelay: number = 600;
     public autoLogin: boolean = true;
     public commandEcho: boolean = true;
+
+    public enableKeepAlive: boolean = false;
+    public keepAliveDelay: number = 0;
 
     public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
