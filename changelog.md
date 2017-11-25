@@ -4,8 +4,10 @@
 
 - **New:**
   - Character manager: Added load default and close, and load and close buttons
+  - Keep alive, this allows you to enable keep alive for sockets and the initial delay in seconds
 - **Changed:**
   - When loading character a character it will now try and refocus on the main window if mapper, chat, or editor window are opened.
+  - Moved show script errors to scripting area in preference dialog
 - **Fixed:**
   - Close check was not correctly working and closed even if you said now when connected
   - Profile manager:

@@ -216,7 +216,7 @@
 
           $('#chat-font').val(_settings.chat.font);
           $('#chat-font').selectpicker('render');
-          $('#chat-font').change();          
+          $('#chat-font').change();
         });
       }
       $('#font').change(() => {
@@ -315,7 +315,7 @@
       $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
       $('#dev').prop('checked', _settings.dev);
       $('#gamepads').prop('checked', _settings.gamepads);
-      
+
       $('#lagMeter').prop('checked', _settings.lagMeter);
       $('#enablePing').prop('checked', _settings.enablePing);
       $('#showScriptErrors').prop('checked', _settings.showScriptErrors);
@@ -330,7 +330,7 @@
       $('#display-roundedOverlays').prop('checked', _settings.display.roundedOverlays);
       $('#profiles-codeEditor').prop('checked', _settings.profiles.codeEditor);
       $('#profiles-watchFiles').prop('checked', _settings.profiles.watchFiles);
-      
+
 
       //$('#font').selectpicker('val', _settings.font);
       $('#font').val(_settings.font);
@@ -347,6 +347,9 @@
       $('#chat-font').selectpicker('render');
       $('#chat-fontSize').val(_settings.chat.fontSize);
       $('#chat-font').change();
+
+      $('#enableKeepAlive').prop('checked', _settings.enableKeepAlive);
+      $('#keepAliveDelay').val(_settings.keepAliveDelay);
 
       $('#commandEcho').prop('checked', _settings.commandEcho);
       $('#AutoCopySelectedToClipboard').prop('checked', _settings.AutoCopySelectedToClipboard);
@@ -1801,6 +1804,11 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
+              <input type="checkbox" id="showScriptErrors" /> Show script errors
+            </label>
+          </div>          
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
               <input type="checkbox" id="parseSingleQuotes" /> Parse single quotes as string
             </label>
           </div>
@@ -1808,7 +1816,7 @@
             <label class="control-label">
               <input type="checkbox" id="parseDoubleQuotes" /> Parse double quotes as string
             </label>
-          </div>
+          </div>          
         </div>
         <div role="tabpanel" class="pref-pane" id="advanced">
           <div class="col-sm-6 form-group">
@@ -1821,11 +1829,6 @@
               <input type="checkbox" id="gamepads" /> Enable gamepads
               <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
             </label>
-          </div>          
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
-              <input type="checkbox" id="showScriptErrors" /> Show script errors
-            </label>
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
@@ -1836,6 +1839,22 @@
             <label class="control-label">
               <input type="checkbox" id="logErrors" /> Log errors
             </label>
+          </div>
+          <div class="col-sm-12 form-group" style="padding: 0px;">
+            <div class="col-sm-6 form-group">
+              <label class="control-label">
+                <input type="checkbox" id="enableKeepAlive" /> Enable Keep alive
+              </label>
+            </div>
+            <div class="col-sm-6 form-group">
+              <label class="control-label">
+                Keep alive delay
+                <div class="input-group">
+                  <input type="number" id="keepAliveDelay" class="input-sm form-control" min="0" max="10000" />
+                  <div class="input-group-addon">s</div>
+                </div>
+              </label>
+            </div>
           </div>
 
           <div class="col-sm-12 form-group" style="padding: 0px;">
