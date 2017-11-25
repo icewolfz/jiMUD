@@ -41,7 +41,7 @@
         var _ied, options;
         var _local = {}, _remote = {}, _downloads = {};
         var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0 };
-        var localTable, remoteTable, queueTable, key = '', keyClearID;
+        var localTable, remoteTable, queueTable, key = '', pKey, keyClearID;
         var watcher;
         var dragging = false, btmDragging = false;
         var _localDrag, _remoteDrag, _progressCancel = false;
@@ -739,6 +739,7 @@
             localTable.rows().remove();
             updateDraw(localTable, localTable.rows.add(all));
             $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
+            $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
             updateStatus();
         }
 
@@ -811,6 +812,7 @@
             }
             remoteTable.rows().remove();
             updateDraw(remoteTable, remoteTable.rows.add(all));
+            $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
             $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
 
@@ -846,6 +848,7 @@
         function updateMenu() {
             if (updatingMenu) return;
             updatingMenu = true;
+            key = '';
             setTimeout(() => {
                 //var remote = $("#remote-list").hasClass("focused");
                 //var local = $("#local-list").hasClass("focused");
@@ -1648,9 +1651,40 @@
 
             $("#local-list").on('keypress', function (e) {
                 key += e.key;
-                var row = localTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; });
+                var selected = localTable.rows({ selected: true });
+                var f = 0;
+                var row = localTable.row(function (idx, data, node) {
+                    if (selected.length > 0) {
+                        if (selected[selected.length - 1][0] == idx)
+                            f = idx;
+                        else if (f)
+                            return data.name.startsWith(key) ? true : false;
+                    }
+                    else
+                        return data.name.startsWith(key) ? true : false;
+                });
+                if (selected.length && row.length == 0) {
+                    localTable.rows().deselect();
+                    row = localTable.row(function (idx, data, node) {
+                        if (selected.length > 0) {
+                            if (selected[selected.length - 1][0] == idx)
+                                f = idx;
+                            else if (f)
+                                return data.name.startsWith(key) ? true : false;
+                        }
+                        else
+                            return data.name.startsWith(key) ? true : false;
+                    });
+                }
                 //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollHeight - (row.index() * $(row.node()).outerHeight());
-                if (!row || row.length === 0) return;
+                if (!row || row.length === 0) {
+                    clearTimeout(keyClearID);
+                    keyClearID = setTimeout(() => {
+                        pKey = key;
+                        key = '';
+                    }, 300);
+                    return;
+                }
                 localTable.rows().deselect();
                 var top = row.node().offsetTop;
                 var sTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop;
@@ -1663,13 +1697,44 @@
                 row.select();
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
+                    pKey = key;
                     key = '';
-                }, 500);
+                }, 300);
             });
             $("#remote-list").on('keypress', function (e) {
                 key += e.key;
-                var row = remoteTable.row(function (idx, data, node) { return data.name.startsWith(key) ? true : false; });
-                if (!row || row.length === 0) return;
+                var selected = remoteTable.rows({ selected: true });
+                var f = 0;
+                var row = remoteTable.row(function (idx, data, node) {
+                    if (selected.length > 0) {
+                        if (selected[selected.length - 1][0] == idx)
+                            f = idx;
+                        else if (f)
+                            return data.name.startsWith(key) ? true : false;
+                    }
+                    else
+                        return data.name.startsWith(key) ? true : false;
+                });
+                if (selected.length && row.length == 0) {
+                    remoteTable.rows().deselect();
+                    row = remoteTable.row(function (idx, data, node) {
+                        if (selected.length > 0) {
+                            if (selected[selected.length - 1][0] == idx)
+                                f = idx;
+                            else if (f)
+                                return data.name.startsWith(key) ? true : false;
+                        }
+                        else
+                            return data.name.startsWith(key) ? true : false;
+                    });
+                }
+                if (!row || row.length === 0) {
+                    keyClearID = setTimeout(() => {
+                        pKey = key;
+                        key = '';
+                    }, 300);
+                    return;
+                }
                 remoteTable.rows().deselect();
                 var top = row.node().offsetTop;
                 var sTop = $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop;
@@ -1681,8 +1746,9 @@
                 row.select();
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
+                    pKey = key;
                     key = '';
-                }, 500);
+                }, 300);
             });
 
             $('#local-list tbody').on('dblclick', 'tr', function () {
