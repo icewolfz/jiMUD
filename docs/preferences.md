@@ -120,6 +120,7 @@ Controls what is captured into the chat window
 ## Scripting
 
 - `Allow evaluate` will enable ${expression} evaluation
+- `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
 - `Parse single quotes as strings` Treat single quotes as string encasing, meaning all text found inside single quotes are treated as is and not parsed.
 - `Parse double quotes as strings` Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
 
@@ -146,10 +147,11 @@ Controls what is captured into the chat window
 
 - `Connect to development` Connect to the development mud.
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
-- `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
 - `Enable GMCP Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
 - `Enable debug` Will display debug data to the dev tool console
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
+- `Enable Keep alive` Enable socket keep alive
+- `Keep alive delay` The number of seconds for initial keep alive delay
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Backup save` what to save when using remote backup systems
 - `Backup load` what to load when using remote backup systems

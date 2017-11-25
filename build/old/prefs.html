@@ -1786,6 +1786,11 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
+              <input type="checkbox" id="showScriptErrors" /> Show script errors
+            </label>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
               <input type="checkbox" id="parseSingleQuotes" /> Parse single quotes as string
             </label>
           </div>
@@ -1809,11 +1814,6 @@
           </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
-              <input type="checkbox" id="showScriptErrors" /> Show script errors
-            </label>
-          </div>
-          <div class="col-sm-6 form-group">
-            <label class="control-label">
               <input type="checkbox" id="enableDebug" /> Enable debug
             </label>
           </div>
@@ -1822,7 +1822,22 @@
               <input type="checkbox" id="logging-errors" /> Log errors
             </label>
           </div>
-
+          <div class="col-sm-12 form-group" style="padding: 0px;">
+            <div class="col-sm-6 form-group">
+              <label class="control-label">
+                <input type="checkbox" id="enableKeepAlive" /> Enable Keep alive
+              </label>
+            </div>
+            <div class="col-sm-6 form-group">
+              <label class="control-label">
+                Keep alive delay
+                <div class="input-group">
+                  <input type="number" id="keepAliveDelay" class="input-sm form-control" min="0" max="10000" />
+                  <div class="input-group-addon">s</div>
+                </div>
+              </label>
+            </div>
+          </div>
 
           <div class="col-sm-12 form-group" style="padding: 0px;">
             <div class="col-sm-6 form-group">
