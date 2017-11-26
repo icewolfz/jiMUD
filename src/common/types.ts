@@ -165,6 +165,7 @@ export interface FileInfo {
   name: string;
   type: string;
   size: number;
+  type2?: number;
 }
 
 export enum TempType {

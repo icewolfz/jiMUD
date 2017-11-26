@@ -29,6 +29,7 @@
   - Immortal tools:
     - List views now correctly scroll to top when remote or local path has been changed
     - List view key down selection search now works more like windows explorer, will start from current selected item
+    - Date modified column groups folders and files instead of mixing them up
 
 ## 0.4.28 2017-11-15
 

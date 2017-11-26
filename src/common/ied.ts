@@ -595,7 +595,8 @@ export class IED extends EventEmitter {
             path: file,
             name: path.basename(file),
             size: 0,
-            type: path.extname(file)
+            type: path.extname(file),
+            type2: 0
         };
         let stat;
         try {
@@ -610,6 +611,7 @@ export class IED extends EventEmitter {
         if (stat.isDirectory()) {
             info.type = 'Directory';
             info.size = -2;
+            info.type2 = -2;
         }
         return info;
     }
