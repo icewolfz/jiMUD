@@ -86,8 +86,10 @@
 
     Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
     ```
+- `Name` a unique name to identify the trigger, if more then one trigger exist with the name, the one with the highest priority is used first
 - `Priority` the sort order of triggers
 - `Verbatim` the text is compared exactly how it is, including case
+- `Temporary` the trigger will be deleted on first execution
 - `Trigger on Newline` this causes the trigger to execute if it is a full line of text
 - `Trigger on Prompt` this causes the trigger to execute if prompt/partial line of text.
 

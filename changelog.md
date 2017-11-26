@@ -5,7 +5,9 @@
 - **New:**
   - Character manager: Added load default and close, and load and close buttons
   - Keep alive, this allows you to enable keep alive for sockets and the initial delay in seconds
-  - Trigger Alarms, this allows you to create trigger timers similar to zMUD/cMUD
+  - Triggers:
+    - Alarms, this allows you to create trigger timers similar to zMUD/cMUD
+    - Temporary, this removes a trigger once it has been executed once
 - **Changed:**
   - When loading character a character it will now try and refocus on the main window if mapper, chat, or editor window are opened.
   - Moved show script errors to scripting area in preference dialog
