@@ -2483,8 +2483,7 @@ export function init() {
                 });
             if (choice === 2)
                 ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
-            if (choice === 0 || choice === 2)
-            {
+            if (choice === 0 || choice === 2) {
                 _close = true;
                 remote.getCurrentWindow().close();
                 return;
@@ -3095,6 +3094,7 @@ function importProfiles() {
                                     item.priority = data.profiles[keys[k]].triggers[m].priority;
                                     item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline;
                                     item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt;
+                                    item.temp = data.profiles[keys[k]].triggers[m].temp;
                                     item.type = data.profiles[keys[k]].triggers[m].type;
                                     item.notes = data.profiles[keys[k]].triggers[m].notes || '';
                                     p.triggers.push(item);
@@ -3200,7 +3200,7 @@ function trashProfiles(p) {
     }
 }
 
-export function saveProfiles() {
+export function saveProfiles(clearNow?: boolean) {
     if (updateCurrent() !== UpdateState.NoChange)
         return false;
     if (filesChanged)
@@ -3222,7 +3222,10 @@ export function saveProfiles() {
                 options.save(remote.getGlobal('settingsFile'));
                 ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
                 ipcRenderer.send('reload-profiles');
-                setTimeout(clearChanges, 500);
+                if (clearNow)
+                    clearChanges();
+                else
+                    setTimeout(clearChanges, 500);
             }
         });
     else {
@@ -3237,7 +3240,10 @@ export function saveProfiles() {
         options.save(remote.getGlobal('settingsFile'));
         ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
         ipcRenderer.send('reload-profiles');
-        setTimeout(clearChanges, 500);
+        if (clearNow)
+            clearChanges();
+        else
+            setTimeout(clearChanges, 500);
     }
     return true;
 }

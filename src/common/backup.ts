@@ -410,6 +410,7 @@ export class Backup extends EventEmitter {
                             item.priority = data.profiles[keys[k]].triggers[m].priority;
                             item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline ? true : false;
                             item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt ? true : false;
+                            item.temp = data.profiles[keys[k]].triggers[m].temp ? true : false;
                             item.type = data.profiles[keys[k]].triggers[m].type;
                             item.notes = data.profiles[keys[k]].triggers[m].notes || '';
                             p.triggers.push(item);
