@@ -71,6 +71,128 @@ export function MacroDisplay(item: Macro) {
     return d.join('+');
 }
 
+export class Alarm {
+    public parent: Trigger;
+    public pattern: string;
+    public temp: boolean = false;
+    public start: boolean = false;
+    public seconds: number = 0;
+    public secondsWildcard: boolean = false;
+    public hours: number = 0;
+    public hoursWildcard: boolean = false;
+    public minutes: number = 0;
+    public minutesWildcard: boolean = false;
+
+    constructor(data?, pattern?) {
+        if (typeof data === 'string') {
+            pattern = data;
+            data = 0;
+        }
+        this.parent = data;
+        this.pattern = pattern;
+    }
+
+    public static parse(parent, pattern?: string, readOnly?: boolean): Alarm {
+        if (typeof parent === 'string') {
+            pattern = parent;
+            parent = 0;
+        }
+        if (!pattern || pattern.length === 0)
+            throw new Error('Blank pattern');
+        const t = new Alarm(parent, pattern);
+        while (pattern[0] === '-' || pattern[0] === '+') {
+            if (pattern[0] === '-')
+                t.start = true;
+            else if (pattern[0] === '+')
+                t.temp = true;
+            pattern = pattern.substr(1);
+        }
+        if (pattern !== '*') {
+            const parts = pattern.split(':');
+            let tmp;
+            if (parts.length === 0)
+                throw new Error('Invalid format: ' + pattern);
+            if (parts.length === 1) {
+                if (parts[0][0] === '*') {
+                    t.secondsWildcard = true;
+                    parts[0] = parts[0].substr(1);
+                }
+                tmp = parseInt(parts[0], 10);
+                if (isNaN(tmp))
+                    throw new Error('Invalid Format: ' + parts[0]);
+                if (tmp < 0 || tmp > 59)
+                    throw new Error('Seconds can only be 0 to 59');
+                t.seconds = tmp;
+            }
+            else if (parts.length === 2) {
+                if (parts[0][0] === '*') {
+                    t.minutesWildcard = true;
+                    parts[0] = parts[0].substr(1);
+                }
+                tmp = parseInt(parts[0], 10);
+                if (isNaN(tmp))
+                    throw new Error('Invalid Format: ' + parts[0]);
+                if (tmp < 0 || tmp > 59)
+                    throw new Error('Minutes can only be 0 to 59');
+                t.minutes = tmp;
+
+                if (parts[1][0] === '*') {
+                    t.secondsWildcard = true;
+                    parts[1] = parts[1].substr(1);
+                }
+                else
+                    t.secondsWildcard = false;
+                tmp = parseInt(parts[1], 10);
+                if (isNaN(tmp))
+                    throw new Error('Invalid Format: ' + parts[1]);
+                if (tmp < 0 || tmp > 59)
+                    throw new Error('Seconds can only be 0 to 59');
+                t.seconds = tmp;
+
+            }
+            else {
+                if (parts[0][0] === '*') {
+                    t.hoursWildcard = true;
+                    parts[0] = parts[0].substr(1);
+                }
+                tmp = parseInt(parts[0], 10);
+                if (isNaN(tmp))
+                    throw new Error('Invalid Format: ' + parts[0]);
+                if (tmp < 0 || tmp > 23)
+                    throw new Error('Hours can only be 0 to 23');
+                t.hours = tmp;
+
+                if (parts[1][0] === '*') {
+                    t.minutesWildcard = true;
+                    parts[1] = parts[1].substr(1);
+                }
+                tmp = parseInt(parts[1], 10);
+                if (isNaN(tmp))
+                    throw new Error('Invalid Format: ' + parts[1]);
+                if (tmp < 0 || tmp > 59)
+                    throw new Error('Minutes can only be 0 to 59');
+                t.minutes = tmp;
+
+                if (parts[2][0] === '*') {
+                    t.secondsWildcard = true;
+                    parts[2] = parts[2].substr(2);
+                }
+                else
+                    t.secondsWildcard = false;
+                tmp = parseInt(parts[2], 10);
+                if (isNaN(tmp))
+                    throw new Error('Invalid Format: ' + parts[2]);
+                if (tmp < 0 || tmp > 59)
+                    throw new Error('Seconds can only be 0 to 59');
+                t.seconds = tmp;
+            }
+        }
+        if (readOnly)
+            t.temp = false;
+        return t;
+    }
+}
+
 export class Item {
     public name: string = '';
     public priority: number = 0;
