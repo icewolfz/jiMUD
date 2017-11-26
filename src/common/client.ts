@@ -442,9 +442,8 @@ export class Client extends EventEmitter {
             }
             if (match) {
                 this._input.ExecuteTrigger(this.alarms[a], [alarm.pattern], false, -a);
-                if (alarm.temp || this.alarms[a].temp) {
+                if (alarm.temp)
                     this.removeTrigger(this.alarms[a]);
-                }
             }
         }
     }
