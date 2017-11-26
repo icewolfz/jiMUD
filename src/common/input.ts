@@ -413,12 +413,14 @@ export class Input extends EventEmitter {
         let args = [];
         let arg: string = '';
         let raw: string;
+        let s = 0;
         const pd: boolean = this.client.options.parseDoubleQuotes;
         const ps: boolean = this.client.options.parseSingleQuotes;
 
         for (; idx < tl; idx++) {
             c = txt.charAt(idx);
             switch (state) {
+                //find name
                 case 1:
                     if (c === ' ') {
                         state = 2;
@@ -429,8 +431,12 @@ export class Input extends EventEmitter {
                         raw += c;
                     }
                     break;
+                //find arguments
                 case 2:
-                    if (c === ' ') {
+                    if (c === '{') {
+                        state = 7;
+                    }
+                    else if (c === ' ') {
                         args.push(arg);
                         arg = '';
                     }
@@ -462,6 +468,20 @@ export class Input extends EventEmitter {
                     arg += c;
                     raw += c;
                     //}
+                    break;
+                case 7:
+                    if (c === '}') {
+                        if (s === 0) {
+                            state = 2;
+                            args.push(arg);
+                            arg = '';
+                        }
+                        else
+                            s--;
+                    }
+                    else if (c === '{')
+                        s++;
+                    raw += c;
                     break;
                 /*
             case 5:
@@ -523,6 +543,10 @@ export class Input extends EventEmitter {
         let i;
         let tmp;
         switch (fun.toLowerCase()) {
+            case 'alarm':
+            case 'ala':
+
+                return null;
             case 'ungag':
             case 'ung':
                 if (args.length > 0)
