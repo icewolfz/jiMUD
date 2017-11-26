@@ -764,7 +764,8 @@
                     size: dir[d].size,
                     type: path.extname(dir[d].file),
                     date: dir[d].date * 1000,
-                    hidden: IED.isHidden((p === "/" ? '' : p) + "/" + dir[d].file, true)
+                    hidden: IED.isHidden((p === "/" ? '' : p) + "/" + dir[d].file, true),
+                    type2: 0
                 };
                 if (file.hidden && !options.showhidden)
                     continue;
@@ -772,6 +773,7 @@
                     file.type = "Directory";
                     dirs.push(file);
                     info.remoteDirs++;
+                    file.type2 = -2;
                 }
                 else
                     info.remoteFiles++;
@@ -1053,16 +1055,23 @@
                     {
                         type: "moment",
                         targets: 3,
+                        orderData: [ 4, 3 ],
                         render: function (data) {
                             return new moment(data).format('MM/DD/YYYY hh:mm:ss A');
                         }
+                    },
+                    {
+                        "targets": 4,
+                        "visible": false
+
                     }
                 ],
                 columns: [
                     { data: 'name', width: '200px' },
                     { data: 'size', width: '200px' },
                     { data: 'type', width: '200px' },
-                    { data: 'date', width: '200px' }
+                    { data: 'date', width: '200px' },
+                    { data: 'type2', width: '200px' }
                 ]
             });
             $('#remote-list').DataTable({
@@ -1103,16 +1112,22 @@
                     {
                         type: "moment",
                         targets: 3,
+                        orderData: [ 4, 3 ],
                         render: function (data) {
                             return new moment(data).format('MM/DD/YYYY hh:mm:ss A');
                         }
+                    },
+                    {
+                        "targets": 4,
+                        "visible": false
                     }
                 ],
                 columns: [
                     { data: 'name', width: '200px' },
                     { data: 'size', width: '200px' },
                     { data: 'type', width: '200px' },
-                    { data: 'date', width: '200px' }
+                    { data: 'date', width: '200px' },
+                    { data: 'type2', width: '200px' }
                 ]
             });
             $('#queue-list').DataTable({
