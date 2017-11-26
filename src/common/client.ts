@@ -8,14 +8,17 @@ import { AnsiColorCode } from './ansi';
 import { stripHTML, parseTemplate, getScrollBarHeight, SortArrayByPriority, SortItemArrayByPriority, existsSync } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
-import { ProfileCollection, Alias, Trigger, Macro, Profile, Button, Context, TriggerType } from './profile';
+import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType } from './profile';
 import { MSP } from './msp';
 import { Display } from './display';
 const { version } = require('../../package.json');
 const path = require('path');
 const fs = require('fs');
+const moment = require('moment');
 
 interface ItemCache {
+    alarmPatterns: object;
+    alarms: Trigger[];
     triggers: Trigger[];
     aliases: Alias[];
     macros: Macro[];
@@ -37,8 +40,11 @@ export class Client extends EventEmitter {
         macros: null,
         buttons: null,
         contexts: null,
-        defaultContext: null
+        defaultContext: null,
+        alarms: null,
+        alarmPatterns: {}
     };
+    private _alarm: NodeJS.Timer;
 
     public MSP: MSP;
 
@@ -156,7 +162,7 @@ export class Client extends EventEmitter {
             if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableTriggers)
                 this._itemCache.triggers = [];
             else
-                this._itemCache.triggers = SortItemArrayByPriority(this.profiles.items[keys[k]].triggers);
+                this._itemCache.triggers = SortItemArrayByPriority(this.profiles.items[keys[0]].triggers);
             return this._itemCache.triggers;
         }
         for (; k < kl; k++) {
@@ -166,6 +172,59 @@ export class Client extends EventEmitter {
         }
         this._itemCache.triggers = tmp;
         return this._itemCache.triggers;
+    }
+
+    public removeTrigger(trigger: Trigger) {
+        const keys = this.profiles.keys;
+        let k = 0;
+        const kl = keys.length;
+        let idx = -1;
+        if (kl === 0)
+            return;
+        if (kl === 1) {
+            if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableTriggers)
+                return;
+            idx = this.profiles.items[keys[k]].triggers.indexOf(trigger);
+        }
+        else
+            for (; k < kl && idx !== -1; k++) {
+                if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableTriggers || this.profiles.items[keys[k]].triggers.length === 0)
+                    continue;
+                idx = this.profiles.items[keys[k]].triggers.indexOf(trigger);
+            }
+        if (idx === -1)
+            return;
+        this.profiles.items[keys[k]].triggers.splice(idx, 1);
+        this._itemCache.triggers = null;
+        this.saveProfile(keys[k]);
+    }
+
+    get alarms(): Trigger[] {
+        if (this._itemCache.alarms)
+            return this._itemCache.alarms;
+        const keys = this.profiles.keys;
+        const tmp = [];
+        let k = 0;
+        const kl = keys.length;
+        if (kl === 0) return [];
+        if (kl === 1) {
+            if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableTriggers)
+                this._itemCache.alarms = [];
+            else
+                this._itemCache.alarms = $.grep(SortItemArrayByPriority(this.profiles.items[keys[k]].triggers), (a) => {
+                    return a.enabled && a.type === TriggerType.Alarm;
+                });
+            return this._itemCache.alarms;
+        }
+        for (; k < kl; k++) {
+            if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableTriggers || this.profiles.items[keys[k]].triggers.length === 0)
+                continue;
+            tmp.push.apply(tmp, SortItemArrayByPriority(this.profiles.items[keys[k]].triggers));
+        }
+        this._itemCache.alarms = $.grep(tmp, (a) => {
+            return a.enabled && a.type === TriggerType.Alarm;
+        });
+        return this._itemCache.alarms;
     }
 
     get buttons(): Button[] {
@@ -250,6 +309,7 @@ export class Client extends EventEmitter {
         if (!this.profiles.contains('default'))
             this.profiles.add(Profile.Default);
         this.clearCache();
+        this.startAlarms();
         this.emit('profiles-loaded');
     }
 
@@ -259,6 +319,7 @@ export class Client extends EventEmitter {
             fs.mkdirSync(p);
         this.profiles.save(p);
         this.clearCache();
+        this.startAlarms();
         this.emit('profiles-updated');
     }
 
@@ -268,6 +329,7 @@ export class Client extends EventEmitter {
             fs.mkdirSync(p);
         this.profiles.items[profile].save(p);
         this.clearCache();
+        this.startAlarms();
         this.emit('profile-updated', profile);
     }
 
@@ -290,6 +352,101 @@ export class Client extends EventEmitter {
         this.enabledProfiles = p;
         this.saveOptions();
         this.clearCache();
+        this.startAlarms();
+    }
+
+    public startAlarms() {
+        const al = this.alarms.length;
+        if (al === 0 && this._alarm)
+        {
+            clearInterval(this._alarm);
+            this._alarm = null;
+        }
+        else if (al && !this._alarm)
+            this._alarm = setInterval((client) => { client.process_alarms(); }, 1000, this);
+    }
+
+    private process_alarms() {
+        let a = 0;
+        let alarm;
+        let pattern;
+        const al = this.alarms.length;
+        if (al === 0 && this._alarm)
+        {
+            clearInterval(this._alarm);
+            this._alarm = null;
+            return;
+        }
+        const patterns = this._itemCache.alarmPatterns;
+        for (; a < al; a++) {
+            pattern = this._input.parseOutgoing(this.alarms[a].pattern, false);
+            alarm = patterns[pattern];
+            if (!alarm) {
+                alarm = Alarm.parse(pattern);
+                patterns[pattern] = alarm;
+            }
+            let match: boolean = true;
+            if (alarm.start) {
+                const ts = moment.duration(Date.now() - this.connectTime);
+                if (alarm.HoursWildCard) {
+                    if (alarm.hours === 0)
+                        match = match && ts.hours() === 0;
+                    else if (alarm.Hours !== -1 && ts.hours() > 0)
+                        match = match && ts.hours() % alarm.Hours === 0;
+                }
+                else
+                    match = match && alarm.hours === ts.hours();
+                if (alarm.minutesWildcard) {
+                    if (alarm.minutes === 0)
+                        match = match && ts.minutes() === 0;
+                    else if (alarm.minutes !== -1 && ts.minutes() > 0)
+                        match = match && ts.minutes() % alarm.minutes === 0;
+                }
+                else
+                    match = match && alarm.minutes === ts.minutes();
+                if (alarm.secondsWildcard) {
+                    if (alarm.seconds === 0)
+                        match = match && ts.seconds() === 0;
+                    else if (alarm.seconds !== -1 && ts.seconds() > 0)
+                        match = match && ts.seconds() % alarm.seconds === 0;
+                }
+                else
+                    match = match && alarm.seconds === ts.seconds();
+            }
+            else {
+                const fired: Date = new Date();
+                if (alarm.hoursWildcard) {
+                    if (alarm.hours === 0)
+                        match = match && fired.getHours() === 0;
+                    else if (alarm.hours !== -1 && fired.getHours() > 0)
+                        match = match && fired.getHours() % alarm.hours === 0;
+                }
+                else
+                    match = match && alarm.hours === fired.getHours();
+                if (alarm.minutesWildcard) {
+                    if (alarm.minutes === 0)
+                        match = match && fired.getMinutes() === 0;
+                    else if (alarm.minutes !== -1 && fired.getMinutes() > 0)
+                        match = match && fired.getMinutes() % alarm.minutes === 0;
+                }
+                else
+                    match = match && alarm.minutes === fired.getMinutes();
+                if (alarm.secondsWildcard) {
+                    if (alarm.seconds === 0)
+                        match = match && fired.getSeconds() === 0;
+                    else if (alarm.seconds !== -1 && fired.getSeconds() > 0)
+                        match = match && fired.getSeconds() % alarm.seconds === 0;
+                }
+                else
+                    match = match && alarm.seconds === fired.getSeconds();
+            }
+            if (match) {
+                this._input.ExecuteTrigger(this.alarms[a], [alarm.pattern], false, -a);
+                if (alarm.temp || this.alarms[a].temp) {
+                    this.removeTrigger(this.alarms[a]);
+                }
+            }
+        }
     }
 
     constructor(display, command, settings?: string) {
@@ -802,7 +959,9 @@ export class Client extends EventEmitter {
             macros: null,
             buttons: null,
             contexts: null,
-            defaultContext: null
+            defaultContext: null,
+            alarms: null,
+            alarmPatterns: {}
         };
     }
 

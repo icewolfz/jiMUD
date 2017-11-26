@@ -26,7 +26,8 @@ export enum ItemStyle {
 export enum TriggerType {
     Regular = 0,
     CommandInputRegular = 1,
-    Event = 2
+    Event = 2,
+    Alarm = 3
 }
 
 export function MacroDisplay(item: Macro) {
@@ -76,12 +77,12 @@ export class Alarm {
     public pattern: string;
     public temp: boolean = false;
     public start: boolean = false;
-    public seconds: number = 0;
-    public secondsWildcard: boolean = false;
-    public hours: number = 0;
-    public hoursWildcard: boolean = false;
-    public minutes: number = 0;
-    public minutesWildcard: boolean = false;
+    public seconds: number = -1;
+    public secondsWildcard: boolean = true;
+    public hours: number = -1;
+    public hoursWildcard: boolean = true;
+    public minutes: number = -1;
+    public minutesWildcard: boolean = true;
 
     constructor(data?, pattern?) {
         if (typeof data === 'string') {
@@ -313,6 +314,7 @@ export class Trigger extends Item {
     public triggerNewline: boolean = true;
     public triggerPrompt: boolean = false;
     public type: TriggerType = TriggerType.Regular;
+    public temp: boolean = false;
 
     constructor(data?) {
         super(data);
