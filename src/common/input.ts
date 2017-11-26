@@ -2360,6 +2360,9 @@ export class Input extends EventEmitter {
                 ret = trigger.value;
                 break;
         }
+        //TODO add temporary trigger support
+        //if (trigger.temp)
+            //this.client.removeTrigger(trigger);
         if (ret == null || ret === undefined)
             return null;
         if (r)
