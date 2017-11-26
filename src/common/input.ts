@@ -2384,7 +2384,7 @@ export class Input extends EventEmitter {
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
             this._TriggerCache = $.grep(this.client.triggers, (a) => {
-                return a.enabled;
+                return a.enabled && a.type !== TriggerType.Alarm;
             });
         }
     }

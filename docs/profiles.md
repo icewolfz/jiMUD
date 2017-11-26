@@ -76,6 +76,16 @@
     - `blur` fired when window loses focus
     - `notify-clicked` fired when notification is clicked, argument 1 is title, argument 2 is message
     - `notify-closed` fired when notification is closed, argument 1 is title, argument 2 is message
+  - `Alarm` create repeating tick timers
+    ```
+    When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.
+
+    You can also define a temporary, one time alarm if pattern is preceded with a plus (+), the trigger alarm is executed then deleted.
+
+    Hours are defined in 24 hour format of 0 to 23, minutes and seconds are 0 to 59.
+
+    Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
+    ```
 - `Priority` the sort order of triggers
 - `Verbatim` the text is compared exactly how it is, including case
 - `Trigger on Newline` this causes the trigger to execute if it is a full line of text
