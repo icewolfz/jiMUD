@@ -12,6 +12,7 @@ import { SettingList } from './settings';
 const mathjs = require('mathjs-expression-parser');
 const buzz = require('buzz');
 const path = require('path');
+const moment = require('moment');
 
 function ProperCase(str) {
     return str.replace(/\w*\S*/g, (txt) => { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
@@ -2290,6 +2291,10 @@ export class Input extends EventEmitter {
         let min;
         let max;
         switch (res[1]) {
+            case 'time':
+                if (res[2] && res[2].length > 0)
+                    return moment().format(res[2]);
+                return moment().format();
             case 'lower':
                 return this.parseOutgoing(res[2]).toLowerCase();
             case 'upper':

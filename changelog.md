@@ -11,6 +11,7 @@
   - Add [#alarm](docs/commands.md) command to create alarm triggers
   - Add [#suspend](docs/commands.md) command to disable alarm trigger
   - Add [#resume](docs/commands.md) command to enable alarm trigger
+  - Add [%{time(format)}](docs/functions.md) function to display current date/time
 - **Changed:**
   - When loading character a character it will now try and refocus on the main window if mapper, chat, or editor window are opened.
   - Moved show script errors to scripting area in preference dialog
