@@ -68,7 +68,13 @@
     Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
     ```
   - `{commands}` the commands to be executed for alarm
-  - `profile` is optional and when set will create alarm in that profile, if profile not found fails to create
+  - `profile` is optional and when set will create alarm in that profile, if profile not found fails to create, if omitted it will only search enabled profiles
+- `#suspend id`, `#suspend id profile`, `#suspend`, `#sus id`, `#sus id profile`, `#sus` disable a trigger
+  - `id` the id or pattern of the trigger to disable, if omitted it will attempt to suspend the last added alarm
+  - `profile` optional profile to search for id, if omitted it will only search enabled profiles
+- `#resume id`, `#resume id profile`, `#resume`, `#resu id`, `#resu id profile`, `#resu` enable a trigger
+  - `id` the id or pattern of the trigger to disable, if omitted it will attempt to resume the last suspended
+  - `profile` optional profile to search for id, if omitted it will only search enabled profiles
 
 ## Test commands
 
