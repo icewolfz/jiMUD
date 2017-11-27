@@ -65,7 +65,7 @@ export class Input extends EventEmitter {
     private _controllers = {};
     private _controllersCount = 0;
     private _gamepadCaches = null;
-    private _lastSuspend = null;
+    private _lastSuspend = -1;
 
     public client: Client = null;
 
@@ -544,110 +544,30 @@ export class Input extends EventEmitter {
         let al;
         let i;
         let tmp;
-        let tmp2;
         switch (fun.toLowerCase()) {
             case 'suspend':
             case 'sus':
                 switch (args.length) {
                     case 0:
-                        tmp = this.client.activeProfile.find('triggers', 'type', TriggerType.Alarm);
+                        tmp = this.client.alarms;
                         if (tmp.length === 0)
                             this.client.echo('No alarms defined.', -7, -8, true, true);
                         else {
-                            tmp = tmp[tmp.length - 1];
-                            if (!tmp.enabled)
-                                this.client.echo('Last alarm already disabled.', -7, -8, true, true);
-                            else {
-                                tmp.enabled = false;
-                                this.client.activeProfile.save(path.join(parseTemplate('{data}'), 'profiles'));
-                                this.client.echo('Last alarm disabled.', -7, -8, true, true);
-                                this.client.clearCache();
-                                this.client.startAlarms();
-                                this._lastSuspend = { profile: this.client.activeProfile, alarm: tmp, reload: true };
-                            }
+                            this.client.setAlarmState(0, false);
+                            this._lastSuspend = 0;
+                            this.client.echo('Last alarm suspended.', -7, -8, true, true);
                         }
                         return null;
                     case 1:
                         items = this.stripQuotes(args[0]);
-                        const keys = this.client.profiles.keys;
-                        let k = 0;
-                        const kl = keys.length;
-                        if (kl === 0)
-                            return;
-                        if (kl === 1) {
-                            if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
-                                throw Error('No enabled profiles found!');
-                            tmp = this.client.profiles.items[keys[0]].find('triggers', 'name', items);
-                            if (!tmp)
-                                tmp = this.client.profiles.items[keys[0]].find('triggers', 'pattern', items);
-                            if (!tmp)
-                                this.client.echo('Alarm \'' + items + '\' not found.', -7, -8, true, true);
-                            else {
-                                if (!tmp.enabled)
-                                    this.client.echo('Alarm \'' + items + '\' already disabled.', -7, -8, true, true);
-                                else {
-                                    tmp.enabled = false;
-                                    this.client.profiles.items[keys[0]].save(path.join(parseTemplate('{data}'), 'profiles'));
-                                    this.client.echo('Alarm \'' + tmp + '\' disabled.', -7, -8, true, true);
-                                    this.client.clearCache();
-                                    this.client.startAlarms();
-                                    this._lastSuspend = { profile: this.client.profiles.items[keys[0]], alarm: tmp, reload: true };
-                                }
-                            }
-                        }
-                        else {
-                            for (; k < kl; k++) {
-                                if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
-                                    continue;
-                                tmp = this.client.profiles.items[keys[k]].find('triggers', 'name', items);
-                                if (!tmp)
-                                    tmp = this.client.profiles.items[keys[k]].find('triggers', 'pattern', items);
-                                if (tmp) {
-                                    if (!tmp.enabled)
-                                        this.client.echo('Alarm \'' + items + '\' already disabled.', -7, -8, true, true);
-                                    else {
-                                        tmp.enabled = false;
-                                        this.client.profiles.items[keys[k]].save(path.join(parseTemplate('{data}'), 'profiles'));
-                                        this.client.echo('Alarm \'' + items + '\' disabled.', -7, -8, true, true);
-                                        this.client.clearCache();
-                                        this.client.startAlarms();
-                                        this._lastSuspend = { profile: this.client.profiles.items[keys[k]], alarm: tmp, reload: true };
-                                    }
-                                    return null;
-                                }
-                            }
-                            this.client.echo('Alarm \'' + tmp + '\' not found.', -7, -8, true, true);
-                        }
-                        return null;
-                    case 2:
-                        items = this.stripQuotes(args[0]);
-                        tmp2 = this.stripQuotes(args[1]);
-                        if (this.client.profiles.contains(tmp2))
-                            tmp = this.client.profiles.items[tmp2];
-                        else {
-                            i = true;
-                            tmp = Profile.load(path.join(parseTemplate('{data}'), 'profiles', tmp2 + '.json'));
-                            if (!tmp)
-                                throw new Error('Profile not found: ' + tmp2);
-                        }
-                        tmp2 = tmp;
-                        tmp = tmp2.find('triggers', 'name', items);
-                        if (!tmp)
-                            tmp = tmp2.find('triggers', 'pattern', items);
-                        if (!tmp)
-                            this.client.echo('Alarm \'' + items + '\' not found.', -7, -8, true, true);
-                        else {
-                            if (!tmp.enabled)
-                                this.client.echo('Alarm \'' + items + '\' already disabled.', -7, -8, true, true);
-                            else {
-                                tmp.enabled = false;
-                                tmp2.save(path.join(parseTemplate('{data}'), 'profiles'));
-                                this.client.echo('Alarm \'' + tmp + '\' disabled.', -7, -8, true, true);
-                                if (!i) {
-                                    this.client.clearCache();
-                                    this.client.startAlarms();
-                                }
-                                this._lastSuspend = { profile: tmp2, alarm: tmp, reload: !i };
+                        tmp = this.client.alarms;
+                        al = tmp.length;
+                        for (let a = tmp.length - 1; a >= 0; a--) {
+                            if (tmp[a].name === items || tmp[a].pattern === items) {
+                                this.client.setAlarmState(a, false);
+                                this.client.echo('Alarm \'' + items + '\' suspended.', -7, -8, true, true);
+                                this._lastSuspend = a;
+                                break;
                             }
                         }
                         return null;
@@ -658,97 +578,21 @@ export class Input extends EventEmitter {
             case 'resu':
                 switch (args.length) {
                     case 0:
-                        if (!this._lastSuspend)
+                        if (this._lastSuspend === -1)
                             return null;
-                        if (this._lastSuspend.alarm.enabled) {
-                            this._lastSuspend.alarm.enabled = false;
-                            this._lastSuspend.profile.save(path.join(parseTemplate('{data}'), 'profiles'));
-                            if (this._lastSuspend.reload) {
-                                this.client.clearCache();
-                                this.client.startAlarms();
-                            }
-                            this.client.echo('Alarm \'' + (this._lastSuspend.alarm.name || this._lastSuspend.alarm.pattern) + '\' enabled.', -7, -8, true, true);
-                        }
-                        this._lastSuspend = null;
+                        this.client.setAlarmState(this._lastSuspend, true);
+                        this.client.echo('Last alarm suspended resumed.', -7, -8, true, true);
+                        this._lastSuspend = -1;
                         return null;
                     case 1:
                         items = this.stripQuotes(args[0]);
-                        const keys = this.client.profiles.keys;
-                        let k = 0;
-                        const kl = keys.length;
-                        if (kl === 0)
-                            return;
-                        if (kl === 1) {
-                            if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
-                                throw Error('No enabled profiles found!');
-                            tmp = this.client.profiles.items[keys[0]].find('triggers', 'name', items);
-                            if (!tmp)
-                                tmp = this.client.profiles.items[keys[0]].find('triggers', 'pattern', items);
-                            if (!tmp)
-                                this.client.echo('Alarm \'' + items + '\' not found.', -7, -8, true, true);
-                            else {
-                                if (tmp.enabled)
-                                    this.client.echo('Alarm \'' + items + '\' already enabled.', -7, -8, true, true);
-                                else {
-                                    tmp.enabled = true;
-                                    tmp = this.client.profiles.items[keys[0]].save(path.join(parseTemplate('{data}'), 'profiles'));
-                                    this.client.echo('Alarm \'' + items + '\' enabled.', -7, -8, true, true);
-                                    this.client.clearCache();
-                                    this.client.startAlarms();
-                                }
-                            }
-                        }
-                        else {
-                            for (; k < kl; k++) {
-                                if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
-                                    continue;
-                                tmp = this.client.profiles.items[keys[k]].find('triggers', 'name', items);
-                                if (!tmp)
-                                    tmp = this.client.profiles.items[keys[k]].find('triggers', 'pattern', items);
-                                if (tmp) {
-                                    if (tmp.enabled)
-                                        this.client.echo('Alarm \'' + items + '\' already enabled.', -7, -8, true, true);
-                                    else {
-                                        tmp.enabled = true;
-                                        this.client.activeProfile.save(path.join(parseTemplate('{data}'), 'profiles'));
-                                        this.client.echo('Alarm \'' + items + '\' enabled.', -7, -8, true, true);
-                                        this.client.clearCache();
-                                        this.client.startAlarms();
-                                    }
-                                    return null;
-                                }
-                            }
-                            this.client.echo('Alarm \'' + items + '\' not found.', -7, -8, true, true);
-                        }
-                        return null;
-                    case 2:
-                        items = this.stripQuotes(args[0]);
-                        tmp2 = this.stripQuotes(args[1]);
-                        if (this.client.profiles.contains(tmp2))
-                            tmp = this.client.profiles.items[tmp2];
-                        else {
-                            i = true;
-                            tmp = Profile.load(path.join(parseTemplate('{data}'), 'profiles', tmp2 + '.json'));
-                            if (!tmp)
-                                throw new Error('Profile not found: ' + tmp2);
-                        }
-                        tmp2 = tmp;
-                        tmp = tmp2.find('triggers', 'name', items);
-                        if (!tmp)
-                            tmp = tmp2.find('triggers', 'pattern', items);
-                        if (!tmp)
-                            this.client.echo('Alarm \'' + items + '\' not found.', -7, -8, true, true);
-                        else {
-                            if (tmp.enabled)
-                                this.client.echo('Alarm \'' + items + '\' already enabled.', -7, -8, true, true);
-                            else {
-                                tmp.enabled = true;
-                                tmp2.save(path.join(parseTemplate('{data}'), 'profiles'));
-                                if (!i) {
-                                    this.client.clearCache();
-                                    this.client.startAlarms();
-                                }
-                                this.client.echo('Alarm \'' + items + '\' enabled.', -7, -8, true, true);
+                        tmp = this.client.alarms;
+                        al = tmp.length;
+                        for (let a = al - 1; a >= 0; a--) {
+                            if (tmp[a].name === items || tmp[a].pattern === items) {
+                                this.client.setAlarmState(a, true);
+                                this.client.echo('Alarm \'' + items + '\' resumed.', -7, -8, true, true);
+                                break;
                             }
                         }
                         return null;
@@ -797,9 +641,8 @@ export class Input extends EventEmitter {
                     profile.save(p);
                     profile = null;
                     if (reload) {
-                        this.client.clearCache();
-                        this._lastSuspend = null;
-                        this.client.startAlarms();
+                        this._lastSuspend = -1;
+                        this.client.updateAlarms();
                     }
                     this.client.echo('Alarm \'' + trigger.pattern + '\' added.', -7, -8, true, true);
                     return null;
@@ -898,9 +741,8 @@ export class Input extends EventEmitter {
                 profile.save(p);
                 profile = null;
                 if (reload) {
-                    this.client.clearCache();
-                    this._lastSuspend = null;
-                    this.client.startAlarms();
+                    this._lastSuspend = -1;
+                    this.client.updateAlarms();
                 }
                 return null;
             case 'ungag':
@@ -1639,7 +1481,17 @@ export class Input extends EventEmitter {
                     }
                     break;
                 case ParseState.function:
-                    if (c === '\n' || (stacking && c === stackingChar)) {
+                    if (c === '{') {
+                        start = false;
+                        str += c;
+                        nest++;
+                    }
+                    else if (c === '}') {
+                        start = false;
+                        str += c;
+                        nest--;
+                    }
+                    else if (nest === 0 && (c === '\n' || (stacking && c === stackingChar))) {
                         state = ParseState.none;
                         str = this.executeScript('#' + str);
                         if (typeof str === 'number') {
@@ -2779,7 +2631,7 @@ export class Input extends EventEmitter {
         this._TriggerCache = null;
         this._TriggerFunctionCache = {};
         this._gamepadCaches = null;
-        this._lastSuspend = null;
+        this._lastSuspend = -1;
     }
 
     public triggerEvent(event: string, args?) {
