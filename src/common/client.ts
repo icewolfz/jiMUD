@@ -376,8 +376,7 @@ export class Client extends EventEmitter {
 
     public startAlarms() {
         const al = this.alarms.length;
-        if (al === 0 && this._alarm)
-        {
+        if (al === 0 && this._alarm) {
             clearInterval(this._alarm);
             this._alarm = null;
         }
@@ -390,8 +389,7 @@ export class Client extends EventEmitter {
         let alarm;
         let pattern;
         const al = this.alarms.length;
-        if (al === 0 && this._alarm)
-        {
+        if (al === 0 && this._alarm) {
             clearInterval(this._alarm);
             this._alarm = null;
             return;

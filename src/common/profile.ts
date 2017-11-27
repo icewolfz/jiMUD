@@ -1,5 +1,5 @@
 //cSpell:ignore displaytype, submenu, triggernewline, triggerprompt
-import { clone, keyCodeToChar, isFileSync } from './library';
+import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority } from './library';
 const path = require('path');
 const fs = require('fs');
 
@@ -770,6 +770,19 @@ export class Profile {
             }
         }
         return profile;
+    }
+
+    public find(type, field, value) {
+        let tmp;
+        if (!type || type.length === 0 || !this[type] || this[type].length === 0)
+            return null;
+        tmp = SortItemArrayByPriority(this[type]);
+        const l = tmp.length;
+        for (let t = 0; t < l; t++) {
+            if (tmp[t][field] === value)
+                return tmp[t];
+        }
+        return null;
     }
 }
 
