@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.29
+## 0.4.29 2017-11-27
 
 - **New:**
   - Character manager: Added load default and close, and load and close buttons
