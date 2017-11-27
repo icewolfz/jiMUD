@@ -13,7 +13,7 @@
   - `amount` the amount of milliseconds to wait before executing remaining commands command block, must be greater then 0
 - `#sayprompt text` or `#sayp` same as echoprompt
 - `#alias name value` or `#al` create or alter and alias from command line
-  - name argument can be wither a quoted string, a number or a string
+  - name argument can be either a quoted string, a number or a string
     - quoted string - if a quoted string the quotes are removed and all text between are used as the alias name
     - number - if a number it access the aliases as an array instead of by name, it is 0 to aliases count - 1,
     - string - works like quoted string but allows no spaces
@@ -54,6 +54,21 @@
 - `#gag number` or `#ga` gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
   - `number` if >= 0 it will gag current line and that number of incoming lines, if negative it will gag the # of lines before current line
 - `#ungag` or `#ung` clear previous #gag command settings
+- `#alarm name {timepattern} {commands} profile`, `#ala name {timepattern} {commands} profile`, `#alarm {timepattern} {commands} profile`, or `#ala {timepattern} {commands} profile` create an alarm trigger
+  - `name` is an optional and when used will update the first matching timer found with name or create a new one
+  time
+  - `{timepattern}` the time pattern to match
+    ```
+    When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.
+
+    You can also define a temporary, one time alarm if pattern is preceded with a plus (+), the trigger alarm is executed then deleted.
+
+    Hours are defined in 24 hour format of 0 to 23, minutes and seconds are 0 to 59.
+
+    Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
+    ```
+  - `{commands}` the commands to be executed for alarm
+  - `profile` is optional and when set will create alarm in that profile, if profile not found fails to create
 
 ## Test commands
 

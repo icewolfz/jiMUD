@@ -3,15 +3,15 @@
 //cSpell:ignore keycode
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority, clone } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority, clone, parseTemplate } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Macro, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
 const mathjs = require('mathjs-expression-parser');
-
 const buzz = require('buzz');
+const path = require('path');
 
 function ProperCase(str) {
     return str.replace(/\w*\S*/g, (txt) => { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
@@ -435,6 +435,7 @@ export class Input extends EventEmitter {
                 case 2:
                     if (c === '{') {
                         state = 7;
+                        arg += c;
                     }
                     else if (c === ' ') {
                         args.push(arg);
@@ -470,11 +471,10 @@ export class Input extends EventEmitter {
                     //}
                     break;
                 case 7:
+                    arg += c;
                     if (c === '}') {
                         if (s === 0) {
                             state = 2;
-                            args.push(arg);
-                            arg = '';
                         }
                         else
                             s--;
@@ -545,7 +545,149 @@ export class Input extends EventEmitter {
         switch (fun.toLowerCase()) {
             case 'alarm':
             case 'ala':
+                let profile = null;
+                let name = null;
+                let trigger;
+                let reload = true;
+                const p = path.join(parseTemplate('{data}'), 'profiles');
+                if (args.length < 2 || args.length > 4)
+                    throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} {commands} profile, \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} profile, or \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} profile');
+                if (args[0].length === 0)
+                    throw new Error('Invalid name or timepattern');
+                //{pattern} {commands} profile
+                if (args[0].match(/^\{.*\}$/g)) {
+                    if (args.length > 3)
+                        throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} profile');
+                    args[0] = args[0].substr(1, args[0].length - 2);
+                    if (args[1].match(/^\{.*\}$/g))
+                        args[1] = args[1].substr(1, args[1].length - 2);
+                    if (args.length === 3)
+                        profile = this.stripQuotes(args[2]);
 
+                    if (!profile || profile.length === 0)
+                        profile = this.client.activeProfile;
+                    else {
+                        if (this.client.profiles.contains(profile))
+                            profile = this.client.profiles.items[profile];
+                        else {
+                            name = profile;
+                            reload = false;
+                            profile = Profile.load(path.join(p, profile + '.json'));
+                            if (!profile)
+                                throw new Error('Profile not found: ' + name);
+                        }
+                    }
+                    trigger = new Trigger();
+                    trigger.pattern = args[0];
+                    trigger.value = args[1];
+                    trigger.type = TriggerType.Alarm;
+                    profile.triggers.push(trigger);
+                    profile.save(p);
+                    profile = null;
+                    if (reload) {
+                        this.client.clearCache();
+                        this.client.startAlarms();
+                    }
+                    this.client.echo('Alarm \'' + trigger.pattern + '\' added.', -7, -8, true, true);
+                    return null;
+                }
+                name = this.stripQuotes(args[0]);
+                if (!name || name.length === 0)
+                    throw new Error('Invalid alarm name');
+                let pattern = args[1];
+                let commands = null;
+                if (pattern.match(/^\{.*\}$/g))
+                    pattern = pattern.substr(1, pattern.length - 2);
+                if (args.length === 3) {
+                    if (args[2].match(/^\{.*\}$/g))
+                        commands = args[2].substr(1, args[2].length - 2);
+                    else
+                        profile = this.stripQuotes(args[2]);
+                }
+                else if (args.length === 4) {
+                    commands = args[2];
+                    profile = this.stripQuotes(args[3]);
+                    if (commands.match(/^\{.*\}$/g))
+                        commands = commands.substr(1, commands.length - 2);
+                }
+                if (!profile || profile.length === 0) {
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0)
+                        return;
+                    if (kl === 1) {
+                        if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                            throw Error('No enabled profiles found!');
+                        profile = this.client.profiles.items[keys[0]];
+                        trigger = profile.find('triggers', 'name', name);
+                        if (!trigger && !commands)
+                            throw new Error('Alarm not found!');
+                        else if (!trigger) {
+                            trigger = new Trigger();
+                            trigger.name = name;
+                            profile.triggers.push(trigger);
+                            this.client.echo('Alarm \'' + trigger.name + '\' added.', -7, -8, true, true);
+                        }
+                        else
+                            this.client.echo('Alarm \'' + trigger.name + '\' updated.', -7, -8, true, true);
+                    }
+                    else {
+                        for (; k < kl; k++) {
+                            if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                continue;
+                            trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', name);
+                            if (trigger) {
+                                profile = this.client.profiles.items[keys[k]];
+                                break;
+                            }
+                        }
+                        if (!profile && !commands)
+                            throw new Error('Alarm not found!');
+                        if (!profile)
+                            profile = this.client.activeProfile;
+                        if (!trigger) {
+                            trigger = new Trigger();
+                            trigger.name = name;
+                            profile.triggers.push(trigger);
+                            this.client.echo('Alarm \'' + trigger.name + '\' added.', -7, -8, true, true);
+                        }
+                        else
+                            this.client.echo('Alarm \'' + trigger.name + '\' updated.', -7, -8, true, true);
+                    }
+                }
+                else {
+                    if (this.client.profiles.contains(profile))
+                        profile = this.client.profiles.items[profile];
+                    else {
+                        name = profile;
+                        reload = false;
+                        profile = Profile.load(path.join(p, profile + '.json'));
+                        if (!profile)
+                            throw new Error('Profile not found: ' + name);
+                    }
+                    trigger = profile.find('triggers', 'name', name);
+                    if (!trigger && !commands)
+                        throw new Error('Alarm not found!');
+                    else if (!trigger) {
+                        trigger = new Trigger();
+                        trigger.name = name;
+                        profile.triggers.push(trigger);
+                        this.client.echo('Alarm \'' + trigger.name + '\' added.', -7, -8, true, true);
+                    }
+                    else
+                        this.client.echo('Alarm \'' + trigger.name + '\' updated.', -7, -8, true, true);
+                }
+                trigger.pattern = pattern;
+                trigger.type = TriggerType.Alarm;
+                if (commands)
+                    trigger.value = commands;
+                profile.save(p);
+                profile = null;
+                if (reload) {
+                    this.client.clearCache();
+                    this.client.startAlarms();
+                }
                 return null;
             case 'ungag':
             case 'ung':
@@ -2494,5 +2636,19 @@ export class Input extends EventEmitter {
             code.push(');');
         }
         return code.join('');
+    }
+
+    public stripQuotes(str: string) {
+        if (!str || str.length === 0)
+            return str;
+        if (this.client.options.parseDoubleQuotes)
+            str = str.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                return e.replace(/\\\"/g, '"');
+            });
+        if (this.client.options.parseSingleQuotes)
+            str = str.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                return e.replace(/\\\'/g, '\'');
+            });
+        return str;
     }
 }
