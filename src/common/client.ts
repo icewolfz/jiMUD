@@ -407,7 +407,6 @@ export class Client extends EventEmitter {
 
     private process_alarms() {
         let a = 0;
-        let alarm;
         const al = this.alarms.length;
         if (al === 0 && this._alarm) {
             clearInterval(this._alarm);
@@ -415,49 +414,54 @@ export class Client extends EventEmitter {
             return;
         }
         const patterns = this._itemCache.alarmPatterns;
+        const now = Date.now();
+        const alarms = this.alarms;
         for (a = al - 1; a >= 0; a--) {
-            alarm = patterns[a];
+            let alarm = patterns[a];
             if (!alarm) {
-                alarm = Alarm.parse(this.alarms[a]);
+                alarm = Alarm.parse(alarms[a]);
                 patterns[a] = alarm;
             }
             let match: boolean = true;
             let ts;
             if (alarm.start)
-                ts = moment.duration(Date.now() - this.connectTime);
+                ts = moment.duration(now - this.connectTime);
             else
-                ts = moment.duration(Date.now() - alarm.startTime);
+                ts = moment.duration(now - alarm.startTime);
+            if (ts.asMilliseconds() < 1000)
+                continue;
+            const sec = Math.floor(ts.asMilliseconds() / 1000);
+            const min = Math.floor(sec / 60);
+            const hr = Math.floor(min / 60);
             if (alarm.hoursWildCard) {
                 if (alarm.hours === 0)
                     match = match && ts.hours() === 0;
-                else if (alarm.Hours !== -1 && ts.hours() > 0)
-                    match = match && ts.hours() % alarm.Hours === 0;
+                else if (alarm.hours !== -1)
+                    match = match && hr % alarm.hours === 0;
             }
             else if (alarm.hours !== -1)
                 match = match && alarm.hours === ts.hours();
             if (alarm.minutesWildcard) {
                 if (alarm.minutes === 0)
                     match = match && ts.minutes() === 0;
-                else if (alarm.minutes !== -1 && ts.minutes() > 0)
-                    match = match && ts.minutes() % alarm.minutes === 0;
+                else if (alarm.minutes !== -1)
+                    match = match && min % alarm.minutes === 0;
             }
             else if (alarm.minutes !== -1)
                 match = match && alarm.minutes === ts.minutes();
             if (alarm.secondsWildcard) {
                 if (alarm.seconds === 0)
                     match = match && ts.seconds() === 0;
-                else if (alarm.seconds !== -1 && ts.seconds() > 0)
-                    match = match && ts.seconds() % alarm.seconds === 0;
-                else if (ts.asMilliseconds() < 1000)
-                    match = false;
+                else if (alarm.seconds !== -1)
+                    match = match && sec % alarm.seconds === 0;
             }
             else if (alarm.seconds !== -1)
                 match = match && alarm.seconds === ts.seconds();
 
             if (match && !alarm.suspended) {
-                this._input.ExecuteTrigger(this.alarms[a], [alarm.pattern], false, -a);
+                this._input.ExecuteTrigger(alarms[a], [alarm.pattern], false, -a);
                 if (alarm.temp)
-                    this.removeTrigger(this.alarms[a]);
+                    this.removeTrigger(alarms[a]);
             }
         }
     }

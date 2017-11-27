@@ -572,7 +572,7 @@ export class Input extends EventEmitter {
                         }
                         return null;
                     default:
-                        throw new Error('Invalid syntax use \x1b[4m#sus\x1b[0;-11;-12mpend id \x1b[3mprofile\x1b[0m or \x1b[4m#sus\x1b[0;-11;-12mpend');
+                        throw new Error('Invalid syntax use \x1b[4m#sus\x1b[0;-11;-12mpend id \x1b[3mprofile\x1b[0;-11;-12m or \x1b[4m#sus\x1b[0;-11;-12mpend');
                 }
             case 'resume':
             case 'resu':
@@ -597,7 +597,7 @@ export class Input extends EventEmitter {
                         }
                         return null;
                     default:
-                        throw new Error('Invalid syntax use \x1b[4m#resu\x1b[0;-11;-12mme id \x1b[3mprofile\x1b[0m or \x1b[4m#resu\x1b[0;-11;-12mme');
+                        throw new Error('Invalid syntax use \x1b[4m#resu\x1b[0;-11;-12mme id \x1b[3mprofile\x1b[0;-11;-12m or \x1b[4m#resu\x1b[0;-11;-12mme');
                 }
             case 'alarm':
             case 'ala':
@@ -607,7 +607,7 @@ export class Input extends EventEmitter {
                 let reload = true;
                 const p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 2 || args.length > 4)
-                    throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} {commands} \x1b[3mprofile\x1b[0m, \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} \x1b[3mprofile\x1b[0m, or \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} \x1b[3mprofile\x1b[0m');
+                    throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m, \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} \x1b[3mprofile\x1b[0;-11;-12m, or \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
                     throw new Error('Invalid name or timepattern');
                 //{pattern} {commands} profile
