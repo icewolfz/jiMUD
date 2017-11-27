@@ -17,7 +17,7 @@ const fs = require('fs');
 const moment = require('moment');
 
 interface ItemCache {
-    alarmPatterns: object;
+    alarmPatterns: any[];
     alarms: Trigger[];
     triggers: Trigger[];
     aliases: Alias[];
@@ -42,7 +42,7 @@ export class Client extends EventEmitter {
         contexts: null,
         defaultContext: null,
         alarms: null,
-        alarmPatterns: {}
+        alarmPatterns: []
     };
     private _alarm: NodeJS.Timer;
 
@@ -196,6 +196,13 @@ export class Client extends EventEmitter {
             return;
         this.profiles.items[keys[k]].triggers.splice(idx, 1);
         this._itemCache.triggers = null;
+        if (trigger.type === TriggerType.Alarm && this._itemCache.alarms) {
+            idx = this._itemCache.alarms.indexOf(trigger);
+            if (idx !== -1) {
+                this._itemCache.alarms.splice(idx, 1);
+                this._itemCache.alarmPatterns.splice(idx, 1);
+            }
+        }
         this.saveProfile(keys[k]);
     }
 
@@ -214,6 +221,7 @@ export class Client extends EventEmitter {
                 this._itemCache.alarms = $.grep(SortItemArrayByPriority(this.profiles.items[keys[k]].triggers), (a) => {
                     return a.enabled && a.type === TriggerType.Alarm;
                 });
+            this._itemCache.alarms.reverse();
             return this._itemCache.alarms;
         }
         for (; k < kl; k++) {
@@ -224,6 +232,7 @@ export class Client extends EventEmitter {
         this._itemCache.alarms = $.grep(tmp, (a) => {
             return a.enabled && a.type === TriggerType.Alarm;
         });
+        this._itemCache.alarms.reverse();
         return this._itemCache.alarms;
     }
 
@@ -365,10 +374,40 @@ export class Client extends EventEmitter {
             this._alarm = setInterval((client) => { client.process_alarms(); }, 1000, this);
     }
 
+    public setAlarmState(idx, state: boolean) {
+        if (typeof idx === 'object')
+            idx = this.alarms.indexOf(idx);
+        if (idx === -1 || idx >= this.alarms.length)
+            return 0;
+        let pattern = this._itemCache.alarmPatterns[idx];
+        if (!pattern) {
+            pattern = Alarm.parse(this.alarms[idx]);
+            this._itemCache.alarmPatterns[idx] = pattern;
+        }
+        pattern.suspended = !state;
+        pattern.startTime = Date.now();
+    }
+
+    public updateAlarms() {
+        if (this._itemCache.alarmPatterns) {
+            const old = this._itemCache.alarmPatterns;
+            const oAlarms = this.alarms;
+            this._itemCache.alarmPatterns = [];
+            this._itemCache.alarms = null;
+            const al = this.alarms.length;
+            let idx = -1;
+            for (let a = 0; a < al; a++) {
+                idx = oAlarms.indexOf(this.alarms[a]);
+                if (idx !== -1)
+                    this._itemCache.alarmPatterns[a] = old[idx];
+            }
+        }
+        this.startAlarms();
+    }
+
     private process_alarms() {
         let a = 0;
         let alarm;
-        let pattern;
         const al = this.alarms.length;
         if (al === 0 && this._alarm) {
             clearInterval(this._alarm);
@@ -376,69 +415,46 @@ export class Client extends EventEmitter {
             return;
         }
         const patterns = this._itemCache.alarmPatterns;
-        for (; a < al; a++) {
-            pattern = this._input.parseOutgoing(this.alarms[a].pattern, false);
-            alarm = patterns[pattern];
+        for (a = al - 1; a >= 0; a--) {
+            alarm = patterns[a];
             if (!alarm) {
-                alarm = Alarm.parse(pattern);
-                patterns[pattern] = alarm;
+                alarm = Alarm.parse(this.alarms[a]);
+                patterns[a] = alarm;
             }
             let match: boolean = true;
-            if (alarm.start) {
-                const ts = moment.duration(Date.now() - this.connectTime);
-                if (alarm.HoursWildCard) {
-                    if (alarm.hours === 0)
-                        match = match && ts.hours() === 0;
-                    else if (alarm.Hours !== -1 && ts.hours() > 0)
-                        match = match && ts.hours() % alarm.Hours === 0;
-                }
-                else
-                    match = match && alarm.hours === ts.hours();
-                if (alarm.minutesWildcard) {
-                    if (alarm.minutes === 0)
-                        match = match && ts.minutes() === 0;
-                    else if (alarm.minutes !== -1 && ts.minutes() > 0)
-                        match = match && ts.minutes() % alarm.minutes === 0;
-                }
-                else
-                    match = match && alarm.minutes === ts.minutes();
-                if (alarm.secondsWildcard) {
-                    if (alarm.seconds === 0)
-                        match = match && ts.seconds() === 0;
-                    else if (alarm.seconds !== -1 && ts.seconds() > 0)
-                        match = match && ts.seconds() % alarm.seconds === 0;
-                }
-                else
-                    match = match && alarm.seconds === ts.seconds();
+            let ts;
+            if (alarm.start)
+                ts = moment.duration(Date.now() - this.connectTime);
+            else
+                ts = moment.duration(Date.now() - alarm.startTime);
+            if (alarm.hoursWildCard) {
+                if (alarm.hours === 0)
+                    match = match && ts.hours() === 0;
+                else if (alarm.Hours !== -1 && ts.hours() > 0)
+                    match = match && ts.hours() % alarm.Hours === 0;
             }
-            else {
-                const fired: Date = new Date();
-                if (alarm.hoursWildcard) {
-                    if (alarm.hours === 0)
-                        match = match && fired.getHours() === 0;
-                    else if (alarm.hours !== -1 && fired.getHours() > 0)
-                        match = match && fired.getHours() % alarm.hours === 0;
-                }
-                else
-                    match = match && alarm.hours === fired.getHours();
-                if (alarm.minutesWildcard) {
-                    if (alarm.minutes === 0)
-                        match = match && fired.getMinutes() === 0;
-                    else if (alarm.minutes !== -1 && fired.getMinutes() > 0)
-                        match = match && fired.getMinutes() % alarm.minutes === 0;
-                }
-                else
-                    match = match && alarm.minutes === fired.getMinutes();
-                if (alarm.secondsWildcard) {
-                    if (alarm.seconds === 0)
-                        match = match && fired.getSeconds() === 0;
-                    else if (alarm.seconds !== -1 && fired.getSeconds() > 0)
-                        match = match && fired.getSeconds() % alarm.seconds === 0;
-                }
-                else
-                    match = match && alarm.seconds === fired.getSeconds();
+            else if (alarm.hours !== -1)
+                match = match && alarm.hours === ts.hours();
+            if (alarm.minutesWildcard) {
+                if (alarm.minutes === 0)
+                    match = match && ts.minutes() === 0;
+                else if (alarm.minutes !== -1 && ts.minutes() > 0)
+                    match = match && ts.minutes() % alarm.minutes === 0;
             }
-            if (match) {
+            else if (alarm.minutes !== -1)
+                match = match && alarm.minutes === ts.minutes();
+            if (alarm.secondsWildcard) {
+                if (alarm.seconds === 0)
+                    match = match && ts.seconds() === 0;
+                else if (alarm.seconds !== -1 && ts.seconds() > 0)
+                    match = match && ts.seconds() % alarm.seconds === 0;
+                else if (ts.asMilliseconds() < 1000)
+                    match = false;
+            }
+            else if (alarm.seconds !== -1)
+                match = match && alarm.seconds === ts.seconds();
+
+            if (match && !alarm.suspended) {
                 this._input.ExecuteTrigger(this.alarms[a], [alarm.pattern], false, -a);
                 if (alarm.temp)
                     this.removeTrigger(this.alarms[a]);
@@ -958,7 +974,7 @@ export class Client extends EventEmitter {
             contexts: null,
             defaultContext: null,
             alarms: null,
-            alarmPatterns: {}
+            alarmPatterns: []
         };
     }
 

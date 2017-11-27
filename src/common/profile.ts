@@ -83,6 +83,8 @@ export class Alarm {
     public hoursWildcard: boolean = true;
     public minutes: number = -1;
     public minutesWildcard: boolean = true;
+    public startTime: number;
+    public suspended = false;
 
     constructor(data?, pattern?) {
         if (typeof data === 'string') {
@@ -91,6 +93,7 @@ export class Alarm {
         }
         this.parent = data;
         this.pattern = pattern;
+        this.startTime = Date.now();
     }
 
     public static parse(parent, pattern?: string, readOnly?: boolean): Alarm {
@@ -98,8 +101,12 @@ export class Alarm {
             pattern = parent;
             parent = 0;
         }
-        if (!pattern || pattern.length === 0)
-            throw new Error('Blank pattern');
+        if (!pattern || pattern.length === 0) {
+            if (typeof parent === 'object')
+                pattern = parent.pattern;
+            else
+                throw new Error('Blank pattern');
+        }
         const t = new Alarm(parent, pattern);
         while (pattern[0] === '-' || pattern[0] === '+') {
             if (pattern[0] === '-')

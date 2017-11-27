@@ -844,6 +844,7 @@ function UpdateContext(customUndo?: boolean): UpdateState {
 }
 
 function UpdateItem(item, type?, options?) {
+    if (!item) return null;
     let changed = 0;
     const data: any = {};
     if (typeof type === 'object') {
