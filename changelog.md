@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - Fixed loading profiles not clearing internal caches
+  - Immortal tools:
+    - Upload error dealing with missing type2 column used for date sorting
 
 ## 0.4.29 2017-11-27
 

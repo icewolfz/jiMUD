@@ -1341,7 +1341,8 @@
                             size: item.totalSize,
                             type: path.extname(item.remote),
                             date: new Date().getTime(),
-                            hidden: IED.isHidden(item.remote, true)
+                            hidden: IED.isHidden(item.remote, true),
+                            type2: 0
                         };
                         if (_remote[path.basename(item.remote)].hidden && !options.showHidden) {
                             delete _remote[path.basename(item.remote)];
@@ -1471,7 +1472,8 @@
                             size: -2,
                             type: "Directory",
                             date: new Date().getTime(),
-                            hidden: IED.isHidden(obj.path, true)
+                            hidden: IED.isHidden(obj.path, true),
+                            type2: -2
                         };
                         if (_remote[name].hidden && !options.showHidden) {
                             delete _remote[name];
@@ -3220,7 +3222,8 @@
                     size: -2,
                     type: "Directory",
                     date: new Date().getTime(),
-                    hidden: false
+                    hidden: false,
+                    type2: -2
                 };
                 info.remoteDirs++;
                 updateDraw(remoteTable, remoteTable.row.add(_remote["bak"]));
