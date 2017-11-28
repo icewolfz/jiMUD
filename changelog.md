@@ -2,6 +2,9 @@
 
 ## 0.4.30
 
+- **Fixed:**
+  - Fixed loading profiles not clearing internal caches
+
 ## 0.4.29 2017-11-27
 
 - **New:**

@@ -297,12 +297,15 @@ export class Client extends EventEmitter {
 
     public loadProfiles() {
         const p = path.join(parseTemplate('{data}'), 'profiles');
-        if (!existsSync(p)) {
-            this.profiles.add(Profile.Default);
-            return;
-        }
         //clear out all current profiles
         this.profiles = new ProfileCollection();
+        if (!existsSync(p)) {
+            this.profiles.add(Profile.Default);
+            this.clearCache();
+            this.startAlarms();
+            this.emit('profiles-loaded');
+            return;
+        }
         //backward compat, if no enabled one just load all so enabled profile setting can be scanned
         //use direct setting instead of wrapper as wrapper assumes profiles are loaded if empty
         if (this.options.profiles.enabled.length === 0)
