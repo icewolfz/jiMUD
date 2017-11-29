@@ -219,7 +219,7 @@ export class Client extends EventEmitter {
                 this._itemCache.alarms = [];
             else
                 this._itemCache.alarms = $.grep(SortItemArrayByPriority(this.profiles.items[keys[k]].triggers), (a) => {
-                    return a.enabled && a.type === TriggerType.Alarm;
+                    return a && a.enabled && a.type === TriggerType.Alarm;
                 });
             this._itemCache.alarms.reverse();
             return this._itemCache.alarms;
@@ -230,7 +230,7 @@ export class Client extends EventEmitter {
             tmp.push.apply(tmp, SortItemArrayByPriority(this.profiles.items[keys[k]].triggers));
         }
         this._itemCache.alarms = $.grep(tmp, (a) => {
-            return a.enabled && a.type === TriggerType.Alarm;
+            return a && a.enabled && a.type === TriggerType.Alarm;
         });
         this._itemCache.alarms.reverse();
         return this._itemCache.alarms;
