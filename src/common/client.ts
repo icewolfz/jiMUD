@@ -406,8 +406,12 @@ export class Client extends EventEmitter {
             pattern = Alarm.parse(this.alarms[idx]);
             this._itemCache.alarmPatterns[idx] = pattern;
         }
-        pattern.suspended = !state;
-        pattern.startTime = Date.now();
+        if (state) {
+            pattern.startTime += Date.now() - pattern.suspended;
+            pattern.suspended = 0;
+        }
+        else
+            pattern.suspended = Date.now();
     }
 
     public updateAlarms() {

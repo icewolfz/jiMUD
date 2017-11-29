@@ -84,7 +84,7 @@ export class Alarm {
     public minutes: number = -1;
     public minutesWildcard: boolean = true;
     public startTime: number;
-    public suspended = false;
+    public suspended: number = 0;
 
     constructor(data?, pattern?) {
         if (typeof data === 'string') {
