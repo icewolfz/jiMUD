@@ -84,22 +84,28 @@
   window.readClipboard = () => { return clipboard.readText('selection') || clipboard.readText() || ''; };
   window.writeClipboard = (txt) => { clipboard.writeText(txt || ''); clipboard.writeText(txt || '', 'selection'); };
 
-  window.onerror = function (msg, url, line) {
+  window.onerror = function (msg, url, line, col, error) {
     if (manager && manager.panels.length > 0) {
-      if (msg.startsWith('Uncaught Error: '))
+      if(error)
+        manager.active.client.error(error);
+      else if (msg.startsWith('Uncaught Error: '))
         manager.active.client.error(`${msg.substr(16)}`);
       else
         manager.active.client.error(`${msg}`);
       if (manager.active.client.options.enableDebug) {
         manager.active.client.error("Url: " + url);
         manager.active.client.error("Line: " + line);
+        manager.active.client.error("Column: " + col);
+        manager.active.client.error("Error: " + error);
       }
     }
     else {
       console.log("Message: " + msg);
       console.log("Url: " + url);
       console.log("Line: " + line);
-    }
+      console.log("Column: " + col);
+      console.log("Error: " + error);
+    }    
     return true;
   };
 
@@ -151,7 +157,7 @@
       else if (!manager.active.client.connecting)
         ipcRenderer.send('set-overlay', 0);
       manager.active.client.raise('focus');
-      manager.active.client.commandInput.focus();
+      //manager.active.client.commandInput.focus();
     }
 
   };
