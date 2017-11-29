@@ -6,6 +6,7 @@
   - Expand error catching to try and get more information
   - Change how active profile is found, active profile now should be highest priority profile or default
   - [#alarm](docs/commands.md) when just passing a single # now allows more then 59 seconds, to create second only timers, if over 59 it assumes wildcard
+  - [#alarm](docs/commands.md), [#suspend](docs/commands.md), [#resume](docs/commands.md) now parse id, timepattern, and profile arguments so functions and varibles can be used
 - **Fixed:**
   - Fixed loading profiles not clearing internal caches
   - Fix suspend/resume to correctly time suspended alarms when resumed
