@@ -83,6 +83,7 @@
     You can also define a temporary, one time alarm if pattern is preceded with a plus (+), the trigger alarm is executed then deleted.
 
     Hours are defined in 24 hour format of 0 to 23, minutes and seconds are 0 to 59.
+    If seconds are > 59 and the only pattern it will be considered the same as adding a wildcard (*) in front of the number.
 
     Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
     ```

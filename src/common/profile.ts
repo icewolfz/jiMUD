@@ -128,8 +128,10 @@ export class Alarm {
                 tmp = parseInt(parts[0], 10);
                 if (isNaN(tmp))
                     throw new Error('Invalid Format: ' + parts[0]);
-                if (tmp < 0 || tmp > 59)
-                    throw new Error('Seconds can only be 0 to 59');
+                if (tmp < 0)
+                    throw new Error('Seconds must be greater than or equal to 0.');
+                else if (tmp > 59)
+                    t.secondsWildcard = true;
                 t.seconds = tmp;
             }
             else if (parts.length === 2) {
