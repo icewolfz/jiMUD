@@ -2,6 +2,8 @@
 
 ## 0.4.30
 
+- **Changed:**
+  - Expand error catching to try and get more information
 - **Fixed:**
   - Fixed loading profiles not clearing internal caches
   - Fix suspend/resume to correctly time suspended alarms when resumed

@@ -153,21 +153,27 @@
     var _selurl = '';
     var _selline = '';
 
-    window.onerror = function (msg, url, line) {
+    window.onerror = function (msg, url, line, col, error) {
       if (client) {
-        if (msg.startsWith('Uncaught Error: '))
+        if (error)
+          client.error(error);
+        else if (msg.startsWith('Uncaught Error: '))
           client.error(`${msg.substr(16)}`);
         else
           client.error(`${msg}`);
         if (client.options.enableDebug) {
           client.error("Url: " + url);
           client.error("Line: " + line);
+          client.error("Column: " + col);
+          client.error("Error: " + error);
         }
       }
       else {
         console.log("Message: " + msg);
         console.log("Url: " + url);
         console.log("Line: " + line);
+        console.log("Column: " + col);
+        console.log("Error: " + error);
       }
       return true;
     };
