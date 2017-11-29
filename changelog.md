@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Fixed loading profiles not clearing internal caches
+  - Fix suspend/resume to correctly time suspended alarms when resumed
   - Immortal tools:
     - Upload error dealing with missing type2 column used for date sorting
 
