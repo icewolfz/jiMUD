@@ -311,6 +311,14 @@ export class Client extends EventEmitter {
     }
 
     get activeProfile(): Profile {
+        const keys = this.profiles.keys;
+        const kl = keys.length;
+        //search for first enabled profile
+        for (const key in keys) {
+            if (this.enabledProfiles.indexOf(keys[key]) !== -1)
+                return this.profiles.items[key];
+        }
+        //if none found fall back to default
         return this.profiles.active;
     }
 
