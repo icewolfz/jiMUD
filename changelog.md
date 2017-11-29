@@ -4,6 +4,7 @@
 
 - **Changed:**
   - Expand error catching to try and get more information
+  - Change how active profile is found, active profile now should be highest priority profile or default
 - **Fixed:**
   - Fixed loading profiles not clearing internal caches
   - Fix suspend/resume to correctly time suspended alarms when resumed
