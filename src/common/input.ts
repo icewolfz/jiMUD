@@ -560,6 +560,7 @@ export class Input extends EventEmitter {
                         return null;
                     case 1:
                         items = this.stripQuotes(args[0]);
+                        items = this.parseOutgoing(items, false);
                         tmp = this.client.alarms;
                         al = tmp.length;
                         for (let a = tmp.length - 1; a >= 0; a--) {
@@ -586,6 +587,7 @@ export class Input extends EventEmitter {
                         return null;
                     case 1:
                         items = this.stripQuotes(args[0]);
+                        items = this.parseOutgoing(items, false);
                         tmp = this.client.alarms;
                         al = tmp.length;
                         for (let a = al - 1; a >= 0; a--) {
@@ -615,10 +617,13 @@ export class Input extends EventEmitter {
                     if (args.length > 3)
                         throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} profile');
                     args[0] = args[0].substr(1, args[0].length - 2);
+                    args[0] = this.parseOutgoing(args[0], false);
                     if (args[1].match(/^\{.*\}$/g))
                         args[1] = args[1].substr(1, args[1].length - 2);
-                    if (args.length === 3)
+                    if (args.length === 3) {
                         profile = this.stripQuotes(args[2]);
+                        profile = this.parseOutgoing(profile, false);
+                    }
 
                     if (!profile || profile.length === 0)
                         profile = this.client.activeProfile;
@@ -650,10 +655,12 @@ export class Input extends EventEmitter {
                 name = this.stripQuotes(args[0]);
                 if (!name || name.length === 0)
                     throw new Error('Invalid alarm name');
+                name = this.parseOutgoing(name, false);
                 let pattern = args[1];
                 let commands = null;
                 if (pattern.match(/^\{.*\}$/g))
                     pattern = pattern.substr(1, pattern.length - 2);
+                pattern = this.parseOutgoing(pattern, false);
                 if (args.length === 3) {
                     if (args[2].match(/^\{.*\}$/g))
                         commands = args[2].substr(1, args[2].length - 2);
@@ -713,6 +720,7 @@ export class Input extends EventEmitter {
                     }
                 }
                 else {
+                    profile = this.parseOutgoing(profile, false);
                     if (this.client.profiles.contains(profile))
                         profile = this.client.profiles.items[profile];
                     else {
