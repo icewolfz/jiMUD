@@ -2,6 +2,8 @@
 
 ## 0.4.30
 
+- **New:**
+  - Character manager: login name independent of the character group, this allows you to create 2 characters with same login name but defferent group name, this makes it easier for those that have a character on dev mud and main mud using the same name but different setting files
 - **Changed:**
   - Expand error catching to try and get more information
   - Change how active profile is found, active profile now should be highest priority profile or default

@@ -694,7 +694,7 @@
         var res, re, c, cl;
         if (client.options.autoLogin && remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
           if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
-            client.sendCommand(remote.getGlobal('character'));
+            client.sendCommand(remote.getGlobal('characterLogin'));
           }
           else if (data.fragment && data.line === 'Password: ') {
             var pass = remote.getGlobal('characterPass');

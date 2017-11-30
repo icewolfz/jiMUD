@@ -29,6 +29,7 @@ global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
 global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
 global.profiles = null;
 global.character = null;
+global.characterLogin = null;
 global.characterPass = null;
 global.title = '';
 global.debug = false;
@@ -63,6 +64,7 @@ function loadCharacter(char) {
   global.character = char;
   global.settingsFile = parseTemplate(characters.characters[char].settings);
   global.mapFile = parseTemplate(characters.characters[char].map);
+  global.characterLogin = characters.characters[char].name || char;
   global.characterPass = characters.characters[char].password || '';
   global.title = char;
   updateTray();
