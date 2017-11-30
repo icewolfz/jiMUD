@@ -793,6 +793,75 @@ export class Profile {
         }
         return null;
     }
+
+    public findAny(type, field, value) {
+        let tmp;
+        if (!type || type.length === 0 || !this[type] || this[type].length === 0)
+            return null;
+        tmp = SortItemArrayByPriority(this[type]);
+        const l = tmp.length;
+        if (typeof field === 'object') {
+            for (let t = 0; t < l; t++) {
+                for (const v in field) {
+                    if (!field.hasOwnProperty(v)) continue;
+                    if (tmp[t][v] === field[v])
+                        return tmp[t];
+                }
+            }
+            return -1;
+        }
+        for (let t = 0; t < l; t++) {
+            if (tmp[t][field] === value)
+                return tmp[t];
+        }
+        return null;
+    }
+
+    public indexOfAny(type, field, value) {
+        let tmp;
+        if (!type || type.length === 0 || !this[type] || this[type].length === 0)
+            return null;
+        tmp = SortItemArrayByPriority(this[type]);
+        const l = tmp.length;
+        if (typeof field === 'object') {
+            for (let t = 0; t < l; t++) {
+                for (const v in field) {
+                    if (!field.hasOwnProperty(v)) continue;
+                    if (tmp[t][v] === field[v])
+                        return this[type].indexOf(tmp[t]);
+                }
+            }
+            return -1;
+        }
+        for (let t = 0; t < l; t++) {
+            if (tmp[t][field] === value)
+                return this[type].indexOf(tmp[t]);
+        }
+        return -1;
+    }
+
+    public indexOf(type, field, value) {
+        let tmp;
+        if (!type || type.length === 0 || !this[type] || this[type].length === 0)
+            return null;
+        tmp = SortItemArrayByPriority(this[type]);
+        const l = tmp.length;
+        if (typeof field === 'object') {
+            for (let t = 0; t < l; t++) {
+                for (const v in field) {
+                    if (!field.hasOwnProperty(v)) continue;
+                    if (tmp[t][v] !== field[v]) continue;
+                }
+                return this[type].indexOf(tmp[t]);
+            }
+            return -1;
+        }
+        for (let t = 0; t < l; t++) {
+            if (tmp[t][field] === value)
+                return this[type].indexOf(tmp[t]);
+        }
+        return -1;
+    }
 }
 
 export class ProfileCollection {
