@@ -145,6 +145,7 @@
     var active = false;
     var capture = 0, captureReview = 0;
     var _captures = [], _captureReviews = [];
+    var _captureComm = false;
     var _noCapture = false;
     var _noCaptureStore = 0;
     var _cLoading = false;
@@ -680,6 +681,7 @@
       client.port = client.options.dev ? 1035 : 1030;
       client.telnet.GMCPSupports.push("Room 1");
       client.telnet.GMCPSupports.push("IED 1");
+      client.telnet.GMCPSupports.push('Comm 1');
       client.on('initialized', () => {
         autoConnect();
       });
@@ -706,6 +708,11 @@
           }
         }
         if (_captures.length === 0 || data.fragment) return;
+        if (_captureComm) {
+          ipcRenderer.send('chat', data);
+          data.gagged = client.options.chat.gag;
+          return;
+        }
         //custom capture to ignore who list
         res = /^(-*)\s*\[ (.*) matching (users|user) \]\s*(-*)$/.exec(data.line);
         if (res && res.length > 0) {
@@ -738,6 +745,7 @@
           capture = 0;
           _noCaptureStore = 0;
         }
+
         if (_noCapture || _noCaptureStore > 0) return;
         //capture indented text
         if (capture > 0 && data.line.startsWith("    ")) {
@@ -932,9 +940,22 @@
       });
 
       client.on('received-GMCP', (mod, obj) => {
-        if (mod === "IED.init") {
-          ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
-          $("#immortal").css('display', "block");
+        switch (mod) {
+          case 'Comm.Channel.Start':
+            if (obj.match(/^tell .*$/) || obj === 'shout' || obj === 'tell' || obj === 'emoteto' || obj.match(/^emoteto .*$/))
+              _captureComm = client.options.chat.captureTells;
+            else if(obj === 'say' || obj.match(/^whisper .*$/) || obj === 'speak' || obj === 'whisper')
+              _captureComm = client.options.chat.captureTalk;
+            else if(client.options.chat.captureLines)
+              _captureComm = client.options.chat.captureAllLines || client.options.chat.lines.indexOf(obj) !== -1;
+            break;
+          case 'Comm.Channel.End':
+            _captureComm = false;
+            break;
+          case 'IED.init':
+            ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
+            $("#immortal").css('display', "block");
+            break;
         }
         ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
       });
@@ -1586,6 +1607,7 @@
         if (client.options.chat.captureReviews)
           _captureReviews.push('^-=-=- Say Review -=-=-$');
       }
+      /*
       if (client.options.chat.captureLines) {
         if (client.options.chat.captureAllLines) {
           _captures.push('^\\[(.*)\\](.*)$');
@@ -1599,6 +1621,7 @@
               _captureReviews.push('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$');
           }
       }
+      */
     }
 
     ipcRenderer.on('flush-end', (event, sender) => {
