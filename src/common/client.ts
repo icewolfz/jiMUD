@@ -794,6 +794,10 @@ export class Client extends EventEmitter {
             this.MSP.reset();
             this.emit('closed');
             this.raise('disconnected');
+            if (this.options.buttons.connect) {
+                $('#connect', this.$parent).css('display', '');
+                $('#disconnect', this.$parent).css('display', 'none');
+            }
         });
         this.telnet.on('received-data', (data) => {
             data = { value: data };
