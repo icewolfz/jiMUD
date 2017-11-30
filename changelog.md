@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.30
+## 0.4.30 2017-11-29
 
 - **New:**
   - Character manager: login name independent of the character group, this allows you to create 2 characters with same login name but defferent group name, this makes it easier for those that have a character on dev mud and main mud using the same name but different setting files
@@ -12,8 +12,7 @@
 - **Fixed:**
   - Fixed loading profiles not clearing internal caches
   - Fix suspend/resume to correctly time suspended alarms when resumed
-  - Immortal tools:
-    - Upload error dealing with missing type2 column used for date sorting
+  - Immortal tools: Error dealing with missing type2 column used for date sorting
 
 ## 0.4.29 2017-11-27
 
