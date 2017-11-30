@@ -159,6 +159,11 @@
                 characters.characters[current].map = v;
                 changed++;
             }
+            v = $("#name").val();
+            if (v != characters.characters[current].name) {
+                characters.characters[current].name = v;
+                changed++;
+            }
             if (current === characters.load) {
                 if (!$("#auto-load").prop('checked')) {
                     characters.load = 0;
@@ -266,10 +271,12 @@
                 $("#btn-copy").prop('disabled', false);
                 $("#btn-delete").prop('disabled', false);
                 $("#btn-load").prop('disabled', false);
+                $("#btn-load-close").prop('disabled', false);
                 $("#character-editor input").prop('disabled', false);
                 $("#character-editor button").prop('disabled', false);
                 $("#settings").val(characters.characters[current].settings);
                 $("#map").val(characters.characters[current].map);
+                $("#name").val(characters.characters[current].name||current);
                 $("#auto-load").prop('checked', current === characters.load);
 
                 if (characters.characters[current].password && characters.characters[current].password.length > 0) {
@@ -300,6 +307,7 @@
             $("#btn-copy").prop('disabled', true);
             $("#btn-delete").prop('disabled', true);
             $("#btn-load").prop('disabled', true);
+            $("#btn-load-close").prop('disabled', true);
             $("#character-editor input").prop('disabled', true);
             $("#character-editor input[type=text]").val('');
             $("#character-editor input[type=checkbox]").prop('checked', false);
@@ -727,6 +735,10 @@
                 <span id="title"></span>
             </div>
             <div class="panel-body" id="character-editor">
+                <label class="control-label" style="width: 100%"> Login
+                    <input disabled="disabled" class="form-control" style="width:100%" type="text" id="name">
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Name to login as if differnt from character name</span>
+                </label>
                 <label class="control-label" style="width: 100%"> Password
                     <input disabled="disabled" class="form-control" style="width:100%" type="password" id="password">
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Supply at own risk, the password is stored in basic encryption</span>

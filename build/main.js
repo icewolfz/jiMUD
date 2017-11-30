@@ -276,8 +276,6 @@ function updateTray() {
   let t = '';
   let d = '';
   let title = global.title;
-  if (!title || title.length === 0)
-    title = global.character;
   if (set && set.dev)
     d = " to Development";
   switch (overlay) {
