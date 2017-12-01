@@ -681,7 +681,7 @@
       client.port = client.options.dev ? 1035 : 1030;
       client.telnet.GMCPSupports.push("Room 1");
       client.telnet.GMCPSupports.push("IED 1");
-      client.telnet.GMCPSupports.push('Comm 1');
+      //client.telnet.GMCPSupports.push('Comm 1');
       client.on('initialized', () => {
         autoConnect();
       });
@@ -707,12 +707,14 @@
             }
           }
         }
-        if (_captures.length === 0 || data.fragment) return;
+        /*
         if (_captureComm) {
           ipcRenderer.send('chat', data);
           data.gagged = client.options.chat.gag;
           return;
         }
+        */
+        if (_captures.length === 0 || data.fragment) return;
         //custom capture to ignore who list
         res = /^(-*)\s*\[ (.*) matching (users|user) \]\s*(-*)$/.exec(data.line);
         if (res && res.length > 0) {
@@ -723,6 +725,28 @@
         //end capture blocking for who list
         res = /^(-*)\s*\[ .* \]\s*(-*)$/.exec(data.line);
         if (_noCapture && res && res.length > 0) {
+          capture = 0;
+          _noCapture = false;
+          return;
+        }
+
+        if (data.line === 'Describers:' ||
+          data.line === 'You supply a list of nouns so when your object is complete it can correctly build an id list to allow you to properly interact with it.' ||
+          data.line === 'You supply a list of adjectives so when your object is complete it can correctly build an id list to allow you to properly interact with it.' ||
+          data.line === 'Available sizes:' ||
+          data.line === 'Available locations:' ||
+          data.line === 'Available tattoos:' ||
+          data.line === 'Available colors:'
+        ) {
+          capture = 0;
+          _noCapture = true;
+          return;
+        }
+        if (_noCapture && (data.line.match(/^Current name: .*$/) ||
+          data.line.match(/^Enter up to 2 nouns, [#] to remove, 'f' to finish, 'q' to quit:.*$/) ||
+          data.line.match(/^Enter up to 3 adjectives, 'f' to finish, 'q' to quit:.*$/) ||
+          data.line.match(/^Enter selection .*$/)
+        )) {
           capture = 0;
           _noCapture = false;
           return;
@@ -941,17 +965,19 @@
 
       client.on('received-GMCP', (mod, obj) => {
         switch (mod) {
+          /*
           case 'Comm.Channel.Start':
             if (obj.match(/^tell .*$/) || obj === 'shout' || obj === 'tell' || obj === 'emoteto' || obj.match(/^emoteto .*$/))
               _captureComm = client.options.chat.captureTells;
-            else if(obj === 'say' || obj.match(/^whisper .*$/) || obj === 'speak' || obj === 'whisper')
+            else if (obj === 'say' || obj.match(/^whisper .*$/) || obj === 'speak' || obj === 'whisper')
               _captureComm = client.options.chat.captureTalk;
-            else if(client.options.chat.captureLines)
+            else if (client.options.chat.captureLines)
               _captureComm = client.options.chat.captureAllLines || client.options.chat.lines.indexOf(obj) !== -1;
             break;
           case 'Comm.Channel.End':
-            _captureComm = false;
+            setTimeout(() => { _captureComm = false; }, 0);
             break;
+            */
           case 'IED.init':
             ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
             $("#immortal").css('display', "block");
@@ -1607,7 +1633,6 @@
         if (client.options.chat.captureReviews)
           _captureReviews.push('^-=-=- Say Review -=-=-$');
       }
-      /*
       if (client.options.chat.captureLines) {
         if (client.options.chat.captureAllLines) {
           _captures.push('^\\[(.*)\\](.*)$');
@@ -1621,7 +1646,6 @@
               _captureReviews.push('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$');
           }
       }
-      */
     }
 
     ipcRenderer.on('flush-end', (event, sender) => {

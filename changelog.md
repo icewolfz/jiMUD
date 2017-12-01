@@ -4,8 +4,8 @@
 
 - **New:**
   - Add [#untrigger](docs/commands.md) command to create alarm triggers
-- **Changed:**
-  - Change how chat capture works, now uses a mix of GMCP Comm module and text trigger, fixing captureing of non channel text no longer an issue.
+- **Fixed:**
+  - Chat capture: forging and tattooist menus should now be ignored
 
 ## 0.4.30 2017-11-29
 
