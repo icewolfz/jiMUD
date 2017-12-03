@@ -197,7 +197,7 @@ export class Telnet extends EventEmitter {
 
     set keepAlive(value: boolean) {
         this._keepAlive = value;
-        if (this.socket)
+        if (this.connected)
             this.socket.setKeepAlive(this._keepAlive, this._keepAliveDelay * 1000);
     }
 
@@ -214,7 +214,7 @@ export class Telnet extends EventEmitter {
 
     set keepAliveDelay(value: number) {
         this._keepAliveDelay = value;
-        if (this.socket)
+        if (this.connected)
             this.socket.setKeepAlive(this._keepAlive, this._keepAliveDelay * 1000);
     }
 
