@@ -1232,7 +1232,7 @@ export class Parser extends EventEmitter {
           if (e.fore.length > 0 && e.back.length > 0)
             e.definition = `<C "${e.fore}" "${e.back}">`;
           else if (e.fore.length > 0)
-          e.definition = `<C "${e.fore}">`;
+            e.definition = `<C "${e.fore}">`;
           else if (e.back.length > 0)
             e.definition = `<C BACK="${e.fore}">`;
           if (e.definition.length > 0)
@@ -1399,7 +1399,10 @@ export class Parser extends EventEmitter {
         case '/VAR':
           tmp = this.ClearMXPToTag(MXPTag[tag.substring(1)]);
           e = new Entity(remote);
-          e.value = this.mxpState.captured.pop().join('');
+          if (this.mxpState.captured.length > 0)
+            e.value = this.mxpState.captured.pop().join('');
+          else
+            e.value = '';
           this.mxpState.capture--;
           if (this.enableDebug) this.emit('debug', 'MXP captured: ' + e.value);
           args = tmp.obj;
@@ -2153,7 +2156,8 @@ export class Parser extends EventEmitter {
 
       //get captured text]
       if (!e.empty && this.mxpState.capture > 0) {
-        sArg = this.mxpState.captured.pop().join('');
+        if (this.mxpState.captured.length > 0)
+          sArg = this.mxpState.captured.pop().join('');
         this.mxpState.capture--;
       }
 

@@ -241,8 +241,8 @@ export class Tests extends EventEmitter {
             sample += 'Custom Entity\n';
             sample += '\t<!ENTITY version "' + this.Client.version + '">&lt;!ENTITY version "' + this.Client.version + '"&gt;\n';
             sample += '\t&amp;version; = &version;\n';
-            sample += '\t&lt;V Hp&gt;<V Hp>100</V>&lt;/VAR&gt; &amp;Hp; = &Hp; &amp;hp; = &hp;\n';
-            sample += '\t&lt;let Sp&gt;<let Sp>200</VAR>&lt;/VAR&gt; &amp;Sp; = &Sp; &amp;sp; = &sp;\n';
+            sample += '\t&lt;V Hp&gt;<V Hp>100</V>&lt;/V&gt; &amp;Hp; = &Hp; &amp;hp; = &hp;\n';
+            sample += '\t&lt;VAR Sp&gt;<VAR Sp>200</VAR>&lt;/VAR&gt; &amp;Sp; = &Sp; &amp;sp; = &sp;\n';
             sample += 'Image\n';
             sample += 'default      <image logo.png URL="./../assets/" w=133 h=40>\n';
             sample += 'align left <image logo.png URL="./../assets/" align=left w=133 h=40> align left\n';
