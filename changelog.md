@@ -22,8 +22,8 @@
   - Chat capture: crafting and tattooist menus should now be ignored
   - Keep alive was setting as milliseconds instead on seconds.
   - Keep alive delay was not set due to a bug in node it was not setting correctly unless already connecteds.
-  - Fixed <var> tag in #TestMXP
-  - Fixed parsing of var tag if in valid tag matching
+  - Fixed var tag in #TestMXP
+  - Fixed parsing of var tag if invalid tag matching
 
 ## 0.4.30 2017-11-29
 
