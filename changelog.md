@@ -23,19 +23,20 @@
 - **Fixed:**
   - Chat capture: crafting and tattooist menus should now be ignored
   - Keep alive was setting as milliseconds instead on seconds.
-  - Keep alive delay was not set due to a bug in node it was not setting correctly unless already connecteds.
+  - Keep alive delay was not set due to a bug in node it was not setting correctly unless already connected.
   - Fixed var tag in #TestMXP
   - Fixed parsing of var tag if invalid tag matching
+  - Immortal Tools: List view key down selection search now ignores case for more accurate searching
 
 ## 0.4.30 2017-11-29
 
 - **New:**
-  - Character manager: login name independent of the character group, this allows you to create 2 characters with same login name but defferent group name, this makes it easier for those that have a character on dev mud and main mud using the same name but different setting files
+  - Character manager: login name independent of the character group, this allows you to create 2 characters with same login name but different group name, this makes it easier for those that have a character on dev mud and main mud using the same name but different setting files
 - **Changed:**
   - Expand error catching to try and get more information
   - Change how active profile is found, active profile now should be highest priority profile or default
   - [#alarm](docs/commands.md) when just passing a single # now allows more then 59 seconds, to create second only timers, if over 59 it assumes wildcard
-  - [#alarm](docs/commands.md), [#suspend](docs/commands.md), [#resume](docs/commands.md) now parse id, timepattern, and profile arguments so functions and varibles can be used
+  - [#alarm](docs/commands.md), [#suspend](docs/commands.md), [#resume](docs/commands.md) now parse id, timepattern, and profile arguments so functions and variables can be used
 - **Fixed:**
   - Fixed loading profiles not clearing internal caches
   - Fix suspend/resume to correctly time suspended alarms when resumed
@@ -123,7 +124,7 @@
 - **Fixed:**
   - Chat capture: Capture all lines no matter what characters they may contain when capture all lines is enabled
   - Mapper: Fix zones not assigning right when moving to a new area
-  - Immortal button not being hidden on disconnect then relogin with a non immortal login
+  - Immortal button not being hidden on disconnect then re-login with a non immortal login
   - Backup system was not having the correct map file set when character was changed.
 
 ## 0.4.21 2017-09-26
@@ -264,7 +265,7 @@
   - Backup:
     - Loading would break when trying to load settings from main using a dev connection
     - Profile buttons where not being correctly restored and being appended to triggers
-    - Profile context items whre not being restored
+    - Profile context items where not being restored
     - Profile default context option was not being restored
   - Onload focus on main window instead of chat/mapper/editor windows
 

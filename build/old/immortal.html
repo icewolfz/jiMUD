@@ -426,7 +426,7 @@
             function naturalSort(a, b, html) {
                 var re = /(^-?[0-9]+(\.?[0-9]*)[df]?e?[0-9]?%?$|^0x[0-9a-f]+$|[0-9]+)/gi,
                     sre = /(^[ ]*|[ ]*$)/g,
-                    dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/,
+                    dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[/-]\d{1,4}[/-]\d{1,4}|^\w+, \w+ \d+, \d{4})/,
                     hre = /^0x[0-9a-f]+$/i,
                     ore = /^0/,
                     htmre = /(<([^>]+)>)/ig,
@@ -469,7 +469,6 @@
                         oFxNcL += '';
                         oFyNcL += '';
                     }
-                    console.log(typeof oFxNcL);
                     if (typeof oFxNcL === 'string') {
                         oFxNcL = oFxNcL.toLowerCase();
                         oFyNcL = oFyNcL.toLowerCase();
@@ -1701,31 +1700,31 @@
             });
 
             $("#local-list").on('keypress', function (e) {
-                key += e.key;
+                key += e.key.toLowerCase();
                 var selected = localTable.rows({ selected: true });
-                var f = 0;
+                var f = -1;
                 var row = localTable.row(function (idx, data, node) {
                     if (selected.length > 0) {
                         if (selected[selected.length - 1][0] == idx)
                             f = idx;
-                        else if (f)
-                            return data.name.startsWith(key) ? true : false;
+                        else if (f >= 0)
+                            return data.name.toLowerCase().startsWith(key) ? true : false;
                     }
                     else
-                        return data.name.startsWith(key) ? true : false;
-                });
+                        return data.name.toLowerCase().startsWith(key) ? true : false;
+                }, { order: 'applied' });
                 if (selected.length && row.length == 0) {
                     localTable.rows().deselect();
                     row = localTable.row(function (idx, data, node) {
                         if (selected.length > 0) {
                             if (selected[selected.length - 1][0] == idx)
                                 f = idx;
-                            else if (f)
-                                return data.name.startsWith(key) ? true : false;
+                            else if (f >= 0)
+                                return data.name.toLowerCase().startsWith(key) ? true : false;
                         }
                         else
-                            return data.name.startsWith(key) ? true : false;
-                    });
+                            return data.name.toLowerCase().startsWith(key) ? true : false;
+                    }, { order: 'applied' });
                 }
                 //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollHeight - (row.index() * $(row.node()).outerHeight());
                 if (!row || row.length === 0) {
@@ -1752,31 +1751,31 @@
                 }, 500);
             });
             $("#remote-list").on('keypress', function (e) {
-                key += e.key;
+                key += e.key.toLowerCase();
                 var selected = remoteTable.rows({ selected: true });
-                var f = 0;
+                var f = -1;
                 var row = remoteTable.row(function (idx, data, node) {
                     if (selected.length > 0) {
                         if (selected[selected.length - 1][0] == idx)
                             f = idx;
-                        else if (f)
-                            return data.name.startsWith(key) ? true : false;
+                        else if (f >= 0)
+                            return data.name.toLowerCase().startsWith(key) ? true : false;
                     }
                     else
-                        return data.name.startsWith(key) ? true : false;
-                });
+                        return data.name.toLowerCase().startsWith(key) ? true : false;
+                }, { order: 'applied' });
                 if (selected.length && row.length == 0) {
                     remoteTable.rows().deselect();
                     row = remoteTable.row(function (idx, data, node) {
                         if (selected.length > 0) {
                             if (selected[selected.length - 1][0] == idx)
                                 f = idx;
-                            else if (f)
-                                return data.name.startsWith(key) ? true : false;
+                            else if (f >= 0)
+                                return data.name.toLowerCase().startsWith(key) ? true : false;
                         }
                         else
-                            return data.name.startsWith(key) ? true : false;
-                    });
+                            return data.name.toLowerCase().startsWith(key) ? true : false;
+                    }, { order: 'applied' });
                 }
                 if (!row || row.length === 0) {
                     keyClearID = setTimeout(() => {
