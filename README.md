@@ -73,6 +73,9 @@ Basic questions answered about jiMUD
 
 ## Known Issues
 
+- Display:
+  - Unicode spacing has issues when displaying half or double wide characters when using mixed display formats so text may overlap.
+  - Unicode selection background may be shorter then displayed text due to half or double wide characters
 - Backup:
   - Loading data that is related to operating system may revert to default or be ignored as paths could not exist or may be in wrong format
 - Command input

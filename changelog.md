@@ -3,12 +3,12 @@
 ## 0.4.31
 
 - **New:**
-  - Add [#untrigger](docs/commands.md) command to create alarm triggers
+  - Add [#untrigger](docs/commands.md) command to remove triggers or alarms
   - Immortal Tools: can zoom in/out and reset from menu bar
 - **Changed:**
   - Immortal Tools: use natural sort when sorting file names
 - **Fixed:**
-  - Chat capture: forging and tattooist menus should now be ignored
+  - Chat capture: crafting and tattooist menus should now be ignored
   - Keep alive was setting as milliseconds instead on seconds.
   - Keep alive delay was not set due to a bug in node it was not setting correctly unless already connected.
   - Fixed var tag in #TestMXP
