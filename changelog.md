@@ -17,6 +17,7 @@
 
 - **New:**
   - Add [#untrigger](docs/commands.md) command to create alarm triggers
+  - Immortal Tools: can zoom in/out and reset from menu bar
 - **Fixed:**
   - Chat capture: crafting and tattooist menus should now be ignored
   - Keep alive was setting as milliseconds instead on seconds.
