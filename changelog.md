@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.31
+## 0.4.31 2017-12-05
 
 - **New:**
   - Add [#untrigger](docs/commands.md) command to remove triggers or alarms
