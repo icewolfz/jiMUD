@@ -5,6 +5,8 @@
 - **New:**
   - Add [#untrigger](docs/commands.md) command to create alarm triggers
   - Immortal Tools: can zoom in/out and reset from menu bar
+- **Changed:**
+  - Immortal Tools: use natural sort when sorting file names
 - **Fixed:**
   - Chat capture: forging and tattooist menus should now be ignored
   - Keep alive was setting as milliseconds instead on seconds.
