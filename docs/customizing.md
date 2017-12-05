@@ -1,6 +1,6 @@
 # Customizing
 
-When loading the client will look for and load three files in jiMUD's data directory:
+When loading the client will look for and load files in jiMUD's data directory:
 
 - `%APPDATA%\jiMUD` on Windows
 - `$XDG_CONFIG_HOME/jiMUD` or `~/.config/jiMUD` on Linux
@@ -18,6 +18,16 @@ Allows you to create monster css classes to set monster icons, can also be done 
 ## user.js
 
 Runs javascript code after the client finishes loading allowing to define custom functions and other javascript options.
+
+## other windows
+
+Other windows support loading of javascript and css to allow them to be adjusted and customized.
+
+- Profile manger: profiles.js and profiles.css
+- Chat capture window: chat.js and chat.css
+- Mapper: map.js and map.css
+- Advanced editor: editor.js and editor.css
+- Immortal tools: immortal.js and immortal.css
 
 ### CSS monster / party member class names
 

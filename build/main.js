@@ -1208,6 +1208,7 @@ function createWindow() {
       w.webContents.openDevTools();
     w.setMenu(null);
     w.once('ready-to-show', () => {
+      loadWindowScripts(w, frameName);
       addInputContext(w);
       w.show();
     });
@@ -2158,6 +2159,7 @@ function createMapper(show, loading, loaded) {
     winMap.webContents.openDevTools();
 
   winMap.once('ready-to-show', () => {
+    loadWindowScripts(winMap, "map");
     addInputContext(winMap);
     if (show) {
       if (s.maximized)
@@ -2250,6 +2252,7 @@ function showProfiles() {
     slashes: true
   }));
   winProfiles.once('ready-to-show', () => {
+    loadWindowScripts(winProfiles, "profiles");
     //addInputContext(winProfiles);
     if (s.maximized)
       winProfiles.maximize();
@@ -2341,6 +2344,7 @@ function createEditor(show, loading) {
     winEditor.webContents.openDevTools();
 
   winEditor.once('ready-to-show', () => {
+    loadWindowScripts(winEditor, 'editor');
     addInputContext(winEditor);
     if (show) {
       if (s.maximized)
@@ -2449,6 +2453,7 @@ function createChat(show, loading) {
     winChat.webContents.openDevTools();
 
   winChat.once('ready-to-show', () => {
+    loadWindowScripts(winChat, 'chat');
     addInputContext(winChat);
     if (show) {
       if (s.maximized)
@@ -2586,6 +2591,7 @@ function createNewWindow(name, options) {
       w.webContents.openDevTools();
     w.setMenu(null);
     w.once('ready-to-show', () => {
+      loadWindowScripts(w, frameName);
       addInputContext(w);
       w.show();
     });
@@ -2607,6 +2613,7 @@ function createNewWindow(name, options) {
     windows[name].window.webContents.openDevTools();
 
   windows[name].window.once('ready-to-show', () => {
+    loadWindowScripts(windows[name].window, name);
     if (!options.noInput)
       addInputContext(windows[name].window);
     if (options.show) {
@@ -2756,4 +2763,18 @@ function copyWindowOptions(name) {
     ops[op] = windows[name][op];
   }
   return ops;
+}
+
+function loadWindowScripts(window, name) {
+  if (!window || !name) return;
+  if (isFileSync(path.join(app.getPath('userData'), name + '.css'))) {
+    fs.readFile(path.join(app.getPath('userData'), '.css'), 'utf8', (err, data) => {
+      window.webContents.insertCSS(parseTemplate(data));
+    });
+  }
+  if (isFileSync(path.join(app.getPath('userData'), '.js'))) {
+    fs.readFile(path.join(app.getPath('userData'), '.js'), 'utf8', (err, data) => {
+      window.webContents.executeJavaScript(data);
+    });
+  }
 }
