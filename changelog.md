@@ -18,6 +18,12 @@
 - **New:**
   - Add [#untrigger](docs/commands.md) command to remove triggers or alarms
   - Immortal Tools: can zoom in/out and reset from menu bar
+  - Mapper, immortal tools, profile manager, advanced editor, and chat window now support loading css/js to allow [customizing](docs/customizing.md) by creating files in the appdata folder.
+    - Profile manger: profiles.js and profiles.css
+    - Chat capture window: chat.js and chat.css
+    - Mapper: map.js and map.css
+    - Advanced editor: editor.js and editor.css
+    - Immortal tools: immortal.js and immortal.css
 - **Changed:**
   - Immortal Tools: use natural sort when sorting file names
 - **Fixed:**

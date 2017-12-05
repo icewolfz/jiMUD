@@ -417,6 +417,7 @@ function createWindow() {
       w.webContents.openDevTools();
     w.setMenu(null);
     w.once('ready-to-show', () => {
+      loadWindowScripts(w, frameName);
       addInputContext(w);
       w.show();
     });
@@ -446,16 +447,7 @@ function createWindow() {
         win.webContents.insertCSS(parseTemplate(data));
       });
     }
-    if (isFileSync(path.join(app.getPath('userData'), "user.css"))) {
-      fs.readFile(path.join(app.getPath('userData'), "user.css"), 'utf8', (err, data) => {
-        win.webContents.insertCSS(parseTemplate(data));
-      });
-    }
-    if (isFileSync(path.join(app.getPath('userData'), "user.js"))) {
-      fs.readFile(path.join(app.getPath('userData'), "user.js"), 'utf8', (err, data) => {
-        win.webContents.executeJavaScript(data);
-      });
-    }
+    loadWindowScripts(win, "user");
     if (s.maximized)
       win.maximize();
     else
@@ -882,6 +874,7 @@ function createNewWindow(name, options, state, client) {
       w.webContents.openDevTools();
     w.setMenu(null);
     w.once('ready-to-show', () => {
+      loadWindowScripts(w, frameName);
       addInputContext(w);
       w.show();
     });
@@ -903,6 +896,7 @@ function createNewWindow(name, options, state, client) {
     global.clients[client][name].window.webContents.openDevTools();
 
   global.clients[client][name].window.once('ready-to-show', () => {
+    loadWindowScripts(global.clients[client][name].window, name);
     if (!options.noInput)
       addInputContext(global.clients[client][name].window);
     if (options.show) {
@@ -1050,4 +1044,18 @@ function getClientWindowState(window) {
     maximized: window.isMaximized(),
     devTools: window.webContents.isDevToolsOpened()
   };
+}
+
+function loadWindowScripts(window, name) {
+  if (!window || !name) return;
+  if (isFileSync(path.join(app.getPath('userData'), name + '.css'))) {
+    fs.readFile(path.join(app.getPath('userData'), '.css'), 'utf8', (err, data) => {
+      window.webContents.insertCSS(parseTemplate(data));
+    });
+  }
+  if (isFileSync(path.join(app.getPath('userData'), '.js'))) {
+    fs.readFile(path.join(app.getPath('userData'), '.js'), 'utf8', (err, data) => {
+      window.webContents.executeJavaScript(data);
+    });
+  }
 }
