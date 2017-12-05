@@ -16,7 +16,7 @@
 ## 0.4.31
 
 - **New:**
-  - Add [#untrigger](docs/commands.md) command to create alarm triggers
+  - Add [#untrigger](docs/commands.md) command to remove triggers or alarms
   - Immortal Tools: can zoom in/out and reset from menu bar
 - **Changed:**
   - Immortal Tools: use natural sort when sorting file names
