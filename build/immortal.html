@@ -345,7 +345,19 @@
                     { type: 'separator' },
                     {
                         role: 'toggledevtools'
-                    }
+                    },
+                    {
+                        type: 'separator'
+                    },
+                    {
+                        role: 'resetzoom'
+                    },
+                    {
+                        role: 'zoomin'
+                    },
+                    {
+                        role: 'zoomout'
+                    },
                 ]
             },
 
@@ -1055,7 +1067,7 @@
                     {
                         type: "moment",
                         targets: 3,
-                        orderData: [ 4, 3 ],
+                        orderData: [4, 3],
                         render: function (data) {
                             return new moment(data).format('MM/DD/YYYY hh:mm:ss A');
                         }
@@ -1112,7 +1124,7 @@
                     {
                         type: "moment",
                         targets: 3,
-                        orderData: [ 4, 3 ],
+                        orderData: [4, 3],
                         render: function (data) {
                             return new moment(data).format('MM/DD/YYYY hh:mm:ss A');
                         }
