@@ -1241,16 +1241,7 @@ function createWindow() {
         win.webContents.insertCSS(parseTemplate(data));
       });
     }
-    if (isFileSync(path.join(app.getPath('userData'), "user.css"))) {
-      fs.readFile(path.join(app.getPath('userData'), "user.css"), 'utf8', (err, data) => {
-        win.webContents.insertCSS(parseTemplate(data));
-      });
-    }
-    if (isFileSync(path.join(app.getPath('userData'), "user.js"))) {
-      fs.readFile(path.join(app.getPath('userData'), "user.js"), 'utf8', (err, data) => {
-        win.webContents.executeJavaScript(data);
-      });
-    }
+    loadWindowScripts(win, "user");
     if (s.maximized)
       win.maximize();
     else
