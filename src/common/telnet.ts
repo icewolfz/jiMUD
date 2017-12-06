@@ -198,7 +198,7 @@ export class Telnet extends EventEmitter {
     set keepAlive(value: boolean) {
         this._keepAlive = value;
         if (this.socket)
-            this.socket.setKeepAlive(this._keepAlive, this._keepAliveDelay);
+            this.socket.setKeepAlive(this._keepAlive, this._keepAliveDelay * 1000);
     }
 
     /**
@@ -215,7 +215,7 @@ export class Telnet extends EventEmitter {
     set keepAliveDelay(value: number) {
         this._keepAliveDelay = value;
         if (this.socket)
-            this.socket.setKeepAlive(this._keepAlive, this._keepAliveDelay);
+            this.socket.setKeepAlive(this._keepAlive, this._keepAliveDelay * 1000);
     }
 
     /**
@@ -1710,7 +1710,6 @@ export class Telnet extends EventEmitter {
         let _socket;
         try {
             _socket = new Socket({ allowHalfOpen: true });
-            _socket.setKeepAlive(this._keepAlive, this._keepAliveDelay);
             //_socket.setEncoding('binary');
             _socket.on('close', err => {
                 if (err)
@@ -1718,7 +1717,11 @@ export class Telnet extends EventEmitter {
                 else
                     this.close();
             });
-            _socket.on('connect', () => { this.emit('connect'); this._connected = true; });
+            _socket.on('connect', () => {
+                _socket.setKeepAlive(this._keepAlive, this._keepAliveDelay * 1000);
+                this.emit('connect');
+                this._connected = true;
+            });
             _socket.on('data', data => {
                 if (this.enableDebug) this.emit('debug', 'Data received: ' + data, 1);
                 this.receivedData(data);

@@ -19,6 +19,8 @@
   - Add [#untrigger](docs/commands.md) command to create alarm triggers
 - **Fixed:**
   - Chat capture: crafting and tattooist menus should now be ignored
+  - Keep alive was setting as milliseconds instead on seconds.
+  - Keep alive delay was not set due to a bug in node it was not setting correctly unless already connecteds.
 
 ## 0.4.30 2017-11-29
 
