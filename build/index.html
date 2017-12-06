@@ -96,7 +96,7 @@
         manager.active.client.error("Url: " + url);
         manager.active.client.error("Line: " + line);
         manager.active.client.error("Column: " + col);
-        manager.active.client.error("Error: " + error);
+        manager.active.client.error(error);
       }
     }
     else {
@@ -104,7 +104,7 @@
       console.log("Url: " + url);
       console.log("Line: " + line);
       console.log("Column: " + col);
-      console.log("Error: " + error);
+      console.log(error);
     }    
     return true;
   };
