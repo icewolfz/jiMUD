@@ -13,6 +13,11 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
+## 0.4.31
+
+- **New:**
+  - Add [#untrigger](docs/commands.md) command to create alarm triggers
+
 ## 0.4.30 2017-11-29
 
 - **New:**

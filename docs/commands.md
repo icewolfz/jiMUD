@@ -74,6 +74,9 @@
   - `id` the id or pattern of the trigger to disable, if omitted it will attempt to suspend the last added alarm
 - `#resume id`, `#resume`, `#resu id`, `#resu` enable a trigger
   - `id` the id or pattern of the trigger to disable, if omitted it will attempt to resume the last suspended
+- `#untrigger {id|pattern} profile` or `#unt {id|pattern} profile` remove a trigger
+  -  `id|pattern` the id or pattern of the trigger to be removed
+  - `profile` is optional and when set will create alarm in that profile, if profile not found fails to create, if omitted it will only search enabled profiles
 
 ## Test commands
 

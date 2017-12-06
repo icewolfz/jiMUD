@@ -544,7 +544,86 @@ export class Input extends EventEmitter {
         let al;
         let i;
         let tmp;
+        let profile = null;
+        let name = null;
+        let item;
+        let p;
+        let reload;
         switch (fun.toLowerCase()) {
+            case 'untrigger':
+            case 'unt':
+                profile = null;
+                name = null;
+                reload = true;
+                p = path.join(parseTemplate('{data}'), 'profiles');
+                if (args.length < 1 || args.length > 2)
+                    throw new Error('Invalid syntax use \x1b[4m#unt\x1b[0;-11;-12mrigger pattern|name \x1b[3mprofile\x1b[0;-11;-12m\x1b[0;-11;-12m');
+                if (args[0].length === 0)
+                    throw new Error('Invalid name or pattern');
+                //{pattern} {commands} profile
+                if (args[0].match(/^\{.*\}$/g)) {
+                    args[0] = args[0].substr(1, args[0].length - 2);
+                    args[0] = this.parseOutgoing(args[0], false);
+                }
+                if (args.length === 2) {
+                    profile = this.stripQuotes(args[2]);
+                    profile = this.parseOutgoing(profile, false);
+                }
+                if (!profile || profile.length === 0) {
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0)
+                        return;
+                    if (kl === 1) {
+                        if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                            throw Error('No enabled profiles found!');
+                        item = profile.findAny('triggers', { name: args[0], pattern: args[0] });
+                    }
+                    else {
+                        for (; k < kl; k++) {
+                            if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                continue;
+                            item = this.client.profiles.items[keys[k]].findAny('triggers', { name: args[0], pattern: args[0] });
+                            if (item) {
+                                profile = this.client.profiles.items[keys[k]];
+                                break;
+                            }
+                        }
+                    }
+                    if (!item)
+                        throw new Error('Trigger \'' + args[0] + '\' not found in \'' + profile.name + '\'!');
+                    this.client.removeTrigger(item);
+                    this.client.echo('Trigger \'' + args[0] + '\' removed from \'' + profile.name + '\'.', -7, -8, true, true);
+                    return null;
+                }
+                else {
+                    profile = this.parseOutgoing(profile, false);
+                    if (this.client.profiles.contains(profile)) {
+                        profile = this.client.profiles.items[profile];
+                        item = profile.findAny('triggers', { name: args[0], pattern: args[0] });
+                        if (!item)
+                            throw new Error('Trigger \'' + args[0] + '\' not found in \'' + profile.name + '\'!');
+                        this.client.removeTrigger(item);
+                        this.client.echo('Trigger \'' + args[0] + '\' removed from \'' + profile.name + '\'.', -7, -8, true, true);
+                        return null;
+                    }
+                    else {
+                        name = profile;
+                        reload = false;
+                        profile = Profile.load(path.join(p, profile + '.json'));
+                        if (!profile)
+                            throw new Error('Profile not found: ' + name);
+                        item = profile.indexOfAny('triggers', { name: args[0], pattern: args[0] });
+                        if (item === -1)
+                            throw new Error('Trigger \'' + args[0] + '\' not found in \'' + profile.name + '\'!');
+                        profile.triggers.splice(item, 1);
+                        profile.save(p);
+                        profile = null;
+                        this.client.echo('Trigger \'' + args[0] + '\' removed from \'' + profile.name + '\'.', -7, -8, true, true);
+                    }
+                }
+                return null;
             case 'suspend':
             case 'sus':
                 switch (args.length) {
@@ -603,11 +682,11 @@ export class Input extends EventEmitter {
                 }
             case 'alarm':
             case 'ala':
-                let profile = null;
-                let name = null;
+                profile = null;
+                name = null;
                 let trigger;
-                let reload = true;
-                const p = path.join(parseTemplate('{data}'), 'profiles');
+                reload = true;
+                p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 2 || args.length > 4)
                     throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m, \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} \x1b[3mprofile\x1b[0;-11;-12m, or \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
