@@ -11,6 +11,7 @@
   <link href="css/theme.css" rel="stylesheet" type="text/css" />
   <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
   <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+
   <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css">
   <script>
     if (typeof module === 'object') { window.module = module; module = undefined; }
@@ -144,27 +145,36 @@
     var active = false;
     var capture = 0, captureReview = 0;
     var _captures = [], _captureReviews = [];
+    var _captureComm = false;
     var _noCapture = false;
     var _noCaptureStore = 0;
     var _cLoading = false;
-    var _pLoading = false;
-    var _profilesOpen = false;
     var _context;
     var _selword = '';
     var _selurl = '';
     var _selline = '';
 
-    window.onerror = function (msg, url, line) {
+    window.onerror = function (msg, url, line, col, error) {
       if (client) {
-        if (msg.startsWith('Uncaught Error: '))
+        if (error)
+          client.error(error);
+        else if (msg.startsWith('Uncaught Error: '))
           client.error(`${msg.substr(16)}`);
         else
           client.error(`${msg}`);
+        if (client.options.enableDebug) {
+          client.error("Url: " + url);
+          client.error("Line: " + line);
+          client.error("Column: " + col);
+          client.error(error);
+        }
       }
       else {
         console.log("Message: " + msg);
         console.log("Url: " + url);
         console.log("Line: " + line);
+        console.log("Column: " + col);
+        console.log(error);
       }
       return true;
     };
@@ -550,7 +560,7 @@
             break;
           case 'toggled':
             if (client) {
-              client.options.logging.enabled = e.data.args;
+              client.options.logEnabled = e.data.args;
               client.saveOptions();
             }
             break;
@@ -581,8 +591,7 @@
 
       client.display.on('selection-done', () => {
         if (client.options.AutoCopySelectedToClipboard && client.display.hasSelection) {
-          clipboard.writeText(client.display.selection, 'selection');
-          clipboard.writeText(client.display.selection);
+          window.writeClipboard(client.display.selection);
           client.display.clearSelection();
         }
       });
@@ -607,19 +616,19 @@
 
           if (parent && parent.hasClass('URLLink')) {
             c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
-            c.append(new MenuItem({ label: 'Copy url', click: () => { clipboard.writeText(parent.attr('title')); clipboard.writeText(parent.attr('title'), 'selection'); } }));
-            c.append(new MenuItem({ label: 'Copy url text', click: () => { clipboard.writeText(parent.text()); clipboard.writeText(parent.text(), 'selection'); } }));
+            c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(parent.attr('title')); } }));
+            c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
             c.append(new MenuItem({ type: 'separator' }));
           }
           else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
             c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
-            c.append(new MenuItem({ label: 'Copy url', click: () => { clipboard.writeText(parent.data('href')); clipboard.writeText(parent.data('href'), 'selection'); } }));
-            c.append(new MenuItem({ label: 'Copy url text', click: () => { clipboard.writeText(parent.text()); clipboard.writeText(parent.text(), 'selection'); } }));
+            c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(parent.data('href')); } }));
+            c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
             c.append(new MenuItem({ type: 'separator' }));
           }
           else if (parent && parent.hasClass('MXPLink')) {
             c.append(new MenuItem({ label: 'Open mxp url', click: () => { parent.trigger('click'); } }));
-            c.append(new MenuItem({ label: 'Copy mxp url text', click: () => { clipboard.writeText(parent.text()); clipboard.writeText(parent.text(), 'selection'); } }));
+            c.append(new MenuItem({ label: 'Copy mxp url text', click: () => { window.writeClipboard(parent.text()); } }));
             c.append(new MenuItem({ type: 'separator' }));
           }
 
@@ -653,7 +662,7 @@
       ['cut', 'copy'].forEach(function (event) {
         document.addEventListener(event, function (e) {
           if (client.display.hasSelection) {
-            clipboard.writeText(client.display.selection, 'selection');
+            window.writeClipboard(client.display.selection);
             e.preventDefault();
             e.stopPropagation();
           }
@@ -663,7 +672,7 @@
       window.client = client;
       window.OoMUD = client;
       window.readClipboard = () => { return clipboard.readText('selection') || clipboard.readText() || ''; };
-      window.writeClipboard = (txt) => { clipboard.writeText(txt || '', 'selection'); clipboard.writeText(txt || ''); };
+      window.writeClipboard = (txt) => { clipboard.writeText(txt || ''); clipboard.writeText(txt || '', 'selection'); };
       client.readClipboard = window.readClipboard;
       client.writeClipboard = window.writeClipboard;
 
@@ -672,6 +681,7 @@
       client.port = client.options.dev ? 1035 : 1030;
       client.telnet.GMCPSupports.push("Room 1");
       client.telnet.GMCPSupports.push("IED 1");
+      //client.telnet.GMCPSupports.push('Comm 1');
       client.on('initialized', () => {
         autoConnect();
       });
@@ -686,7 +696,7 @@
         var res, re, c, cl;
         if (client.options.autoLogin && remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
           if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
-            client.sendCommand(remote.getGlobal('character'));
+            client.sendCommand(remote.getGlobal('characterLogin'));
           }
           else if (data.fragment && data.line === 'Password: ') {
             var pass = remote.getGlobal('characterPass');
@@ -697,6 +707,13 @@
             }
           }
         }
+        /*
+        if (_captureComm) {
+          ipcRenderer.send('chat', data);
+          data.gagged = client.options.chat.gag;
+          return;
+        }
+        */
         if (_captures.length === 0 || data.fragment) return;
         //custom capture to ignore who list
         res = /^(-*)\s*\[ (.*) matching (users|user) \]\s*(-*)$/.exec(data.line);
@@ -712,6 +729,29 @@
           _noCapture = false;
           return;
         }
+
+        if (data.line === 'Describers:' ||
+          data.line === 'You supply a list of nouns so when your object is complete it can correctly build an id list to allow you to properly interact with it.' ||
+          data.line === 'You supply a list of adjectives so when your object is complete it can correctly build an id list to allow you to properly interact with it.' ||
+          data.line === 'Available sizes:' ||
+          data.line === 'Available locations:' ||
+          data.line === 'Available tattoos:' ||
+          data.line === 'Available colors:'
+        ) {
+          capture = 0;
+          _noCapture = true;
+          return;
+        }
+        if (_noCapture && (data.line.match(/^Current name: .*$/) ||
+          data.line.match(/^Enter up to 2 nouns, [#] to remove, 'f' to finish, 'q' to quit:.*$/) ||
+          data.line.match(/^Enter up to 3 adjectives, 'f' to finish, 'q' to quit:.*$/) ||
+          data.line.match(/^Enter selection .*$/)
+        )) {
+          capture = 0;
+          _noCapture = false;
+          return;
+        }
+
         //locker/store list start
         res = /^ {2}# {2}Item.*$/.exec(data.line);
         if (_noCaptureStore === 0 && res && res.length > 0) {
@@ -725,15 +765,15 @@
           capture = 0;
           _noCaptureStore++;
         }
-        if(_noCaptureStore > 2)
-        {
+        if (_noCaptureStore > 2) {
           capture = 0;
           _noCaptureStore = 0;
         }
+
         if (_noCapture || _noCaptureStore > 0) return;
         //capture indented text
         if (capture > 0 && data.line.startsWith("    ")) {
-          ipcRenderer.send('chat', data, chatOptions());
+          ipcRenderer.send('chat', data);
           data.gagged = client.options.chat.gag;
           return;
         }
@@ -744,13 +784,13 @@
           if (!res || res.length === 0)
             continue;
           captureReview = 1;
-          ipcRenderer.send('chat', data, chatOptions());
+          ipcRenderer.send('chat', data);
           data.gagged = client.options.chat.gag;
           return;
         }
         //if in a review capture until end review
         if (captureReview > 0) {
-          ipcRenderer.send('chat', data, chatOptions());
+          ipcRenderer.send('chat', data);
           data.gagged = client.options.chat.gag;
           res = /^-=-=- End Review -=-=-$/.exec(data.line);
           if (res && res.length > 0)
@@ -759,7 +799,7 @@
         }
         //review requires 1 extra capture to get the current date/time
         if (captureReview === -1) {
-          ipcRenderer.send('chat', data, chatOptions());
+          ipcRenderer.send('chat', data);
           data.gagged = client.options.chat.gag;
           captureReview = 0;
           return;
@@ -774,7 +814,7 @@
           if (capture > 0)
             capture--;
           capture++;
-          ipcRenderer.send('chat', data, chatOptions());
+          ipcRenderer.send('chat', data);
           data.gagged = client.options.chat.gag;
           return;
         }
@@ -843,15 +883,15 @@
         if (_logger)
           _logger.postMessage({
             action: 'options', args: {
-              path: parseTemplate(client.options.logging.path),
-              offline: client.options.logging.offline,
-              gagged: client.options.logging.gagged,
-              enabled: client.options.logging.enabled,
-              unique: client.options.logging.uniqueOnConnect,
-              prepend: client.options.logging.prepend,
-              what: client.options.logging.what,
+              path: parseTemplate(client.options.logPath),
+              offline: client.options.logOffline,
+              gagged: client.options.logGagged,
+              enabled: client.options.logEnabled,
+              unique: client.options.logUniqueOnConnect,
+              prepend: client.options.logPrepend,
+              what: client.options.logWhat,
               debug: client.options.enableDebug,
-              format: client.options.logging.timeFormat
+              format: client.options.logTimeFormat
             }
           });
       });
@@ -880,7 +920,7 @@
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
         ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: false });
-        $('#immortal').css('display', 'none');
+        $("#immortal").css('display', "none");
         ipcRenderer.send('set-overlay', 1);
       });
 
@@ -924,9 +964,24 @@
       });
 
       client.on('received-GMCP', (mod, obj) => {
-        if (mod === "IED.init") {
-          ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
-          $("#immortal").css('display', "block");
+        switch (mod) {
+          /*
+          case 'Comm.Channel.Start':
+            if (obj.match(/^tell .*$/) || obj === 'shout' || obj === 'tell' || obj === 'emoteto' || obj.match(/^emoteto .*$/))
+              _captureComm = client.options.chat.captureTells;
+            else if (obj === 'say' || obj.match(/^whisper .*$/) || obj === 'speak' || obj === 'whisper')
+              _captureComm = client.options.chat.captureTalk;
+            else if (client.options.chat.captureLines)
+              _captureComm = client.options.chat.captureAllLines || client.options.chat.lines.indexOf(obj) !== -1;
+            break;
+          case 'Comm.Channel.End':
+            setTimeout(() => { _captureComm = false; }, 0);
+            break;
+            */
+          case 'IED.init':
+            ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
+            $("#immortal").css('display', "block");
+            break;
         }
         ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
       });
@@ -1030,26 +1085,58 @@
       buildCaptures();
       _logger.postMessage({
         action: 'options', args: {
-          path: parseTemplate(client.options.logging.path),
-          offline: client.options.logging.offline,
-          gagged: client.options.logging.gagged,
-          enabled: client.options.logging.enabled,
-          unique: client.options.logging.uniqueOnConnect,
-          prepend: client.options.logging.prepend,
-          what: client.options.logging.what,
+          path: parseTemplate(client.options.logPath),
+          offline: client.options.logOffline,
+          gagged: client.options.logGagged,
+          enabled: client.options.logEnabled,
+          unique: client.options.logUniqueOnConnect,
+          prepend: client.options.logPrepend,
+          what: client.options.logWhat,
           debug: client.options.enableDebug,
-          format: client.options.logging.timeFormat
+          format: client.options.logTimeFormat
         }
       });
-      window.onbeforeunload = function () {
-        if (_profilesOpen) {
-          ipcRenderer.send('show-dialog', 'profiles', {
-            type: 'warning',
-            title: 'Close profile manager',
-            message: 'You must close the profile manager before you can exit.'
+
+      let closeWindow = false;
+
+      window.onbeforeunload = function (evt) {
+        if (!closeWindow && client.options.askonclose && client.connected) {
+          evt.returnValue = false;
+
+          setTimeout(() => {
+            var choice = dialog.showMessageBox(
+              remote.getCurrentWindow(),
+              {
+                type: 'warning',
+                title: 'Connected',
+                message: 'Closing will disconnect you from the mud, close anyway?',
+                buttons: ['Yes', 'No', 'Never ask again'],
+                defaultId: 1
+              });
+            if (choice === 2) {
+              client.raise('closed');
+              client.options.askonclose = false;
+              client.saveOptions();
+              closeWindow = true;
+              remote.getCurrentWindow().close();
+              return;
+            }
+            if (choice !== 0) {
+              evt.returnValue = false;
+              return 'no';
+            }
+            client.raise('closed');
+            closeWindow = true;
+            remote.getCurrentWindow().close();
           });
-          return 'no';
+          return;
         }
+        client.raise('closed');
+        closeWindow = true;
+        remote.getCurrentWindow().close();
+        return;
+
+        /*
         if (client.options.askonclose && client.connected) {
           var choice = dialog.showMessageBox(
             remote.getCurrentWindow(),
@@ -1067,10 +1154,14 @@
             return;
           }
           if (choice !== 0)
+          {
+            evt.returnValue = false;
             return 'no';
+          }
         }
         client.raise('closed');
         return;
+        */
       };
 
       $("#status").on('contextmenu', (e) => {
@@ -1356,17 +1447,6 @@
       client.display.RegularExpression = client.options.find.regex;
       if (client.options.find.show)
         client.display.showFind();
-      if (client.options.showEditor)
-        showEditor();
-      if (client.options.showChat)
-        showChat();
-      else if ((client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent) || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
-        ipcRenderer.send('create-window', 'chat', chatOptions());
-
-      if (client.options.showMapper)
-        showMapper();
-      else if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
-        ipcRenderer.send('create-window', 'mapper', mapperOptions());
 
       if (client.options.showCharacterManager)
         showCharacters();
@@ -1594,25 +1674,12 @@
     ipcRenderer.on('change-options', (event, file) => {
       client.settingsFile = remote.getGlobal('settingsFile');
       autoConnect();
-      if (client.options.showEditor)
-        showEditor();
-      if (client.options.showChat)
-        showChat();
-      else if ((client.options.windows['chat'] && client.options.windows['chat'].options && client.options.windows['chat'].persistent) || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
-        ipcRenderer.send('create-window', 'chat', chatOptions());
-
-      if (client.options.showMapper)
-        showMapper();
-      else if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
-        ipcRenderer.send('create-window', 'mapper', mapperOptions());
     });
 
     ipcRenderer.on('setting-changed', (event, data) => {
       if (data.type === "mapper") {
         client.options.mapper[data.name] = data.value;
         client.saveOptions();
-        if (data.name == "enabled" && data.value)
-          ipcRenderer.send('create-window', 'mapper', mapperOptions());
       }
       else if (data.type === "profiles") {
         client.options.profiles[data.name] = data.value;
@@ -1623,8 +1690,6 @@
       else if (data.type === "chat") {
         client.options.chat[data.name] = data.value;
         client.saveOptions();
-        if (data.value && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines'))
-          ipcRenderer.send('create-window', 'chat', chatOptions());
       }
       else if (data.type === "extensions") {
         client.options.extensions[data.name] = data.value;
@@ -1672,15 +1737,15 @@
       client.loadOptions();
       _logger.postMessage({
         action: 'options', args: {
-          path: parseTemplate(client.options.logging.path),
-          offline: client.options.logging.offline,
-          gagged: client.options.logging.gagged,
-          enabled: client.options.logging.enabled,
-          unique: client.options.logging.uniqueOnConnect,
-          prepend: client.options.logging.prepend,
-          what: client.options.logging.what,
+          path: parseTemplate(client.options.logPath),
+          offline: client.options.logOffline,
+          gagged: client.options.logGagged,
+          enabled: client.options.logEnabled,
+          unique: client.options.logUniqueOnConnect,
+          prepend: client.options.logPrepend,
+          what: client.options.logWhat,
           debug: client.options.enableDebug,
-          format: client.options.logging.timeFormat
+          format: client.options.logTimeFormat
         }
       });
       buildButtons();
@@ -1691,21 +1756,19 @@
       client.loadOptions();
       _logger.postMessage({
         action: 'options', args: {
-          path: parseTemplate(client.options.logging.path),
-          offline: client.options.logging.offline,
-          gagged: client.options.logging.gagged,
-          enabled: client.options.logging.enabled,
-          unique: client.options.logging.uniqueOnConnect,
-          prepend: client.options.logging.prepend,
-          what: client.options.logging.what,
+          path: parseTemplate(client.options.logPath),
+          offline: client.options.logOffline,
+          gagged: client.options.logGagged,
+          enabled: client.options.logEnabled,
+          unique: client.options.logUniqueOnConnect,
+          prepend: client.options.logPrepend,
+          what: client.options.logWhat,
           debug: client.options.enableDebug,
-          format: client.options.logging.timeFormat
+          format: client.options.logTimeFormat
         }
       });
       buildButtons();
       updateMenu();
-      if (client.options.mapper.enabled || (client.options.windows['mapper'] && client.options.windows['mapper'].options && client.options.windows['mapper'].persistent))
-        ipcRenderer.send('create-window', 'mapper', mapperOptions());
     });
 
     ipcRenderer.on('debug', (event, msg) => {
@@ -1718,29 +1781,14 @@
     });
 
     function childClosed(url, name) {
-      if (name === "profiles")
-        _profilesOpen = false;
-      else {
-        var basename = path.basename(url);
-        if (basename === 'characters.html')
-          _cLoading = false;
-        else if (basename === 'profiles.html')
-          _profilesOpen = false;
-        else if (basename === 'prefs.html')
-          _pLoading = false;
-      }
+      if (path.basename(url) === 'characters.html')
+        _cLoading = false;
     }
 
     function showCharacters() {
       if (_cLoading) return;
       _cLoading = true;
       window.open('characters.html', 'modal', 'backgroundColor=#fff,height=440,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
-    }
-
-    function showPrefs() {
-      if (_pLoading) return;
-      _pLoading = true;
-      window.open('prefs.html', 'modal', 'backgroundColor=#fff,height=420,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
     }
 
     function showImmortalTools() {
@@ -1750,50 +1798,7 @@
       }
       else
         ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
-    }
-
-    function showProfiles() {
-      _profilesOpen = true;
-      if (client.options.windows['profiles'] && client.options.windows['profiles'].options) {
-        client.options.windows['profiles'].options.show = true;
-        ipcRenderer.send('show-window', 'profiles', client.options.windows['profiles'].options);
-      }
-      else
-        ipcRenderer.send('show-window', 'profiles', { show: true, file: 'profiles.html', icon: 'profiles', alwaysOnTopClient: true });
-    }
-
-    function showEditor() {
-      //ipcRenderer.send('show-window', 'editor')
-      if (client.options.windows['editor'] && client.options.windows['editor'].options) {
-        client.options.windows['editor'].options.show = true;
-        ipcRenderer.send('show-window', 'editor', client.options.windows['editor'].options);
-      }
-      else
-        ipcRenderer.send('show-window', 'editor', { show: true, file: 'editor.html', width: 300, height: 225, icon: 'edit', alwaysOnTopClient: true });
-    }
-
-    function chatOptions(show) {
-      if (client.options.windows['chat'] && client.options.windows['chat'].options) {
-        client.options.windows['chat'].options.show = show ? true : false;
-        return client.options.windows['chat'].options;
-      }
-      return { show: show, file: 'chat.html', width: 300, height: 225, icon: 'chat', alwaysOnTopClient: true };
-    }
-
-    function showChat() {
-      ipcRenderer.send('show-window', 'chat', chatOptions(true));
-    }
-
-    function mapperOptions(show) {
-      if (client.options.windows['mapper'] && client.options.windows['mapper'].options) {
-        client.options.windows['mapper'].options.show = show ? true : false;
-        return client.options.windows['mapper'].options;
-      }
-      return { show: show, background: '#eae4d6', file: 'mapper.html', icon: 'map', alwaysOnTopClient: true };
-    }
-
-    function showMapper() {
-      ipcRenderer.send('show-window', 'mapper', mapperOptions(true));
+      //window.open('immortal.html', '', 'backgroundColor=#fff,height=600,width=800,icon=' + path.join(__dirname, '../assets/icons/png/ied.png'));
     }
 
     $(document).ready(init);
@@ -1895,7 +1900,7 @@
     <div id="commandbox">
       <textarea type="text" id="commandinput" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
     </div>
-    <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="showEditor();">
+    <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
       <i class="fa fa-edit"></i>
     </a>
   </div>
@@ -1918,7 +1923,7 @@
     <a href="javascript:void(0)" title="Immortal Tools" id="immortal" class="button" onclick="showImmortalTools()" style="display: none">
       <i class="fa fa-code-fork"></i>
     </a>
-    <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="showPrefs();">
+    <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
       <i class="fa fa-gears"></i>
     </a>
     <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="toggleLogging();">
@@ -1933,7 +1938,7 @@
     <a href="javascript:void(0)" title="Lock display" id="lock" class="button" onclick="client.toggleScrollLock()">
       <i class="fa fa-lock"></i>
     </a>
-    <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="showMapper();">
+    <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');">
       <i class="fa fa-map"></i>
     </a>
     <div id="user-buttons"></div>

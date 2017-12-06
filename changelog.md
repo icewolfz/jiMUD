@@ -17,6 +17,8 @@
 
 - **New:**
   - Add [#untrigger](docs/commands.md) command to create alarm triggers
+- **Fixed:**
+  - Chat capture: crafting and tattooist menus should now be ignored
 
 ## 0.4.30 2017-11-29
 
