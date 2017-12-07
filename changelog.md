@@ -2,6 +2,8 @@
 
 ## 0.4.32
 
+- **Changed:**
+  - Immortal Tools: Performance tweaks to lower cpu when downloading or uploading
 - **Fixed:**
   - Immortal Tools:
     - Update status bar when reset

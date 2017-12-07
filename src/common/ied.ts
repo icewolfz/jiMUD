@@ -293,9 +293,15 @@ export class IED extends EventEmitter {
                     switch (mods[2]) {
                         case 'init':
                             this.emit('message', 'Download initialize: ' + obj.path + '/' + obj.file);
+                            if (!this.active) {
+                                this.emit('error', 'Download initialize error');
+                                this.nextGMCP();
+                                return;
+                            }
                             this.active.totalSize = obj.size;
                             if (this.active.totalSize < 1)
                                 this.removeActive();
+
                             break;
                         case 'chunk':
                             if (!this.active) {
