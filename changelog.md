@@ -5,6 +5,7 @@
 - **Fixed:**
   - Immortal Tools:
     - Update status bar when reset
+    - Fix creating sub folders in current local folder
 
 ## 0.4.31 2017-12-05
 
