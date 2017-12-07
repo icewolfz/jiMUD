@@ -1244,7 +1244,10 @@
                 logError(msg);
             });
             _ied.on('reset', () => {
-                updateDraw(queueTable, queueTable.rows().remove());
+                info.downloads = 0;
+                info.uploads = 0;
+                updateDraw(queueTable, queueTable.rows().remove());                
+                updateStatus();
             });
             _ied.on('dir', (dir, files, tag) => {
                 var f, fl, file;
@@ -1360,6 +1363,7 @@
                         }
                     }
                     info.downloads--;
+                    updateStatus();
                 }
                 else {
                     //only update if current remote is the same path as file

@@ -13,6 +13,10 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
+- **Fixed:**
+  - Immortal Tools:
+    - Update status bar when reset
+
 ## 0.4.31 2017-12-05
 
 - **New:**
