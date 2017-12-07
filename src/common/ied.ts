@@ -32,6 +32,7 @@ export class IED extends EventEmitter {
     private _gmcp = [];
     private _temp: TempType = TempType.extension;
     private _activeIdx: number = -1;
+    private _begin = null;
 
     public local;
     public remote;
@@ -657,7 +658,10 @@ export class IED extends EventEmitter {
     }
 
     public addItem(item) {
-        this.emit('add', item);
+        if (this._begin)
+            this._begin.push(item);
+        else
+            this.emit('add', item);
         this.queue.push(item);
         if (!this.active)
             this.nextItem();
@@ -666,6 +670,18 @@ export class IED extends EventEmitter {
                 this.emit('message', 'Download queried: ' + item.remote);
             else
                 this.emit('message', 'Upload queried: ' + item.remote);
+        }
+    }
+
+    public begin() {
+        if (!this._begin)
+            this._begin = [];
+    }
+
+    public end() {
+        if (this._begin) {
+            this.emit('add', this._begin);
+            this._begin = null;
         }
     }
 
