@@ -49,7 +49,8 @@
         var _localDrag, _remoteDrag, _progressCancel = false;
         var _updating = 0;
         var _remove, _removeID;
-        var _qUpdate;
+        var _qUpdate, _qUpdateID;
+        var _qUpdateTracker;
 
         var menubar = new Menubar([
             {
@@ -1382,9 +1383,19 @@
             _ied.on('update', (item) => {
                 if (!item)
                     return;
-                if (!_qUpdate) _qUpdate = [];
-                _qUpdate.push(item);
-                doUpdate(128);
+                if (!_qUpdate) {
+                    _qUpdate = [];
+                    _qUpdateTracker = {};
+                }
+                if (_qUpdateTracker.hasOwnProperty(item.ID))
+                    _qUpdate[_qUpdateTracker[item.ID]] = item;
+                else {
+                    _qUpdateTracker[item.ID] = _qUpdate.length;
+                    _qUpdate.push(item);
+                }
+                if (!_qUpdateID)
+                    _qUpdateID = setTimeout(bulkQueueUpdate, 500);
+                //doUpdate(128);
             });
 
             _ied.on('cmd', (obj) => {
@@ -3371,7 +3382,12 @@
         }
 
         function bulkQueueUpdate() {
-            if (!_qUpdate) return;
+            if (!_qUpdate || _qUpdate.length === 0) {
+                _qUpdate = null;
+                _qUpdateTracker = null;
+                _qUpdateID = null;
+                return;
+            }
             var uc = _qUpdate.length;
             for (var u = 0; u < uc; u++) {
                 var item = _qUpdate[u];
@@ -3394,6 +3410,8 @@
             ipcRenderer.send('set-progress-window', 'immortal', { value: _qUpdate[_qUpdate.length - 1].percent });
             ipcRenderer.send('set-progress', { value: _qUpdate[_qUpdate.length - 1].percent });
             _qUpdate = null;
+            _qUpdateTracker = null;
+            _qUpdateID = null;
         }
 
         function doUpdate(type) {
