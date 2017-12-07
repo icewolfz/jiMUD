@@ -343,21 +343,14 @@ table.dataTable {
     border-radius: 6px;
 
     /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#46961e+0,b5d875+100 */
-    background: #46961e;
+    background: #b5d875;
 
-    /* Old browsers */
-    background: -moz-linear-gradient(left, #46961e 0%, #b5d875 100%);
-
-    /* FF3.6-15 */
-    background: -webkit-linear-gradient(left, #46961e 0%, #b5d875 100%);
-
-    /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to right, #46961e 0%, #b5d875 100%);
-
-    /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#46961e', endColorstr='#b5d875',GradientType=1 );
-
-    /* IE6-9 */
+    /*
+        background: -moz-linear-gradient(left, #46961e 0%, #b5d875 100%);
+        background: -webkit-linear-gradient(left, #46961e 0%, #b5d875 100%);
+        background: linear-gradient(to right, #46961e 0%, #b5d875 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#46961e', endColorstr='#b5d875',GradientType=1 );
+    */
 }
 
 .progressbar {
