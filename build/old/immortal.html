@@ -1326,22 +1326,45 @@
             });
 
             _ied.on('add', (item) => {
-                if (item.download) {
-                    _downloads[item.local] = true;
-                    if (item.tmp === TempType.extension)
-                        _downloads[item.local + ".tmp"] = true;
-                    info.downloads++;
+                if (Array.isArray(item)) {
+                    item = item.map(function callback(val) {
+                        if (val.download) {
+                            _downloads[val.local] = true;
+                            if (val.tmp === TempType.extension)
+                                _downloads[val.local + ".tmp"] = true;
+                            info.downloads++;
+                        }
+                        else
+                            info.uploads++;
+                        return {
+                            "local": val.local,
+                            "direction": val.download ? "<-" : "->",
+                            "remote": val.remote,
+                            "progress": val.percent,
+                            "id": val.ID,
+                            "state": val.state
+                        };
+                    });
+                    queueTable.rows.add(item);
                 }
-                else
-                    info.uploads++;
-                queueTable.row.add({
-                    "local": item.local,
-                    "direction": item.download ? "<-" : "->",
-                    "remote": item.remote,
-                    "progress": item.percent,
-                    "id": item.ID,
-                    "state": item.state
-                });
+                else {
+                    if (item.download) {
+                        _downloads[item.local] = true;
+                        if (item.tmp === TempType.extension)
+                            _downloads[item.local + ".tmp"] = true;
+                        info.downloads++;
+                    }
+                    else
+                        info.uploads++;
+                    queueTable.row.add({
+                        "local": item.local,
+                        "direction": item.download ? "<-" : "->",
+                        "remote": item.remote,
+                        "progress": item.percent,
+                        "id": item.ID,
+                        "state": item.state
+                    });
+                }
                 doUpdate(9);
             });
 
@@ -1350,7 +1373,6 @@
                     return data.id === item.ID ?
                         true : false;
                 }).remove();
-                doUpdate(24);
                 if (item.download) {
                     //Update local list if file was uploaded to current local
                     if (item.state === ItemState.done && options.openEditor) {
@@ -1363,49 +1385,47 @@
                     }
                     info.downloads--;
                 }
-                else {
-                    //only update if current remote is the same path as file
-                    if (item.state === ItemState.done && path.dirname(item.remote) === options.remote) {
-                        var row = remoteTable.row(function (idx, data, node) {
+                //only update if current remote is the same path as file
+                else if (item.state === ItemState.done && path.dirname(item.remote) === options.remote) {
+                    var row = remoteTable.row(function (idx, data, node) {
+                        return data.name === path.basename(item.remote) ?
+                            true : false;
+                    });
+                    _remote[path.basename(item.remote)] = {
+                        name: path.basename(item.remote),
+                        path: item.remote,
+                        size: item.totalSize,
+                        type: path.extname(item.remote),
+                        date: new Date().getTime(),
+                        hidden: IED.isHidden(item.remote, true),
+                        type2: 0
+                    };
+                    if (_remote[path.basename(item.remote)].hidden && !options.showHidden) {
+                        delete _remote[path.basename(item.remote)];
+                        return;
+                    }
+                    if (row && row.length === 1)
+                        row.data(_remote[path.basename(item.remote)]);
+                    else {
+                        info.remoteFiles++;
+                        remoteTable.row.add(_remote[path.basename(item.remote)]);
+                        row = localTable.row(function (idx, data, node) {
                             return data.name === path.basename(item.remote) ?
                                 true : false;
                         });
-                        _remote[path.basename(item.remote)] = {
-                            name: path.basename(item.remote),
-                            path: item.remote,
-                            size: item.totalSize,
-                            type: path.extname(item.remote),
-                            date: new Date().getTime(),
-                            hidden: IED.isHidden(item.remote, true),
-                            type2: 0
-                        };
-                        if (_remote[path.basename(item.remote)].hidden && !options.showHidden) {
-                            delete _remote[path.basename(item.remote)];
-                            return;
-                        }
-                        if (row && row.length === 1)
-                            row.data(_remote[path.basename(item.remote)]);
-                        else {
-                            info.remoteFiles++;
-                            remoteTable.row.add(_remote[path.basename(item.remote)]);
-                            row = localTable.row(function (idx, data, node) {
-                                return data.name === path.basename(item.remote) ?
-                                    true : false;
-                            });
-                        }
-                        doUpdate(4);
-                        if (options.focusOnFinished)
-                            focusRow(row);
-                        if (options.selectOnFinished) {
-                            remoteTable.rows().deselect();
-                            row.select();
-                        }
-                        info.uploads--;
                     }
-                    else
-                        info.uploads--;
+                    doUpdate(4);
+                    if (options.focusOnFinished)
+                        focusRow(row);
+                    if (options.selectOnFinished) {
+                        remoteTable.rows().deselect();
+                        row.select();
+                    }
+                    info.uploads--;
                 }
-                doUpdate(1);
+                else
+                    info.uploads--;
+                doUpdate(25);
                 ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
                 ipcRenderer.send('set-progress', { value: -1 });
             });
@@ -2195,15 +2215,18 @@
                     _localDrag = 0;
                 }
                 else if (_remoteDrag) {
+                    _ied.begin();
                     for (f = 0, fl = _remoteDrag.length; f < fl; f++) {
                         if (_remote[path.basename(_remoteDrag[f])].size === -2)
                             downloadPath(_remoteDrag[f]);
                         else
                             _ied.download(_remoteDrag[f]);
                     }
+                    _ied.end();
                     _remoteDrag = 0;
                 }
-                else
+                else {
+                    _ied.begin();
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         var p;
                         console.log(event.dataTransfer.files[f].path.startsWith("/jiMUD:"));
@@ -2230,6 +2253,8 @@
                             fs.copySync(event.dataTransfer.files[f].path, path.join(options.local, getNewName(event.dataTransfer.files[f].name, _local)));
                         }
                     }
+                    _ied.end();
+                }
             };
 
             $("#remote")[0].ondragenter = (event) => {
@@ -2265,18 +2290,21 @@
             $("#remote")[0].ondrop = (event) => {
                 event.preventDefault();
                 if (_localDrag) {
+                    _ied.begin();
                     for (var f = 0, fl = _localDrag.length; f < fl; f++) {
                         if (_local[path.basename(_localDrag[f])].size === -2)
                             uploadPath(_localDrag[f]);
                         else
                             _ied.upload(_localDrag[f]);
                     }
+                    _ied.end();
                     _localDrag = 0;
                 }
                 else if (_remoteDrag) {
                     _remoteDrag = 0;
                 }
-                else
+                else {
+                    _ied.begin();
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) continue;
                         if (event.dataTransfer.files[f].path.startsWith("/jiMUD:")) continue;
@@ -2296,6 +2324,8 @@
                         else
                             _ied.upload(event.dataTransfer.files[f].path);
                     }
+                    _ied.end();
+                }
             };
 
             $("#local-list")[0].ondragstart = (event) => {
@@ -2372,24 +2402,29 @@
             $("#queue-list-container")[0].ondrop = (event) => {
                 event.preventDefault();
                 if (_localDrag) {
+                    _ied.begin();
                     for (var f = 0, fl = _localDrag.length; f < fl; f++) {
                         if (_local[path.basename(_localDrag[f])].size === -2)
                             uploadPath(_localDrag[f]);
                         else
                             _ied.upload(_localDrag[f]);
                     }
+                    _ied.end();
                     _localDrag = 0;
                 }
                 else if (_remoteDrag) {
+                    _ied.begin();
                     for (f = 0, fl = _remoteDrag.length; f < fl; f++) {
                         if (_remote[path.basename(_remoteDrag[f])].size === -2)
                             downloadPath(_remoteDrag[f]);
                         else
                             _ied.download(_remoteDrag[f]);
                     }
+                    _ied.end();
                     _remoteDrag = 0;
                 }
-                else
+                else {
+                    _ied.begin();
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         var p;
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
@@ -2421,6 +2456,8 @@
                         else
                             _ied.upload(event.dataTransfer.files[f].path);
                     }
+                    _ied.end();
+                }
             };
 
             $(window).trigger('resize');
@@ -2742,22 +2779,26 @@
 
         function download() {
             var data = remoteTable.rows({ selected: true }).data();
+            _ied.begin();
             for (var d = 0, dl = data.length; d < dl; d++) {
                 if (data[d].size === -2)
                     downloadPath(data[d].path);
                 else
                     _ied.download(data[d].path);
             }
+            _ied.end();
         }
 
         function upload() {
             var data = localTable.rows({ selected: true }).data();
+            _ied.begin();
             for (var d = 0, dl = data.length; d < dl; d++) {
                 if (data[d].size === -2)
                     uploadPath(data[d].path);
                 else
                     _ied.upload(data[d].path);
             }
+            _ied.end();
         }
 
 
