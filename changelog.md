@@ -13,6 +13,8 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
+- **Changed:**
+  - Immortal Tools: Performance tweaks to lower cpu when downloading or uploading
 - **Fixed:**
   - Immortal Tools:
     - Update status bar when reset

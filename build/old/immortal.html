@@ -42,10 +42,12 @@
         var _ied, options;
         var _local = {}, _remote = {}, _downloads = {};
         var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0 };
-        var localTable, remoteTable, queueTable, key = '', pKey = '', keyClearID;
+        var localTable, remoteTable, queueTable, key = '', pKey, keyClearID;
+        var logView;
         var watcher;
         var dragging = false, btmDragging = false;
         var _localDrag, _remoteDrag, _progressCancel = false;
+        var _updating = 0;
 
         var menubar = new Menubar([
             {
@@ -315,7 +317,7 @@
                     {
                         label: '&Clear log',
                         click: () => {
-                            $("#log-view").html('');
+                            logView.html('');
                         }
                     }
                 ]
@@ -647,12 +649,7 @@
                 $("#bottom").css('display', 'none');
                 $("#main").css('bottom', '28px');
             }
-            if (localTable)
-                updateDraw(localTable);
-            if (remoteTable)
-                updateDraw(remoteTable);
-            if (queueTable)
-                updateDraw(queueTable);
+            doUpdate(14);
         }
 
         function saveOptions() {
@@ -767,10 +764,10 @@
                 }
             });
             localTable.rows().remove();
-            updateDraw(localTable, localTable.rows.add(all));
+            localTable.rows.add(all);
             $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
             $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
-            updateStatus();
+            doUpdate(3);
         }
 
         function updateRemote(p, dir) {
@@ -810,7 +807,7 @@
 
                 all.push(file);
                 _remote[file.name] = file;
-                updateStatus();
+                doUpdate(1);
             }
             $("#remote-path").val(p);
             for (var pt = 0, pl = parts.length; pt < pl; pt++) {
@@ -843,15 +840,16 @@
                     $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
             }
             remoteTable.rows().remove();
-            updateDraw(remoteTable, remoteTable.rows.add(all));
+            remoteTable.rows.add(all);
+            doUpdate(4);
             $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
             $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
 
         function logMessage(msg) {
             if (!msg) return;
-            $("#log-view").html($("#log-view").html() + msg.toString() + "<br>");
-            $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
+            logView.html(logView.html() + msg.toString() + "<br>");
+            doUpdate(32);
         }
 
         function logError(error) {
@@ -961,7 +959,7 @@
                 $("#btn-start").prop('disabled', !queueSelected);
                 $("#btn-pause").prop('disabled', !queueSelected);
                 $("#btn-stop").prop('disabled', !queueSelected);
-                updateStatus();
+                doUpdate(1);
                 updatingMenu = false;
             }, 0);
         }
@@ -1246,8 +1244,8 @@
             _ied.on('reset', () => {
                 info.downloads = 0;
                 info.uploads = 0;
-                updateDraw(queueTable, queueTable.rows().remove());                
-                updateStatus();
+                queueTable.rows().remove();
+                doUpdate(9);
             });
             _ied.on('dir', (dir, files, tag) => {
                 var f, fl, file;
@@ -1273,13 +1271,13 @@
                     var r = dir.substr(s).replace(/\//g, path.sep);
 
                     //if (!existsSync(path.join(options.local, path.basename(dir))))
-                        //fs.mkdirSync(path.join(options.local, path.basename(dir)));
+                    //fs.mkdirSync(path.join(options.local, path.basename(dir)));
                     for (f = 0, fl = files.length; f < fl; f++) {
                         file = (dir === "/" ? '' : dir) + "/" + files[f].file;
                         if (files[f].size == -2) {
                             //create local
                             //if (!existsSync(path.join(options.local, path.basename(file))))
-                                //fs.mkdirSync(path.join(options.local, path.basename(file)));
+                            //fs.mkdirSync(path.join(options.local, path.basename(file)));
                             pTotal++;
                             _ied.getDir(file, true, 'download');
                         }
@@ -1336,23 +1334,23 @@
                 }
                 else
                     info.uploads++;
-                updateStatus();
-                updateDraw(queueTable, queueTable.row.add({
+                queueTable.row.add({
                     "local": item.local,
                     "direction": item.download ? "<-" : "->",
                     "remote": item.remote,
                     "progress": item.percent,
                     "id": item.ID,
                     "state": item.state
-                }));
+                });
+                doUpdate(9);
             });
 
             _ied.on('remove', (item) => {
-                updateDraw(queueTable, queueTable.rows(function (idx, data, node) {
+                queueTable.rows(function (idx, data, node) {
                     return data.id === item.ID ?
                         true : false;
-                }).remove());
-                updateMenu();
+                }).remove();
+                doUpdate(24);
                 if (item.download) {
                     //Update local list if file was uploaded to current local
                     if (item.state === ItemState.done && options.openEditor) {
@@ -1364,7 +1362,6 @@
                         }
                     }
                     info.downloads--;
-                    updateStatus();
                 }
                 else {
                     //only update if current remote is the same path as file
@@ -1387,15 +1384,16 @@
                             return;
                         }
                         if (row && row.length === 1)
-                            updateDraw(remoteTable, row.data(_remote[path.basename(item.remote)]));
+                            row.data(_remote[path.basename(item.remote)]);
                         else {
                             info.remoteFiles++;
-                            updateDraw(remoteTable, remoteTable.row.add(_remote[path.basename(item.remote)]));
+                            remoteTable.row.add(_remote[path.basename(item.remote)]);
                             row = localTable.row(function (idx, data, node) {
                                 return data.name === path.basename(item.remote) ?
                                     true : false;
                             });
                         }
+                        doUpdate(4);
                         if (options.focusOnFinished)
                             focusRow(row);
                         if (options.selectOnFinished) {
@@ -1406,8 +1404,8 @@
                     }
                     else
                         info.uploads--;
-                    updateStatus();
                 }
+                doUpdate(1);
                 ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
                 ipcRenderer.send('set-progress', { value: -1 });
             });
@@ -1419,15 +1417,17 @@
                     return data.id === item.ID ?
                         true : false;
                 });
-                if (row && row.length === 1)
-                    updateDraw(queueTable, row.data({
+                if (row && row.length === 1) {
+                    row.data({
                         "local": item.local,
                         "direction": item.download ? "<-" : "->",
                         "remote": item.remote,
                         "progress": item.percent,
                         "id": item.ID,
                         "state": item.state
-                    }));
+                    });
+                    doUpdate(8);
+                }
                 ipcRenderer.send('set-progress-window', 'immortal', { value: item.percent });
                 ipcRenderer.send('set-progress', { value: item.percent });
             });
@@ -1444,10 +1444,12 @@
                                 true : false;
                         });
                         delete _remote[obj.file];
-                        if (row && row.length === 1)
-                            updateDraw(remoteTable, row.remove());
+                        if (row && row.length === 1) {
+                            row.remove();
+                            doUpdate(4);
+                        }
                         info.remoteFiles--;
-                        updateStatus();
+                        doUpdate(1);
                     }
                     else {
                         logMessage(`Failed to delete: ${obj.path}/${obj.file}`);
@@ -1482,8 +1484,8 @@
                             info.remoteFiles--;
                             return;
                         }
-                        updateDraw(remoteTable, remoteTable.row.add(_remote[obj.file2]));
-                        updateStatus();
+                        remoteTable.row.add(_remote[obj.file2]);
+                        doUpdate(5);
                     }
                     else {
                         logMessage(`Failed to rename: ${obj.path}/${obj.file}`);
@@ -1521,8 +1523,8 @@
                             row.remove();
                         else
                             info.remoteDirs++;
-                        updateDraw(remoteTable, remoteTable.row.add(_remote[name]));
-                        updateStatus();
+                        remoteTable.row.add(_remote[name]);
+                        doUpdate(5);
                     }
                     else {
                         logMessage(`Failed to create directory: ${obj.path}`);
@@ -1543,11 +1545,13 @@
                             return data.name === name ?
                                 true : false;
                         });
-                        if (row && row.length === 1)
-                            updateDraw(remoteTable, row.remove());
+                        if (row && row.length === 1) {
+                            row.remove();
+                            doUpdate(4);
+                        }
                         delete _remote[name];
                         info.remoteDirs--;
-                        updateStatus();
+                        doUpdate(1);
                     }
                     else {
                         logMessage(`Failed to remove directory: ${obj.path}`);
@@ -1563,6 +1567,7 @@
             localTable = $('#local-list').DataTable();
             remoteTable = $('#remote-list').DataTable();
             queueTable = $('#queue-list').DataTable();
+            logView = $("#log-view");
 
             localTable.on('user-select', function (e, dt, type, cell, originalEvent) {
                 if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length === 1) {
@@ -1639,7 +1644,7 @@
                 showQueueContextMenu();
             });
 
-            $("#log-view").on('contextmenu', function (e) {
+            logView.on('contextmenu', function (e) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1651,7 +1656,7 @@
                 c.append(new MenuItem({
                     label: 'Clear log',
                     click: () => {
-                        $("#log-view").html('');
+                        logView.html('');
                     }
                 }));
                 c.append(new MenuItem({ type: 'separator' }));
@@ -1660,7 +1665,7 @@
                     click: () => {
                         var selection = window.getSelection();
                         var range = document.createRange();
-                        range.selectNodeContents($("#log-view")[0]);
+                        range.selectNodeContents(logView[0]);
                         selection.removeAllRanges();
                         selection.addRange(range);
                     }
@@ -1669,39 +1674,33 @@
             });
 
             localTable.on('select', function (e, dt, type, indexes) {
-                if (type === 'row') {
-                    updateMenu();
-                }
+                if (type === 'row')
+                    doUpdate(16);
             });
 
             localTable.on('deselect', function (e, dt, type, indexes) {
-                if (type === 'row') {
-                    updateMenu();
-                }
+                if (type === 'row')
+                    doUpdate(16);
             });
 
             remoteTable.on('select', function (e, dt, type, indexes) {
-                if (type === 'row') {
-                    updateMenu();
-                }
+                if (type === 'row')
+                    doUpdate(16);
             });
 
             remoteTable.on('deselect', function (e, dt, type, indexes) {
-                if (type === 'row') {
-                    updateMenu();
-                }
+                if (type === 'row')
+                    doUpdate(16);
             });
 
             queueTable.on('select', function (e, dt, type, indexes) {
-                if (type === 'row') {
-                    updateMenu();
-                }
+                if (type === 'row')
+                    doUpdate(16);
             });
 
             queueTable.on('deselect', function (e, dt, type, indexes) {
-                if (type === 'row') {
-                    updateMenu();
-                }
+                if (type === 'row')
+                    doUpdate(16);
             });
 
             $("#local-list").on('keypress', function (e) {
@@ -1842,20 +1841,20 @@
                 $("#local-list").addClass('focused');
                 $("#remote-list").removeClass('focused');
                 $("#queue-list").removeClass('focused');
-                updateMenu();
+                doUpdate(16);
 
             });
             $("#remote-list").on('focus', () => {
                 $("#local-list").removeClass('focused');
                 $("#remote-list").addClass('focused');
                 $("#queue-list").removeClass('focused');
-                updateMenu();
+                doUpdate(16);
             });
             $("#queue-list").on('focus', () => {
                 $("#local-list").removeClass('focused');
                 $("#remote-list").removeClass('focused');
                 $("#queue-list").addClass('focused');
-                updateMenu();
+                doUpdate(16);
             });
             updateLocal(options.local);
             if (!options.remote || options.remote.length === 0)
@@ -1916,7 +1915,7 @@
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
                 var target = $(e.target).attr("href"); // activated tab
                 if (target === "#log")
-                    $("#log-view")[0].scrollTop = $("#log-view")[0].scrollHeight;
+                    logView[0].scrollTop = logView[0].scrollHeight;
             });
 
             $(document).keydown((event) => {
@@ -2044,9 +2043,7 @@
                     h += $("#bottom").outerHeight();
                 $("#local-navigate").css("max-height", h + "px");
                 $("#remote-navigate").css("max-height", h + "px");
-                updateDraw(localTable);
-                updateDraw(remoteTable);
-                updateDraw(queueTable);
+                doUpdate(14);
             });
 
             $(document).mouseup(function (e) {
@@ -2066,8 +2063,7 @@
                         $('#remote').css("left", e.pageX + 2);
                         options.localSize = e.pageX + 2;
                     }
-                    updateDraw(localTable);
-                    updateDraw(remoteTable);
+                    doUpdate(6);
                     saveOptions();
                     $('#ghost-bar').remove();
                     $(document).unbind('mousemove');
@@ -2083,9 +2079,7 @@
                     options.queueSize -= 26;
                     $('#bottom').css("height", options.queueSize);
                     $('#main').css("bottom", options.queueSize);
-                    updateDraw(localTable);
-                    updateDraw(remoteTable);
-                    updateDraw(queueTable);
+                    doUpdate(14);
                     saveOptions();
                     $('#btm-ghost-bar').remove();
                     $(document).unbind('mousemove');
@@ -2849,7 +2843,7 @@
             if (options.debug)
                 console.log(`Download path: ${p}`);
             //if (!existsSync(path.join(options.local, path.basename(p))))
-                //fs.mkdirSync(path.join(options.local, path.basename(p)));
+            //fs.mkdirSync(path.join(options.local, path.basename(p)));
             pTotal = 1;
             _ied.getDir(p, true, 'download');
         }
@@ -2932,6 +2926,7 @@
                 if (_local[file.name]) {
                     removeLocalFile(file.path);
                     info.localFiles--;
+                    doUpdate(1);
                 }
                 return;
             }
@@ -2942,14 +2937,15 @@
             });
             _local[file.name] = file;
             if (row && row.length === 1)
-                updateDraw(localTable, row.data(_local[file.name]));
+                row.data(_local[file.name]);
             else {
-                updateDraw(localTable, localTable.row.add(_local[file.name]));
+                localTable.row.add(_local[file.name]);
                 row = localTable.row(function (idx, data, node) {
                     return data.name === path.basename(p) ?
                         true : false;
                 });
             }
+            doUpdate(2);
             if (options.debug)
                 console.log(_downloads[p]);
             if (file.size === -2)
@@ -2972,13 +2968,13 @@
                 return data.name === path.basename(p) ?
                     true : false;
             });
-            updateDraw(localTable, row.remove());
+            row.remove();
             if (_local[path.basename(p)].size === -2)
                 info.localDirs--;
             else
                 info.localFiles--;
             delete _local[path.basename(p)];
-            updateStatus();
+            doUpdate(3);
         }
 
         function addLocalFile(path) {
@@ -2996,14 +2992,14 @@
             else
                 info.localFiles++;
             _local[file.name] = file;
-            updateDraw(localTable, localTable.row.add(_local[file.name]));
+            localTable.row.add(_local[file.name]);
             if (options.debug)
                 console.log(_downloads[path]);
             if (file.size != -2 && !_downloads[path] && options.uploadOnChange)
                 _ied.upload(path);
             if (_downloads[path])
                 delete _downloads[path];
-            updateStatus();
+            doUpdate(3);
         }
 
         function deleteLocal() {
@@ -3262,7 +3258,8 @@
                     type2: -2
                 };
                 info.remoteDirs++;
-                updateDraw(remoteTable, remoteTable.row.add(_remote["bak"]));
+                remoteTable.row.add(_remote["bak"]);
+                doUpdate(4);
             }
         }
 
@@ -3322,6 +3319,43 @@
             if (data.type === "extensions" && data.name === "immortal")
                 loadOptions(data.value);
         });
+
+        function doUpdate(type) {
+            if (!type) return;
+            _updating |= type;
+            if (_updating === 0)
+                return;
+            window.requestAnimationFrame(() => {
+                if ((this._updating & 1) === 1) {
+                    updateStatus();
+                    _updating &= ~1;
+                }
+                if ((this._updating & 2) === 2) {
+                    if (localTable)
+                        updateDraw(localTable);
+                    _updating &= ~2;
+                }
+                if ((this._updating & 4) === 4) {
+                    if (remoteTable)
+                        updateDraw(remoteTable);
+                    _updating &= ~4;
+                }
+                if ((this._updating & 8) === 8) {
+                    if (queueTable)
+                        updateDraw(queueTable);
+                    _updating &= ~8;
+                }
+                if ((this._updating & 16) === 16) {
+                    updateMenu();
+                    _updating &= ~16;
+                }
+                if ((this._updating & 32) === 32) {
+                    logView[0].scrollTop = logView[0].scrollHeight;
+                    _updating &= ~32;
+                }
+                doUpdate(_updating);
+            });
+        }        
     </script>
 </head>
 
