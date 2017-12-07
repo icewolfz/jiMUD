@@ -8,6 +8,7 @@
   - Immortal Tools:
     - Update status bar when reset
     - Fix creating sub folders in current local folder
+    - Statusbar now shows correct remote file counts
 
 ## 0.4.31 2017-12-05
 
