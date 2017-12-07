@@ -2,6 +2,10 @@
 
 ## 0.4.32
 
+- **Fixed:**
+  - Immortal Tools:
+    - Update status bar when reset
+
 ## 0.4.31 2017-12-05
 
 - **New:**
