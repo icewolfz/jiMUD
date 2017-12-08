@@ -2,6 +2,10 @@
 
 ## 0.4.32
 
+- **New:**
+  - Immortal Tools:
+    - Queue list now contains an error column to display any errors from upload/downloading
+    - Queue list error icon now has error as tooltip
 - **Changed:**
   - Immortal Tools: Performance tweaks to lower cpu when downloading or uploading
 - **Fixed:**
@@ -9,6 +13,7 @@
     - Update status bar when reset
     - Fix creating sub folders in current local folder
     - Statusbar now shows correct remote file counts
+    - Mark items with an error icon instead of just removing
 
 ## 0.4.31 2017-12-05
 

@@ -384,7 +384,7 @@
                 if (!items || items.length === 0) break;
                 for (var m = 0; m < items.length; m++) {
                     if (!items[m]) continue;
-                    if (items[m].id === args.menu[i] || (items[m].label||'').toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
+                    if (items[m].id === args.menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
                         item = items[m];
                         tItem = tItems[m];
                         if (item.submenu) {
@@ -1238,9 +1238,13 @@
                             if (full.state === ItemState.paused)
                                 return '<i class="fa fa-pause" style="width:12px; margin-right: 2px"></i>' + data;
                             if (full.state === ItemState.error)
-                                return '<i class="fa fa-warning" style="width:12px; margin-right: 2px"></i>' + data;
+                                return '<i class="fa fa-warning" style="width:12px; margin-right: 2px" title="' + IED.errorMessage(full.error) + '"></i>' + data;
                             return '<i class="fa fa-play" style="width:12px; margin-right: 2px"></i>' + data;
                         }
+                    },
+                    {
+                        width: '30px',
+                        targets: 1
                     },
                     {
                         render: function (data, type, full, meta) {
@@ -1248,22 +1252,34 @@
                                 return data;
                             return `<div class="progressbar"><div class="progressbar-text">${Math.round(100 * data)}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`;
                         },
-                        targets: 3
-                    },
-                    {
-                        width: '30px',
-                        targets: 1
-                    },
-                    {
+                        targets: 3,
                         width: '150px',
-                        targets: 3
+                    },
+                    {
+                        targets: 4,
+                        render: function (data, type, full, meta) {
+                            if (type === "sort" || type === 'type')
+                                return data;
+                            switch (full.state) {
+                                case ItemState.paused:
+                                    return 'Paused';
+                                case ItemState.error:
+                                    return IED.errorMessage(full.error);
+                                case ItemState.done:
+                                    return 'Success';
+                                case ItemState.stopped:
+                                    return 'Stopped';
+                            }
+                            return '';
+                        }
                     }
                 ],
                 columns: [
                     { data: 'local' },
                     { data: 'direction', width: '30px' },
                     { data: 'remote' },
-                    { data: 'progress', width: '150px' }
+                    { data: 'progress', width: '150px' },
+                    { data: 'error' }
                 ]
             });
             loadOptions();
@@ -1396,7 +1412,8 @@
                             "remote": val.remote,
                             "progress": val.percent,
                             "id": val.ID,
-                            "state": val.state
+                            "state": val.state,
+                            'error': val.error
                         };
                     });
                     queueTable.rows.add(item);
@@ -1416,7 +1433,8 @@
                         "remote": item.remote,
                         "progress": item.percent,
                         "id": item.ID,
-                        "state": item.state
+                        "state": item.state,
+                        'error': item.error
                     });
                 }
                 doUpdate(9);
@@ -3453,7 +3471,8 @@
                         "remote": item.remote,
                         "progress": item.percent,
                         "id": item.ID,
-                        "state": item.state
+                        "state": item.state,
+                        'error': item.error
                     });
                     doUpdate(8);
                 }
@@ -3685,6 +3704,7 @@
                                 <th>&lt;-&gt;</th>
                                 <th>Remote</th>
                                 <th>Progress</th>
+                                <th></th>
                             </tr>
                         </thead>
                     </table>
