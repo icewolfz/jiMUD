@@ -132,8 +132,11 @@ export class IED extends EventEmitter {
                     case IEDError.DL_TOOMANY:
                     case IEDError.DL_INPROGRESS:
                         item = this.getItem(obj.tag);
-                        if (item)
+                        if (item) {
                             item.state = ItemState.error;
+                            item.error = obj.code;
+                        }
+                        this.nextItem();
                         this.emit('message', `Download error for '${obj.path}/${obj.file}': ${obj.msg}`);
                         this.emit('update', item);
                         break;
@@ -142,9 +145,14 @@ export class IED extends EventEmitter {
                     case IEDError.DL_USERABORT:
                     case IEDError.DL_INVALIDFILE:
                     case IEDError.DL_INVALIDPATH:
-                        if (this.active && this.active.ID === obj.tag)
-                            this.removeActive();
+                        item = this.getItem(obj.tag);
+                        if (item) {
+                            item.state = ItemState.error;
+                            item.error = obj.code;
+                        }
+                        this.nextItem();
                         this.emit('message', `Download aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
+                        this.emit('update', item);
                         break;
                     case IEDError.RESET:
                         this.emit('message', 'Server reset: ' + obj.msg);
@@ -159,7 +167,11 @@ export class IED extends EventEmitter {
                     case IEDError.UL_TOOMANY:
                     case IEDError.UL_INPROGRESS:
                         item = this.getItem(obj.tag);
-                        item.state = ItemState.error;
+                        if (item) {
+                            item.state = ItemState.error;
+                            item.error = obj.code;
+                        }
+                        this.nextItem();
                         this.emit('message', `Upload error for '${obj.path}/${obj.file}': ${obj.msg}`);
                         this.emit('update', item);
                         break;
@@ -173,9 +185,14 @@ export class IED extends EventEmitter {
                     case IEDError.UL_INVALIDPATH:
                     case IEDError.UL_DENIED:
                     case IEDError.UL_FILE:
-                        if (this.active && this.active.ID === obj.tag)
-                            this.removeActive();
+                        item = this.getItem(obj.tag);
+                        if (item) {
+                            item.state = ItemState.error;
+                            item.error = obj.code;
+                        }
+                        this.nextItem();
                         this.emit('message', `Upload aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
+                        this.emit('update', item);
                         break;
                     case IEDError.CMD_EXIST:
                         if (obj && this._callbacks[obj.tag]) {
@@ -642,6 +659,52 @@ export class IED extends EventEmitter {
         return file.match(/[/\0]/g);
     }
 
+    public static errorMessage(code: number): string {
+        switch (code) {
+            case IEDError.DL_NOTSTART:
+                return 'Download not started';
+            case IEDError.DL_TOOMANY:
+                return 'Too many downloads active';
+            case IEDError.DL_INPROGRESS:
+                return 'Download already in progress';
+            case IEDError.DL_INVALIDFMT:
+                return 'Invalid download data';
+            case IEDError.DL_UNKNOWN:
+                return 'Unknown download error';
+            case IEDError.DL_USERABORT:
+                return 'Download aborted';
+            case IEDError.DL_INVALIDFILE:
+                return 'Invalid download filename';
+            case IEDError.DL_INVALIDPATH:
+                return 'Invalid download path';
+            case IEDError.UL_TOOMANY:
+                return 'Too many uploads active';
+            case IEDError.UL_INPROGRESS:
+                return 'Upload already in progress';
+            case IEDError.UL_INVALIDFMT:
+                return 'Invalid upload data';
+            case IEDError.UL_USERABORT:
+                return 'Upload aborted';
+            case IEDError.UL_BADENCODE:
+                return 'Error decoding uploaded data';
+            case IEDError.UL_TOOLARGE:
+                return 'Upload to large';
+            case IEDError.UL_FAILWRITE:
+                return 'Failed to save upload data';
+            case IEDError.UL_UNKNOWN:
+                return 'Unknown upload error';
+            case IEDError.UL_INVALIDFILE:
+                return 'Invalid upload filename';
+            case IEDError.UL_INVALIDPATH:
+                return 'Invalid upload path';
+            case IEDError.UL_DENIED:
+                return 'Access denied uploading';
+            case IEDError.UL_FILE:
+                return 'Error creating upload path';
+        }
+        return '';
+    }
+
     public removeActive() {
         if (this.active) {
             if (this.active.state !== ItemState.done && this.active.download)
@@ -871,6 +934,7 @@ export class Item {
     public inProgress = false;
     public chunks: number = 0;
     public mkdir: boolean = false;
+    public error: string;
 
     constructor(id: string, download?: boolean) {
         this.ID = id;
