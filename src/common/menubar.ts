@@ -36,7 +36,7 @@ export class Menubar {
             if (!items || items.length === 0) break;
             for (let m = 0; m < items.length; m++) {
                 if (!items[m]) continue;
-                if (items[m].id === menu[i] || items[m].label.toLowerCase().replace(/&/g, '') === menu[i].toLowerCase()) {
+                if (items[m].id === menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === menu[i].toLowerCase()) {
                     item = items[m];
                     tItem = tItems[m];
                     if (item.submenu) {
