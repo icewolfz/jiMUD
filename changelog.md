@@ -15,7 +15,7 @@
 
 - **New:**
   - Immortal Tools:
-    - Queue list now contains an error column to display any errors from upload/downloading
+    - Queue list now contains an status column to display any errors from upload/downloading
     - Queue list error icon now has error as tooltip
 - **Changed:**
   - Immortal Tools: Performance tweaks to lower cpu when downloading or uploading
