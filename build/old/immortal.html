@@ -3391,6 +3391,25 @@
                 }
                 else
                     info.uploads--;
+                var rows;
+                if (info.uploads < 0) {
+                    rows = queueTable.rows(function (idx, data) {
+                        return data.direction === '<-';
+                    });
+                    if (rows)
+                        info.uploads = rows.length;
+                    else
+                        info.uploads = 0;
+                }
+                if (info.downloads < 0) {
+                    rows = queueTable.rows(function (idx, data) {
+                        return data.direction === '->';
+                    });
+                    if (rows)
+                        info.downloads = rows.length;
+                    else
+                        info.downloads = 0;
+                }
             }
             doUpdate(25);
             ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
