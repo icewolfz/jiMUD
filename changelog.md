@@ -19,6 +19,7 @@
     - Queue list error icon now has error as tooltip
 - **Changed:**
   - Immortal Tools: Performance tweaks to lower cpu when downloading or uploading
+  - Immortal Tools: Update data table control to newest version
 - **Fixed:**
   - Immortal Tools:
     - Update status bar when reset
