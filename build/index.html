@@ -119,6 +119,20 @@
       configurable: true
     });
 
+    $(window).keydown((event) => {
+      if ($("#disconnectDialog")[0].open) {
+        if (event.which === 81)
+          window.close();
+        else if (event.which === 82) {
+          $('#disconnectDialog')[0].close();
+          client.connect();
+        }
+        else if (event.which === 79)
+          $('#disconnectDialog')[0].close();
+        //67 - c
+        //68 - d
+      }
+    });
 
     const Client = require('./js/client.js').Client;
     const Status = require('./js/status.js').Status;
@@ -2084,6 +2098,42 @@
       <button style="float: left" type="button" class="btn btn-default" onclick="$('#pasteSpecial-replace').prop('disabled', false);$('#pasteSpecial-replace-enable').prop('checked', true);$('#pasteSpecial-replace').val('');$('#pasteSpecial-prefix').prop('disabled', false);$('#pasteSpecial-postfix').prop('disabled', false);$('#pasteSpecial-prefix').val('');$('#pasteSpecial-postfix').val('');$('#pasteSpecial-prefix-enable').prop('checked', true);$('#pasteSpecial-postfix-enable').prop('checked', true);">Reset</button>
       <button style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();">Cancel</button>
       <button style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
+    </div>
+  </dialog>
+  <dialog id="disconnectDialog" style="z-index:1000;height:180px;width:450px;">
+    <div class="dialog-header" style="font-weight: bold">
+      <button type="button" class="close" data-dismiss="modal" onclick="$('#disconnectDialog')[0].close();">&times;</button>
+      <div style="padding-top: 2px;">Disconnected...</div>
+    </div>
+    <div class="dialog-body" style="padding-top:25px">
+
+      <div class="col-sm-7 form-group">
+        <p>You have been Disconnected.</p>
+        <p>
+          The reason for this may vary:
+          <p style="padding-left: 20px;background-color:#F5F5F5">
+            You quit.
+            <br> Mud crashed.
+            <br> Lost network connection.
+          </p>
+        </p>
+        <p style="font-weight: bold">Reconnecting in ...
+          <span>#</span>
+        </p>
+      </div>
+      <div class="col-sm-5 form-group">
+        <button style="float: right" type="button" class="btn btn-primary btn-block" onclick="$('#disconnectDialog')[0].close();client.connect();" accesskey="r">
+          <i class="fa fa-refresh"></i>
+          <u>R</u>econnect</button>
+        <!--<button style="float: right" type="button" class="btn btn-primary" onclick="" accesskey="d"><i class="fa fa-terminal"></i><u>D</u>iffernt MUD...</button>-->
+        <button style="float: right" type="button" class="btn btn-default btn-block" onclick="$('#disconnectDialog')[0].close();" accesskey="o">
+          <i class="fa fa-pause"></i>
+          <u>O</u>ffline</button>
+        <!--<button style="float: right" type="button" class="btn btn-primary" onclick="" accesskey="c"><i class="fa fa-remove"></i><u>C</u>lose</button>-->
+        <button style="float: right" type="button" class="btn btn-danger btn-block" onclick="window.close();" accesskey="q">
+          <i class="fa fa-power-off"></i>
+          <u>Q</u>uit</button>
+      </div>
     </div>
   </dialog>
 </body>

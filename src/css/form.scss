@@ -1,3 +1,18 @@
+.dialog-header {
+    background-color: #F5F5F5;
+    box-shadow: inset 0 -1px 0 #ddd;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 5px;
+    border-bottom: 1px solid #fff;
+}
+
+.dialog-header .btn {
+    margin: 5px;
+}
+
 .dialog-footer {
     background-color: #F5F5F5;
     box-shadow: inset 0 1px 0 #fff;
@@ -9,16 +24,17 @@
     border-top: 1px solid #ddd;
 }
 
+.dialog-footer .btn {
+    margin: 5px;
+}
+
+
 .dialog-body .tab-pane {
     padding: 10px;
 }
 
 .dialog-body .nav-tabs li:first-child {
     margin-left: 10px;
-}
-
-.dialog-footer .btn {
-    margin: 5px;
 }
 
 input[type=color] {
