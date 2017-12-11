@@ -13,6 +13,8 @@
     - Preference dialog now uses dynamic dialog system like character manager
     - Mapper now uses dynamic window system
 
+## 0.4.32
+
 - **New:**
   - Immortal Tools:
     - Queue list now contains an status column to display any errors from upload/downloading
