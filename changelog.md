@@ -21,6 +21,7 @@
     - Fix creating sub folders in current local folder
     - Statusbar now shows correct remote file counts
     - Mark items with an error icon instead of just removing
+  - Fixed issue where new client window was created instead of a subwindow
 
 ## 0.4.31 2017-12-05
 

@@ -1557,15 +1557,15 @@ ipcMain.on('reload-options', () => {
     winProfiles.webContents.send('reload-options');
   if (winEditor)
     winEditor.webContents.send('reload-options');
-
+ 
   for (var name in windows) {
     if (!windows.hasOwnProperty(name))
       continue;
     if (!windows[name].window) {
       if (set.windows[name].options.show)
         showWindow(name, set.windows[name].options);
-      else if (set.windows[name].options.persistent)
-        createWindow(name, set.windows[name].options);
+      else if (set.windows[name].options.persistent)        
+        createNewWindow(name, set.windows[name].options);
       else
         continue;
     }
