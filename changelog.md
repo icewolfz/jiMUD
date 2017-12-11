@@ -111,7 +111,6 @@
 - **Fixed:**
   - Chat capture: finally fix ignoring stores and lockers
 
-
 ## 0.4.25 2017-10-26
 
 - **Fixed:**
