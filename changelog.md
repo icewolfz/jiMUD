@@ -22,6 +22,7 @@
     - Statusbar now shows correct remote file counts
     - Mark items with an error icon instead of just removing
   - Fixed issue where new client window was created instead of a subwindow
+  - When reloading options, close all childwindows and recreate based on new options
 
 ## 0.4.31 2017-12-05
 
