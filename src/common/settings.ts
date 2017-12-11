@@ -1,6 +1,6 @@
 //cSpell:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //cSpell:ignore emoteto, emotetos
-import { NewLineType, Log, BackupSelection, TrayClick } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -162,6 +162,7 @@ export class Settings {
     public autoConnect: boolean = true;
     public autoConnectDelay: number = 600;
     public autoLogin: boolean = true;
+    public onDisconnect: OnDisconnect = OnDisconnect.ReconnectDialog;
     public commandEcho: boolean = true;
 
     public enableKeepAlive: boolean = false;

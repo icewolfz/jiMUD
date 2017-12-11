@@ -12,6 +12,12 @@ Reset - Resetting will revert all settings back to default values
 - `Enable spellchecking` support spellchecking in command line and advanced editor
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
 - `Theme` the theme for the main client window
+- `On disconnect do` What to do when disconnected from the mud
+  - `Nothing` do nothing
+  - `Reconnect` reconnect using autoconnect options
+  - `Reconnect dialog` show the reconnect dialog with options and delayed reconnect timer
+  - `Character manager` show character manager
+  - `Close` close the client
 
 ## Display
 

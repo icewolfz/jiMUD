@@ -73,6 +73,10 @@ export enum FormatType {
   MXPSkip = 10
 }
 
+export enum OnDisconnect {
+  Nothing = 0, Reconnect = 1, ReconnectDialog = 2, LoadManager = 4, Close = 8
+}
+
 /**
    * Enum flag for Font styles.
    * @readonly

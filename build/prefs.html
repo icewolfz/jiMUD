@@ -455,6 +455,12 @@
       $('#newlineShortcut-4').prop('checked', _settings.newlineShortcut === 4);
       $('#newlineShortcut-8').prop('checked', _settings.newlineShortcut === 8);
 
+      $('#onDisconnect-0').prop('checked', _settings.onDisconnect === 0);
+      $('#onDisconnect-1').prop('checked', _settings.onDisconnect === 1);
+      $('#onDisconnect-2').prop('checked', _settings.onDisconnect === 2);
+      $('#onDisconnect-4').prop('checked', _settings.onDisconnect === 4);
+      $('#onDisconnect-8').prop('checked', _settings.onDisconnect === 8);
+
       $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
       $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
       $('#trayClick-hide').prop('checked', _settings.trayClick === TrayClick.hide);
@@ -605,6 +611,27 @@
             if (this.checked)
               _settings.newlineShortcut = 8;
             break;
+          case 'onDisconnect-0':
+            if (this.checked)
+              _settings.onDisconnect = 0;
+            break;
+          case 'onDisconnect-1':
+            if (this.checked)
+              _settings.onDisconnect = 1;
+            break;
+          case 'onDisconnect-2':
+            if (this.checked)
+              _settings.onDisconnect = 2;
+            break;
+          case 'onDisconnect-4':
+            if (this.checked)
+              _settings.onDisconnect = 4;
+            break;
+          case 'onDisconnect-8':
+            if (this.checked)
+              _settings.onDisconnect = 8;
+            break;
+
           case 'trayClick-none':
             if (this.checked)
               _settings.trayClick = TrayClick.none;
@@ -1100,6 +1127,27 @@
             <label class="control-label">Theme
               <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
             </label>
+          </div>
+
+          <div class="col-sm-12 form-group">
+            <label class="control-label">On disconnect do</label>
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-default btn-xs">
+                <input type="radio" name="onDisconnect" id="onDisconnect-0"> Nothing
+              </label>
+              <label class="btn btn-default btn-xs">
+                <input type="radio" name="onDisconnect" id="onDisconnect-1"> Reconnect
+              </label>
+              <label class="btn btn-default btn-xs">
+                <input type="radio" name="onDisconnect" id="onDisconnect-2"> Reconnect dialog
+              </label>
+              <label class="btn btn-default btn-xs">
+                <input type="radio" name="onDisconnect" id="onDisconnect-4"> Character manager
+              </label>              
+              <label class="btn btn-default btn-xs">
+                <input type="radio" name="onDisconnect" id="onDisconnect-8"> Close
+              </label>
+            </div>
           </div>
 
         </div>
@@ -1806,7 +1854,7 @@
             <label class="control-label">
               <input type="checkbox" id="showScriptErrors" /> Show script errors
             </label>
-          </div>          
+          </div>
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="parseSingleQuotes" /> Parse single quotes as string
@@ -1816,7 +1864,7 @@
             <label class="control-label">
               <input type="checkbox" id="parseDoubleQuotes" /> Parse double quotes as string
             </label>
-          </div>          
+          </div>
         </div>
         <div role="tabpanel" class="pref-pane" id="advanced">
           <div class="col-sm-6 form-group">

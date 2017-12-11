@@ -121,14 +121,20 @@
 
     $(window).keydown((event) => {
       if ($("#disconnectDialog")[0].open) {
-        if (event.which === 81)
+        if (event.which === 81) {
+          closeDisconnectDialog();
           window.close();
+        }
         else if (event.which === 82) {
-          $('#disconnectDialog')[0].close();
+          closeDisconnectDialog();
           client.connect();
         }
         else if (event.which === 79)
-          $('#disconnectDialog')[0].close();
+          closeDisconnectDialog();
+        else if (event.which == 77) {
+          closeDisconnectDialog();
+          showCharacters();
+        }
         //67 - c
         //68 - d
       }
@@ -167,6 +173,9 @@
     var _selword = '';
     var _selurl = '';
     var _selline = '';
+    var _disconnectTimerID;
+    var _disconnectTimer = 0;
+    var _disconnectCounter = 0;
 
     window.onerror = function (msg, url, line, col, error) {
       if (client) {
@@ -949,10 +958,54 @@
         ipcRenderer.send('closed');
         _logger.postMessage({ action: 'connected', args: client.connected });
         _logger.postMessage({ action: 'stop' });
+        switch (client.options.onDisconnect) {
+          case 1: //reconnect
+            autoConnect();
+            break;
+          case 2: //dialog
+            if (_disconnectTimerID)
+              clearTimeout(_disconnectTimerID);
+
+            if (_disconnectTimer === 0)
+              _disconnectTimer = 10;
+            else if (_disconnectTimer === 10)
+              _disconnectTimer = 30;
+            else
+              _disconnectTimer *= 2;
+            _disconnectCounter = _disconnectTimer;
+            _disconnectTimerID = setInterval(() => {
+              _disconnectTimer--;
+              if (_disconnectTimer <= 0) {
+                client.connect();
+                closeDisconnectDialog();
+              }
+              $('#disconnectTimer').text(_disconnectTimer);
+            }, 1000);
+            $('#disconnectTimer').text(_disconnectTimer);
+            $("#disconnectDialog")[0].showModal();
+            $('#disconnectDialogReconnect').focus();
+            break;
+          case 4: //character manger
+            showCharacters();
+            break;
+          case 8: //close
+            window.close();
+            break;
+        }
       });
 
       client.on('connected', () => {
         ipcRenderer.send('connected');
+        if (_disconnectTimerID) {
+          clearTimeout(_disconnectTimerID);
+          _disconnectTimerID = null;
+        }
+        if (autoConnectID) {
+          clearTimeout(autoConnectID);
+          autoConnectID = null;
+        }
+        _disconnectTimer = 0;
+        _disconnectCounter = 0;
         _logger.postMessage({ action: 'connected', args: client.connected });
         _logger.postMessage({
           action: 'start', args: {
@@ -962,6 +1015,45 @@
             fragment: client.display.EndOfLine || client.telnet.prompt
           }
         });
+      });
+
+      client.on('reconnect', () => {
+        if (client.errored || this.telnet.connected)
+          return;
+        switch (client.options.onDisconnect) {
+          case 1: //reconnect
+            autoConnect();
+            break;
+          case 2: //dialog
+            if (_disconnectTimerID)
+              clearTimeout(_disconnectTimerID);
+
+            if (_disconnectTimer === 0)
+              _disconnectTimer = 10;
+            else if (_disconnectTimer === 10)
+              _disconnectTimer = 30;
+            else
+              _disconnectTimer *= 2;
+            _disconnectCounter = _disconnectTimer;
+            _disconnectTimerID = setInterval(() => {
+              _disconnectTimer--;
+              if (_disconnectTimer <= 0) {
+                client.connect();
+                closeDisconnectDialog();
+              }
+              $('#disconnectTimer').text(_disconnectTimer);
+            }, 1000);
+            $('#disconnectTimer').text(_disconnectTimer);
+            $("#disconnectDialog")[0].showModal();
+            $('#disconnectDialogReconnect').focus();
+            break;
+          case 4: //character manger
+            showCharacters();
+            break;
+          case 8: //close
+            window.close();
+            break;
+        }
       });
 
       client.on('add-line-done', (data) => {
@@ -1899,8 +1991,20 @@
     }
 
     function autoConnect() {
-      if (!autoConnectID && client.options.autoConnect && !client.connected)
+      if (!autoConnectID && client.options.autoConnect && !client.connected && !client.errored)
         autoConnectID = setTimeout(function () { client.connect(); autoConnectID = null; }, client.options.autoConnectDelay);
+    }
+
+    function closeDisconnectDialog(resetTimers) {
+      if (_disconnectTimerID) {
+        clearTimeout(_disconnectTimerID);
+        _disconnectTimerID = null;
+      }
+      if (resetTimers) {
+        _disconnectTimer = 0;
+        _disconnectCounter = 0;
+      }
+      $('#disconnectDialog')[0].close();
     }
   </script>
 </head>
@@ -2100,9 +2204,9 @@
       <button style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
     </div>
   </dialog>
-  <dialog id="disconnectDialog" style="z-index:1000;height:180px;width:450px;">
+  <dialog id="disconnectDialog" style="z-index:1000;height:205px;width:525px;">
     <div class="dialog-header" style="font-weight: bold">
-      <button type="button" class="close" data-dismiss="modal" onclick="$('#disconnectDialog')[0].close();">&times;</button>
+      <button type="button" class="close" data-dismiss="modal" onclick="closeDisconnectDialog();">&times;</button>
       <div style="padding-top: 2px;">Disconnected...</div>
     </div>
     <div class="dialog-body" style="padding-top:25px">
@@ -2118,19 +2222,22 @@
           </p>
         </p>
         <p style="font-weight: bold">Reconnecting in ...
-          <span>#</span>
+          <span id="disconnectTimer"></span>
         </p>
       </div>
       <div class="col-sm-5 form-group">
-        <button style="float: right" type="button" class="btn btn-primary btn-block" onclick="$('#disconnectDialog')[0].close();client.connect();" accesskey="r">
+        <button id="disconnectDialogReconnect" style="float: right" type="button" class="btn btn-primary btn-block" onclick="closeDisconnectDialog();client.connect();" accesskey="r">
           <i class="fa fa-refresh"></i>
           <u>R</u>econnect</button>
         <!--<button style="float: right" type="button" class="btn btn-primary" onclick="" accesskey="d"><i class="fa fa-terminal"></i><u>D</u>iffernt MUD...</button>-->
-        <button style="float: right" type="button" class="btn btn-default btn-block" onclick="$('#disconnectDialog')[0].close();" accesskey="o">
+        <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog();showCharacters();" accesskey="d">
+          <i class="fa fa-user"></i> Character
+          <u>M</u>anager...</button>
+        <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog();" accesskey="o">
           <i class="fa fa-pause"></i>
           <u>O</u>ffline</button>
         <!--<button style="float: right" type="button" class="btn btn-primary" onclick="" accesskey="c"><i class="fa fa-remove"></i><u>C</u>lose</button>-->
-        <button style="float: right" type="button" class="btn btn-danger btn-block" onclick="window.close();" accesskey="q">
+        <button style="float: right" type="button" class="btn btn-danger btn-block" onclick="closeDisconnectDialog();window.close();" accesskey="q">
           <i class="fa fa-power-off"></i>
           <u>Q</u>uit</button>
       </div>

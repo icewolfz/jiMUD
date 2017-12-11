@@ -3,6 +3,12 @@
 ## 0.4.32
 
 - **New:**
+  - On disconnect preferance, allows you to pick what happens when you are disconnected
+    - Nothing - do nothing
+    - Reconnect - reconnect using autoconnect rules
+    - Reconnect dialog - show a dialog with an auto reconnect count down with buttons to allow you to pick
+    - Show character manager - display the character manager
+    - Quit - quit the client
   - Immortal Tools:
     - Queue list now contains an status column to display any errors from upload/downloading
     - Queue list error icon now has error as tooltip

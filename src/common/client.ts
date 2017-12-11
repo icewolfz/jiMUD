@@ -3,7 +3,7 @@
 
 import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
-import { ParserLine, Size } from './types';
+import { ParserLine, Size, OnDisconnect } from './types';
 import { AnsiColorCode } from './ansi';
 import { stripHTML, parseTemplate, getScrollBarHeight, SortArrayByPriority, SortItemArrayByPriority, existsSync } from './library';
 import { Settings } from './settings';
@@ -32,7 +32,7 @@ export class Client extends EventEmitter {
     private _enableDebug: boolean = false;
     private _input: Input;
     private _auto: NodeJS.Timer = null;
-    private _autoError: boolean = false;
+    public errored: boolean = false;
     private _settingsFile: string = parseTemplate(path.join('{data}', 'settings.json'));
     private _itemCache: ItemCache = {
         triggers: null,
@@ -557,7 +557,7 @@ export class Client extends EventEmitter {
                 if (err.reason)
                     msg.push(err.reason);
                 if (err.code === 'ECONNREFUSED')
-                    this._autoError = true;
+                    this.errored = true;
                 if (err.code)
                     this.error(err.code + ' - ' + msg.join(', '));
                 else
@@ -828,12 +828,7 @@ export class Client extends EventEmitter {
 
         if (err === 'Error: ECONNRESET - read ECONNRESET.' && this.telnet.connected)
             this.close();
-
-        if (this.options.autoConnect && !this.telnet.connected && !this._autoError) {
-            if (this._auto)
-                clearTimeout(this._auto);
-            this._auto = setTimeout(() => { this.connect(); }, this.options.autoConnectDelay);
-        }
+        this.emit('reconnect');
         this.raise('error', msg);
     }
 
@@ -951,12 +946,10 @@ export class Client extends EventEmitter {
 
     public close() {
         this.telnet.close();
-        if (this._auto)
-            clearTimeout(this._auto);
     }
 
     public connect() {
-        this._autoError = false;
+        this.errored = false;
         this.emit('connecting');
         this.MSP.reset();
         this.display.ClearMXP();
