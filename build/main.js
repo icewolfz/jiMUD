@@ -1557,20 +1557,22 @@ ipcMain.on('reload-options', () => {
     winProfiles.webContents.send('reload-options');
   if (winEditor)
     winEditor.webContents.send('reload-options');
- 
+
   for (var name in windows) {
     if (!windows.hasOwnProperty(name))
       continue;
     if (!windows[name].window) {
       if (set.windows[name].options.show)
         showWindow(name, set.windows[name].options);
-      else if (set.windows[name].options.persistent)        
+      else if (set.windows[name].options.persistent)
         createNewWindow(name, set.windows[name].options);
       else
         continue;
     }
     else {
       windows[name].window.webContents.send('reload-options');
+      if (!set.windows[name].options)
+        continue;
       if (windows[name].window.setParentWindow)
         windows[name].window.setParentWindow(set.windows[name].options.alwaysOnTopClient ? win : null);
       windows[name].window.setAlwaysOnTop(set.windows[name].options.alwaysOnTop);
