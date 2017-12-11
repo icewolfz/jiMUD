@@ -2051,7 +2051,11 @@ function isFileSync(aPath) {
 }
 
 function showPrefs() {
-  var b = win.getBounds();
+  var b;
+  if (win)
+    b = win.getBounds();
+  else
+    b = { x: 0, y: 0, height: 600, width: 800 };
 
   let pref = new BrowserWindow({
     parent: win,
@@ -2068,7 +2072,6 @@ function showPrefs() {
     title: 'Preferences',
     icon: path.join(__dirname, '../assets/icons/png/preferences.png')
   });
-  //pref.webContents.openDevTools()
   pref.setMenu(null);
   pref.on('closed', () => {
     pref = null;
