@@ -3,9 +3,9 @@
 ## 0.4.32
 
 - **New:**
-  - On disconnect preferance, allows you to pick what happens when you are disconnected
+  - On disconnect preference, allows you to pick what happens when you are disconnected
     - Nothing - do nothing
-    - Reconnect - reconnect using autoconnect rules
+    - Reconnect - reconnect using auto connect rules
     - Reconnect dialog - show a dialog with an auto reconnect count down with buttons to allow you to pick
     - Show character manager - display the character manager
     - Quit - quit the client
@@ -21,8 +21,8 @@
     - Fix creating sub folders in current local folder
     - Statusbar now shows correct remote file counts
     - Mark items with an error icon instead of just removing
-  - Fixed issue where new client window was created instead of a subwindow
-  - When reloading options, close all childwindows and recreate based on new options
+  - Fixed issue where new client window was created instead of a sub window
+  - When reloading options, close all child windows and recreate based on new options
 
 ## 0.4.31 2017-12-05
 
