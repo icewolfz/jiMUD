@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Bug in disconnect code
+  - Fix an issue with gamepads
 
 ## 0.4.32 2017-12-12
 

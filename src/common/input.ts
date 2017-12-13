@@ -295,6 +295,11 @@ export class Input extends EventEmitter {
     }
 
     private updatePads() {
+        /*
+Error: TypeError: Cannot read property '0' of null
+    at Input.updatePads (C:\Users\Admin\AppData\Local\Programs\jimud\resources\app.asar\build\js\input.js:1:6584)
+    at requestAnimationFrame (C:\Users\Admin\AppData\Local\Programs\jimud\resources\app.asar\build\js\input.js:1:7599)        
+        */
         if (this._controllersCount === 0 || !this.client.options.gamepads)
             return;
         const controllers = navigator.getGamepads();
@@ -308,6 +313,8 @@ export class Input extends EventEmitter {
             const bl = controller.buttons.length;
             let i;
             let macros;
+            if (!this._gamepadCaches)
+                this._gamepadCaches = [];
             if (!this._gamepadCaches[c])
                 this._gamepadCaches[c] = FilterArrayByKeyValue(this.client.macros, 'gamepad', c + 1);
             macros = this._gamepadCaches[c];
