@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.32
+## 0.4.32 2017-12-12
 
 - **New:**
   - On disconnect preference, allows you to pick what happens when you are disconnected
