@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.4.33
+## 0.4.
+
+- **Fixed:**
+  - Bug in disconnect code
 
 ## 0.4.32 2017-12-12
 

@@ -1018,7 +1018,7 @@
       });
 
       client.on('reconnect', () => {
-        if (client.errored || this.telnet.connected)
+        if (client.errored || client.connected)
           return;
         switch (client.options.onDisconnect) {
           case 1: //reconnect
