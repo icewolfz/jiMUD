@@ -701,7 +701,7 @@
 
       client.version = version;
       client.host = "www.shadowmud.com";
-      client.port = client.options.dev ? 1035 : 1030;
+      client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
       client.telnet.GMCPSupports.push("Room 1");
       client.telnet.GMCPSupports.push("IED 1");
       //client.telnet.GMCPSupports.push('Comm 1');
@@ -902,7 +902,7 @@
         buildCaptures();
         if (client.options.spellchecking)
           loadSpellchecker();
-        client.port = client.options.dev ? 1035 : 1030;
+        client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
         if (_logger)
           _logger.postMessage({
             action: 'options', args: {
@@ -1767,6 +1767,7 @@
         $("#character-name").text(char);
         _backup.mapFile = remote.getGlobal('mapFile');
       }
+      client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
     });
 
     ipcRenderer.on('load-default', (event) => {
@@ -1894,7 +1895,7 @@
     function showCharacters() {
       if (_cLoading) return;
       _cLoading = true;
-      window.open('characters.html', 'modal', 'backgroundColor=#fff,height=440,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+      window.open('characters.html', 'modal', 'backgroundColor=#fff,height=480,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
     }
 
     function showImmortalTools() {

@@ -31,6 +31,7 @@ global.profiles = null;
 global.character = null;
 global.characterLogin = null;
 global.characterPass = null;
+global.dev = false;
 global.title = '';
 global.debug = false;
 
@@ -65,6 +66,7 @@ function loadCharacter(char) {
   global.settingsFile = parseTemplate(characters.characters[char].settings);
   global.mapFile = parseTemplate(characters.characters[char].map);
   global.characterLogin = characters.characters[char].name || char;
+  global.dev = characters.characters[char].dev;
   global.characterPass = characters.characters[char].password || '';
   global.title = char;
   updateTray();
@@ -1031,7 +1033,7 @@ function updateTray() {
   let title = global.title;
   if (!title || title.length === 0)
     title = global.character;
-  if (set && set.dev)
+  if ((set && set.dev) || global.dev)
     d = " to Development";
   switch (overlay) {
     case 1:
@@ -1484,8 +1486,27 @@ ipcMain.on('load-default', (event) => {
 ipcMain.on('load-char', (event, char) => {
   //already loaded so no need to switch
   if (char === global.character)
+  {
+    loadCharacter(char);
+    win.webContents.send('load-char', char);
     return;
+  }
   closeWindows();
+  set.windows['main'] = getWindowState('main', win);
+  if (winMap) {
+    set.windows['mapper'] = getWindowState('mapper', winMap);
+    winMap.webContents.executeJavaScript('save();');
+    winMap.destroy();
+  }
+  if (winEditor) {
+    set.windows['editor'] = getWindowState('editor', winEditor);
+    winEditor.destroy();
+  }
+  if (winChat) {
+    set.windows['chat'] = getWindowState('chat', winChat);
+    winChat.destroy();
+  }
+  set.save(global.settingsFile);
   loadCharacter(char);
   set = settings.Settings.load(global.settingsFile);
   if (win && win.webContents)
@@ -1513,10 +1534,12 @@ ipcMain.on('load-char', (event, char) => {
     showEditor(true);
   else if (set.editorPersistent)
     createEditor();
+
   if (set.showChat)
     showChat(true);
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
+
   for (var name in set.windows) {
     if (set.windows[name].options) {
       if (set.windows[name].options.show)

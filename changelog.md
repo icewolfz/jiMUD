@@ -1,10 +1,14 @@
 # Changelog
 
-## 0.4.
+## 0.4.33 2017-12-12
 
+- **New:**
+  - Add dev setting per character login to allow easier development login
 - **Fixed:**
   - Bug in disconnect code
   - Fix an issue with gamepads
+  - Fix chat, mapper, and editor windows when characters are changed so they close and reopen as needed
+  - Fix character data not saving before loading new character
 
 ## 0.4.32 2017-12-12
 

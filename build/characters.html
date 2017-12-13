@@ -174,6 +174,12 @@
                 changed++;
                 characters.load = current;
             }
+
+            if ($("#dev").prop('checked') != characters.characters[current].dev) {
+                changed++;
+                characters.characters[current].dev = $("#dev").prop('checked');
+            }
+
             v = $("#password").val() || '';
             if (v && v.length > 0) {
                 var key, iv;
@@ -276,8 +282,9 @@
                 $("#character-editor button").prop('disabled', false);
                 $("#settings").val(characters.characters[current].settings);
                 $("#map").val(characters.characters[current].map);
-                $("#name").val(characters.characters[current].name||current);
+                $("#name").val(characters.characters[current].name || current);
                 $("#auto-load").prop('checked', current === characters.load);
+                $("#dev").prop('checked', characters.characters[current].dev);
 
                 if (characters.characters[current].password && characters.characters[current].password.length > 0) {
                     var pass = characters.characters[current].password.split(':');
@@ -606,7 +613,10 @@
                 defaultId: 1,
             });
             if (response === 0)
+            {
+                saveCharacters();
                 ipcRenderer.send('load-char', name);
+            }
         }
 
         function loadDefault() {
@@ -618,7 +628,10 @@
                 defaultId: 1,
             });
             if (response === 0)
+            {
+                saveCharacters();
                 ipcRenderer.send('load-default', name);
+            }
         }
 
         function showGetName(name, val, type, callback) {
@@ -767,6 +780,10 @@
                     <input disabled="disabled" type="checkbox" id="auto-load" /> Auto load
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
                 </label>
+                <label class="control-label">
+                    <input disabled="disabled" type="checkbox" id="dev" /> Development
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Connect to development port</span>
+                </label>                
             </div>
         </div>
     </div>
