@@ -300,6 +300,8 @@ export class Input extends EventEmitter {
         const controllers = navigator.getGamepads();
         let c = 0;
         const cl = controllers.length;
+        if (!this._gamepadCaches && cl > 0)
+            this._gamepadCaches = [];
         for (; c < cl; c++) {
             const controller = controllers[c];
             if (!controller) continue;
@@ -308,8 +310,6 @@ export class Input extends EventEmitter {
             const bl = controller.buttons.length;
             let i;
             let macros;
-            if (!this._gamepadCaches)
-                this._gamepadCaches = [];
             if (!this._gamepadCaches[c])
                 this._gamepadCaches[c] = FilterArrayByKeyValue(this.client.macros, 'gamepad', c + 1);
             macros = this._gamepadCaches[c];
