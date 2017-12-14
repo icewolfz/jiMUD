@@ -1485,8 +1485,7 @@ ipcMain.on('load-default', (event) => {
 
 ipcMain.on('load-char', (event, char) => {
   //already loaded so no need to switch
-  if (char === global.character)
-  {
+  if (char === global.character) {
     loadCharacter(char);
     win.webContents.send('load-char', char);
     return;
@@ -1556,9 +1555,8 @@ ipcMain.on('load-char', (event, char) => {
   }
 });
 
-ipcMain.on('reload-options', () => {
-  closeWindows();
-  set.save(global.settingsFile);
+ipcMain.on('reload-options', (event, save) => {
+  closeWindows(save);
   if (win && win.webContents)
     win.webContents.send('reload-options');
   set = settings.Settings.load(global.settingsFile);
@@ -2803,7 +2801,7 @@ function loadWindowScripts(window, name) {
   }
 }
 
-function closeWindows() {
+function closeWindows(save) {
   if (!set)
     set = settings.Settings.load(global.settingsFile);
   var name;
@@ -2817,5 +2815,6 @@ function closeWindows() {
     windows[name].window.destroy();
   }
   windows = {};
-  set.save(global.settingsFile);
+  if (save)
+    set.save(global.settingsFile);
 }

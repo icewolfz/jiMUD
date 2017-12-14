@@ -1065,7 +1065,7 @@
     function saveSettings() {
       _settings.chat.lines = $("#chat-lines").val().split(',');
       _settings.save(remote.getGlobal('settingsFile'));
-      ipcRenderer.send('reload-options');
+      ipcRenderer.send('reload-options', false);
       window.close();
     }
   </script>
