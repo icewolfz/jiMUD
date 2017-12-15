@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.34 2017-12-13
+## 0.4.34 2017-12-14
 
 - **Fixed:**
   - Preferences where not being saved, introduced in 0.4.32 with correcting windows open
