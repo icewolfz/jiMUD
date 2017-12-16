@@ -2,6 +2,9 @@
 
 ## 0.4.35
 
+- **Fixed:**
+  - Rebuild context and buttons after a profile enabled state has changed
+
 ## 0.4.34 2017-12-14
 
 - **Fixed:**
