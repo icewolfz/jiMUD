@@ -3729,7 +3729,10 @@ function UpdateEditor(editor, item, options?) {
     $('div[id$=-editor]').css('display', 'none');
     $('#' + editor + '-editor').css('display', '');
     $('#editor-title').text(editor + ': ' + GetDisplay(item));
-    $('#editor-enabled').prop('checked', item.enabled);
+    if (editor === 'profile')
+        $('#editor-enabled').prop('checked', _enabled.indexOf(item.name.toLowerCase()) !== -1);
+    else
+        $('#editor-enabled').prop('checked', item.enabled);
     if (typeof options['pre'] === 'function')
         options['pre']();
     let prop;
@@ -3844,6 +3847,23 @@ ipcRenderer.on('profile-item-added', (event, type, profile, item) => {
 ipcRenderer.on('profile-item-removed', (event, type, profile, idx) => {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
+});
+
+ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
+    const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);
+    if (!parent) return;
+    _enabled.filter((a) => { return a !== profile.toLowerCase(); });
+    if (enabled)
+        _enabled.push(profile.toLowerCase());
+    if (_enabled.length === 0)
+        _enabled.push('default');
+    if (enabled)
+        $('#profile-tree').treeview('checkNode', [parent, { silent: true }]);
+    else
+        $('#profile-tree').treeview('uncheckNode', [parent, { silent: true }]);
+    const t = currentNode.dataAttr.type;
+    if (currentProfile.name === profile && t === 'profile' || t === 'aliases' || t === 'triggers' || t === 'buttons' || t === 'macros' || t === 'contexts')
+        $('#editor-enabled').prop('checked', enabled);
 });
 
 function exportAll() {

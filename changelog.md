@@ -4,6 +4,9 @@
 
 - **Fixed:**
   - Rebuild context and buttons after a profile enabled state has changed
+  - Profile Manager:
+    - When profile toggled from menu and profile manager is open update the enabled state
+    - Enabled check state is not correctly set when profile is selected, causing the profile to be set based on previous selected item
 
 ## 0.4.34 2017-12-14
 

@@ -373,7 +373,7 @@ export class Client extends EventEmitter {
         this.saveOptions();
         this.clearCache();
         this.startAlarms();
-        this.emit('profile-updated', profile);
+        this.emit('profile-toggled', profile, p.indexOf(profile) !== -1);
     }
 
     public startAlarms() {

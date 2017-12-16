@@ -1885,6 +1885,11 @@ ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
     winProfiles.webContents.send('profile-item-removed', type, profile, idx);
 });
 
+ipcMain.on('profile-toggled', (event, profile, enabled) => {
+  if (winProfiles)
+    winProfiles.webContents.send('profile-toggled', profile, enabled);
+});
+
 ipcMain.on('ondragstart', (event, files, icon) => {
   if (!files || files.length === 0) return;
   if (typeof (files) === "string")

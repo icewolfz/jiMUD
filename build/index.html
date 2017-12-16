@@ -712,6 +712,14 @@
         ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
         buildContextMenu();
         buildButtons();
+        ipcRenderer.send('profile-updated', profile);
+      });
+
+      client.on('profile-toggled', (profile, enabled) => {
+        ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: enabled });
+        buildContextMenu();
+        buildButtons();
+        ipcRenderer.send('profile-toggled', profile, enabled);
       });
 
       client.on('profiles-updated', () => {
