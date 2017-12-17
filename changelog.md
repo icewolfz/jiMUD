@@ -8,6 +8,7 @@
   - Profile Manager:
     - When profile toggled from menu and profile manager is open update the enabled state
     - Enabled check state is not correctly set when profile is selected, causing the profile to be set based on previous selected item
+  - Mapper: fix minor issue when trying to process data before the mapper window is ready
 
 ## 0.4.34 2017-12-14
 

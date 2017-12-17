@@ -335,7 +335,7 @@
 
         updateMenuItem({ menu: 'edit|Remove current room', enabled: mapper.current.ID && room.ID });
         updateMenuItem({ menu: 'actions|highlight path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
-        updateMenuItem({ menu: 'actions|walk path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });        
+        updateMenuItem({ menu: 'actions|walk path', enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
         ipcRenderer.send('setting-changed', { type: 'mapper', name: 'active', value: room });
       });
 
@@ -641,7 +641,12 @@
     });
 
     ipcRenderer.on('GMCP-received', (event, data) => {
-      mapper.processGMCP(data.mod, data.obj);
+      if (!mapper)
+        setTimeout(() => {
+          mapper.processGMCP(data.mod, data.obj);
+        });
+      else
+        mapper.processGMCP(data.mod, data.obj);
     });
 
     ipcRenderer.on('reload-options', (event) => {
