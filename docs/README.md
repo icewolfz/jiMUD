@@ -7,10 +7,16 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
   To build jiMUD you must have node, npm, node-sass, typescript 2.3+, cPython 2.7.x installed
   Steps to build:
 
-### Windows
+### **Windows**
 
 1. npm install - install all the node modules
-1. npm run rebuild:win64 - rebuild sqlite3 and spellchecker
+1. npm run release:win64 - build 64bit installer and portable exe
+    - npm run release:win62 - build 32bit version installer and portable exe
+
+#### Advanced Step by step
+
+1. npm install - install all the node modules
+1. npm run rebuild:win64 - rebuild native modules for t
     - npm run rebuild:win32 - rebuild 32bit version, it will override any other windows versions
 1. npm run compile - will compile typescript and scss files into js and css files
 1. npm run build:win64 - builds application files in dist/jiMUD-win32-x64
@@ -21,10 +27,17 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
     - npm run build:winportable32 - build win 32 bit window's portable files, requires 32bit build folder
     - npm run build:winportable64 - build win64 bit window's portable files, requires 64bit build folder
 
-### Linux
+### **Linux**
 
 1. npm install - install all the node modules
-1. npm run rebuild:linux64 - rebuild sqlite3 and spellchecker
+1. npm run release:linux64 - build 64bit tar, deb, appImage, and rpm packages
+    - npm run release:linux32 - build 32bit tar, deb, appImage, and rpm packages
+    - npm run release:linuxarm - build arm tar, deb, appImage, and rpm packages
+
+#### Advanced Step by step
+
+1. npm install - install all the node modules
+1. npm run rebuild:linux64 - rebuild native modules for 64bit
     - npm run rebuild:linux32 - rebuild 32bit version, it will override any other windows versions
     - npm run rebuild:linuxarm - rebuild for arm
 1. npm run compile - will compile typescript and scss files into js and css files

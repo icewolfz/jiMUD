@@ -7,7 +7,7 @@
   - Profile menu states where not updated based on new setting data
   - Profile Manager:
     - When profile toggled from menu and profile manager is open update the enabled state
-    - Enabled check state is not correctly set when profile is selected, causing the profile to be set based on previous selected item
+    - Enabled check state was not correctly set when profile is selected, causing the profile to be set based on previous selected item
   - Mapper: fix minor issue when trying to process data before the mapper window is ready
 
 ## 0.4.34 2017-12-14
@@ -21,7 +21,7 @@
   - Add dev setting per character login to allow easier development login
 - **Fixed:**
   - Bug in disconnect code
-  - Fix an issue with gamepads
+  - Fix an issue with game pads
   - Fix chat, mapper, and editor windows when characters are changed so they close and reopen as needed
   - Fix character data not saving before loading new character
 
@@ -161,7 +161,7 @@
 ## 0.4.22 2017-10-06
 
 - **New:**
-  - Experimental gamepad support
+  - Experimental game pad support
   - Mapper: Added zoom in, zoom out, zoom reset, toggle developer tools, and toggle full screen
 - **Fixed:**
   - Chat capture: Capture all lines no matter what characters they may contain when capture all lines is enabled
