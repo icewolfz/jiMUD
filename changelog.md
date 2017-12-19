@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.35
+## 0.4.35 2017-12-18
 
 - **Fixed:**
   - Rebuild context and buttons after a profile enabled state has changed
