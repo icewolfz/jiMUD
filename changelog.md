@@ -2,6 +2,9 @@
 
 ## 0.4.36
 
+- **Fixed:**
+  - Immortal tools: shift selection after using keyboard search would select wrong items
+
 ## 0.4.35 2017-12-18
 
 - **Fixed:**

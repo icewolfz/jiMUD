@@ -1782,6 +1782,8 @@
                 //row.node().scrollIntoView();
                 //$("body")[0].scrollTop = 0
                 row.select();
+                //hack, seems this gets set wrong and causes shift click selection to act wonky, setting to current item index seems to fix it
+                localTable.context[0]._select_lastCell.row = row.index();
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
                     pKey = key;
@@ -1831,6 +1833,8 @@
                 //row.node().scrollIntoView();
                 //$("body")[0].scrollTop = 0
                 row.select();
+                //hack, seems this gets set wrong and causes shift click selection to act wonky, setting to current item index seems to fix it
+                remoteTable.context[0]._select_lastCell.row = row.index();
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
                     pKey = key;
