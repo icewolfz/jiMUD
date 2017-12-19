@@ -975,6 +975,8 @@
             autoConnect();
             break;
           case 2: //dialog
+            if ($("#disconnectDialog")[0].open)
+              return;
             if (_disconnectTimerID)
               clearTimeout(_disconnectTimerID);
 

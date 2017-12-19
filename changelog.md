@@ -9,6 +9,7 @@
     - When profile toggled from menu and profile manager is open update the enabled state
     - Enabled check state was not correctly set when profile is selected, causing the profile to be set based on previous selected item
   - Mapper: fix minor issue when trying to process data before the mapper window is ready
+  - Dont attempt to show disconnect dialog if already open
 
 ## 0.4.34 2017-12-14
 
