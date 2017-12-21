@@ -445,9 +445,10 @@
       $("#lock").css('display', client.options.buttons.lock ? '' : 'none');
       $("#map").css('display', client.options.buttons.map ? '' : 'none');
 
-      client.display.update();
       _status.updateInterface();
       buildButtons();
+      client.display.update();      
+      client.UpdateWindow();      
       updateMenu();
     }
 

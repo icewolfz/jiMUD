@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Immortal tools: shift selection after using keyboard search would select wrong items
+  - Send NAWS updates when status/button bar are hidden so that the mud has new display width
 
 ## 0.4.35 2017-12-18
 
