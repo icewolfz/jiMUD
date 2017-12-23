@@ -7,6 +7,8 @@
     - Shift selection after using keyboard search would select wrong items
     - Task bar progress now is based on total active items now just current item
     - Downloads/upload tracking counts where not always correct
+    - Quick toggle open in editor button when downloading files, making it easier to disable when downloading bulk files, and on for single quick changes
+    - Open/Open with editor local buttons for easier opening of selected items
   - Send NAWS updates when status/button bar are hidden so that the mud has new display width
 
 ## 0.4.35 2017-12-18

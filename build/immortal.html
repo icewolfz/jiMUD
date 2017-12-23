@@ -40,7 +40,7 @@
 
         var _ied, options;
         var _local = {}, _remote = {}, _downloads = {};
-        var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0, active: 0};
+        var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0, active: 0 };
         var localTable, remoteTable, queueTable, key = '', pKey, keyClearID;
         var logView;
         var watcher;
@@ -1002,6 +1002,8 @@
                 $("#btn-rename-local").prop('disabled', !localSelected);
                 $("#btn-delete-local").prop('disabled', !localSelected);
                 $("#btn-upload-local").prop('disabled', !localSelected);
+                $("#btn-open-local").prop('disabled', !localSelected);
+                $("#btn-editor-local").prop('disabled', !(localSelected && options.editor && options.editor.length > 0));
 
                 $("#btn-rename-remote").prop('disabled', !remoteSelected);
                 $("#btn-delete-remote").prop('disabled', !remoteSelected);
@@ -1286,6 +1288,10 @@
             _ied = new IED(options.local, options.remote);
             _ied.bufferSize = options.bufferSize;
             _ied.useTemp = options.tempFile;
+            if (options.openEditor)
+                $('#btn-editor-remote').addClass('active');
+            else
+                $('#btn-editor-remote').removeClass('active');
             _ied.on('init', () => {
                 if (!options.remote || options.remote.length === 0)
                     _ied.getDir(".");
@@ -2564,22 +2570,12 @@
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Open...',
-                        click: () => {
-                            var selected = localTable.rows({ selected: true }).data().pluck('path');
-                            for (var d = 0, dl = selected.length; d < dl; d++)
-                                openItem(selected[d]);
-                        }
+                        click: () => openItems
                     }));
                     if (options.editor && options.editor.length > 0)
                         c.append(new MenuItem({
                             label: 'Open with editor...',
-                            click: () => {
-                                var selected = localTable.rows({ selected: true }).data().pluck('path');
-                                for (var d = 0, dl = selected.length; d < dl; d++) {
-                                    var p = child_process.spawn(options.editor, [selected[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
-                                    p.unref();
-                                }
-                            }
+                            click: () => openWithEditor
                         }));
                 }
             }
@@ -3490,7 +3486,7 @@
                 _qUpdateTracker = null;
                 _qUpdateID = null;
                 ipcRenderer.send('set-progress-window', 'immortal', { value: _qUpdate[_qUpdate.length - 1].percent });
-                ipcRenderer.send('set-progress', { value: _qUpdate[_qUpdate.length - 1].percent });                
+                ipcRenderer.send('set-progress', { value: _qUpdate[_qUpdate.length - 1].percent });
                 return;
             }
             var uc = _qUpdate.length;
@@ -3516,7 +3512,7 @@
             var rows = queueTable.rows(function (idx, data) {
                 return data.state === ItemState.working;
             });
-            info.active = rows.count();            
+            info.active = rows.count();
             if (info.active > 1) {
                 ipcRenderer.send('set-progress-window', 'immortal', { value: 1 / info.active });
                 ipcRenderer.send('set-progress', { value: 1 / info.active });
@@ -3573,7 +3569,30 @@
                 }
                 doUpdate(_updating);
             });
-        }        
+        }
+
+        function toggleEditor() {
+            options.openEditor = !options.openEditor;
+            if (options.openEditor)
+                $('#btn-editor-remote').addClass('active');
+            else
+                $('#btn-editor-remote').removeClass('active');
+            saveOptions();
+        }
+
+        function openItems() {
+            var selected = localTable.rows({ selected: true }).data().pluck('path');
+            for (var d = 0, dl = selected.length; d < dl; d++)
+                openItem(selected[d]);
+        }
+
+        function openWithEditor() {
+            var selected = localTable.rows({ selected: true }).data().pluck('path');
+            for (var d = 0, dl = selected.length; d < dl; d++) {
+                var p = child_process.spawn(options.editor, [selected[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                p.unref();
+            }
+        }
     </script>
 </head>
 
@@ -3610,6 +3629,15 @@
                                     <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
                                     <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
                                 </span>
+                            </button>
+                        </div>
+
+                        <div class="btn-group" role="group">
+                            <button id="btn-open-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Open..." onclick="openItems()">
+                                <i class="fa fa-external-link"></i>
+                            </button>
+                            <button id="btn-editor-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Open with editor..." onclick="openWithEditor()">
+                                <i class="fa fa-edit"></i>
                             </button>
                         </div>
                     </label>
@@ -3678,6 +3706,9 @@
                                 <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
                                 <i class="fa fa-plus fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
                             </span>
+                        </button>
+                        <button id="btn-editor-remote" type="button" class="btn btn-default btn-xs" title="Open in editor" onclick="toggleEditor()">
+                            <i class="fa fa-pencil"></i>
                         </button>
                     </label>
 
