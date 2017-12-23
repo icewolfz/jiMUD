@@ -3,7 +3,10 @@
 ## 0.4.36
 
 - **Fixed:**
-  - Immortal tools: shift selection after using keyboard search would select wrong items
+  - Immortal tools: 
+    - Shift selection after using keyboard search would select wrong items
+    - Task bar progress now is based on total active items now just current item
+    - Downloads/upload tracking counts where not always correct
   - Send NAWS updates when status/button bar are hidden so that the mud has new display width
 
 ## 0.4.35 2017-12-18

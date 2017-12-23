@@ -40,7 +40,7 @@
 
         var _ied, options;
         var _local = {}, _remote = {}, _downloads = {};
-        var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0 };
+        var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0, active: 0};
         var localTable, remoteTable, queueTable, key = '', pKey, keyClearID;
         var logView;
         var watcher;
@@ -1312,6 +1312,7 @@
             _ied.on('reset', () => {
                 info.downloads = 0;
                 info.uploads = 0;
+                info.active = 0;
                 queueTable.rows().remove();
                 doUpdate(9);
                 ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
@@ -3452,7 +3453,7 @@
                         return data.direction === '<-';
                     });
                     if (rows)
-                        info.uploads = rows.length;
+                        info.uploads = rows.count();
                     else
                         info.uploads = 0;
                 }
@@ -3461,14 +3462,24 @@
                         return data.direction === '->';
                     });
                     if (rows)
-                        info.downloads = rows.length;
+                        info.downloads = rows.count();
                     else
                         info.downloads = 0;
                 }
             }
+            rows = queueTable.rows(function (idx, data) {
+                return data.state === ItemState.working;
+            });
+            info.active = rows.count();
             doUpdate(25);
-            ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
-            ipcRenderer.send('set-progress', { value: -1 });
+            if (info.active > 0) {
+                ipcRenderer.send('set-progress-window', 'immortal', { value: 1 / info.active });
+                ipcRenderer.send('set-progress', { value: 1 / info.active });
+            }
+            else {
+                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
+                ipcRenderer.send('set-progress', { value: -1 });
+            }
             _remove = null;
             _removeID = null;
         }
@@ -3478,6 +3489,8 @@
                 _qUpdate = null;
                 _qUpdateTracker = null;
                 _qUpdateID = null;
+                ipcRenderer.send('set-progress-window', 'immortal', { value: _qUpdate[_qUpdate.length - 1].percent });
+                ipcRenderer.send('set-progress', { value: _qUpdate[_qUpdate.length - 1].percent });                
                 return;
             }
             var uc = _qUpdate.length;
@@ -3500,8 +3513,18 @@
                     doUpdate(8);
                 }
             }
-            ipcRenderer.send('set-progress-window', 'immortal', { value: _qUpdate[_qUpdate.length - 1].percent });
-            ipcRenderer.send('set-progress', { value: _qUpdate[_qUpdate.length - 1].percent });
+            var rows = queueTable.rows(function (idx, data) {
+                return data.state === ItemState.working;
+            });
+            info.active = rows.count();            
+            if (info.active > 1) {
+                ipcRenderer.send('set-progress-window', 'immortal', { value: 1 / info.active });
+                ipcRenderer.send('set-progress', { value: 1 / info.active });
+            }
+            else {
+                ipcRenderer.send('set-progress-window', 'immortal', { value: _qUpdate[_qUpdate.length - 1].percent });
+                ipcRenderer.send('set-progress', { value: _qUpdate[_qUpdate.length - 1].percent });
+            }
             _qUpdate = null;
             _qUpdateTracker = null;
             _qUpdateID = null;
