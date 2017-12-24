@@ -818,7 +818,7 @@
             localTable.rows.add(all);
             $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
             $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
-            doUpdate(3);
+            doUpdate(19);
         }
 
         function updateRemote(p, dir) {
@@ -892,7 +892,7 @@
             }
             remoteTable.rows().remove();
             remoteTable.rows.add(all);
-            doUpdate(4);
+            doUpdate(20);
             $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
             $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
@@ -1002,6 +1002,7 @@
                 $("#btn-rename-local").prop('disabled', !localSelected);
                 $("#btn-delete-local").prop('disabled', !localSelected);
                 $("#btn-upload-local").prop('disabled', !localSelected);
+                $("#btn-reveal-local").prop('disabled', !localSelected);
                 $("#btn-open-local").prop('disabled', !localSelected);
                 $("#btn-editor-local").prop('disabled', !(localSelected && options.editor && options.editor.length > 0));
 
@@ -2558,24 +2559,18 @@
                 c.append(new MenuItem({ type: 'separator' }));
                 c.append(new MenuItem({
                     label: 'Reveal in explorer...',
-                    click: () => {
-                        {
-                            var selected = localTable.rows({ selected: true }).data().pluck('path');
-                            for (var d = 0, dl = selected.length; d < dl; d++)
-                                shell.showItemInFolder(selected[d]);
-                        }
-                    }
+                    click: revealExplorer
                 }));
                 if (!dirs) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Open...',
-                        click: () => openItems
+                        click: openItems
                     }));
                     if (options.editor && options.editor.length > 0)
                         c.append(new MenuItem({
                             label: 'Open with editor...',
-                            click: () => openWithEditor
+                            click: openWithEditor
                         }));
                 }
             }
@@ -3593,6 +3588,12 @@
                 p.unref();
             }
         }
+
+        function revealExplorer() {
+            var selected = localTable.rows({ selected: true }).data().pluck('path');
+            for (var d = 0, dl = selected.length; d < dl; d++)
+                shell.showItemInFolder(selected[d]);
+        }
     </script>
 </head>
 
@@ -3633,6 +3634,9 @@
                         </div>
 
                         <div class="btn-group" role="group">
+                            <button id="btn-reveal-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Reveal in explorer" onclick="revealExplorer()">
+                                <i class="fa fa-folder"></i>
+                            </button>
                             <button id="btn-open-local" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Open..." onclick="openItems()">
                                 <i class="fa fa-external-link"></i>
                             </button>

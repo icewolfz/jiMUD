@@ -6,11 +6,12 @@
   - Immortal tools:
     - Task bar progress now is based on total active items now just current item
     - Quick toggle open in editor button when downloading files, making it easier to disable when downloading bulk files, and on for single quick changes
-    - Open/Open with editor local buttons for easier opening of selected items
+    - Reveal in explorer, Open, and Open with editor local buttons for easier opening of selected items
 - **Fixed:**
   - Immortal tools:
     - Shift selection after using keyboard search would select wrong items
     - Downloads/upload tracking counts where not always correct
+    - Update local/remote toolbar button states when the folder is changed
   - Send NAWS updates when status/button bar are hidden so that the mud has new display width
 
 ## 0.4.35 2017-12-18
