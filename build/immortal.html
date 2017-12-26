@@ -1414,6 +1414,7 @@
                         }
                         else
                             info.uploads++;
+                        info.active++;
                         return {
                             "local": val.local,
                             "direction": val.download ? "<-" : "->",
@@ -1444,6 +1445,7 @@
                         "state": item.state,
                         'error': item.error
                     });
+                    info.active++;
                 }
                 doUpdate(9);
             });
@@ -2897,7 +2899,7 @@
             //if (!existsSync(path.join(options.local, path.basename(p))))
             //fs.mkdirSync(path.join(options.local, path.basename(p)));
             pTotal = 1;
-            _ied.getDir(p, true, 'download:'+p);
+            _ied.getDir(p, true, 'download:' + p);
         }
 
         function downNext(file, local) {
@@ -3458,14 +3460,18 @@
                         info.downloads = 0;
                 }
             }
+            /*
             rows = queueTable.rows(function (idx, data) {
                 return data.state === ItemState.working;
             });
             info.active = rows.count();
+            */
             doUpdate(25);
+            if (info.downloads + info.uploads === 0)
+                info.active = 0;
             if (info.active > 0) {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: 1 / info.active });
-                ipcRenderer.send('set-progress', { value: 1 / info.active });
+                ipcRenderer.send('set-progress-window', 'immortal', { value: 1.0 - (info.downloads + info.uploads) / info.active });
+                ipcRenderer.send('set-progress', { value: 1.0 - (info.downloads + info.uploads) / info.active });
             }
             else {
                 ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
@@ -3480,8 +3486,8 @@
                 _qUpdate = null;
                 _qUpdateTracker = null;
                 _qUpdateID = null;
-                ipcRenderer.send('set-progress-window', 'immortal', { value: _qUpdate[_qUpdate.length - 1].percent });
-                ipcRenderer.send('set-progress', { value: _qUpdate[_qUpdate.length - 1].percent });
+                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
+                ipcRenderer.send('set-progress', { value: -1 });
                 return;
             }
             var uc = _qUpdate.length;
@@ -3504,13 +3510,17 @@
                     doUpdate(8);
                 }
             }
+            /*
             var rows = queueTable.rows(function (idx, data) {
                 return data.state === ItemState.working;
             });
             info.active = rows.count();
-            if (info.active > 1) {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: 1 / info.active });
-                ipcRenderer.send('set-progress', { value: 1 / info.active });
+            */
+            if (info.downloads + info.uploads === 0)
+                info.active = 0;
+            if (info.active > 0) {
+                ipcRenderer.send('set-progress-window', 'immortal', { value: 1.0 - (info.downloads + info.uploads) / info.active });
+                ipcRenderer.send('set-progress', { value: 1.0 - (info.downloads + info.uploads) / info.active });
             }
             else {
                 ipcRenderer.send('set-progress-window', 'immortal', { value: _qUpdate[_qUpdate.length - 1].percent });

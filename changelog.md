@@ -3,7 +3,9 @@
 ## 0.4.37
 
 - **Fixed:**
-  - Immortal tools: Downloading multiple folders at once was broken
+  - Immortal tools:
+    - Downloading multiple folders at once was broken
+    - Queue progress is more accurate
 
 ## 0.4.36 2017-12-25
 
