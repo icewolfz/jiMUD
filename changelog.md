@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.36
+## 0.4.36 2017-12-25
 
 - **New:**
   - Immortal tools:
