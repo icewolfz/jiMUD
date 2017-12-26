@@ -829,7 +829,8 @@ export class Client extends EventEmitter {
 
         if (err === 'Error: ECONNRESET - read ECONNRESET.' && this.telnet.connected)
             this.close();
-        this.emit('reconnect');
+        else
+            this.emit('reconnect');
         this.raise('error', msg);
     }
 

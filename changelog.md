@@ -13,6 +13,7 @@
     - Downloads/upload tracking counts where not always correct
     - Update local/remote toolbar button states when the folder is changed
   - Send NAWS updates when status/button bar are hidden so that the mud has new display width
+  - Minor issue where disconnect code was ran with reconnect code causing double disconnect dialogs.
 
 ## 0.4.35 2017-12-18
 
