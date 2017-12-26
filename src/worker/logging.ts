@@ -89,6 +89,7 @@ let timeStamp: number;
 let fTimeStamp: string = '';
 let logging: boolean = false;
 let currentFile: string = '';
+let writingHeader = false;
 
 self.addEventListener('message', (e: MessageEvent) => {
     if (!e.data) return;
@@ -171,10 +172,26 @@ self.addEventListener('message', (e: MessageEvent) => {
 
 function fileChanged() {
     if ((options.what & Log.Html) === Log.Html) {
+        const f = path.join(options.path, fTimeStamp) + '.htm';
+        buildFilename();
+        if (isFileSync(f) && f !== currentFile + '.htm')
+            fs.renameSync(f, currentFile + '.htm');
+        if (options.debug)
+            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
+    }
+    if ((options.what & Log.Raw) === Log.Raw) {
         const f = path.join(options.path, fTimeStamp) + '.raw.txt';
         buildFilename();
         if (isFileSync(f) && f !== currentFile + '.raw.txt')
-            fs.renameSync(f, currentFile);
+            fs.renameSync(f, currentFile + '.raw.txt');
+        if (options.debug)
+            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
+    }
+    if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
+        const f = path.join(options.path, fTimeStamp) + '.txt';
+        buildFilename();
+        if (isFileSync(f) && f !== currentFile + '.txt')
+            fs.renameSync(f, currentFile + '.txt');
         if (options.debug)
             postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
     }
@@ -196,11 +213,15 @@ function buildFilename() {
 
 function writeHeader() {
     buildFilename();
-    if (!isFileSync(currentFile + '.htm') && (options.what & Log.Html) === Log.Html)
+    if (!isFileSync(currentFile + '.htm') && (options.what & Log.Html) === Log.Html && !writingHeader)
+    {
+        writingHeader = true;
         fs.appendFile(currentFile + '.htm', '<style>\nbody\n{\n	font-family: \'Courier New\', Courier, monospace;\n	text-align: left;\n	font-size: 1em;\n	white-space: pre;\n	background-color: black;	\n}\n/* --- Start CSS for ansi display --- */\n@-webkit-keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n@keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n.ansi-blink { \n	text-decoration:blink;\n	animation-name: blinker;\n	animation-iteration-count: infinite; \n	animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	animation-duration: 1s; \n	-webkit-animation-name: blinker;\n	-webkit-animation-iteration-count: infinite; \n	-webkit-animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	-webkit-animation-duration: 1s; \n}\n\n.ansi\n{\n	padding: 0px;\n	margin:0px;\n	\n}\n\n.line \n{\n	word-wrap:break-word;\n	word-break:break-all;\n	width: 100%;\n	display: block;\n	padding-bottom:1px;\n	clear:both;\n	line-height: normal;\n  padding-bottom:2px\n}	\n\n.line hr{ border: 0px; }\n/* --- End CSS for ansi display --- */\n\n.line a, .line a:link \n{\n	color: inherit;\n	font-weight: inherit;\n	text-decoration: underline;\n}\n\n.URLLink, .URLLink:link\n{\n	text-decoration: underline;\n	cursor: pointer;\n}\n</style>\n', (err) => {
             if (err)
                 postMessage({ event: 'error', args: err });
+            writingHeader = false;
         });
+    }
 }
 
 function writeText(data) {

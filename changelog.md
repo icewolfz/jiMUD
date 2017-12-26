@@ -16,7 +16,9 @@
     - Update local/remote toolbar button states when the folder is changed
   - Send NAWS updates when status/button bar are hidden so that the mud has new display width
   - Minor issue where disconnect code was ran with reconnect code causing double disconnect dialogs.
-  - Logging caused an infinite loop by not correctly handling error catching.
+  - Logging:
+    - An infinite loop by not correctly handling error catching.
+    - Files where not correctly renamed after setting character name on login.
 
 ## 0.4.35 2017-12-18
 
