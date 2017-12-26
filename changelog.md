@@ -2,6 +2,9 @@
 
 ## 0.4.37
 
+- **Fixed:**
+  - Immortal tools: Downloading multiple folders at once was broken
+
 ## 0.4.36 2017-12-25
 
 - **New:**

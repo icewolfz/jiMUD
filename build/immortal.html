@@ -1327,9 +1327,9 @@
             });
             _ied.on('dir', (dir, files, tag) => {
                 var f, fl, file;
-                if (tag === 'dir:browse')
+                if (tag.startsWith('dir:browse'))
                     updateRemote(dir, files);
-                else if (tag === 'dir:download') {
+                else if (tag.startsWith('dir:download')) {
                     if (_progressCancel) {
                         if (options.debug)
                             console.log("Download files canceled");
@@ -1370,7 +1370,7 @@
                         return;
                     }
                 }
-                else if (tag === 'dir:delete') {
+                else if (tag.startsWith('dir:delete')) {
                     if (_progressCancel) {
                         pTotal = 0;
                         pFiles = 0;
@@ -2897,7 +2897,7 @@
             //if (!existsSync(path.join(options.local, path.basename(p))))
             //fs.mkdirSync(path.join(options.local, path.basename(p)));
             pTotal = 1;
-            _ied.getDir(p, true, 'download');
+            _ied.getDir(p, true, 'download:'+p);
         }
 
         function downNext(file, local) {
