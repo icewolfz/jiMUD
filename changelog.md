@@ -10,7 +10,7 @@
 - **Changed:**
   - Logging:
     - Logging now begins when trying to connect instead of waiting for it to connect first, this fixes some logs being created with only 1 or 2 lines of text
-    - Added extra new lines to html log to improve raw readability and seperate each html line to its own text line.
+    - Added extra new lines to HTML log to improve raw readability and separate each HTML line to its own text line.
 - **Fixed:**
   - Immortal tools:
     - Shift selection after using keyboard search would select wrong items
