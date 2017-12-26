@@ -7,6 +7,8 @@
     - Task bar progress now is based on total active items now just current item
     - Quick toggle open in editor button when downloading files, making it easier to disable when downloading bulk files, and on for single quick changes
     - Reveal in explorer, Open, and Open with editor local buttons for easier opening of selected items
+- **Changed:**
+  - Logging: Logging now begins when trying to connect instead of waiting for it to connect first, this fixes some logs being created with only 1 or 2 lines of text
 - **Fixed:**
   - Immortal tools:
     - Shift selection after using keyboard search would select wrong items

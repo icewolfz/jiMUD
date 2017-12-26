@@ -447,8 +447,8 @@
 
       _status.updateInterface();
       buildButtons();
-      client.display.update();      
-      client.UpdateWindow();      
+      client.display.update();
+      client.UpdateWindow();
       updateMenu();
     }
 
@@ -958,6 +958,15 @@
         ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: false });
         $("#immortal").css('display', "none");
         ipcRenderer.send('set-overlay', 1);
+        _logger.postMessage({ action: 'connected', args: client.connected });
+        _logger.postMessage({
+          action: 'start', args: {
+            lines: client.display.lines,
+            raw: client.display.rawLines,
+            formats: client.display.lineFormats,
+            fragment: client.display.EndOfLine || client.telnet.prompt
+          }
+        });
       });
 
       client.on('closed', () => {
@@ -1021,15 +1030,6 @@
         }
         _disconnectTimer = 0;
         _disconnectCounter = 0;
-        _logger.postMessage({ action: 'connected', args: client.connected });
-        _logger.postMessage({
-          action: 'start', args: {
-            lines: client.display.lines,
-            raw: client.display.rawLines,
-            formats: client.display.lineFormats,
-            fragment: client.display.EndOfLine || client.telnet.prompt
-          }
-        });
       });
 
       client.on('reconnect', () => {
