@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.37
+## 0.4.37 2017-12-26
 
 - **Changed:**
   - Immortal Tools: Local/remote paths in queue list now replace start of path with . if local/remote paths match current working local/remote
