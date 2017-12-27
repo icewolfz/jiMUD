@@ -2,6 +2,9 @@
 
 ## 0.4.38
 
+- **Fixed:**
+  - Fixed scroll lock when using split screen mode, lock button/scroll when turned off should scroll to the end and remove split view
+
 ## 0.4.37 2017-12-26
 
 - **Changed:**

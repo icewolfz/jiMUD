@@ -1916,9 +1916,9 @@ export class Display extends EventEmitter {
         }
     }
 
-    public scrollDisplay() {
+    public scrollDisplay(force?: boolean) {
         if (this.split) {
-            if (this.split.shown)
+            if (this.split.shown && !force)
                 return;
             if (this.scrollLock && !this.split.shown && this._VScroll.scrollSize > 0) {
                 this.split.style.display = 'block';
