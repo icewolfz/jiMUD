@@ -818,7 +818,7 @@
             localTable.rows.add(all);
             $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
             $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
-            doUpdate(19);
+            doUpdate(27);
         }
 
         function updateRemote(p, dir) {
@@ -858,7 +858,6 @@
 
                 all.push(file);
                 _remote[file.name] = file;
-                doUpdate(1);
             }
             $("#remote-path").val(p);
             for (var pt = 0, pl = parts.length; pt < pl; pt++) {
@@ -892,7 +891,7 @@
             }
             remoteTable.rows().remove();
             remoteTable.rows.add(all);
-            doUpdate(20);
+            doUpdate(29);
             $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
             $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
@@ -1238,17 +1237,35 @@
                         render: function (data, type, full, meta) {
                             if (type === "sort" || type === 'type')
                                 return data;
+                            var file = data;
+                            if (file.startsWith(options.local)) {
+                                file = file.substr(options.local.length);
+                                file = '.' + file;
+                            }
                             if (full.state === ItemState.paused)
-                                return '<i class="fa fa-pause" style="width:12px; margin-right: 2px"></i>' + data;
+                                return '<i class="fa fa-pause" style="width:12px; margin-right: 2px"></i>' + file;
                             if (full.state === ItemState.error)
-                                return '<i class="fa fa-warning" style="width:12px; margin-right: 2px" title="' + IED.errorMessage(full.error) + '"></i>' + data;
-                            return '<i class="fa fa-play" style="width:12px; margin-right: 2px"></i>' + data;
+                                return '<i class="fa fa-warning" style="width:12px; margin-right: 2px" title="' + IED.errorMessage(full.error) + '"></i>' + file;
+                            return '<i class="fa fa-play" style="width:12px; margin-right: 2px"></i>' + file;
                         }
                     },
                     {
                         width: '30px',
                         targets: 1
                     },
+                    {
+                        targets: 2,
+                        render: function (data, type, full, meta) {
+                            if (type === "sort" || type === 'type')
+                                return data;
+                            var file = data;
+                            if (file.startsWith(options.remote)) {
+                                file = file.substr(options.remote.length);
+                                file = '.' + file;
+                            }
+                            return file;
+                        }
+                    },                    
                     {
                         render: function (data, type, full, meta) {
                             if (type === "sort" || type === 'type')
@@ -1325,7 +1342,7 @@
                 ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
                 ipcRenderer.send('set-progress', { value: -1 });
             });
-            _ied.on('dir', (dir, files, tag) => {
+            _ied.on('dir', (dir, files, tag, local) => {
                 var f, fl, file;
                 if (tag.startsWith('dir:browse'))
                     updateRemote(dir, files);
@@ -1348,16 +1365,22 @@
                         s--;
                     var r = dir.substr(s).replace(/\//g, path.sep);
 
-                    //if (!existsSync(path.join(options.local, path.basename(dir))))
-                    //fs.mkdirSync(path.join(options.local, path.basename(dir)));
+                    /*
+                    if (local && !existsSync(path.join(local, path.basename(dir)))) {
+                        fs.mkdirSync(path.join(local, path.basename(dir)));
+                        logMessage("Creating directory: " + path.join(local, path.basename(dir)));
+                    }
+                    */
                     for (f = 0, fl = files.length; f < fl; f++) {
                         file = (dir === "/" ? '' : dir) + "/" + files[f].file;
                         if (files[f].size == -2) {
                             //create local
-                            //if (!existsSync(path.join(options.local, path.basename(file))))
-                            //fs.mkdirSync(path.join(options.local, path.basename(file)));
+                            if (local && !existsSync(path.join(local, path.basename(file)))) {
+                                fs.mkdirSync(path.join(local, path.basename(file)));
+                                logMessage("Creating directory: " + path.join(local, path.basename(file)));
+                            }
                             pTotal++;
-                            _ied.getDir(file, true, 'download');
+                            _ied.getDir(file, true, 'download', path.join(local, path.basename(file)));
                         }
                         else
                             downNext(file, path.join(options.local, r));
@@ -2247,9 +2270,9 @@
                     _ied.begin();
                     for (f = 0, fl = _remoteDrag.length; f < fl; f++) {
                         if (_remote[path.basename(_remoteDrag[f])].size === -2)
-                            downloadPath(_remoteDrag[f]);
+                            downloadPath(_remoteDrag[f], options.local);
                         else
-                            _ied.download(_remoteDrag[f]);
+                            _ied.download(_remoteDrag[f], options.local);
                     }
                     _ied.end();
                     _remoteDrag = 0;
@@ -2263,14 +2286,14 @@
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             p = event.dataTransfer.files[f].path.substring(8);
                             if (_remote[path.basename(p)].size === -2)
-                                downloadPath(p);
+                                downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
                         else if (event.dataTransfer.files[f].path.startsWith("/jiMUD:")) {
                             p = event.dataTransfer.files[f].path.substring(7);
                             if (_remote[path.basename(p)].size === -2)
-                                downloadPath(p);
+                                downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
@@ -2445,7 +2468,7 @@
                     _ied.begin();
                     for (f = 0, fl = _remoteDrag.length; f < fl; f++) {
                         if (_remote[path.basename(_remoteDrag[f])].size === -2)
-                            downloadPath(_remoteDrag[f]);
+                            downloadPath(_remoteDrag[f], options.local);
                         else
                             _ied.download(_remoteDrag[f]);
                     }
@@ -2459,14 +2482,14 @@
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             p = event.dataTransfer.files[f].path.substring(8);
                             if (_remote[path.basename(p)].size === -2)
-                                downloadPath(p);
+                                downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
                         else if (event.dataTransfer.files[f].path.startsWith("/jiMUD:")) {
                             p = event.dataTransfer.files[f].path.substring(7);
                             if (_remote[path.basename(p)].size === -2)
-                                downloadPath(p);
+                                downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
@@ -2795,7 +2818,7 @@
             _ied.begin();
             for (var d = 0, dl = data.length; d < dl; d++) {
                 if (data[d].size === -2)
-                    downloadPath(data[d].path);
+                    downloadPath(data[d].path, options.local);
                 else
                     _ied.download(data[d].path);
             }
@@ -2887,7 +2910,7 @@
                 $("#Progress")[0].close();
         }
 
-        function downloadPath(p) {
+        function downloadPath(p, local) {
             _progressCancel = false;
             if (!pTotal && !$("#Progress")[0].open) {
                 $("#Progressbar").html('<progress max="100"></progress>');
@@ -2896,10 +2919,12 @@
             }
             if (options.debug)
                 console.log(`Download path: ${p}`);
-            //if (!existsSync(path.join(options.local, path.basename(p))))
-            //fs.mkdirSync(path.join(options.local, path.basename(p)));
+            if (local && !existsSync(path.join(local, path.basename(p)))) {
+                fs.mkdirSync(path.join(local, path.basename(p)));
+                logMessage("Creating directory: " + path.join(local, path.basename(p)));
+            }
             pTotal = 1;
-            _ied.getDir(p, true, 'download:' + p);
+            _ied.getDir(p, true, 'download:' + p, path.join(local, path.basename(p)));
         }
 
         function downNext(file, local) {
@@ -3147,6 +3172,7 @@
                     }
                 }
                 fs.mkdirSync(path.join(options.local, n));
+                logMessage("Creating directory: " + path.join(options.local, n));
             }
             else if ($("#newFolder").data("type") === "remote") {
                 if (_remote[n]) {
@@ -3440,25 +3466,25 @@
                 }
                 else
                     info.uploads--;
-                var rows;
-                if (info.uploads < 0) {
-                    rows = queueTable.rows(function (idx, data) {
-                        return data.direction === '<-';
-                    });
-                    if (rows)
-                        info.uploads = rows.count();
-                    else
-                        info.uploads = 0;
-                }
-                if (info.downloads < 0) {
-                    rows = queueTable.rows(function (idx, data) {
-                        return data.direction === '->';
-                    });
-                    if (rows)
-                        info.downloads = rows.count();
-                    else
-                        info.downloads = 0;
-                }
+            }
+            var rows;
+            if (info.uploads < 0) {
+                rows = queueTable.rows(function (idx, data) {
+                    return data.direction === '<-';
+                });
+                if (rows)
+                    info.uploads = rows.count();
+                else
+                    info.uploads = 0;
+            }
+            if (info.downloads < 0) {
+                rows = queueTable.rows(function (idx, data) {
+                    return data.direction === '->';
+                });
+                if (rows)
+                    info.downloads = rows.count();
+                else
+                    info.downloads = 0;
             }
             /*
             rows = queueTable.rows(function (idx, data) {
@@ -3523,8 +3549,8 @@
                 ipcRenderer.send('set-progress', { value: 1.0 - (info.downloads + info.uploads) / info.active });
             }
             else {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: _qUpdate[_qUpdate.length - 1].percent });
-                ipcRenderer.send('set-progress', { value: _qUpdate[_qUpdate.length - 1].percent });
+                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
+                ipcRenderer.send('set-progress', { value: -1 });
             }
             _qUpdate = null;
             _qUpdateTracker = null;

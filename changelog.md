@@ -2,10 +2,13 @@
 
 ## 0.4.37
 
+- **Changed:**
+  - Immortal Tools: Local/remote paths in queue list now replace start of path with . if local/remote paths match current working local/remote
 - **Fixed:**
   - Immortal tools:
     - Downloading multiple folders at once was broken
     - Queue progress is more accurate
+    - Could not download empty folders
 
 ## 0.4.36 2017-12-25
 

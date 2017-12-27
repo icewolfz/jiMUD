@@ -279,7 +279,10 @@ export class IED extends EventEmitter {
                             else if (obj.tag.startsWith('mkdirPIgnore:'))
                                 this.makeDirectoryParent(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
                             else if (obj.tag.startsWith('dir:'))
-                                this.getDir(obj.path, true, obj.tag.substr(4));
+                            {
+                                delete this._paths[obj.tag];
+                                this.getDir(obj.path, true, obj.tag.substr(4), this._paths[obj.tag]);
+                            }
                         }
                         break;
                 }
@@ -303,7 +306,8 @@ export class IED extends EventEmitter {
                 }
                 else {
                     delete this._data[obj.tag || 'dir'];
-                    this.emit('dir', obj.path, files, obj.tag || 'dir');
+                    this.emit('dir', obj.path, files, obj.tag || 'dir', this._paths[obj.tag]);
+                    delete this._paths[obj.tag];
                 }
                 break;
             case 'download':
@@ -374,7 +378,9 @@ export class IED extends EventEmitter {
         }
     }
 
-    public getDir(dir: string, noResolve?: boolean, tag?) {
+    public getDir(dir: string, noResolve?: boolean, tag?, local?: string) {
+        if (local)
+            this._paths['dir:' + (tag || 'browse')] = local;
         if (noResolve) {
             ipcRenderer.send('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: 'dir:' + (tag || 'browse') }));
             this.emit('message', 'Getting Directory: ' + dir);
