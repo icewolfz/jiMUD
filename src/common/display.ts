@@ -411,6 +411,10 @@ export class Display extends EventEmitter {
             this.emit('sound', data);
         });
 
+        this._parser.on('MXP-tag-reply', (tag, args) => {
+            this.emit('MXP-tag-reply', tag, args);
+        });
+
         this._el.addEventListener('mousedown', (e) => {
             if (e.buttons && e.button === 0) {
                 e.preventDefault();
@@ -853,6 +857,13 @@ export class Display extends EventEmitter {
     }
     get emulateTerminal(): boolean {
         return this._parser.emulateTerminal;
+    }
+
+    set MXPStyleVersion(value: string) {
+        this._parser.StyleVersion = value;
+    }
+    get MXPStyleVersion(): string {
+        return this._parser.StyleVersion;
     }
 
     public debug(msg) {

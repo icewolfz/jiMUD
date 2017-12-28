@@ -652,7 +652,20 @@ export class Client extends EventEmitter {
             this.emit('add-line-done', data);
         });
         this.display.on('MXP-tag-reply', (tag, args) => {
-            this.emit('MXP-tag-reply', tag, args);
+            const e = { tag: tag, args: args, preventDefault: false };
+            this.emit('MXP-tag-reply', e);
+            if (e.preventDefault)
+                return;
+            switch (tag) {
+                case 'VERSION':
+                    this.debug(`MXP Tag REPLY: <VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>`);
+                    this.send(`\x1b[1z<VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>\r\n`);
+                    break;
+                case 'SUPPORT':
+                    this.debug(`MXP Tag REPLY: <SUPPORTS ${args.join(' ')}>`);
+                    this.send(`\x1b[1z<SUPPORTS ${args.join(' ')}>\r\n`);
+                    break;
+            }
         });
         this.display.on('expire-links', (args) => {
             this.emit('expire-links', args);
