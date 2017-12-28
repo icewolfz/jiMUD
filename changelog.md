@@ -4,6 +4,8 @@
 
 - **New:**
   - MXP: add <version>, <support>, <user>, and <password> tag support but leave user/password disabled for now due to server side not supporting it
+- **Changed:**
+  - Character Manager: double clicking now does a close load, instead of just a load
 - **Fixed:**
   - Fixed scroll lock when using split screen mode, lock button/scroll when turned off should scroll to the end and remove split view
 
