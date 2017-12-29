@@ -8,6 +8,7 @@
   - Character Manager: double clicking now does a close load, instead of just a load
 - **Fixed:**
   - Fixed scroll lock when using split screen mode, lock button/scroll when turned off should scroll to the end and remove split view
+  - Prevent disconnect dialog hotkeys from being sent to command input when pressed.
   - Immortal tools:
     - Fix double clicking items as they are removed from local/remote/queue table
     - Update queue table properly when local/remote folder are changed to refresh the file path state

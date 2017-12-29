@@ -124,16 +124,25 @@
         if (event.which === 81) {
           closeDisconnectDialog();
           window.close();
+          event.preventDefault();
+          event.cancelBubble = true;
         }
         else if (event.which === 82) {
           closeDisconnectDialog();
           client.connect();
+          event.preventDefault();
+          event.cancelBubble = true;
         }
-        else if (event.which === 79)
+        else if (event.which === 79) {
           closeDisconnectDialog();
+          event.preventDefault();
+          event.cancelBubble = true;
+        }
         else if (event.which == 77) {
           closeDisconnectDialog();
           showCharacters();
+          event.preventDefault();
+          event.cancelBubble = true;
         }
         //67 - c
         //68 - d
@@ -873,7 +882,7 @@
         }
         */
       });
-      
+
       client.on('show', () => {
         remote.getCurrentWindow().show();
         remote.getCurrentWindow().focus();
