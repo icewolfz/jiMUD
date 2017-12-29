@@ -818,7 +818,7 @@
             localTable.rows.add(all);
             $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
             $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
-            doUpdate(27);
+            doUpdate(275);
         }
 
         function updateRemote(p, dir) {
@@ -891,7 +891,7 @@
             }
             remoteTable.rows().remove();
             remoteTable.rows.add(all);
-            doUpdate(29);
+            doUpdate(277);
             $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
             $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
@@ -1877,6 +1877,7 @@
 
             $('#local-list tbody').on('dblclick', 'tr', function () {
                 var data = localTable.row(this).data();
+                if(!data) return;
                 if (data.size === -2) {
                     if (options.syncFolders) {
                         if (_remote[data.name] && path.basename(options.remote) === path.basename(options.local))
@@ -1890,6 +1891,7 @@
 
             $('#remote-list tbody').on('dblclick', 'tr', function () {
                 var data = remoteTable.row(this).data();
+                if(!data) return;
                 if (data.size === -2) {
                     if (options.syncFolders) {
                         if (_local[data.name] && path.basename(options.remote) === path.basename(options.remote))
@@ -1903,6 +1905,7 @@
 
             $('#queue-list tbody').on('dblclick', 'tr', function () {
                 var data = queueTable.row(this).data();
+                if(!data) return;
                 if (data.state === ItemState.paused)
                     _ied.startItem(data.id);
                 else
@@ -3598,6 +3601,10 @@
                     bulkQueueUpdate();
                     _updating &= ~128;
                 }
+                if ((this._updating & 256) === 256) {
+                    queueTable.rows().invalidate('data').draw();
+                    _updating &= ~256;
+                }                
                 doUpdate(_updating);
             });
         }
