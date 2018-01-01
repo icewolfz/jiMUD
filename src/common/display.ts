@@ -1277,8 +1277,10 @@ export class Display extends EventEmitter {
             const formats = this.lineFormats;
             const ll = lines.length;
             for (let l = 0; l < ll; l++) {
-                if (formats[0].hr)
-                    m = this.WindowWidth;
+                if (formats[0].hr) {
+                    if (this.WindowWidth > m)
+                        m = this.WindowWidth;
+                }
                 else if (lines[l].length > m)
                     m = lines[l].length;
             }
