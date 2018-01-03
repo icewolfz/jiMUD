@@ -91,6 +91,7 @@
     background-color: Scrollbar;
     box-sizing: border-box;
     z-index: 1001;
+    cursor: default;
 }
 
 .scroll-thumb {
@@ -101,6 +102,7 @@
     border-right: 1px solid ButtonShadow;
     border-bottom: 1px solid ButtonShadow;
     z-index: 2000;
+    cursor: default;
 }
 
 .scroll-thumb:hover {
@@ -117,16 +119,20 @@
     height: 12px;
     background-color: Scrollbar;
     z-index: 1000;
+    cursor: default;
 }
 
 .scroll-horizontal {
     border-top: 1px solid ButtonHighlight;
+    cursor: default;
 }
 
 .scroll-vertical {
     border-left: 1px solid ButtonHighlight;
+    cursor: default;
 }
 
 .scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
     background-color: ThreeDLightShadow;
+    cursor: default;
 }
