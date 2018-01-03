@@ -79,8 +79,9 @@ export class Display extends EventEmitter {
 
     public lines: string[] = [];
     public rawLines: string[] = [];
+    public scrollToEnd: boolean = true;
     private lineFormats = [];
-    public _maxLines: number = 5000;
+    private _maxLines: number = 5000;
     private _charHeight: number;
     private _charWidth: number;
     private _viewLines: string[] = [];
@@ -393,7 +394,10 @@ export class Display extends EventEmitter {
             this._el.classList.remove('animate');
             const bar = this._HScroll.visible;
             this.trimLines();
-            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
+            if (this.scrollToEnd)
+                this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
+            else
+                this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollView);
             if (bar !== this._HScroll.visible)
                 this.updateWindow();
             this.emit('parse-done');
@@ -1069,7 +1073,10 @@ export class Display extends EventEmitter {
             this._el.classList.remove('animate');
             const bar = this._HScroll.visible;
             this.trimLines();
-            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
+            if (this.scrollToEnd)
+                this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
+            else
+                this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollView);
             if (bar !== this._HScroll.visible)
                 this.updateWindow();
             //re-enable animation so they are all synced
@@ -2263,6 +2270,10 @@ export class ScrollBar extends EventEmitter {
 
     public scrollToEnd() {
         this.updatePosition(this.maxPosition);
+    }
+
+    public scrollToStart() {
+        this.updatePosition(0);
     }
 
     public resize(locked?: boolean) {
