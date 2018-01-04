@@ -174,21 +174,7 @@ export class Mapper extends EventEmitter {
             this.save(() => {
                 this._db.close(() => {
                     this._memory = value;
-                    if (this._memory) {
-                        this._db = new sqlite3.Database(':memory:');
-                        this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
-                    }
-                    else
-                        this._db = new sqlite3.Database(this._mapFile);
-                    this.createDatabase();
-                    this._db.serialize();
-                    if (this._memory) {
-                        this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
-                        this.createDatabase('Disk');
-                        this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
-                        this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
-                        this._db.run('DETACH DATABASE Disk');
-                    }
+                    this.initializeDatabase();
                 });
             });
         }
@@ -257,23 +243,8 @@ export class Mapper extends EventEmitter {
         });
     }
 
-    constructor(canvas, memory?: boolean, memoryPeriod?: (number | string), map?: string) {
-        super();
-        if (typeof memoryPeriod === 'string') {
-            if (memoryPeriod.length > 0)
-                this._mapFile = memoryPeriod;
-        }
-        else {
-            this._memorySavePeriod = memoryPeriod;
-            if (map && map.length > 0)
-                this._mapFile = map;
-        }
-        this._canvas = canvas;
-        this._context = canvas.getContext('2d');
-        //rooms - ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors
-        //exits - ID, Exit, DestID
-        if (memory) {
-            this._memory = memory;
+    public initializeDatabase() {
+        if (this._memory) {
             this._db = new sqlite3.Database(':memory:');
             this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
         }
@@ -288,7 +259,24 @@ export class Mapper extends EventEmitter {
             this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
             this._db.run('DETACH DATABASE Disk');
         }
+    }
 
+    constructor(canvas, memory?: boolean, memoryPeriod?: (number | string), map?: string) {
+        super();
+        if (typeof memoryPeriod === 'string') {
+            if (memoryPeriod.length > 0)
+                this._mapFile = memoryPeriod;
+        }
+        else {
+            this._memorySavePeriod = memoryPeriod;
+            if (map && map.length > 0)
+                this._mapFile = map;
+        }
+        this._canvas = canvas;
+        this._context = canvas.getContext('2d');
+        this.initializeDatabase();
+        //rooms - ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors
+        //exits - ID, Exit, DestID
         $(this._canvas).mousemove((event) => {
             this.MousePrev = this.Mouse;
             this.Mouse = this.getMapMousePos(event);
