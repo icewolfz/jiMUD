@@ -1436,11 +1436,18 @@ ipcMain.on('reload', (event, char) => {
 });
 
 ipcMain.on('load-default', (event) => {
+  var name;
   //already loaded so no need to switch
   var sf = parseTemplate(path.join("{data}", "settings.json"));
   var mf = parseTemplate(path.join("{data}", "map.sqlite"));
-  if (sf === global.settingsFile && mf === global.mapFile)
+  if (sf === global.settingsFile && mf === global.mapFile) {
+    for ( name in windows) {
+      if (!windows.hasOwnProperty(name) || !windows[name].window)
+        continue;
+      windows[name].webContents.send('load-default');
+    }
     return;
+  }
   if (win && win.webContents)
     win.webContents.send('load-default');
   global.settingsFile = sf;
@@ -1457,7 +1464,7 @@ ipcMain.on('load-default', (event) => {
     winEditor.destroy();
   if (winChat)
     winChat.destroy();
-  for (var name in windows) {
+  for (name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.executeJavaScript('closed();');
