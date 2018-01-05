@@ -1949,6 +1949,24 @@
       //window.open('immortal.html', '', 'backgroundColor=#fff,height=600,width=800,icon=' + path.join(__dirname, '../assets/icons/png/ied.png'));
     }
 
+    function showMail() {
+      if (client.options.windows['mail'] && client.options.windows['mail'].options) {
+        client.options.windows['mail'].options.show = true;
+        ipcRenderer.send('show-window', 'mail', client.options.windows['mail'].options);
+      }
+      else
+        ipcRenderer.send('show-window', 'mail', { show: true, file: 'mail.html', icon: 'mail', alwaysOnTopClient: true });
+    }    
+
+    function showComposer() {
+      if (client.options.windows['composer'] && client.options.windows['composer'].options) {
+        client.options.windows['composer'].options.show = true;
+        ipcRenderer.send('show-window', 'composer', client.options.windows['composer'].options);
+      }
+      else
+        ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'send', alwaysOnTopClient: true });
+    }
+
     $(document).ready(init);
 
     function toggleLogging() {

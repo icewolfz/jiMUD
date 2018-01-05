@@ -234,3 +234,28 @@ export enum TrayClick {
   toggle = 3,
   menu = 4
 }
+
+export enum MailStatus {
+  SUCCESS = 0,
+  ERROR = 1,
+  NO_RECIPIENTS = 2,
+  INVALID_ID = 3,
+  INVALID_GROUP = 4,
+  NOT_ALLOWED = 5,
+  GROUP_EXIST = 6,
+  PLAYER_EXIST = 7,
+  PLAYER_DOES_EXIST = 8,
+  INVALID_DATA = 9
+}
+
+export enum MailAction {
+  list = 0,
+  read = 1,
+  mark = 2
+}
+
+export enum MailReadFormat {
+  none = 0,
+  html = 1,
+  ansi = 2
+}
