@@ -815,6 +815,18 @@
             if (top < sTop || top + 31 >= sTop + sHeight)
                 body.scrollTop = top;
         }
+        ipcRenderer.on('load-default', () => {
+            mail.file = parseTemplate(path.join("{data}", "mail.sqlite"));
+        });
+
+        ipcRenderer.on('load-char', (event, char) => {
+            var file = char;
+            if (!file || file.length === 0)
+                file = parseTemplate(path.join("{data}", "mail.sqlite"));
+            else
+                file = parseTemplate(path.join("{characters}", file + ".mail"));
+            mail.file = file;
+        });
 
     </script>
 </head>
