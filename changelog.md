@@ -12,6 +12,7 @@
   - Immortal tools:
     - Fix double clicking items as they are removed from local/remote/queue table
     - Update queue table properly when local/remote folder are changed to refresh the file path state
+  - Mapper: When reloading the same character it would not refresh the map file if it changed from previous load.
 
 ## 0.4.37 2017-12-26
 

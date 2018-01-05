@@ -1488,6 +1488,8 @@ ipcMain.on('load-char', (event, char) => {
   if (char === global.character) {
     loadCharacter(char);
     win.webContents.send('load-char', char);
+    if (winMap)
+      winMap.webContents.send('load-char', char);
     return;
   }
   closeWindows();

@@ -649,6 +649,10 @@
         mapper.processGMCP(data.mod, data.obj);
     });
 
+    ipcRenderer.on('load-char', () => {
+      mapper.mapFile = remote.getGlobal('mapFile');
+    });
+
     ipcRenderer.on('reload-options', (event) => {
       save(function () {
         remote.getCurrentWindow().reload();
