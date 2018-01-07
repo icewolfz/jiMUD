@@ -560,7 +560,7 @@
                     if (row && row.length === 1) {
                         row.data(letter);
                         doUpdate(2);
-                    }                    
+                    }
                 });
                 updateFolderBadges();
                 doUpdate(2);
@@ -935,49 +935,59 @@
         }
 
         function displayLetter(id) {
-            _messageLoading = setTimeout(()=> {
+            _messageLoading = setTimeout(() => {
                 $('#bottom-loading').css('display', 'block');
-            }, 500);            
+            }, 500);
             _currentLetter = id;
             display.clear();
             if (options.showHeaders)
                 $('#view-body').css('top', '');
-            mail.read(id, options.format, (letter) => {
-                if(_messageLoading)
-                    clearTimeout(_messageLoading);
-                _messageLoading = 0;
-                $('#bottom-loading').css('display', 'none');
-                if (!_currentLetter) return;
-                if (!letter) {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
-                        type: 'error',
-                        title: "Letter not found",
-                        message: "Letter could not be found."
-                    });
-                    return;
-                }
-                if (letter.id != _currentLetter)
-                    return;
-                $('#from').html(letter.from);
-                $('#cc').html(letter.cc.join(', '));
-                if (letter.cc.length) {
-                    $('#ccs').css('display', 'block');
-                    if (options.showHeaders)
-                        $('#view-body').css('top', '95px');
-                }
-                else {
-                    $('#ccs').css('display', 'none');
-                    if (options.showHeaders)
-                        $('#view-body').css('top', '75px');
-                }
-                $('#date').html(new moment(letter.date * 1000).format('MM/DD/YYYY hh:mm:ss A'));
-                $('#subject').html(letter.subject);
-                display.append(letter.body);
-                if (!letter.read)
-                    setTimeout(() => {
-                        mail.mark(letter.id, 1);
-                    }, options.markReadDelay || 2000);
+            mail.read(id, MailReadFormat.none, (letter) => {
+                if (options.format !== MailReadFormat.none) return;
+                displayLetterLoad(letter);
             });
+            mail.read(id, MailReadFormat.ansi, (letter) => {
+                if (options.format !== MailReadFormat.ansi) return;
+                displayLetterLoad(letter);
+
+            });
+        }
+
+        function displayLetterLoad(letter) {
+            if (_messageLoading)
+                clearTimeout(_messageLoading);
+            _messageLoading = 0;
+            $('#bottom-loading').css('display', 'none');
+            if (!_currentLetter) return;
+            if (!letter) {
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'error',
+                    title: "Letter not found",
+                    message: "Letter could not be found."
+                });
+                return;
+            }
+            if (letter.id != _currentLetter)
+                return;
+            $('#from').html(letter.from);
+            $('#cc').html(letter.cc.join(', '));
+            if (letter.cc.length) {
+                $('#ccs').css('display', 'block');
+                if (options.showHeaders)
+                    $('#view-body').css('top', '95px');
+            }
+            else {
+                $('#ccs').css('display', 'none');
+                if (options.showHeaders)
+                    $('#view-body').css('top', '75px');
+            }
+            $('#date').html(new moment(letter.date * 1000).format('MM/DD/YYYY hh:mm:ss A'));
+            $('#subject').html(letter.subject);
+            display.append(letter.body);
+            if (!letter.read)
+                setTimeout(() => {
+                    mail.mark(letter.id, 1);
+                }, options.markReadDelay || 2000);
         }
 
         function updateFolderBadges() {
