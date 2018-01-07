@@ -123,7 +123,7 @@ export class Mail extends EventEmitter {
                         this._gettingMail = 0;
                     }
                     else
-                        this.emit('got-mail', Date.now(), this._list);
+                        this.emit('got-mail', Math.floor(Date.now() / 1000), this._list);
                     this._list = null;
                 }
                 break;
@@ -232,6 +232,26 @@ export class Mail extends EventEmitter {
         });
     }
 
+    public getLetter(id, callback) {
+        this._db.get('SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE Mail.MailID = ?', [id], (err, row) => {
+            if (err)
+                this.emit('error', err);
+            else {
+                this._db.all('SELECT Names.Name FROM [To] INNER JOIN Names on Names.NameID = [To].NameID WHERE [To].MailID = ?', [id], (err2, rows) => {
+                    if (err2)
+                        this.emit('error', err2);
+                    else if (callback) {
+                        if (row)
+                            row.to = rows.map((obj) => {
+                                return obj.Name;
+                            });
+                        callback(row);
+                    }
+                });
+            }
+        });
+    }
+
     public getMail(date?: (number | Date)) {
         if (date instanceof Date)
             date = date.getTime();
@@ -239,7 +259,7 @@ export class Mail extends EventEmitter {
             ipcRenderer.send('send-gmcp', 'Post.list ' + date);
         else
             ipcRenderer.send('send-gmcp', 'Post.list');
-        this._gettingMail = Date.now();
+        this._gettingMail = Math.floor(Date.now() / 1000);
     }
 
     public read(id, format: MailReadFormat, callback) {
@@ -280,7 +300,7 @@ export class Mail extends EventEmitter {
     }
 
     public mark(id, mark: number) {
-        ipcRenderer.send('send-gmcp', `Post.mark {id:"${id}", format:${mark}}`);
+        ipcRenderer.send('send-gmcp', `Post.mark {id:"${id}", read:${mark}}`);
         this._db.run('Update Mail SET Read = ? WHERE MailID = ?', [mark, id], (err) => {
             if (err)
                 this.emit('error', err);

@@ -16,6 +16,7 @@
   - Mapper: When reloading the same character it would not refresh the map file if it changed from previous load.
   - Display scroll bars where not correctly updated when buttons/status display was hidden/shown
   - View > Buttons > Button check state was not correctly set when setting toggled
+  - GMCP event is no longer triggered when an error decoding GMCP is done
 
 ## 0.4.37 2017-12-26
 

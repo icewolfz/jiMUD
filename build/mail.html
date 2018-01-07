@@ -49,6 +49,7 @@
         var _checking;
         var _currentFolder = MailFolders.inbox;
         var _currentLetter;
+        var _messageLoading;
 
         var menu = [
             {
@@ -551,7 +552,16 @@
                     updateFolderBadges();
                 }, 1000);
             });
-            mail.on('mark-changed', () => {
+            mail.on('mark-changed', (id) => {
+                mail.getLetter(id, (letter) => {
+                    var row = messageTable.row(function (idx, data, node) {
+                        return data.id === id ? true : false;
+                    });
+                    if (row && row.length === 1) {
+                        row.data(letter);
+                        doUpdate(2);
+                    }                    
+                });
                 updateFolderBadges();
                 doUpdate(2);
             });
@@ -594,7 +604,7 @@
                         targets: 1,
                         render: function (data, type, full, meta) {
                             if (!full.read)
-                                return `<span class="mail_new">${full.id}</span>`;
+                                return `<span class="mail_new">${data}</span>`;
                             return data;
                         }
                     },
@@ -925,12 +935,17 @@
         }
 
         function displayLetter(id) {
-            $('#bottom-loading').css('display', 'block');
+            _messageLoading = setTimeout(()=> {
+                $('#bottom-loading').css('display', 'block');
+            }, 500);            
             _currentLetter = id;
             display.clear();
             if (options.showHeaders)
                 $('#view-body').css('top', '');
             mail.read(id, options.format, (letter) => {
+                if(_messageLoading)
+                    clearTimeout(_messageLoading);
+                _messageLoading = 0;
                 $('#bottom-loading').css('display', 'none');
                 if (!_currentLetter) return;
                 if (!letter) {
@@ -944,11 +959,16 @@
                 if (letter.id != _currentLetter)
                     return;
                 $('#from').html(letter.from);
-                $('#ccs').html(letter.cc.join(', '));
+                $('#cc').html(letter.cc.join(', '));
                 if (letter.cc.length) {
                     $('#ccs').css('display', 'block');
                     if (options.showHeaders)
                         $('#view-body').css('top', '95px');
+                }
+                else {
+                    $('#ccs').css('display', 'none');
+                    if (options.showHeaders)
+                        $('#view-body').css('top', '75px');
                 }
                 $('#date').html(new moment(letter.date * 1000).format('MM/DD/YYYY hh:mm:ss A'));
                 $('#subject').html(letter.subject);
@@ -970,7 +990,7 @@
 
         function headers(state, nosave) {
             options.showHeaders = state;
-            if(!nosave)
+            if (!nosave)
                 saveOptions();
             if (options.showHeaders) {
                 $('#view-headers').css('display', '');
@@ -984,15 +1004,13 @@
                 $('#view-body').css('top', '12px');
             }
             updateMenuItem({ menu: 'view|headers', checked: options.showHeaders });
-            if(options.showHeaders)
-            {
+            if (options.showHeaders) {
                 $('#btn-show-headers i').removeClass('fa-chevron-down');
                 $('#btn-show-headers i').addClass('fa-chevron-up');
             }
-            else
-            {
+            else {
                 $('#btn-show-headers i').addClass('fa-chevron-down');
-                $('#btn-show-headers i').removeClass('fa-chevron-up');                
+                $('#btn-show-headers i').removeClass('fa-chevron-up');
             }
             display.updateScrollbars();
         }
@@ -1097,7 +1115,7 @@
                 <button id="btn-show-headers" class="btn btn-default btn-xs btn-adv" onclick="headers(!options.showHeaders);">
                     <i style="font-size: 8px;" class="fa fa-chevron-up"></i>
                 </button>
-            </div>            
+            </div>
             <div id="view-body" class="panel-body">
                 <div id="display"></div>
             </div>
