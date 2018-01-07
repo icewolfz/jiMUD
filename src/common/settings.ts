@@ -229,7 +229,9 @@ export class Settings {
         clear: true,
         lock: true,
         map: true,
-        user: true
+        user: true,
+        mail: true,
+        compose: true
     };
 
     public find = {

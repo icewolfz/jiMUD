@@ -434,6 +434,24 @@ var menuTemp = [
             }
           },
           {
+            label: 'M&ail',
+            id: "mailbutton",
+            type: 'checkbox',
+            checked: true,
+            click: () => {
+              win.webContents.executeJavaScript('toggleView("button.mail")');
+            }
+          },
+          {
+            label: '&Compose mail',
+            id: "composebutton",
+            type: 'checkbox',
+            checked: true,
+            click: () => {
+              win.webContents.executeJavaScript('toggleView("button.compose")');
+            }
+          },          
+          {
             label: '&User buttons',
             id: "userbutton",
             type: 'checkbox',
@@ -486,7 +504,7 @@ var menuTemp = [
         id: 'chat',
         click: showChat,
         accelerator: 'CmdOrCtrl+L'
-      },
+      },        
       {
         label: '&Immortal tools...',
         id: 'immortal',
@@ -496,12 +514,27 @@ var menuTemp = [
         visible: false,
         accelerator: 'CmdOrCtrl+I'
       },
-
       {
         label: '&Map...',
         click: showMapper,
         accelerator: 'CmdOrCtrl+T'
       },
+      {
+        label: '&Mail...',
+        click: () => {
+          win.webContents.executeJavaScript('showMail()');
+        },
+        visible: true,
+        //accelerator: 'CmdOrCtrl+M'
+      },   
+      {
+        label: '&Compose mail...',
+        click: () => {
+          win.webContents.executeJavaScript('showComposer()');
+        },
+        visible: true,
+        //accelerator: 'CmdOrCtrl+M'
+      },       
       { type: 'separator' },
       {
         role: 'minimize'

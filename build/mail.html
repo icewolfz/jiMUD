@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Immortal Tools</title>
+    <title>Mail</title>
     <link rel="shortcut icon" href="../assets/icons/png/ied.png" />
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
@@ -26,7 +26,7 @@
     <script>
         //cSpell:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //cSpell:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
-        const { MailStatus, MailAction } = require('./js/types');
+        const { MailStatus, MailAction, MailFolders, MailReadFormat } = require('./js/types');
         const { remote, ipcRenderer, shell, clipboard } = require('electron');
         const { app, dialog, Menu, MenuItem } = remote;
         const { parseTemplate, existsSync } = require('./js/library');
@@ -46,6 +46,9 @@
         var _updating;
         var dragging = false, btmDragging = false;
         var mail;
+        var _checking;
+        var _currentFolder = MailFolders.inbox;
+        var _currentLetter;
 
         var menu = [
             {
@@ -63,7 +66,7 @@
                         label: '&Get new mail',
                         accelerator: "CmdOrCtrl+S",
                         enabled: true,
-                        //click: download
+                        click: checkMail
                     },
                     {
                         label: '&Sync to mud',
@@ -91,22 +94,35 @@
                 submenu: [
                     {
                         label: 'Reply',
-                        accelerator: "CmdOrCtrl+N",
+                        //accelerator: "CmdOrCtrl+N",
                         enabled: true,
                         //click: download
                     },
                     {
                         label: '&Reply all',
-                        accelerator: "CmdOrCtrl+S",
+                        //accelerator: "CmdOrCtrl+S",
                         enabled: true,
                         //click: download
                     },
                     {
                         label: '&Forward',
-                        accelerator: "CmdOrCtrl+S",
+                        //accelerator: "CmdOrCtrl+S",
                         enabled: true,
                         //click: download
-                    }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Mark as Read',
+                        //accelerator: "CmdOrCtrl+S",
+                        enabled: true,
+                        //click: download
+                    },
+                    {
+                        label: 'Mark as &Unread',
+                        //accelerator: "CmdOrCtrl+S",
+                        enabled: true,
+                        //click: download
+                    },
                 ]
             },
             {
@@ -226,7 +242,7 @@
                         checked: true,
                         type: 'checkbox',
                         accelerator: "CmdOrCtrl+Shift+S",
-                        click: () => { }
+                        click: () => { headers(!options.showHeaders); }
                     },
                     { type: 'separator' },
                     {
@@ -451,12 +467,18 @@
                 options = data;
             if (!options) {
                 options = {
+                    'debug': false,
+                    'logErrors': false,
                     'folderSize': 202,
                     'viewSize': 250,
                     'showHeaders': true,
                     'showRaw': false,
                     'viewFont': '\'Courier New\', Courier, monospace',
                     'viewFontSize': '1em',
+                    'lastCheck': 0,
+                    'checkPeriod': 172800,
+                    'format': MailReadFormat.ansi,
+                    'markReadDelay': 2000
                 };
                 saveOptions();
             }
@@ -464,19 +486,21 @@
                 options.folderSize = 202;
             if (options.viewSize < 202)
                 options.viewSize = 202;
+            //min of 15 mins as dont want to check to fast, defaults to 48 hrs
+            //if (options.checkPeriod < 900)
+            //options.checkPeriod = 900;
             $('#folders').css("width", options.folderSize);
             $('#messages').css("left", options.folderSize);
             $('#bottom').css("height", options.viewSize);
+            $('#bottom-loading').css("line-height", options.viewSize + "px");
+
             $('#main').css("bottom", options.viewSize + 26);
-            if (options.showHeaders) {
-                $('#view-headers').css('display', '');
-                $('#view-body').css('top', '');
-            }
-            else {
-                $('#view-headers').css('display', 'none');
-                $('#view-body').css('top', '2px');
-            }
+            headers(options.showHeaders, true);
             display.updateFont(options.viewFont, options.viewFontSize);
+            if (!options.lastCheck)
+                checkMail();
+            //if (options.checkPeriod > 0)
+            //setInterval(() => { mail.getMail(); }, options.checkPeriod);
             doUpdate(2);
         }
 
@@ -509,6 +533,7 @@
                 fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), msg + '\n', { flag: 'a' });
             }
         }
+
         $(document).ready(() => {
             var file = remote.getGlobal('character');
             if (!file || file.length === 0)
@@ -516,6 +541,28 @@
             else
                 file = parseTemplate(path.join("{characters}", file + ".mail"));
             mail = new Mail(file);
+            mail.on('got-mail', (timeStamp, letters) => {
+                if (options.debug)
+                    console.log(letters);
+                options.lastCheck = timeStamp;
+                saveOptions();
+                setTimeout(() => {
+                    updateMessages(_currentFolder);
+                    updateFolderBadges();
+                }, 1000);
+            });
+            mail.on('mark-changed', () => {
+                updateFolderBadges();
+                doUpdate(2);
+            });
+            mail.on('new', checkMail);
+            mail.on('error', (err) => {
+                logError(err);
+            });
+            mail.on('initialize', () => {
+                if (!options.lastCheck)
+                    checkMail();
+            });
 
             $('#messages-list').DataTable({
                 keys: true,
@@ -539,16 +586,24 @@
                     {
                         targets: 0,
                         render: function (data, type, full, meta) {
-                            return `<input type="checkbox" value="${data.id}"/>`;
+                            return `<input type="checkbox" value="${data}"/>`;
                         },
                         "orderable": false
                     },
                     {
+                        targets: 1,
+                        render: function (data, type, full, meta) {
+                            if (!full.read)
+                                return `<span class="mail_new">${full.id}</span>`;
+                            return data;
+                        }
+                    },
+                    {
                         type: "moment",
-                        targets: 2,
-                        orderData: [2, 1, 0],
+                        targets: 3,
+                        orderData: [3, 1, 0],
                         render: function (data) {
-                            return new moment(data).format('MM/DD/YYYY hh:mm:ss A');
+                            return new moment(data * 1000).format('MM/DD/YYYY hh:mm:ss A');
                         }
                     },
                     {
@@ -557,11 +612,11 @@
                     }
                 ],
                 columns: [
-                    { data: 'check', width: '20px' },
+                    { data: 'id', width: '20px' },
                     { data: 'from', width: '200px' },
                     { data: 'subject' },
                     { data: 'date', width: '200px' },
-                    { data: 'id' },
+                    { data: 'read' },
                 ]
             });
             messageTable = $('#messages-list').DataTable();
@@ -598,6 +653,17 @@
                 event.stopPropagation();
                 event.cancelBubble = true;
                 //showLocalContextMenu();
+            });
+
+            $('#messages-list tbody').on('click', 'tr', function () {
+                if (!$(this).hasClass('selected')) {
+                    messageTable.rows().deselect();
+                    messageTable.row(this).select();
+                }
+                var selected = messageTable.rows({ selected: true }).data();
+                if (selected.length > 0 && _currentLetter !== selected[0].id)
+                    displayLetter(selected[0].id);
+
             });
 
             $('#messages-list tbody').on('dblclick', 'tr', function () {
@@ -680,6 +746,7 @@
                 if ($('#bottom').outerHeight() < 200 && $("#main").outerHeight() > 202) {
                     options.viewSize = 200;
                     $('#bottom').css("height", options.viewSize);
+                    $('#bottom-loading').css("line-height", options.viewSize + "px");
                     $('#main').css("bottom", options.viewSize + 26);
                     saveOptions();
                 }
@@ -722,6 +789,7 @@
                         options.viewSize = document.body.clientHeight - e.pageY + 2;
                     options.viewSize -= 26;
                     $('#bottom').css("height", options.viewSize);
+                    $('#bottom-loading').css("line-height", options.viewSize + "px");
                     $('#main').css("bottom", options.viewSize + 26);
                     doUpdate(2);
                     saveOptions();
@@ -730,8 +798,6 @@
                     btmDragging = false;
                 }
             });
-
-            updateMessages();
             display = new Display($("#display"));
             display.scrollToEnd = false;
             display.maxLines = -1;
@@ -761,12 +827,25 @@
                         break;
                 }
             });
-
-
+            updateMessages();
+            updateFolderBadges();
             $(window).trigger('resize');
         });
 
-        function updateMessages() {
+        function checkMail() {
+            if (_checking)
+                return;
+            _checking = setTimeout(() => {
+                mail.getMail(options.lastCheck); _checking = 0;
+            }, 1000);
+        }
+
+        function updateMessages(folder) {
+            mail.getLetterList(folder || MailFolders.inbox, (letters) => {
+                messageTable.rows().remove();
+                messageTable.rows.add(letters);
+                doUpdate(7);
+            });
             $("#messages-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
         }
 
@@ -828,34 +907,123 @@
             mail.file = file;
         });
 
+        ipcRenderer.on('GMCP-received', (event, data) => {
+            if (options && options.debug)
+                console.log(data);
+            if (mail)
+                mail.processGMCP(data.mod, data.obj);
+        });
+
+        function switchFolder(folder) {
+            $('#folder-' + _currentFolder).removeClass('active');
+            _currentFolder = folder;
+            updateMessages(folder);
+            display.clear();
+            $('#folder-' + _currentFolder).addClass('active');
+            $('#bottom-loading').css('display', '');
+            _currentLetter = 0;
+        }
+
+        function displayLetter(id) {
+            $('#bottom-loading').css('display', 'block');
+            _currentLetter = id;
+            display.clear();
+            if (options.showHeaders)
+                $('#view-body').css('top', '');
+            mail.read(id, options.format, (letter) => {
+                $('#bottom-loading').css('display', 'none');
+                if (!_currentLetter) return;
+                if (!letter) {
+                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'error',
+                        title: "Letter not found",
+                        message: "Letter could not be found."
+                    });
+                    return;
+                }
+                if (letter.id != _currentLetter)
+                    return;
+                $('#from').html(letter.from);
+                $('#ccs').html(letter.cc.join(', '));
+                if (letter.cc.length) {
+                    $('#ccs').css('display', 'block');
+                    if (options.showHeaders)
+                        $('#view-body').css('top', '95px');
+                }
+                $('#date').html(new moment(letter.date * 1000).format('MM/DD/YYYY hh:mm:ss A'));
+                $('#subject').html(letter.subject);
+                display.append(letter.body);
+                if (!letter.read)
+                    setTimeout(() => {
+                        mail.mark(letter.id, 1);
+                    }, options.markReadDelay || 2000);
+            });
+        }
+
+        function updateFolderBadges() {
+            for (let f = 0; f < 4; f++)
+                mail.newCount(f, (cnt) => {
+                    $('#folder-' + f + ' .badge').text(cnt);
+                    $('#folder-' + f + ' .badge').css('display', cnt ? 'block' : 'none');
+                });
+        }
+
+        function headers(state, nosave) {
+            options.showHeaders = state;
+            if(!nosave)
+                saveOptions();
+            if (options.showHeaders) {
+                $('#view-headers').css('display', '');
+                if ($('#ccs').css('display') === 'block')
+                    $('#view-body').css('top', '95px');
+                else
+                    $('#view-body').css('top', '');
+            }
+            else {
+                $('#view-headers').css('display', 'none');
+                $('#view-body').css('top', '12px');
+            }
+            updateMenuItem({ menu: 'view|headers', checked: options.showHeaders });
+            if(options.showHeaders)
+            {
+                $('#btn-show-headers i').removeClass('fa-chevron-down');
+                $('#btn-show-headers i').addClass('fa-chevron-up');
+            }
+            else
+            {
+                $('#btn-show-headers i').addClass('fa-chevron-down');
+                $('#btn-show-headers i').removeClass('fa-chevron-up');                
+            }
+            display.updateScrollbars();
+        }
     </script>
 </head>
 
 <body>
     <div id="toolbar" class="btn-toolbar" role="toolbar">
-        <div class="btn-group" role="group" id="queue-controls">
-            <button id="btn-get" type="button" class="btn btn-default btn-xs" title="Get new mail">
+        <div class="btn-group" role="group">
+            <button id="btn-get" type="button" class="btn btn-default btn-xs" title="Get new mail" onclick="checkMail()">
                 <i class="fa fa-envelope-open"></i>
             </button>
-            <button id="btn-sync" type="button" class="btn btn-default btn-xs" title="Sync to mud">
+            <button id="btn-sync" type="button" class="btn btn-default btn-xs" title="Sync to mud" onclick="">
                 <i class="fa fa-exchange"></i>
             </button>
         </div>
-        <button id="btn-compose" type="button" class="btn btn-default btn-xs" title="Compose" onclick="queueStart()">
-            <i class="fa fa-plus"></i>
+        <button id="btn-compose" type="button" class="btn btn-default btn-xs" title="Compose" onclick="">
+            <i class="fa fa-pencil"></i>
         </button>
-        <button id="btn-delete" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Pause" onclick="queuePause()" data-toggle="button">
+        <button id="btn-delete" disabled="disabled" type="button" class="btn btn-danger btn-xs" title="Pause" onclick="" data-toggle="button">
             <i class="fa fa-remove"></i>
         </button>
 
-        <div class="btn-group" role="group" id="queue-controls">
-            <button id="btn-pause" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Reply" onclick="queuePause()" data-toggle="button">
+        <div class="btn-group" role="group" id="reply-controls">
+            <button id="btn-pause" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Reply" onclick="" data-toggle="button">
                 <i class="fa fa-reply"></i>
             </button>
-            <button id="btn-stop" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Reply all" onclick="queueStop()">
+            <button id="btn-stop" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Reply all" onclick="">
                 <i class="fa fa-reply-all"></i>
             </button>
-            <button id="btn-pause" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Forward" onclick="queuePause()" data-toggle="button">
+            <button id="btn-pause" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Forward" onclick="" data-toggle="button">
                 <i class="fa fa-mail-forward"></i>
             </button>
 
@@ -873,13 +1041,17 @@
         <div id="folders">
             <div class="panel panel-default">
                 <div id="folder-container" class="list-group" style="padding:0px;top:0px;bottom:1px;left:1px;right:5px;position: absolute;">
-                    <a class="list-group-item active" href="javascript:void()">
+                    <a id="folder-0" class="list-group-item active" href="javascript:void(0)" onclick="switchFolder(0)">
+                        <span class="badge" style="display: none">0</span>
                         <i class="fa fa-inbox"></i> Inbox</a>
-                    <a class="list-group-item" href="javascript:void()">
+                    <a id="folder-1" class="list-group-item" href="javascript:void(0)" onclick="switchFolder(1)">
+                        <span class="badge" style="display: none">0</span>
                         <i class="fa fa-edit"></i> Drafts</a>
-                    <a class="list-group-item" href="javascript:void()">
+                    <a id="folder-2" class="list-group-item" href="javascript:void(0)" onclick="switchFolder(2)">
+                        <span class="badge" style="display: none">0</span>
                         <i class="fa fa-envelope-o"></i> Sent</a>
-                    <a class="list-group-item" href="javascript:void()">
+                    <a id="folder-3" class="list-group-item" href="javascript:void(0)" onclick="switchFolder(3)">
+                        <span class="badge" style="display: none">0</span>
                         <i class="fa fa-trash"></i> Trash</a>
                 </div>
             </div>
@@ -908,13 +1080,10 @@
         <div id="btm-drag-bar"></div>
         <div class="panel panel-default" style="margin-bottom:0px;padding:0px;top:5px;bottom:0px;left:0px;right:0px;position: absolute;">
             <div id="view-headers" class="panel-heading">
-                <button style="float: right" class="btn btn-default btn-xs" type="button" id="btn-hide">
-                    <i class="fa fa-remove"></i>
-                </button>
                 <div>From:
                     <span id="from"></span>
                 </div>
-                <div id="ccs">CC:
+                <div id="ccs" style="display: none">CC:
                     <span id="cc"></span>
                 </div>
                 <div>Date:
@@ -924,9 +1093,17 @@
                     <span id="subject"></span>
                 </div>
             </div>
+            <div id="view-show-headers" class="panel-heading">
+                <button id="btn-show-headers" class="btn btn-default btn-xs btn-adv" onclick="headers(!options.showHeaders);">
+                    <i style="font-size: 8px;" class="fa fa-chevron-up"></i>
+                </button>
+            </div>            
             <div id="view-body" class="panel-body">
                 <div id="display"></div>
             </div>
+        </div>
+        <div id="bottom-loading">
+            <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
         </div>
     </div>
     <div id="status" class="btn-toolbar" role="toolbar">

@@ -3,6 +3,7 @@
 ## 0.4.38
 
 - **New:**
+  - Added Mail interface for reading MUD mail
   - MXP: add <version>, <support>, <user>, and <password> tag support but leave user/password disabled for now due to server side not supporting it
 - **Changed:**
   - Character Manager: double clicking now does a close load, instead of just a load
@@ -13,6 +14,8 @@
     - Fix double clicking items as they are removed from local/remote/queue table
     - Update queue table properly when local/remote folder are changed to refresh the file path state
   - Mapper: When reloading the same character it would not refresh the map file if it changed from previous load.
+  - Display scroll bars where not correctly updated when buttons/status display was hidden/shown
+  - View > Buttons > Button check state was not correctly set when setting toggled
 
 ## 0.4.37 2017-12-26
 

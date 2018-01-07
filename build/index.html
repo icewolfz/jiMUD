@@ -325,11 +325,13 @@
         case 'button.map':
         case 'button.user':
         case 'button.characters':
+        case 'button.mail':
+        case 'button.compose':
           view = view.split('.');
           client.options.buttons[view[1]] = !client.options.buttons[view[1]];
           updateInterface();
           client.saveOptions();
-          ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + "button"], checked: client.options.showButtonBar });
+          ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + "button"], checked: client.options.buttons[view[1]] });
           break;
         case 'buttons':
           client.options.showButtonBar = !client.options.showButtonBar;
@@ -453,10 +455,13 @@
       $("#clear").css('display', client.options.buttons.clear ? '' : 'none');
       $("#lock").css('display', client.options.buttons.lock ? '' : 'none');
       $("#map").css('display', client.options.buttons.map ? '' : 'none');
+      $("#mail").css('display', client.options.buttons.mail ? '' : 'none');
+      $("#compose").css('display', client.options.buttons.compose ? '' : 'none');
 
       _status.updateInterface();
       buildButtons();
       client.display.update();
+      client.display.updateScrollbars();
       client.UpdateWindow();
       updateMenu();
     }
@@ -715,6 +720,7 @@
       client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
       client.telnet.GMCPSupports.push("Room 1");
       client.telnet.GMCPSupports.push("IED 1");
+      client.telnet.GMCPSupports.push("Post 1");
       //client.telnet.GMCPSupports.push('Comm 1');
       client.on('initialized', () => {
         autoConnect();
@@ -1488,6 +1494,22 @@
           }
         }));
         c.append(new MenuItem({
+          label: 'Mail',
+          type: 'checkbox',
+          checked: client.options.buttons.mail,
+          click: () => {
+            toggleView("button.mail");
+          }
+        }));
+        c.append(new MenuItem({
+          label: 'Compose mail',
+          type: 'checkbox',
+          checked: client.options.buttons.compose,
+          click: () => {
+            toggleView("button.compose");
+          }
+        }));
+        c.append(new MenuItem({
           label: 'User buttons',
           type: 'checkbox',
           checked: client.options.buttons.user,
@@ -1739,6 +1761,8 @@
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'clearbutton'], checked: client.options.buttons.clear });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'lockbutton'], checked: client.options.buttons.lock });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mapbutton'], checked: client.options.buttons.map });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mailbutton'], checked: client.options.buttons.mail });
+      ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'composebutton'], checked: client.options.buttons.compose });
       ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
       _logger.postMessage({ action: 'logging' });
     }
@@ -1956,15 +1980,17 @@
       }
       else
         ipcRenderer.send('show-window', 'mail', { show: true, file: 'mail.html', icon: 'mail', alwaysOnTopClient: true });
-    }    
+    }
 
     function showComposer() {
+      /*
       if (client.options.windows['composer'] && client.options.windows['composer'].options) {
         client.options.windows['composer'].options.show = true;
         ipcRenderer.send('show-window', 'composer', client.options.windows['composer'].options);
       }
       else
         ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'send', alwaysOnTopClient: true });
+        */
     }
 
     $(document).ready(init);
@@ -2118,6 +2144,15 @@
     </a>
     <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');">
       <i class="fa fa-map"></i>
+    </a>
+    <a href="javascript:void(0)" title="Mail" id="mail" class="button" onclick="showMail();">
+      <i class="fa fa-envelope"></i>
+    </a>
+    <a href="javascript:void(0)" title="Compose new mail" id="compose" class="button" onclick="showComposer();">
+      <span class="fa-stack">
+        <i class="fa fa-envelope-open-o fa-stack-2x"></i>
+        <i class="fa fa-pencil fa-stack-1x"></i>
+      </span>
     </a>
     <div id="user-buttons"></div>
   </div>

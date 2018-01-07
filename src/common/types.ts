@@ -259,3 +259,10 @@ export enum MailReadFormat {
   html = 1,
   ansi = 2
 }
+
+export enum MailFolders {
+  inbox = 0,
+  drafts = 1,
+  sent = 2,
+  trash = 3
+}

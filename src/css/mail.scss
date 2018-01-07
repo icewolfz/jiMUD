@@ -32,7 +32,7 @@ body {
 }
 
 #main {
-    top: 0px;
+    top: 26px;
     bottom: 276px;
     left: 0;
     right: 0;
@@ -135,7 +135,7 @@ body {
 #folders {
     position: absolute;
     left: 0;
-    top: 26px;
+    top: 0px;
     bottom: 0;
     padding-right: 4px;
     width: 20%;
@@ -148,7 +148,7 @@ body {
 #messages {
     position: absolute;
     right: 0;
-    top: 26px;
+    top: 0px;
     bottom: 0;
     left: 80%;
 }
@@ -296,6 +296,10 @@ table.dataTable {
     white-space: nowrap;
 }
 
+.mail_new {
+    font-weight: bold;
+}
+
 #log-view {
     user-select: text;
     margin: 0;
@@ -333,10 +337,42 @@ table.dataTable {
 
 #view-body {
     position: absolute;
-    top: 85px;
+    top: 75px;
     bottom: 0px;
     left: 0px;
     right: 0px;
+}
+
+#bottom-loading {
+    z-index: 1000;
+    font-size: 3em;
+    text-align: center;
+    margin-bottom: 0px;
+    padding: 0px;
+    top: 5px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.25);
+    color: #ececec;
+    display: none;
+}
+
+.btn-adv {
+    height: 11px;
+    padding: 0;
+    margin: 0;
+    font-size: 8px;
+    width: 75px;
+}
+
+#view-show-headers {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    height: 11px;
+    line-height: 9px;
 }
 
 /** Display css*/
@@ -359,6 +395,7 @@ table.dataTable {
     padding: 2px;
     overflow: hidden;
     cursor: text;
+
     /*
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);    
