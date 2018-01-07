@@ -631,11 +631,11 @@ export class Client extends EventEmitter {
             try {
                 if (val.length > 0)
                     obj = JSON.parse(val);
+                this.emit('received-GMCP', mod, obj);
             }
             catch (e) {
                 this.error('Invalid GMCP');
             }
-            this.emit('received-GMCP', mod, obj);
         });
 
         this.telnet.on('windowSize', () => { this.UpdateWindow(); });
