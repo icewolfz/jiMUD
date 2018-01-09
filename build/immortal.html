@@ -1886,7 +1886,7 @@
                 if (!data) return;
                 if (data.size === -2) {
                     if (options.syncFolders) {
-                        if (_remote[data.name] && (path.basename(options.remote) === path.basename(options.local) || path.basename(options.remote) === '/'))
+                        if (_remote[data.name] && (path.basename(options.remote) === path.basename(options.local) || options.remote === '/'))
                             _ied.getDir(options.remote + "/" + data.name, true);
                     }
                     updateLocal(data.path);
