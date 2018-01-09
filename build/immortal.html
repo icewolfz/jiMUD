@@ -380,22 +380,28 @@
 
             items = menubar.items;
             tItems = menu;
-            for (i = 0; i < args.menu.length; i++) {
-                if (!items || items.length === 0) break;
-                for (var m = 0; m < items.length; m++) {
-                    if (!items[m]) continue;
-                    if (items[m].id === args.menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
-                        item = items[m];
-                        tItem = tItems[m];
-                        if (item.submenu) {
-                            items = item.submenu.items;
-                            tItems = tItem.submenu;
+            try {
+                for (i = 0; i < args.menu.length; i++) {
+                    if (!items || items.length === 0) break;
+                    for (var m = 0; m < items.length; m++) {
+                        if (!items[m]) continue;
+                        if (items[m].id === args.menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
+                            item = items[m];
+                            tItem = tItems[m];
+                            if (item.submenu) {
+                                items = item.submenu.items;
+                                tItems = tItem.submenu;
+                            }
+                            else
+                                items = null;
+                            break;
                         }
-                        else
-                            items = null;
-                        break;
                     }
                 }
+            }
+            catch (error) {
+                logError(error);
+                return;
             }
             if (!item)
                 return;
@@ -1265,7 +1271,7 @@
                             }
                             return file;
                         }
-                    },                    
+                    },
                     {
                         render: function (data, type, full, meta) {
                             if (type === "sort" || type === 'type')
@@ -1877,7 +1883,7 @@
 
             $('#local-list tbody').on('dblclick', 'tr', function () {
                 var data = localTable.row(this).data();
-                if(!data) return;
+                if (!data) return;
                 if (data.size === -2) {
                     if (options.syncFolders) {
                         if (_remote[data.name] && (path.basename(options.remote) === path.basename(options.local) || path.basename(options.remote) === '/'))
@@ -1891,7 +1897,7 @@
 
             $('#remote-list tbody').on('dblclick', 'tr', function () {
                 var data = remoteTable.row(this).data();
-                if(!data) return;
+                if (!data) return;
                 if (data.size === -2) {
                     if (options.syncFolders) {
                         if (_local[data.name] && path.basename(options.remote) === path.basename(options.remote))
@@ -1905,7 +1911,7 @@
 
             $('#queue-list tbody').on('dblclick', 'tr', function () {
                 var data = queueTable.row(this).data();
-                if(!data) return;
+                if (!data) return;
                 if (data.state === ItemState.paused)
                     _ied.startItem(data.id);
                 else
@@ -3604,7 +3610,7 @@
                 if ((this._updating & 256) === 256) {
                     queueTable.rows().invalidate('data').draw();
                     _updating &= ~256;
-                }                
+                }
                 doUpdate(_updating);
             });
         }
