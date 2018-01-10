@@ -164,6 +164,13 @@ i.mce-i-fa-open:before {
     border-right-color: transparent !important;
 }
 
+.mce-tooltip-nw .mce-tooltip-arrow {
+    border-bottom-style: solid !important;
+    border-top: none !important;
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
+}
+
 .mce-menu-item:hover .sm-transparent:before {
     color: white;
 }
