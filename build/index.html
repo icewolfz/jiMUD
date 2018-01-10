@@ -1983,14 +1983,12 @@
     }
 
     function showComposer() {
-      /*
       if (client.options.windows['composer'] && client.options.windows['composer'].options) {
         client.options.windows['composer'].options.show = true;
         ipcRenderer.send('show-window', 'composer', client.options.windows['composer'].options);
       }
       else
-        ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'send', alwaysOnTopClient: true });
-        */
+        ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true });
     }
 
     $(document).ready(init);

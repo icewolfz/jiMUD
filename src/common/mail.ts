@@ -39,10 +39,13 @@ export class Mail extends EventEmitter {
 
     set file(value: string) {
         if (value !== this._file) {
-            this._db.close(() => {
-                this._file = value;
+            this._file = value;
+            if (this._db)
+                this._db.close(() => {
+                    this.initializeDatabase();
+                });
+            else
                 this.initializeDatabase();
-            });
         }
     }
     get file(): string { return this._file; }
