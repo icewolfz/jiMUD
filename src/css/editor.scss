@@ -95,12 +95,21 @@ i.mce-i-fa-open:before {
     height: 0;
     line-height: 0;
     border: 5px dashed #fff !important;
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;    
 }
 
 .mce-tooltip-n .mce-tooltip-arrow {
     top: 0;
     left: 50%;
     margin-left: -5px;
+    border-bottom-style: solid !important;
+    border-top: none !important;
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
+}
+
+.mce-tooltip-nw .mce-tooltip-arrow {
     border-bottom-style: solid !important;
     border-top: none !important;
     border-left-color: transparent !important;
