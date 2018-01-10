@@ -1,8 +1,11 @@
 /**
- * IED
+ * Mail
  *
- * send and receive IED gmcp protocol
+ * Hand GMCP ShadowMUD Post protocol
+ *
  * @arthur William
+ * @created 2018-01-05
+ * @change 2018-01-09 William Set file in constructor
  */
 //cSpell:words fswin, chunksize
 import EventEmitter = require('events');
@@ -27,6 +30,7 @@ export class Mail extends EventEmitter {
 
     constructor(file?: string) {
         super();
+        this.file = file;
         this.initializeDatabase();
     }
 
