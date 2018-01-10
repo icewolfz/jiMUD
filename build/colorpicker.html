@@ -40,6 +40,7 @@
 
             var type = 'forecolor';
             var color = '';
+            var _window;
             var options;
 
             var colorNames = {
@@ -302,6 +303,7 @@
 
             function setType(t) { type = t; }
             function setColor(c) { color = c; }
+            function setWindow(w) { _window = w; }
 
             $(window).keydown((event) => {
                 if (event.which === 27)
@@ -454,7 +456,7 @@
                 $("div").on('click', function () {
                     console.log($(this));
                     console.log($(this).data('mce-color'));
-                    ipcRenderer.send('set-color', type, $(this).data('mce-color'));
+                    ipcRenderer.send('set-color', type, $(this).data('mce-color'), _window);
                     window.close();
                 });
 

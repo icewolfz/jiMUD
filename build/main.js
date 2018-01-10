@@ -1704,9 +1704,9 @@ ipcMain.on('connected', (event) => {
   }
 });
 
-ipcMain.on('set-color', (event, type, color) => {
+ipcMain.on('set-color', (event, type, color, window) => {
   if (winEditor)
-    winEditor.webContents.send('set-color', type, color);
+    winEditor.webContents.send('set-color', type, color, window);
 });
 
 ipcMain.on('send-background', (event, command) => {
@@ -2771,7 +2771,7 @@ function showColor(args) {
 
   cp.once('ready-to-show', () => {
     cp.show();
-    cp.webContents.executeJavaScript('setType("' + (args.type || 'forecolor') + '");setColor("' + (args.color || '') + '");');
+    cp.webContents.executeJavaScript('setType("' + (args.type || 'forecolor') + '");setColor("' + (args.color || '') + '");setWindow("' + (args.window || '') + '");');
   });
 }
 

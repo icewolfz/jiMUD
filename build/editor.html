@@ -636,7 +636,7 @@
                         label: 'More...',
                         icon: path.join(__dirname, '../assets/icons/png/color.png'),
                         click: function (evt) {
-                            ipcRenderer.send('show-window', 'color', { type: 'forecolor', color: '' });
+                            ipcRenderer.send('show-window', 'color', { type: 'forecolor', color: '', window: 'editor' });
                         }
                     });
                     bmi.push({ type: 'separator' });
@@ -644,7 +644,7 @@
                         label: 'More...',
                         icon: path.join(__dirname, '../assets/icons/png/color.png'),
                         click: function (evt) {
-                            ipcRenderer.send('show-window', 'color', { type: 'hilitecolor', color: '' });
+                            ipcRenderer.send('show-window', 'color', { type: 'hilitecolor', color: '', window: 'editor' });
                         }
                     });
                     cMenu.append(new MenuItem({ type: 'separator' }));
@@ -785,7 +785,7 @@
                     //contextmenu
                     "paste shadowmud insertdatetime smtextcolor nonbreaking"
                 ],
-                color_picker_callback: function (editor, color, format) { ipcRenderer.send('show-window', 'color', { type: format, color: color || '' }); },
+                color_picker_callback: function (editor, color, format) { ipcRenderer.send('show-window', 'color', { type: format, color: color || '', window: 'editor' }); },
                 color_picker_caption: 'More&hellip;',
                 //contextmenu: "shadowfore shadowback | bold italic underline strikethrough overline dblunderline flash reverse",
                 nonbreaking_force_tab: true,
@@ -1059,7 +1059,8 @@
             loadOptions();
         });
 
-        ipcRenderer.on('set-color', (event, type, color) => {
+        ipcRenderer.on('set-color', (event, type, color, window) => {
+            if (window != "editor") return;
             if (color === 'transparent')
                 tinymce.activeEditor.plugins["shadowmud"].removeFormat(type);
             else
