@@ -450,7 +450,7 @@ var menuTemp = [
             click: () => {
               win.webContents.executeJavaScript('toggleView("button.compose")');
             }
-          },          
+          },
           {
             label: '&User buttons',
             id: "userbutton",
@@ -504,7 +504,7 @@ var menuTemp = [
         id: 'chat',
         click: showChat,
         accelerator: 'CmdOrCtrl+L'
-      },        
+      },
       {
         label: '&Immortal tools...',
         id: 'immortal',
@@ -526,7 +526,7 @@ var menuTemp = [
         },
         visible: true,
         //accelerator: 'CmdOrCtrl+M'
-      },   
+      },
       {
         label: '&Compose mail...',
         click: () => {
@@ -534,7 +534,7 @@ var menuTemp = [
         },
         visible: true,
         //accelerator: 'CmdOrCtrl+M'
-      },       
+      },
       { type: 'separator' },
       {
         role: 'minimize'
@@ -1474,7 +1474,7 @@ ipcMain.on('load-default', (event) => {
   var sf = parseTemplate(path.join("{data}", "settings.json"));
   var mf = parseTemplate(path.join("{data}", "map.sqlite"));
   if (sf === global.settingsFile && mf === global.mapFile) {
-    for ( name in windows) {
+    for (name in windows) {
       if (!windows.hasOwnProperty(name) || !windows[name].window)
         continue;
       windows[name].webContents.send('load-default');
@@ -1524,13 +1524,14 @@ ipcMain.on('load-default', (event) => {
 });
 
 ipcMain.on('load-char', (event, char) => {
+  var name;
   //already loaded so no need to switch
   if (char === global.character) {
     loadCharacter(char);
     win.webContents.send('load-char', char);
     if (winMap)
       winMap.webContents.send('load-char', char);
-    for (var name in windows) {
+    for (name in windows) {
       if (!windows.hasOwnProperty(name) || !windows[name].window)
         continue;
       windows[name].window.webContents.send('load-char', char);
@@ -1586,7 +1587,7 @@ ipcMain.on('load-char', (event, char) => {
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
 
-  for (var name in set.windows) {
+  for (name in set.windows) {
     if (set.windows[name].options) {
       if (set.windows[name].options.show)
         showWindow(name, set.windows[name].options);
@@ -1707,6 +1708,11 @@ ipcMain.on('connected', (event) => {
 ipcMain.on('set-color', (event, type, color, window) => {
   if (winEditor)
     winEditor.webContents.send('set-color', type, color, window);
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.send('set-color', type, color, window);
+  }
 });
 
 ipcMain.on('send-background', (event, command) => {
@@ -1746,6 +1752,17 @@ ipcMain.on('debug', (event, msg) => {
 ipcMain.on('error', (event, err) => {
   if (win && win.webContents)
     win.webContents.send('error', err);
+});
+
+ipcMain.on('reload-mail', (event) => {
+  createMenu();
+  if (win && win.webContents)
+    win.webContents.send('reload-mail');
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window || !windows[name].window.webContents)
+      continue;
+    windows[name].window.webContents.send('reload-mail');
+  }
 });
 
 ipcMain.on('reload-profiles', (event) => {
