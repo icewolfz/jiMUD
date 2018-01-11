@@ -27,6 +27,7 @@ export class Mail extends EventEmitter {
     private _gettingMail: number;
     private _read = {};
     private _mark = {};
+    private _data = {};
 
     constructor(file?: string) {
         super();
@@ -134,25 +135,41 @@ export class Mail extends EventEmitter {
                 this.updateBody(obj);
                 break;
             case 'status':
-                if (obj.id === MailAction.mark) {
-                    if (obj.code === MailStatus.SUCCESS) {
-                        this._db.run('Update Mail SET Read = ? WHERE MailID = ?', [obj.read, obj.id], (err) => {
-                            if (err)
-                                this.emit('error', err);
-                            else
-                                this.emit('mark-changed', obj.id);
-                        });
-                    }
-                    else {
-                        switch (obj.code) {
-                            case MailStatus.INVALID_ID:
-                                this.emit('error', 'Invalid letter when marking');
-                                break;
-                            default:
-                                this.emit('error', `Error marking ${obj.id} as ${obj.read ? 'read' : 'unread'}`);
-                                break;
+                switch (obj.id) {
+                    case MailAction.mark:
+                        if (obj.code === MailStatus.SUCCESS) {
+                            this._db.run('Update Mail SET Read = ? WHERE MailID = ?', [obj.read, obj.id], (err) => {
+                                if (err)
+                                    this.emit('error', err);
+                                else
+                                    this.emit('mark-changed', obj.id);
+                            });
                         }
-                    }
+                        else {
+                            switch (obj.code) {
+                                case MailStatus.INVALID_ID:
+                                    this.emit('error', 'Invalid letter when marking');
+                                    break;
+                                default:
+                                    this.emit('error', `Error marking ${obj.id} as ${obj.read ? 'read' : 'unread'}`);
+                                    break;
+                            }
+                        }
+                        break;
+                    case MailAction.send:
+                        if (obj.code !== MailStatus.SUCCESS) {
+                            this.emit('error', obj.code, obj.to);
+                            if (this._data[obj.tag])
+                                delete this._data[obj.tag];
+                        }
+                        else {
+                            this.emit('letter-sent', obj.to);
+                            if (this._data[obj.tag]) {
+                                this._data[obj.tag](obj.code.obj.to || []);
+                                delete this._data[obj.tag];
+                            }
+                        }
+                        break;
                 }
                 break;
             case 'mail':
@@ -376,14 +393,16 @@ export class Mail extends EventEmitter {
             letter.body = letter.raw;
             letter.format = MailReadFormat.none;
             this.updateBody(letter, () => {
+                letter.tag = 'Send' + Date.now();
                 ipcRenderer.send('send-gmcp', 'Post.send ' + JSON.stringify({
                     to: letter.to,
                     cc: letter.cc,
                     subject: letter.subject,
-                    body: letter.raw
+                    body: letter.raw,
+                    tag: letter.tag
                 }));
                 if (callback)
-                    callback();
+                    this._data[letter.tag] = callback;
             });
         });
     }

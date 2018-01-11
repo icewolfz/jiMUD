@@ -251,7 +251,8 @@ export enum MailStatus {
 export enum MailAction {
   list = 0,
   read = 1,
-  mark = 2
+  mark = 2,
+  send = 3
 }
 
 export enum MailReadFormat {

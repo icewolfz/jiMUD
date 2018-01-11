@@ -29,7 +29,7 @@
         const { stripHTML, htmlEncode, parseTemplate } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Mail } = require('./js/mail');
-        //const { MailFolders, MailReadFormat } = require('./js/types');
+        const { MailStatus } = require('./js/types');
         const rgbcolor = require("rgbcolor");
         const fs = require('fs');
         const path = require('path');
@@ -914,38 +914,38 @@
         }
 
         function sendFormated() {
+            var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
+            var cc = $('#CC').val().split(/ |,/).filter((a) => { return a.length > 0; });
+            if(to.length === 0)
+            {
+                
+            }
             mail.send({
                 id: '' + (Date.now() / 1000),
                 date: Date.now() / 1000,
                 subject: $('#Subject').val(),
                 read: 0,
-                to: $('#to').val().split(/ |,/),
-                cc: $('#CC').val().split(/ |,/),
+                to: to,
+                cc: cc,
                 from: remote.getGlobal('character') || '',
                 raw: getFormatedText().replace(/(?:\r)/g, ''),
                 ansi: getAnsiText().replace(/(?:\r)/g, '')
-            }, () => {
-                ipcRenderer.send('reload-mail');
-                draft = false;
-                window.close();
             });
         }
 
         function sendRaw() {
+            var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
+            var cc = $('#CC').val().split(/ |,/).filter((a) => { return a.length > 0; });            
             mail.send({
                 id: '' + (Date.now() / 1000),
                 date: Date.now() / 1000,
                 subject: $('#Subject').val(),
                 read: 0,
-                to: $('#to').val().split(/ |,/),
-                cc: $('#CC').val().split(/ |,/),
+                to: to,
+                cc: cc,
                 from: remote.getGlobal('character') || '',
                 raw: getText().replace(/(?:\r)/g, ''),
                 ansi: getText().replace(/(?:\r)/g, '')
-            }, () => {
-                ipcRenderer.send('reload-mail');
-                draft = false;
-                window.close();
             });
         }
 
@@ -957,6 +957,37 @@
             else
                 file = parseTemplate(path.join("{characters}", file + ".mail"));
             mail = new Mail(file);
+            mail.on('letter-sent', (to) => {
+                if (!to || to.length === 0) {
+                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'error',
+                        title: "No recipients",
+                        message: "No recipients found."
+                    });
+                    return;
+                }
+                ipcRenderer.send('reload-mail');
+                draft = false;
+                window.close();
+            });
+            mail.on('error', (err, to) => {
+                switch (err) {
+                    case MailStatus.NO_RECIPIENTS:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: "No recipients",
+                            message: "No recipients found."
+                        });
+                        break;
+                    default:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: "Error sending",
+                            message: "Error sending mail."
+                        });
+                        break;
+                }
+            });
             tinymce.init({
                 selector: 'textarea',
                 height: 500,
@@ -1250,7 +1281,7 @@
                             ansi: getAnsiText().replace(/(?:\r)/g, ''),
                             html: getHTML()
                         }, () => {
-                            mail.close(); 
+                            mail.close();
                             closeWindow = true;
                             remote.getCurrentWindow().close();
                         });
