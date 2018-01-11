@@ -3,10 +3,13 @@
 ## 0.4.38
 
 - **New:**
-  - Added Mail interface for reading MUD mail
+  - Added Experimental Mail interface for reading MUD mail, not everything is finished
+  - Added Composer to send new mail
   - MXP: add <version>, <support>, <user>, and <password> tag support but leave user/password disabled for now due to server side not supporting it
 - **Changed:**
-  - Character Manager: double clicking now does a close load, instead of just a load
+  - Character Manager:
+    - Double clicking now does a close load, instead of just a load
+    - Remove load and just load and close with single button to remove confusion
 - **Fixed:**
   - Fixed scroll lock when using split screen mode, lock button/scroll when turned off should scroll to the end and remove split view
   - Prevent disconnect dialog hotkeys from being sent to command input when pressed.
