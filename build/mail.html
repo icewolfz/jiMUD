@@ -479,7 +479,8 @@
                     'lastCheck': 0,
                     'checkPeriod': 172800,
                     'format': MailReadFormat.ansi,
-                    'markReadDelay': 2000
+                    'markReadDelay': 2000,
+                    'saveSent': true
                 };
                 saveOptions();
             }
@@ -931,6 +932,10 @@
             });
         });
 
+        ipcRenderer.on('reload-options', (event) => {
+            loadOptions();
+        });        
+
         function switchFolder(folder) {
             $('#folder-' + _currentFolder).removeClass('active');
             _currentFolder = folder;
@@ -990,7 +995,7 @@
             }
             $('#date').html(new moment(letter.date * 1000).format('MM/DD/YYYY hh:mm:ss A'));
             $('#subject').html(letter.subject);
-            display.append(letter.body);
+            display.append(letter.message);
             if (!letter.read)
                 setTimeout(() => {
                     mail.mark(letter.id, 1, _currentFolder === MailFolders.inbox);

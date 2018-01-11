@@ -132,10 +132,10 @@ export class Mail extends EventEmitter {
                     this._read[obj.id + '-' + obj.format](obj);
                     delete this._read[obj.id + '-' + obj.format];
                 }
-                this.updateBody(obj);
+                this.updateMessage(obj);
                 break;
             case 'status':
-                switch (obj.id) {
+                switch (obj.action) {
                     case MailAction.mark:
                         if (obj.code === MailStatus.SUCCESS) {
                             this._db.run('Update Mail SET Read = ? WHERE MailID = ?', [obj.read, obj.id], (err) => {
@@ -251,7 +251,7 @@ export class Mail extends EventEmitter {
             });
     }
 
-    public updateBody(letter, callback?) {
+    public updateMessage(letter, callback?) {
         if (!letter) return;
         this.addOrUpdateLetter(letter, () => {
             let sql;
@@ -261,7 +261,7 @@ export class Mail extends EventEmitter {
                 sql = 'Update Mail SET HTML = ? WHERE MailID = ?';
             else
                 sql = 'Update Mail SET Raw = ? WHERE MailID = ?';
-            this._db.run(sql, [letter.body, letter.id], (err) => {
+            this._db.run(sql, [letter.message, letter.id], (err) => {
                 if (err)
                     this.emit('error', err);
                 if (callback)
@@ -331,9 +331,11 @@ export class Mail extends EventEmitter {
     public read(id, format: MailReadFormat, callback) {
         let sql;
         if (format === MailReadFormat.ansi)
-            sql = 'SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read, Ansi as body FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE MailID = ?';
+            sql = 'SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read, Ansi as message FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE MailID = ?';
+        else if (format === MailReadFormat.html)
+            sql = 'SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read, HTML as message FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE MailID = ?';
         else
-            sql = 'SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read, Raw as body FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE MailID = ?';
+            sql = 'SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read, Raw as message FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE MailID = ?';
         this._db.get(sql, [id], (err, row) => {
             if (err) {
                 this.emit('error', err);
@@ -345,7 +347,7 @@ export class Mail extends EventEmitter {
                     callback(0);
             }
             else {
-                if (!row.body) {
+                if (!row.message) {
                     if (callback)
                         this._read[id + '-' + format] = callback;
                     ipcRenderer.send('send-gmcp', `Post.read {id:"${id}", format:${format}}`);
@@ -385,20 +387,33 @@ export class Mail extends EventEmitter {
         });
     }
 
-    public send(letter, callback) {
+    public send(letter, save?, callback?) {
+        if (!save) {
+            letter.tag = 'Send' + Date.now();
+            ipcRenderer.send('send-gmcp', 'Post.send ' + JSON.stringify({
+                to: letter.to,
+                cc: letter.cc,
+                subject: letter.subject,
+                message: letter.raw,
+                tag: letter.tag
+            }));
+            if (callback)
+                this._data[letter.tag] = callback;
+            return;
+        }
         letter.folder = MailFolders.sent;
-        letter.body = letter.ansi || letter.raw;
+        letter.message = letter.ansi || letter.raw;
         letter.format = MailReadFormat.ansi;
-        this.updateBody(letter, () => {
-            letter.body = letter.raw;
+        this.updateMessage(letter, () => {
+            letter.message = letter.raw;
             letter.format = MailReadFormat.none;
-            this.updateBody(letter, () => {
+            this.updateMessage(letter, () => {
                 letter.tag = 'Send' + Date.now();
                 ipcRenderer.send('send-gmcp', 'Post.send ' + JSON.stringify({
                     to: letter.to,
                     cc: letter.cc,
                     subject: letter.subject,
-                    body: letter.raw,
+                    message: letter.raw,
                     tag: letter.tag
                 }));
                 if (callback)
@@ -409,25 +424,25 @@ export class Mail extends EventEmitter {
 
     public draft(letter, callback) {
         letter.folder = MailFolders.drafts;
-        letter.body = letter.ansi || letter.raw;
+        letter.message = letter.ansi || letter.raw;
         letter.format = MailReadFormat.ansi;
-        this.updateBody(letter, () => {
+        this.updateMessage(letter, () => {
             if (letter.html) {
-                letter.body = letter.html;
+                letter.message = letter.html;
                 letter.format = MailReadFormat.html;
-                this.updateBody(letter, () => {
-                    letter.body = letter.raw;
+                this.updateMessage(letter, () => {
+                    letter.message = letter.raw;
                     letter.format = MailReadFormat.none;
-                    this.updateBody(letter, () => {
+                    this.updateMessage(letter, () => {
                         if (callback)
                             callback();
                     });
                 });
             }
             else {
-                letter.body = letter.raw;
+                letter.message = letter.raw;
                 letter.format = MailReadFormat.none;
-                this.updateBody(letter, () => {
+                this.updateMessage(letter, () => {
                     if (callback)
                         callback();
                 });

@@ -915,7 +915,7 @@
 
         function sendFormated() {
             var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
-            var cc = $('#CC').val().split(/ |,/).filter((a) => { return a.length > 0; });
+            var cc = ($('#CC').val().split(/ |,/)||[]).filter((a) => { return a.length > 0; });
             var p = $('#to-form');
             p.removeClass("has-error");
             p.removeClass("has-feedback");
@@ -940,12 +940,12 @@
                 from: remote.getGlobal('character') || '',
                 raw: getFormatedText().replace(/(?:\r)/g, ''),
                 ansi: getAnsiText().replace(/(?:\r)/g, '')
-            });
+            }, options.extensions["mail"] ? options.extensions["mail"].saveSent : true);
         }
 
         function sendRaw() {
             var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
-            var cc = $('#CC').val().split(/ |,/).filter((a) => { return a.length > 0; });
+            var cc = ($('#CC').val().split(/ |,/)||[]).filter((a) => { return a.length > 0; });
             if (to.length === 0) {
                 var p = $('#to-form');
                 p.addClass("has-error");
@@ -968,7 +968,7 @@
                 from: remote.getGlobal('character') || '',
                 raw: getText().replace(/(?:\r)/g, ''),
                 ansi: getText().replace(/(?:\r)/g, '')
-            });
+            }, options.extensions["mail"] ? options.extensions["mail"].saveSent : true);
         }
 
         $(document).ready(() => {
@@ -1268,6 +1268,13 @@
             loadOptions();
         });
 
+        ipcRenderer.on('GMCP-received', (event, data) => {
+            if (options && options.enableDebug)
+                console.log(data);
+            if (mail)
+                mail.processGMCP(data.mod, data.obj);
+        });      
+
         ipcRenderer.on('set-color', (event, type, color, window) => {
             if (window !== 'composer') return;
             if (color === 'transparent')
@@ -1336,7 +1343,7 @@
                         });
                         return;
                     }
-                    else if (choice === 1) {
+                    else if (choice === 3) {
                         createOptions();
                         options.extensions["mail"].draft = 2;
                         ipcRenderer.send('setting-changed', { type: 'extensions', name: 'mail', value: options.extensions["mail"] });
