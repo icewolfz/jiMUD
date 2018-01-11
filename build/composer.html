@@ -26,14 +26,19 @@
         /* global tinymce */
         const { remote, ipcRenderer, webFrame } = require('electron');
         const { nativeImage, dialog, Menu, MenuItem } = remote;
-        const { stripHTML, htmlEncode } = require('./js/library');
+        const { stripHTML, htmlEncode, parseTemplate } = require('./js/library');
         const { Settings } = require('./js/settings');
+        const { Mail } = require('./js/mail');
+        //const { MailFolders, MailReadFormat } = require('./js/types');
         const rgbcolor = require("rgbcolor");
         const fs = require('fs');
         const path = require('path');
 
 
         var spellchecker;
+        var mail;
+        var draft = true;
+        var closeWindow = false;
 
         var _colors, _ColorTable, options;
         var colorNames = {
@@ -423,6 +428,188 @@
             return buffer.join('');
         }
 
+        //RGB are 0-5 each
+        function XTERM_COLOUR_NUM(r, g, b) { return (16 + (r) * 36 + (g) * 6 + (b)); }
+        //0-24
+        function XTERM_GREY_NUM(i) { return (232 + i); }
+
+        function getAnsiCode(color) {
+            switch (color) {
+                case 'DEFAULT': return '0;37;40';
+                case 'RESET': return '0;37;40';
+                case 'BOLD': return '1';
+                case 'FLASH': return '5';
+                case 'BLACK': return '30';
+                case 'WHITE': return '37';
+                case 'BLUE': return '34';
+                case 'CYAN': return '36';
+                case 'GREEN': return '32';
+                case 'MAGENTA': return '35';
+                case 'ORANGE': return '33';
+                case 'RED': return '31';
+                case 'YELLOW': return '1;33';
+                case 'BOLD%^%^BLACK': return '1;30';
+                case 'BOLD%^%^WHITE': return '1;37';
+                case 'BOLD%^%^BLUE': return '1;34';
+                case 'BOLD%^%^CYAN': return '1;36';
+                case 'BOLD%^%^GREEN': return '1;32';
+                case 'BOLD%^%^MAGENTA': return '1;35';
+                case 'BOLD%^%^ORANGE': return '1;33';
+                case 'BOLD%^%^RED': return '1;31';
+                case 'BOLD%^%^YELLOW': return '1;33';
+                case 'B_BLUE': return '44';
+                case 'B_CYAN': return '46';
+                case 'B_GREEN': return '42';
+                case 'B_MAGENTA': return '45';
+                case 'B_ORANGE': return '43';
+                case 'B_RED': return '41';
+                case 'B_YELLOW': return '1;43';
+                case 'B_BLACK': return '40';
+                case 'B_WHITE': return '47';
+                case 'UNDERLINE': return '4';
+                case 'DBLUNDERLINE': return '4;21';
+                case 'REVERSE': return '7';
+                case 'ITALIC': return '3';
+                case 'STRIKEOUT': return '9';
+                case 'OVERLINE': return '53';
+                case 'BOLDOFF': return '22';
+                case 'ITALICOFF': return '23';
+                case 'UNDERLINEOFF': return '24';
+                case 'FLASHOFF': return '25';
+                case 'INVERSEOFF': return '27';
+                case 'STRIKEOUTOFF': return '29';
+                case 'OVERLINEOFF': return '55';
+            }
+            if (color.startsWith('B_RGB'))
+                return '48;5;' + XTERM_COLOUR_NUM(parseInt(color.substr(5, 1)), parseInt(color.substr(6, 1)), parseInt(color.substr(7, 1)));
+            if (color.startsWith('RGB'))
+                return '38;5;' + XTERM_COLOUR_NUM(parseInt(color.substr(3, 1)), parseInt(color.substr(4, 1)), parseInt(color.substr(5, 1)));
+
+            if (color.startsWith('B_mono'))
+                return '48;5;' + XTERM_GREY_NUM(parseInt(color.substr(6)));
+            if (color.startsWith('mono'))
+                return '38;5;' + XTERM_GREY_NUM(parseInt(color.substr(4)));
+            return '';
+        }
+
+        function getAnsiText() {
+            var data = buildHTMLStack($("<html>" + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, "<br>") + "</html>"));
+            var buffer = [];
+            var codes = [];
+            var color, d, dl, rgb;
+            if (options.enableDebug)
+                ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
+            for (d = data.length - 1; d >= 0; d--) {
+                if (!data[d].startsWith('"') && data[d] != "BR")
+                    data.pop();
+                else
+                    break;
+            }
+
+            for (d = 0, dl = data.length; d < dl; d++) {
+                switch (data[d]) {
+                    case "BOLD":
+                    case "ITALIC":
+                    case "UNDERLINE":
+                    case "STRIKEOUT":
+                    case "DBLUNDERLINE":
+                    case "OVERLINE":
+                    case "FLASH":
+                    case "REVERSE":
+                        codes.push(getAnsiCode(data[d]));
+                        buffer.push("\x1b[" + getAnsiCode(data[d]) + "m");
+                        break;
+                    case "/DBLUNDERLINE":
+                    case "/OVERLINE":
+                    case "/FLASH":
+                    case "/REVERSE":
+                    case "/UNDERLINE":
+                    case "/BOLD":
+                    case "/ITALIC":
+                    case "/STRIKEOUT":
+                        codes.pop();
+                        buffer.push("\x1b[0;37;40m");
+                        if (codes.length > 0)
+                            buffer.push("\x1b[" + codes.join(';') + 'm');
+                        break;
+                    case "SPAN":
+                    case "/SPAN":
+                    case "/BR":
+                    case "/DIV":
+                        break;
+                    case "DIV":
+                    case "BR":
+                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith("\x1b[0;37;40m"))
+                            buffer.push("\x1b[0;37;40m");
+                        buffer.push('\n');
+                        if (codes.length > 0)
+                            buffer.push("\x1b[" + codes.join(';') + 'm');
+                        break;
+                    default:
+                        if (data[d].startsWith("COLOR: #")) {
+                            color = data[d].substr(8);
+                            if (!_colors[color]) {
+                                rgb = new rgbcolor(color);
+                                color = nearestHex(rgb.toHex()).substr(1);
+                            }
+                            color = _colors[color];
+                            codes.push(getAnsiCode(color));
+                            buffer.push("\x1b[" + getAnsiCode(color) + "m");
+                        }
+                        else if (data[d].startsWith("COLOR: ")) {
+                            color = new rgbcolor(data[d].substr(7)).toHex().substr(1);
+                            if (!_colors[color])
+                                color = nearestHex("#" + color).substr(1);
+                            color = _colors[color];
+                            codes.push(getAnsiCode(color));
+                            buffer.push("\x1b[" + getAnsiCode(color) + "m");
+                        }
+                        else if (data[d].startsWith("/COLOR: ")) {
+                            codes.pop();
+                            buffer.push("\x1b[0;37;40m");
+                            if (codes.length > 0)
+                                buffer.push("\x1b[" + codes.join(';') + 'm');
+                        }
+                        else if (data[d].startsWith("BACKGROUND-COLOR: #")) {
+                            color = data[d].substr(19);
+                            if (!_colors[color]) {
+                                rgb = new rgbcolor(color);
+                                color = nearestHex(rgb.toHex()).substr(1);
+                            }
+                            if (_colors["B" + color])
+                                color = _colors["B" + color];
+                            else
+                                color = _colors[color];
+                            color = "B_" + color + "";
+                            codes.push(getAnsiCode(color));
+                            buffer.push("\x1b[" + getAnsiCode(color) + "m");
+                        }
+                        else if (data[d].startsWith("BACKGROUND-COLOR: ")) {
+                            color = new rgbcolor(data[d].substr(18)).toHex().substr(1);
+                            if (!_colors[color])
+                                color = nearestHex("#" + color).substr(1);
+                            if (_colors["B" + color])
+                                color = _colors["B" + color];
+                            else
+                                color = _colors[color];
+                            color = "B_" + color + "";
+                            codes.push(getAnsiCode(color));
+                            buffer.push("\x1b[" + getAnsiCode(color) + "m");
+                        }
+                        else if (data[d].startsWith("/BACKGROUND-COLOR: ")) {
+                            codes.pop();
+                            buffer.push("\x1b[0;37;40m");
+                            if (codes.length > 0)
+                                buffer.push("\x1b[" + codes.join(';') + 'm');
+                        }
+                        else if (data[d].startsWith('"'))
+                            buffer.push(data[d].substring(1, data[d].length - 1));
+                        break;
+                }
+            }
+            return buffer.join('');
+        }
+
         function getText() {
             return tinymce.activeEditor.getContent({ format: 'text' });
         }
@@ -659,21 +846,15 @@
                     type: 'splitbutton',
                     icon: 'fa-sendraw',
                     tooltip: 'Send mail',
-                    onclick: function () {
-                        ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
-                    },
+                    onclick: sendFormated,
                     menu: [
                         {
                             text: 'Send formatted ',
-                            onclick: function () {
-                                ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
-                            }
+                            onclick: sendFormated
                         },
                         {
                             text: 'Send text',
-                            onclick: function () {
-                                ipcRenderer.send('send-command', getText().replace(/(?:\r)/g, ''));
-                            }
+                            onclick: sendRaw
                         }
                     ]
                 });
@@ -732,9 +913,50 @@
             });
         }
 
+        function sendFormated() {
+            mail.send({
+                id: '' + (Date.now() / 1000),
+                date: Date.now() / 1000,
+                subject: $('#Subject').val(),
+                read: 0,
+                to: $('#to').val().split(/ |,/),
+                cc: $('#CC').val().split(/ |,/),
+                from: remote.getGlobal('character') || '',
+                raw: getFormatedText().replace(/(?:\r)/g, ''),
+                ansi: getAnsiText().replace(/(?:\r)/g, '')
+            }, () => {
+                ipcRenderer.send('reload-mail');
+                draft = false;
+                window.close();
+            });
+        }
+
+        function sendRaw() {
+            mail.send({
+                id: '' + (Date.now() / 1000),
+                date: Date.now() / 1000,
+                subject: $('#Subject').val(),
+                read: 0,
+                to: $('#to').val().split(/ |,/),
+                cc: $('#CC').val().split(/ |,/),
+                from: remote.getGlobal('character') || '',
+                raw: getText().replace(/(?:\r)/g, ''),
+                ansi: getText().replace(/(?:\r)/g, '')
+            }, () => {
+                ipcRenderer.send('reload-mail');
+                draft = false;
+                window.close();
+            });
+        }
+
         $(document).ready(() => {
             initShadowMUD();
-
+            var file = remote.getGlobal('character');
+            if (!file || file.length === 0)
+                file = parseTemplate(path.join("{data}", "mail.sqlite"));
+            else
+                file = parseTemplate(path.join("{characters}", file + ".mail"));
+            mail = new Mail(file);
             tinymce.init({
                 selector: 'textarea',
                 height: 500,
@@ -813,36 +1035,6 @@
             tinymce.activeEditor.on('contextmenu', function (e) {
                 e.preventDefault();
                 var cMenu = tinymce.activeEditor.plugins["shadowmud"].buildMenu();
-
-                /*
-                                    sel = tinymce.activeEditor.selection.getSel();
-                                    if (!sel.isCollapsed) {
-                
-                                        // Detect if selection is backwards
-                                        var range = document.createRange();
-                                        range.setStart(sel.anchorNode, sel.anchorOffset);
-                                        range.setEnd(sel.focusNode, sel.focusOffset);
-                                        var backwards = range.collapsed;
-                                        range.detach();
-                
-                                        // modify() works on the focus of the selection
-                                        var endNode = sel.focusNode, endOffset = sel.focusOffset;
-                                        sel.collapse(sel.anchorNode, sel.anchorOffset);
-                
-                                        var direction = [];
-                                        if (backwards) {
-                                            direction = ['backward', 'forward'];
-                                        } else {
-                                            direction = ['forward', 'backward'];
-                                        }
-                
-                                        sel.modify("move", direction[0], "character");
-                                        sel.modify("move", direction[1], "word");
-                                        sel.extend(endNode, endOffset);
-                                        sel.modify("extend", direction[1], "character");
-                                        sel.modify("extend", direction[0], "word");
-                                    }
-                                    */
                 var selRng = tinymce.activeEditor.selection.getRng();
                 selRng.expand("word"); //expands the DOM range to the current word
                 //tinymce.activeEditor.selection.setRng(selRng);
@@ -1011,7 +1203,6 @@
                 ipcRenderer.send('error', ex);
             }
 
-
             $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-size", options.cmdfontSize);
             $(".mce-content-body", tinymce.activeEditor.getDoc()).css("font-family", options.cmdfont + ", monospace");
             if (tinymce.activeEditor.formatter)
@@ -1032,6 +1223,50 @@
             else
                 tinymce.activeEditor.plugins["shadowmud"].applyFormat(type, "#" + color);
         });
+
+        window.onbeforeunload = function (evt) {
+            if (!closeWindow && draft) {
+                evt.returnValue = false;
+                setTimeout(() => {
+                    var choice = dialog.showMessageBox(
+                        remote.getCurrentWindow(),
+                        {
+                            type: 'warning',
+                            title: 'Unsaved',
+                            message: 'Save as draft?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1
+                        });
+                    if (choice === 0) {
+                        mail.draft({
+                            id: '' + (Date.now() / 1000),
+                            date: Date.now() / 1000,
+                            subject: $('#Subject').val(),
+                            read: 0,
+                            to: $('#to').val().split(/ |,/),
+                            cc: $('#CC').val().split(/ |,/),
+                            from: remote.getGlobal('character') || '',
+                            raw: getFormatedText().replace(/(?:\r)/g, ''),
+                            ansi: getAnsiText().replace(/(?:\r)/g, ''),
+                            html: getHTML()
+                        }, () => {
+                            mail.close(); 
+                            closeWindow = true;
+                            remote.getCurrentWindow().close();
+                        });
+                        return;
+                    }
+                    closeWindow = true;
+                    remote.getCurrentWindow().close();
+                });
+                return;
+            }
+            else if (mail)
+                mail.close();
+            closeWindow = true;
+            remote.getCurrentWindow().close();
+        };
+
     </script>
 </head>
 

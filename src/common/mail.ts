@@ -47,6 +47,20 @@ export class Mail extends EventEmitter {
     }
     get file(): string { return this._file; }
 
+    public reload(callback?) {
+        if (!this._db) {
+            this.initializeDatabase();
+            if (callback)
+                callback();
+        }
+        else
+            this._db.close(() => {
+                this.initializeDatabase();
+                if (callback)
+                    callback();
+            });
+    }
+
     public close(callback?) {
         if (!this._db) {
             if (callback)
@@ -88,7 +102,7 @@ export class Mail extends EventEmitter {
         this._db.serialize(() => {
             //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
             this._db.run('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Mail (MailID TEXT PRIMARY KEY ASC, [From] INTEGER, [Date] INTEGER, Subject TEXT, Raw TEXT, Ansi TEXT, Folder INTEGER, Read INTEGER)');
+            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Mail (MailID TEXT PRIMARY KEY ASC, [From] INTEGER, [Date] INTEGER, Subject TEXT, Raw TEXT, Ansi TEXT, HTML TEXT, Folder INTEGER, Read INTEGER)');
             this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'CC (MailID TEXT, NameID INTEGER, FOREIGN KEY(MailID) REFERENCES Mail(MailID), FOREIGN KEY(NameID) REFERENCES Names(NameID))');
             this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + '[To] (MailID TEXT, NameID INTEGER, FOREIGN KEY(MailID) REFERENCES Mail(MailID), FOREIGN KEY(NameID) REFERENCES Names(NameID))');
             this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Names (NameID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)');
@@ -169,7 +183,7 @@ export class Mail extends EventEmitter {
                 letter.date,
                 letter.subject,
                 letter.read,
-                MailFolders.inbox,
+                letter.folder || MailFolders.inbox,
                 letter.id,
                 letter.id
             ], (err) => {
@@ -220,17 +234,21 @@ export class Mail extends EventEmitter {
             });
     }
 
-    public updateBody(letter) {
+    public updateBody(letter, callback?) {
         if (!letter) return;
         this.addOrUpdateLetter(letter, () => {
             let sql;
             if (letter.format === MailReadFormat.ansi)
                 sql = 'Update Mail SET Ansi = ? WHERE MailID = ?';
+            else if (letter.format === MailReadFormat.html)
+                sql = 'Update Mail SET HTML = ? WHERE MailID = ?';
             else
                 sql = 'Update Mail SET Raw = ? WHERE MailID = ?';
             this._db.run(sql, [letter.body, letter.id], (err) => {
                 if (err)
                     this.emit('error', err);
+                if (callback)
+                    callback();
             });
         });
     }
@@ -330,8 +348,9 @@ export class Mail extends EventEmitter {
         });
     }
 
-    public mark(id, mark: number) {
-        ipcRenderer.send('send-gmcp', `Post.mark {id:"${id}", read:${mark}}`);
+    public mark(id, mark: number, local?) {
+        if (!local)
+            ipcRenderer.send('send-gmcp', `Post.mark {id:"${id}", read:${mark}}`);
         this._db.run('Update Mail SET Read = ? WHERE MailID = ?', [mark, id], (err) => {
             if (err)
                 this.emit('error', err);
@@ -348,4 +367,53 @@ export class Mail extends EventEmitter {
                 callback(row ? row.count : 0);
         });
     }
+
+    public send(letter, callback) {
+        letter.folder = MailFolders.sent;
+        letter.body = letter.ansi || letter.raw;
+        letter.format = MailReadFormat.ansi;
+        this.updateBody(letter, () => {
+            letter.body = letter.raw;
+            letter.format = MailReadFormat.none;
+            this.updateBody(letter, () => {
+                ipcRenderer.send('send-gmcp', 'Post.send ' + JSON.stringify({
+                    to: letter.to,
+                    cc: letter.cc,
+                    subject: letter.subject,
+                    body: letter.raw
+                }));
+                if (callback)
+                    callback();
+            });
+        });
+    }
+
+    public draft(letter, callback) {
+        letter.folder = MailFolders.drafts;
+        letter.body = letter.ansi || letter.raw;
+        letter.format = MailReadFormat.ansi;
+        this.updateBody(letter, () => {
+            if (letter.html) {
+                letter.body = letter.html;
+                letter.format = MailReadFormat.html;
+                this.updateBody(letter, () => {
+                    letter.body = letter.raw;
+                    letter.format = MailReadFormat.none;
+                    this.updateBody(letter, () => {
+                        if (callback)
+                            callback();
+                    });
+                });
+            }
+            else {
+                letter.body = letter.raw;
+                letter.format = MailReadFormat.none;
+                this.updateBody(letter, () => {
+                    if (callback)
+                        callback();
+                });
+            }
+        });
+    }
+
 }
