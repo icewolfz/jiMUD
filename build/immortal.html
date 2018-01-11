@@ -1954,7 +1954,17 @@
             $("#local-navigate").on('click', (e) => {
                 e.preventDefault();
                 e.cancelBubble = true;
-                updateLocal($(e.target).data('path'));
+                var p = $(e.target).data('path');
+                if (options.syncFolders) {
+                    if (p.startsWith(options.local) && _remote[path.basename(p)] && (path.basename(options.remote) === path.basename(options.local) || options.remote === '/'))
+                        _ied.getDir(options.remote + "/" + path.basename(p), true);
+                    else if (path.basename(path.dirname(options.remote)).length === 0 && path.dirname(options.local) === p)
+                        _ied.getDir(path.dirname(options.remote), true);
+                    else if (path.basename(path.dirname(options.remote)) === path.basename(p))
+                        _ied.getDir(path.dirname(options.remote), true);
+
+                }
+                updateLocal(p);
             });
 
             $('#local-path').change(function () {
@@ -1979,7 +1989,14 @@
             $("#remote-navigate").on('click', (e) => {
                 e.preventDefault();
                 e.cancelBubble = true;
-                _ied.getDir($(e.target).data('path'), true);
+                var p = $(e.target).data('path');
+                if (options.syncFolders) {
+                    if (p.startsWith(options.remote) && [path.basename(p)] && path.basename(options.remote) === path.basename(options.remote))
+                        updateLocal(path.join(options.local, path.basename(p)));
+                    else if (path.basename(path.dirname(options.local)) === path.basename(p))
+                        updateLocal(path.dirname(options.local));
+                }
+                _ied.getDir(p, true);
             });
 
             $('#remote-path').change(function () {

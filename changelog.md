@@ -6,6 +6,7 @@
   - Added Experimental Mail interface for reading MUD mail, not everything is finished
   - Added Composer to send new mail
   - MXP: add <version>, <support>, <user>, and <password> tag support but leave user/password disabled for now due to server side not supporting it
+  - Immortal tools: When using quick jump selecting a sub folder will now sync local/remote if sync is enabled, simlar as if you had double clicked the folder
 - **Changed:**
   - Character Manager:
     - Double clicking now does a close load, instead of just a load
