@@ -1024,6 +1024,10 @@
             }
             display.updateScrollbars();
         }
+
+        window.onbeforeunload = function (evt) {
+            if (mail) mail.close();
+        };
     </script>
 </head>
 
