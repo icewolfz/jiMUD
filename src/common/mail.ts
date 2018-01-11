@@ -54,12 +54,14 @@ export class Mail extends EventEmitter {
         }
         else
             this._db.close(() => {
+                /*
                 try {
                     fs.unlinkSync(this._file + '.lock');
                 }
                 catch (err) {
                     this.emit('error', err);
                 }
+                */
                 if (callback)
                     callback();
             });
@@ -69,11 +71,13 @@ export class Mail extends EventEmitter {
         this._db = new sqlite3.Database(this._file);
         this.createDatabase();
         this._db.serialize();
+        /*
         try {
             fs.writeFileSync(this._file + '.lock', Date.now());
         } catch (e) {
             this.emit('error', e);
         }
+        */
     }
 
     public createDatabase(prefix?) {
