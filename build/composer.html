@@ -29,7 +29,7 @@
         const { stripHTML, htmlEncode, parseTemplate } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Mail } = require('./js/mail');
-        const { MailStatus } = require('./js/types');
+        const { MailStatus, MailReadFormat } = require('./js/types');
         const rgbcolor = require("rgbcolor");
         const fs = require('fs');
         const path = require('path');
@@ -916,9 +916,19 @@
         function sendFormated() {
             var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
             var cc = $('#CC').val().split(/ |,/).filter((a) => { return a.length > 0; });
-            if(to.length === 0)
-            {
-                
+            var p = $('#to-form');
+            p.removeClass("has-error");
+            p.removeClass("has-feedback");
+            if (to.length === 0) {
+                p.addClass("has-error");
+                p.addClass("has-feedback");
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'error',
+                    title: 'No recipient',
+                    message: 'Must supply at least one recipient'
+                });
+                $('#to').focus();
+                return;
             }
             mail.send({
                 id: '' + (Date.now() / 1000),
@@ -935,7 +945,19 @@
 
         function sendRaw() {
             var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
-            var cc = $('#CC').val().split(/ |,/).filter((a) => { return a.length > 0; });            
+            var cc = $('#CC').val().split(/ |,/).filter((a) => { return a.length > 0; });
+            if (to.length === 0) {
+                var p = $('#to-form');
+                p.addClass("has-error");
+                p.addClass("has-feedback");
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'error',
+                    title: 'No recipient',
+                    message: 'Must supply at least one recipient'
+                });
+                $('#to').focus();
+                return;
+            }
             mail.send({
                 id: '' + (Date.now() / 1000),
                 date: Date.now() / 1000,
@@ -1225,7 +1247,6 @@
 
         function loadOptions() {
             options = Settings.load(remote.getGlobal('settingsFile'));
-
             try {
                 if (!spellchecker && options.spellchecking)
                     spellchecker = require('spellchecker');
@@ -1255,8 +1276,31 @@
                 tinymce.activeEditor.plugins["shadowmud"].applyFormat(type, "#" + color);
         });
 
+        function createOptions() {
+            if (options.extensions["mail"])
+                return;
+            options = {
+                'debug': false,
+                'logErrors': false,
+                'folderSize': 202,
+                'viewSize': 250,
+                'showHeaders': true,
+                'showRaw': false,
+                'viewFont': '\'Courier New\', Courier, monospace',
+                'viewFontSize': '1em',
+                'lastCheck': 0,
+                'checkPeriod': 172800,
+                'format': MailReadFormat.ansi,
+                'markReadDelay': 2000
+            };
+        }
+
         window.onbeforeunload = function (evt) {
-            if (!closeWindow && draft) {
+            var ask = 0;
+            if (options.extensions["mail"])
+                ask = options.extensions["mail"].draft;
+
+            if (!closeWindow && draft && !ask) {
                 evt.returnValue = false;
                 setTimeout(() => {
                     var choice = dialog.showMessageBox(
@@ -1265,10 +1309,15 @@
                             type: 'warning',
                             title: 'Unsaved',
                             message: 'Save as draft?',
-                            buttons: ['Yes', 'No'],
+                            buttons: ['Yes', 'No', 'Alway', 'Never ask again'],
                             defaultId: 1
                         });
-                    if (choice === 0) {
+                    if (choice === 0 || choice === 2) {
+                        if (choice === 2) {
+                            createOptions();
+                            options.extensions["mail"].draft = 1;
+                            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'mail', value: options.extensions["mail"] });
+                        }
                         mail.draft({
                             id: '' + (Date.now() / 1000),
                             date: Date.now() / 1000,
@@ -1287,6 +1336,30 @@
                         });
                         return;
                     }
+                    else if (choice === 1) {
+                        createOptions();
+                        options.extensions["mail"].draft = 2;
+                        ipcRenderer.send('setting-changed', { type: 'extensions', name: 'mail', value: options.extensions["mail"] });
+                    }
+                    closeWindow = true;
+                    remote.getCurrentWindow().close();
+                });
+                return;
+            }
+            else if (ask === 1) {
+                mail.draft({
+                    id: '' + (Date.now() / 1000),
+                    date: Date.now() / 1000,
+                    subject: $('#Subject').val(),
+                    read: 0,
+                    to: $('#to').val().split(/ |,/),
+                    cc: $('#CC').val().split(/ |,/),
+                    from: remote.getGlobal('character') || '',
+                    raw: getFormatedText().replace(/(?:\r)/g, ''),
+                    ansi: getAnsiText().replace(/(?:\r)/g, ''),
+                    html: getHTML()
+                }, () => {
+                    mail.close();
                     closeWindow = true;
                     remote.getCurrentWindow().close();
                 });
@@ -1299,23 +1372,48 @@
         };
 
     </script>
+    <style>
+        .form-control-feedback,
+        .form-error {
+            display: none;
+        }
+
+        .has-error .form-control-feedback {
+            display: inline;
+            top: -6px !important;
+            z-index: 100 !important;
+            right: 10px !important;
+        }
+
+        .has-error .form-error {
+            display: block;
+        }
+
+        .aura-error,
+        .form-error,
+        .has-error a {
+            color: #A94442;
+        }
+    </style>
 </head>
 
 <body>
     <div class="panel panel-default" style="margin-bottom:0px;padding:0px;top:0px;bottom:0px;left:0px;right:0px;position: absolute;">
 
         <div class="panel-heading">
-            <div class="input-group input-group-xs">
-                <label class="input-group-addon" for="to">To</label>
-                <input type="text" id="to" class="form-control" />
-                <span class="input-group-btn">
-                    <ul id="to-list" class="dropdown-menu" aria-labelledby="button-to" data-container="body"></ul>
-                    <button id="button-to" class="btn btn-default dropdown-toggle" style="width:17px;min-width:17px;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                        <span class="caret" style="margin-left: -1px;"></span>
-                    </button>
-                </span>
+            <div id="to-form" style="width: 100%">
+                <div class="input-group input-group-xs">
+                    <label class="input-group-addon" for="to">To</label>
+                    <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+                    <input type="text" id="to" class="form-control" />
+                    <span class="input-group-btn">
+                        <ul id="to-list" class="dropdown-menu" aria-labelledby="button-to" data-container="body"></ul>
+                        <button id="button-to" class="btn btn-default dropdown-toggle" style="width:17px;min-width:17px;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            <span class="caret" style="margin-left: -1px;"></span>
+                        </button>
+                    </span>
+                </div>
             </div>
-
             <div class="input-group input-group-xs">
                 <label class="input-group-addon" for="CC">CC</label>
                 <input type="text" id="CC" class="form-control" />
