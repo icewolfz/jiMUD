@@ -18,7 +18,9 @@
     - Fix double clicking items as they are removed from local/remote/queue table
     - Update queue table properly when local/remote folder are changed to refresh the file path state
     - When double clicking a folder in local when sync enabled, fails when in root remote (/)
-  - Mapper: When reloading the same character it would not refresh the map file if it changed from previous load.
+  - Mapper:
+    - When reloading the same character it would not refresh the map file if it changed from previous load.
+    - When import progress dialog is closed with escape key properly end import.
   - Display scroll bars where not correctly updated when buttons/status display was hidden/shown
   - View > Buttons > Button check state was not correctly set when setting toggled
   - GMCP event is no longer triggered when an error decoding GMCP is done

@@ -248,6 +248,10 @@
       $("#mapper-room select").prop("disabled", true);
       $("#mapper-room button").prop("disabled", true);
 
+      $("#mapProgress")[0].addEventListener('close', () => {
+        mapper.cancelImport();
+      });
+
       var options = Settings.load(remote.getGlobal('settingsFile'));
       mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
 
@@ -434,7 +438,8 @@
         if (value >= 100) {
           //setTimeout(updateAreas, 1);
           updateAreas();
-          $("#mapProgress")[0].close();
+          if ($("#mapProgress")[0].open)
+            $("#mapProgress")[0].close();
           ipcRenderer.send('set-progress', { value: -1 });
           ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
           ipcRenderer.send('send-gmcp', 'Room.Info');
