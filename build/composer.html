@@ -39,6 +39,7 @@
         var mail;
         var draft = true;
         var closeWindow = false;
+        var id = '' + (Date.now() / 1000);
 
         var _colors, _ColorTable, options;
         var colorNames = {
@@ -915,7 +916,7 @@
 
         function sendFormated() {
             var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
-            var cc = ($('#CC').val().split(/ |,/)||[]).filter((a) => { return a.length > 0; });
+            var cc = ($('#CC').val().split(/ |,/) || []).filter((a) => { return a.length > 0; });
             var p = $('#to-form');
             p.removeClass("has-error");
             p.removeClass("has-feedback");
@@ -930,9 +931,14 @@
                 $('#to').focus();
                 return;
             }
+            $("#sendProgressbar").html('<progress max="100"></progress>');
+            $("#sendProgress")[0].showModal();
+            ipcRenderer.send('set-progress', { value: 0 });
+            ipcRenderer.send('set-progress-window', 'composer', { value: 0 });
+
+
             mail.send({
-                id: '' + (Date.now() / 1000),
-                date: Date.now() / 1000,
+                id: id,
                 subject: $('#Subject').val(),
                 read: 0,
                 to: to,
@@ -945,7 +951,7 @@
 
         function sendRaw() {
             var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
-            var cc = ($('#CC').val().split(/ |,/)||[]).filter((a) => { return a.length > 0; });
+            var cc = ($('#CC').val().split(/ |,/) || []).filter((a) => { return a.length > 0; });
             if (to.length === 0) {
                 var p = $('#to-form');
                 p.addClass("has-error");
@@ -958,9 +964,13 @@
                 $('#to').focus();
                 return;
             }
+            $("#sendProgressbar").html('<progress max="100"></progress>');
+            $("#sendProgress")[0].showModal();
+            ipcRenderer.send('set-progress', { value: 0 });
+            ipcRenderer.send('set-progress-window', 'composer', { value: 0 });
+
             mail.send({
-                id: '' + (Date.now() / 1000),
-                date: Date.now() / 1000,
+                id: id,
                 subject: $('#Subject').val(),
                 read: 0,
                 to: to,
@@ -978,7 +988,17 @@
                 file = parseTemplate(path.join("{data}", "mail.sqlite"));
             else
                 file = parseTemplate(path.join("{characters}", file + ".mail"));
+            $("#sendProgress")[0].addEventListener('close', () => {
+                mail.sendCancel(id);
+                ipcRenderer.send('set-progress', { value: -1 });
+                ipcRenderer.send('set-progress-window', 'composer', { value: -1 });
+            });
             mail = new Mail(file);
+            mail.on('send-progress', (p) => {
+                $("#sendProgress progress").val(p * 100);
+                ipcRenderer.send('set-progress', { value: p });
+                ipcRenderer.send('set-progress-window', 'mapper', { value: p });
+            });
             mail.on('letter-sent', (to) => {
                 if (!to || to.length === 0) {
                     dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -990,6 +1010,8 @@
                 }
                 ipcRenderer.send('reload-mail');
                 draft = false;
+                ipcRenderer.send('set-progress', { value: -1 });
+                ipcRenderer.send('set-progress-window', 'composer', { value: -1 });
                 window.close();
             });
             mail.on('error', (err, to) => {
@@ -1009,6 +1031,10 @@
                         });
                         break;
                 }
+                ipcRenderer.send('set-progress', { value: -1 });
+                ipcRenderer.send('set-progress-window', 'composer', { value: -1 });
+                if ($("#sendProgress")[0].open)
+                    $("#sendProgress")[0].close();
             });
             tinymce.init({
                 selector: 'textarea',
@@ -1273,7 +1299,7 @@
                 console.log(data);
             if (mail)
                 mail.processGMCP(data.mod, data.obj);
-        });      
+        });
 
         ipcRenderer.on('set-color', (event, type, color, window) => {
             if (window !== 'composer') return;
@@ -1326,7 +1352,7 @@
                             ipcRenderer.send('setting-changed', { type: 'extensions', name: 'mail', value: options.extensions["mail"] });
                         }
                         mail.draft({
-                            id: '' + (Date.now() / 1000),
+                            id: id,
                             date: Date.now() / 1000,
                             subject: $('#Subject').val(),
                             read: 0,
@@ -1355,7 +1381,7 @@
             }
             else if (ask === 1) {
                 mail.draft({
-                    id: '' + (Date.now() / 1000),
+                    id: id,
                     date: Date.now() / 1000,
                     subject: $('#Subject').val(),
                     read: 0,
@@ -1440,6 +1466,17 @@
             <textarea></textarea>
         </div>
     </div>
+    <dialog id="sendProgress" style="z-index:1000;text-align:center">
+        <div>Sending&hellip;</div>
+        <div id="sendProgressbar">
+            <progress max="100"></progress>
+        </div>
+        <div>
+            <button onclick="$('#sendProgress')[0].close();">
+                Cancel
+            </button>
+        </div>
+    </dialog>
 </body>
 
 </html>

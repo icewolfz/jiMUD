@@ -29,6 +29,8 @@ export class Mail extends EventEmitter {
     private _mark = {};
     private _data = {};
 
+    public sendSize = 3000;
+
     constructor(file?: string) {
         super();
         this.file = file;
@@ -125,7 +127,10 @@ export class Mail extends EventEmitter {
                 this.emit('initialize');
                 break;
             case 'new':
-                this.emit('new');
+                if (obj)
+                    this.emit('new', obj.from, obj.subject);
+                else
+                    this.emit('new');
                 break;
             case 'letter':
                 if (this._read[obj.id + '-' + obj.format]) {
@@ -157,7 +162,25 @@ export class Mail extends EventEmitter {
                         }
                         break;
                     case MailAction.send:
-                        if (obj.code !== MailStatus.SUCCESS) {
+                        if (obj.code === MailStatus.RESET)
+                            this.emit('send-reset');
+                        else if (obj.code === MailStatus.CHUNK) {
+                            if (!this._data['send' + obj.id] || this._data['send' + obj.id].length === 0) {
+                                this.emit('error', 'Invalid send request, send data not found');
+                                return;
+                            }
+                            ipcRenderer.send('send-gmcp', 'Post.send ' + JSON.stringify({
+                                id: this._data['send' + obj.id].id,
+                                message: this._data['send' + obj.id].message.shift(),
+                                tag: this._data['send' + obj.id].tag,
+                                last: this._data['send' + obj.id].message.length === 0
+                            }));
+                            if (this._data['send' + obj.id].length === 0)
+                                delete this._data['send' + obj.id];
+                            else
+                                this.emit('send-progress', this._data['send' + obj.id].message.length / this._data['send' + obj.id].length);
+                        }
+                        else if (obj.code !== MailStatus.SUCCESS) {
                             this.emit('error', obj.code, obj.to);
                             if (this._data[obj.tag])
                                 delete this._data[obj.tag];
@@ -169,6 +192,9 @@ export class Mail extends EventEmitter {
                                 delete this._data[obj.tag];
                             }
                         }
+                        break;
+                    case MailAction.reset:
+                        this.emit('reset');
                         break;
                 }
                 break;
@@ -388,15 +414,40 @@ export class Mail extends EventEmitter {
     }
 
     public send(letter, save?, callback?) {
+        if (!letter) {
+            this.emit('error', 'Invalid letter');
+            return;
+        }
+        if (!letter.raw) {
+            this.emit('error', 'Missing message');
+            return;
+        }
+        if (!letter.id)
+            letter.id = Date.now() / 1000;
+        letter.tag = 'Send' + Date.now();
+        this._data['send' + letter.id] = {
+            id: letter.id,
+            to: letter.to,
+            cc: letter.cc,
+            subject: letter.subject,
+            tag: letter.tag,
+            message: letter.raw.match(/((\S|\s|.){1,20000})/g)
+        };
+        this._data['send' + letter.id].length = this._data['send' + letter.id].message.length;
         if (!save) {
-            letter.tag = 'Send' + Date.now();
             ipcRenderer.send('send-gmcp', 'Post.send ' + JSON.stringify({
+                id: letter.id,
                 to: letter.to,
                 cc: letter.cc,
                 subject: letter.subject,
-                message: letter.raw,
-                tag: letter.tag
+                message: this._data['send' + letter.id].message.shift(),
+                tag: letter.tag,
+                last: this._data['send' + letter.id].message.length === 0
             }));
+            if (this._data['send' + letter.id].length === 0)
+                delete this._data['send' + letter.id];
+            else
+                this.emit('send-progress', this._data['send' + letter.id].message.length / this._data['send' + letter.id].length);
             if (callback)
                 this._data[letter.tag] = callback;
             return;
@@ -408,18 +459,27 @@ export class Mail extends EventEmitter {
             letter.message = letter.raw;
             letter.format = MailReadFormat.none;
             this.updateMessage(letter, () => {
-                letter.tag = 'Send' + Date.now();
                 ipcRenderer.send('send-gmcp', 'Post.send ' + JSON.stringify({
+                    id: letter.id,
                     to: letter.to,
                     cc: letter.cc,
                     subject: letter.subject,
-                    message: letter.raw,
-                    tag: letter.tag
+                    message: this._data['send' + letter.id].message.shift(),
+                    tag: letter.tag,
+                    last: this._data['send' + letter.id].message.length === 0
                 }));
+                if (this._data['send' + letter.id].length === 0)
+                    delete this._data['send' + letter.id];
                 if (callback)
                     this._data[letter.tag] = callback;
             });
         });
+    }
+
+    public sendCancel(id)
+    {
+        delete this._data['send' + id];
+        ipcRenderer.send('send-gmcp', `Post.send.reset "${id}"`);
     }
 
     public draft(letter, callback) {
