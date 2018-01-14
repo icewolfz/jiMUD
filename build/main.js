@@ -433,6 +433,7 @@ var menuTemp = [
               win.webContents.executeJavaScript('toggleView("button.map")');
             }
           },
+          /*
           {
             label: 'M&ail',
             id: "mailbutton",
@@ -451,6 +452,7 @@ var menuTemp = [
               win.webContents.executeJavaScript('toggleView("button.compose")');
             }
           },
+          */
           {
             label: '&User buttons',
             id: "userbutton",
@@ -519,6 +521,7 @@ var menuTemp = [
         click: showMapper,
         accelerator: 'CmdOrCtrl+T'
       },
+      /*
       {
         label: '&Mail...',
         click: () => {
@@ -535,6 +538,7 @@ var menuTemp = [
         visible: true,
         //accelerator: 'CmdOrCtrl+M'
       },
+      */
       { type: 'separator' },
       {
         role: 'minimize'

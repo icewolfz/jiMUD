@@ -720,7 +720,7 @@
       client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
       client.telnet.GMCPSupports.push("Room 1");
       client.telnet.GMCPSupports.push("IED 1");
-      client.telnet.GMCPSupports.push("Post 1");
+      //client.telnet.GMCPSupports.push("Post 1");
       //client.telnet.GMCPSupports.push('Comm 1');
       client.on('initialized', () => {
         autoConnect();
@@ -1493,6 +1493,7 @@
             toggleView("button.map");
           }
         }));
+        /*
         c.append(new MenuItem({
           label: 'Mail',
           type: 'checkbox',
@@ -1509,6 +1510,7 @@
             toggleView("button.compose");
           }
         }));
+        */
         c.append(new MenuItem({
           label: 'User buttons',
           type: 'checkbox',
@@ -2144,6 +2146,7 @@
     <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');">
       <i class="fa fa-map"></i>
     </a>
+    <!--
     <a href="javascript:void(0)" title="Mail" id="mail" class="button" onclick="showMail();">
       <i class="fa fa-envelope"></i>
     </a>
@@ -2153,6 +2156,7 @@
         <i class="fa fa-pencil fa-stack-1x" style="margin-top:-10px;margin-left:6px;"></i>
       </span>
     </a>
+    -->
     <div id="user-buttons"></div>
   </div>
   <div id="status-border"></div>
