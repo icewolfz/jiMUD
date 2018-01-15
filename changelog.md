@@ -3,7 +3,7 @@
 ## 0.4.38 2018-01-15
 
 - **New:**
-  - MXP: add <version>, <support>, <user>, and <password> tag support but leave user/password disabled for now due to server side not supporting it
+  - MXP: add version, support, user, and password tag support but leave user/password disabled for now due to server side not supporting it
   - Immortal tools: When using quick jump selecting a sub folder will now sync local/remote if sync is enabled, similar as if you had double clicked the folder
 - **Changed:**
   - Character Manager:
