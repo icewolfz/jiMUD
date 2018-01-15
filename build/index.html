@@ -174,7 +174,7 @@
     var active = false;
     var capture = 0, captureReview = 0;
     var _captures = [], _captureReviews = [];
-    var _captureComm = false;
+    //var _captureComm = false;
     var _noCapture = false;
     var _noCaptureStore = 0;
     var _cLoading = false;
@@ -492,7 +492,7 @@
       }
       return items;
     }
-
+/*
     function buildMenuItems(items) {
       if (!items || items.length === 0)
         return [];
@@ -521,7 +521,7 @@
       }
       return menuItems;
     }
-
+*/
     function buildContextMenu() {
       _context = [];
       var context = client.contexts;
@@ -1020,9 +1020,9 @@
             if (_disconnectTimerID)
               clearTimeout(_disconnectTimerID);
 
-            if (_disconnectTimer === 0)
+            if (_disconnectCounter === 0)
               _disconnectTimer = 10;
-            else if (_disconnectTimer === 10)
+            else if (_disconnectCounter === 10)
               _disconnectTimer = 30;
             else
               _disconnectTimer *= 2;
@@ -1075,9 +1075,9 @@
             if (_disconnectTimerID)
               clearTimeout(_disconnectTimerID);
 
-            if (_disconnectTimer === 0)
+            if (_disconnectCounter === 0)
               _disconnectTimer = 10;
-            else if (_disconnectTimer === 10)
+            else if (_disconnectCounter === 10)
               _disconnectTimer = 30;
             else
               _disconnectTimer *= 2;
@@ -1991,7 +1991,7 @@
         ipcRenderer.send('show-window', 'composer', client.options.windows['composer'].options);
       }
       else
-        ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent:false });
+        ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false });
     }
 
     $(document).ready(init);

@@ -4,7 +4,7 @@
 
 - **New:**
   - MXP: add <version>, <support>, <user>, and <password> tag support but leave user/password disabled for now due to server side not supporting it
-  - Immortal tools: When using quick jump selecting a sub folder will now sync local/remote if sync is enabled, simlar as if you had double clicked the folder
+  - Immortal tools: When using quick jump selecting a sub folder will now sync local/remote if sync is enabled, similar as if you had double clicked the folder
 - **Changed:**
   - Character Manager:
     - Double clicking now does a close load, instead of just a load
@@ -12,6 +12,7 @@
 - **Fixed:**
   - Fixed scroll lock when using split screen mode, lock button/scroll when turned off should scroll to the end and remove split view
   - Prevent disconnect dialog hotkeys from being sent to command input when pressed.
+  - Fixed issue with disconnect dialog count down timer
   - Immortal tools:
     - Fix double clicking items as they are removed from local/remote/queue table
     - Update queue table properly when local/remote folder are changed to refresh the file path state
