@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.38
+## 0.4.38 2018-01-15
 
 - **New:**
   - MXP: add <version>, <support>, <user>, and <password> tag support but leave user/password disabled for now due to server side not supporting it
