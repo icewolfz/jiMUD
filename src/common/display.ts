@@ -444,43 +444,40 @@ export class Display extends EventEmitter {
             }
         });
 
-        this._el.addEventListener('dblclick', (e) => {
-            if (this.lines.length === 0) return;
-            const o = this.getLineOffset(e);
-            if (o.y >= 0 && o.y < this.lines.length) {
-                const line = this.lines[o.y];
-                const len = line.length;
-                if (o.x >= 0 || o.x < len) {
-                    let sPos = o.x;
-                    let ePos = o.x;
-                    while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
-                        sPos--;
-                        if (sPos < 0)
-                            break;
-                    }
-                    sPos++;
-                    while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
-                        ePos++;
-                    }
-                    if (sPos >= 0 && ePos <= len) {
-                        this._currentSelection = {
-                            start: { x: sPos, y: o.y },
-                            end: { x: ePos, y: o.y },
-                            scrollTimer: null,
-                            drag: false
-                        };
-                        this.emit('selection-changed');
-                        this.emit('selection-done');
-                        this.doUpdate(UpdateType.selection);
+        this._el.addEventListener('mouseup', (e) => {
+            if (this.lines.length === 0 || e.button !== 0) return;
+            if (e.detail === 2) {
+                const o = this.getLineOffset(e);
+                if (o.y >= 0 && o.y < this.lines.length) {
+                    const line = this.lines[o.y];
+                    const len = line.length;
+                    if (o.x >= 0 || o.x < len) {
+                        let sPos = o.x;
+                        let ePos = o.x;
+                        while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+                            sPos--;
+                            if (sPos < 0)
+                                break;
+                        }
+                        sPos++;
+                        while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
+                            ePos++;
+                        }
+                        if (sPos >= 0 && ePos <= len) {
+                            this._currentSelection = {
+                                start: { x: sPos, y: o.y },
+                                end: { x: ePos, y: o.y },
+                                scrollTimer: null,
+                                drag: false
+                            };
+                            this.emit('selection-changed');
+                            this.emit('selection-done');
+                            this.doUpdate(UpdateType.selection);
+                        }
                     }
                 }
             }
-
-        });
-
-        this._el.addEventListener('click', (e) => {
-            if (this.lines.length === 0) return;
-            if (e.detail === 3) {
+            else if (e.detail === 3) {
                 const o = this.getLineOffset(e);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     this._currentSelection = {

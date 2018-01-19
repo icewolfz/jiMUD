@@ -2,6 +2,9 @@
 
 ## 0.4.39
 
+- **Fixed:**
+  - Fix double, triple, and quad click text selection
+
 ## 0.4.38 2018-01-15
 
 - **New:**
