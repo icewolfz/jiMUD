@@ -6,6 +6,7 @@
   - Update to electron 1.7.11
 - **Fixed:**
   - Fix double, triple, and quad click text selection
+  - Immortal tools: Double clicking a folder in local while remote is root (/) would cause a double // in the path
 
 ## 0.4.38 2018-01-15
 
