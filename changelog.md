@@ -2,6 +2,8 @@
 
 ## 0.4.39
 
+- **Changed:**
+  - Update to electron 1.7.11
 - **Fixed:**
   - Fix double, triple, and quad click text selection
 
