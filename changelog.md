@@ -7,6 +7,7 @@
 - **Fixed:**
   - Fix double, triple, and quad click text selection
   - Immortal tools: Double clicking a folder in local while remote is root (/) would cause a double // in the path
+  - Correct detect window focus state on load
 
 ## 0.4.38 2018-01-15
 
