@@ -2,12 +2,15 @@
 
 ## 0.4.39
 
+- **New:**
+  - Preference: Show extended error messages, hide expanded error messages unless told to but for logging
 - **Changed:**
   - Update to electron 1.7.11
 - **Fixed:**
   - Fix double, triple, and quad click text selection
   - Immortal tools: Double clicking a folder in local while remote is root (/) would cause a double // in the path
   - Correct detect window focus state on load
+  - Backup: fix an issue when restoring and setting logErrors to the wrong value
 
 ## 0.4.38 2018-01-15
 

@@ -180,6 +180,7 @@ export class Settings {
     public parseCommands: boolean = true;
 
     public logErrors: boolean = true;
+    public showErrorsExtended: boolean = false;
     public reportCrashes: boolean = false;
 
     public parseDoubleQuotes: boolean = true;

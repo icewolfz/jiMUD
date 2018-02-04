@@ -133,7 +133,8 @@ export class Backup extends EventEmitter {
                     showStatus: this.client.options.showStatus,
                     MapperOpen: this.client.options.showMapper,
                     showCharacterManager: this.client.options.showCharacterManager,
-                    logErrors: this.client.options.logErrors
+                    logErrors: this.client.options.logErrors,
+                    showErrorsExtended: this.client.options.showErrorsExtended
                 },
                 map: {}
             };
@@ -491,7 +492,8 @@ export class Backup extends EventEmitter {
                 this.client.options.showStatus = data.settings.showStatus ? true : false;
                 this.client.options.showMapper = data.settings.MapperOpen ? true : false;
                 this.client.options.showCharacterManager = data.settings.showCharacterManager ? true : false;
-                this.client.options.logErrors = data.settings.showCharacterManager ? true : false;
+                this.client.options.logErrors = data.settings.logErrors ? true : false;
+                this.client.options.showErrorsExtended = data.settings.showCharacterManager ? true : false;
 
                 let prop;
                 let prop2;

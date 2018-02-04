@@ -322,6 +322,7 @@
       $('#enableDebug').prop('checked', _settings.enableDebug);
       $('#allowNegativeNumberNeeded').prop('checked', _settings.allowNegativeNumberNeeded);
       $('#logErrors').prop('checked', _settings.logErrors);
+      $('#showErrorsExtended').prop('checked', _settings.showErrorsExtended);
       $('#spellchecking').prop('checked', _settings.spellchecking);
 
       $('#display-split').prop('checked', _settings.display.split);
@@ -1888,6 +1889,11 @@
               <input type="checkbox" id="logErrors" /> Log errors
             </label>
           </div>
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="showErrorsExtended" /> Show extended error messages
+            </label>
+          </div>          
           <div class="col-sm-12 form-group" style="padding: 0px;">
             <div class="col-sm-6 form-group">
               <label class="control-label">

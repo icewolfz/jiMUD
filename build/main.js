@@ -2829,7 +2829,7 @@ function logError(err, skipClient) {
   var msg = '';
   if (global.debug)
     console.error(err);
-  if (err.stack)
+  if (err.stack && set.showErrorsExtended)
     msg = err.stack;
   else if (err instanceof TypeError)
     msg = err.name + " - " + err.message;
@@ -2844,6 +2844,8 @@ function logError(err, skipClient) {
   if (win && win.webContents && !skipClient)
     win.webContents.send('error', msg);
   else if (set && set.logErrors) {
+    if (err.stack && !set.showErrorsExtended)
+      msg = err.stack;
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + '\n', { flag: 'a' });
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), msg + '\n', { flag: 'a' });
   }

@@ -171,6 +171,7 @@
                     'uploadOnChange': false,
                     'debug': false,
                     'logErrors': false,
+                    'showErrorsExtended': false,
                     'tempFile': TempType.extension
                 };
             else {
@@ -194,6 +195,7 @@
 
             $("#debug").prop('checked', _settings.extensions["immortal"].debug);
             $("#logErrors").prop('checked', _settings.extensions["immortal"].logErrors);
+            $("#showErrorsExtended").prop('checked', _settings.extensions["immortal"].showErrorsExtended);
 
             $('#bufferSize').val(_settings.extensions["immortal"].bufferSize);
             $('#bufferSize').selectpicker('render');
@@ -229,6 +231,7 @@
                 'uploadOnChange': false,
                 'debug': false,
                 'logErrors': false,
+                'showErrorsExtended': false,
                 'tempFile': TempType.extension,
                 'focusOnFinished': true,
                 'selectOnFinished': true
@@ -395,6 +398,11 @@
                         <input type="checkbox" id="logErrors" /> Log errors
                     </label>
                 </div>
+                <div class="col-xs-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="showErrorsExtended" /> Show extended error messages
+                    </label>
+                </div>                
             </div>
         </div>
         <div class="dialog-footer">

@@ -821,8 +821,8 @@ export class Client extends EventEmitter {
             msg = 'Unknown';
         else if (typeof err === 'string' && err.length === 0)
             msg = 'Unknown';
-        else if (err.stack)
-            msg += err.stack;
+        else if (err.stack && this.options.showErrorsExtended)
+            msg = err.stack;
         else if (err instanceof Error || err instanceof TypeError)
             msg = err.name + ' - ' + err.message;
         else if (err.message)
@@ -830,12 +830,14 @@ export class Client extends EventEmitter {
         else
             msg = err;
 
-        if (msg.match(/^.*Error: /g))
+        if (msg.match(/^.*Error: /g) || msg.match(/^.*Error - /g))
             this.echo(msg, AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
         else
             this.echo('Error: ' + msg, AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
 
         if (this.options.logErrors) {
+            if (!this.options.showErrorsExtended && err.stack)
+                msg = err.stack;
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), new Date().toLocaleString() + '\n', { flag: 'a' });
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
         }

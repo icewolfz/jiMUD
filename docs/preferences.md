@@ -156,6 +156,7 @@ Controls what is captured into the chat window
 - `Enable GMCP Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
 - `Enable debug` Will display debug data to the dev tool console
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
+- `Show extended error messages` Display extended stack information for errors
 - `Enable Keep alive` Enable socket keep alive
 - `Keep alive delay` The number of seconds for initial keep alive delay
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.

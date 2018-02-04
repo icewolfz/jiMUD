@@ -669,6 +669,7 @@
                     'uploadOnChange': false,
                     'debug': false,
                     'logErrors': false,
+                    'showErrorsExtended': false,
                     'tempFile': TempType.extension,
                     'focusOnFinished': true,
                     'selectOnFinished': true
@@ -911,7 +912,7 @@
         function logError(error) {
             if (!error) return;
             var msg;
-            if (error.stack)
+            if (error.stack && options.showErrorsExtended)
                 msg = error.stack;
             else if (error instanceof TypeError)
                 msg = error.name + " - " + error.message;
@@ -924,6 +925,8 @@
             if (options.debug)
                 console.log(error);
             if (options.logErrors) {
+                if (!options.showErrorsExtended && error.stack)
+                    msg = error.stack;
                 fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), "Immortal Tools: " + new Date().toLocaleString() + '\n', { flag: 'a' });
                 fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), msg + '\n', { flag: 'a' });
             }
