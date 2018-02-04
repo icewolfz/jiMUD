@@ -830,7 +830,7 @@ export class Client extends EventEmitter {
         else
             msg = err;
 
-        if (msg.match(/^.*Error: .*$/g))
+        if (msg.match(/^.*Error: /g))
             this.echo(msg, AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
         else
             this.echo('Error: ' + msg, AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
