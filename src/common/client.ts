@@ -565,6 +565,8 @@ export class Client extends EventEmitter {
                     this.error(msg.join(', '));
                 if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET')
                     this.close();
+                else
+                    this.emit('reconnect');
             }
             else
                 this.error('Unknown telnet error.');
@@ -844,8 +846,8 @@ export class Client extends EventEmitter {
 
         if (err === 'Error: ECONNRESET - read ECONNRESET.' && this.telnet.connected)
             this.close();
-        else
-            this.emit('reconnect');
+        //else
+            //this.emit('reconnect');
         this.raise('error', msg);
     }
 

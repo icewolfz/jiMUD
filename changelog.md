@@ -11,6 +11,8 @@
   - Immortal tools: Double clicking a folder in local while remote is root (/) would cause a double // in the path
   - Correct detect window focus state on load
   - Backup: fix an issue when restoring and setting logErrors to the wrong value
+  - Only show disconnect dialog if it was a connection error
+  - Reset disconnect timers when clicking any button but reconnect from disconnect dialog
 
 ## 0.4.38 2018-01-15
 

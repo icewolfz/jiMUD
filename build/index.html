@@ -122,7 +122,7 @@
     $(window).keydown((event) => {
       if ($("#disconnectDialog")[0].open) {
         if (event.which === 81) {
-          closeDisconnectDialog();
+          closeDisconnectDialog(true);
           window.close();
           event.preventDefault();
           event.cancelBubble = true;
@@ -134,12 +134,12 @@
           event.cancelBubble = true;
         }
         else if (event.which === 79) {
-          closeDisconnectDialog();
+          closeDisconnectDialog(true);
           event.preventDefault();
           event.cancelBubble = true;
         }
         else if (event.which == 77) {
-          closeDisconnectDialog();
+          closeDisconnectDialog(true);
           showCharacters();
           event.preventDefault();
           event.cancelBubble = true;
@@ -2328,14 +2328,14 @@
           <i class="fa fa-refresh"></i>
           <u>R</u>econnect</button>
         <!--<button style="float: right" type="button" class="btn btn-primary" onclick="" accesskey="d"><i class="fa fa-terminal"></i><u>D</u>iffernt MUD...</button>-->
-        <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog();showCharacters();" accesskey="d">
+        <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog(true);showCharacters();" accesskey="d">
           <i class="fa fa-user"></i> Character
           <u>M</u>anager...</button>
-        <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog();" accesskey="o">
+        <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog(true);" accesskey="o">
           <i class="fa fa-pause"></i>
           <u>O</u>ffline</button>
         <!--<button style="float: right" type="button" class="btn btn-primary" onclick="" accesskey="c"><i class="fa fa-remove"></i><u>C</u>lose</button>-->
-        <button style="float: right" type="button" class="btn btn-danger btn-block" onclick="closeDisconnectDialog();window.close();" accesskey="q">
+        <button style="float: right" type="button" class="btn btn-danger btn-block" onclick="closeDisconnectDialog(true);window.close();" accesskey="q">
           <i class="fa fa-power-off"></i>
           <u>Q</u>uit</button>
       </div>
