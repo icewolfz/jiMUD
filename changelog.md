@@ -8,7 +8,9 @@
   - Update to electron 1.7.12
 - **Fixed:**
   - Fix double, triple, and quad click text selection
-  - Immortal tools: Double clicking a folder in local while remote is root (/) would cause a double // in the path
+  - Immortal tools:
+    - Double clicking a folder in local while remote is root (/) would cause a double // in the path
+    - When uploading or downloading a new file it would fail to correctly focus on item when Focus on finish was enabled
   - Correct detect window focus state on load
   - Backup: fix an issue when restoring and setting logErrors to the wrong value
   - Only show disconnect dialog if it was a connection error

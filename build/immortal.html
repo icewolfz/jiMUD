@@ -50,6 +50,7 @@
         var _remove, _removeID;
         var _qUpdate, _qUpdateID;
         var _qUpdateTracker;
+        var _focusRemote, _focusLocal;
 
         var menu = [
             {
@@ -3064,7 +3065,7 @@
                 _ied.upload(p);
             if (_downloads[p]) {
                 if (options.focusOnFinished)
-                    focusRow(row);
+                    _focusLocal = row;
                 if (options.selectOnFinished) {
                     localTable.rows().deselect();
                     row.select();
@@ -3087,9 +3088,9 @@
             doUpdate(3);
         }
 
-        function addLocalFile(path) {
+        function addLocalFile(p) {
             try {
-                var file = IED.getFileInfo(path);
+                var file = IED.getFileInfo(p);
             }
             catch (error) {
                 logError(error);
@@ -3104,11 +3105,24 @@
             _local[file.name] = file;
             localTable.row.add(_local[file.name]);
             if (options.debug)
-                console.log(_downloads[path]);
-            if (file.size != -2 && !_downloads[path] && options.uploadOnChange)
-                _ied.upload(path);
-            if (_downloads[path])
-                delete _downloads[path];
+                console.log(_downloads[p]);
+            if (file.size != -2 && !_downloads[p] && options.uploadOnChange)
+                _ied.upload(p);
+
+            if (_downloads[p]) {
+                var row = localTable.row(function (idx, data) {
+                    return data.name === path.basename(p) ?
+                        true : false;
+                });
+                if (options.focusOnFinished)
+                    _focusLocal = row;
+                if (options.selectOnFinished) {
+                    localTable.rows().deselect();
+                    row.select();
+                }
+                delete _downloads[p];
+            }
+
             doUpdate(3);
         }
 
@@ -3481,18 +3495,18 @@
                     else {
                         info.remoteFiles++;
                         remoteTable.row.add(_remote[path.basename(item.remote)]);
-                        row = localTable.row(function (idx, data, node) {
+                        row = remoteTable.row(function (idx, data, node) {
                             return data.name === path.basename(item.remote) ?
                                 true : false;
                         });
                     }
-                    doUpdate(4);
                     if (options.focusOnFinished)
-                        focusRow(row);
+                        _focusRemote = row;
                     if (options.selectOnFinished) {
                         remoteTable.rows().deselect();
                         row.select();
                     }
+                    doUpdate(4);
                     info.uploads--;
                 }
                 else
@@ -3601,11 +3615,19 @@
                 if ((this._updating & 2) === 2) {
                     if (localTable)
                         updateDraw(localTable);
+                    setTimeout(() => {
+                        focusRow(_focusLocal);
+                        _focusLocal = 0;
+                    });
                     _updating &= ~2;
                 }
                 if ((this._updating & 4) === 4) {
                     if (remoteTable)
                         updateDraw(remoteTable);
+                    setTimeout(() => {
+                        focusRow(_focusRemote);
+                        _focusRemote = 0;
+                    });
                     _updating &= ~4;
                 }
                 if ((this._updating & 8) === 8) {
