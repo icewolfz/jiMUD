@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.39
+## 0.4.39 2018-02-12
 
 - **New:**
   - Preference: Show extended error messages, hide expanded error messages unless told to but for logging
