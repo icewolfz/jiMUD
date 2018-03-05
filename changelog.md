@@ -2,6 +2,9 @@
 
 ## 0.4.40
 
+- **Changed:**
+  - Upgrade several 3rd party dependencies
+
 ## 0.4.39 2018-02-12
 
 - **New:**
