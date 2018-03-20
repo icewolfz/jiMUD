@@ -4,6 +4,8 @@
 
 - **Changed:**
   - Upgrade several 3rd party dependencies
+- **Fixed:**
+  - Mapper: in memory option was broken
 
 ## 0.4.39 2018-02-12
 

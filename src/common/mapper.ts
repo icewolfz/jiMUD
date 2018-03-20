@@ -274,6 +274,7 @@ export class Mapper extends EventEmitter {
         }
         this._canvas = canvas;
         this._context = canvas.getContext('2d');
+        this._memory = memory;
         this.initializeDatabase();
         //rooms - ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors
         //exits - ID, Exit, DestID
