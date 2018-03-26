@@ -684,19 +684,19 @@
     function updateAreas() {
       $("#select-area option").remove();
       $("#reArea option").remove();
-      mapper._db.all("SELECT DISTINCT Area from Rooms", (err, rows) => {
-        if (rows && rows.length > 0) {
-          for (var a = 0; a < rows.length; a++) {
-            $("#select-area").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
-            $("#reArea").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
-          }
-          if (mapper.active.area)
-            $("#select-area").val(mapper.active.area);
-          else
-            mapper.active.area = $("#select-area option:first").val();
+      let rows = mapper._db.prepare("SELECT DISTINCT Area from Rooms").all();
+      if (rows && rows.length > 0) {
+        for (var a = 0; a < rows.length; a++) {
+          $("#select-area").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
+          $("#reArea").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
         }
-      });
+        if (mapper.active.area)
+          $("#select-area").val(mapper.active.area);
+        else
+          mapper.active.area = $("#select-area option:first").val();
+      }
     }
+
     function compact() {
       $("#mapProgressbar").html('<progress max="100"></progress>');
       $("#mapProgressTitle").html("Compacting map data&hellip;");

@@ -5,7 +5,7 @@ import { Size } from './types';
 import { parseTemplate, clone } from './library';
 const fs = require('fs');
 const path = require('path');
-const sqlite3 = require('sqlite3');
+const sqlite3 = require('better-sqlite3');
 const PF = require('./../../lib/pathfinding.js');
 
 export enum RoomDetails {
@@ -148,19 +148,19 @@ export class Mapper extends EventEmitter {
                 this._db.close(() => {
                     this._mapFile = value;
                     if (this._memory) {
-                        this._db = new sqlite3.Database(':memory:');
+                        this._db = new sqlite3(':memory:', { memory: true });
                         this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
                     }
                     else
-                        this._db = new sqlite3.Database(this._mapFile);
+                        this._db = new sqlite3(this._mapFile);
                     this.createDatabase();
-                    this._db.serialize();
+                    //this._db.serialize();
                     if (this._memory) {
-                        this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
+                        this._db.exec('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
                         this.createDatabase('Disk');
-                        this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
-                        this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
-                        this._db.run('DETACH DATABASE Disk');
+                        this._db.exec('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
+                        this._db.exec('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
+                        this._db.exec('DETACH DATABASE Disk');
                     }
                 });
             });
@@ -232,32 +232,27 @@ export class Mapper extends EventEmitter {
             prefix += '.';
         else
             prefix = '';
-        this._db.serialize(() => {
-            //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
-            this._db.run('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)');
-            this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id on Rooms (ID);');
-            this._db.run('CREATE INDEX IF NOT EXISTS ' + prefix + 'exits_id on Exits (ID);');
-            //this._db.run("CREATE TABLE IF NOT EXISTS Areas (ID INTEGER PRIMARY KEY AUTOINCREMENT, Area TEXT)");
-        });
+        this._db.exec('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
+        this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)');
+        this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)');
+        this._db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id on Rooms (ID);');
+        this._db.exec('CREATE INDEX IF NOT EXISTS ' + prefix + 'exits_id on Exits (ID);');
     }
 
     public initializeDatabase() {
         if (this._memory) {
-            this._db = new sqlite3.Database(':memory:');
+            this._db = new sqlite3(':memory:', { memory: true });
             this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
         }
         else
-            this._db = new sqlite3.Database(this._mapFile);
+            this._db = new sqlite3(this._mapFile);
         this.createDatabase();
-        this._db.serialize();
         if (this._memory) {
-            this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
+            this._db.exec('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
             this.createDatabase('Disk');
-            this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
-            this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
-            this._db.run('DETACH DATABASE Disk');
+            this._db.exec('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
+            this._db.exec('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
+            this._db.exec('DETACH DATABASE Disk');
         }
     }
 
@@ -274,7 +269,7 @@ export class Mapper extends EventEmitter {
         }
         this._canvas = canvas;
         this._context = canvas.getContext('2d');
-        this._memory = memory;
+        this.memory = memory;
         this.initializeDatabase();
         //rooms - ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors
         //exits - ID, Exit, DestID
@@ -396,36 +391,28 @@ export class Mapper extends EventEmitter {
         y += (ry - oy) / 32;
         x = Math.floor(x);
         y = Math.floor(y);
+        let rows;
         if (this._splitArea)
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area AND Zone = $zone AND X = $x AND Y = $y AND Z = $z', {
-                $area: area,
-                $zone: zone,
-                $x: x,
-                $y: y,
-                $z: z
-            }, (err, rows) => {
-                if (callback) {
-                    if (rows && rows.length > 0)
-                        callback({ ID: rows[0].ID, x: rows[0].X, y: rows[0].Y, z: rows[0].Z, area: rows[0].Area, zone: rows[0].Zone, background: rows[0].Background, env: rows[0].Env, indoors: rows[0].Indoor, name: rows[0].Name, details: rows[0].Details, notes: rows[0].Notes });
-                    else
-                        callback(new Room());
-                }
+            rows = this._db.prepare('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area AND Zone = $zone AND X = $x AND Y = $y AND Z = $z').all({
+                area: area,
+                zone: zone,
+                x: x,
+                y: y,
+                z: z
             });
         else
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Zone = $zone AND X = $x AND Y = $y AND Z = $z', {
-                $zone: zone,
-                $x: x,
-                $y: y,
-                $z: z
-            }, (err, rows) => {
-                if (callback) {
-                    if (rows && rows.length > 0)
-                        callback({ ID: rows[0].ID, x: rows[0].X, y: rows[0].Y, z: rows[0].Z, area: rows[0].Area, zone: rows[0].Zone, background: rows[0].Background, env: rows[0].Env, indoors: rows[0].Indoors, name: rows[0].Name, details: rows[0].Details, notes: rows[0].Notes });
-                    else
-                        callback(new Room());
-                }
+            rows = this._db.prepare('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Zone = $zone AND X = $x AND Y = $y AND Z = $z').all({
+                zone: zone,
+                x: x,
+                y: y,
+                z: z
             });
-
+        if (callback) {
+            if (rows && rows.length > 0)
+                callback({ ID: rows[0].ID, x: rows[0].X, y: rows[0].Y, z: rows[0].Z, area: rows[0].Area, zone: rows[0].Zone, background: rows[0].Background, env: rows[0].Env, indoors: rows[0].Indoor, name: rows[0].Name, details: rows[0].Details, notes: rows[0].Notes });
+            else
+                callback(new Room());
+        }
     }
 
     public draw(canvas?, context?, ex?: boolean, callback?) {
@@ -444,6 +431,7 @@ export class Mapper extends EventEmitter {
         const zone = this.active.zone || 0;
         let ox = 15.5;
         let oy = 15.5;
+        let rows;
 
         const bx = 0;
         const by = 0;
@@ -455,110 +443,67 @@ export class Mapper extends EventEmitter {
         if (canvas.height % 2 !== 0)
             oy = 15;
         context.font = '8pt Arial';
-        //this._db.serialize(() => {
-        if (this._splitArea) {
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
-                $area: area,
-                $zone: zone,
-                $x: x,
-                $y: y,
-                $z: z,
-                $ox: ox,
-                $oy: oy,
-                $w: canvas.width,
-                $h: canvas.height
-            }, (err, rows) => {
-                context.save();
-                if (ex) {
-                    context.fillStyle = '#eae4d6';
-                    context.fillRect(0, 0, canvas.width, canvas.height);
-                }
-                else
-                    context.clearRect(0, 0, canvas.width, canvas.height);
-                const rooms = {};
-                if (rows) {
-                    const rl = rows.length;
-                    for (let r = 0; r < rl; r++) {
-                        if (rooms[rows[r].ID]) {
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
-                                num: rows[r].DestID,
-                                isdoor: rows[r].IsDoor,
-                                isclosed: rows[r].IsClosed
-                            };
-                        }
-                        else {
-                            rooms[rows[r].ID] = clone(rows[r]);
-                            rooms[rows[r].ID].exits = {};
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
-                                num: rows[r].DestID,
-                                isdoor: rows[r].IsDoor,
-                                isclosed: rows[r].IsClosed
-                            };
-                        }
-                    }
-                    let rm;
-                    for (rm in rooms) {
-                        if (!rooms.hasOwnProperty(rm)) continue;
-                        const room = rooms[rm];
-                        this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, false);
-                    }
-                }
-                context.restore();
-                this.DrawLegend(context, 1, -4, 0);
-                if (callback) callback();
+        if (this._splitArea)
+            rows = this._db.prepare('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))').all({
+                area: area,
+                zone: zone,
+                x: x,
+                y: y,
+                z: z,
+                ox: ox,
+                oy: oy,
+                w: canvas.width,
+                h: canvas.height
             });
-        }
-        else {
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
-                $zone: zone,
-                $x: x,
-                $y: y,
-                $z: z,
-                $ox: ox,
-                $oy: oy,
-                $w: canvas.width,
-                $h: canvas.height
-            }, (err, rows) => {
-                context.save();
-                if (ex) {
-                    context.fillStyle = '#eae4d6';
-                    context.fillRect(0, 0, canvas.width, canvas.height);
-                }
-                else
-                    context.clearRect(0, 0, canvas.width, canvas.height);
-                const rooms = {};
-                if (rows) {
-                    const rl = rows.length;
-                    for (let r = 0; r < rl; r++) {
-                        if (rooms[rows[r].ID]) {
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
-                                num: rows[r].DestID,
-                                isdoor: rows[r].IsDoor,
-                                isclosed: rows[r].IsClosed
-                            };
-                        }
-                        else {
-                            rooms[rows[r].ID] = clone(rows[r]);
-                            rooms[rows[r].ID].exits = {};
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
-                                num: rows[r].DestID,
-                                isdoor: rows[r].IsDoor,
-                                isclosed: rows[r].IsClosed
-                            };
-                        }
-                    }
-                    let rm;
-                    for (rm in rooms) {
-                        if (!rooms.hasOwnProperty(rm)) continue;
-                        const room = rooms[rm];
-                        this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, ex);
-                    }
-                }
-                context.restore();
-                this.DrawLegend(context, 1, -4, 0);
-                if (callback) callback();
+        else
+            rows = this._db.prepare('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))').all({
+                zone: zone,
+                x: x,
+                y: y,
+                z: z,
+                ox: ox,
+                oy: oy,
+                w: canvas.width,
+                h: canvas.height
             });
+        context.save();
+        if (ex) {
+            context.fillStyle = '#eae4d6';
+            context.fillRect(0, 0, canvas.width, canvas.height);
         }
+        else
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        const rooms = {};
+        if (rows) {
+            const rl = rows.length;
+            for (let r = 0; r < rl; r++) {
+                if (rooms[rows[r].ID]) {
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: rows[r].DestID,
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+                else {
+                    rooms[rows[r].ID] = clone(rows[r]);
+                    rooms[rows[r].ID].exits = {};
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: rows[r].DestID,
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+            }
+            let rm;
+            for (rm in rooms) {
+                if (!rooms.hasOwnProperty(rm)) continue;
+                const room = rooms[rm];
+                this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, ex);
+            }
+        }
+        context.restore();
+        this.DrawLegend(context, 1, -4, 0);
+        if (callback) callback();
     }
 
     public reset(type?) {
@@ -611,18 +556,17 @@ export class Mapper extends EventEmitter {
             this.emit('setting-changed', 'active', this.active);
         }
         else {
-            this._db.get('SELECT * from Rooms WHERE Area = ? ORDER BY X, Y, Z', [area], (err, row) => {
-                if (row) {
-                    this.active.ID = row.ID;
-                    this.active.x = row.X;
-                    this.active.y = row.Y;
-                    this.active.z = row.Z;
-                    this.active.zone = row.Zone;
-                    this.setActive(this.sanitizeRoom(this.active));
-                    this.focusActiveRoom();
-                    this.emit('setting-changed', 'active', this.active);
-                }
-            });
+            let row = this._db.prepare('SELECT * from Rooms WHERE Area = ? ORDER BY X, Y, Z').get([area])
+            if (row) {
+                this.active.ID = row.ID;
+                this.active.x = row.X;
+                this.active.y = row.Y;
+                this.active.z = row.Z;
+                this.active.zone = row.Zone;
+                this.setActive(this.sanitizeRoom(this.active));
+                this.focusActiveRoom();
+                this.emit('setting-changed', 'active', this.active);
+            }
         }
     }
 
@@ -643,25 +587,22 @@ export class Mapper extends EventEmitter {
     }
 
     public removeRoom(room) {
-        this._db.run('DELETE FROM Rooms WHERE ID = ?', [room.ID], () => {
-            this._db.run('Delete From Exits WHERE ID = ?', [room.ID], () => {
-                this.emit('remove-done', room);
-                if (room.ID === this.current.ID) {
-                    this.current = new Room();
-                    this.emit('current-room-changed', this.current);
-                    this.clearPath();
-                }
-                else if (this.markers[room.ID])
-                    this.clearPath();
-                if (room.ID === this.active.ID)
-                    this.setActive(new Room());
-                if (room.ID === this.selected.ID)
-                    this.selected = new Room();
-                this.refresh();
-                this._changed = true;
-            });
-        });
-
+        this._db.prepare('DELETE FROM Rooms WHERE ID = ?').run([room.ID]);
+        this._db.prepare('DELETE FROM Exits WHERE ID = ?').run([room.ID]);
+        this.emit('remove-done', room);
+        if (room.ID === this.current.ID) {
+            this.current = new Room();
+            this.emit('current-room-changed', this.current);
+            this.clearPath();
+        }
+        else if (this.markers[room.ID])
+            this.clearPath();
+        if (room.ID === this.active.ID)
+            this.setActive(new Room());
+        if (room.ID === this.selected.ID)
+            this.selected = new Room();
+        this.refresh();
+        this._changed = true;
     }
 
     public clearSelectedRoom() {
@@ -673,130 +614,125 @@ export class Mapper extends EventEmitter {
     }
 
     public clearArea() {
-        this._db.run('DELETE FROM Exits WHERE ID in (Select ID from Rooms WHERE Area = ?)', [this.active.area], () => {
-            this._db.run('DELETE FROM Rooms WHERE Area = ?', [this.active.area], () => {
-                this.emit('clear-area-done', this.active.area);
-                this.reset();
-                this.refresh();
-                this._changed = true;
-            });
-        });
+        this._db.prepare('DELETE FROM Exits WHERE ID in (Select ID from Rooms WHERE Area = ?)').run([this.active.area]);
+        this._db.prepare('DELETE FROM Rooms WHERE Area = ?').run([this.active.area]);
+        this.emit('clear-area-done', this.active.area);
+        this.reset();
+        this.refresh();
+        this._changed = true;
     }
 
     public clearAll() {
-        this._db.run('DELETE FROM Exits', () => {
-            this._db.run('DELETE FROM Rooms', () => {
-                this.emit('clear-done');
-                this.reset();
-                this.refresh();
-                this.focusActiveRoom();
-                this._changed = true;
-            });
-        });
+        this._db.prepare('DELETE FROM Exits').run();
+        this._db.prepare('DELETE FROM Rooms').run();
+        this.emit('clear-done');
+        this.reset();
+        this.refresh();
+        this.focusActiveRoom();
+        this._changed = true;
     }
 
     public processData(data) {
         try {
-            this._db.all('Select * FROM Rooms where ID = \'' + data.num + '\'', (err, rows) => {
-                let room;
-                if (!rows || rows.length === 0) {
-                    room = {
-                        area: '',
-                        details: 0,
-                        exits: {},
-                        name: '',
-                        num: 0,
-                        env: '',
-                        x: 0,
-                        y: 0,
-                        z: 0,
-                        zone: 0
-                    };
-                    room.zone = this.current.zone;
-                    if (this.current.ID !== null) {
-                        switch (data.prevroom.dir) {
-                            case 'west':
-                                room.x--;
-                                break;
-                            case 'east':
-                                room.x++;
-                                break;
-                            case 'north':
-                                room.y--;
-                                break;
-                            case 'south':
-                                room.y++;
-                                break;
-                            case 'northeast':
-                                room.y--;
-                                room.x++;
-                                break;
-                            case 'northwest':
-                                room.y--;
-                                room.x--;
-                                break;
-                            case 'southeast':
-                                room.y++;
-                                room.x++;
-                                break;
-                            case 'southwest':
-                                room.y++;
-                                room.x--;
-                                break;
-                            case 'up':
-                                room.z++;
-                                break;
-                            case 'down':
-                                room.z--;
-                                break;
-                            //out means you leave a zone
-                            case 'out':
-                                room.zone = this.current.zone - 1;
-                                break;
-                            //enter or unknown exits new zone
-                            default:
-                                //if (val.area == currentRoom.area)
-                                room.zone = this.current.zone + 1;
-                                break;
-                        }
-                        room.x += this.current.x;
-                        room.y += this.current.y;
-                        room.z += this.current.z;
+            let rows = this._db.prepare('Select * FROM Rooms where ID = ?').all('' + data.num);
+            let room;
+            if (!rows || rows.length === 0) {
+                room = {
+                    area: '',
+                    details: 0,
+                    exits: {},
+                    name: '',
+                    num: 0,
+                    env: '',
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    zone: 0
+                };
+                room.zone = this.current.zone;
+                if (this.current.ID !== null) {
+                    switch (data.prevroom.dir) {
+                        case 'west':
+                            room.x--;
+                            break;
+                        case 'east':
+                            room.x++;
+                            break;
+                        case 'north':
+                            room.y--;
+                            break;
+                        case 'south':
+                            room.y++;
+                            break;
+                        case 'northeast':
+                            room.y--;
+                            room.x++;
+                            break;
+                        case 'northwest':
+                            room.y--;
+                            room.x--;
+                            break;
+                        case 'southeast':
+                            room.y++;
+                            room.x++;
+                            break;
+                        case 'southwest':
+                            room.y++;
+                            room.x--;
+                            break;
+                        case 'up':
+                            room.z++;
+                            break;
+                        case 'down':
+                            room.z--;
+                            break;
+                        //out means you leave a zone
+                        case 'out':
+                            room.zone = this.current.zone - 1;
+                            break;
+                        //enter or unknown exits new zone
+                        default:
+                            //if (val.area == currentRoom.area)
+                            room.zone = this.current.zone + 1;
+                            break;
                     }
-                    if (data.area === this.current.area) {
-                        this.updateCurrent(room, data);
-                        this._changed = true;
-                    }
-                    else
-                        this.roomExists(room.x, room.y, room.z, this.current.zone, (exist) => {
-                            if (exist || data.prevroom.zone) {
-                                this.getFreeZone(room.x, room.y, room.z, this.current.zone, (zone) => {
-                                    room.zone = zone;
-                                    this.updateCurrent(room, data);
-                                    this._changed = true;
-                                });
-                            }
-                            else {
+                    room.x += this.current.x;
+                    room.y += this.current.y;
+                    room.z += this.current.z;
+                }
+                if (data.area === this.current.area) {
+                    this.updateCurrent(room, data);
+                    this._changed = true;
+                }
+                else
+                    this.roomExists(room.x, room.y, room.z, this.current.zone, (exist) => {
+                        if (exist || data.prevroom.zone) {
+                            this.getFreeZone(room.x, room.y, room.z, this.current.zone, (zone) => {
+                                room.zone = zone;
                                 this.updateCurrent(room, data);
                                 this._changed = true;
-                            }
-                        });
-                }
-                else {
-                    this.updateCurrent({
-                        area: rows[0].Area,
-                        details: rows[0].Details,
-                        exits: {},
-                        name: rows[0].Name,
-                        num: rows[0].ID,
-                        env: rows[0].Env,
-                        x: rows[0].X,
-                        y: rows[0].Y,
-                        z: rows[0].Z,
-                        zone: rows[0].Zone
-                    }, data);
-                }
-            });
+                            });
+                        }
+                        else {
+                            this.updateCurrent(room, data);
+                            this._changed = true;
+                        }
+                    });
+            }
+            else {
+                this.updateCurrent({
+                    area: rows[0].Area,
+                    details: rows[0].Details,
+                    exits: {},
+                    name: rows[0].Name,
+                    num: rows[0].ID,
+                    env: rows[0].Env,
+                    x: rows[0].X,
+                    y: rows[0].Y,
+                    z: rows[0].Z,
+                    zone: rows[0].Zone
+                }, data);
+            }
         }
         catch (e) {
             this.emit('error', e);
@@ -870,87 +806,79 @@ export class Mapper extends EventEmitter {
 
     public getFreeZone(x, y, z, zone, callback) {
         if (!zone) zone = 0;
-        this._db.serialize(() => {
-            //this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
-            //this._db.get('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
-            this._db.get('SELECT DISTINCT Zone FROM Rooms ORDER BY Zone DESC LIMIT 1', (err, row) => {
-                if (!row) {
-                    if (callback)
-                        callback(zone);
-                }
-                else if (callback)
-                    callback(row.Zone + 1);
-            });
-        });
+        let row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms ORDER BY Zone DESC LIMIT 1').get();
+        if (!row) {
+            if (callback)
+                callback(zone);
+        }
+        else if (callback)
+            callback(row.Zone + 1);
     }
 
     public roomExists(x, y, z, zone, callback) {
         if (!zone) zone = 0;
-        this._db.serialize(() => {
-            //this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
-            this._db.get('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' AND Zone = ' + zone + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
-                if (!row) {
-                    if (callback)
-                        callback(false);
-                }
-                else if (callback)
-                    callback(true);
-            });
-        });
+        let row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' AND Zone = ' + zone + ' ORDER BY Zone DESC LIMIT 1').get();
+        if (!row) {
+            if (callback)
+                callback(false);
+        }
+        else if (callback)
+            callback(true);
     }
 
     public updateRoom(room) {
-        //this._db.serialize(() => {
-        this._db.run('Update Rooms SET Area = ?, Details = ?, Name = ?, Env = ?, X = ?, Y = ?, Z = ?, Zone = ?, Indoors = ? WHERE ID = ?',
-            [
-                room.Area || room.area,
-                room.Details || room.details || RoomDetails.None,
-                room.Name || room.name,
-                room.Env || room.env,
-                room.X || room.x || 0,
-                room.Y || room.y || 0,
-                room.Z || room.z || 0,
-                room.Zone || room.zone || 0,
-                room.Indoors || room.indoors,
-                room.ID || room.num
-            ], (err) => {
-                if (err)
-                    this.emit('error', err);
-                this._changed = true;
-            });
-        this._db.run('Delete From Exits WHERE ID = ?', [room.ID || room.num]);
+        try {
+            this._db.prepare('Update Rooms SET Area = ?, Details = ?, Name = ?, Env = ?, X = ?, Y = ?, Z = ?, Zone = ?, Indoors = ? WHERE ID = ?').run(
+                [
+                    room.Area || room.area,
+                    room.Details || room.details || RoomDetails.None,
+                    room.Name || room.name,
+                    room.Env || room.env,
+                    room.X || room.x || 0,
+                    room.Y || room.y || 0,
+                    room.Z || room.z || 0,
+                    room.Zone || room.zone || 0,
+                    room.Indoors || room.indoors,
+                    room.ID || room.num
+                ]);
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
+        this._changed = true;
+        this._db.prepare('Delete From Exits WHERE ID = ?').run([room.ID || room.num]);
         const stmt = this._db.prepare('INSERT INTO Exits VALUES (?, ?, ?, ?, ?)');
         let exit;
         for (exit in room.exits) {
             if (!room.exits.hasOwnProperty(exit)) continue;
             stmt.run(room.ID, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
-        stmt.finalize();
         this._changed = true;
-        //});
     }
 
     public addOrUpdateRoom(room) {
-        this._db.run('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ',
-            [
-                room.ID || room.num,
-                room.Area || room.area,
-                room.Details || room.details || RoomDetails.None,
-                room.Name || room.name,
-                room.Env || room.env,
-                room.X || room.x || 0,
-                room.Y || room.y || 0,
-                room.Z || room.z || 0,
-                room.Zone || room.zone || 0,
-                room.Indoors || room.indoors,
-                room.Background || room.background,
-                room.Notes || room.notes
-            ], (err) => {
-                if (err)
-                    this.emit('error', err);
-                this.refresh();
-                this._changed = true;
-            });
+        try {
+            this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ').run(
+                [
+                    room.ID || room.num || null,
+                    room.Area || room.area || null,
+                    room.Details || room.details || RoomDetails.None,
+                    room.Name || room.name || null,
+                    room.Env || room.env || null,
+                    room.X || room.x || 0,
+                    room.Y || room.y || 0,
+                    room.Z || room.z || 0,
+                    room.Zone || room.zone || 0,
+                    room.Indoors || room.indoors || null,
+                    room.Background || room.background || null,
+                    room.Notes || room.notes || null
+                ]);
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
+        this.refresh();
+        this._changed = true;
         //this._db.run("Delete From Exits WHERE ID = ?", [room.ID || room.num]);
         const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
         let exit;
@@ -958,7 +886,7 @@ export class Mapper extends EventEmitter {
             if (!room.exits.hasOwnProperty(exit)) continue;
             stmt.run(room.ID || room.num, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
-        stmt.finalize();
+
         this.refresh();
         this._changed = true;
     }
@@ -1462,97 +1390,70 @@ export class Mapper extends EventEmitter {
     }
 
     public getRoom(id, callback) {
-        this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Rooms.ID = $id', {
-            $id: id
-        }, (err, rows) => {
-            const rooms = {};
-            if (rows) {
-                const rl = rows.length;
-                for (let r = 0; r < rl; r++) {
-                    if (rooms[rows[r].ID]) {
-                        rooms[rows[r].ID].exits[rows[r].Exit] = {
-                            num: rows[r].DestID,
-                            isdoor: rows[r].IsDoor,
-                            isclosed: rows[r].IsClosed
-                        };
-                    }
-                    else {
-                        rooms[rows[r].ID] = clone(rows[r]);
-                        rooms[rows[r].ID].exits = {};
-                        rooms[rows[r].ID].exits[rows[r].Exit] = {
-                            num: rows[r].DestID,
-                            isdoor: rows[r].IsDoor,
-                            isclosed: rows[r].IsClosed
-                        };
-                    }
-                }
-                if (callback) callback(rooms[rows[0].ID]);
-            }
+        let rows = this._db.prepare('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Rooms.ID = $id').all({
+            id: id
         });
+        const rooms = {};
+        if (rows) {
+            const rl = rows.length;
+            for (let r = 0; r < rl; r++) {
+                if (rooms[rows[r].ID]) {
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: rows[r].DestID,
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+                else {
+                    rooms[rows[r].ID] = clone(rows[r]);
+                    rooms[rows[r].ID].exits = {};
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: rows[r].DestID,
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+            }
+            if (callback) callback(rooms[rows[0].ID]);
+        }
     }
 
     public getRooms(area, level, zone, callback) {
-        if (this._splitArea) {
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone', {
-                $area: area,
-                $zone: zone,
-                $z: level
-            }, (err, rows) => {
-                const rooms = {};
-                if (rows) {
-                    const rl = rows.length;
-                    for (let r = 0; r < rl; r++) {
-                        if (rooms[rows[r].ID]) {
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
-                                num: rows[r].DestID,
-                                isdoor: rows[r].IsDoor,
-                                isclosed: rows[r].IsClosed
-                            };
-                        }
-                        else {
-                            rooms[rows[r].ID] = clone(rows[r]);
-                            rooms[rows[r].ID].exits = {};
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
-                                num: rows[r].DestID,
-                                isdoor: rows[r].IsDoor,
-                                isclosed: rows[r].IsClosed
-                            };
-                        }
-                    }
-                    if (callback) callback(rooms);
-                }
+        let rows;
+        if (this._splitArea)
+            rows = this._db.prepare('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone').all({
+                area: area,
+                zone: zone,
+                z: level
             });
-        }
-        else {
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone', {
-                $zone: zone,
-                $z: level
-            }, (err, rows) => {
-                const rooms = {};
-                if (rows) {
-                    const rl = rows.length;
-                    for (let r = 0; r < rl; r++) {
-                        if (rooms[rows[r].ID]) {
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
-                                num: rows[r].DestID,
-                                isdoor: rows[r].IsDoor,
-                                isclosed: rows[r].IsClosed
-                            };
-                        }
-                        else {
-                            rooms[rows[r].ID] = clone(rows[r]);
-                            rooms[rows[r].ID].exits = {};
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
-                                num: rows[r].DestID,
-                                isdoor: rows[r].IsDoor,
-                                isclosed: rows[r].IsClosed
-                            };
-                        }
-                    }
-                    if (callback) callback(rooms);
-                }
+        else
+            rows = this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone').all({
+                zone: zone,
+                z: level
             });
+        const rooms = {};
+        if (rows) {
+            const rl = rows.length;
+            for (let r = 0; r < rl; r++) {
+                if (rooms[rows[r].ID]) {
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: rows[r].DestID,
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+                else {
+                    rooms[rows[r].ID] = clone(rows[r]);
+                    rooms[rows[r].ID].exits = {};
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: rows[r].DestID,
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+            }
         }
+        if (callback) callback(rooms);
     }
 
     public showPath(destRoom?: Room) {
@@ -1811,252 +1712,231 @@ export class Mapper extends EventEmitter {
     public import(data, type?: ImportType) {
         if (!data) return;
         if (type === ImportType.Replace) {
-            this._db.run('DELETE FROM Exits', () => {
-                this._db.run('DELETE FROM Rooms', () => {
-                    this.emit('clear-done');
-                    this.reset();
-                    //this.refresh();
-                    //this.focusActiveRoom();
-                    this.import(data, ImportType.Merge);
-                    this._changed = true;
-                });
-            });
+            this._db.prepare('DELETE FROM Exits').run();
+            this._db.prepare('DELETE FROM Rooms').run();
+            this.emit('clear-done');
+            this.reset();
+            this.import(data, ImportType.Merge);
+            this._changed = true;
         }
         else {
             this._cancelImport = false;
             let idx;
             let r;
             let rl;
-            this._db.serialize(() => {
-                if (Array.isArray(data)) {
-                    rl = data.length;
-                    this.emit('import-progress', 0);
-                    const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ');
-                    idx = 1;
-                    for (r = 0; r < rl; r++) {
-                        if (this._cancelImport) {
-                            stmt2.finalize();
-                            this._changed = true;
-                            return;
-                        }
-                        if (!data[r]) continue;
-                        rl += Object.keys(data[r].exits).length;
+            if (Array.isArray(data)) {
+                rl = data.length;
+                this.emit('import-progress', 0);
+                const stmt2 = this._db.transaction(['INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ']);
+                idx = 1;
+                for (r = 0; r < rl; r++) {
+                    if (this._cancelImport) {
+                        this._changed = true;
+                        return;
+                    }
+                    if (!data[r]) continue;
+                    rl += Object.keys(data[r].exits).length;
+                    try {
                         stmt2.run([
-                            data[r].ID || data[r].num,
-                            data[r].Area || data[r].area,
-                            data[r].Details || data[r].details,
-                            data[r].Name || data[r].name,
-                            data[r].Env || data[r].env,
+                            data[r].ID || data[r].num || null,
+                            data[r].Area || data[r].area || null,
+                            data[r].Details || data[r].details || RoomDetails.None,
+                            data[r].Name || data[r].name || null,
+                            data[r].Env || data[r].env || null,
                             data[r].X || data[r].x,
                             data[r].Y || data[r].y,
                             data[r].Z || data[r].z,
-                            data[r].Zone || data[r].zone,
-                            data[r].Indoors || data[r].indoors,
-                            data[r].Background || data[r].background
-                        ],
-                            (err) => {
-                                if (this._cancelImport) {
-                                    this.refresh();
-                                    this.focusActiveRoom();
-                                    this._changed = true;
-                                    return;
-                                }
-                                this.emit('import-progress', Math.floor(r / rl * 100));
-                                if (r >= rl) {
-                                    //this.reset();
-                                    this.refresh();
-                                    this.focusActiveRoom();
-                                }
-                            });
-                        //this._db.run("Delete From Exits WHERE ID = ?", [data[r].ID]);
-                        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
-                        let exit;
-                        for (exit in data[r].exits) {
-                            if (!data[r].exits.hasOwnProperty(exit)) continue;
-                            stmt.run(data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed,
-                                () => {
-                                    if (this._cancelImport) {
-                                        this.refresh();
-                                        this.focusActiveRoom();
-                                        this._changed = true;
-                                        return;
-                                    }
-                                    this.emit('import-progress', Math.floor(idx / rl * 100));
-                                    idx++;
-                                    if (idx >= rl) {
-                                        //this.reset();
-                                        this.refresh();
-                                        this.focusActiveRoom();
-                                    }
-                                });
-                        }
-                        stmt.finalize();
+                            data[r].Zone || data[r].zone || null,
+                            data[r].Indoors || data[r].indoors || 0,
+                            data[r].Background || data[r].background || null
+                        ]);
                     }
-                    stmt2.finalize();
-                    if (rl === 0)
-                        this.emit('import-progress', 100);
-                    this._changed = true;
-                    //this.emit('import-progress', 100);
-                }
-                else {
-                    this.emit('import-progress', 0);
-                    const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ');
-                    rl = Object.keys(data).length;
-                    idx = 1;
-                    for (r in data) {
-                        if (!data.hasOwnProperty(r) || !data[r]) continue;
+                    catch (err) {
                         if (this._cancelImport) {
-                            stmt2.finalize();
+                            this.refresh();
+                            this.focusActiveRoom();
                             this._changed = true;
                             return;
                         }
-                        rl += Object.keys(data[r].exits).length;
+                        this.emit('import-progress', Math.floor(r / rl * 100));
+                        if (r >= rl) {
+                            //this.reset();
+                            this.refresh();
+                            this.focusActiveRoom();
+                        }
+                    }
+                    const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
+                    let exit;
+                    for (exit in data[r].exits) {
+                        if (!data[r].exits.hasOwnProperty(exit)) continue;
+                        stmt.run(data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed);
                         if (this._cancelImport) {
-                            stmt2.finalize();
+                            this.refresh();
+                            this.focusActiveRoom();
+                            this._changed = true;
                             return;
                         }
-                        if (!data[r]) continue;
+                        this.emit('import-progress', Math.floor(idx / rl * 100));
+                        idx++;
+                        if (idx >= rl) {
+                            this.refresh();
+                            this.focusActiveRoom();
+                        }
+                    }
+                }
+                if (rl === 0)
+                    this.emit('import-progress', 100);
+                this._changed = true;
+            }
+            else {
+                this.emit('import-progress', 0);
+                const stmt2 = this._db.transaction(['INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ']);
+                rl = Object.keys(data).length;
+                idx = 1;
+                for (r in data) {
+                    if (!data.hasOwnProperty(r) || !data[r]) continue;
+                    if (this._cancelImport) {
+                        this._changed = true;
+                        return;
+                    }
+                    rl += Object.keys(data[r].exits).length;
+                    if (this._cancelImport) {
+                        return;
+                    }
+                    if (!data[r]) continue;
+                    try {
                         stmt2.run([
-                            data[r].ID || data[r].num,
-                            data[r].Area || data[r].area,
-                            data[r].Details || data[r].details,
-                            data[r].Name || data[r].name,
-                            data[r].Env || data[r].env,
+                            data[r].ID || data[r].num || null,
+                            data[r].Area || data[r].area || null,
+                            data[r].Details || data[r].details || RoomDetails.None,
+                            data[r].Name || data[r].name || null,
+                            data[r].Env || data[r].env || null,
                             data[r].X || data[r].x,
                             data[r].Y || data[r].y,
                             data[r].Z || data[r].z,
-                            data[r].Zone || data[r].zone,
-                            data[r].Indoors || data[r].indoors,
-                            data[r].Background || data[r].background
-                        ],
-                            (err) => {
-                                if (this._cancelImport) {
-                                    this.refresh();
-                                    this.focusActiveRoom();
-                                    this._changed = true;
-                                    return;
-                                }
-                                this.emit('import-progress', Math.floor(idx / rl * 100));
-                                idx++;
-                                if (idx >= rl) {
-                                    //this.reset();
-                                    this.refresh();
-                                    this.focusActiveRoom();
-                                }
-                            });
-                        //this._db.run("Delete From Exits WHERE ID = ?", [data[r].ID]);
-                        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
-                        let exit;
-                        for (exit in data[r].exits) {
-                            if (!data[r].exits.hasOwnProperty(exit)) continue;
-                            stmt.run([data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed],
-                                () => {
-                                    if (this._cancelImport) {
-                                        this.refresh();
-                                        this.focusActiveRoom();
-                                        this._changed = true;
-                                        return;
-                                    }
-                                    this.emit('import-progress', Math.floor(idx / rl * 100));
-                                    idx++;
-                                    if (idx >= rl) {
-                                        //this.reset();
-                                        this.refresh();
-                                        this.focusActiveRoom();
-                                    }
-                                });
-                        }
-                        stmt.finalize();
+                            data[r].Zone || data[r].zone || null,
+                            data[r].Indoors || data[r].indoors || 0,
+                            data[r].Background || data[r].background || null
+                        ]);
                     }
-                    stmt2.finalize();
-                    if (rl === 0)
-                        this.emit('import-progress', 100);
-                    this._changed = true;
+                    catch (err) {
+                        if (this._cancelImport) {
+                            this.refresh();
+                            this.focusActiveRoom();
+                            this._changed = true;
+                            return;
+                        }
+                        this.emit('import-progress', Math.floor(idx / rl * 100));
+                        idx++;
+                        if (idx >= rl) {
+                            this.refresh();
+                            this.focusActiveRoom();
+                        }
+                    }
+                    const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
+                    let exit;
+                    for (exit in data[r].exits) {
+                        if (!data[r].exits.hasOwnProperty(exit)) continue;
+                        stmt.run([data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed]);
+                        if (this._cancelImport) {
+                            this.refresh();
+                            this.focusActiveRoom();
+                            this._changed = true;
+                            return;
+                        }
+                        this.emit('import-progress', Math.floor(idx / rl * 100));
+                        idx++;
+                        if (idx >= rl) {
+                            this.refresh();
+                            this.focusActiveRoom();
+                        }
+                    }
                 }
-            });
+                if (rl === 0)
+                    this.emit('import-progress', 100);
+                this._changed = true;
+            }
         }
     }
 
     public exportArea(file: string) {
-        this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area', {
-            $area: this.active.area || ''
-        }, (err, rows) => {
-            const rooms = {};
-            if (rows) {
-                const rl = rows.length;
-                this.emit('import-progress', 0);
-                for (let r = 0; r < rl; r++) {
-                    rows[r].ID = parseInt(rows[r].ID, 10);
-                    if (rooms[rows[r].ID]) {
-                        rooms[rows[r].ID].exits[rows[r].Exit] = {
-                            num: parseInt(rows[r].DestID, 10),
-                            isdoor: rows[r].IsDoor,
-                            isclosed: rows[r].IsClosed
-                        };
-                    }
-                    else {
-                        rooms[rows[r].ID] = { num: rows[r].ID };
-                        let prop;
-                        for (prop in rows[r]) {
-                            if (prop === 'ID')
-                                continue;
-                            if (!rows[r].hasOwnProperty(prop)) {
-                                continue;
-                            }
-                            rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
-                        }
-                        rooms[rows[r].ID].exits = {};
-                        rooms[rows[r].ID].exits[rows[r].Exit] = {
-                            num: parseInt(rows[r].DestID, 10),
-                            isdoor: rows[r].IsDoor,
-                            isclosed: rows[r].IsClosed
-                        };
-                    }
-                    this.emit('import-progress', Math.floor(r / rl * 100));
-                }
-                this.exportRooms(file, rooms);
-            }
+        let rows = this._db.prepare('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area').all({
+            area: this.active.area || ''
         });
+        const rooms = {};
+        if (rows) {
+            const rl = rows.length;
+            this.emit('import-progress', 0);
+            for (let r = 0; r < rl; r++) {
+                rows[r].ID = parseInt(rows[r].ID, 10);
+                if (rooms[rows[r].ID]) {
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: parseInt(rows[r].DestID, 10),
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+                else {
+                    rooms[rows[r].ID] = { num: rows[r].ID };
+                    let prop;
+                    for (prop in rows[r]) {
+                        if (prop === 'ID')
+                            continue;
+                        if (!rows[r].hasOwnProperty(prop)) {
+                            continue;
+                        }
+                        rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
+                    }
+                    rooms[rows[r].ID].exits = {};
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: parseInt(rows[r].DestID, 10),
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+                this.emit('import-progress', Math.floor(r / rl * 100));
+            }
+            this.exportRooms(file, rooms);
+        }
     }
 
     public exportAll(file: string) {
-        this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID', (err, rows) => {
-            const rooms = {};
-            if (rows) {
-                const rl = rows.length;
-                this.emit('import-progress', 0);
-                for (let r = 0; r < rl; r++) {
-                    rows[r].ID = parseInt(rows[r].ID, 10);
-                    if (rooms[rows[r].ID]) {
-                        rooms[rows[r].ID].exits[rows[r].Exit] = {
-                            num: parseInt(rows[r].DestID, 10),
-                            isdoor: rows[r].IsDoor,
-                            isclosed: rows[r].IsClosed
-                        };
-                    }
-                    else {
-                        rooms[rows[r].ID] = { num: rows[r].ID };
-                        let prop;
-                        for (prop in rows[r]) {
-                            if (prop === 'ID')
-                                continue;
-                            if (!rows[r].hasOwnProperty(prop)) {
-                                continue;
-                            }
-                            rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
-                        }
-                        rooms[rows[r].ID].exits = {};
-                        rooms[rows[r].ID].exits[rows[r].Exit] = {
-                            num: parseInt(rows[r].DestID, 10),
-                            isdoor: rows[r].IsDoor,
-                            isclosed: rows[r].IsClosed
-                        };
-                    }
-                    this.emit('import-progress', Math.floor(r / rl * 100));
+        let rows = this._db.prepare('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID').all()
+        const rooms = {};
+        if (rows) {
+            const rl = rows.length;
+            this.emit('import-progress', 0);
+            for (let r = 0; r < rl; r++) {
+                rows[r].ID = parseInt(rows[r].ID, 10);
+                if (rooms[rows[r].ID]) {
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: parseInt(rows[r].DestID, 10),
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
                 }
-                this.exportRooms(file, rooms);
+                else {
+                    rooms[rows[r].ID] = { num: rows[r].ID };
+                    let prop;
+                    for (prop in rows[r]) {
+                        if (prop === 'ID')
+                            continue;
+                        if (!rows[r].hasOwnProperty(prop)) {
+                            continue;
+                        }
+                        rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
+                    }
+                    rooms[rows[r].ID].exits = {};
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: parseInt(rows[r].DestID, 10),
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+                this.emit('import-progress', Math.floor(r / rl * 100));
             }
-        });
+            this.exportRooms(file, rooms);
+        }
     }
 
     public exportRooms(file: string, rooms) {
@@ -2075,14 +1955,15 @@ export class Mapper extends EventEmitter {
 
     public compact() {
         this.emit('import-progress', 0);
-        this._db.run('VACUUM;', () => {
-            this.emit('import-progress', 100);
-        });
+        this._db.exec('VACUUM;');
+        this.emit('import-progress', 100);
     }
 
     public executeCommand(cmd: string, callback?) {
         if (!cmd || cmd.length === 0) return;
-        this._db.run(cmd, callback);
+        this._db.exec(cmd);
+        if (callback)
+            callback();
     }
 
     public save(callback?) {
@@ -2092,30 +1973,21 @@ export class Mapper extends EventEmitter {
                     callback();
                 return;
             }
-            this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this.createDatabase('Disk');
-            this._db.run('DELETE FROM Disk.Rooms', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('DELETE FROM Disk.Exits', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('INSERT OR REPLACE INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('INSERT OR REPLACE INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('VACUUM Disk', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('DETACH DATABASE Disk', (err) => {
-                if (err) this.emit('error', err);
+            try {
+                this._db.exec('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
+                this.createDatabase('Disk');
+                this._db.exec('DELETE FROM Disk.Rooms');
+                this._db.exec('DELETE FROM Disk.Exits');
+                this._db.exec('INSERT OR REPLACE INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms');
+                this._db.exec('INSERT OR REPLACE INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits');
+                this._db.exec('VACUUM Disk');
+                this._db.exec('DETACH DATABASE Disk');
                 if (callback) callback();
-            });
-            this._changed = false;
+                this._changed = false;
+            }
+            catch (err) {
+                if (err) this.emit('error', err);
+            }
         }
         else if (callback)
             callback();
