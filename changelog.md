@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.41
+
+- **Changed:**
+  - Upgrade electron to 1.8.4
+
 ## 0.4.40
 
 - **Changed:**
