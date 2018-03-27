@@ -1880,6 +1880,7 @@ export class Mapper extends EventEmitter {
                 this.emit('import-progress', 100);
                 this._changed = true;
             }
+            this.save();
         }
     }
 
