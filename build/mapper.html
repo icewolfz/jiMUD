@@ -684,7 +684,7 @@
     function updateAreas() {
       $("#select-area option").remove();
       $("#reArea option").remove();
-      let rows = mapper._db.prepare("SELECT DISTINCT Area from Rooms").all();
+      let rows = mapper._db.prepare("SELECT DISTINCT Area from Rooms ORDER BY Area ASC").all();
       if (rows && rows.length > 0) {
         for (var a = 0; a < rows.length; a++) {
           $("#select-area").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
