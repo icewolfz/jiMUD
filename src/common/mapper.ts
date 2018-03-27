@@ -232,7 +232,11 @@ export class Mapper extends EventEmitter {
             prefix += '.';
         else
             prefix = '';
-        this._db.exec('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
+        this._db.pragma(prefix + 'synchronous=OFF');
+        this._db.pragma(prefix + 'temp_store=MEMORY');
+        this._db.pragma(prefix + 'threads=4');
+        //this._db.pragma('journal_mode = WAL');
+        //this._db.exec('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
         this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)');
         this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)');
         this._db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id on Rooms (ID);');
@@ -241,7 +245,7 @@ export class Mapper extends EventEmitter {
 
     public initializeDatabase() {
         if (this._memory) {
-            this._db = new sqlite3(':memory:', { memory: true });
+            this._db = new sqlite3(':memory', { memory: true });
             this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
         }
         else
