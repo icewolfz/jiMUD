@@ -5,11 +5,11 @@
   "website": "https://github.com/icewolfz/jiMUD",
   "homepage": "https://github.com/icewolfz/jiMUD",
   "url": "https://github.com/icewolfz/jiMUD/issues",
-  "version": "0.4.40",
+  "version": "0.4.41",
   "main": "build/main.js",
   "description": "MUD client coded in javascript.",
   "author": "Icewolfz",
-  "electronVersion": "1.7.12",
+  "electronVersion": "1.8.4",
   "email": "icewolfz@users.noreply.github.com",
   "license": "UNLICENSED",
   "repository": {
@@ -85,7 +85,7 @@
     "babel-cli": "^6.26.0",
     "babili": "^0.1.4",
     "devtron": "^1.4.0",
-    "electron": "^1.7.12",
+    "electron": "^1.8.4",
     "electron-builder": "^19.26.0",
     "electron-installer-dmg": "^0.2.1",
     "electron-local-crash-reporter": "^1.0.2",
@@ -118,6 +118,7 @@
     }
   },
   "dependencies": {
+    "better-sqlite3": "^4.1.0",
     "buzz": "^1.2.0",
     "chokidar": "^2.0.2",
     "drivelist": "^5.1.8",
