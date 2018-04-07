@@ -242,6 +242,10 @@
       mapper.save(callback);
     }
 
+    window.onbeforeunload = function () {
+            if (mapper) save();
+    };
+
     $(document).ready(() => {
       $("#mapper-room input").prop("disabled", true);
       $("#mapper-room textarea").prop("disabled", true);
