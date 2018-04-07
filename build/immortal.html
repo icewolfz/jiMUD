@@ -3288,8 +3288,8 @@
             };
             editor.on('blur', editor.close);
             editor.on('click', function (e) {
-                e.preventDefault();
-                e.cancelBubble = true;
+                event.cancelable = true;
+                event.stopPropagation();
             });
             editor.on('keypress', function (event) {
                 event.cancelable = true;

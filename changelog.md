@@ -4,6 +4,9 @@
 
 - **Changed:**
   - Upgrade electron to 1.8.4
+- **Fixed:**
+  - Mapper: force save in cause the mapper window is unloaded
+  - Immortal tools: could not click in rename text box to position cursor
 
 ## 0.4.40
 
