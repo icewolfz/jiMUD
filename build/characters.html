@@ -297,8 +297,8 @@
             });
             item.on('dblclick', function () {
                 $(this).click();
-                load();
-                window.close();
+                if (load() === 0)
+                    window.close();
             });
             list.append(item);
         }
@@ -613,11 +613,11 @@
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
             });
-            if (response === 0)
-            {
+            if (response === 0) {
                 saveCharacters();
                 ipcRenderer.send('load-char', name);
             }
+            return response;
         }
 
         function loadDefault() {
@@ -628,11 +628,11 @@
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
             });
-            if (response === 0)
-            {
+            if (response === 0) {
                 saveCharacters();
                 ipcRenderer.send('load-default', name);
             }
+            return response;
         }
 
         function showGetName(name, val, type, callback) {
@@ -723,10 +723,10 @@
             </button>
         </div>
         <div class="btn-group" role="group">
-            <button id="btn-load-default" type="button" class="btn btn-warning btn-xs" title="Load default" onclick="loadDefault();window.close()">
+            <button id="btn-load-default" type="button" class="btn btn-warning btn-xs" title="Load default" onclick="if(loadDefault() === 0) window.close()">
                 <i class="fa fa-step-backward"></i>
             </button>
-            <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick="load();window.close()">
+            <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick="if(load() === 0) window.close()">
                 <i class="fa fa-play"></i>
             </button>
         </div>
@@ -778,7 +778,7 @@
                 <label class="control-label">
                     <input disabled="disabled" type="checkbox" id="dev" /> Development
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Connect to development port</span>
-                </label>                
+                </label>
             </div>
         </div>
     </div>

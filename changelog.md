@@ -5,8 +5,9 @@
 - **Changed:**
   - Upgrade electron to 1.8.4
 - **Fixed:**
-  - Mapper: force save in cause the mapper window is unloaded
+  - Mapper: force save in case the mapper window is unloaded
   - Immortal tools: could not click in rename text box to position cursor
+  - Character manager: do not close dialog when no is clicked from confirm dialog
 
 ## 0.4.40
 
