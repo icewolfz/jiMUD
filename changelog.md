@@ -8,6 +8,7 @@
   - Mapper: force save in case the mapper window is unloaded
   - Immortal tools: could not click in rename text box to position cursor
   - Character manager: do not close dialog when no is clicked from confirm dialog
+  - Monster icons not displaying due to case sensitivity
 
 ## 0.4.40
 

@@ -51,7 +51,7 @@ jiMUD assigns all monster/party member icons with a list of supported css classe
 ```css
 .monster-cerberus {
     /*image is set by background-image*/
-    background-image: url({assets}/monsters/32x32-2.PNG);
+    background-image: url({assets}/monsters/32x32-2.png);
     /*32x32-2 is a image sprite of icons 32x32, so we supply the top corner offset in -#*/
     background-position: -160px -992px;
     /*set an optional background, all build in icons are transparent background*/
