@@ -181,7 +181,7 @@ export class Status extends EventEmitter {
         if (obj.guild && obj.guild.length > 0)
             cls.push(prefix + this.sanitizeID(obj.guild));
         if (obj.name && obj.name.length > 0)
-            cls.push(prefix + this.sanitizeID(obj.name));
+            cls.push(prefix + this.sanitizeID(obj.name.replace(/\d+$/, "").trim()));
         return cls.join(' ').toLowerCase();
     }
 

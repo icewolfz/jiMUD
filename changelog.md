@@ -9,6 +9,7 @@
   - Immortal tools: could not click in rename text box to position cursor
   - Character manager: do not close dialog when no is clicked from confirm dialog
   - Monster icons not displaying due to case sensitivity
+  - Status: trim training # to monster name to allow unique monster classes to be used
 
 ## 0.4.40
 
