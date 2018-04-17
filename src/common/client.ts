@@ -695,7 +695,6 @@ export class Client extends EventEmitter {
         if (settings && settings.length > 0)
             this._settingsFile = settings;
         this.loadOptions();
-        this.loadProfiles();
         this.emit('initialized');
     }
 
@@ -768,6 +767,7 @@ export class Client extends EventEmitter {
         this.display.roundedRanges = this.options.display.roundedOverlays;
         this.UpdateFonts();
         this.display.scrollDisplay();
+        this.loadProfiles();
         this.emit('options-loaded');
     }
 

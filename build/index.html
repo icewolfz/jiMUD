@@ -1907,7 +1907,7 @@
     });
 
     ipcRenderer.on('reload-profiles', (event) => {
-      client.loadProfiles();
+      //client.loadProfiles();
       client.loadOptions();
       _logger.postMessage({
         action: 'options', args: {
