@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.41
+## 0.4.41 2018-04-17
 
 - **Changed:**
   - Upgrade electron to 1.8.4
@@ -12,7 +12,7 @@
   - Status: trim training # to monster name to allow unique monster classes to be used
   - When reloading options it would not reinitialize the profiles to correctly load the new enabled ones
 
-## 0.4.40
+## 0.4.40 2018-03-20
 
 - **Changed:**
   - Upgrade several 3rd party dependencies
