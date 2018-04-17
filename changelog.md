@@ -8,7 +8,7 @@
   - Mapper: force save in case the mapper window is unloaded
   - Immortal tools: could not click in rename text box to position cursor
   - Character manager: Do not close dialog when no is clicked from confirm dialog
-  - Monster icons not displaying due to case sensitivity
+  - Monster icons not displaying due to case sensitivity and numeric additions to names
   - Status: trim training # to monster name to allow unique monster classes to be used
   - When reloading options it would not reinitialize the profiles to correctly load the new enabled ones
 
