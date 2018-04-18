@@ -117,30 +117,30 @@ export class Status extends EventEmitter {
                     if (obj.action === 'leave')
                         $('#combat').empty();
                     else if (obj.action === 'add')
-                        this.createBar('#combat', this.sanitizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, 'monster-'), obj.order);
+                        this.createBar('#combat', this.getID(obj, 'combat_'), obj.name, obj.hp, 100, this.livingClass(obj, 'monster-'), obj.order);
                     else if (obj.action === 'update') {
                         if (obj.hp === 0)
-                            this.removeBar('#' + this.sanitizeID(obj.name));
+                            this.removeBar('#' + this.getID(obj, 'combat_'));
                         else
-                            this.createBar('#combat', this.sanitizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, 'monster-'), obj.order);
+                            this.createBar('#combat', this.getID(obj, 'combat_'), obj.name, obj.hp, 100, this.livingClass(obj, 'monster-'), obj.order);
                     }
                     else if (obj.action === 'remove')
-                        this.removeBar('#' + this.sanitizeID(obj.name));
+                        this.removeBar('#' + this.getID(obj, 'combat_'));
                     break;
                 case 'omud.party':
                     if (obj.action === 'leave')
                         $('#party').empty();
                     else if (obj.action === 'add') {
-                        this.createBar('#party', this.sanitizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, 'party-'), obj.name.replace('"', ''));
+                        this.createBar('#party', this.getID(obj, 'party_'), obj.name, obj.hp, 100, this.livingClass(obj, 'party-'), obj.name.replace('"', ''));
                     }
                     else if (obj.action === 'update') {
                         if (obj.hp === 0)
-                            this.removeBar('#' + this.sanitizeID(obj.name));
+                            this.removeBar('#' + this.getID(obj, 'party_'));
                         else
-                            this.createBar('#party', this.sanitizeID(obj.name), obj.name, obj.hp, 100, this.livingClass(obj, 'party-'), obj.name.replace('"', ''));
+                            this.createBar('#party', this.getID(obj, 'party_'), obj.name, obj.hp, 100, this.livingClass(obj, 'party-'), obj.name.replace('"', ''));
                     }
                     else if (obj.action === 'remove')
-                        this.removeBar('#' + this.sanitizeID(obj.name));
+                        this.removeBar('#' + this.getID(obj, 'party_'));
                     if ($('#party').children().length > 0)
                         $('#party').addClass('hasmembers');
                     else
@@ -164,12 +164,18 @@ export class Status extends EventEmitter {
         }
     }
 
-    private sanitizeID(id: string) {
+    private sanitizeID(id: string):string {
         id = id.replace(/\s/gi, '-');
         return id.replace(/[^a-zA-Z0-9_-]/gi, '');
     }
 
-    private livingClass(obj, prefix?: string) {
+    private getID(obj, prefix?:string):string {
+        if(!obj) return;
+        if(!obj.id) return this.sanitizeID(obj.name || '');
+        return (prefix || 'obj_')+obj.id;
+    }
+
+    private livingClass(obj, prefix?: string):string {
         const cls = [];
         if (!prefix) prefix = '';
         if (obj.class && obj.class.length > 0)

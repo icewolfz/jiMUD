@@ -2,6 +2,9 @@
 
 ## 0.4.42
 
+- **Changed:**
+  - Status: Use unique player/monster ids if supplied then fall back to the old name id
+
 ## 0.4.41 2018-04-17
 
 - **Changed:**
