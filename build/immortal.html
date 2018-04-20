@@ -3311,7 +3311,7 @@
 
             editor[0].selectionStart = 0;
             if (editor.val().lastIndexOf(".") === -1)
-                editor[0].selectionEnd = editor.val().length - 1;
+                editor[0].selectionEnd = editor.val().length;
             else
                 editor[0].selectionEnd = editor.val().lastIndexOf(".");
         }

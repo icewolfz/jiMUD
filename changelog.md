@@ -4,6 +4,7 @@
 
 - **Changed:**
   - Status: Use unique player/monster ids if supplied then fall back to the old name id
+  - Immortal tools: rename when no extension will not select all by default
 
 ## 0.4.41 2018-04-17
 
