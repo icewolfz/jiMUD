@@ -4,9 +4,10 @@
 
 - **Changed:**
   - Status: Use unique player/monster ids if supplied then fall back to the old name id
-  - Immortal tools: 
+  - Immortal tools:
     - Rename when no extension will not select all by default
-    - Double clicking local folder would not always change remote folder if matching subfolder exist
+    - Double clicking local folder would not always change remote folder if matching sub folder exist
+    - Fixed added 'change to directory' to context when nothing selected
 
 ## 0.4.41 2018-04-17
 

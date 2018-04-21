@@ -2715,6 +2715,15 @@
                     click: deleteRemote
                 }));
             }
+            else {
+                c.append(new MenuItem({ type: 'separator' }));
+                c.append(new MenuItem({
+                    label: 'Change to directory',
+                    click: () => {
+                        ipcRenderer.send('send-command', `cd ${options.remote}`);
+                    }
+                }));
+            }
             c.append(new MenuItem({
                 label: 'New directory',
                 click: newFolderRemote
