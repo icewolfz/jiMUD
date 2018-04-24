@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.42
+## 0.4.42 2018-04-23
 
 - **Changed:**
   - Status: Use unique player/monster ids if supplied then fall back to the old name id
