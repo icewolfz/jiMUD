@@ -1314,6 +1314,8 @@
             });
             loadOptions();
             _ied = new IED(options.local, options.remote);
+            _ied.local = options.local;
+            _ied.remote = options.remote;
             _ied.bufferSize = options.bufferSize;
             _ied.useTemp = options.tempFile;
             if (options.openEditor)
@@ -3450,8 +3452,15 @@
         });
 
         ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type === "extensions" && data.name === "immortal")
+            if (data.type === "extensions" && data.name === "immortal") {
                 loadOptions(data.value);
+                if (_ied) {
+                    _ied.local = options.local;
+                    _ied.remote = options.remote;
+                    _ied.bufferSize = options.bufferSize;
+                    _ied.useTemp = options.tempFile;
+                }
+            }
         });
 
         function bulkQueueRemove() {

@@ -131,7 +131,10 @@
                 _settings.extensions["immortal"][$(this).attr('id')] = parseInt($(this).val(), 10);
             });
             $('.selectpicker').change(function () {
-                _settings.extensions["immortal"][$(this).attr('id')] = $(this).val();
+                if($(this).attr('id') == 'bufferSize')
+                    _settings.extensions["immortal"][$(this).attr('id')] = parseInt($(this).val(), 10);
+                else
+                    _settings.extensions["immortal"][$(this).attr('id')] = $(this).val();
             });
             $("#btn-editor").on('click', () => {
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
