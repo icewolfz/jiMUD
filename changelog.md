@@ -6,6 +6,7 @@
   - Immortal tools:
     - Buffer size was not correctly being stored as a number when changed from default in preferences
     - When saving preferences was not correctly updating temp and buffersize options
+    - Upgrade several 3rd party dependencies
 
 ## 0.4.42 2018-04-23
 
