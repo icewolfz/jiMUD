@@ -517,6 +517,14 @@ var menuTemp = [
         accelerator: 'CmdOrCtrl+I'
       },
       {
+        label: '&Immortal editor...',
+        id: 'immortaleditor',
+        click: () => {
+          win.webContents.executeJavaScript('showImmortalEditor()');
+        },
+        visible: false
+      },      
+      {
         label: '&Map...',
         click: showMapper,
         accelerator: 'CmdOrCtrl+T'
