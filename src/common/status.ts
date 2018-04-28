@@ -164,18 +164,18 @@ export class Status extends EventEmitter {
         }
     }
 
-    private sanitizeID(id: string):string {
+    private sanitizeID(id: string): string {
         id = id.replace(/\s/gi, '-');
         return id.replace(/[^a-zA-Z0-9_-]/gi, '');
     }
 
-    private getID(obj, prefix?:string):string {
-        if(!obj) return;
-        if(!obj.id) return this.sanitizeID(obj.name || '');
-        return (prefix || 'obj_')+obj.id;
+    private getID(obj, prefix?: string): string {
+        if (!obj) return;
+        if (!obj.id) return this.sanitizeID(obj.name || '');
+        return (prefix || 'obj_') + obj.id;
     }
 
-    private livingClass(obj, prefix?: string):string {
+    private livingClass(obj, prefix?: string): string {
         const cls = [];
         if (!prefix) prefix = '';
         if (obj.class && obj.class.length > 0)
@@ -211,6 +211,8 @@ export class Status extends EventEmitter {
             eLimb.addClass('weapon-' + this.sanitizeID(weapon.subtype));
         if (weapon.name && weapon.name.length > 0)
             eLimb.addClass('weapon-' + this.sanitizeID(weapon.name));
+        if (weapon.dominant)
+            eLimb.addClass('weapon-dominant');
     }
 
     public setLimbAC(limb, ac) {

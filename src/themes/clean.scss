@@ -396,6 +396,10 @@ body {
     text-transform: uppercase;
 }
 
+.weapon-dominant {
+    border-color: red !important;
+}
+
 .weapon-large-sword {
     background-image: url(#{$images}/status/icon_sword_long2.png);
 }

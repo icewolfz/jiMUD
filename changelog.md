@@ -2,6 +2,8 @@
 
 ## 0.4.43
 
+- **New:**
+  - Status: dominant weapon hand is now bordered with red
 - **Changed:**
   - Immortal tools:
     - Buffer size was not correctly being stored as a number when changed from default in preferences
