@@ -85,7 +85,7 @@ body {
 
 .editor {
     top: 0;
-    bottom: 0;
+    bottom: 20px;
     left: 0;
     position: absolute !important;
     right: 0;
@@ -98,4 +98,31 @@ body {
 
 .cm-tabpane-container {
     background-color: grey;
+}
+
+.statusbar {
+    bottom: 0;
+    position: absolute;
+    left: 0;
+    right: 0;    
+    cursor: default;
+}
+
+.statusbar span, .statusbar div {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.ace_status-indicator {
+    float: right;
+}
+
+.cm-tabstrip li.changed {
+    background-color: rgb(218, 255, 181) !important;
+    border-color: rgb(119, 168, 69) !important;
+}
+
+.cm-tabstrip li.active {
+    background-color: rgb(249, 242, 217);
+    border-color: rgb(247, 216, 106);
 }

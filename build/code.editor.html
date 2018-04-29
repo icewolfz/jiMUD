@@ -43,7 +43,7 @@
             </button>
         </div>
         <div class="btn-group" role="group" id="queue-controls">
-            <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Open file..." onclick="openfile()">
+            <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Open file..." onclick="openFile()">
                 <i class="fa fa-folder-open-o"></i>
             </button>
             <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Close file" onclick="">
@@ -74,7 +74,7 @@
             <button id="btn-delete" type="button" disabled="disabled" class="btn btn-danger btn-xs" title="Delete" onclick="">
                 <i class="fa fa-times"></i>
             </button>
-        </div>        
+        </div>
     </div>
 </body>
 <script>
@@ -88,9 +88,8 @@
     const { Settings } = require('./js/settings');
 
     const path = require('path');
-    var chokidar = require('chokidar');
 
-    var spellchecker;
+    var spellchecker, menubar;
     var options, _updating;
 
     webFrame.setSpellCheckProvider("en-US", true, {
@@ -101,7 +100,7 @@
         }
     });
 
-    var menubar = new Menubar([
+    menubar = new Menubar([
         {
             label: '&File',
             id: 'file',
@@ -148,13 +147,13 @@
                 {
                     label: '&Open',
                     accelerator: "CmdOrCtrl+O",
-                    click: () => { openfile(); }
+                    click: () => { openFile(); }
                 },
                 { type: 'separator' },
                 {
                     label: '&Save',
                     accelerator: "CmdOrCtrl+S",
-                    click: () => { }
+                    click: () => { saveFile(); }
                 },
                 {
                     label: 'Save &As',
@@ -208,7 +207,6 @@
                 },
             ]
         },
-
     ]);
 
     var manager = new DockManager();
@@ -418,7 +416,7 @@
         }
     });
 
-    function openfile(file) {
+    function openFile(file) {
         if (!file || file.length === 0) {
             dialog.showOpenDialog(remote.getCurrentWindow(),
                 {
@@ -435,12 +433,23 @@
                         return;
                     }
                     for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        createEditor(fileNames[f]);
+                        createEditor(fileNames[f], true);
                 });
         }
         else
-            createEditor(file);
+            createEditor(file, true);
     }
+
+    function saveFile() {
+        if (!manager.active)
+            return;
+        if (manager.active.editor.new)
+            saveFileAs();
+        else
+            manager.active.editor.save();
+    }
+
+    function saveFileAs() { }
 
     function findEditor(file) {
         if (!file || file.length === 0)
@@ -453,18 +462,29 @@
         return 0;
     }
 
-    function createEditor(file) {
+    function createEditor(file, open) {
         var p = findEditor(file);
         if (p)
             manager.switchToPanel(p);
         else {
             p = manager.addPanel(path.basename(file), getFileIcon(file), file);
             if (path.extname(file) === '.map')
-                p.editor = new VirtualEditor({ file: file, container: p.pane });
+                p.editor = new VirtualEditor({ file: file, container: p.pane, open: open });
             else
-                p.editor = new CodeEditor({ file: file, container: p.pane });
+                p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
+            p.editor.on('changed', () => {
+                p.tab.classList.add('changed');
+            });
+
+            p.editor.on('saved', () => {
+                if (p.editor.changed)
+                    p.tab.classList.add('changed');
+                else
+                    p.tab.classList.remove('changed');
+            });
             updateTitle();
         }
+        return p.editor;
     }
 
     function doUpdate(type) {
