@@ -68,7 +68,7 @@ export class EditorBase extends EventEmitter {
 
     public createControl() { }
 
-    public readFile() {
+    public read() {
         if (!this.$file || this.$file.length === 0)
             return '';
         try {
@@ -79,6 +79,13 @@ export class EditorBase extends EventEmitter {
         }
         return '';
     }
+
+    public write() {
+
+    }
+
+    public refresh() {}
+
 }
 
 export class CodeEditor extends EditorBase {
@@ -128,7 +135,7 @@ export class CodeEditor extends EditorBase {
     public openFile() {
         if (!this.file || this.file.length === 0)
             return;
-        this.$el.value = this.readFile();
+        this.$el.value = this.read();
         switch (path.extname(this.file)) {
             case '.c':
             case '.h':

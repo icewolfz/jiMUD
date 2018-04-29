@@ -34,14 +34,47 @@
 
 <body>
     <div id="toolbar" class="btn-toolbar" role="toolbar">
-        <div class="btn-group" role="group" id="queue-controls">
-            <button id="btn-start" type="button" class="btn btn-default btn-xs" title="New" onclick="">
-               <i class="fa fa-file-o"></i>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-default btn-xs" title="New" onclick="">
+                <i class="fa fa-plus"></i>
             </button>
+            <button id="btn-add-dropdown" type="button" class="btn btn-default btn-xs" title="New">
+                <span class="caret"></span>
+            </button>
+        </div>
+        <div class="btn-group" role="group" id="queue-controls">
             <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Open file..." onclick="openfile()">
                 <i class="fa fa-folder-open-o"></i>
             </button>
+            <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Close file" onclick="">
+                <i class="fa fa-window-close-o"></i>
+            </button>
         </div>
+        <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Save file" onclick="">
+            <i class="fa fa-save"></i>
+        </button>
+        <div class="btn-group" role="group">
+            <button id="btn-undo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Undo" onclick="">
+                <i class="fa fa-undo"></i>
+            </button>
+            <button id="btn-redo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Redo" onclick="">
+                <i class="fa fa-repeat"></i>
+            </button>
+        </div>
+        <div class="btn-group" role="group">
+            <button id="btn-cut" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Cut" onclick="">
+                <i class="fa fa-cut"></i>
+            </button>
+            <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick="">
+                <i class="fa fa-copy"></i>
+            </button>
+            <button id="btn-paste" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Paste" onclick="">
+                <i class="fa fa-paste"></i>
+            </button>
+            <button id="btn-delete" type="button" disabled="disabled" class="btn btn-danger btn-xs" title="Delete" onclick="">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>        
     </div>
 </body>
 <script>
@@ -74,9 +107,59 @@
             id: 'file',
             submenu: [
                 {
+                    label: '&New',
+                    submenu: [
+                        {
+                            label: '&File...',
+                            accelerator: "CmdOrCtrl+N",
+                            click: () => { }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: '&Area...',
+                            //accelerator: "CmdOrCtrl+N",
+                            click: () => { }
+                        },
+                        {
+                            label: '&Virtual Area...',
+                            //accelerator: "CmdOrCtrl+N",
+                            click: () => { }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: '&Room...',
+                            //accelerator: "CmdOrCtrl+N",
+                            click: () => { }
+                        },
+                        {
+                            label: '&Monster...',
+                            //accelerator: "CmdOrCtrl+N",
+                            click: () => { }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: '&Templates',
+                            submenu: [
+
+                            ]
+                        }
+                    ]
+                },
+                {
                     label: '&Open',
                     accelerator: "CmdOrCtrl+O",
                     click: () => { openfile(); }
+                },
+                { type: 'separator' },
+                {
+                    label: '&Save',
+                    accelerator: "CmdOrCtrl+S",
+                    click: () => { }
+                },
+                {
+                    label: 'Save &As',
+                    accelerator: "CmdOrCtrl+Shift+S",
+                    click: () => { }
                 },
                 { type: 'separator' },
                 {
@@ -94,8 +177,20 @@
             ]
         },
         {
+            label: '&Edit',
+            submenu: [
+
+            ]
+        },
+        {
             label: '&View',
             submenu: [
+                {
+                    label: '&Refresh',
+                    accelerator: "F5",
+                    click: () => { }
+                },
+                { type: 'separator' },
                 {
                     role: 'toggledevtools'
                 },
