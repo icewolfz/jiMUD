@@ -4,6 +4,7 @@
 
 - **New:**
   - Status: dominant weapon hand is now bordered with red
+  - Code editor: allows you to view and edit code, good for immortals
 - **Changed:**
   - Upgrade ace editor to newest build
   - Immortal tools:
