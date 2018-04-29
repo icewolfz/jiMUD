@@ -33,6 +33,16 @@
 </head>
 
 <body>
+    <div id="toolbar" class="btn-toolbar" role="toolbar">
+        <div class="btn-group" role="group" id="queue-controls">
+            <button id="btn-start" type="button" class="btn btn-default btn-xs" title="New" onclick="">
+               <i class="fa fa-file-o"></i>
+            </button>
+            <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Open file..." onclick="openfile()">
+                <i class="fa fa-folder-open-o"></i>
+            </button>
+        </div>
+    </div>
 </body>
 <script>
     const { remote, ipcRenderer, shell, clipboard, webFrame } = require('electron');
@@ -110,16 +120,21 @@
     manager.hideTabstrip = false;
     manager.on('add', (e) => {
     });
-    manager.on('remove', (e) => {
+    manager.on('removed', (e) => {
+        updateTitle();
     });
     manager.on('activated', (e) => {
-        if (manager.active.editor)
-            document.title = 'jiMUD - Code Editor - ' + manager.active.filename;
-        else
-            document.title = 'jiMUD - Code Editor - ' + manager.active.title.innerText;
+        updateTitle();
     });
     manager.on('deactivated', (e) => {
     });
+
+    function updateTitle() {
+        if (manager.active && manager.active.editor)
+            document.title = 'Code Editor - ' + manager.active.editor.filename;
+        else
+            document.title = 'Code Editor';
+    }
 
     // List all files in a directory in Node.js recursively in a synchronous fashion
     var walkSync = function (dir, fileList, dirList, empty) {
@@ -353,6 +368,7 @@
                 p.editor = new VirtualEditor({ file: file, container: p.pane });
             else
                 p.editor = new CodeEditor({ file: file, container: p.pane });
+            updateTitle();
         }
     }
 

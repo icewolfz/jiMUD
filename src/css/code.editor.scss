@@ -1,3 +1,44 @@
+html,
+body {
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    height: 100%;
+    width: 100%;
+}
+
+.cm {
+    top: 26px !important;
+}
+
+.cm-tabpane {
+    background-color: window;
+}
+
+.btn-toolbar {
+    background-color: rgb(245, 245, 245);
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    top: 0;
+    position: absolute;
+    left: 0;
+    right: 0;
+}
+
+.btn-toolbar .btn {
+    outline: none !important;
+}
+
+.btn-toolbar button, .panel-heading button {
+    min-width: 26px;
+}
+
+.btn-toolbar label {
+    margin-bottom: 0 !important;
+}
+
 .fa-file-pdf-o {
     color: #cc3e44 !important;
 }
@@ -36,4 +77,21 @@
 
 .fa-map-o {
     color: #8dc149 !important;
+}
+
+.editor {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    position: absolute !important;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    border-top: 1px solid #ccc;
+}
+
+.cm-tabpane-container {
+    background-color: grey;
 }

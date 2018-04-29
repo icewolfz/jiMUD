@@ -2,6 +2,9 @@ import EventEmitter = require('events');
 const fs = require('fs-extra');
 const path = require('path');
 
+declare let ace;
+let aceTooltip;
+
 export enum UpdateType {
     none = 0, resize = 1
 }
@@ -12,7 +15,7 @@ export interface EditorOptions {
 }
 
 export class EditorBase extends EventEmitter {
-    private $el: HTMLElement;
+
     private $parent: HTMLElement;
     private $file;
 
@@ -35,16 +38,16 @@ export class EditorBase extends EventEmitter {
         super();
 
         if (options && options.container)
-            this.setParent(options.container.container ? options.container.container : options.container);
+            this.parent = options.container.container ? options.container.container : options.container;
         else
-            this.setParent(document.body);
+            this.parent = document.body;
         this.file = options.file;
     }
 
-    public setParent(parent?: string | JQuery | HTMLElement) {
+    set parent(parent) {
         if (typeof parent === 'string') {
-            if (parent.startsWith('#'))
-                this.$parent = document.getElementById(parent.substr(1));
+            if ((<string>parent).startsWith('#'))
+                this.$parent = document.getElementById((<string>parent).substr(1));
             else
                 this.$parent = document.getElementById(parent);
         }
@@ -57,14 +60,95 @@ export class EditorBase extends EventEmitter {
         this.createControl();
     }
 
-    public createControl() {
-        if (this.$el) {
-            this.$parent.removeChild(this.$el);
+    get parent(): HTMLElement { return this.$parent; }
+
+    public createControl() { }
+
+    public readFile() {
+        if (!this.$file || this.$file.length === 0)
+            return '';
+        try {
+            return fs.readFileSync(this.$file);
         }
+        catch (err) {
+            this.emit('error', err);
+        }
+        return '';
     }
 }
 
 export class CodeEditor extends EditorBase {
+    private $el: HTMLTextAreaElement;
+    private $editorEl;
+    private $editor;
+    private $session;
+
+    public createControl() {
+        if (this.$el) {
+            this.parent.removeChild(this.$el);
+        }
+        this.$el = document.createElement('textarea');
+        this.$el.id = this.parent.id + '-textbox';
+        this.$el.style.display = 'none';
+        this.parent.appendChild(this.$el);
+        this.$editorEl = document.createElement('pre');
+        this.$editorEl.classList.add('editor');
+        this.$editorEl.id = this.parent.id + '-editor';
+        this.parent.appendChild(this.$editorEl);
+        ace.require('ace/ext/language_tools');
+        this.$editor = ace.edit(this.$editorEl.id);
+        this.$session = this.$editor.getSession();
+
+        this.$editor.$blockScrolling = Infinity;
+        this.$editor.getSelectedText = function () {
+            return this.session.getTextRange(this.getSelectionRange());
+        };
+
+        if (!aceTooltip) {
+            const Tooltip = ace.require('ace/tooltip').Tooltip;
+            aceTooltip = new Tooltip($('#content')[0]);
+        }
+
+        this.$editor.setTheme('ace/theme/visual_studio');
+        this.$session.setUseSoftTabs(true);
+
+        this.$editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: true,
+            enableLiveAutocompletion: true,
+            newLineMode: 'unix',
+            tabSize: 3
+        });
+
+    }
+
+    public openFile() {
+        if (!this.file || this.file.length === 0)
+            return;
+        this.$el.value = this.readFile();
+        switch (path.extname(this.file)) {
+            case '.c':
+            case '.h':
+                this.$session.setMode('ace/mode/lpc');
+                break;
+            default:
+                this.$session.setMode('ace/mode/text');
+                break;
+        }
+        this.$session.setValue(this.$el.value);
+        this.emit('opened');
+    }
+
+    get file():string {
+        return super.file;
+    }
+
+    set file(value: string) {
+        if (super.file != value) {
+            super.file = value;
+            this.openFile();
+        }
+    }    
 }
 
 export class VirtualEditor extends EditorBase {

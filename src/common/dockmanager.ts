@@ -412,12 +412,15 @@ export class DockManager extends EventEmitter {
         this.$tabstrip.removeChild(panel.tab);
         this.$tabpane.removeChild(panel.pane);
         this.panels.splice(idx, 1);
-        if (panel.id === this.active.id) {
+        if(this.panels.length === 0)
+            this.active = null;
+        else if (panel.id === this.active.id) {
             if (idx >= this.panels.length)
                 idx--;
             this.switchToPanelByIndex(idx);
         }
         this.updateStripState();
+        this.emit('removed', { index: idx, id: panel.id, panel: panel });
         this.doUpdate(UpdateType.resize);
     }
 
