@@ -327,6 +327,7 @@
         case 'button.characters':
         case 'button.mail':
         case 'button.compose':
+        case 'button.codeEditor':
           view = view.split('.');
           client.options.buttons[view[1]] = !client.options.buttons[view[1]];
           updateInterface();
@@ -457,6 +458,7 @@
       $("#map").css('display', client.options.buttons.map ? '' : 'none');
       $("#mail").css('display', client.options.buttons.mail ? '' : 'none');
       $("#compose").css('display', client.options.buttons.compose ? '' : 'none');
+      $("#codeEditor").css('display', client.options.buttons.codeEditor ? '' : 'none');
 
       _status.updateInterface();
       buildButtons();
@@ -986,9 +988,7 @@
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
         ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: false });
-        ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal editor'], visible: false });
         $("#immortal").css('display', "none");
-        $("#immortal-editor").css('display', "none");
         ipcRenderer.send('set-overlay', 1);
         _logger.postMessage({ action: 'connected', args: client.connected });
         _logger.postMessage({
@@ -1136,7 +1136,6 @@
           case 'IED.init':
             ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
             $("#immortal").css('display', "block");
-            $("#immortal-editor").css('display', "block");
             break;
         }
         ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
@@ -1456,6 +1455,14 @@
             toggleView("button.characters");
           }
         }));
+        c.append(new MenuItem({
+          label: 'Code Editor',
+          type: 'checkbox',
+          checked: client.options.buttons.codeEditor,
+          click: () => {
+            toggleView("button.codeEditor");
+          }
+        }));                
         c.append(new MenuItem({
           label: 'Preferences',
           type: 'checkbox',
@@ -1977,13 +1984,13 @@
         ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
     }
 
-    function showImmortalEditor() {
-      if (client.options.windows['immortal-editor'] && client.options.windows['immortal-editor'].options) {
-        client.options.windows['immortal-editor'].options.show = true;
-        ipcRenderer.send('show-window', 'immortal-editor', client.options.windows['immortal-editor'].options);
+    function showCodeEditor() {
+      if (client.options.windows['code-editor'] && client.options.windows['code-editor'].options) {
+        client.options.windows['code-editor'].options.show = true;
+        ipcRenderer.send('show-window', 'code-editor', client.options.windows['code-editor'].options);
       }
       else
-        ipcRenderer.send('show-window', 'immortal-editor', { show: true, file: 'immortal.editor.html', icon: 'ied', alwaysOnTopClient: true });
+        ipcRenderer.send('show-window', 'code-editor', { show: true, file: 'code.editor.html', icon: 'ied', alwaysOnTopClient: true });
     }    
 
     function showMail() {
@@ -2139,7 +2146,7 @@
     <a href="javascript:void(0)" title="Immortal Tools" id="immortal" class="button" onclick="showImmortalTools()" style="display: none">
       <i class="fa fa-code-fork"></i>
     </a>
-    <a href="javascript:void(0)" title="Immortal Editor" id="immortal-editor" class="button" onclick="showImmortalEditor()" style="display: none">
+    <a href="javascript:void(0)" title="Code Editor" id="codeEditor" class="button" onclick="showCodeEditor()">
       <i class="fa fa-pencil"></i>
     </a>    
     <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">

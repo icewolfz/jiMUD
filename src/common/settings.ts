@@ -232,7 +232,9 @@ export class Settings {
         map: true,
         user: true,
         mail: true,
-        compose: true
+        compose: true,
+        immortal: true,
+        codeEditor: false
     };
 
     public find = {

@@ -389,6 +389,15 @@ var menuTemp = [
             }
           },
           {
+            label: 'Code &editor',
+            id: "codeEditorbutton",
+            type: 'checkbox',
+            checked: false,
+            click: () => {
+              win.webContents.executeJavaScript('toggleView("button.codeEditor")');
+            }
+          },                    
+          {
             label: '&Preferences',
             id: "preferencesbutton",
             type: 'checkbox',
@@ -517,12 +526,11 @@ var menuTemp = [
         accelerator: 'CmdOrCtrl+I'
       },
       {
-        label: '&Immortal editor...',
-        id: 'immortaleditor',
+        label: '&Code editor...',
+        id: 'codeeditor',
         click: () => {
-          win.webContents.executeJavaScript('showImmortalEditor()');
-        },
-        visible: false
+          win.webContents.executeJavaScript('showCodeEditor()');
+        }
       },      
       {
         label: '&Map...',

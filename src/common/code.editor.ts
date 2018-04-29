@@ -1,20 +1,44 @@
 import EventEmitter = require('events');
+const fs = require('fs-extra');
+const path = require('path');
 
 export enum UpdateType {
     none = 0, resize = 1
 }
 
-export class ImmortalVirtualEditor extends EventEmitter {
+export interface EditorOptions {
+    file: string;
+    container?: any;
+}
+
+export class EditorBase extends EventEmitter {
     private $el: HTMLElement;
     private $parent: HTMLElement;
+    private $file;
 
-    constructor(container?: any) {
+    get file(): string {
+        return this.$file;
+    }
+    set file(value: string) {
+        if (this.$file != value) {
+            this.$file = value;
+        }
+    }
+
+    get filename(): string {
+        if (!this.$file || this.$file.length === 0)
+            return '';
+        return path.basename(this.$file);
+    }
+
+    constructor(options?: EditorOptions) {
         super();
 
-        if (container)
-            this.setParent(container.container ? container.container : container);
+        if (options && options.container)
+            this.setParent(options.container.container ? options.container.container : options.container);
         else
             this.setParent(document.body);
+        this.file = options.file;
     }
 
     public setParent(parent?: string | JQuery | HTMLElement) {
@@ -31,11 +55,17 @@ export class ImmortalVirtualEditor extends EventEmitter {
         if (!this.$parent)
             this.$parent = document.body;
         this.createControl();
-    }    
+    }
 
     public createControl() {
         if (this.$el) {
             this.$parent.removeChild(this.$el);
         }
     }
+}
+
+export class CodeEditor extends EditorBase {
+}
+
+export class VirtualEditor extends EditorBase {
 }

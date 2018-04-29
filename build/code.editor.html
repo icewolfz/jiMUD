@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Code Editor</title>
+    <link rel="shortcut icon" href="../assets/icons/png/ied.png" />
+    <link href="css/cm.css" rel="stylesheet" type="text/css" />
+    <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-treeview.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/form.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
+    <script>
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js" type="text/javascript"></script>
+    <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
+    <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
+    <script src="../lib/datatables.min.js" type="text/javascript"></script>
+    <script src="../lib/datatables.scrollresize.js" type="text/javascript"></script>
+    <script src="../lib/bootstrap-treeview.min.js"></script>
+    <script src="../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/ace/ext-statusbar.js" type="text/javascript"></script>
+    <script src="../lib/ace/ext-language_tools.js" type="text/javascript"></script>
+    <script src="../lib/ace/ext-settings_menu.js" type="text/javascript"></script>
+    <script src="../lib/ace/ext-themelist.js" type="text/javascript"></script>
+    <script src="../lib/ace/ext-modelist.js" type="text/javascript"></script>
+
+</head>
+
+<body>
+</body>
+<script>
+    const { remote, ipcRenderer, shell, clipboard, webFrame } = require('electron');
+    const { DockManager } = require('./js/dockmanager');
+    const { CodeEditor, VirtualEditor } = require('./js/code.editor');
+
+    const { app, dialog, Menu, MenuItem } = remote;
+    const { Menubar } = require('./js/menubar');
+    const { parseTemplate, existsSync } = require('./js/library');
+    const { Settings } = require('./js/settings');
+
+    const path = require('path');
+    var chokidar = require('chokidar');
+
+    var spellchecker;
+    var options, _updating;
+
+    webFrame.setSpellCheckProvider("en-US", true, {
+        spellCheck: function (text) {
+            if (!spellchecker || !options.spellchecking)
+                return true;
+            return !(spellchecker.isMisspelled(text));
+        }
+    });
+
+    var menubar = new Menubar([
+        {
+            label: '&File',
+            id: 'file',
+            submenu: [
+                {
+                    label: '&Open',
+                    accelerator: "CmdOrCtrl+O",
+                    click: () => { openfile(); }
+                },
+                { type: 'separator' },
+                {
+                    label: '&Preferences...',
+                    accelerator: "CmdOrCtrl+Comma",
+                    click: () => {
+                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=300,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: '&Close',
+                    click: () => { window.close(); }
+                }
+            ]
+        },
+        {
+            label: '&View',
+            submenu: [
+                {
+                    role: 'toggledevtools'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'resetzoom'
+                },
+                {
+                    role: 'zoomin'
+                },
+                {
+                    role: 'zoomout'
+                },
+            ]
+        },
+
+    ]);
+
+    var manager = new DockManager();
+    manager.hideTabstrip = false;
+    manager.on('add', (e) => {
+    });
+    manager.on('remove', (e) => {
+    });
+    manager.on('activated', (e) => {
+        if (manager.active.editor)
+            document.title = 'jiMUD - Code Editor - ' + manager.active.filename;
+        else
+            document.title = 'jiMUD - Code Editor - ' + manager.active.title.innerText;
+    });
+    manager.on('deactivated', (e) => {
+    });
+
+    // List all files in a directory in Node.js recursively in a synchronous fashion
+    var walkSync = function (dir, fileList, dirList, empty) {
+        var path = path || require('path');
+        var fs = fs || require('fs'),
+            files = fs.readdirSync(dir);
+        fileList = fileList || [];
+        dirList = dirList || [];
+        empty = empty || [];
+        if (files.length == 0)
+            empty.push(dir);
+        files.forEach(function (file) {
+            if (fs.statSync(path.join(dir, file)).isDirectory()) {
+                dirList.push(path.join(dir, file));
+                var t = walkSync(path.join(dir, file), fileList, dirList, empty);
+                fileList = t.files;
+                dirList = t.dirs;
+                empty = t.empty;
+            }
+            else {
+                fileList.push(path.join(dir, file));
+            }
+        });
+        return { files: fileList, dirs: dirList, empty: empty };
+    };
+
+    var walk = function (dir, callback) {
+        var path = path || require('path');
+        var fs = fs || require('fs');
+        fs.readdir(dir, (err, files) => {
+            var fileList = [];
+            var dirList = [];
+            var empty = [];
+            if (files.length == 0)
+                empty.push(dir);
+            files.forEach(function (file) {
+                if (fs.statSync(path.join(dir, file)).isDirectory()) {
+                    dirList.push(path.join(dir, file));
+                    var t = walkSync(path.join(dir, file), fileList, dirList, empty);
+                    fileList = t.files;
+                    dirList = t.dirs;
+                    empty = t.empty;
+                }
+                else {
+                    fileList.push(path.join(dir, file));
+                }
+            });
+            if (callback)
+                callback(fileList, dirList, empty);
+
+        });
+    };
+
+    function loadOptions(data) {
+        if (!data) {
+            var set = Settings.load(remote.getGlobal('settingsFile'));
+            options = set.extensions["code-editor"];
+        }
+        else
+            options = data;
+        if (!options) {
+            options = {
+                spellchecking: true
+            };
+            saveOptions();
+        }
+        try {
+            if (!spellchecker && options.spellchecking)
+                spellchecker = require('spellchecker');
+        }
+        catch (ex) {
+            ipcRenderer.send('error', ex);
+        }
+        doUpdate(14);
+    }
+
+    function saveOptions() {
+        ipcRenderer.send('setting-changed', { type: 'extensions', name: 'code-editor', value: options });
+    }
+
+    function getFileIcon(file) {
+        switch (path.extname(file)) {
+            case ".pdf":
+                return 'fa fa-file-pdf-o';
+            case ".xls":
+            case ".xlt":
+            case ".xlm":
+            case ".xlsx":
+            case ".xlsm":
+            case ".xltx":
+            case ".xltm":
+                return 'fa fa-file-excel-o';
+            case ".doc":
+            case ".dot":
+            case ".wbk":
+            case ".docx":
+            case ".docm":
+            case ".dotx":
+            case ".dotm":
+            case ".docb":
+                return 'fa fa-file-word-o';
+            case ".ppt":
+            case ".pot":
+            case ".pps":
+            case ".pptx":
+            case ".pptm":
+            case ".potx":
+            case ".potm":
+            case ".ppam":
+            case ".ppsx":
+            case ".ppsm":
+            case ".sldx":
+            case ".sldm":
+                return 'fa fa-file-powerpoint-o';
+            case ".png":
+            case ".gif":
+            case ".jpg":
+            case ".ico":
+            case ".svg":
+            case ".webp":
+                return 'fa fa-file-image-o';
+            case ".m4a":
+            case ".wav":
+            case ".mp3":
+            case ".flac":
+                return 'fa fa-file-audio-o';
+            case ".avi":
+            case ".mpg":
+            case ".mov":
+            case ".webm":
+            case ".oog":
+            case ".mkv":
+                return 'fa fa-file-video-o';
+            case ".7z":
+            case ".zip":
+            case ".rar":
+            case ".jar":
+                return 'fa fa-file-archive-o';
+            case ".txt":
+                return 'fa fa-file-text-o';
+            case ".o":
+            case ".csv":
+                return 'fa fa-file-o icon-o';
+            case ".h":
+                return 'fa fa-file-code-o icon-h';
+            case ".c":
+                return 'fa fa-file-code-o icon-c';
+            case ".map":
+                return 'fa fa-map-o';
+        }
+        return 'fa fa-file-o';
+    }
+
+    $(document).ready(() => {
+        loadOptions();
+
+        $(document).keydown((event) => {
+
+        });
+        $(window).on('resize', () => {
+
+            doUpdate(14);
+        });
+
+        $(window).trigger('resize');
+
+        window.onbeforeunload = function () {
+
+        };
+    });
+
+    ipcRenderer.on('GMCP-received', (event, data) => {
+        if (options && options.debug)
+            console.log(data);
+        //if (_ied)
+        //_ied.processGMCP(data.mod, data.obj);
+    });
+
+    ipcRenderer.on('reload-options', (event) => {
+        loadOptions();
+    });
+
+    ipcRenderer.on('setting-changed', (event, data) => {
+        if (data.type === "extensions" && data.name === "code-editor") {
+            loadOptions(data.value);
+        }
+    });
+
+    function openfile(file) {
+        if (!file || file.length === 0) {
+            dialog.showOpenDialog(remote.getCurrentWindow(),
+                {
+                    filters: [
+                        { name: 'Code files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
+                        { name: 'Text files (*.txt)', extensions: ['txt'] },
+                        { name: 'Map files (*.map)', extensions: ['map'] },
+                        { name: 'All files (*.*)', extensions: ['*'] },
+                    ],
+                    properties: ['multiSelections', 'openFile']
+                },
+                function (fileNames) {
+                    if (fileNames === undefined) {
+                        return;
+                    }
+                    for (var f = 0, fl = fileNames.length; f < fl; f++)
+                        createEditor(fileNames[f]);
+                });
+        }
+        else
+            createEditor(file);
+    }
+
+    function findEditor(file) {
+        if (!file || file.length === 0)
+            return 0;
+        var l = manager.panels.length;
+        for (var p = 0; p < l; p++) {
+            if (manager.panels[p].editor.file === file)
+                return manager.panels[p];
+        }
+        return 0;
+    }
+
+    function createEditor(file) {
+        var p = findEditor(file);
+        if (p)
+            manager.switchToPanel(p);
+        else {
+            p = manager.addPanel(path.basename(file), getFileIcon(file), file);
+            if (path.extname(file) === '.map')
+                p.editor = new VirtualEditor({ file: file, container: p.pane });
+            else
+                p.editor = new CodeEditor({ file: file, container: p.pane });
+        }
+    }
+
+    function doUpdate(type) {
+        if (!type) return;
+        _updating |= type;
+        if (_updating === 0)
+            return;
+        window.requestAnimationFrame(() => {
+            if ((this._updating & 1) === 1) {
+
+                _updating &= ~1;
+            }
+            if ((this._updating & 2) === 2) {
+
+                _updating &= ~2;
+            }
+            if ((this._updating & 4) === 4) {
+
+                _updating &= ~4;
+            }
+            if ((this._updating & 8) === 8) {
+
+                _updating &= ~8;
+            }
+            if ((this._updating & 16) === 16) {
+
+                _updating &= ~16;
+            }
+            if ((this._updating & 32) === 32) {
+                _updating &= ~32;
+            }
+            if ((this._updating & 64) === 64) {
+                _updating &= ~64;
+            }
+            if ((this._updating & 128) === 128) {
+
+                _updating &= ~128;
+            }
+            if ((this._updating & 256) === 256) {
+                _updating &= ~256;
+            }
+            doUpdate(_updating);
+        });
+    }
+</script>
+
+</html>

@@ -339,7 +339,7 @@ export class DockManager extends EventEmitter {
         this.doUpdate(UpdateType.scroll);
     }
 
-    public addPanel(title?: string, icon?: string) {
+    public addPanel(title?: string, icon?: string, tooltip?: string) {
         $('.dropdown.open').removeClass('open');
         const panel: Panel = {
             tab: document.createElement('li'),
@@ -347,7 +347,7 @@ export class DockManager extends EventEmitter {
             id: --this._id,
             title: document.createElement('div'),
             icon: document.createElement('div'),
-            iconCls: icon || 'disconnected-icon'
+            iconCls: icon || 'disconnected-icon',
         };
 
         panel.tab.id = 'cm-tab' + panel.id;
@@ -389,6 +389,7 @@ export class DockManager extends EventEmitter {
         this.switchToPanelByIndex(this.panels.length - 1);
         this.setPanelTitle(title || '');
         this.setPanelIcon(panel.iconCls);
+        this.setPanelTooltip(tooltip || '');
         this.updateStripState();
         this.emit('add', { index: this.panels.length - 1, id: panel.id, panel: panel });
         this.doUpdate(UpdateType.resize);
@@ -432,6 +433,8 @@ export class DockManager extends EventEmitter {
         this.active.tab.classList.add('active');
         this.active.pane.classList.add('active');
         this.emit('activated', { index: idx, id: this.active.id, panel: this.active });
+        this.active.tab.focus();
+        this.$tabstrip.scrollTop = 0;        
         this.doUpdate(UpdateType.scrollToTab);
     }
 
@@ -448,10 +451,21 @@ export class DockManager extends EventEmitter {
         this.active.pane.classList.add('active');
         this.emit('activated', { index: this.getPanelIndex(this.active), id: this.active.id, panel: this.active });
         this.active.tab.focus();
+        this.$tabstrip.scrollTop = 0;
         this.doUpdate(UpdateType.scrollToTab);
     }
 
-    public setPanelTitle(text, tab?) {
+    public setPanelTooltip(text: string, tab?) {
+        if (tab === undefined)
+            tab = this.active;
+        else
+            tab = this.getPanel(tab);
+        if (!tab) return;
+        tab.title.title = text;
+        tab.tab.title = text;
+    }
+
+    public setPanelTitle(text: string, tab?) {
         if (tab === undefined)
             tab = this.active;
         else
@@ -463,20 +477,16 @@ export class DockManager extends EventEmitter {
         $(`#cm-scroll-dropdownmenu-${idx}-title`).html(text);
     }
 
-    public setPanelIcon(icon, tab?) {
+    public setPanelIcon(icon: string, tab?) {
         if (tab === undefined)
             tab = this.active;
         else
             tab = this.getPanel(tab);
         if (!tab) return;
         const idx = this.getPanelIndex(tab);
-        if (tab.iconCls.startsWith('fa-'))
-            tab.icon.classList.remove('fa');
-        tab.icon.classList.remove(tab.iconCls);
+        tab.icon.classList.remove(...tab.iconCls.split(' '));
+        tab.icon.classList.add(...icon.split(' '));
         tab.iconCls = icon;
-        if (tab.iconCls.startsWith('fa-'))
-            tab.icon.classList.add('fa');
-        tab.icon.classList.add(icon);
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).addClass(tab.icon.className);
     }
