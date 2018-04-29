@@ -542,7 +542,12 @@ export class DockManager extends EventEmitter {
     }
 
     private updateStripState() {
-        if (!this._hideTabstrip || this.panels.length > 1) {
+        if(!this._hideTabstrip  && this.panels.length === 0 )
+        {
+            this.$tabstrip.classList.add('hidden');
+            this.$tabpane.classList.add('full');
+        }
+        else if (!this._hideTabstrip || this.panels.length > 1) {
             this.$tabstrip.classList.remove('hidden');
             this.$tabpane.classList.remove('full');
         }

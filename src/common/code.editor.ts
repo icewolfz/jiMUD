@@ -4,7 +4,7 @@ const path = require('path');
 
 declare let ace;
 
-ace.config.set('basePath', '/lib/ace');
+ace.config.set('basePath', '../lib/ace');
 ace.require('ace/ext/language_tools');
 
 let aceTooltip;
