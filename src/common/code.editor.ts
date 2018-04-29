@@ -3,6 +3,10 @@ const fs = require('fs-extra');
 const path = require('path');
 
 declare let ace;
+
+ace.config.set('basePath', '/lib/ace');
+ace.require('ace/ext/language_tools');
+
 let aceTooltip;
 
 export enum UpdateType {
@@ -95,7 +99,6 @@ export class CodeEditor extends EditorBase {
         this.$editorEl.classList.add('editor');
         this.$editorEl.id = this.parent.id + '-editor';
         this.parent.appendChild(this.$editorEl);
-        ace.require('ace/ext/language_tools');
         this.$editor = ace.edit(this.$editorEl.id);
         this.$session = this.$editor.getSession();
 
