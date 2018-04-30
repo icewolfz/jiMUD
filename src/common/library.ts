@@ -854,3 +854,13 @@ export function decrypt(crypted, key, iv, algorithm, input_encoding, output_enco
     decrypted += decipher.final(output_encoding);
     return decrypted;
 }
+
+export function formatSize(size) {
+    if (size >= 1073741824)
+        return Math.round(size / 1073741824).toLocaleString() + " GB";
+    else if (size >= 1048576)
+        return Math.round(size / 1048576).toLocaleString() + " MB";
+    else if (size >= 1024)
+        return Math.round(size / 1024).toLocaleString() + " KB";
+    return size + " B";
+}

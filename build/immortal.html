@@ -28,7 +28,7 @@
         const { TempType, IEDCmdStatus } = require('./js/types');
         const { remote, ipcRenderer, shell, clipboard } = require('electron');
         const { app, dialog, Menu, MenuItem } = remote;
-        const { parseTemplate, existsSync } = require('./js/library');
+        const { parseTemplate, existsSync, formatSize } = require('./js/library');
         const { Settings } = require('./js/settings');
         const fs = require('fs-extra');
         const child_process = require('child_process');
@@ -637,16 +637,6 @@
                 }
             };
         }());
-
-        function formatSize(size) {
-            if (size >= 1073741824)
-                return Math.round(size / 1073741824).toLocaleString() + " GB";
-            else if (size >= 1048576)
-                return Math.round(size / 1048576).toLocaleString() + " MB";
-            else if (size >= 1024)
-                return Math.round(size / 1024).toLocaleString() + " KB";
-            return size + " B";
-        }
 
         function loadOptions(data) {
             if (!data) {
