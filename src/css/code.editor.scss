@@ -117,12 +117,42 @@ body {
     float: right;
 }
 
+.cm-tabstrip li {
+    opacity: 1;
+    color: silver;
+}
+
 .cm-tabstrip li.changed {
+    background-color: lighten(rgb(218, 255, 181), 10%) !important;
+    border-color: lighten(rgb(119, 168, 69), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.new {
+    background-color: lighten(rgb(178, 226, 255), 10%) !important;
+    border-color: lighten(rgb(94, 185, 242), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.changed.active {
     background-color: rgb(218, 255, 181) !important;
     border-color: rgb(119, 168, 69) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.new.active {
+    background-color: rgb(178, 226, 255) !important;
+    border-color: rgb(94, 185, 242) !important;
+    opacity: 1;
+    color: black;
 }
 
 .cm-tabstrip li.active {
     background-color: rgb(249, 242, 217);
     border-color: rgb(247, 216, 106);
+    opacity: 1;
+    color: black;
 }
