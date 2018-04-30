@@ -1,5 +1,5 @@
 import EventEmitter = require('events');
-import { existsSync } from './library';
+import { existsSync, formatSize } from './library';
 const fs = require('fs-extra');
 const path = require('path');
 const chokidar = require('chokidar');
@@ -124,6 +124,8 @@ export class CodeEditor extends EditorBase {
     private $editor;
     private $session;
     private $statusbar: HTMLElement;
+    private $sbSize: HTMLElement;
+    private $sbMsg: HTMLElement;
 
     public createControl() {
         if (this.$el) {
@@ -163,15 +165,24 @@ export class CodeEditor extends EditorBase {
         this.$statusbar = document.createElement('div');
         this.$statusbar.id = this.parent.id + '-statusbar';
         this.$statusbar.classList.add('statusbar');
-        this.$statusbar.innerHTML = '<span id="' + this.parent.id + '-filename"></span><span id="' + this.parent.id + '-filesize">File size: 0</span><span id="' + this.parent.id + '-statusmessage"></span>';
+        this.$statusbar.innerHTML = '<span id="' + this.parent.id + '-filename"></span>';
+        this.$sbSize = document.createElement('span');
+        this.$sbSize.id = this.parent.id + '-filesize';
+        this.$statusbar.appendChild(this.$sbSize);
+        this.$sbMsg = document.createElement('span');
+        this.$sbMsg.id = this.parent.id + '-statusmessage';
+        this.$statusbar.appendChild(this.$sbSize);
         this.parent.appendChild(this.$statusbar);
         let StatusBar = ace.require('ace/ext/statusbar').StatusBar;
         new StatusBar(this.$editor, this.$statusbar);
 
-        this.$session.on('change', () => {
+        this.$session.on('change', (e) => {
             var d = this.$session.getValue();
-            this.state |= FileState.changed;
-            $('#' + this.parent.id + '-filesize').text("File size: " + d.length.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+            if (!this.$session.getUndoManager().hasUndo())
+                this.state &= ~FileState.changed;
+            else
+                this.state |= FileState.changed;
+            this.$sbSize.textContent = 'File size: ' + formatSize(d.length);
             this.emit('changed');
         });
         this.emit('created');
@@ -208,6 +219,7 @@ export class CodeEditor extends EditorBase {
         this.$session.setValue(this.$el.value);
         this.emit('opened');
         this.state |= FileState.opened;
+        this.state &= ~FileState.changed;
     }
 
     public refresh() {
@@ -217,6 +229,7 @@ export class CodeEditor extends EditorBase {
 
     public save() {
         this.write(this.$session.getValue());
+        this.state &= ~FileState.changed;
         this.emit('saved');
     }
 

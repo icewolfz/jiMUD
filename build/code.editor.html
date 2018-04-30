@@ -35,24 +35,33 @@
 <body>
     <div id="toolbar" class="btn-toolbar" role="toolbar">
         <div class="btn-group" role="group">
-            <button type="button" class="btn btn-default btn-xs" title="New" onclick="">
+            <button type="button" class="btn btn-default btn-xs" title="New file" onclick="">
                 <i class="fa fa-plus"></i>
             </button>
-            <button id="btn-add-dropdown" type="button" class="btn btn-default btn-xs" title="New">
+            <button id="btn-add-dropdown" type="button" class="btn btn-default btn-xs" title="New...">
                 <span class="caret"></span>
             </button>
         </div>
-        <div class="btn-group" role="group" id="queue-controls">
-            <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Open file..." onclick="openFile()">
+        <div class="btn-group" role="group">
+            <button id="btn-open" type="button" class="btn btn-default btn-xs" title="Open file..." onclick="openFile()">
                 <i class="fa fa-folder-open-o"></i>
             </button>
-            <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Close file" onclick="">
+            <button id="btn-close" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Close file" onclick="">
                 <i class="fa fa-window-close-o"></i>
             </button>
         </div>
-        <button id="btn-start" type="button" class="btn btn-default btn-xs" title="Save file" onclick="">
-            <i class="fa fa-save"></i>
-        </button>
+        <div class="btn-group" role="group">
+            <button id="btn-save" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Save file" onclick="">
+                <i class="fa fa-save"></i>
+            </button>
+            <button id="btn-save-all" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Save all files" onclick="">
+                <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                    <i class="fa fa-save fa-stack-2x" style="font-size: 1em;margin-top: -2px;margin-left: 2px;"></i>
+                    <i class="fa fa-save fa-stack-2x" style="font-size: 1em;margin-top: 2px;margin-left: -2px;"></i>
+
+                </span>
+            </button>
+        </div>
         <div class="btn-group" role="group">
             <button id="btn-undo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Undo" onclick="">
                 <i class="fa fa-undo"></i>
@@ -100,6 +109,8 @@
         }
     });
 
+    var menuTemplates = [];
+
     menubar = new Menubar([
         {
             label: '&File',
@@ -109,7 +120,7 @@
                     label: '&New',
                     submenu: [
                         {
-                            label: '&File...',
+                            label: '&File',
                             accelerator: "CmdOrCtrl+N",
                             click: () => { }
                         },
@@ -120,7 +131,7 @@
                             click: () => { }
                         },
                         {
-                            label: '&Virtual Area...',
+                            label: '&Virtual area...',
                             //accelerator: "CmdOrCtrl+N",
                             click: () => { }
                         },
@@ -138,9 +149,7 @@
                         { type: 'separator' },
                         {
                             label: '&Templates',
-                            submenu: [
-
-                            ]
+                            submenu: menuTemplates
                         }
                     ]
                 },
@@ -153,6 +162,11 @@
                 {
                     label: '&Save',
                     accelerator: "CmdOrCtrl+S",
+                    click: () => { saveFile(); }
+                },
+                {
+                    label: 'Save A&ll',
+                    accelerator: "CmdOrCtrl+Alt+S",
                     click: () => { saveFile(); }
                 },
                 {
@@ -381,6 +395,12 @@
         return 'fa fa-file-o';
     }
 
+
+    function clearButton(id) {
+        $(id).removeClass('open');
+        $(id).blur();
+    }
+
     $(document).ready(() => {
         loadOptions();
 
@@ -397,6 +417,53 @@
         window.onbeforeunload = function () {
 
         };
+
+        $('#btn-add-dropdown').click(function () {
+            $(this).addClass('open');
+            const pos = $(this).offset();
+            const x = Math.floor(pos.left);
+            const y = Math.floor(pos.top + $(this).outerHeight() + 2);
+            const addMenu = new Menu();
+            addMenu.append(new MenuItem({
+                label: 'New file', click() {
+                    clearButton('#btn-add-dropdown');
+
+                }
+            }));
+            addMenu.append(new MenuItem({ type: 'separator' }));
+            addMenu.append(new MenuItem({
+                label: 'New area...', click() {
+                    clearButton('#btn-add-dropdown');
+
+                }
+            }));
+            addMenu.append(new MenuItem({
+                label: 'New virtual area...', click() {
+                    clearButton('#btn-add-dropdown');
+
+                }
+            }));
+            addMenu.append(new MenuItem({ type: 'separator' }));
+            addMenu.append(new MenuItem({
+                label: 'New room...', click() {
+                    clearButton('#btn-add-dropdown');
+
+                }
+            }));
+            addMenu.append(new MenuItem({
+                label: 'New monster...', click() {
+                    clearButton('#btn-add-dropdown');
+
+                }
+            }));
+            addMenu.append(new MenuItem({ type: 'separator' }));
+            addMenu.append(new MenuItem({
+                label: 'Templates',
+                submenu: menuTemplates
+            }));
+            addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+        });
+
     });
 
     ipcRenderer.on('GMCP-received', (event, data) => {
@@ -473,7 +540,10 @@
             else
                 p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
             p.editor.on('changed', () => {
-                p.tab.classList.add('changed');
+                if (p.editor.changed)
+                    p.tab.classList.add('changed');
+                else
+                    p.tab.classList.remove('changed');
             });
 
             p.editor.on('saved', () => {
