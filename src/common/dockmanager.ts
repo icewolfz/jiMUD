@@ -412,7 +412,7 @@ export class DockManager extends EventEmitter {
         this.$tabstrip.removeChild(panel.tab);
         this.$tabpane.removeChild(panel.pane);
         this.panels.splice(idx, 1);
-        if(this.panels.length === 0)
+        if (this.panels.length === 0)
             this.active = null;
         else if (panel.id === this.active.id) {
             if (idx >= this.panels.length)
@@ -421,6 +421,95 @@ export class DockManager extends EventEmitter {
         }
         this.updateStripState();
         this.emit('removed', { index: idx, id: panel.id, panel: panel });
+        this.doUpdate(UpdateType.resize);
+    }
+
+    public removeAllPanels(skipPanel?) {
+        const tl = this.panels.length;
+        let idx;
+        let e;
+        let panel;
+        if (skipPanel)
+            skipPanel = this.getPanelIndex(skipPanel);
+        for (idx = 0; idx < tl; idx++) {
+            if (idx === skipPanel) continue;
+            panel = this.panels[idx];
+            e = { index: idx, id: panel.id, panel: panel, cancel: false };
+            this.emit('remove', e);
+            if (e.cancel)
+                continue;
+            this.$tabstrip.removeChild(panel.tab);
+            this.$tabpane.removeChild(panel.pane);
+            this.panels.splice(idx, 1);
+            this.emit('removed', { index: idx, id: panel.id, panel: panel });
+        }
+        $('.dropdown.open').removeClass('open');
+        if (this.panels.length === 0)
+            this.active = null;
+        else if (!this.active)
+            this.switchToPanelByIndex(0);
+        this.updateStripState();
+        this.doUpdate(UpdateType.resize);
+    }
+
+    public removeAllPanelsAfter(afterPanel?) {
+        const tl = this.panels.length;
+        let idx;
+        let e;
+        let panel;
+        if (afterPanel === undefined)
+            afterPanel = this.active;
+        idx = this.getPanelIndex(afterPanel);
+        if (idx === -1)
+            return;
+        idx++;
+        for (; idx < tl; idx++) {
+            panel = this.panels[idx];
+            e = { index: idx, id: panel.id, panel: panel, cancel: false };
+            this.emit('remove', e);
+            if (e.cancel)
+                continue;
+            this.$tabstrip.removeChild(panel.tab);
+            this.$tabpane.removeChild(panel.pane);
+            this.panels.splice(idx, 1);
+            this.emit('removed', { index: idx, id: panel.id, panel: panel });
+        }
+        $('.dropdown.open').removeClass('open');
+        if (this.panels.length === 0)
+            this.active = null;
+        else if (!this.active)
+            this.switchToPanelByIndex(0);
+        this.updateStripState();
+        this.doUpdate(UpdateType.resize);
+    }
+
+    public removeAllPanelsBefore(beforePanel?) {
+        const tl = this.panels.length;
+        let idx;
+        let e;
+        let panel;
+        if (beforePanel === undefined)
+            beforePanel = this.active;
+        beforePanel = this.getPanelIndex(beforePanel);
+        if (beforePanel === -1)
+            return;
+        for (idx = 0; idx < beforePanel; idx++) {
+            panel = this.panels[idx];
+            e = { index: idx, id: panel.id, panel: panel, cancel: false };
+            this.emit('remove', e);
+            if (e.cancel)
+                continue;
+            this.$tabstrip.removeChild(panel.tab);
+            this.$tabpane.removeChild(panel.pane);
+            this.panels.splice(idx, 1);
+            this.emit('removed', { index: idx, id: panel.id, panel: panel });
+        }
+        $('.dropdown.open').removeClass('open');
+        if (this.panels.length === 0)
+            this.active = null;
+        else if (!this.active)
+            this.switchToPanelByIndex(0);
+        this.updateStripState();
         this.doUpdate(UpdateType.resize);
     }
 
@@ -437,7 +526,7 @@ export class DockManager extends EventEmitter {
         this.active.pane.classList.add('active');
         this.emit('activated', { index: idx, id: this.active.id, panel: this.active });
         this.active.tab.focus();
-        this.$tabstrip.scrollTop = 0;        
+        this.$tabstrip.scrollTop = 0;
         this.doUpdate(UpdateType.scrollToTab);
     }
 
@@ -542,8 +631,7 @@ export class DockManager extends EventEmitter {
     }
 
     private updateStripState() {
-        if(!this._hideTabstrip  && this.panels.length === 0 )
-        {
+        if (!this._hideTabstrip && this.panels.length === 0) {
             this.$tabstrip.classList.add('hidden');
             this.$tabpane.classList.add('full');
         }
