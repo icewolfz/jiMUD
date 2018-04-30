@@ -65,6 +65,7 @@
     "rebuild:linux32": "./node_modules/.bin/electron-rebuild -a=ia32 -f -p",
     "rebuild:linux64": "./node_modules/.bin/electron-rebuild -a=x64 -f -p",
     "rebuild:linuxarm": "./node_modules/.bin/electron-rebuild -a=arm -f -p",
+    "rebuild:osx": "./node_modules/.bin/electron-rebuild -a=x64 -f -p",
     "sass": "node-sass src/css/ -o build/css/ --output-style compressed",
     "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed",
     "release:win32": "npm run compile && npm run rebuild:win32 && npm run build:win32 && npm run package:win32 && timeout 2 && npm run package:winportable32",
@@ -74,6 +75,7 @@
     "release:linuxarm": "npm run compile && && npm run rebuild:linuxarm && npm run build:linux64 && npm run package:linuxarm && sleep 2 && npm run package:linux-otherarm",
     "release:win": "npm run release:win32 && npm run release:win64",
     "release:linux": "npm run release:linux32 && npm run release:linux64 && npm run release:linuxarm",
+    "release:osx": "npm run compile && && npm run rebuild:osx && npm run build:osx && npm run package:osx && sleep 2 && npm run package:osx",
     "clean": "npm run clean:code && npm run clean:css",
     "clean:code": "del /q .\\out\\*.js && del /q .\\build\\js\\*.js",
     "clean:css": "del /q .\\build\\css\\*.css"

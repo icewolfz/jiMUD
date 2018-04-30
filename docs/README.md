@@ -53,6 +53,19 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
     - npm run package:linux-other32 - build deb, rpm and appimage packages, requires 32bit build folder
     - npm run package:linux-otherarm - build deb, rpm and appimage packages, requires arm build folder
 
+### OSX
+
+1. npm install - install node modules
+1. npm run release:osx - build OSX packages
+
+#### Advanced Step by step OSX
+
+1. npm install - install all the node modules
+1. npm run rebuild:osx - rebuild native modules for t
+1. npm run compile - will compile typescript and scss files into js and css files
+1. npm run build:osx - builds application files in dist/jiMUD-darwin-x64
+1. npm run package:osx - build installer
+
 Build and package files are all saved to dist folder
 
 ## FAQ
