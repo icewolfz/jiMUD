@@ -103,6 +103,8 @@ abstract class EditorBase extends EventEmitter {
 
     abstract refresh(): void;
 
+    abstract revert(): void;
+
     abstract open(): void;
 
     abstract save(): void;
@@ -113,6 +115,12 @@ abstract class EditorBase extends EventEmitter {
         return (this.state & FileState.changed) === FileState.changed;
     }
 
+    set new(value: boolean) {
+        if (value)
+            this.state |= FileState.new;
+        else
+            this.state &= ~FileState.new;
+    }
     get new(): boolean {
         return (this.state & FileState.new) === FileState.new;
     }
@@ -223,7 +231,7 @@ export class CodeEditor extends EditorBase {
     }
 
     public refresh() {
-        this.open();
+        //this.open();
         this.emit('refreshed');
     }
 
@@ -235,6 +243,18 @@ export class CodeEditor extends EditorBase {
 
     public selected() {
         return this.$session.getTextRange(this.$editor.getSelectionRange());
+    }
+
+    public revert() {
+        if (!this.new)
+            this.open();
+        else {
+            this.$el.value = '';
+            this.$session.setValue('');
+        }
+        this.$session.getUndoManager().reset();
+        this.state &= ~FileState.changed;
+        this.emit('reverted');
     }
 }
 
@@ -248,4 +268,8 @@ export class VirtualEditor extends EditorBase {
     public save() { }
 
     public selected() { }
+
+    public revert() {
+
+    }
 }
