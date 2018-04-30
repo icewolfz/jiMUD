@@ -212,7 +212,7 @@ export class CodeEditor extends EditorBase {
     }
 
     public open() {
-        if (!this.file || this.file.length === 0 || !existsSync(this.file))
+        if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
             return;
         this.$el.value = this.read();
         switch (path.extname(this.file)) {

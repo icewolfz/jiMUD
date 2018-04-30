@@ -99,6 +99,7 @@
 
     var spellchecker, menubar;
     var options, _updating;
+    var newCounter = 1;
 
     webFrame.setSpellCheckProvider("en-US", true, {
         spellCheck: function (text) {
@@ -263,7 +264,9 @@
     });
 
     function updatePanel(panel) {
-        if (panel.editor.changed)
+        if (panel.editor.new)
+            panel.tab.classList.add('new');
+        else if (panel.editor.changed)
             panel.tab.classList.add('changed');
         else
             panel.tab.classList.remove('changed');
@@ -272,7 +275,7 @@
     function updateUI() {
         var enabled = (manager.active && manager.active.editor) ? true : false;
         if (enabled)
-            document.title = 'Code Editor - ' + manager.active.editor.filename;
+            document.title = 'Code Editor - ' + manager.active.tab.title.innerText;
         else
             document.title = 'Code Editor';
         $("#btn-close").prop('disabled', !enabled);
@@ -537,7 +540,11 @@
     });
 
     function newFile() {
-
+        var editor = createEditor('new ' + newCounter);
+        editor.new = true;
+        newCounter++;
+        updateUI();
+        updatePanel(manager.active);
     }
 
     function openFile(file) {
@@ -564,18 +571,37 @@
             createEditor(file, true);
     }
 
-    function saveFile() {
-        if (!manager.active)
-            return;
-        if (manager.active.editor.new)
-            saveFileAs();
+    function saveFile(editor) {
+        if (!editor) {
+            if (!manager.active)
+                return;
+            editor = manager.editor;
+        }
+        if (editor.new)
+            saveFileAs(editor);
         else
-            manager.active.editor.save();
+            editor.save();
     }
 
-    function saveAllFiles() { }
+    function saveAllFiles() {
+        for (var p = 0, l = manager.panels.length; p < l; p++) {
+            //no editor or of not changed and new try next
+            if (!manager.panels[p].editor)
+                continue;
+            if (manager.panels[p].editor.new)
+                saveFileAs(manager.panels[p].editor);
+            else
+                manager.panels[p].editor.save();
+        }
+    }
 
-    function saveFileAs() { }
+    function saveFileAs(editor) {
+        if (!editor) {
+            if (!manager.active)
+                return;
+            editor = manager.editor;
+        }
+    }
 
     function closeFile() {
         if (manager.active) {
@@ -604,13 +630,13 @@
             else
                 p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
             p.editor.on('changed', () => {
-                updatePanel(p);
                 updateUIChange();
+                updatePanel(p);
             });
 
             p.editor.on('saved', () => {
-                updatePanel(p);
                 updateUIChange();
+                updatePanel(p);
             });
             updateUI();
         }
