@@ -195,12 +195,12 @@
                 { type: 'separator' },
                 {
                     label: 'Revert',
-                    click: () => { },
+                    click: () => { revertFile(); },
                     enabled: false
                 },
                 {
                     label: 'Revert All',
-                    click: () => { },
+                    click: () => { revertAllFiles(); },
                     enabled: false
                 },
                 {
@@ -318,8 +318,6 @@
         else
             document.title = 'Code Editor';
         $("#btn-close").prop('disabled', !enabled);
-        menubar.updateItem('File|Revert', { enabled: enabled });
-        menubar.updateItem('File|Revert all', { enabled: enabled });
         menubar.updateItem('File|Close', { enabled: enabled });
         doUpdate(2);
     }
@@ -338,6 +336,10 @@
         menubar.updateItem('file|save', { enabled: changed });
         $("#btn-save-all").prop('disabled', !changedAll);
         menubar.updateItem('file|save all', { enabled: changedAll });
+
+        menubar.updateItem('file|revert', { enabled: changed });
+        menubar.updateItem('file|revert all', { enabled: changedAll });
+
         $("#btn-undo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.hasUndo : true);
         menubar.updateItem('edit|undo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.hasUndo : false });
         $("#btn-redo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.hasRedo : true);
@@ -784,6 +786,38 @@
         manager.setPanelTooltip(panel.editor.file, panel);
         manager.setPanelTitle(panel.editor.filename, panel);
         panel.editor.save();
+        return true;
+    }
+
+    function revertFile(panel) {
+        if (!panel) {
+            if (!manager.active)
+                return false;
+            panel = manager.active;
+        }
+        if (panel.changed || panel.editor.new) {
+            var choice = dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'question',
+                    title: 'Revert file?',
+                    message: 'Revert ' + panel.editor.filename + ' and lose changes?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                });
+            if (choice === 0)
+                panel.revert();
+        }
+    }
+
+    function revertAllFiles() {
+        for (var p = 0, l = manager.panels.length; p < l; p++) {
+            //not changed and new try next
+            if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
+                continue;
+            if (!revertFile(manager.panels[p]))
+                return false;
+        }
         return true;
     }
 
