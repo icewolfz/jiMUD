@@ -4,6 +4,10 @@
 
 - **New:**
   - Code editor: allows you to view and edit code, good for immortals
+  - Immortal tools:
+    - Rename old editor to external editor
+    - Replace old editor with new internal code editor.
+
 
 ## 0.4.43
 

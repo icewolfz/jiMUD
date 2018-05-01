@@ -600,6 +600,9 @@
         return;
     };
 
+    ipcRenderer.on('open-editor', (event, file, remote) => {
+        openFile(file, remote);
+    });
 
     ipcRenderer.on('GMCP-received', (event, data) => {
         if (options && options.debug)
@@ -626,7 +629,7 @@
         updatePanel(manager.active);
     }
 
-    function openFile(file) {
+    function openFile(file, remote) {
         if (!file || file.length === 0) {
             dialog.showOpenDialog(remote.getCurrentWindow(),
                 {
@@ -644,11 +647,11 @@
                         return;
                     }
                     for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        createEditor(fileNames[f], true);
+                        createEditor(fileNames[f], true, remote);
                 });
         }
         else
-            createEditor(file, true);
+            createEditor(file, true, remote);
     }
 
     function saveFile(panel) {
@@ -742,16 +745,19 @@
         return 0;
     }
 
-    function createEditor(file, open) {
+    function createEditor(file, open, remote) {
         var p = findEditor(file);
-        if (p)
+        if (p) {
+            p.editor.remote = remote;
             manager.switchToPanel(p);
+        }
         else {
             p = manager.addPanel(path.basename(file), getFileIcon(file), file);
             if (path.extname(file) === '.map')
                 p.editor = new VirtualEditor({ file: file, container: p.pane, open: open });
             else
                 p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
+            p.editor.remote = remote;
             p.editor.on('changed', () => {
                 doUpdate(2);
                 updatePanel(p);
@@ -787,7 +793,6 @@
             doUpdate(_updating);
         });
     }
-
 </script>
 
 </html>

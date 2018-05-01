@@ -205,7 +205,21 @@
                             {
                                 label: 'Open &with editor...',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl++Shift+E",
+                                accelerator: "CmdOrCtrl+Shift+E",
+                                click: () => {
+                                    var data = localTable.rows({ selected: true }).data().pluck('path');
+                                    for (var d = 0, dl = data.length; d < dl; d++) {
+                                        if (_remote[path.basename(data[d])])
+                                            ipcRenderer.send('open-editor', data[d], options.remote + '/' + path.basename(data[d]));
+                                        else
+                                            ipcRenderer.send('open-editor', data[d]);
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Open &with external editor...',
+                                enabled: false,
+                                accelerator: "CmdOrCtrl+Alt+E",
                                 click: () => {
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
                                     for (var d = 0, dl = data.length; d < dl; d++) {
@@ -344,6 +358,13 @@
                     {
                         label: '&Editor',
                         accelerator: "CmdOrCtrl+E",
+                        click: () => {
+                            ipcRenderer.send('open-editor', '');
+                        }
+                    },
+                    {
+                        label: 'E&xternal editor',
+                        accelerator: "CmdOrCtrl+Alt+E",
                         click: () => {
                             shell.openItem(options.editor);
                         }
@@ -686,7 +707,7 @@
                 $("#btn-sync").addClass("active");
             else
                 $('#btn-sync').removeClass('active');
-            updateMenuItem({ menu: 'edit|editor', enabled: options.editor && options.editor.length > 0 });
+            updateMenuItem({ menu: 'edit|external editor', enabled: options.editor && options.editor.length > 0 });
             updateMenuItem({ menu: 'view|show queue and log', checked: options.showQueue });
             if (options.showQueue) {
                 $("#btn-queue").addClass("active");
@@ -984,7 +1005,8 @@
 
                 updateMenuItem({ menu: 'edit|local|reveal in explorer...', enabled: localSelected });
                 updateMenuItem({ menu: 'edit|local|open...', enabled: localSelected });
-                updateMenuItem({ menu: 'edit|local|open with editor...', enabled: localSelected && options.editor && options.editor.length > 0 });
+                updateMenuItem({ menu: 'edit|local|open with editor...', enabled: localSelected });
+                updateMenuItem({ menu: 'edit|local|open with external editor...', enabled: localSelected && options.editor && options.editor.length > 0 });
 
                 updateMenuItem({ menu: 'edit|remote|goto', enabled: remoteSelected });
                 updateMenuItem({ menu: 'edit|remote|change to directory', enabled: remoteSelected });
@@ -1003,7 +1025,8 @@
                 $("#btn-upload-local").prop('disabled', !localSelected);
                 $("#btn-reveal-local").prop('disabled', !localSelected);
                 $("#btn-open-local").prop('disabled', !localSelected);
-                $("#btn-editor-local").prop('disabled', !(localSelected && options.editor && options.editor.length > 0));
+                $("#btn-editor-local").prop('disabled', !localSelected);
+                //$("#btn-editor-local").prop('disabled', !(localSelected && options.editor && options.editor.length > 0));
 
                 $("#btn-rename-remote").prop('disabled', !remoteSelected);
                 $("#btn-delete-remote").prop('disabled', !remoteSelected);
@@ -1897,9 +1920,9 @@
                 var data = remoteTable.row(this).data();
                 if (!data) return;
                 if (data.size === -2) {
-                    if (options.syncFolders) {
-                        if (_local[data.name] && path.basename(options.remote) === path.basename(options.remote))
-                            updateLocal(path.join(options.local, data.name));
+                    if (options.syncFolders && _local[data.name]) {
+                        //if (_local[data.name] && path.basename(options.remote) === path.basename(options.remote))
+                        updateLocal(path.join(options.local, data.name));
                     }
                     _ied.getDir(data.path, true);
                 }
@@ -2616,10 +2639,14 @@
                         label: 'Open...',
                         click: openItems
                     }));
+                    c.append(new MenuItem({
+                        label: 'Open with editor...',
+                        click: openWithEditor
+                    }));
                     if (options.editor && options.editor.length > 0)
                         c.append(new MenuItem({
-                            label: 'Open with editor...',
-                            click: openWithEditor
+                            label: 'Open with external editor...',
+                            click: openWithExternalEditor
                         }));
                 }
             }
@@ -3470,12 +3497,15 @@
                 if (item.download) {
                     //Update local list if file was uploaded to current local
                     if (item.state === ItemState.done && options.openEditor) {
+                        ipcRenderer.send('open-editor', item.local, item.remote);
+                        /*
                         if (!options.editor || options.editor.length === 0)
                             openItem(item.local);
                         else {
                             var p = child_process.spawn(options.editor, [item.local], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
                             p.unref();
                         }
+                        */
                     }
                     info.downloads--;
                 }
@@ -3683,6 +3713,16 @@
         }
 
         function openWithEditor() {
+            var selected = localTable.rows({ selected: true }).data().pluck('path');
+            for (var d = 0, dl = selected.length; d < dl; d++) {
+                if (_remote[path.basename(selected[d])])
+                    ipcRenderer.send('open-editor', selected[d], options.remote + '/' + path.basename(selected[d]));
+                else
+                    ipcRenderer.send('open-editor', selected[d]);
+            }
+        }
+
+        function openWithExternalEditor() {
             var selected = localTable.rows({ selected: true }).data().pluck('path');
             for (var d = 0, dl = selected.length; d < dl; d++) {
                 var p = child_process.spawn(options.editor, [selected[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });

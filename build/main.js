@@ -396,7 +396,7 @@ var menuTemp = [
             click: () => {
               win.webContents.executeJavaScript('toggleView("button.codeEditor")');
             }
-          },                    
+          },
           {
             label: '&Preferences',
             id: "preferencesbutton",
@@ -531,7 +531,7 @@ var menuTemp = [
         click: () => {
           win.webContents.executeJavaScript('showCodeEditor()');
         }
-      },      
+      },
       {
         label: '&Map...',
         click: showMapper,
@@ -1732,6 +1732,19 @@ ipcMain.on('set-color', (event, type, color, window) => {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.send('set-color', type, color, window);
+  }
+});
+
+ipcMain.on('open-editor', (event, file, remote) => {
+  if (win && win.webContents) {
+    win.webContents.executeJavaScript('showCodeEditor()');
+    setTimeout(() => {
+      for (var name in windows) {
+        if (!windows.hasOwnProperty(name) || !windows[name].window)
+          continue;
+        windows[name].window.webContents.send('open-editor', file, remote);
+      }
+    }, 100);
   }
 });
 

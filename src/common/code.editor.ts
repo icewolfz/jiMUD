@@ -35,6 +35,7 @@ abstract class EditorBase extends EventEmitter {
 
     private $parent: HTMLElement;
     private $file;
+    private $remote;
     public state: FileState = FileState.closed;
 
     get file(): string {
@@ -50,6 +51,15 @@ abstract class EditorBase extends EventEmitter {
         if (!this.$file || this.$file.length === 0)
             return '';
         return path.basename(this.$file);
+    }
+
+    get remote(): string {
+        return this.$remote;
+    }
+    set remote(value: string) {
+        if (this.$remote != value) {
+            this.$remote = value;
+        }
     }
 
     constructor(options?: EditorOptions) {
