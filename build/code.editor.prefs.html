@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Preferences</title>
+    <link rel="shortcut icon" href="../assets/icons/png/preferences.png" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/form.css" rel="stylesheet" type="text/css" />
+    <style>
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .col-lg-1,
+        .col-lg-10,
+        .col-lg-11,
+        .col-lg-12,
+        .col-lg-2,
+        .col-lg-3,
+        .col-lg-4,
+        .col-lg-5,
+        .col-lg-6,
+        .col-lg-7,
+        .col-lg-8,
+        .col-lg-9,
+        .col-md-1,
+        .col-md-10,
+        .col-md-11,
+        .col-md-12,
+        .col-md-2,
+        .col-md-3,
+        .col-md-4,
+        .col-md-5,
+        .col-md-6,
+        .col-md-7,
+        .col-md-8,
+        .col-md-9,
+        .col-sm-1,
+        .col-sm-10,
+        .col-sm-11,
+        .col-sm-12,
+        .col-sm-2,
+        .col-sm-3,
+        .col-sm-4,
+        .col-sm-5,
+        .col-sm-6,
+        .col-sm-7,
+        .col-sm-8,
+        .col-sm-9,
+        .col-xs-1,
+        .col-xs-10,
+        .col-xs-11,
+        .col-xs-12,
+        .col-xs-2,
+        .col-xs-3,
+        .col-xs-4,
+        .col-xs-5,
+        .col-xs-6,
+        .col-xs-7,
+        .col-xs-8,
+        .col-xs-9 {
+            padding-right: 0px;
+            padding-left: 0px;
+        }
+    </style>
+    <script>
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-select.min.js"></script>
+    <script>
+        //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        const { TempType } = require('./js/types');
+        const Settings = require('./js/settings').Settings;
+        const { remote, ipcRenderer } = require('electron');
+        const { dialog } = remote;
+        const path = require('path');
+
+        var _settings;
+        if (window.module) module.module;
+        $(window).keydown((event) => {
+            if (event.which === 27)
+                window.close();
+        });
+
+        $(document).ready(() => {
+            if (process.platform === 'win32')
+                $('.win32').css('display', 'block');
+            else
+                $('.win32').css('display', 'none');
+            _settings = Settings.load(remote.getGlobal('settingsFile'));
+            loadSettings();
+            $('input[type="checkbox"]').change(function () {
+                switch ($(this).attr('id')) {
+                    case 'alwaysOnTopClient':
+                    case 'persistent':
+                    case 'alwaysOnTop':
+                        break;
+                    default:
+                        _settings.extensions["code-editor"][$(this).attr('id')] = this.checked;
+                        break;
+                }
+            });
+            $('input[type="radio"]').change(function () {
+                switch ($(this).attr('id')) {
+                    case 'tempFile-none':
+                        if (this.checked)
+                            _settings.extensions["code-editor"].tempFile = TempType.none;
+                        break;
+                    case 'tempFile-file':
+                        if (this.checked)
+                            _settings.extensions["code-editor"].tempFile = TempType.file;
+                        break;
+                    case 'tempFile-extension':
+                        if (this.checked)
+                            _settings.extensions["code-editor"].tempFile = TempType.extension;
+                        break;
+                }
+            });
+
+            $('input[type="text"]').change(function () {
+                _settings.extensions["code-editor"][$(this).attr('id')] = $(this).val();
+            });
+            $('input[type="number"]').change(function () {
+                _settings.extensions["code-editor"][$(this).attr('id')] = parseInt($(this).val(), 10);
+            });
+            $('.selectpicker').change(function () {
+                if ($(this).attr('id') == 'bufferSize')
+                    _settings.extensions["code-editor"][$(this).attr('id')] = parseInt($(this).val(), 10);
+                else
+                    _settings.extensions["code-editor"][$(this).attr('id')] = $(this).val();
+            });
+            $("#btn-editor").on('click', () => {
+                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                    defaultPath: path.dirname($("#editor").val()),
+                    filters: process.platform === 'win32' ? [
+                        { name: 'Programs (*.exe, *.com)', extensions: ['exe', 'com', 'com'] },
+                        { name: 'All files (*.*)', extensions: ['*'] },
+                    ]
+                        :
+                        [
+                            { name: 'All files (*.*)', extensions: ['*'] },
+                        ]
+                },
+                    function (fileNames) {
+                        if (fileNames === undefined) {
+                            return;
+                        }
+                        $("#editor").val(fileNames[0]);
+                        _settings.extensions["code-editor"].editor = fileNames[0];
+                    });
+            });
+        });
+
+        function defaultSettings() {
+            return {
+                spellchecking: true,
+                recent: [],
+                options: {
+                    persistent: false,
+                    alwaysOnTopClient: true,
+                    alwaysOnTop: false
+                }
+            };
+        }
+
+        function loadSettings() {
+            if (!_settings.extensions["code-editor"])
+                _settings.extensions["code-editor"] = defaultSettings();
+            else {
+                if (!_settings.extensions["code-editor"].hasOwnProperty('focusOnFinished'))
+                    _settings.extensions["code-editor"].focusOnFinished = true;
+                if (!_settings.extensions["code-editor"].hasOwnProperty('selectOnFinished'))
+                    _settings.extensions["code-editor"].selectOnFinished = true;
+            }
+            $("#spellchecking").prop('checked', _settings.extensions["code-editor"].spellchecking);
+
+            if (!_settings.windows["code-editor"] || !_settings.windows["code-editor"].options) {
+                $("#persistent").prop('checked', false);
+                $("#alwaysOnTopClient").prop('checked', true);
+                $("#alwaysOnTop").prop('checked', false);
+            }
+            else {
+                $("#persistent").prop('checked', _settings.windows["code-editor"].options.persistent);
+                $("#alwaysOnTopClient").prop('checked', _settings.windows["code-editor"].options.alwaysOnTopClient);
+                $("#alwaysOnTop").prop('checked', _settings.windows["code-editor"].options.alwaysOnTop);
+            }
+            $('.btn-group input').parent().removeClass('active');
+            $('.btn-group input:checked').parent().addClass('active');
+        }
+
+        function resetSettings() {
+            _settings.extensions["code-editor"] = defaultSettings();
+            loadSettings();
+        }
+
+        function saveSettings() {
+            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'code-editor', value: _settings.extensions["code-editor"] });
+            ipcRenderer.send('setting-changed', {
+                type: 'windows',
+                name: 'code-editor',
+                value: {
+                    persistent: $("#persistent").prop('checked'),
+                    alwaysOnTopClient: $("#alwaysOnTopClient").prop('checked'),
+                    alwaysOnTop: $("#alwaysOnTop").prop('checked')
+                }
+            });
+            window.close();
+        }
+    </script>
+</head>
+
+<body>
+    <div class="dialog-body">
+        <ul class="nav nav-tabs" role="tablist" style="background-color: #F5F5F5;box-shadow: inset 0 -1px 0 #fff;">
+            <li role="presentation" class="active">
+                <a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a>
+            </li>
+            <li role="presentation">
+                <a href="#window" aria-controls="window" role="tab" data-toggle="tab">Window</a>
+            </li>
+            <li role="presentation">
+                <a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab">Advanced</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div role="tabpanel" class="container tab-pane fade in active" id="general">
+
+                <div class="col-xs-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="spellchecking" /> Spellchecking
+                    </label>
+                </div>
+            </div>
+            <div role="tabpanel" class="container tab-pane fade" id="window">
+                <div class="col-xs-12">
+                    <div class="col-xs-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="alwaysOnTopClient" /> Always on top of parent
+                            <span class="win32 help-block" style="display:none;font-size: 0.8em;margin:0;padding:0">Requires restart</span>
+                        </label>
+                    </div>
+                    <div class="col-xs-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="alwaysOnTop" /> Always on top of all
+                        </label>
+                    </div>
+                </div>
+                <div class="col-xs-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="persistent" /> Persistent
+                    </label>
+                </div>
+            </div>
+            <div role="tabpanel" class="container tab-pane fade" id="advanced">
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
+            <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
+        </div>
+</body>
+
+</html>

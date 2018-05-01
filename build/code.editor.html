@@ -407,7 +407,8 @@
             options = data;
         if (!options) {
             options = {
-                spellchecking: true
+                spellchecking: true,
+                recent: [],
             };
             saveOptions();
         }
@@ -495,6 +496,9 @@
                 return 'fa fa-map-o';
         }
         return 'fa fa-file-o';
+    }
+
+    function childClosed(url, name) {
     }
 
     function clearButton(id) {
