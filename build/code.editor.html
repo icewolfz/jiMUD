@@ -464,6 +464,8 @@
                 spellchecking: true,
                 recent: [],
                 opened: [],
+                maxRecent: 15,
+                reopen: true,
                 options: {
                     persistent: false,
                     alwaysOnTopClient: true,
@@ -644,7 +646,7 @@
             addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
         });
         var o, ol;
-        if (options.opened) {
+        if (options.opened && options.reopen) {
             for (o = 0, ol = options.opened.length; o < ol; o++)
                 openFile(options.opened[o].file, options.opened.remote);
         }
@@ -665,17 +667,21 @@
                 var opened = [];
                 //check if need to save
                 for (p = 0; p < l; p++) {
-                    opened.push({
-                        file: manager.panels[p].editor,
-                        remote: manager.panels[p].remote
-                    });
+                    if (!manager.panels[p].editor.new)
+                        opened.push({
+                            file: manager.panels[p].editor,
+                            remote: manager.panels[p].remote
+                        });
                     if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
                         continue;
                     if (!confirmSave(manager.panels[p]))
                         return 'no';
                 }
                 if (!options) loadOptions();
-                options.opened = opened;
+                if (options.reopen) {
+                    options.opened = opened;
+                    saveOptions();
+                }
                 //clean up
                 for (p = 0; p < l; p++)
                     manager.panels[p].editor.close();
@@ -766,6 +772,9 @@
                 options.recent.slice(r, 1);
         }
         options.recent.unshift({ file: file, remote: remoteFile });
+        if (options.recent.length > options.maxRecent)
+            options.recent.slice(0, options.maxRecent);
+        saveOptions();
     }
 
     function saveFile(panel) {
