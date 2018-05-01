@@ -3,6 +3,7 @@ import { existsSync, formatSize } from './library';
 const fs = require('fs-extra');
 const path = require('path');
 const chokidar = require('chokidar');
+const crypto = require('crypto');
 
 declare let ace;
 
@@ -111,6 +112,13 @@ abstract class EditorBase extends EventEmitter {
 
     abstract selected();
 
+    set changed(value: boolean) {
+        if (value)
+            this.state |= FileState.changed;
+        else
+            this.state &= ~FileState.changed;
+    }
+
     get changed(): boolean {
         return (this.state & FileState.changed) === FileState.changed;
     }
@@ -186,10 +194,7 @@ export class CodeEditor extends EditorBase {
 
         this.$session.on('change', (e) => {
             var d = this.$session.getValue();
-            if (!this.$session.getUndoManager().hasUndo())
-                this.state &= ~FileState.changed;
-            else
-                this.state |= FileState.changed;
+            this.changed = true;
             this.$sbSize.textContent = 'File size: ' + formatSize(d.length);
             this.emit('changed');
         });
@@ -227,7 +232,7 @@ export class CodeEditor extends EditorBase {
         this.$session.setValue(this.$el.value);
         this.emit('opened');
         this.state |= FileState.opened;
-        this.state &= ~FileState.changed;
+        this.changed = false;
     }
 
     public refresh() {
@@ -237,7 +242,7 @@ export class CodeEditor extends EditorBase {
 
     public save() {
         this.write(this.$session.getValue());
-        this.state &= ~FileState.changed;
+        this.changed = false;
         this.emit('saved');
     }
 
@@ -253,7 +258,7 @@ export class CodeEditor extends EditorBase {
             this.$session.setValue('');
         }
         this.$session.getUndoManager().reset();
-        this.state &= ~FileState.changed;
+        this.changed = false;
         this.emit('reverted');
     }
 }

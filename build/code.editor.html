@@ -575,7 +575,7 @@
         if (!editor) {
             if (!manager.active)
                 return;
-            editor = manager.editor;
+            editor = manager.active.editor;
         }
         if (editor.new)
             saveFileAs(editor);
@@ -588,10 +588,7 @@
             //no editor or of not changed and new try next
             if (!manager.panels[p].editor)
                 continue;
-            if (manager.panels[p].editor.new)
-                saveFileAs(manager.panels[p].editor);
-            else
-                manager.panels[p].editor.save();
+            saveFile(manager.panels[p].editor);
         }
     }
 
@@ -599,7 +596,7 @@
         if (!editor) {
             if (!manager.active)
                 return;
-            editor = manager.editor;
+            editor = manager.active.editor;
         }
     }
 
