@@ -6,10 +6,14 @@
   - Status: dominant weapon hand is now bordered with red
 - **Changed:**
   - Upgrade ace editor to newest build
+  - Upgrade several 3rd party dependencies
+- **Fixed:**
   - Immortal tools:
     - Buffer size was not correctly being stored as a number when changed from default in preferences
     - When saving preferences was not correctly updating temp and buffersize options
-    - Upgrade several 3rd party dependencies
+  - Telnet:
+    - MCCP was not correctly being processed.
+    - Split buffer was not always correctly cleared
 
 ## 0.4.42 2018-04-23
 

@@ -399,7 +399,7 @@ export class Telnet extends EventEmitter {
      * @fires Telnet#receive-CHARSET
      */
     //this.processData = function(data) { return data; };
-    public processData(data, skipDecompress?: boolean) {
+    public processData(data, skipDecompress?: boolean, returnRaw?: boolean) {
         let len: number;
         let _sb;
         if (data == null)
@@ -409,8 +409,10 @@ export class Telnet extends EventEmitter {
         len = data.length;
         if (len === 0)
             return data;
+        //get buffer
         _sb = this._splitBuffer;
-
+        //clear globaln
+        this._splitBuffer = [];
         if (_sb.length > 0) {
             if (this.enableDebug) this.emit('debug', 'Split buffer length: ' + _sb.length, 1);
             data = Buffer.concat([Buffer.from(_sb, 'binary'), data]);
@@ -1314,7 +1316,7 @@ export class Telnet extends EventEmitter {
                             state = 0;
                             _sb = [];
                             if (idx < len - 1)
-                                processed = processed.concat(this.processData(data.slice(idx + 1), skipDecompress).slice());
+                                processed = processed.concat(this.processData(data.slice(idx + 1), skipDecompress, true).slice());
                             idx = len;
                         }
                         break;
@@ -1532,7 +1534,8 @@ export class Telnet extends EventEmitter {
         if (processed.length > 0)
             this.firstReceived = false;
         this._splitBuffer = _sb;
-
+        if(returnRaw)
+            return processed;
         processed = Buffer.from(processed);
         //force UTF8 or if charset is enabled and type is UTF8 process data as UTF8 data
         if (this.UTF8 || (this.options.CHARSET))
