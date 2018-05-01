@@ -912,9 +912,9 @@
         }
         else {
             p = manager.addPanel(path.basename(file), getFileIcon(file), file);
-            if (path.extname(file) === '.map')
-                p.editor = new VirtualEditor({ file: file, container: p.pane, open: open });
-            else
+            //if (path.extname(file) === '.map')
+                //p.editor = new VirtualEditor({ file: file, container: p.pane, open: open });
+            //else
                 p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
             if (!_watched[file]) {
                 _watched[file] = 1;
