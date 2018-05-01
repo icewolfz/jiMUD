@@ -643,8 +643,13 @@
             }));
             addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
         });
+        var o, ol;
+        if (options.opened) {
+            for (o = 0, ol = options.opened.length; o < ol; o++)
+                openFile(options.opened[o].file, options.opened.remote);
+        }
         if (_open) {
-            for (var o = 0, ol = _open.length; o < ol; o++)
+            for (o = 0, ol = _open.length; o < ol; o++)
                 openFile(_open[o][0], _open[o][1]);
             _open = 0;
         }
@@ -657,13 +662,20 @@
             evt.returnValue = false;
             setTimeout(() => {
                 var p, l = manager.panels.length;
+                var opened = [];
                 //check if need to save
                 for (p = 0; p < l; p++) {
+                    opened.push({
+                        file: manager.panels[p].editor,
+                        remote: manager.panels[p].remote
+                    });
                     if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
                         continue;
                     if (!confirmSave(manager.panels[p]))
                         return 'no';
                 }
+                if (!options) loadOptions();
+                options.opened = opened;
                 //clean up
                 for (p = 0; p < l; p++)
                     manager.panels[p].editor.close();
@@ -727,18 +739,33 @@
                         { name: 'Map files (*.map)', extensions: ['map'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ],
-                    properties: ['multiSelections', 'openFile']
+                    properties: ['multiSelections', 'openFile'],
+                    defaultPath: manager.active ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0]) : '')
                 },
                 function (fileNames) {
                     if (fileNames === undefined) {
                         return;
                     }
-                    for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        createEditor(fileNames[f], true, remoteFile);
+                    for (var f = 0, fl = fileNames.length; f < fl; f++) {
+                        addToRecent(fileNames[f]);
+                        createEditor(fileNames[f], true);
+                    }
                 });
         }
-        else
+        else {
+            addToRecent(file, remoteFile);
             createEditor(file, true, remoteFile);
+        }
+    }
+
+    function addToRecent(file, remoteFile) {
+        if (!options) loadOptions();
+        if (!options.recent) options.recent = [];
+        for (var r = options.recent.length; r >= 0; r--) {
+            if (options.recent[r].file === file)
+                options.recent.slice(r, 1);
+        }
+        options.recent.unshift({ file: file, remote: remoteFile });
     }
 
     function saveFile(panel) {
@@ -880,6 +907,12 @@
                 p.editor = new VirtualEditor({ file: file, container: p.pane, open: open });
             else
                 p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
+            if (!_watched[file]) {
+                _watched[file] = 1;
+                watcher.add(file);
+            }
+            else
+                _watched[file]++;
             p.editor.remote = remoteFile;
             p.editor.on('watch', (files) => {
                 if (!files) return;
