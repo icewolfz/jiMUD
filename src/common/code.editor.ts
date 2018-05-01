@@ -142,6 +142,8 @@ abstract class EditorBase extends EventEmitter {
     abstract undo(): void;
     abstract redo(): void;
 
+    abstract set spellcheck(value: boolean);
+
     set changed(value: boolean) {
         if (value)
             this.state |= FileState.changed;
@@ -233,6 +235,10 @@ export class CodeEditor extends EditorBase {
         })
         this.emit('created');
     }
+
+    public set spellcheck(value: boolean) {
+        this.$editor.setOption('spellcheck', value);
+    };
 
     get file(): string {
         return super.file;
@@ -369,4 +375,5 @@ export class VirtualEditor extends EditorBase {
     public redo() { }
     public close() { }
     public watch(action: string, file: string, details?) { }
+    public set spellcheck(value: boolean) { };
 }

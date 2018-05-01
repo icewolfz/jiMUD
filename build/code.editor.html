@@ -29,7 +29,7 @@
     <script src="../lib/ace/ext-settings_menu.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-themelist.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-modelist.js" type="text/javascript"></script>
-
+    <script src="../lib/ace/ext-spellcheck.js"></script>
 </head>
 
 <body>
@@ -475,8 +475,8 @@
             saveOptions();
         }
         try {
-            if (!spellchecker && options.spellchecking)
-                spellchecker = require('spellchecker');
+            //if (!spellchecker && options.spellchecking)
+                //spellchecker = require('spellchecker');
         }
         catch (ex) {
             ipcRenderer.send('error', ex);
@@ -832,7 +832,7 @@
                 return false;
             panel = manager.active;
         }
-        if (panel.changed || panel.editor.new) {
+        if (panel.editor.changed || panel.editor.new) {
             var choice = dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
@@ -997,9 +997,9 @@
             });
             doUpdate(1);
         }
+        p.spellCheck = options.spellCheck;
         return p.editor;
     }
-
 
     function doUpdate(type) {
         if (!type) return;
