@@ -40,7 +40,8 @@ You may drag files from local to queue or remote list to upload, from remote to 
 
 ### Editor
 
-- `Open file in editor` this causes any file that is downloaded to automatically be opened in default or provided editor
+- `Open file in editor` this causes any file that is downloaded to automatically be opened in internal or external editor
+- `Open file in external editor` this causes any file that is downloaded to automatically be opened in default or provided editor if open file in editor is enabled
 - `Path to editor` this is a path to the editor you want to open files in instead default
 
 ### Window

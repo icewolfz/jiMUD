@@ -166,6 +166,7 @@
                     'editor': '',
                     'bufferSize': 0,
                     'openEditor': true,
+                    'openExternalEditor':false,
                     'queueSize': 250,
                     'localSize': 400,
                     'syncFolders': true,
@@ -187,6 +188,7 @@
             $("#selectOnFinished").prop('checked', _settings.extensions["immortal"].selectOnFinished);
 
             $("#openEditor").prop('checked', _settings.extensions["immortal"].openEditor);
+            $("#openExternalEditor").prop('checked', _settings.extensions["immortal"].openExternalEditor);            
             $("#syncFolders").prop('checked', _settings.extensions["immortal"].syncFolders);
             $("#showQueue").prop('checked', _settings.extensions["immortal"].showQueue);
             $("#showHidden").prop('checked', _settings.extensions["immortal"].showHidden);
@@ -226,6 +228,7 @@
                 'editor': '',
                 'bufferSize': 0,
                 'openEditor': true,
+                'openExternalEditor':false,
                 'queueSize': 250,
                 'localSize': 400,
                 'syncFolders': true,
@@ -322,6 +325,11 @@
                         <input type="checkbox" id="openEditor" /> Open file in editor
                     </label>
                 </div>
+                <div class="col-xs-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="openExternalEditor" /> Open file in external editor
+                    </label>
+                </div>                
                 <div class="col-xs-12 form-group">
                     <label class="control-label" style="width:100%">
                         Path to editor

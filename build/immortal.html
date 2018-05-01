@@ -673,6 +673,7 @@
                     'editor': '',
                     'bufferSize': 0,
                     'openEditor': true,
+                    'openExternalEditor': false,
                     'queueSize': 250,
                     'localSize': 400,
                     'syncFolders': true,
@@ -3497,15 +3498,16 @@
                 if (item.download) {
                     //Update local list if file was uploaded to current local
                     if (item.state === ItemState.done && options.openEditor) {
-                        ipcRenderer.send('open-editor', item.local, item.remote);
-                        /*
-                        if (!options.editor || options.editor.length === 0)
-                            openItem(item.local);
-                        else {
-                            var p = child_process.spawn(options.editor, [item.local], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
-                            p.unref();
+                        if (options.openExternalEditor) {
+                            if (!options.editor || options.editor.length === 0)
+                                openItem(item.local);
+                            else {
+                                var p = child_process.spawn(options.editor, [item.local], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
+                                p.unref();
+                            }
                         }
-                        */
+                        else
+                            ipcRenderer.send('open-editor', item.local, item.remote);
                     }
                     info.downloads--;
                 }

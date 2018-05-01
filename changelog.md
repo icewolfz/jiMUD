@@ -3,11 +3,12 @@
 ## 0.4.x
 
 - **New:**
-  - Code editor: allows you to view and edit code, good for immortals
+  - Code editor: allows you to view and edit code, good for immortals 
+  - Immortal tools: New [open file in external editor](docs/immortal.md) preference, allows you to choose to ignore the new internal code editor
+- **Changed:**
   - Immortal tools:
     - Rename old editor to external editor
-    - Replace old editor with new internal code editor.
-
+    - Add new editor using new internal code editor.
 
 ## 0.4.43
 
