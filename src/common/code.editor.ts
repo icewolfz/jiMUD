@@ -1,5 +1,6 @@
 import EventEmitter = require('events');
 import { existsSync, formatSize } from './library';
+const { clipboard } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
 const chokidar = require('chokidar');
@@ -110,7 +111,20 @@ abstract class EditorBase extends EventEmitter {
 
     abstract save(): void;
 
-    abstract selected();
+    abstract get selected(): string;
+    abstract selectAll();
+
+    abstract get hasUndo(): boolean;
+    abstract get hasRedo(): boolean;
+    abstract get canCut(): boolean;
+    abstract get canCopy(): boolean;
+    abstract get canPaste(): boolean;
+    abstract cut(): void;
+    abstract copy(): void;
+    abstract paste(): void;
+    abstract delete(): void;
+    abstract undo(): void;
+    abstract redo(): void;
 
     set changed(value: boolean) {
         if (value)
@@ -198,6 +212,9 @@ export class CodeEditor extends EditorBase {
             this.$sbSize.textContent = 'File size: ' + formatSize(d.length);
             this.emit('changed');
         });
+        this.$session.getSelection().on('changeSelection', () => {
+            this.emit('selection-changed');
+        })
         this.emit('created');
     }
 
@@ -247,7 +264,7 @@ export class CodeEditor extends EditorBase {
         this.emit('saved');
     }
 
-    public selected() {
+    public get selected(): string {
         return this.$session.getTextRange(this.$editor.getSelectionRange());
     }
 
@@ -262,6 +279,34 @@ export class CodeEditor extends EditorBase {
         this.changed = false;
         this.emit('reverted');
     }
+
+    public selectAll() { this.$editor.selectAll() };
+
+    public get hasUndo() { return this.$session.getUndoManager().hasUndo(); }
+    public get hasRedo() { return this.$session.getUndoManager().hasRedo(); }
+    public get canCut(): boolean { return this.selected.length > 0; }
+    public get canCopy(): boolean { return this.selected.length > 0; }
+    public get canPaste(): boolean { return true; }
+    public cut() {
+        let text = this.$editor.getCopyText();
+        clipboard.writeText(text || '');
+        clipboard.writeText(text || '', 'selection');
+        this.$editor.execCommand('cut');
+    }
+    public copy() {
+        let text = this.$editor.getCopyText();
+        clipboard.writeText(text || '');
+        clipboard.writeText(text || '', 'selection');
+    }
+    public paste() {
+        let text = clipboard.readText();
+        if (text.length === 0)
+            return;
+        this.$editor.insert(text);
+    }
+    public delete() { this.$editor.remove("right"); }
+    public undo() { this.$editor.undo(); }
+    public redo() { this.$editor.redo(); }
 }
 
 export class VirtualEditor extends EditorBase {
@@ -273,9 +318,20 @@ export class VirtualEditor extends EditorBase {
 
     public save() { }
 
-    public selected() { }
+    public revert() { }
 
-    public revert() {
+    public get selected() { return ''; }
+    public selectAll() { };
 
-    }
+    public get hasUndo() { return false; }
+    public get hasRedo() { return false; }
+    public get canCut(): boolean { return false; }
+    public get canCopy(): boolean { return false; }
+    public get canPaste(): boolean { return false; }
+    public cut() { }
+    public copy() { }
+    public paste() { }
+    public delete() { }
+    public undo() { }
+    public redo() { }
 }

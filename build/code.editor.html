@@ -62,25 +62,22 @@
             </button>
         </div>
         <div class="btn-group" role="group">
-            <button id="btn-undo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Undo" onclick="">
+            <button id="btn-undo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Undo" onclick="doUndo()">
                 <i class="fa fa-undo"></i>
             </button>
-            <button id="btn-redo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Redo" onclick="">
+            <button id="btn-redo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Redo" onclick="doRedo()">
                 <i class="fa fa-repeat"></i>
             </button>
         </div>
         <div class="btn-group" role="group">
-            <button id="btn-cut" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Cut" onclick="">
+            <button id="btn-cut" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Cut" onclick="doCut()">
                 <i class="fa fa-cut"></i>
             </button>
-            <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick="">
+            <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick="doCopy()">
                 <i class="fa fa-copy"></i>
             </button>
-            <button id="btn-paste" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Paste" onclick="">
+            <button id="btn-paste" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Paste" onclick="doPaste()">
                 <i class="fa fa-paste"></i>
-            </button>
-            <button id="btn-delete" type="button" disabled="disabled" class="btn btn-danger btn-xs" title="Delete" onclick="">
-                <i class="fa fa-times"></i>
             </button>
         </div>
     </div>
@@ -98,7 +95,7 @@
     const path = require('path');
 
     var spellchecker, menubar;
-    var options, _updating;
+    var options, _updating = 0;
     var newCounter = 1;
     let closeWindow = false;
 
@@ -216,7 +213,41 @@
         {
             label: '&Edit',
             submenu: [
-
+                {
+                    label: '&Undo',
+                    accelerator: "CmdOrCtrl+Z",
+                    click: doUndo
+                },
+                {
+                    label: '&Redo',
+                    accelerator: "CmdOrCtrl+Y",
+                    click: doRedo
+                },
+                { type: 'separator' },
+                {
+                    label: 'Cu&t',
+                    accelerator: "CmdOrCtrl+X",
+                    click: doCut
+                },
+                {
+                    label: '&Copy',
+                    accelerator: "CmdOrCtrl+C",
+                    click: doCopy
+                },
+                {
+                    label: '&Paste',
+                    accelerator: "CmdOrCtrl+V",
+                    click: doPaste
+                },
+                { type: 'separator' },
+                {
+                    label: '&Select All',
+                    accelerator: "CmdOrCtrl+A",
+                    click: () => {
+                        if (manager.active && manager.active.editor)
+                            manager.active.editor.selectAll();
+                    }
+                },
             ]
         },
         {
@@ -255,10 +286,12 @@
         if (e.panel.editor.changed || e.panel.editor.new) {
             e.cancel = !confirmSave(e.panel);
         }
-        updateUI();
+    });
+    manager.on('removed', (e) => {
+        doUpdate(1);
     });
     manager.on('activated', (e) => {
-        updateUI();
+        doUpdate(1);
     });
     manager.on('deactivated', (e) => {
     });
@@ -281,7 +314,7 @@
         $("#btn-close").prop('disabled', !enabled);
         menubar.updateItem('File|Revert file', { enabled: enabled });
         menubar.updateItem('File|Close', { enabled: enabled });
-        updateUIChange();
+        doUpdate(2);
     }
 
     function updateUIChange() {
@@ -298,6 +331,17 @@
         menubar.updateItem('file|save', { enabled: changed });
         $("#btn-save-all").prop('disabled', !changedAll);
         menubar.updateItem('file|save all', { enabled: changedAll });
+        $("#btn-undo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.hasUndo : true);
+        menubar.updateItem('edit|undo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.hasUndo : false });
+        $("#btn-redo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.hasRedo : true);
+        menubar.updateItem('edit|redo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.hasRedo : false });
+
+        $("#btn-cut").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.canCut : true);
+        menubar.updateItem('edit|cut', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.canCut : false });
+        $("#btn-copy").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.canCopy : true);
+        menubar.updateItem('edit|copy', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.canCopy : false });
+        $("#btn-paste").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.canPaste : true);
+        menubar.updateItem('edit|paste', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.canPaste : false });
     }
 
     // List all files in a directory in Node.js recursively in a synchronous fashion
@@ -456,6 +500,32 @@
         $(id).blur();
     }
 
+    function doCut() {
+        if (manager.active && manager.active.editor)
+            manager.active.editor.cut();
+    }
+
+    function doCopy() {
+        if (manager.active && manager.active.editor)
+            manager.active.editor.copy();
+    }
+
+    function doPaste() {
+        if (manager.active && manager.active.editor)
+            manager.active.editor.paste();
+    }
+
+    function doRedo() {
+        if (manager.active && manager.active.editor)
+            manager.active.editor.redo();
+    }
+
+    function doUndo() {
+        if (manager.active && manager.active.editor)
+            manager.active.editor.undo();
+    }
+
+
     $(document).ready(() => {
         loadOptions();
 
@@ -552,7 +622,7 @@
         var editor = createEditor('new ' + newCounter + '.c');
         editor.new = true;
         newCounter++;
-        updateUI();
+        doUpdate(1);
         updatePanel(manager.active);
     }
 
@@ -683,18 +753,41 @@
             else
                 p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
             p.editor.on('changed', () => {
-                updateUIChange();
+                doUpdate(2);
                 updatePanel(p);
             });
 
             p.editor.on('saved', () => {
-                updateUIChange();
+                doUpdate(2);
                 updatePanel(p);
             });
-            updateUI();
+            p.editor.on('selection-changed', () => {
+                doUpdate(2);
+            });
+            doUpdate(1);
         }
         return p.editor;
     }
+
+
+    function doUpdate(type) {
+        if (!type) return;
+        _updating |= type;
+        if (_updating === 0)
+            return;
+        window.requestAnimationFrame(() => {
+            if ((this._updating & 1) === 1) {
+                updateUI();
+                _updating &= ~1;
+            }
+            if ((this._updating & 2) === 2) {
+                updateUIChange();
+                _updating &= ~2;
+            }
+            doUpdate(_updating);
+        });
+    }
+
 </script>
 
 </html>
