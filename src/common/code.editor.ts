@@ -243,6 +243,7 @@ export class CodeEditor extends EditorBase {
     public save() {
         this.write(this.$session.getValue());
         this.changed = false;
+        this.new = false;
         this.emit('saved');
     }
 

@@ -540,7 +540,7 @@
     });
 
     function newFile() {
-        var editor = createEditor('new ' + newCounter);
+        var editor = createEditor('new ' + newCounter+'.c');
         editor.new = true;
         newCounter++;
         updateUI();
@@ -552,7 +552,8 @@
             dialog.showOpenDialog(remote.getCurrentWindow(),
                 {
                     filters: [
-                        { name: 'Code files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
+                        { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
+                        { name: 'Data files (*.o)', extensions: ['o'] },
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
                         { name: 'Map files (*.map)', extensions: ['map'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
@@ -571,33 +572,51 @@
             createEditor(file, true);
     }
 
-    function saveFile(editor) {
-        if (!editor) {
+    function saveFile(panel) {
+        if (!panel) {
             if (!manager.active)
-                return;
-            editor = manager.active.editor;
+                return false;
+            panel = manager.active;
         }
-        if (editor.new)
-            saveFileAs(editor);
-        else
-            editor.save();
+        if (panel.editor.new)
+            return saveFileAs(panel);
+        panel.editor.save();
+        return true;
     }
 
     function saveAllFiles() {
         for (var p = 0, l = manager.panels.length; p < l; p++) {
             //no editor or of not changed and new try next
-            if (!manager.panels[p].editor)
-                continue;
-            saveFile(manager.panels[p].editor);
+            if (!saveFile(manager.panels[p]))
+                return false;
         }
+        return true;
     }
 
-    function saveFileAs(editor) {
-        if (!editor) {
+    function saveFileAs(panel) {
+        if (!panel) {
             if (!manager.active)
-                return;
-            editor = manager.active.editor;
+                return false;
+            panel = manager.active;
         }
+        var file = dialog.showSaveDialog(remote.getCurrentWindow(), {
+            title: 'Save as...',
+            defaultPath: panel.editor.file,
+            filters: [
+                { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
+                { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
+                { name: 'Text files (*.txt)', extensions: ['txt'] },
+                { name: 'Map files (*.map)', extensions: ['map'] },
+                { name: 'All files (*.*)', extensions: ['*'] },
+            ]
+        });
+        if (file === undefined)
+            return false;
+        panel.editor.file = file;
+        manager.setPanelTooltip(panel.editor.file, panel);
+        manager.setPanelTitle(panel.editor.filename, panel);
+        panel.editor.save();
+        return true;
     }
 
     function closeFile() {
