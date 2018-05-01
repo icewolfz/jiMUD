@@ -3,7 +3,6 @@ import { existsSync, formatSize } from './library';
 const { clipboard } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
-const chokidar = require('chokidar');
 const crypto = require('crypto');
 
 declare let ace;
@@ -43,7 +42,11 @@ abstract class EditorBase extends EventEmitter {
     }
     set file(value: string) {
         if (this.$file != value) {
+            if (this.$file && this.$file.length > 0 && !this.new)
+                this.emit('watch-stop', [this.$file]);
             this.$file = value;
+            if (!this.new)
+                this.emit('watch', [this.$file]);
         }
     }
 
@@ -120,6 +123,9 @@ abstract class EditorBase extends EventEmitter {
     abstract open(): void;
 
     abstract save(): void;
+
+    abstract close(); void;
+    abstract watch(action: string, file: string, details?): void;
 
     abstract get selected(): string;
     abstract selectAll();
@@ -274,8 +280,25 @@ export class CodeEditor extends EditorBase {
         this.emit('saved');
     }
 
+    public close() {
+        if (this.file && this.file.length > 0 && !this.new)
+            this.emit('watch-stop', [this.file]);
+    }
+
     public get selected(): string {
         return this.$session.getTextRange(this.$editor.getSelectionRange());
+    }
+
+    public watch(action: string, file: string, details?) {
+        if (file != this.file || this.new)
+            return;
+        switch (action) {
+            case 'add':
+            case 'change':
+            case 'unlink':
+                this.emit('reload', action);
+                break;
+        }
     }
 
     public revert() {
@@ -344,4 +367,6 @@ export class VirtualEditor extends EditorBase {
     public delete() { }
     public undo() { }
     public redo() { }
+    public close() { }
+    public watch(action: string, file: string, details?) { }
 }

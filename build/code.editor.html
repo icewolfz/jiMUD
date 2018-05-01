@@ -92,6 +92,7 @@
     const { parseTemplate, existsSync } = require('./js/library');
     const { Settings } = require('./js/settings');
 
+    const chokidar = require('chokidar');
     const path = require('path');
 
     var spellchecker, menubar;
@@ -100,6 +101,8 @@
     var _open;
     var newCounter = 1;
     let closeWindow = false;
+    var watcher;
+    var _watched = {};
 
     webFrame.setSpellCheckProvider("en-US", true, {
         spellCheck: function (text) {
@@ -290,6 +293,7 @@
         }
     });
     manager.on('removed', (e) => {
+        e.panel.editor.close();
         doUpdate(1);
     });
     manager.on('activated', (e) => {
@@ -397,6 +401,53 @@
 
         });
     };
+
+    function createWatcher() {
+        if (watcher)
+            watcher.close();
+        watcher = chokidar.watch('', {
+            persistent: true,
+            depth: 0,
+            ignoreInitial: true
+        });
+
+        // Something to use when events are received.
+        var log = console.log.bind(console);
+        var ready = false;
+        watcher
+            .on('error', error => {
+                log(`Watcher error: ${error}`);
+            })
+            .on('ready', () => {
+                log('Initial scan complete. Ready for changes');
+                ready = true;
+            })
+            .on('add', (file, stats) => {
+                log(`File ${file} has been added`);
+                for (var p = 0, l = manager.panels.length; p < l; p++)
+                    manager.panels[p].editor.watch('add', file, stats);
+            })
+            .on('change', (file, stats) => {
+                log(`File ${file} has been changed`);
+                for (var p = 0, l = manager.panels.length; p < l; p++)
+                    manager.panels[p].editor.watch('change', file, stats);
+            })
+            .on('unlink', file => {
+                log(`File ${file} has been removed`);
+                for (var p = 0, l = manager.panels.length; p < l; p++)
+                    manager.panels[p].editor.watch('unlink', file);
+            })
+            .on('raw', (event, file, details) => {
+                log('Raw event info:', event, file, details);
+                for (var p = 0, l = manager.panels.length; p < l; p++)
+                    manager.panels[p].editor.watch('raw', file, details);
+            });
+    }
+
+    function closing() {
+        if (watcher)
+            watcher.close();
+    }
 
     function loadOptions(data) {
         if (!data) {
@@ -595,17 +646,26 @@
         if (!closeWindow) {
             evt.returnValue = false;
             setTimeout(() => {
-                for (var p = 0, l = manager.panels.length; p < l; p++) {
+                var p, l = manager.panels.length;
+                //check if need to save
+                for (p = 0; p < l; p++) {
                     if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
                         continue;
                     if (!confirmSave(manager.panels[p]))
                         return 'no';
                 }
+                //clean up
+                for (p = 0; p < l; p++)
+                    manager.panels[p].editor.close();
+                if (watcher)
+                    watcher.close();
                 closeWindow = true;
                 remote.getCurrentWindow().close();
             });
             return 'no';
         }
+        if (watcher)
+            watcher.close();
         closeWindow = true;
         remote.getCurrentWindow().close();
         return;
@@ -720,10 +780,14 @@
         return true;
     }
 
-    function closeFile() {
-        if (manager.active) {
-            manager.removePanel();
+    function closeFile(panel) {
+        if (!panel) {
+            if (!manager.active)
+                return;
+            panel = manager.active;
         }
+        if (panel)
+            manager.removePanel(panel);
     }
 
     function confirmSave(panel) {
@@ -775,6 +839,62 @@
             else
                 p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
             p.editor.remote = remoteFile;
+            p.editor.on('watch', (files) => {
+                if (!files) return;
+                for (var f = 0, fl = files.length; f < fl; f++) {
+                    if (!_watched[files[f]]) {
+                        _watched[files[f]] = 1;
+                        watcher.add(files[f]);
+                    }
+                    else
+                        _watched[files[f]]++;
+                }
+            });
+            p.editor.on('watch-stop', (files) => {
+                if (!files) return;
+                for (var f = 0, fl = files.length; f < fl; f++) {
+                    _watched[files[f]]--;
+                    if (_watched[files[f]] === 0) {
+                        watcher.unwatch(files[f]);
+                        delete _watched[files[f]];
+                    }
+                }
+            });
+            p.editor.on('reload', (type) => {
+                var choice;
+                if (type === 'unlink') {
+                    choice = dialog.showMessageBox(
+                        remote.getCurrentWindow(),
+                        {
+                            type: 'question',
+                            title: 'File deleted',
+                            message: p.editor.filename + ' has been deleted, keep open?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1
+                        });
+                    //no
+                    if (choice === 1)
+                        closeFile(p);
+                    else
+                        p.editor.changed = true;
+                }
+                else {
+                    choice = dialog.showMessageBox(
+                        remote.getCurrentWindow(),
+                        {
+                            type: 'question',
+                            title: 'File changed',
+                            message: (p.editor.filename + ' has been changed, reload?'),
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1
+                        });
+                    //yes
+                    if (choice === 0)
+                        p.editor.revert();
+                    //else
+                    //p.editor.changed = true;
+                }
+            });
             p.editor.on('changed', () => {
                 doUpdate(2);
                 updatePanel(p);
