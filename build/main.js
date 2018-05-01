@@ -1738,15 +1738,20 @@ ipcMain.on('set-color', (event, type, color, window) => {
 ipcMain.on('open-editor', (event, file, remote) => {
   if (win && win.webContents) {
     win.webContents.executeJavaScript('showCodeEditor()');
-    setTimeout(() => {
-      for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
-          continue;
-        windows[name].window.webContents.send('open-editor', file, remote);
-      }
-    }, 100);
+    openEditor(file, remote);
   }
 });
+
+function openEditor(file, remote) {
+  if (!windows['code-editor'] || !windows['code-editor'].window || !windows['code-editor'].window.webContents || !windows['code-editor'].ready) {
+    setTimeout(() => {
+      openEditor(file, remote);
+    }, 1000);
+  }
+  else {
+    windows['code-editor'].window.webContents.send('open-editor', file, remote);
+  }
+}
 
 ipcMain.on('send-background', (event, command) => {
   if (win && win.webContents)

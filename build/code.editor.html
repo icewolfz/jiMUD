@@ -96,6 +96,8 @@
 
     var spellchecker, menubar;
     var options, _updating = 0;
+    var _loading = 1;
+    var _open;
     var newCounter = 1;
     let closeWindow = false;
 
@@ -577,7 +579,12 @@
             }));
             addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
         });
-
+        if (_open) {
+            for (var o = 0, ol = _open.length; o < ol; o++)
+                openFile(_open[o][0], _open[o][1]);
+            _open = 0;
+        }
+        _loading = 0;
     });
 
     window.onbeforeunload = function (evt) {
@@ -601,7 +608,13 @@
     };
 
     ipcRenderer.on('open-editor', (event, file, remote) => {
-        openFile(file, remote);
+        if (_loading) {
+            if (!_open)
+                _open = [];
+            _open.push([file, remote]);
+        }
+        else
+            openFile(file, remote);
     });
 
     ipcRenderer.on('GMCP-received', (event, data) => {
