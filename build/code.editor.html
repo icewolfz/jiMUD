@@ -100,6 +100,7 @@
     var spellchecker, menubar;
     var options, _updating;
     var newCounter = 1;
+    let closeWindow = false;
 
     webFrame.setSpellCheckProvider("en-US", true, {
         spellCheck: function (text) {
@@ -250,10 +251,9 @@
     manager.hideTabstrip = false;
     manager.on('add', (e) => {
     });
-    manager.on('removed', (e) => {
-        if (e.panel.editor.changed) {
-            //asked to save first
-            //e.cancel = true|false
+    manager.on('remove', (e) => {
+        if (e.panel.editor.changed || e.panel.editor.new) {
+            e.cancel = !confirmSave(e.panel);
         }
         updateUI();
     });
@@ -372,7 +372,6 @@
         catch (ex) {
             ipcRenderer.send('error', ex);
         }
-        //doUpdate(14);
     }
 
     function saveOptions() {
@@ -463,17 +462,6 @@
         $(document).keydown((event) => {
 
         });
-        $(window).on('resize', () => {
-
-            //doUpdate(14);
-        });
-
-        $(window).trigger('resize');
-
-        window.onbeforeunload = function () {
-
-        };
-
         $('#btn-add-dropdown').click(function () {
             $(this).addClass('open');
             const pos = $(this).offset();
@@ -522,6 +510,27 @@
 
     });
 
+    window.onbeforeunload = function (evt) {
+        if (!closeWindow) {
+            evt.returnValue = false;
+            setTimeout(() => {
+                for (var p = 0, l = manager.panels.length; p < l; p++) {
+                    if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
+                        continue;
+                    if (!confirmSave(manager.panels[p]))
+                        return 'no';
+                }
+                closeWindow = true;
+                remote.getCurrentWindow().close();
+            });
+            return 'no';
+        }
+        closeWindow = true;
+        remote.getCurrentWindow().close();
+        return;
+    };
+
+
     ipcRenderer.on('GMCP-received', (event, data) => {
         if (options && options.debug)
             console.log(data);
@@ -540,7 +549,7 @@
     });
 
     function newFile() {
-        var editor = createEditor('new ' + newCounter+'.c');
+        var editor = createEditor('new ' + newCounter + '.c');
         editor.new = true;
         newCounter++;
         updateUI();
@@ -553,7 +562,7 @@
                 {
                     filters: [
                         { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
-                        { name: 'Data files (*.o)', extensions: ['o'] },
+                        { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
                         { name: 'Map files (*.map)', extensions: ['map'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
@@ -586,7 +595,9 @@
 
     function saveAllFiles() {
         for (var p = 0, l = manager.panels.length; p < l; p++) {
-            //no editor or of not changed and new try next
+            //not changed and new try next
+            if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
+                continue;
             if (!saveFile(manager.panels[p]))
                 return false;
         }
@@ -625,6 +636,32 @@
         }
     }
 
+    function confirmSave(panel) {
+        if (!panel) {
+            if (!manager.active)
+                return false;
+            panel = manager.active;
+        }
+        var choice = dialog.showMessageBox(
+            remote.getCurrentWindow(),
+            {
+                type: 'question',
+                title: panel.editor.new ? 'Save file?' : 'Save changes?',
+                message: panel.editor.new ? ('Save ' + panel.editor.filename + '?') : ('Save changes to ' + panel.editor.filename + '?'),
+                buttons: ['Yes', 'No', 'Cancel'],
+                defaultId: 1
+            });
+        //canceled
+        if (choice === 2)
+            return false;
+        //no
+        if (choice === 1)
+            return true;
+        //attempt to save
+        return saveFile(panel);
+    }
+
+
     function findEditor(file) {
         if (!file || file.length === 0)
             return 0;
@@ -657,49 +694,6 @@
             updateUI();
         }
         return p.editor;
-    }
-
-    function doUpdate(type) {
-        if (!type) return;
-        _updating |= type;
-        if (_updating === 0)
-            return;
-        window.requestAnimationFrame(() => {
-            if ((this._updating & 1) === 1) {
-
-                _updating &= ~1;
-            }
-            if ((this._updating & 2) === 2) {
-
-                _updating &= ~2;
-            }
-            if ((this._updating & 4) === 4) {
-
-                _updating &= ~4;
-            }
-            if ((this._updating & 8) === 8) {
-
-                _updating &= ~8;
-            }
-            if ((this._updating & 16) === 16) {
-
-                _updating &= ~16;
-            }
-            if ((this._updating & 32) === 32) {
-                _updating &= ~32;
-            }
-            if ((this._updating & 64) === 64) {
-                _updating &= ~64;
-            }
-            if ((this._updating & 128) === 128) {
-
-                _updating &= ~128;
-            }
-            if ((this._updating & 256) === 256) {
-                _updating &= ~256;
-            }
-            doUpdate(_updating);
-        });
     }
 </script>
 
