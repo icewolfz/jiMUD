@@ -645,6 +645,7 @@
             }));
             addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
         });
+        createWatcher();
         var o, ol;
         if (options.opened && options.reopen) {
             for (o = 0, ol = options.opened.length; o < ol; o++)
@@ -655,7 +656,6 @@
                 openFile(_open[o][0], _open[o][1]);
             _open = 0;
         }
-        createWatcher();
         _loading = 0;
     });
 
@@ -669,7 +669,7 @@
                 for (p = 0; p < l; p++) {
                     if (!manager.panels[p].editor.new)
                         opened.push({
-                            file: manager.panels[p].editor,
+                            file: manager.panels[p].editor.file,
                             remote: manager.panels[p].remote
                         });
                     if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
@@ -746,7 +746,7 @@
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ],
                     properties: ['multiSelections', 'openFile'],
-                    defaultPath: manager.active ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0]) : '')
+                    defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
                 },
                 function (fileNames) {
                     if (fileNames === undefined) {
@@ -767,7 +767,7 @@
     function addToRecent(file, remoteFile) {
         if (!options) loadOptions();
         if (!options.recent) options.recent = [];
-        for (var r = options.recent.length; r >= 0; r--) {
+        for (var r = options.recent.length-1; r >= 0; r--) {
             if (options.recent[r].file === file)
                 options.recent.slice(r, 1);
         }
