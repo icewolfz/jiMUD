@@ -435,6 +435,7 @@ export class CodeEditor extends EditorBase {
                         {
                             label: 'Line Comment',
                             enabled: this.selected.length > 0,
+                            accelerator: 'CmdOrCtrl+/',
                             click: () => {
                                 var r = this.$editor.getSelectionRange();
                                 if (r.start.row !== r.end.row) {
@@ -453,6 +454,7 @@ export class CodeEditor extends EditorBase {
                         {
                             label: 'Block Comment',
                             enabled: this.selected.length > 0,
+                            accelerator: 'Alt+Shift+A',
                             click: () => {
                                 var r = this.$editor.getSelectionRange();
                                 // if (r.start.row !== r.end.row) {
@@ -488,14 +490,14 @@ export class CodeEditor extends EditorBase {
                     submenu: [
                         {
                             label: 'Expand All',
-                            accelerator: "CmdOrCtrl+/",
+                            accelerator: "CmdOrCtrl+>",
                             click: () => {
                                 this.$session.unfold();
                             }
                         },
                         {
                             label: 'Collapse All',
-                            accelerator: "CmdOrCtrl+*",
+                            accelerator: "CmdOrCtrl+<",
                             click: () => {
                                 this.$session.foldAll();
                             }
@@ -504,6 +506,16 @@ export class CodeEditor extends EditorBase {
                 }
             ]
         }
+        if (menu === 'view')
+            return [
+                {
+                    label: 'Toggle Word Wrap',
+                    accelerator: 'Alt+Z',
+                    click: () => {
+                        this.$session.setUseWrapMode(!this.$session.getUseWrapMode());
+                    }
+                }
+            ]
     }
 
     public focus(): void {

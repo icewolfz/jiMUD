@@ -47,12 +47,12 @@
                 <i class="fa fa-folder-open-o"></i>
             </button>
             <button id="btn-close" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Close" onclick="closeFile()">
-                <i class="fa fa-times"></i>
+                <i class="fa fa-window-close"></i>
             </button>
             <button id="btn-close-all" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Close All" onclick="closeAllFiles()">
                 <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
-                    <i class="fa fa-times fa-stack-2x" style="font-size: 1em;margin-top: -1px;margin-left: 1px;"></i>
-                    <i class="fa fa-times fa-stack-2x" style="font-size: 1em;margin-top: 1px;margin-left: -1px;"></i>
+                    <i class="fa fa-window-close fa-stack-2x" style="font-size: 1em;margin-top: -2px;margin-left: 2px;"></i>
+                    <i class="fa fa-window-close fa-stack-2x" style="font-size: 1em;margin-top: 2px;margin-left: -2px;"></i>
                 </span>
             </button>
         </div>
@@ -308,16 +308,19 @@
                 {
                     label: '&Close',
                     click: () => { closeFile(); },
+                    accelerator: "CmdOrCtrl+F4",
                     enabled: false
                 },
                 {
                     label: 'C&lose All',
                     click: () => { closeAllFiles(); },
+                    accelerator: "CmdOrCtrl+Shift+F4",
                     enabled: false
                 },
                 { type: 'separator' },
                 {
                     label: 'E&xit',
+                    accelerator: "CmdOrCtrl+Shift+W",
                     click: () => { window.close(); }
                 }
             ]
