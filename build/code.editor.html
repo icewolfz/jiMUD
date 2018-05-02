@@ -1117,10 +1117,10 @@
         }
         else {
             p = manager.addPanel(path.basename(data.file), getFileIcon(data.file), data.file);
-            //if (path.extname(file) === '.map')
-            //p.editor = new VirtualEditor({ file: file, container: p.pane, open: open, value: value });
-            //else
             data.container = p.pane;
+            //if (path.extname(file) === '.map')
+            //p.editor = new VirtualEditor(data);
+            //else            
             p.editor = new CodeEditor(data);
             if (!_watched[data.file]) {
                 _watched[data.file] = 1;
