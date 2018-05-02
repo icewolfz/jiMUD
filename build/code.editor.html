@@ -253,6 +253,23 @@
                             manager.active.editor.selectAll();
                     }
                 },
+                { type: 'separator' },
+                {
+                    label: '&Find',
+                    accelerator: "CmdOrCtrl+F",
+                    click: () => {
+                        if (manager.active && manager.active.editor)
+                            manager.active.editor.find();
+                    }
+                },
+                {
+                    label: '&Replace',
+                    accelerator: "CmdOrCtrl+H",
+                    click: () => {
+                        if (manager.active && manager.active.editor)
+                            manager.active.editor.replace();
+                    }
+                },                
             ]
         },
         {
@@ -1039,13 +1056,27 @@
                 });
                 if (p.editor.changed) {
                     temp.push({ type: 'separator' });
-                    temp.push(
-                        {
-                            label: 'Revert',
-                            click: () => { revertFile(); },
-                            enabled: false
-                        });
+                    temp.push({
+                        label: 'Revert',
+                        click: () => { revertFile(); },
+                        enabled: false
+                    });
                 }
+                temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Find',
+                    click: () => {
+                        if (manager.active && manager.active.editor)
+                            manager.active.editor.find();
+                    }
+                });
+                temp.push({
+                    label: 'Replace',
+                    click: () => {
+                        if (manager.active && manager.active.editor)
+                            manager.active.editor.replace();
+                    }
+                });
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup(remote.getCurrentWindow());
             });

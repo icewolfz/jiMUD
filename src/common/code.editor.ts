@@ -141,6 +141,8 @@ abstract class EditorBase extends EventEmitter {
     abstract delete(): void;
     abstract undo(): void;
     abstract redo(): void;
+    abstract find(): void;
+    abstract replace(): void;
 
     abstract set spellcheck(value: boolean);
 
@@ -353,6 +355,8 @@ export class CodeEditor extends EditorBase {
     public delete() { this.$editor.remove("right"); }
     public undo() { this.$editor.undo(); }
     public redo() { this.$editor.redo(); }
+    public find() { this.$editor.execCommand('find'); }
+    public replace() { this.$editor.execCommand('replace'); }
 }
 
 export class VirtualEditor extends EditorBase {
@@ -383,4 +387,6 @@ export class VirtualEditor extends EditorBase {
     public close() { }
     public watch(action: string, file: string, details?) { }
     public set spellcheck(value: boolean) { };
+    public find() { }
+    public replace() { }
 }
