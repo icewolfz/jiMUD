@@ -1,5 +1,5 @@
 import EventEmitter = require('events');
-import { existsSync, formatSize } from './library';
+import { existsSync, formatSize, capitalize } from './library';
 const { clipboard } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
@@ -21,6 +21,7 @@ export interface EditorOptions {
     container?: any;
     open?: boolean;
     new?: boolean;
+    value?: any;
 }
 
 export enum FileState {
@@ -162,6 +163,21 @@ export class CodeEditor extends EditorBase {
     private $statusbar: HTMLElement;
     private $sbSize: HTMLElement;
     private $sbMsg: HTMLElement;
+
+    constructor(options?: EditorOptions) {
+        super(options);
+        if (options.value) {
+            if (!this.new)
+                this.open();
+            else {
+                this.$el.value = options.value;
+                this.$session.setValue(options.value);
+            }
+            this.$session.getUndoManager().reset();
+            this.changed = false;
+            this.emit('reverted');
+        }
+    }
 
     public createControl() {
         if (this.$el) {
@@ -395,19 +411,8 @@ export class CodeEditor extends EditorBase {
                             label: 'Capitalize',
                             enabled: this.selected.length > 0,
                             click: () => {
-                                var s = this.$editor.getSelectedText().split(" ");
-                                var c;
-                                for (var i = 0, il = s.length; i < il; i++) {
-                                    for (var p = 0, pl = s[i].length; p < pl; p++) {
-                                        c = s[i].charAt(p);
-                                        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-                                            s[i] = s[i].substr(0, p) + c.toUpperCase() + s[i].substr(p + 1).toLowerCase();
-                                            break;
-                                        }
-                                    }
-                                }
                                 var r = this.$editor.getSelectionRange();
-                                this.$session.replace(r, s.join(" "));
+                                this.$session.replace(r, capitalize(this.$editor.getSelectedText()));
                                 this.$session.getSelection().setSelectionRange(r);
                             }
                         },
