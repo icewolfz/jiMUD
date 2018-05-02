@@ -376,10 +376,12 @@
         menubar.updateItem('File|Close', { enabled: enabled });
         menubar.updateItem('File|Close all', { enabled: enabled });
         menubar.updateItem('File|save as', { enabled: enabled });
-        var buttons = $("#editor-buttons");
-        buttons.empty();
+        var buttons = document.getElementById("editor-buttons");
+        while (buttons.firstChild) {
+            buttons.removeChild(buttons.firstChild);
+        }
         if (enabled && manager.active.editor.supports('buttons'))
-            buttons.append(manager.active.editor.buttons);
+            buttons.append(...manager.active.editor.buttons);
         updateMenu('edit');
         updateMenu('view');
         doUpdate(2);
