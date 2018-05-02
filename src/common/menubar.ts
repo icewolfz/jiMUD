@@ -33,7 +33,7 @@ export class Menubar {
         items = this._menubar.items;
         tItems = this.menu;
         let il = menu.length;
-        let f;
+        let f = 0;
         for (i = 0; i < il; i++) {
             if (!menu[i] || !items || items.length === 0) break;            
             let ml = items.length;
