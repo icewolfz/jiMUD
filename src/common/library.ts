@@ -864,3 +864,19 @@ export function formatSize(size) {
         return Math.round(size / 1024).toLocaleString() + " KB";
     return size + " B";
 }
+
+export function capitalize(s) {
+    if (!s) return '';
+    s = s.split(" ");
+    var c;
+    for (var i = 0, il = s.length; i < il; i++) {
+        for (var p = 0, pl = s[i].length; p < pl; p++) {
+            c = s[i].charAt(p);
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+                s[i] = s[i].substr(0, p) + c.toUpperCase() + s[i].substr(p + 1).toLowerCase();
+                break;
+            }
+        }
+    }
+    return s.join(" ");
+}
