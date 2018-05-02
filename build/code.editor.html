@@ -94,6 +94,9 @@
                 <i class="fa fa-exchange"></i>
             </button>
         </div>
+        <button id="btn-refresh" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Refresh" onclick="doRefresh()">
+            <i class="fa fa-refresh"></i>
+        </button>
     </div>
 </body>
 <script>
@@ -197,6 +200,7 @@
                     label: 'Save &As',
                     accelerator: "CmdOrCtrl+Shift+S",
                     click: () => { saveFileAs(); },
+                    enabled: false,
                 },
                 { type: 'separator' },
                 {
@@ -240,33 +244,39 @@
                 {
                     label: '&Undo',
                     accelerator: "CmdOrCtrl+Z",
-                    click: doUndo
+                    click: doUndo,
+                    enabled: false,
                 },
                 {
                     label: '&Redo',
                     accelerator: "CmdOrCtrl+Y",
-                    click: doRedo
+                    click: doRedo,
+                    enabled: false,
                 },
                 { type: 'separator' },
                 {
                     label: 'Cu&t',
                     accelerator: "CmdOrCtrl+X",
-                    click: doCut
+                    click: doCut,
+                    enabled: false,
                 },
                 {
                     label: '&Copy',
                     accelerator: "CmdOrCtrl+C",
-                    click: doCopy
+                    click: doCopy,
+                    enabled: false,
                 },
                 {
                     label: '&Paste',
                     accelerator: "CmdOrCtrl+V",
-                    click: doPaste
+                    click: doPaste,
+                    enabled: false,
                 },
                 { type: 'separator' },
                 {
                     label: '&Select All',
                     accelerator: "CmdOrCtrl+A",
+                    enabled: false,
                     click: () => {
                         if (manager.active && manager.active.editor)
                             manager.active.editor.selectAll();
@@ -276,11 +286,13 @@
                 {
                     label: '&Find',
                     accelerator: "CmdOrCtrl+F",
+                    enabled: false,
                     click: doFind
                 },
                 {
                     label: '&Replace',
                     accelerator: "CmdOrCtrl+H",
+                    enabled: false,
                     click: doReplace
                 },
             ]
@@ -291,7 +303,8 @@
                 {
                     label: '&Refresh',
                     accelerator: "F5",
-                    click: () => { }
+                    enabled: false,
+                    click: doRefresh
                 },
                 { type: 'separator' },
                 {
@@ -378,20 +391,22 @@
         menubar.updateItem('file|revert all', { enabled: changedAllOnly });
 
         $("#btn-undo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('undo') : true);
-        menubar.updateItem('edit|undo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('undo')  : false });
-        $("#btn-redo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('redo')  : true);
-        menubar.updateItem('edit|redo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('redo')  : false });
+        menubar.updateItem('edit|undo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('undo') : false });
+        $("#btn-redo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('redo') : true);
+        menubar.updateItem('edit|redo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('redo') : false });
 
-        $("#btn-cut").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('cut')  : true);
-        menubar.updateItem('edit|cut', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('cut')  : false });
-        $("#btn-copy").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('copy')  : true);
-        menubar.updateItem('edit|copy', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('copy')  : false });
-        $("#btn-paste").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('paste')  : true);
-        menubar.updateItem('edit|paste', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('paste')  : false });
-        $("#btn-find").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('find')  : true);
-        menubar.updateItem('edit|find', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('find')  : false });
-        $("#btn-replace").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('replace')  : true);
+        $("#btn-cut").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('cut') : true);
+        menubar.updateItem('edit|cut', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('cut') : false });
+        $("#btn-copy").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('copy') : true);
+        menubar.updateItem('edit|copy', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('copy') : false });
+        $("#btn-paste").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('paste') : true);
+        menubar.updateItem('edit|paste', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('paste') : false });
+        $("#btn-find").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('find') : true);
+        menubar.updateItem('edit|find', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('find') : false });
+        $("#btn-replace").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('replace') : true);
         menubar.updateItem('edit|replace', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('replace') : false });
+        $("#btn-refresh").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('refresh') : true);
+        menubar.updateItem('view|refresh', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('refresh') : false });
     }
 
     // List all files in a directory in Node.js recursively in a synchronous fashion
@@ -610,40 +625,44 @@
     }
 
     function doCut() {
-        if (manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor && manager.active.editor.supports('cut'))
             manager.active.editor.cut();
     }
 
     function doCopy() {
-        if (manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor && manager.active.editor.supports('copy'))
             manager.active.editor.copy();
     }
 
     function doPaste() {
-        if (manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor && manager.active.editor.supports('paste'))
             manager.active.editor.paste();
     }
 
     function doRedo() {
-        if (manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor && manager.active.editor.supports('redo'))
             manager.active.editor.redo();
     }
 
     function doUndo() {
-        if (manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor && manager.active.editor.supports('undo'))
             manager.active.editor.undo();
     }
 
     function doFind() {
-        if (manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor && manager.active.editor.supports('find'))
             manager.active.editor.find();
     }
 
     function doReplace() {
-        if (manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor && manager.active.editor.supports('replace'))
             manager.active.editor.replace();
     }
 
+    function doRefresh() {
+        if (manager.active && manager.active.editor && manager.active.editor.supports('refresh'))
+            manager.active.editor.refresh();
+    }
 
     $(document).ready(() => {
         loadOptions();
@@ -1052,6 +1071,12 @@
             });
             p.editor.on('contextmenu', (e, token) => {
                 var temp = [];
+                if (p.editor.supports('refresh')) {
+                    temp.push({
+                        label: 'Refresh',
+                        click: doRefresh
+                    });
+                }
                 if (p.editor.supports('undo'))
                     temp.push({
                         label: 'Undo',
