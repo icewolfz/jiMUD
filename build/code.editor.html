@@ -325,20 +325,24 @@
     function updateUIChange() {
         var changed = (manager.active && manager.active.editor) ? (manager.active.editor.changed || manager.active.editor.new) : false;
         var changedAll = false;
+        var changedAllOnly = false;
         for (var p = 0, l = manager.panels.length; p < l; p++) {
             //no editor or of not changed and new try next
             if (!manager.panels[p].editor || (!manager.panels[p].editor.changed && !manager.panels[p].editor.new))
                 continue;
             changedAll = true;
-            break; //do not need to check all as soon as one has been found
+            if (manager.panels[p].editor.changed && !manager.panels[p].editor.new)
+                changedAllOnly = true;
+            if (changedAllOnly && changedAll)
+                break; //do not need to check all as soon as one has been found
         }
         $("#btn-save").prop('disabled', !changed);
         menubar.updateItem('file|save', { enabled: changed });
         $("#btn-save-all").prop('disabled', !changedAll);
         menubar.updateItem('file|save all', { enabled: changedAll });
 
-        menubar.updateItem('file|revert', { enabled: changed });
-        menubar.updateItem('file|revert all', { enabled: changedAll });
+        menubar.updateItem('file|revert', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.changed && !manager.panels[p].editor.new) : false });
+        menubar.updateItem('file|revert all', { enabled: changedAllOnly });
 
         $("#btn-undo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.hasUndo : true);
         menubar.updateItem('edit|undo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.hasUndo : false });
@@ -476,7 +480,7 @@
         }
         try {
             //if (!spellchecker && options.spellchecking)
-                //spellchecker = require('spellchecker');
+            //spellchecker = require('spellchecker');
         }
         catch (ex) {
             ipcRenderer.send('error', ex);
@@ -767,7 +771,7 @@
     function addToRecent(file, remoteFile) {
         if (!options) loadOptions();
         if (!options.recent) options.recent = [];
-        for (var r = options.recent.length-1; r >= 0; r--) {
+        for (var r = options.recent.length - 1; r >= 0; r--) {
             if (options.recent[r].file === file)
                 options.recent.slice(r, 1);
         }
@@ -832,7 +836,7 @@
                 return false;
             panel = manager.active;
         }
-        if (panel.editor.changed || panel.editor.new) {
+        if (panel.editor.changed && !panel.editor.new) {
             var choice = dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
@@ -843,7 +847,7 @@
                     defaultId: 1
                 });
             if (choice === 0)
-                panel.revert();
+                panel.editor.revert();
         }
     }
 
@@ -913,9 +917,9 @@
         else {
             p = manager.addPanel(path.basename(file), getFileIcon(file), file);
             //if (path.extname(file) === '.map')
-                //p.editor = new VirtualEditor({ file: file, container: p.pane, open: open });
+            //p.editor = new VirtualEditor({ file: file, container: p.pane, open: open });
             //else
-                p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
+            p.editor = new CodeEditor({ file: file, container: p.pane, open: open });
             if (!_watched[file]) {
                 _watched[file] = 1;
                 watcher.add(file);
@@ -994,6 +998,56 @@
             });
             p.editor.on('selection-changed', () => {
                 doUpdate(2);
+            });
+            p.editor.on('contextmenu', (e, token) => {
+                var temp = [];
+                if (p.editor.hasUndo)
+                    temp.push({
+                        label: 'Undo',
+                        click: doUndo
+                    });
+                if (p.editor.hasRedo)
+                    temp.push({
+                        label: 'Redo',
+                        click: doRedo
+                    });
+                if (p.editor.hasRedo || p.editor.hasUndo)
+                    temp.push({ type: 'separator' });
+                if (p.editor.canCut)
+                    temp.push({
+                        label: 'Cut',
+                        click: doCut
+                    });
+                if (p.editor.canCopy)
+                    temp.push({
+                        label: 'Copy',
+                        click: doCopy
+                    });
+                if (p.editor.canPaste)
+                    temp.push({
+                        label: 'Paste',
+                        click: doPaste
+                    });
+                if (p.editor.canPaste || p.editor.canCopy || p.editor.canCut)
+                    temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Select all',
+                    click: () => {
+                        if (manager.active && manager.active.editor)
+                            manager.active.editor.selectAll();
+                    }
+                });
+                if (p.editor.changed) {
+                    temp.push({ type: 'separator' });
+                    temp.push(
+                        {
+                            label: 'Revert',
+                            click: () => { revertFile(); },
+                            enabled: false
+                        });
+                }
+                let inputMenu = Menu.buildFromTemplate(temp);
+                inputMenu.popup(remote.getCurrentWindow());
             });
             doUpdate(1);
         }

@@ -188,6 +188,13 @@ export class CodeEditor extends EditorBase {
         this.$editorEl.id = this.parent.id + '-editor';
         this.parent.appendChild(this.$editorEl);
         this.$editor = ace.edit(this.$editorEl.id);
+        this.$editor.container.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            let position = this.$editor.selection.getCursor();
+            let token = this.$session.getTokenAt(position.row, position.column);
+            this.emit('contextmenu', e, token);
+            return false;
+        });
         this.$session = this.$editor.getSession();
 
         this.$editor.$blockScrolling = Infinity;
