@@ -116,8 +116,6 @@ abstract class EditorBase extends EventEmitter {
         fs.writeFileSync(this.file, data);
     }
 
-    abstract refresh(): void;
-
     abstract revert(): void;
 
     abstract open(): void;
@@ -128,23 +126,8 @@ abstract class EditorBase extends EventEmitter {
     abstract watch(action: string, file: string, details?): void;
 
     abstract get selected(): string;
-    abstract selectAll();
 
-    abstract get hasUndo(): boolean;
-    abstract get hasRedo(): boolean;
-    abstract get canCut(): boolean;
-    abstract get canCopy(): boolean;
-    abstract get canPaste(): boolean;
-    abstract get canFind(): boolean;
-    abstract get canReplace(): boolean;
-    abstract cut(): void;
-    abstract copy(): void;
-    abstract paste(): void;
-    abstract delete(): void;
-    abstract undo(): void;
-    abstract redo(): void;
-    abstract find(): void;
-    abstract replace(): void;
+    abstract supports(what): boolean;
 
     abstract set spellcheck(value: boolean);
 
@@ -332,13 +315,6 @@ export class CodeEditor extends EditorBase {
 
     public selectAll() { this.$editor.selectAll() };
 
-    public get hasUndo() { return this.$session.getUndoManager().hasUndo(); }
-    public get hasRedo() { return this.$session.getUndoManager().hasRedo(); }
-    public get canCut(): boolean { return this.selected.length > 0; }
-    public get canCopy(): boolean { return this.selected.length > 0; }
-    public get canPaste(): boolean { return true; }
-    public get canFind(): boolean { return true; }
-    public get canReplace(): boolean { return true; }
     public cut() {
         let text = this.$editor.getCopyText();
         clipboard.writeText(text || '');
@@ -361,6 +337,25 @@ export class CodeEditor extends EditorBase {
     public redo() { this.$editor.redo(); }
     public find() { this.$editor.execCommand('find'); }
     public replace() { this.$editor.execCommand('replace'); }
+    public supports(what) {
+        switch (what) {
+            case 'undo':
+            case 'redo':
+            case 'cut':
+            case 'copy':
+                return this.selected.length > 0;
+            case 'indent':
+            case 'paste':
+            case 'find':
+            case 'replace':
+            case 'delete':
+            case 'select-all':
+            case 'selectall':
+                return true;
+        }
+        return false;
+    }
+
 }
 
 export class VirtualEditor extends EditorBase {
@@ -376,14 +371,6 @@ export class VirtualEditor extends EditorBase {
 
     public get selected() { return ''; }
     public selectAll() { };
-
-    public get hasUndo() { return false; }
-    public get hasRedo() { return false; }
-    public get canCut(): boolean { return false; }
-    public get canCopy(): boolean { return false; }
-    public get canPaste(): boolean { return false; }
-    public get canFind(): boolean { return false; }
-    public get canReplace(): boolean { return false; }
     public cut() { }
     public copy() { }
     public paste() { }
@@ -395,4 +382,5 @@ export class VirtualEditor extends EditorBase {
     public set spellcheck(value: boolean) { };
     public find() { }
     public replace() { }
+    public supports(what) { return false; }
 }
