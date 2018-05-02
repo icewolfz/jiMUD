@@ -338,6 +338,7 @@
             document.title = 'Code Editor';
         $("#btn-close").prop('disabled', !enabled);
         menubar.updateItem('File|Close', { enabled: enabled });
+        menubar.updateItem('File|save as', { enabled: enabled });        
         doUpdate(2);
     }
 
