@@ -126,6 +126,7 @@ abstract class EditorBase extends EventEmitter {
     abstract watch(action: string, file: string, details?): void;
 
     abstract get selected(): string;
+    abstract focus(): void;
 
     abstract supports(what): boolean;
 
@@ -226,6 +227,13 @@ export class CodeEditor extends EditorBase {
         });
         this.$session.getSelection().on('changeSelection', () => {
             this.emit('selection-changed');
+            let selected = this.selected.length > 0;
+            this.emit('menu-update', 'edit|formatting|to upper case', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|to lower case', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|capitalize', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|inverse case', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
         })
         this.emit('created');
     }
@@ -241,6 +249,15 @@ export class CodeEditor extends EditorBase {
         if (this.file != value) {
             super.file = value;
             $('#' + this.parent.id + '-filename').text(value);
+            switch (path.extname(this.file)) {
+                case '.c':
+                case '.h':
+                    this.$session.setMode('ace/mode/lpc');
+                    break;
+                default:
+                    this.$session.setMode(this.getModeByFileExtension(this.file));
+                    break;
+            }
         }
     }
 
@@ -253,15 +270,6 @@ export class CodeEditor extends EditorBase {
         if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
             return;
         this.$el.value = this.read();
-        switch (path.extname(this.file)) {
-            case '.c':
-            case '.h':
-                this.$session.setMode('ace/mode/lpc');
-                break;
-            default:
-                this.$session.setMode(this.getModeByFileExtension(this.file));
-                break;
-        }
         this.$session.setValue(this.$el.value);
         this.emit('opened');
         this.state |= FileState.opened;
@@ -365,23 +373,112 @@ export class CodeEditor extends EditorBase {
                     submenu: [
                         { label: 'Insert Color...' },
                         { type: 'separator' },
-                        { label: 'To Upper Case' },
-                        { label: 'To Lower Case' },
-                        { label: 'Capitalize' },
-                        { label: 'Inverse Case' },
-                        { type: 'separator' },
-                        { label: 'Comment' },
+                        {
+                            label: 'To Upper Case',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var r = this.$editor.getSelectionRange();
+                                this.$session.replace(r, this.$editor.getSelectedText().toUpperCase());
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        {
+                            label: 'To Lower Case',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var r = this.$editor.getSelectionRange();
+                                this.$session.replace(r, this.$editor.getSelectedText().toLowerCase());
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        {
+                            label: 'Capitalize',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var s = this.$editor.getSelectedText().split(" ");
+                                var c;
+                                for (var i = 0, il = s.length; i < il; i++) {
+                                    for (var p = 0, pl = s[i].length; p < pl; p++) {
+                                        c = s[i].charAt(p);
+                                        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+                                            s[i] = s[i].substr(0, p) + c.toUpperCase() + s[i].substr(p + 1).toLowerCase();
+                                            break;
+                                        }
+                                    }
+                                }
+                                var r = this.$editor.getSelectionRange();
+                                this.$session.replace(r, s.join(" "));
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        {
+                            label: 'Inverse Case',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var s = this.$editor.getSelectedText().split(" ");
+                                var c;
+                                for (var i = 0, il = s.length; i < il; i++) {
+                                    for (var p = 0, pl = s[i].length; p < pl; p++) {
+                                        c = s[i].charAt(p);
+                                        if (c >= 'A' && c <= 'Z')
+                                            s[i] = s[i].substr(0, p) + c.toLowerCase() + s[i].substr(p + 1);
+                                        else if (c >= 'a' && c <= 'z')
+                                            s[i] = s[i].substr(0, p) + c.toUpperCase() + s[i].substr(p + 1);
+                                    }
+                                }
+                                var r = this.$editor.getSelectionRange();
+                                this.$session.replace(r, s.join(" "));
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
                         { type: 'separator' },
                         {
-                            label: 'Indent',
+                            label: 'Line Comment',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var r = this.$editor.getSelectionRange();
+                                if (r.start.row !== r.end.row) {
+                                    let str = this.$editor.getSelectedText();
+                                    str = '// ' + str.replace(/(?:\r\n|\r|\n)/g, '\n// ');
+                                    this.$session.replace(r, str);
+                                    r.end.column += 3;
+                                }
+                                else {
+                                    this.$session.replace(r, "// " + this.$editor.getSelectedText());
+                                    r.end.column += 3;
+                                }
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        {
+                            label: 'Block Comment',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var r = this.$editor.getSelectionRange();
+                                // if (r.start.row !== r.end.row) {
+                                //     this.$session.replace(r, "/*\n" + this.$editor.getSelectedText() + "\n*/");
+                                //     r.end.row += 2;
+                                //     r.end.column = 2;
+                                // }
+                                // else {
+                                this.$session.replace(r, "/* " + this.$editor.getSelectedText() + " */");
+                                r.end.column += 6;
+                                //}
+
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'Indent File',
                             accelerator: 'CmdOrCtrl+I'
                         },
                         {
-                            label: 'Format',
+                            label: 'Format File',
                             accelerator: 'CmdOrCtrl+Shift+F'
                         },
                         {
-                            label: 'Formant and Indent',
+                            label: 'Format and Indent File',
                             accelerator: 'CmdOrCtrl+Shift+I'
                         }
                     ]
@@ -391,11 +488,17 @@ export class CodeEditor extends EditorBase {
                     submenu: [
                         {
                             label: 'Expand All',
-                            accelerator: "CmdOrCtrl+Shift+=",
+                            accelerator: "CmdOrCtrl+/",
+                            click: () => {
+                                this.$session.unfold();
+                            }
                         },
                         {
                             label: 'Collapse All',
-                            accelerator: "CmdOrCtrl+Shift+-",
+                            accelerator: "CmdOrCtrl+*",
+                            click: () => {
+                                this.$session.foldAll();
+                            }
                         }
                     ]
                 }
@@ -403,6 +506,9 @@ export class CodeEditor extends EditorBase {
         }
     }
 
+    public focus(): void {
+        this.$editor.focus();
+    }
 }
 
 export class VirtualEditor extends EditorBase {
@@ -430,4 +536,5 @@ export class VirtualEditor extends EditorBase {
     public find() { }
     public replace() { }
     public supports(what) { return false; }
+    public focus(): void { }
 }

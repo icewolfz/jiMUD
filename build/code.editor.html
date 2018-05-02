@@ -264,7 +264,6 @@
                 {
                     label: 'Open &Recent',
                     submenu: [],
-                    visible: false
                 },
                 { type: 'separator' },
                 {
@@ -346,6 +345,8 @@
         doUpdate(1);
     });
     manager.on('activated', (e) => {
+        if(e.panel.editor)
+            e.panel.editor.focus();
         doUpdate(1);
     });
     manager.on('deactivated', (e) => {
@@ -383,10 +384,13 @@
     function updateMenu(menu) {
         var items = subMenus[menu].slice();
         if (manager.active && manager.active.editor && manager.active.editor.supports('menu|') + menu) {
-            menu.push({ type: 'separator' });
-            menu = menu.concat(manager.active.editor.menu(menu));
+            var cItems = manager.active.editor.menu(menu);
+            if (cItems && cItems.length) {
+                items.push({ type: 'separator' });
+                items = items.concat(cItems);
+            }
         }
-        menubar.updateItem(menu, { submenu: menu });
+        menubar.updateItem(menu, { submenu: items });
     }
 
     function updateUIChange() {
@@ -408,7 +412,7 @@
         $("#btn-save-all").prop('disabled', !changedAll);
         menubar.updateItem('file|save all', { enabled: changedAll });
 
-        menubar.updateItem('file|revert', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.changed && !manager.panels[p].editor.new) : false });
+        menubar.updateItem('file|revert', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.changed && !manager.active.editor.new) : false });
         menubar.updateItem('file|revert all', { enabled: revertAll });
 
         $("#btn-undo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('undo') : true);
@@ -748,7 +752,7 @@
             _open = 0;
         }
         if (!(options.opened && !options.reopen) && !_open)
-            buildRecent();
+            doUpdate(4);
         _loading = 0;
     });
 
@@ -860,15 +864,17 @@
     function addToRecent(file, remoteFile) {
         if (!options) loadOptions();
         if (!options.recent) options.recent = [];
-        for (var r = options.recent.length - 1; r >= 0; r--) {
-            if (options.recent[r].file === file)
-                options.recent.slice(r, 1);
+        var recent = [{ file: file, remote: remoteFile }];
+        for (var r = 0, rl = options.recent.length; r < rl; r++) {
+            if (options.recent[r].file !== file)
+                recent.push(options.recent[r]);
         }
-        options.recent.unshift({ file: file, remote: remoteFile });
-        if (options.recent.length > options.maxRecent)
-            options.recent.slice(0, options.maxRecent);
+        if (recent.length > options.maxRecent)
+            options.recent = recent.slice(0, options.maxRecent);
+        else
+            options.recent = recent;
         saveOptions();
-        buildRecent();
+        doUpdate(4);
     }
 
     function buildRecent() {
@@ -877,25 +883,27 @@
             menu.push(
                 {
                     label: options.recent[r].file,
-                    click: () => {
-                        openFile(options.recent[r].file, options.recent[r].remote);
+                    idx: r,
+                    click: (item) => {
+                        openFile(options.recent[item.idx].file, options.recent[item.idx].remote);
                     }
                 }
             );
+            if (r < 10)
+                menu[r].accelerator = 'CmdOrCtrl+'+(r + 1);
         }
-        if(menu.length > 0)
-        {
+        if (menu.length > 0) {
             menu.push({ type: 'separator' });
             menu.push({
-                label:'Clear Recently Opend',
-                click: ()=> {
+                label: 'Clear Recently Opened',
+                click: () => {
                     options.recent = [];
-                    saveOptions;
-                    buildRecent();
+                    saveOptions();
+                    doUpdate(4);
                 }
             });
         }
-        menubar.updateItem(menu, { submenu: menu });
+        menubar.updateItem('file|open recent', { submenu: menu });
     }
 
     function saveFile(panel) {
@@ -1120,6 +1128,9 @@
             p.editor.on('selection-changed', () => {
                 doUpdate(2);
             });
+            p.editor.on('menu-update', (menu, options) => {
+                menubar.updateItem(menu, options);
+            });
             p.editor.on('contextmenu', (e, token) => {
                 var temp = [];
                 if (p.editor.supports('refresh')) {
@@ -1195,6 +1206,7 @@
             doUpdate(1);
         }
         p.spellCheck = options.spellCheck;
+        p.editor.focus();
         return p.editor;
     }
 
@@ -1211,6 +1223,10 @@
             if ((this._updating & 2) === 2) {
                 updateUIChange();
                 _updating &= ~2;
+            }
+            if ((this._updating & 4) === 4) {
+                buildRecent();
+                _updating &= ~4;
             }
             doUpdate(_updating);
         });
