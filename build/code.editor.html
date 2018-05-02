@@ -747,6 +747,8 @@
                 openFile(_open[o][0], _open[o][1]);
             _open = 0;
         }
+        if (!(options.opened && !options.reopen) && !_open)
+            buildRecent();
         _loading = 0;
     });
 
@@ -866,6 +868,34 @@
         if (options.recent.length > options.maxRecent)
             options.recent.slice(0, options.maxRecent);
         saveOptions();
+        buildRecent();
+    }
+
+    function buildRecent() {
+        var menu = [];
+        for (var r = 0, rl = options.recent.length; r < rl; r++) {
+            menu.push(
+                {
+                    label: options.recent[r].file,
+                    click: () => {
+                        openFile(options.recent[r].file, options.recent[r].remote);
+                    }
+                }
+            );
+        }
+        if(menu.length > 0)
+        {
+            menu.push({ type: 'separator' });
+            menu.push({
+                label:'Clear Recently Opend',
+                click: ()=> {
+                    options.recent = [];
+                    saveOptions;
+                    buildRecent();
+                }
+            });
+        }
+        menubar.updateItem(menu, { submenu: menu });
     }
 
     function saveFile(panel) {
@@ -1159,7 +1189,6 @@
                     temp.push({ type: 'separator' });
                     temp = temp.concat(p.editor.menu('context'));
                 }
-
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup(remote.getCurrentWindow());
             });
