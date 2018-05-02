@@ -80,6 +80,14 @@
                 <i class="fa fa-paste"></i>
             </button>
         </div>
+        <div class="btn-group" role="group">
+            <button id="btn-find" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Find" onclick="doFind()">
+                <i class="fa fa-search"></i>
+            </button>
+            <button id="btn-replace" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Replace" onclick="doReplace()">
+                <i class="fa fa-exchange"></i>
+            </button>
+        </div>
     </div>
 </body>
 <script>
@@ -257,19 +265,13 @@
                 {
                     label: '&Find',
                     accelerator: "CmdOrCtrl+F",
-                    click: () => {
-                        if (manager.active && manager.active.editor)
-                            manager.active.editor.find();
-                    }
+                    click: doFind
                 },
                 {
                     label: '&Replace',
                     accelerator: "CmdOrCtrl+H",
-                    click: () => {
-                        if (manager.active && manager.active.editor)
-                            manager.active.editor.replace();
-                    }
-                },                
+                    click: doReplace
+                },
             ]
         },
         {
@@ -372,6 +374,10 @@
         menubar.updateItem('edit|copy', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.canCopy : false });
         $("#btn-paste").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.canPaste : true);
         menubar.updateItem('edit|paste', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.canPaste : false });
+        $("#btn-find").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.canFind : true);
+        menubar.updateItem('edit|find', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.canFind : false });
+        $("#btn-replace").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.canReplace : true);
+        menubar.updateItem('edit|replace', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.canReplace : false });
     }
 
     // List all files in a directory in Node.js recursively in a synchronous fashion
@@ -612,6 +618,16 @@
     function doUndo() {
         if (manager.active && manager.active.editor)
             manager.active.editor.undo();
+    }
+
+    function doFind() {
+        if (manager.active && manager.active.editor)
+            manager.active.editor.find();
+    }
+
+    function doReplace() {
+        if (manager.active && manager.active.editor)
+            manager.active.editor.replace();
     }
 
 
@@ -1062,21 +1078,18 @@
                         enabled: false
                     });
                 }
-                temp.push({ type: 'separator' });
-                temp.push({
-                    label: 'Find',
-                    click: () => {
-                        if (manager.active && manager.active.editor)
-                            manager.active.editor.find();
-                    }
-                });
-                temp.push({
-                    label: 'Replace',
-                    click: () => {
-                        if (manager.active && manager.active.editor)
-                            manager.active.editor.replace();
-                    }
-                });
+                if (p.editor.canFind || p.editor.canReplace)
+                    temp.push({ type: 'separator' });
+                if (p.editor.canFind)
+                    temp.push({
+                        label: 'Find',
+                        click: doFind
+                    });
+                if (p.editor.canReplace)
+                    temp.push({
+                        label: 'Replace',
+                        click: doReplace
+                    });
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup(remote.getCurrentWindow());
             });

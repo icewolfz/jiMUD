@@ -135,6 +135,8 @@ abstract class EditorBase extends EventEmitter {
     abstract get canCut(): boolean;
     abstract get canCopy(): boolean;
     abstract get canPaste(): boolean;
+    abstract get canFind(): boolean;
+    abstract get canReplace(): boolean;
     abstract cut(): void;
     abstract copy(): void;
     abstract paste(): void;
@@ -335,6 +337,8 @@ export class CodeEditor extends EditorBase {
     public get canCut(): boolean { return this.selected.length > 0; }
     public get canCopy(): boolean { return this.selected.length > 0; }
     public get canPaste(): boolean { return true; }
+    public get canFind(): boolean { return true; }
+    public get canReplace(): boolean { return true; }
     public cut() {
         let text = this.$editor.getCopyText();
         clipboard.writeText(text || '');
@@ -378,6 +382,8 @@ export class VirtualEditor extends EditorBase {
     public get canCut(): boolean { return false; }
     public get canCopy(): boolean { return false; }
     public get canPaste(): boolean { return false; }
+    public get canFind(): boolean { return false; }
+    public get canReplace(): boolean { return false; }
     public cut() { }
     public copy() { }
     public paste() { }
