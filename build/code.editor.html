@@ -830,7 +830,7 @@
     });
 
     function newFile() {
-        var editor = createEditor('new ' + newCounter + '.c', false, 0, true);
+        createEditor({ file: 'new_' + newCounter + '.c', new: true });
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
@@ -846,7 +846,7 @@
             value = value.replace(/{name}/g, character);
             value = value.replace(/{date}/g, moment().format('YYYY-MM-DD'));
         }
-        var editor = createEditor('new ' + name + ' ' + newCounter + '.c', false, 0, true, value);
+        createEditor({ file: 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c', new: true, value: value });
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
@@ -872,13 +872,13 @@
                     }
                     for (var f = 0, fl = fileNames.length; f < fl; f++) {
                         addToRecent(fileNames[f]);
-                        createEditor(fileNames[f], true);
+                        createEditor({ file: fileNames[f], open: true });
                     }
                 });
         }
         else {
             addToRecent(file, remoteFile);
-            createEditor(file, true, remoteFile);
+            createEditor({ file: file, open: true, remote: remoteFile });
         }
     }
 
@@ -1109,25 +1109,25 @@
         return 0;
     }
 
-    function createEditor(file, open, remoteFile, _new, value) {
-        var p = findEditor(file);
+    function createEditor(data) {//file, open, remoteFile, _new, value) {
+        var p = findEditor(data.file);
         if (p) {
-            p.editor.remote = remoteFile;
+            p.editor.remote = data.remote;
             manager.switchToPanel(p);
         }
         else {
-            p = manager.addPanel(path.basename(file), getFileIcon(file), file);
+            p = manager.addPanel(path.basename(data.file), getFileIcon(data.file), data.file);
             //if (path.extname(file) === '.map')
             //p.editor = new VirtualEditor({ file: file, container: p.pane, open: open, value: value });
             //else
-            p.editor = new CodeEditor({ file: file, container: p.pane, open: open, value: value, new: _new });
-            if (!_watched[file]) {
-                _watched[file] = 1;
-                watcher.add(file);
+            data.container = p.pane;
+            p.editor = new CodeEditor(data);
+            if (!_watched[data.file]) {
+                _watched[data.file] = 1;
+                watcher.add(data.file);
             }
             else
-                _watched[file]++;
-            p.editor.remote = remoteFile;
+                _watched[data.file]++;
             p.editor.on('watch', (files) => {
                 if (!files) return;
                 for (var f = 0, fl = files.length; f < fl; f++) {

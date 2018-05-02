@@ -22,6 +22,7 @@ export interface EditorOptions {
     open?: boolean;
     new?: boolean;
     value?: any;
+    remote?: string;
 }
 
 export enum FileState {
@@ -78,6 +79,8 @@ abstract class EditorBase extends EventEmitter {
             this.open();
         if (options.new)
             this.state |= FileState.new;
+        if (options.remote)
+            this.remote = options.remote;
     }
 
     set parent(parent) {
