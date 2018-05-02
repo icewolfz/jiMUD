@@ -351,9 +351,56 @@ export class CodeEditor extends EditorBase {
             case 'delete':
             case 'select-all':
             case 'selectall':
+            case 'menu|edit':
+            case 'menu|context':
                 return true;
         }
         return false;
+    }
+    public menu(menu) {
+        if (menu === 'edit' || menu === 'context') {
+            return [
+                {
+                    label: 'Formatting',
+                    submenu: [
+                        { label: 'Insert Color...' },
+                        { type: 'separator' },
+                        { label: 'To Upper Case' },
+                        { label: 'To Lower Case' },
+                        { label: 'Capitalize' },
+                        { label: 'Inverse Case' },
+                        { type: 'separator' },
+                        { label: 'Comment' },
+                        { type: 'separator' },
+                        {
+                            label: 'Indent',
+                            accelerator: 'CmdOrCtrl+I'
+                        },
+                        {
+                            label: 'Format',
+                            accelerator: 'CmdOrCtrl+Shift+F'
+                        },
+                        {
+                            label: 'Formant and Indent',
+                            accelerator: 'CmdOrCtrl+Shift+I'
+                        }
+                    ]
+                },
+                {
+                    label: 'Folding',
+                    submenu: [
+                        {
+                            label: 'Expand All',
+                            accelerator: "CmdOrCtrl+Shift+=",
+                        },
+                        {
+                            label: 'Collapse All',
+                            accelerator: "CmdOrCtrl+Shift+-",
+                        }
+                    ]
+                }
+            ]
+        }
     }
 
 }

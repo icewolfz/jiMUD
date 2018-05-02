@@ -51,8 +51,8 @@
             </button>
             <button id="btn-close-all" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Close All" onclick="closeAllFiles()">
                 <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
-                    <i class="fa fa-times fa-stack-2x" style="font-size: 1em;margin-top: -2px;margin-left: 2px;"></i>
-                    <i class="fa fa-times fa-stack-2x" style="font-size: 1em;margin-top: 2px;margin-left: -2px;"></i>
+                    <i class="fa fa-times fa-stack-2x" style="font-size: 1em;margin-top: -1px;margin-left: 1px;"></i>
+                    <i class="fa fa-times fa-stack-2x" style="font-size: 1em;margin-top: 1px;margin-left: -1px;"></i>
                 </span>
             </button>
         </div>
@@ -97,16 +97,17 @@
         <button id="btn-refresh" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Refresh" onclick="doRefresh()">
             <i class="fa fa-refresh"></i>
         </button>
+        <div id="editor-buttons"></div>
     </div>
 </body>
 <script>
-    const { remote, ipcRenderer, shell, clipboard, webFrame } = require('electron');
+    const { remote, ipcRenderer, webFrame } = require('electron');
     const { DockManager } = require('./js/dockmanager');
     const { CodeEditor, VirtualEditor } = require('./js/code.editor');
 
-    const { app, dialog, Menu, MenuItem } = remote;
+    const { dialog, Menu, MenuItem } = remote;
     const { Menubar } = require('./js/menubar');
-    const { parseTemplate, existsSync } = require('./js/library');
+    const { clone } = require('./js/library');
     const { Settings } = require('./js/settings');
 
     const chokidar = require('chokidar');
@@ -131,6 +132,88 @@
 
     var menuTemplates = [];
 
+    var subMenus = {
+        'edit': [
+            {
+                label: '&Undo',
+                accelerator: "CmdOrCtrl+Z",
+                click: doUndo,
+                enabled: false,
+            },
+            {
+                label: '&Redo',
+                accelerator: "CmdOrCtrl+Y",
+                click: doRedo,
+                enabled: false,
+            },
+            { type: 'separator' },
+            {
+                label: 'Cu&t',
+                accelerator: "CmdOrCtrl+X",
+                click: doCut,
+                enabled: false,
+            },
+            {
+                label: '&Copy',
+                accelerator: "CmdOrCtrl+C",
+                click: doCopy,
+                enabled: false,
+            },
+            {
+                label: '&Paste',
+                accelerator: "CmdOrCtrl+V",
+                click: doPaste,
+                enabled: false,
+            },
+            { type: 'separator' },
+            {
+                label: '&Select All',
+                accelerator: "CmdOrCtrl+A",
+                enabled: false,
+                click: () => {
+                    if (manager.active && manager.active.editor)
+                        manager.active.editor.selectAll();
+                }
+            },
+            { type: 'separator' },
+            {
+                label: '&Find',
+                accelerator: "CmdOrCtrl+F",
+                enabled: false,
+                click: doFind
+            },
+            {
+                label: '&Replace',
+                accelerator: "CmdOrCtrl+H",
+                enabled: false,
+                click: doReplace
+            },
+        ],
+        'view': [
+            {
+                label: '&Refresh',
+                accelerator: "F5",
+                enabled: false,
+                click: doRefresh
+            },
+            { type: 'separator' },
+            {
+                role: 'toggledevtools'
+            },
+            {
+                type: 'separator'
+            },
+            {
+                role: 'resetzoom'
+            },
+            {
+                role: 'zoomin'
+            },
+            {
+                role: 'zoomout'
+            },
+        ]
+    };
     menubar = new Menubar([
         {
             label: '&File',
@@ -221,6 +304,7 @@
                     click: () => { revertAllFiles(); },
                     enabled: false
                 },
+                { type: 'separator' },
                 {
                     label: '&Close',
                     click: () => { closeFile(); },
@@ -240,89 +324,11 @@
         },
         {
             label: '&Edit',
-            submenu: [
-                {
-                    label: '&Undo',
-                    accelerator: "CmdOrCtrl+Z",
-                    click: doUndo,
-                    enabled: false,
-                },
-                {
-                    label: '&Redo',
-                    accelerator: "CmdOrCtrl+Y",
-                    click: doRedo,
-                    enabled: false,
-                },
-                { type: 'separator' },
-                {
-                    label: 'Cu&t',
-                    accelerator: "CmdOrCtrl+X",
-                    click: doCut,
-                    enabled: false,
-                },
-                {
-                    label: '&Copy',
-                    accelerator: "CmdOrCtrl+C",
-                    click: doCopy,
-                    enabled: false,
-                },
-                {
-                    label: '&Paste',
-                    accelerator: "CmdOrCtrl+V",
-                    click: doPaste,
-                    enabled: false,
-                },
-                { type: 'separator' },
-                {
-                    label: '&Select All',
-                    accelerator: "CmdOrCtrl+A",
-                    enabled: false,
-                    click: () => {
-                        if (manager.active && manager.active.editor)
-                            manager.active.editor.selectAll();
-                    }
-                },
-                { type: 'separator' },
-                {
-                    label: '&Find',
-                    accelerator: "CmdOrCtrl+F",
-                    enabled: false,
-                    click: doFind
-                },
-                {
-                    label: '&Replace',
-                    accelerator: "CmdOrCtrl+H",
-                    enabled: false,
-                    click: doReplace
-                },
-            ]
+            submenu: subMenus['edit']
         },
         {
             label: '&View',
-            submenu: [
-                {
-                    label: '&Refresh',
-                    accelerator: "F5",
-                    enabled: false,
-                    click: doRefresh
-                },
-                { type: 'separator' },
-                {
-                    role: 'toggledevtools'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    role: 'resetzoom'
-                },
-                {
-                    role: 'zoomin'
-                },
-                {
-                    role: 'zoomout'
-                },
-            ]
+            submenu: subMenus['view']
         },
     ]);
 
@@ -365,21 +371,36 @@
         menubar.updateItem('File|Close', { enabled: enabled });
         menubar.updateItem('File|Close all', { enabled: enabled });
         menubar.updateItem('File|save as', { enabled: enabled });
+        var buttons = $("#editor-buttons");
+        buttons.empty();
+        if (enabled && manager.active.editor.supports('buttons'))
+            buttons.append(manager.active.editor.buttons);
+        updateMenu('edit');
+        updateMenu('view');
         doUpdate(2);
+    }
+
+    function updateMenu(menu) {
+        var items = subMenus[menu].slice();
+        if (manager.active && manager.active.editor && manager.active.editor.supports('menu|') + menu) {
+            menu.push({ type: 'separator' });
+            menu = menu.concat(manager.active.editor.menu(menu));
+        }
+        menubar.updateItem(menu, { submenu: menu });
     }
 
     function updateUIChange() {
         var changed = (manager.active && manager.active.editor) ? (manager.active.editor.changed || manager.active.editor.new) : false;
         var changedAll = false;
-        var changedAllOnly = false;
+        var revertAll = false;
         for (var p = 0, l = manager.panels.length; p < l; p++) {
             //no editor or of not changed and new try next
             if (!manager.panels[p].editor || (!manager.panels[p].editor.changed && !manager.panels[p].editor.new))
                 continue;
             changedAll = true;
             if (manager.panels[p].editor.changed && !manager.panels[p].editor.new)
-                changedAllOnly = true;
-            if (changedAllOnly && changedAll)
+                revertAll = true;
+            if (revertAll && changedAll)
                 break; //do not need to check all as soon as one has been found
         }
         $("#btn-save").prop('disabled', !changed);
@@ -388,7 +409,7 @@
         menubar.updateItem('file|save all', { enabled: changedAll });
 
         menubar.updateItem('file|revert', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.changed && !manager.panels[p].editor.new) : false });
-        menubar.updateItem('file|revert all', { enabled: changedAllOnly });
+        menubar.updateItem('file|revert all', { enabled: revertAll });
 
         $("#btn-undo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('undo') : true);
         menubar.updateItem('edit|undo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('undo') : false });
@@ -1133,6 +1154,12 @@
                         label: 'Replace',
                         click: doReplace
                     });
+
+                if (p.editor.supports('menu|context')) {
+                    temp.push({ type: 'separator' });
+                    temp = temp.concat(p.editor.menu('context'));
+                }
+
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup(remote.getCurrentWindow());
             });
