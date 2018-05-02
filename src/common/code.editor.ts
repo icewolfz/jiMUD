@@ -105,7 +105,7 @@ abstract class EditorBase extends EventEmitter {
             file = this.file;
         if (!file || file.length === 0)
             return '';
-        return fs.readFileSync(this.file);
+        return fs.readFileSync(this.file, 'utf8');
     }
 
     public write(data, file?: string) {
@@ -167,15 +167,10 @@ export class CodeEditor extends EditorBase {
     constructor(options?: EditorOptions) {
         super(options);
         if (options.value) {
-            if (!this.new)
-                this.open();
-            else {
-                this.$el.value = options.value;
-                this.$session.setValue(options.value);
-            }
+            this.$el.value = options.value;
+            this.$session.setValue(options.value);
             this.$session.getUndoManager().reset();
             this.changed = false;
-            this.emit('reverted');
         }
     }
 

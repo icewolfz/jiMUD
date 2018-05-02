@@ -110,6 +110,7 @@
     const { parseTemplate, capitalize } = require('./js/library');
     const { Settings } = require('./js/settings');
 
+    const moment = require('moment');
     const chokidar = require('chokidar');
     const path = require('path');
     const fs = require('fs');
@@ -383,7 +384,7 @@
 
     function updateMenu(menu) {
         var items = subMenus[menu].slice();
-        if (manager.active && manager.active.editor && manager.active.editor.supports('menu|') + menu) {
+        if (manager.active && manager.active.editor && manager.active.editor.supports('menu|' + menu)) {
             var cItems = manager.active.editor.menu(menu);
             if (cItems && cItems.length) {
                 items.push({ type: 'separator' });
@@ -824,8 +825,23 @@
     });
 
     function newFile() {
-        var editor = createEditor('new ' + newCounter + '.c');
-        editor.new = true;
+        var editor = createEditor('new ' + newCounter + '.c', false, 0, true);
+        newCounter++;
+        doUpdate(1);
+        updatePanel(manager.active);
+    }
+
+    function newFromFile(file, name) {
+        if (!file || file.length === 0) return;
+        var character = capitalize(remote.getGlobal('characterLogin') || remote.getGlobal('character'));
+        var value = fs.readFileSync(file, 'utf8');
+        if (value) {
+            value = value.replace(/{your name}/g, character);
+            value = value.replace(/{character}/g, character);
+            value = value.replace(/{name}/g, character);
+            value = value.replace(/{date}/g, moment().format('YYYY-MM-DD'));
+        }
+        var editor = createEditor('new ' + name + ' ' + newCounter + '.c', false, 0, true, value);
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
@@ -1056,6 +1072,7 @@
                     label: capitalize(path.basename(files[f], path.extname(files[f])).replace(/_/g, ' ')),
                     path: path.join(root, files[f]),
                     click: (item) => {
+                        newFromFile(parseTemplate(path.join('{assets}', 'templates', item.path)), item.label.toLowerCase());
                     }
                 });
             }
@@ -1066,8 +1083,10 @@
             menu.unshift(
                 {
                     label: 'base',
+                    newName: path.basename(p).replace(/_/g, ' ').slice(0, -1),
                     path: path.join(root, 'base.c'),
                     click: (item) => {
+                        newFromFile(parseTemplate(path.join('{assets}', 'templates', item.path)), item.newName.toLowerCase());
                     }
                 }
             );
@@ -1085,7 +1104,7 @@
         return 0;
     }
 
-    function createEditor(file, open, remoteFile, value) {
+    function createEditor(file, open, remoteFile, _new, value) {
         var p = findEditor(file);
         if (p) {
             p.editor.remote = remoteFile;
@@ -1096,7 +1115,7 @@
             //if (path.extname(file) === '.map')
             //p.editor = new VirtualEditor({ file: file, container: p.pane, open: open, value: value });
             //else
-            p.editor = new CodeEditor({ file: file, container: p.pane, open: open, value: value });
+            p.editor = new CodeEditor({ file: file, container: p.pane, open: open, value: value, new: _new });
             if (!_watched[file]) {
                 _watched[file] = 1;
                 watcher.add(file);
