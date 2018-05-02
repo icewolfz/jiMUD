@@ -47,7 +47,13 @@
                 <i class="fa fa-folder-open-o"></i>
             </button>
             <button id="btn-close" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Close" onclick="closeFile()">
-                <i class="fa fa-window-close-o"></i>
+                <i class="fa fa-times"></i>
+            </button>
+            <button id="btn-close-all" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Close All" onclick="closeAllFiles()">
+                <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                    <i class="fa fa-times fa-stack-2x" style="font-size: 1em;margin-top: -2px;margin-left: 2px;"></i>
+                    <i class="fa fa-times fa-stack-2x" style="font-size: 1em;margin-top: 2px;margin-left: -2px;"></i>
+                </span>
             </button>
         </div>
         <div class="btn-group" role="group">
@@ -216,6 +222,11 @@
                     click: () => { closeFile(); },
                     enabled: false
                 },
+                {
+                    label: 'C&lose All',
+                    click: () => { closeAllFiles(); },
+                    enabled: false
+                },
                 { type: 'separator' },
                 {
                     label: 'E&xit',
@@ -337,8 +348,10 @@
         else
             document.title = 'Code Editor';
         $("#btn-close").prop('disabled', !enabled);
+        $("#btn-close-all").prop('disabled', !enabled);
         menubar.updateItem('File|Close', { enabled: enabled });
-        menubar.updateItem('File|save as', { enabled: enabled });        
+        menubar.updateItem('File|Close all', { enabled: enabled });
+        menubar.updateItem('File|save as', { enabled: enabled });
         doUpdate(2);
     }
 
@@ -904,6 +917,10 @@
         }
         if (panel)
             manager.removePanel(panel);
+    }
+
+    function closeAllFiles() {
+        manager.removeAllPanels();
     }
 
     function confirmSave(panel) {
