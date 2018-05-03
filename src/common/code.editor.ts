@@ -7,6 +7,22 @@ const crypto = require('crypto');
 
 declare let ace;
 
+class DebugTimer {
+    private $s = [];
+
+    public start() {
+        this.$s.push(new Date().getTime());
+    }
+    public end(lbl) {
+        if (this.$s.length === 0) return;
+        var e = new Date().getTime();
+        var t = e - this.$s.pop();
+        if (!lbl)
+            lbl = 'Execution time';
+        console.debug(lbl + ': ' + t);
+    }
+}
+
 ace.config.set('basePath', '../lib/ace');
 ace.require('ace/ext/language_tools');
 
@@ -166,9 +182,30 @@ export class CodeEditor extends EditorBase {
     private $statusbar: HTMLElement;
     private $sbSize: HTMLElement;
     private $sbMsg: HTMLElement;
+    private $indenter: lpcIndenter;
+    private $annotations = [];
 
     constructor(options?: EditorOptions) {
         super(options);
+        this.$indenter = new lpcIndenter();
+        this.$indenter.on('error', (e) => {
+            this.$editor.setReadOnly(false);
+            this.$annotations.push({
+                row: e.line, column: e.col, text: e.message, type: "error"
+            });
+            if (this.$annotations.length > 0)
+                this.$session.setAnnotations(this.$annotations);
+            this.emit('error', e);
+        });
+        this.$indenter.on('progress', (p) => {
+            this.emit('progress', p);
+        });
+        this.$indenter.on('complete', (lines) => {
+            var Range = ace.require('ace/range').Range;
+            this.$session.replace(new Range(0, 0, this.$session.getLength(), Number.MAX_VALUE), lines.join('\n'));
+            this.$editor.setReadOnly(false);
+            this.emit('progress-complete');
+        });
         if (options.value) {
             this.$el.value = options.value;
             this.$session.setValue(options.value);
@@ -181,14 +218,17 @@ export class CodeEditor extends EditorBase {
         if (this.$el) {
             this.parent.removeChild(this.$el);
         }
+        let fragment = document.createDocumentFragment();
         this.$el = document.createElement('textarea');
         this.$el.id = this.parent.id + '-textbox';
         this.$el.style.display = 'none';
-        this.parent.appendChild(this.$el);
+        fragment.appendChild(this.$el);
         this.$editorEl = document.createElement('pre');
         this.$editorEl.classList.add('editor');
         this.$editorEl.id = this.parent.id + '-editor';
-        this.parent.appendChild(this.$editorEl);
+        fragment.appendChild(this.$editorEl);
+        this.parent.appendChild(fragment);
+
         this.$editor = ace.edit(this.$editorEl.id);
         this.$editor.container.addEventListener('contextmenu', (e) => {
             e.preventDefault();
@@ -375,10 +415,12 @@ export class CodeEditor extends EditorBase {
             case 'selectall':
             case 'menu|edit':
             case 'menu|context':
+            case 'menu|view':
                 return true;
         }
         return false;
     }
+
     public menu(menu) {
         if (menu === 'edit' || menu === 'context') {
             return [
@@ -476,7 +518,13 @@ export class CodeEditor extends EditorBase {
                         { type: 'separator' },
                         {
                             label: 'Indent File',
-                            accelerator: 'CmdOrCtrl+I'
+                            accelerator: 'CmdOrCtrl+I',
+                            click: () => {
+                                var Range = ace.require('ace/range').Range;
+                                this.$editor.setReadOnly(true);
+                                this.$session.clearAnnotations();
+                                this.$indenter.indent(this.$session.getValue());
+                            }
                         },
                         {
                             label: 'Format File',
@@ -516,7 +564,7 @@ export class CodeEditor extends EditorBase {
                     accelerator: 'Alt+Z',
                     click: () => {
                         this.$session.setUseWrapMode(!this.$session.getUseWrapMode());
-                    }
+                    },
                 }
             ]
     }
@@ -524,6 +572,7 @@ export class CodeEditor extends EditorBase {
     public focus(): void {
         this.$editor.focus();
     }
+
 }
 
 export class VirtualEditor extends EditorBase {
@@ -552,4 +601,528 @@ export class VirtualEditor extends EditorBase {
     public replace() { }
     public supports(what) { return false; }
     public focus(): void { }
+}
+
+enum TokenType {
+    SEMICOLON = 0,
+    LBRACKET = 1,
+    RBRACKET = 2,
+    LOPERATOR = 3,
+    ROPERATOR = 4,
+    LHOOK = 5,
+    LHOOK2 = 6,
+    RHOOK = 7,
+    TOKEN = 8,
+    ELSE = 9,
+    IF = 10,
+    SWITCH = 11,
+    FOR = 12,
+    WHILE = 13,
+    XDO = 14,
+    XEOT = 15
+}
+
+class Stack {
+    public size: number;
+    private $stack = [];
+    private position = 0;
+
+    constructor(size) {
+        this.size = size;
+        if (Array.isArray(size))
+            this.$stack = size;
+        else
+            this.$stack = new Array(size).fill(0);
+    }
+
+    set set(value) {
+        this.$stack[this.position] = value;
+    }
+    public query(p) {
+        if (!p)
+            return this.$stack[this.position];
+        if (p < 0)
+            return this.$stack[0];
+        if (p >= this.$stack.length)
+            this.$stack[this.$stack.length - 1]
+        return this.$stack[p];
+    }
+
+    public getnext(p) {
+        if (!p) p = 0;
+        return this.query(p + this.position);
+    }
+
+    public next(value?) {
+        if (this.position < this.$stack.length - 1)
+            this.position++;
+        if (value !== undefined)
+            this.$stack[this.position] = value;
+        return this.$stack[this.position];
+    }
+
+    public prev(value?) {
+        if (this.position > 0)
+            this.position--;
+        if (value !== undefined)
+            this.$stack[this.position] = value;
+        return this.$stack[this.position];
+    }
+
+    public last(value?) {
+        this.position = this.$stack.length - 1;
+        if (value !== undefined)
+            this.$stack[this.position] = value;
+        return this.$stack[this.position];
+    }
+
+    get current() {
+        return this.$stack[this.position];
+    }
+
+    get length() {
+        return this.$stack.length;
+    }
+
+    get bottom() {
+        return this.position >= this.$stack.length;
+    }
+
+    get stack() {
+        return this.$stack;
+    }
+
+    public copy() {
+        return this.$stack.slice();
+    }
+}
+
+export class lpcIndenter extends EventEmitter {
+    private $stack: Stack; /* token stack */
+    private $ind: Stack; /* indent stack */
+    private $quote; /* ' or " */
+    private $in_ppcontrol;
+    private $after_keyword_t;
+    private $in_mblock; /* status */
+    private $in_comment;
+    private $last_term;
+    private $last_term_len;
+    private $shi; /* the current shift (negative for left shift) */
+
+    private $f = [7, 1, 7, 1, 2, 1, 1, 6, 4, 2, 6, 7, 7, 7, 2, 0,];
+    private $g = [2, 2, 1, 7, 1, 5, 5, 1, 3, 6, 2, 2, 2, 2, 2, 0,];
+
+    private shiftLine(line) {
+        if (!line || line.length === 0)
+            return line;
+        let ii = 0;
+        let ptr = 0;
+        let ll = line.length;
+        let c = line.charAt(ptr);
+        while (ptr < ll && (c === ' ' || c === '\t')) {
+            if (c === ' ')
+                ii++;
+            else
+                ii = ii + 8 - (ii % 8);
+            ptr++;
+            c = line.charAt(ptr);
+        }
+        if (ptr >= ll) return line;
+
+        ii += this.$shi;
+
+        var newline = "";
+        /* fill with leading ws */
+        while (ii > 0) {
+            newline += ' ';
+            --ii;
+        }
+        return newline + line.substring(ptr);
+    }
+
+    private strncmp(str1, str2, n) {
+        str1 = str1.substring(0, n);
+        str2 = str2.substring(0, n);
+        return ((str1 == str2) ? 0 : ((str1 > str2) ? 1 : -1));
+    }
+
+    private isalpha(c) {
+        return (((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')));
+    }
+
+    private isdigit(c) {
+        return ((c >= '0') && (c <= '9'));
+    }
+
+    private isalnum(c) {
+        return (this.isalpha(c) || this.isdigit(c));
+    }
+    private indent_line(line, lineNo) {
+        if (!line || line.length === 0) return line;
+        var pl = line.length, opl = line.length;
+        var p = 0;
+        var do_indent = false;
+        var indent_index = 0;
+        var ident;
+        var token, top;
+        var ip, sp;
+        var newLine;
+
+        if (this.$quote)
+            this.$shi = 0;
+        else if (this.$in_ppcontrol || line.charAt(p) === '#') {
+            while (p < pl) {
+                if (line.charAt(p) == '\\' && p + 1 === pl) {
+                    this.$in_ppcontrol = true;
+                    return newLine || line;
+                }
+                p++;
+            }
+            this.$in_ppcontrol = false;
+            return newLine || line;
+        }
+        else if (this.$in_mblock) {
+            if (!this.strncmp(line, this.$last_term, this.$last_term.length)) {
+                this.$in_mblock = false;
+                p += this.$last_term.length;
+            }
+            else
+                return newLine || line;
+        }
+        else {
+            while (p < pl && (line.charAt(p) === ' ' || line.charAt(p) === '\t')) {
+                if (line.charAt(p++) == ' ')
+                    indent_index++;
+                else
+                    indent_index = indent_index + 8 - (indent_index % 8);
+            }
+            if (p >= pl)
+                return newLine || line;
+            else if (this.$in_comment > 0) {
+                newLine = this.shiftLine(newLine || line);
+            }
+            else
+                do_indent = true;
+        }
+
+        pl = line.length;
+
+        var start = p;
+        while (p < pl) {
+            ident = "";
+            if (this.$in_comment > 0) {
+                while (line.charAt(p) !== '*') {
+                    if (p >= pl) {
+                        if (this.$in_comment === 2) this.$in_comment = 0;
+                        return newLine || line;
+                    }
+                    p++;
+                }
+                while (line.charAt(p) === '*')
+                    p++;
+                if (line.charAt(p) === '/') {
+                    this.$in_comment = 0;
+                    p++;
+                }
+                continue;
+            }
+            else if (this.$quote) {
+                for (; ;) {
+                    if (line.charAt(p) === this.$quote) {
+                        this.$quote = 0;
+                        p++;
+                        break;
+                    }
+                    else if (p >= pl)
+                        throw { message: "Unterminated string", line: lineNo, col: p - 1 };
+                    else if (line.charAt(p) === '\\' && p + 1 == pl)
+                        break;
+                    p++;
+                }
+                token = TokenType.TOKEN;
+            }
+            else {
+                var c = line.charAt(p++);
+                switch (c) {
+                    case ' ':
+                    case '\t':
+                        continue;
+                    case '\'':
+                    case '"':
+                        this.$quote = c;
+                        if (p >= pl)
+                            throw { message: "Unterminated string", line: lineNo, col: p - 1 };
+                        continue;
+                    case '@':
+                        var j = 0;
+                        c = line.charAt(p);
+                        if (c === '@')
+                            c = line.charAt(p++);
+                        this.$last_term = "";
+                        while (this.isalnum(c) || c === '_') {
+                            this.$last_term += c;
+                            c = line.charAt(++p);
+                        }
+                        this.$in_mblock = true;
+                        return newLine || line;
+                    case '/':
+                        if (line.charAt(p) === '*' || line.charAt(p) === '/') {
+                            this.$in_comment = (line.charAt(p) === '*') ? 1 : 2;
+                            if (do_indent) {
+                                this.$shi = this.$ind.current - indent_index;
+
+                                newLine = this.shiftLine(newLine || line);
+                                //p += shi;
+                                do_indent = false;
+                            }
+                            else {
+                                var q;
+                                var index2 = this.$ind.current;
+                                for (q = start; q < p - 1; q++) {
+                                    if (line.charAt(q) === '\t') {
+                                        indent_index = indent_index + 8 - (indent_index % 8);
+                                        index2 = index2 + 8 - (index2 % 8);
+                                    }
+                                    else {
+                                        indent_index++;
+                                        index2++;
+                                    }
+                                }
+                                this.$shi = index2 - indent_index;
+                            }
+                            p++;
+                            if (p >= pl && this.$in_comment === 2)
+                                this.$in_comment = 0;
+                            if (this.$in_comment === 2) {
+                                this.$in_comment = 0;
+                                return newLine || line;
+                            }
+                            continue;
+                        }
+                        token = TokenType.TOKEN;
+                        break;
+                    case '{':
+                        token = TokenType.LBRACKET;
+                        break;
+                    case '(':
+                        if (this.$after_keyword_t) {
+                            token = TokenType.LOPERATOR;
+                            break;
+                        }
+                        if (line.charAt(p) === '{' || line.charAt(p) === '[' || (line.charAt(p) === ':' && line.charAt(p + 1) != ':')) {
+                            p++;
+                            token = TokenType.LHOOK2;
+                            break;
+                        }
+                        token = TokenType.LHOOK;
+                        break;
+                    case '[':
+                        token = TokenType.LHOOK;
+                        break;
+                    case ':':
+                        if (line.charAt(p) === ')') {
+                            p++;
+                            token = TokenType.RHOOK;
+                            break;
+                        }
+                        token = TokenType.TOKEN;
+                        break;
+                    case '}':
+                        if (line.charAt(p) !== ')') {
+                            token = TokenType.RBRACKET;
+                            break;
+                        }
+                        p++;
+                        token = TokenType.RHOOK;
+                        break;
+                    case ']':
+                        if (line.charAt(p) === ')' &&
+                            (this.$stack.current === TokenType.LHOOK2 ||
+                                (this.$stack.current != TokenType.XEOT && (this.$stack.getnext(1) === TokenType.LHOOK2 || (this.$stack.getnext(1) === TokenType.ROPERATOR && this.$stack.getnext(2) == TokenType.LHOOK2)))))
+                            p++;
+                        token = TokenType.RHOOK;
+                        break;
+                    case ')':
+                        token = TokenType.RHOOK;
+                        break;
+                    case ';':
+                        token = TokenType.SEMICOLON;
+                        break;
+                    default:
+                        if (this.isalpha(line.charAt(--p)) || line.charAt(p) == '_') {
+                            ident = "";
+                            do {
+                                ident += line.charAt(p++);
+                            }
+                            while (this.isalnum(line.charAt(p)) || line.charAt(p) === '_');
+                            if (ident === "switch")
+                                token = TokenType.SWITCH;
+                            else if (ident === "if")
+                                token = TokenType.IF;
+                            else if (ident === "else")
+                                token = TokenType.ELSE;
+                            else if (ident === "for")
+                                token = TokenType.FOR;
+                            else if (ident === "foreach")
+                                token = TokenType.FOR;
+                            else if (ident === "while")
+                                token = TokenType.WHILE;
+                            else if (ident === "do")
+                                token = TokenType.XDO;
+                            else
+                                token = TokenType.TOKEN;
+                        }
+                        else {
+                            p++;
+                            token = TokenType.TOKEN;
+                        }
+                        break;
+                }
+            }
+
+            sp = this.$stack;
+            ip = this.$ind;
+            for (; ;) {
+                top = sp.current;
+                if (top == TokenType.LOPERATOR && token == TokenType.RHOOK)
+                    token = TokenType.ROPERATOR;
+                if (this.$f[top] <= this.$g[token]) { /* shift the token on the stack */
+                    var i, i2 = 0;
+                    if (sp.bottom)
+                        throw { message: "Nesting too deep", line: lineNo, col: p - 1 };
+
+                    i = ip.current;
+                    if ((token === TokenType.LBRACKET &&
+                        (sp.current === TokenType.ROPERATOR || sp.current === TokenType.ELSE || sp.current === TokenType.XDO)) ||
+                        token === TokenType.RBRACKET || (token === TokenType.IF && sp.current === TokenType.ELSE)) {
+                        i -= 3; //shift
+                    }
+                    else if (token == TokenType.RHOOK || token == TokenType.ROPERATOR) {
+                        i -= 1; //shift / 2
+                    }
+                    /* shift the current line, if appropriate */
+                    if (do_indent) {
+                        this.$shi = i - indent_index + i2;
+                        if (token == TokenType.TOKEN && sp.current == TokenType.LBRACKET && (ident === "case" || ident === "default"))
+                            this.$shi -= 3; //shift
+                        newLine = this.shiftLine(newLine || line);
+                        //p += shi;
+                        do_indent = false;
+                    }
+                    /* change indentation after current token */
+                    switch (token) {
+                        case TokenType.SWITCH:
+                            //i += 3;
+                            break;
+                        case TokenType.IF:
+                            break;
+                        case TokenType.LBRACKET:
+                        case TokenType.ROPERATOR:
+                        case TokenType.ELSE:
+                        case TokenType.XDO:
+                            {
+                                /* add indentation */
+                                i += 3;
+                                break;
+                            }
+                        case TokenType.LOPERATOR:
+                        case TokenType.LHOOK:
+                        case TokenType.LHOOK2:
+                            /* Is this right? */
+                            {
+                                /* half indent after ( [ ({ ([ */
+                                i += 1;
+                                break;
+                            }
+                        case TokenType.SEMICOLON:
+                            {
+                                /* in case it is followed by a comment */
+                                if (sp.current == TokenType.ROPERATOR || sp.current == TokenType.ELSE)
+                                    i -= 3;
+                                break;
+                            }
+                    }
+                    sp.prev(token);
+                    ip.prev(i);
+                    break;
+                }
+                do {
+                    top = sp.current;
+                    sp.next();
+                    ip.next();
+                } while (this.$f[sp.current] >= this.$g[top]);
+            }
+            this.$stack = sp;
+            this.$ind = ip;
+
+            this.$after_keyword_t = (token >= TokenType.IF);
+        }
+        if (p >= pl && this.$quote)
+            throw { message: "Unterminated string", line: lineNo, col: p - 1 };
+
+        return newLine || line;
+    }
+
+    private indentLines(lines, c, chunk) {
+        var ce = c + chunk;
+        var ln = c;
+        var ll = lines.length;
+        try {
+            for (; ln < ll && ln < ce; ln++)
+                lines[ln] = this.indent_line(lines[ln], ln);
+            if (ln < lines.length - 1) {
+                ce = Math.ceil(100 * ce / lines.length);
+                setTimeout(function () { this.indentLines(lines, ln, chunk); }, 5);
+                this.emit('progress', ce, c, chunk, lines);
+            }
+            else {
+                this.emit('complete', lines);
+            }
+        }
+        catch (e) {
+            this.emit('error', e);
+        }
+    }
+
+    public reset() {
+        this.$stack = new Stack(2048);
+        this.$stack.last(TokenType.XEOT);
+        this.$ind = new Stack(2048);
+        this.$ind.last(0);
+        this.$in_ppcontrol = 0;
+        this.$in_comment = 0;
+        this.$in_mblock = 0;
+        this.$quote = 0;
+    }
+
+    public indent(code) {
+        if (!code || code.length === 0)
+            return code;
+        this.reset();
+        var lines = code.split("\n");
+        this.indentLines(lines, 0, 100);
+    };
+
+    public indentEditor(editor) {
+        if (!editor) return;
+        let session = editor.getSession();
+        this.reset();
+        var ll = session.getLength();
+        var ln = 0, l;
+        try {
+            var Range = ace.require('ace/range').Range;
+            for (; ln < ll; ln++) {
+                l = session.getLine(ln);
+                session.replace(new Range(ln, 0, ln, l.length), this.indent_line(l, ln));
+            }
+        }
+        catch (e) {
+            this.emit('error', e);
+        }
+    };
+
+}
+
+export class lpcFormatter extends EventEmitter {
+
 }

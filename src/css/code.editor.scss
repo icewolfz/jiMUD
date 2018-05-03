@@ -96,6 +96,49 @@ body {
     border-top: 1px solid #ccc;
 }
 
+.editor.output {
+    bottom: 170px;
+}
+
+.output-container {
+    margin: 0;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 149px;
+    bottom: 0;
+    border-top: 1px solid #D3D3D3;
+    overflow: auto;
+}
+
+.output-container body {
+	border-top: 1px solid #D3D3D3;
+}
+
+.output-container .error {
+	color: red;
+	text-decoration: none;
+	display: block;
+}
+
+.output-container .warning {
+	text-decoration: none;
+	color: #DDDD00;
+	display: block;
+}
+
+.output-container .error:hover, .output-container .warning:hover {
+	text-decoration: underline;
+}
+
+.output-display {
+    border-top: 1px solid #D3D3D3;
+}
+
+.statusbar.output {
+    bottom: 150px;
+}
+
 .cm-tabpane-container {
     background-color: grey;
 }
@@ -104,7 +147,7 @@ body {
     bottom: 0;
     position: absolute;
     left: 0;
-    right: 0;    
+    right: 0;
     cursor: default;
 }
 

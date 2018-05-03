@@ -553,6 +553,7 @@
                 opened: [],
                 maxRecent: 15,
                 reopen: true,
+                output: 170,
                 options: {
                     persistent: false,
                     alwaysOnTopClient: true,
@@ -1274,6 +1275,18 @@
                 }
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup(remote.getCurrentWindow());
+            });
+            p.editor.on('error', (e) => {
+
+            });
+            p.editor.on('progress', (p) => {
+
+            });
+            p.editor.on('progress-complete', () => {
+
+            });
+            p.editor.on('output', (e) => {
+
             });
             doUpdate(1);
         }
