@@ -6,18 +6,16 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/monster/tutorial
+ * @doc /doc/build/monster/types/cleric_trainer
  */
-/*
-	see /doc/build/monster/types/cleric_trainer
-*/
 #include <std.h>
 
-inherit CLERIC_TRAINER;
+inherit MONTYPE_CLERIC_TRAINER;
 
 void create()
 {
-	::create(, "", "");//Level, Race, Class
+	::create(1, "", "");//Level, Race, Class
 	set_name("");
 	set_short("");
 	set_long("");

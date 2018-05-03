@@ -6,11 +6,10 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
  */
 #include <std.h>
 
-inherit DISGUISEKIT;
+inherit OBJ_DISGUISEKIT;
 
 void create()
 {

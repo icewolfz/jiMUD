@@ -6,11 +6,10 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
  */
 #include <std.h>
 
-inherit SMOKEBOMB;
+inherit OBJ_SMOKEBOMB;
 
 function _effect(object room, object thrower) {
 	if(!room || !thrower) return 0;

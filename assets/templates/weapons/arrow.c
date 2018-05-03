@@ -6,15 +6,16 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/weapon/tutorial
+ * @doc /doc/build/weapon/types/arrow
  */
 #include <std.h>
 
-inherit ARROW;
+inherit OBJ_ARROW;
 
 void create()
 {
-	 //materal, quality, type, charm
+   //materal, quality, type, natural enchantment
    ::create("", "", "");
    set_nouns("");
    set_adjectives("");

@@ -6,15 +6,17 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/weapon/tutorial
+ * @doc /doc/build/weapon/types/bolas
+ * @help mattypes
  */
 #include <std.h>
 
-inherit BOLAS;
+inherit OBJ_BOLAS;
 
 void create()
 {
-	 //material, quality, charm
+   //material, quality, charm
    ::create("", "");
    set_nouns("");
    set_adjectives("");

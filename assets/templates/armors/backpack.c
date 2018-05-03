@@ -6,7 +6,9 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/armors/type/backpack
+ * @doc /doc/build/armours/tutorial
+ * @doc /doc/build/armours/type/backpack
+ * @help mattypes
  */
 #include <std.h>
 

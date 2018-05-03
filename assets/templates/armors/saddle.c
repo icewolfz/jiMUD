@@ -6,18 +6,20 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/armours/tutorial
+ * @help mattypes
+ * @help atypes
  */
 #include <std.h>
 #include <abbr.h>
 #include <limbs.h>
 
-inherit SADDLE;
+inherit OBJ_SADDLE;
 
 void create()
 {
-		//armor type, material, quality
-        ::create("", "", "");
+	//armor type, material, quality
+    ::create("", "", "");
     set_nouns("");
     set_adjectives("");
     set_name("");

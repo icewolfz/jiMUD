@@ -6,7 +6,10 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/armors/types/sheath
+ * @doc /doc/build/armours/tutorial
+ * @doc /doc/build/armours/types/sheath
+ * @help mattypes
+ * @help atypes 
  */
 #include <std.h>
 
@@ -22,4 +25,5 @@ void create()
    set_name("");
    set_short("");
    set_long("");
+   set_weapon_type("");
 }

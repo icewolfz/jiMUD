@@ -6,16 +6,17 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/weapon/tutorial
+ * @doc /doc/build/weapon/types/rope
  */
 #include <std.h>
 
-inherit WEAPON;
+inherit OBJ_ROPE;
 
 void create()
 {
-	 //Type, Material, Quality
-   ::create("", "", "");
+   //Name, Material, Quality, Natural enchantment
+   ::create("", "", "", "");
    set_nouns("");
    set_adjectives("");
    set_name("");

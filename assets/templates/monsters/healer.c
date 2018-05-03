@@ -6,18 +6,16 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/monster/tutorial
+ * @doc /doc/build/monster/types/healer
  */
-/*
-	see /doc/build/monster/types/healer
-*/
 #include <std.h>
 
-inherit HEALER;
+inherit MONTYPE_HEALER;
 
 void create()
 {
-	::create(, "", "");//Level, Race, Class
+	::create(80, "", "");//Level, Race, Class
 	set_name("");
 	set_short("");
 	set_long("");

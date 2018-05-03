@@ -6,15 +6,16 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/armours/tutorial
+ * @doc /doc/build/armours/types/quiver
  */
 #include <std.h>
 
-inherit QUIVER;
+inherit OBJ_QUIVER;
 
 void create()
 {
-	 //int arrows, string materal, string quality, mixed limbs, int charm, string type, string arrow material, string arrow quality, int arrow charm
+//int arrows, string materal, string quality, mixed limbs, int charm, string type, string arrow material, string arrow quality, int arrow charm
    ::create(0, "", "", ({ "" }) );
    set_nouns("");
    set_adjectives("");

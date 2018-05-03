@@ -6,21 +6,17 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/monster/tutorial
+ * @doc /doc/build/monster/types/smith
+ * @doc /doc/build/monster/types/vendor
  */
-/*
-	Weapon repair monster
-		see /doc/build/monster/types/smith
-		see /doc/build/monster/types/vendor
-		
-*/
 #include <std.h>
 
-inherit WEAPON_REPAIR;
+inherit MONTYPE_WEAPON_REPAIR;
 
 void create()
 {
-	::create(, "", "");//Level, Race, Class
+	::create(1, "", "");//Level, Race, Class
 	set_name("");
 	set_short("");
 	set_long("");

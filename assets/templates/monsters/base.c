@@ -6,19 +6,15 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/monster/tutorial
  */
-/*
-	see /doc/build/monster/tutorial
-*/
-
 #include <std.h>
 
-inherit MONSTER;
+inherit STD_MONSTER;
 
 void create()
 {
-	::create(, "", "");//Level, Race, Class
+	::create(1, "", "");//Level, Race, Class
 	set_name("");
 	set_short("");
 	set_long("");

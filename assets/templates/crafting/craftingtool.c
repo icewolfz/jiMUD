@@ -6,18 +6,23 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/crafting/craftingtool
+ * @help mattypes
  */
 #include <std.h>
 
-inherit TRAP;
+inherit OBJ_CRAFTINGTOOL_WEAPON;
 
 void create()
 {
-	::create(); /*int difficulty, mixed trigger, mixed disarm, string type, int rearm, mixed args...*/
-	set_name("");
-	set_short("");
-	set_long("");
-	set_nouns("");
-	set_adjectives("");
+   //Craft skills...
+   ::create("");
+   set_nouns("");
+   set_adjectives("");
+   set_name("");
+   set_short("");
+   set_long("");
+   set_material("");
+   //How good a tool it is
+   set_crafting_quality(0);
 }

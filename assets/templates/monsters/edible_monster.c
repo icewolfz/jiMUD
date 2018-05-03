@@ -6,18 +6,16 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/monster/tutorial
+ * @doc /doc/build/monster/types/mon_edible
  */
-/*
-	see /doc/build/monster/types/mon_edible
-*/
 #include <std.h>
 
-inherit MON_EDIBLE;
+inherit MONTYPE_MON_EDIBLE;
 
 void create()
 {
-	::create(, "", "");//Level, Race, Class
+	::create(1, "", "");//Level, Race, Class
 	set_name("");
 	set_short("");
 	set_long("");

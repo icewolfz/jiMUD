@@ -6,20 +6,18 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/monster/tutorial
+ * @doc /doc/build/monster/types/smith
+ * @doc /doc/build/monster/types/vendor
  */
-/*
-	see /doc/build/monster/types/smith
-	see /doc/build/monster/types/vendor
-*/
 
 #include <std.h>
 
-inherit SMITH;
+inherit MONTYPE_SMITH;
 
 void create()
 {
-	::create(, "", "");//Level, Race, Class
+	::create(1, "", "");//Level, Race, Class
 	set_name("");
 	set_short("");
 	set_long("");

@@ -6,19 +6,16 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/monster/tutorial
+ * @doc /doc/build/monster/types/skill_trainer
  */
-/*
-	see /doc/build/monster/types/skill_trainer
-*/
-
 #include <std.h>
 
-inherit SKILL_TRAINER;
+inherit MONTYPE_SKILL_TRAINER;
 
 void create()
 {
-	::create(, "", "");//Level, Race, Class
+	::create(1, "", "");//Level, Race, Class
 	set_name("");
 	set_short("");
 	set_long("");

@@ -6,7 +6,7 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/armors/types/bagofholding
+ * @help mattypes
  */
 #include <std.h>
 
@@ -20,6 +20,7 @@ void create()
    set_name("");
    set_short("");
    set_long("");
+   set_material("");
    //Max amount of weight it can hold
    set_max_encumbrance(40000);   
 }

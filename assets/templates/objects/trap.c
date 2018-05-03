@@ -6,11 +6,11 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/etc/traps
  */
 #include <std.h>
 
-inherit TRAP;
+inherit OBJ_TRAP;
 
 void create()
 {

@@ -6,11 +6,11 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/etc/drinks
  */
 #include <std.h>
 
-inherit DRINK;
+inherit OBJ_DRINK;
 
 void create()
 {

@@ -10,7 +10,7 @@
  */
 #include <std.h>
 
-inherit POTION;
+inherit OBJ_POTION;
 
 void create()
 {

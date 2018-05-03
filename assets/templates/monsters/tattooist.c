@@ -6,18 +6,16 @@
  * @author {your name}
  * @created {date}
  * @typeof object
- * @doc /doc/build/
+ * @doc /doc/build/monster/tutorial
+ * @doc /doc/build/monster/types/tattooist
  */
-/*
-	see /doc/build/monster/types/tattooist
-*/
 #include <std.h>
 
-inherit TATTOOIST;
+inherit MONTYPE_ATTOOIST;
 
 void create()
 {
-	::create(, "", "");//Level, Race, Class
+	::create(1, "", "");//Level, Race, Class
 	set_name("");
 	set_short("");
 	set_long("");

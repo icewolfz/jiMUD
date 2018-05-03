@@ -10,7 +10,7 @@
  */
 #include <std.h>
 
-inherit ROOM;
+inherit STD_ROOM;
 
 void create()
 {
