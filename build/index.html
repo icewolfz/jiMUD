@@ -1147,6 +1147,9 @@
         ipcRenderer.send('profile-item-removed', type, profile, idx);
       });
 
+      client.on('options-saved', () => {
+        ipcRenderer.send('options-changed');
+      });
       _backup = new Backup(client, remote.getGlobal('mapFile'));
       _backup.loadSelection = client.options.backupLoad;
       _backup.saveSelection = client.options.backupSave;

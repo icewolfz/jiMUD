@@ -14,6 +14,9 @@
   - Telnet:
     - MCCP was not correctly being processed.
     - Split buffer was not always correctly cleared
+  - Character manager:
+    - Profiles where not correctly saving when switching characters
+    - Profile menu list state was being updated to match correctly enabled profiles
 
 ## 0.4.42 2018-04-23
 
