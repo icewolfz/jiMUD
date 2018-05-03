@@ -1797,9 +1797,13 @@ ipcMain.on('send', (event, raw, echo) => {
     win.webContents.send('send', raw, echo);
 });
 
-ipcMain.on('send-editor', (event, text) => {
-  if (windows['code-editor'] && !windows['code-editor'].window && !windows['code-editor'].window.webContents) {
-    windows['code-editor'].window.webContents.send('open-editor', text);
+ipcMain.on('send-editor', (event, text, window) => {
+  if (winEditor)
+    winEditor.webContents.send('send-editor', text, window);
+  for (var name in windows) {
+    if (!windows.hasOwnProperty(name) || !windows[name].window)
+      continue;
+    windows[name].window.webContents.send('send-editor', text, window);
   }
 });
 

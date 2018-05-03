@@ -85,6 +85,9 @@
             <button id="btn-paste" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Paste" onclick="doPaste()">
                 <i class="fa fa-paste"></i>
             </button>
+            <button id="btn-editor" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Paste to advanced editor" onclick="doEditor()">
+                <i class="fa fa-edit"></i>
+            </button>
         </div>
         <div class="btn-group" role="group">
             <button id="btn-find" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Find" onclick="doFind()">
@@ -154,20 +157,20 @@
     outputDisplay.on('cut', (e) => {
         e.preventDefault();
         e.stopPropagation();
-    });    
+    });
 
     outputDisplay.on('paste', (e) => {
         e.preventDefault();
         e.stopPropagation();
-    });    
+    });
 
     webFrame.setSpellCheckProvider("en-US", true, {
-            spellCheck: function (text) {
-                if (!spellchecker || !options.spellchecking)
-                    return true;
-                return !(spellchecker.isMisspelled(text));
-            }
-        });
+        spellCheck: function (text) {
+            if (!spellchecker || !options.spellchecking)
+                return true;
+            return !(spellchecker.isMisspelled(text));
+        }
+    });
 
     var menuTemplates = loadTemplates(parseTemplate(path.join('{assets}', 'templates')), '');
     var subMenus = {
@@ -201,6 +204,12 @@
                 label: '&Paste',
                 accelerator: "CmdOrCtrl+V",
                 click: doPaste,
+                enabled: false,
+            },
+            {
+                label: 'Paste to ^Advanced Editor',
+                accelerator: "CmdOrCtrl+Shift+V",
+                click: doEditor,
                 enabled: false,
             },
             { type: 'separator' },
@@ -474,6 +483,8 @@
         menubar.updateItem('edit|cut', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('cut') : false });
         $("#btn-copy").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('copy') : true);
         menubar.updateItem('edit|copy', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('copy') : false });
+        $("#btn-editor").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('copy') : true);
+        menubar.updateItem('edit|paste to advanced editor', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('copy') : false });
         $("#btn-paste").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('paste') : true);
         menubar.updateItem('edit|paste', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('paste') : false });
         $("#btn-find").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('find') : true);
@@ -728,6 +739,15 @@
     function doPaste() {
         if (manager.active && manager.active.editor && manager.active.editor.supports('paste'))
             manager.active.editor.paste();
+    }
+
+    function doEditor() {
+        if (!manager.active || !manager.active.editor || !manager.active.editor.supports('copy'))
+            return;
+        ipcRenderer.send('show-window', 'editor');
+        setTimeout(() => {
+            ipcRenderer.send('send-editor', manager.active.editor.selected, 'editor');
+        });
     }
 
     function doRedo() {
@@ -1355,35 +1375,47 @@
                 if (p.editor.supports('refresh')) {
                     temp.push({
                         label: 'Refresh',
-                        click: doRefresh
+                        click: doRefresh,
+                        accelerator: "F5"
                     });
                 }
                 if (p.editor.supports('undo'))
                     temp.push({
                         label: 'Undo',
-                        click: doUndo
+                        click: doUndo,
+                        accelerator: "CmdOrCtrl+Z"
                     });
                 if (p.editor.supports('redo'))
                     temp.push({
                         label: 'Redo',
-                        click: doRedo
+                        click: doRedo,
+                        accelerator: "CmdOrCtrl+Y"
                     });
                 if (p.editor.supports('undo') || p.editor.supports('redp'))
                     temp.push({ type: 'separator' });
                 if (p.editor.supports('cut'))
                     temp.push({
                         label: 'Cut',
-                        click: doCut
+                        click: doCut,
+                        accelerator: "CmdOrCtrl+C"
                     });
                 if (p.editor.supports('copy'))
                     temp.push({
                         label: 'Copy',
-                        click: doCopy
+                        click: doCopy,
+                        accelerator: "CmdOrCtrl+X"
                     });
                 if (p.editor.supports('paste'))
                     temp.push({
                         label: 'Paste',
-                        click: doPaste
+                        click: doPaste,
+                        accelerator: "CmdOrCtrl+V"
+                    });
+                if (p.editor.supports('copy'))
+                    temp.push({
+                        label: 'Paste to Advanced Editor',
+                        click: doEditor,
+                        accelerator: "CmdOrCtrl+Shift+V"
                     });
                 if (p.editor.supports('cut') || p.editor.supports('copy') || p.editor.supports('paste'))
                     temp.push({ type: 'separator' });

@@ -211,6 +211,13 @@
             clipboard.writeText(text || '', 'selection');
         }
 
+        function insertFormated(text) {
+            text = text || '';
+            //format text
+            tinymce.activeEditor.execCommand('mceInsertContent', false, text);
+
+        }
+
         webFrame.setSpellCheckProvider("en-US", true, {
             spellCheck: function (text) {
                 if (!spellchecker || !options.spellchecking)
@@ -717,6 +724,13 @@
                         click: copyFormatted
                     }));
                     cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
+                    cMenu.append(new MenuItem({
+                        label: 'Paste formatted',
+                        icon: path.join(__dirname, '../assets/icons/png/paste.png'),
+                        click: () => {
+                            insertFormated(clipboard.readText('selection') || '');
+                        }
+                    }));
                     cMenu.append(new MenuItem({ role: 'delete', icon: path.join(__dirname, '../assets/icons/png/delete.png') }));
                     cMenu.append(new MenuItem({ type: 'separator' }));
                     cMenu.append(new MenuItem({ role: 'selectall' }));
@@ -890,7 +904,7 @@
                         {
                             text: 'To code editor',
                             onclick: function () {
-                                ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''));
+                                ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor');
                             }
                         },
                     ]
@@ -997,6 +1011,9 @@
                 },
                 init_instance_callback: function (editor) {
                     editor.shortcuts.add("ctrl+shift+c", 'Copy formatted', copyFormatted);
+                    editor.shortcuts.add("ctrl+shift+p", 'Paste formatted', () => {
+                        insertFormated(clipboard.readText('selection') || '');
+                    });
                     editor.on('PastePreProcess', function (e) {
                         if (options.enableDebug)
                             ipcRenderer.send('debug', 'Advanced Before Editor PastePreProcess: ' + e.content);
@@ -1250,6 +1267,11 @@
                 tinymce.activeEditor.plugins["shadowmud"].removeFormat(type);
             else
                 tinymce.activeEditor.plugins["shadowmud"].applyFormat(type, "#" + color);
+        });
+
+        ipcRenderer.on('send-editor', (event, text, window) => {
+            if (window != "editor") return;
+            insertFormated(text);
         });
     </script>
 </head>

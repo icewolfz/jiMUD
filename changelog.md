@@ -8,6 +8,7 @@
   - Advanced editor:
     - Can send formated text to open code editor to be inserted at current cursor
     - Copy formatted, copy selected text with the format codes, using Ctrl+Shift+C or context menu
+    - Paste formatted, paste text formatted with pinkfish codes and have it display in the editor with full formatting, Ctrl+Shift+P or context menu
 - **Changed:**
   - Immortal tools:
     - Rename old editor to external editor
