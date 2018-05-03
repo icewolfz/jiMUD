@@ -773,6 +773,7 @@ export class Client extends EventEmitter {
 
     public saveOptions() {
         this.options.save(this._settingsFile);
+        this.emit('options-saved');
     }
 
     public setOption(name, value) {

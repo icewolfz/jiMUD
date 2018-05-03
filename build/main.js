@@ -1372,6 +1372,19 @@ function createWindow() {
   });
 }
 
+function resetProfiles() {
+  updateMenuItem({ menu: ['profiles', 'default'], checked: false });
+  var p = path.join(app.getPath('userData'), "profiles");
+  if (isDirSync(p)) {
+    var files = fs.readdirSync(p);
+    for (var i = 0; i < files.length; i++) {
+      if (path.extname(files[i]) !== ".json")
+        continue;
+      updateMenuItem({ menu: ['profiles', path.basename(files[i], ".json")], checked: false });
+    }
+  }
+}
+
 if (process.argv.indexOf('--disable-gpu') !== -1)
   app.disableHardwareAcceleration();
 
@@ -1505,7 +1518,7 @@ ipcMain.on('load-default', (event) => {
     win.webContents.send('load-default');
   global.settingsFile = sf;
   global.mapFile = mf;
-
+  resetProfiles();
   set = settings.Settings.load(global.settingsFile);
 
   if (winMap) {
@@ -1575,6 +1588,7 @@ ipcMain.on('load-char', (event, char) => {
   }
   set.save(global.settingsFile);
   loadCharacter(char);
+  resetProfiles();
   set = settings.Settings.load(global.settingsFile);
   if (win && win.webContents)
     win.webContents.send('load-char', char);
@@ -1623,7 +1637,12 @@ ipcMain.on('load-char', (event, char) => {
   }
 });
 
+ipcMain.on('options-changed', (event, save) => {
+  set = settings.Settings.load(global.settingsFile);
+});
+
 ipcMain.on('reload-options', (event, save) => {
+  resetProfiles();
   closeWindows(save);
   if (win && win.webContents)
     win.webContents.send('reload-options');
