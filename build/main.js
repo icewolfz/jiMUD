@@ -1797,6 +1797,12 @@ ipcMain.on('send', (event, raw, echo) => {
     win.webContents.send('send', raw, echo);
 });
 
+ipcMain.on('send-editor', (event, text) => {
+  if (windows['code-editor'] && !windows['code-editor'].window && !windows['code-editor'].window.webContents) {
+    windows['code-editor'].window.webContents.send('open-editor', text);
+  }
+});
+
 ipcMain.on('log', (event, raw) => {
   console.log(raw);
 });

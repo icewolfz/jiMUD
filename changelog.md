@@ -5,6 +5,9 @@
 - **New:**
   - Code editor: allows you to view and edit code, good for immortals
   - Immortal tools: New [open file in external editor](docs/immortal.md) preference, allows you to choose to ignore the new internal code editor
+  - Advanced editor:
+    - Can send formated text to open code editor to be inserted at current cursor
+    - Copy formatted, copy selected text with the format codes, using Ctrl+Shift+C or context menu
 - **Changed:**
   - Immortal tools:
     - Rename old editor to external editor

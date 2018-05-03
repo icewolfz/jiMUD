@@ -23,7 +23,7 @@
         //cSpell:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
         //cSpell:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime, 
         /* global tinymce */
-        const { remote, ipcRenderer, webFrame } = require('electron');
+        const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
         const { nativeImage, dialog, Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode } = require('./js/library');
         const { Settings } = require('./js/settings');
@@ -205,6 +205,12 @@
                 });
         }
 
+        function copyFormatted() {
+            var text = getFormatedSelection().replace(/(?:\r)/g, '');
+            clipboard.writeText(text || '');
+            clipboard.writeText(text || '', 'selection');
+        }
+
         webFrame.setSpellCheckProvider("en-US", true, {
             spellCheck: function (text) {
                 if (!spellchecker || !options.spellchecking)
@@ -303,6 +309,168 @@
             return stack;
         }
 
+        function getFormatedSelection() {
+            //build all preivous nodes to ensure all formatting is captures
+            var nodes = tinymce.activeEditor.dom.getParents(tinymce.activeEditor.selection.getNode());
+            var n = 0, nl = nodes.length;
+            var start = '<html>';
+            var end = '</html>';
+            for (; n < nl; n++) {
+                var tag = nodes[n].tagName;
+                if (tag === "EM" || tag === "I" || tag === "STRONG" || tag === "B") {
+                    start += '<' + tag + '>';
+                    end = '</' + tag + '>' + end;
+                }
+                else if (tag === 'SPAN') {
+                    start += '<' + tag;
+                    if (nodes[n].className != '')
+                        start += ' class="' + nodes[n].className + '"';
+                    var style = '';
+                    if (nodes[n].style.textDecoration != "")
+                        style += 'text-decoration:' + nodes[n].style.textDecoration + ';';
+                    if (nodes[n].style.color != "")
+                        style += 'color:' + nodes[n].style.color + ';';
+                    if (nodes[n].style.background != "")
+                        style += 'background:' + nodes[n].style.background + ';';
+                    if (nodes[n].style.backgroundColor != "")
+                        style += 'background-color:' + nodes[n].style.backgroundColor + ';';
+                    if (style.length > 0)
+                        start += ' style="' + style + '"';
+                    if (nodes[n].dataset && nodes[n].dataset.mceStyle)
+                        start += ' data-mce-style="' + nodes[n].dataset.mceStyle + '"';
+                    start += ' >';
+                    end = '</' + tag + '>' + end;
+                }
+                else if (tag === 'BODY') {
+                    start += '<' + tag + '>';
+                    end = '</' + tag + '>' + end;
+                    break;
+                }
+            }
+
+            //append and prepend parent formatting for proper text formatting
+            var data = buildHTMLStack($(start + tinymce.activeEditor.selection.getContent({ format: 'raw' }).replace(/<\/div><div>/g, "<br>") + end));
+            var buffer = [];
+            var codes = [];
+            var color, d, dl, rgb;
+            if (options.enableDebug)
+                ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
+            for (d = data.length - 1; d >= 0; d--) {
+                if (!data[d].startsWith('"') && data[d] != "BR")
+                    data.pop();
+                else
+                    break;
+            }
+
+            for (d = 0, dl = data.length; d < dl; d++) {
+                switch (data[d]) {
+                    case "BOLD":
+                    case "ITALIC":
+                    case "UNDERLINE":
+                    case "STRIKEOUT":
+                    case "DBLUNDERLINE":
+                    case "OVERLINE":
+                    case "FLASH":
+                    case "REVERSE":
+                        codes.push("%^" + data[d] + "%^");
+                        buffer.push("%^" + data[d] + "%^");
+                        break;
+                    case "/DBLUNDERLINE":
+                    case "/OVERLINE":
+                    case "/FLASH":
+                    case "/REVERSE":
+                    case "/UNDERLINE":
+                    case "/BOLD":
+                    case "/ITALIC":
+                    case "/STRIKEOUT":
+                        codes.pop();
+                        buffer.push("%^RESET%^");
+                        if (codes.length > 0)
+                            buffer.push(codes.join(''));
+                        break;
+                    case "SPAN":
+                    case "/SPAN":
+                    case "/BR":
+                    case "/DIV":
+                        break;
+                    case "DIV":
+                    case "BR":
+                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith("%^RESET%^"))
+                            buffer.push("%^RESET%^");
+                        buffer.push('\n');
+                        if (codes.length > 0)
+                            buffer.push(codes.join(''));
+                        break;
+                    default:
+                        if (data[d].startsWith("COLOR: #")) {
+                            color = data[d].substr(8);
+                            if (!_colors[color]) {
+                                rgb = new rgbcolor(color);
+                                color = nearestHex(rgb.toHex()).substr(1);
+                            }
+                            color = _colors[color];
+                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                                color = "mono11";
+                            codes.push("%^" + color + "%^");
+                            buffer.push("%^" + color + "%^");
+                        }
+                        else if (data[d].startsWith("COLOR: ")) {
+                            color = new rgbcolor(data[d].substr(7)).toHex().substr(1);
+                            if (!_colors[color])
+                                color = nearestHex("#" + color).substr(1);
+                            color = _colors[color];
+                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                                color = "mono11";
+                            codes.push("%^" + color + "%^");
+                            buffer.push("%^" + color + "%^");
+
+                        }
+                        else if (data[d].startsWith("/COLOR: ")) {
+                            codes.pop();
+                            buffer.push("%^RESET%^");
+                            if (codes.length > 0)
+                                buffer.push(codes.join(''));
+                        }
+                        else if (data[d].startsWith("BACKGROUND-COLOR: #")) {
+                            color = data[d].substr(19);
+                            if (!_colors[color]) {
+                                rgb = new rgbcolor(color);
+                                color = nearestHex(rgb.toHex()).substr(1);
+                            }
+                            if (_colors["B" + color])
+                                color = _colors["B" + color];
+                            else
+                                color = _colors[color];
+                            color = "%^B_" + color + "%^";
+                            codes.push(color);
+                            buffer.push(color);
+                        }
+                        else if (data[d].startsWith("BACKGROUND-COLOR: ")) {
+                            color = new rgbcolor(data[d].substr(18)).toHex().substr(1);
+                            if (!_colors[color])
+                                color = nearestHex("#" + color).substr(1);
+                            if (_colors["B" + color])
+                                color = _colors["B" + color];
+                            else
+                                color = _colors[color];
+                            color = "%^B_" + color + "%^";
+                            codes.push("%^" + color + "%^");
+                            buffer.push("%^" + color + "%^");
+                        }
+                        else if (data[d].startsWith("/BACKGROUND-COLOR: ")) {
+                            codes.pop();
+                            buffer.push("%^RESET%^");
+                            if (codes.length > 0)
+                                buffer.push(codes.join(''));
+                        }
+                        else if (data[d].startsWith('"'))
+                            buffer.push(data[d].substring(1, data[d].length - 1));
+                        break;
+                }
+            }
+            return buffer.join('');
+        }
+
         function getFormatedText() {
             var data = buildHTMLStack($("<html>" + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, "<br>") + "</html>"));
             var buffer = [];
@@ -364,8 +532,8 @@
                                 color = nearestHex(rgb.toHex()).substr(1);
                             }
                             color = _colors[color];
-                            if(color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
-                                color = "mono11";                            
+                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                                color = "mono11";
                             codes.push("%^" + color + "%^");
                             buffer.push("%^" + color + "%^");
                         }
@@ -374,8 +542,8 @@
                             if (!_colors[color])
                                 color = nearestHex("#" + color).substr(1);
                             color = _colors[color];
-                            if(color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
-                                color = "mono11";                            
+                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                                color = "mono11";
                             codes.push("%^" + color + "%^");
                             buffer.push("%^" + color + "%^");
 
@@ -543,6 +711,11 @@
                     cMenu.append(new MenuItem({ type: 'separator' }));
                     cMenu.append(new MenuItem({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') }));
                     cMenu.append(new MenuItem({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') }));
+                    cMenu.append(new MenuItem({
+                        label: 'Copy formatted',
+                        icon: path.join(__dirname, '../assets/icons/png/copy.png'),
+                        click: copyFormatted
+                    }));
                     cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
                     cMenu.append(new MenuItem({ role: 'delete', icon: path.join(__dirname, '../assets/icons/png/delete.png') }));
                     cMenu.append(new MenuItem({ type: 'separator' }));
@@ -713,7 +886,13 @@
                             onclick: function () {
                                 ipcRenderer.send('send-raw', getText().replace(/(?:\r)/g, ''));
                             }
-                        }
+                        },
+                        {
+                            text: 'To code editor',
+                            onclick: function () {
+                                ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''));
+                            }
+                        },
                     ]
                 });
                 editor.addButton('append', {
@@ -817,6 +996,7 @@
 
                 },
                 init_instance_callback: function (editor) {
+                    editor.shortcuts.add("ctrl+shift+c", 'Copy formatted', copyFormatted);
                     editor.on('PastePreProcess', function (e) {
                         if (options.enableDebug)
                             ipcRenderer.send('debug', 'Advanced Before Editor PastePreProcess: ' + e.content);
