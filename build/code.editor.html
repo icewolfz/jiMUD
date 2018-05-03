@@ -102,14 +102,14 @@
     <div id="output" class="output">
         <div id="btm-drag-bar"></div>
         <div id="output-toolbar" class="btn-toolbar" role="toolbar">
-            <a href="javascript:void(0)" onclick="closeOutput()" style="float: right">
+            <a href="javascript:void(0)" onclick="closeOutput()" class="close">
                 <i class="fa fa-times"></i>
             </a>
             <button id="btn-clear-output" type="button" class="btn btn-default btn-xs" title="Clear output" onclick="doClearOutput()">
                 <i class="fa fa-trash"></i>
             </button>
         </div>
-        <div id="output-display" class="output-display"></div>
+        <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
     </div>
 </body>
 <script>
@@ -139,13 +139,35 @@
     var output = $('#output');
     var outputDisplay = $('#output-display');
 
-    webFrame.setSpellCheckProvider("en-US", true, {
-        spellCheck: function (text) {
-            if (!spellchecker || !options.spellchecking)
-                return true;
-            return !(spellchecker.isMisspelled(text));
+    outputDisplay.on('keydown', (e) => {
+        if (event.ctrlKey) {
+            // allow Ctrl-A, Ctrl-(any arrow key) combinations
+            return true;
         }
+        // keycode: http://www.programming-magic.com/file/20080205232140/keycode_table.html
+        if (33 <= event.keyCode && event.keyCode <= 40) {
+            return true;
+        }
+        return false;
     });
+
+    outputDisplay.on('cut', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });    
+
+    outputDisplay.on('paste', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });    
+
+    webFrame.setSpellCheckProvider("en-US", true, {
+            spellCheck: function (text) {
+                if (!spellchecker || !options.spellchecking)
+                    return true;
+                return !(spellchecker.isMisspelled(text));
+            }
+        });
 
     var menuTemplates = loadTemplates(parseTemplate(path.join('{assets}', 'templates')), '');
     var subMenus = {
