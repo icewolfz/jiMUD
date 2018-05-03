@@ -147,7 +147,7 @@ abstract class EditorBase extends EventEmitter {
 
     abstract get selected(): string;
     abstract focus(): void;
-
+    abstract resize() :void;
     abstract supports(what): boolean;
 
     abstract set spellcheck(value: boolean);
@@ -171,7 +171,7 @@ abstract class EditorBase extends EventEmitter {
     }
     get new(): boolean {
         return (this.state & FileState.new) === FileState.new;
-    }
+    }   
 }
 
 export class CodeEditor extends EditorBase {
@@ -195,16 +195,19 @@ export class CodeEditor extends EditorBase {
             });
             if (this.$annotations.length > 0)
                 this.$session.setAnnotations(this.$annotations);
-            this.emit('error', e);
+            this.emit('error', e, 'indent');
+        });
+        this.$indenter.on('start', (p) => {
+            this.emit('progress-start', p, 'indent');
         });
         this.$indenter.on('progress', (p) => {
-            this.emit('progress', p);
+            this.emit('progress', p, 'indent');
         });
         this.$indenter.on('complete', (lines) => {
             var Range = ace.require('ace/range').Range;
             this.$session.replace(new Range(0, 0, this.$session.getLength(), Number.MAX_VALUE), lines.join('\n'));
             this.$editor.setReadOnly(false);
-            this.emit('progress-complete');
+            this.emit('progress-complete', 'indent');
         });
         if (options.value) {
             this.$el.value = options.value;
@@ -572,7 +575,10 @@ export class CodeEditor extends EditorBase {
     public focus(): void {
         this.$editor.focus();
     }
-
+    
+    public resize() {
+        this.$editor.resize(true);
+    }
 }
 
 export class VirtualEditor extends EditorBase {
@@ -601,6 +607,7 @@ export class VirtualEditor extends EditorBase {
     public replace() { }
     public supports(what) { return false; }
     public focus(): void { }
+    public resize() {}
 }
 
 enum TokenType {
@@ -1093,6 +1100,7 @@ export class lpcIndenter extends EventEmitter {
         this.$in_comment = 0;
         this.$in_mblock = 0;
         this.$quote = 0;
+        this.emit('start');
     }
 
     public indent(code) {

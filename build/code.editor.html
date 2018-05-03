@@ -99,6 +99,18 @@
         </button>
         <div id="editor-buttons"></div>
     </div>
+    <div id="output" class="output">
+        <div id="btm-drag-bar"></div>
+        <div id="output-toolbar" class="btn-toolbar" role="toolbar">
+            <a href="javascript:void(0)" onclick="closeOutput()" style="float: right">
+                <i class="fa fa-times"></i>
+            </a>
+            <button id="btn-clear-output" type="button" class="btn btn-default btn-xs" title="Clear output" onclick="doClearOutput()">
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
+        <div id="output-display" class="output-display"></div>
+    </div>
 </body>
 <script>
     const { remote, ipcRenderer, webFrame } = require('electron');
@@ -123,6 +135,9 @@
     let closeWindow = false;
     var watcher;
     var _watched = {};
+    var outputDragging = false;
+    var output = $('#output');
+    var outputDisplay = $('#output-display');
 
     webFrame.setSpellCheckProvider("en-US", true, {
         spellCheck: function (text) {
@@ -196,6 +211,12 @@
                 accelerator: "F5",
                 enabled: false,
                 click: doRefresh
+            },
+            { type: 'separator' },
+            {
+                label: '&Output',
+                accelerator: 'CmdOrCtrl+Shift+U',
+                click: toggleOutput
             },
             { type: 'separator' },
             {
@@ -336,6 +357,7 @@
     ]);
 
     var manager = new DockManager();
+    var dock = $("#cm");
     manager.hideTabstrip = false;
     manager.on('add', (e) => {
     });
@@ -368,7 +390,7 @@
     function updateUI() {
         var enabled = (manager.active && manager.active.editor) ? true : false;
         if (enabled)
-            document.title = 'Code Editor - ' + manager.active.tab.title.innerText;
+            document.title = 'Code Editor - ' + manager.active.tab.innerText;
         else
             document.title = 'Code Editor';
         $("#btn-close").prop('disabled', !enabled);
@@ -553,7 +575,8 @@
                 opened: [],
                 maxRecent: 15,
                 reopen: true,
-                output: 170,
+                outputSize: 170,
+                output: false,
                 options: {
                     persistent: false,
                     alwaysOnTopClient: true,
@@ -562,13 +585,27 @@
             };
             saveOptions();
         }
+        if (!options.outputSize || options.outputSize < 170)
+            options.outputSize = 170;
+        /*
         try {
-            //if (!spellchecker && options.spellchecking)
-            //spellchecker = require('spellchecker');
+            if (!spellchecker && options.spellchecking)
+            spellchecker = require('spellchecker');
         }
         catch (ex) {
             ipcRenderer.send('error', ex);
         }
+        */
+        output.css('height', options.outputSize + 'px');
+        if (options.output) {
+            dock.css('bottom', options.outputSize + 'px');
+            output.css('display', 'block');
+        }
+        else {
+            dock.css('bottom', '0');
+            output.css('display', 'none');
+        }
+        buildRecent();
     }
 
     function saveOptions() {
@@ -696,12 +733,101 @@
             manager.active.editor.refresh();
     }
 
+    function toggleOutput() {
+        if (options.output)
+            options.output = false;
+        else
+            options.output = true;
+        output.css('height', options.outputSize + 'px');
+        if (options.output) {
+            dock.css('bottom', options.outputSize + 'px');
+            output.css('display', 'block');
+        }
+        else {
+            dock.css('bottom', '0');
+            output.css('display', 'none');
+        }
+        $(window).trigger('resize');
+        saveOptions();
+    }
+
+    function doClearOutput() {
+        outputDisplay.empty();
+    }
+
+    function closeOutput() {
+        options.output = false;
+        dock.css('bottom', '0');
+        output.css('display', 'none');
+        $(window).trigger('resize');
+        saveOptions();
+    }
+
+    function logOutput(text, open) {
+        if (!text || text.length === 0)
+            return;
+        if (open && !options.output)
+            toggleOutput();
+        outputDisplay.append('<div>' + text + '</div>');
+    }
+
     $(document).ready(() => {
         loadOptions();
 
-        $(document).keydown((event) => {
+        $('#btm-drag-bar').mousedown(function (e) {
+            e.preventDefault();
+            outputDragging = true;
+            var ghostBar = $('<div>',
+                {
+                    id: 'btm-ghost-bar',
+                    css: {
+                        width: output.outerWidth(),
+                        top: output.offset().top,
+                        left: output.offset().left
+                    }
+                }).appendTo('body');
 
+            $(document).mousemove(function (e) {
+                if (e.pageY < 169)
+                    ghostBar.css("top", 169);
+                else if (e.pageY > document.body.clientHeight - 170)
+                    ghostBar.css("top", document.body.clientHeight - 170);
+                else
+                    ghostBar.css("top", e.pageY);
+            });
         });
+
+        $(window).on('resize', () => {
+            if (output.outerHeight() < 170 && (dock.outerHeight() + 28) > 172) {
+                options.outputSize = 170;
+                output.css("height", options.outputSize);
+                dock.css("bottom", options.outputSize);
+                saveOptions();
+            }
+            for (var p = 0, l = manager.panels.length; p < l; p++) {
+                if (!manager.panels[p].editor) continue;
+                manager.panels[p].editor.resize();
+            }
+        });
+
+        $(document).mouseup(function (e) {
+            if (outputDragging) {
+                if (e.pageY < 170)
+                    options.outputSize = document.body.clientHeight - 172;
+                else if (e.pageY > document.body.clientHeight - 170)
+                    options.outputSize = 170;
+                else
+                    options.outputSize = document.body.clientHeight - e.pageY + 2;
+                output.css("height", options.outputSize);
+                dock.css("bottom", options.outputSize);
+                saveOptions();
+                $('#btm-ghost-bar').remove();
+                $(document).unbind('mousemove');
+                outputDragging = false;
+            }
+        });
+
+
         $('#btn-add-dropdown').click(function () {
             $(this).addClass('open');
             const pos = $(this).offset();
@@ -758,8 +884,6 @@
                 openFile(_open[o][0], _open[o][1]);
             _open = 0;
         }
-        if (!(options.opened && !options.reopen) && !_open)
-            doUpdate(4);
         _loading = 0;
     });
 
@@ -1276,17 +1400,20 @@
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup(remote.getCurrentWindow());
             });
-            p.editor.on('error', (e) => {
+            p.editor.on('error', (e, type) => {
+                //logOutput(manager.active.editor.filename+': Indenting complete');
+            });
+            p.editor.on('progress-start', (type) => {
+                logOutput(manager.active.editor.filename + ': Indenting started', true);
+            });
+            p.editor.on('progress', (p, type) => {
 
             });
-            p.editor.on('progress', (p) => {
-
+            p.editor.on('progress-complete', (type) => {
+                logOutput(manager.active.editor.filename + ': Indenting finished', true);
             });
-            p.editor.on('progress-complete', () => {
-
-            });
-            p.editor.on('output', (e) => {
-
+            p.editor.on('output', (msg) => {
+                logOutput(msg, true);
             });
             doUpdate(1);
         }
