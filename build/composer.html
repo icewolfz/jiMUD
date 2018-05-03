@@ -371,6 +371,8 @@
                                 color = nearestHex(rgb.toHex()).substr(1);
                             }
                             color = _colors[color];
+                            if(color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                                color = "mono11";
                             codes.push("%^" + color + "%^");
                             buffer.push("%^" + color + "%^");
                         }
@@ -379,6 +381,8 @@
                             if (!_colors[color])
                                 color = nearestHex("#" + color).substr(1);
                             color = _colors[color];
+                            if(color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                                color = "mono11";
                             codes.push("%^" + color + "%^");
                             buffer.push("%^" + color + "%^");
 
@@ -1184,7 +1188,7 @@
             _ColorTable.push(color, "WHITE");
 
             color = new rgbcolor(options.colors[8] || _dColors[8]).toHex().substr(1).toUpperCase();
-            _colors[color] = "BOLD%^%^BLACK";
+            _colors[color] = "mono11";
             _ColorTable.push(color, "BOLD BLACK");
             _bold.push(color);
             color = new rgbcolor(options.colors[9] || _dColors[9]).toHex().substr(1).toUpperCase();
