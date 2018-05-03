@@ -9,10 +9,12 @@
  * @doc /doc/build/room/Basic
  * @doc /doc/build/room/Intermediate
  * @doc /doc/build/room/Advanced
+ * @doc /doc/build/room/types/vault
+ * @doc /doc/build/room/types/modroom
  */
 #include <std.h>
 
-inherit STD_ROOM;
+inherit ROOMTYPE_MODROOM;
 
 void create()
 {

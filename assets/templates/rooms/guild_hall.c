@@ -9,10 +9,13 @@
  * @doc /doc/build/room/Basic
  * @doc /doc/build/room/Intermediate
  * @doc /doc/build/room/Advanced
+ * @doc /doc/build/room/types/vault
+ * @doc /doc/build/room/types/guild_hall
+ * @doc /doc/build/etc/voter
  */
 #include <std.h>
 
-inherit STD_ROOM;
+inherit ROOMTYPE_GUILD_HALL;
 
 void create()
 {
@@ -30,4 +33,5 @@ void create()
 	set_exits( ([
 
 	]) );
+	set_guild(""); //guild name, if not set will default based on path name
 }
