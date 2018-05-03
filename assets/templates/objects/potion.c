@@ -26,25 +26,58 @@ void create()
 	//set_throw("do_throw"); //executed when potion is thrown and hits someone
 }
 
+/**
+ * do_effect
+ *
+ * What the function does
+ *
+ * @param {object} potion the potion
+ * @param {object} drinker the one who drank the potion
+ **/
 void do_effect(object potion, object drinker)
 {
 	if(!drinker) return;
 	/* effects here */
 }
 
+/**
+ * do_throw
+ *
+ * What the function does
+ *
+ * @param {object} potion the potion
+ * @param {object} thrower the one who threw the potion
+ * @param {object} the target hit by the potion
+ **/
 void do_throw(object potion, object thrower, object target)
 {
 	if(!target) return;
 	/* effects here */
 }
 
+/**
+ * do_shatter
+ *
+ * What the function does
+ *
+ * @param {object} potion the potion
+ * @param {object} thrower the one who thew the potion
+ * @param {object} target the target hit by the potion
+ **/
 void do_shatter(object potion, object thrower, object target)
 {
 	if(!target) return;
 	/* effects here */
 }
 
-
+/**
+ * do_smash
+ *
+ * What the function does
+ *
+ * @param {object} potion the potion
+ * @param {object} thrower the one who threw the potion
+ **/
 void do_smash(object potion, object thrower)
 {
 	if(!drinker) return;

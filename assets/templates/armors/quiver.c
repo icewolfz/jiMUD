@@ -15,7 +15,7 @@ inherit OBJ_QUIVER;
 
 void create()
 {
-//int arrows, string materal, string quality, mixed limbs, int charm, string type, string arrow material, string arrow quality, int arrow charm
+   //int arrows, string materal, string quality, mixed limbs, int charm, string type, string arrow material, string arrow quality, int arrow charm
    ::create(0, "", "", ({ "" }) );
    set_nouns("");
    set_adjectives("");
