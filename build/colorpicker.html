@@ -59,6 +59,7 @@
                 "BOLD MAGENTA": "Magenta",
                 "BOLD CYAN": "Cyan",
                 "BOLD": "White",
+                "BOLD WHITE": "White",
                 "RGB000": "Black",
                 "RGB001": "Navy Blue",
                 "RGB002": "Dark Blue",
@@ -456,7 +457,7 @@
                 $("div").on('click', function () {
                     //console.log($(this));
                     //console.log($(this).data('mce-color'));
-                    ipcRenderer.send('set-color', type, $(this).data('mce-color'), _window);
+                    ipcRenderer.send('set-color', type, $(this).data('mce-color'), $(this).attr('id'), _window);
                     window.close();
                 });
 

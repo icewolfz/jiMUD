@@ -1744,13 +1744,13 @@ ipcMain.on('connected', (event) => {
   }
 });
 
-ipcMain.on('set-color', (event, type, color, window) => {
+ipcMain.on('set-color', (event, type, color, code, window) => {
   if (winEditor)
-    winEditor.webContents.send('set-color', type, color, window);
+    winEditor.webContents.send('set-color', type, color, code, window);
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
-    windows[name].window.webContents.send('set-color', type, color, window);
+    windows[name].window.webContents.send('set-color', type, color, code, window);
   }
 });
 

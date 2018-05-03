@@ -1060,7 +1060,7 @@
             loadOptions();
         });
 
-        ipcRenderer.on('set-color', (event, type, color, window) => {
+        ipcRenderer.on('set-color', (event, type, color, code, window) => {
             if (window != "editor") return;
             if (color === 'transparent')
                 tinymce.activeEditor.plugins["shadowmud"].removeFormat(type);

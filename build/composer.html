@@ -1301,7 +1301,7 @@
                 mail.processGMCP(data.mod, data.obj);
         });
 
-        ipcRenderer.on('set-color', (event, type, color, window) => {
+        ipcRenderer.on('set-color', (event, type, color, code, window) => {
             if (window !== 'composer') return;
             if (color === 'transparent')
                 tinymce.activeEditor.plugins["shadowmud"].removeFormat(type);
