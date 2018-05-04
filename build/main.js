@@ -477,7 +477,13 @@ var menuTemp = [
         type: 'separator'
       },
       {
-        role: 'toggledevtools'
+        label: '&Toggle Developer Tools',
+        click: () => {
+          if (win.webContents.isDevToolsOpened())
+            win.webContents.closeDevTools();
+          else
+            win.webContents.openDevTools();
+        }
       },
       {
         type: 'separator'
@@ -2823,7 +2829,7 @@ function showWindow(name, options) {
 
 function showColor(args) {
   var w;
-  if(windows[args.window])
+  if (windows[args.window])
     w = windows[args.window].window;
   else
     w = winEditor || win;
