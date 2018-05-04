@@ -15,6 +15,8 @@
     - Add new editor using new internal code editor.
   - Display: Optimize display creation
   - Advanced editor: Changed bold black to send mono11, as many clients cant handle bold black and the mud will handle converts of the code to other clients
+- **Fixed:**
+  - Fixed color picker not being a modal dialog in some instances
 
 ## 0.4.43
 

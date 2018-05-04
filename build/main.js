@@ -2822,8 +2822,13 @@ function showWindow(name, options) {
 }
 
 function showColor(args) {
+  var w;
+  if(windows[args.window])
+    w = windows[args.window].window;
+  else
+    w = winEditor || win;
   let cp = new BrowserWindow({
-    parent: args.window || winEditor || win,
+    parent: w,
     modal: true,
     width: 326,
     height: 296,
