@@ -25,7 +25,7 @@
         /* global tinymce */
         const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
         const { nativeImage, dialog, Menu, MenuItem } = remote;
-        const { stripHTML, htmlEncode } = require('./js/library');
+        const { stripHTML, htmlEncode, invert } = require('./js/library');
         const { Settings } = require('./js/settings');
         const rgbcolor = require("rgbcolor");
         const fs = require('fs');
@@ -34,7 +34,7 @@
 
         var spellchecker;
 
-        var _colors, _ColorTable, options;
+        var _colors, _ColorTable, options, _colorCodes;
         var colorNames = {
             "BLACK": "Black",
             "RED": "Maroon",
@@ -110,7 +110,6 @@
                 }
             );
         }
-
 
         function toggleContextFormat(item) {
             var format = item.format || item.label;
@@ -213,8 +212,100 @@
 
         function insertFormated(text) {
             text = text || '';
+            text = text.split('%^');
+            var stack = [];
+            var codes = [];
+            var t = 0;
+            var tl = text.length;
+            var bold = false;
+            var classes = [];
+            for (; t < tl; t++) {
+                switch (text[t]) {
+                    case "ITALIC":
+                        this.stack.push('<em>');
+                        this.codes.push('</em>');
+                        break;
+                    case "UNDERLINE":
+                        classes.push('underline');
+                        break;
+                    case "STRIKEOUT":
+                        classes.push('strikeout');
+                        break;
+                    case "DBLUNDERLINE":
+                        classes.push('dblunderline');
+                        break;
+                    case "OVERLINE":
+                        classes.push('overline');
+                        break;
+                    case "FLASH":
+                        if (options.flashing)
+                            classes.push('flash');
+                        else
+                            classes.push('noflash');
+                        break;
+                    case "REVERSE":
+                        classes.push('reverse');
+                        break;
+                    case 'RESET':
+                    case 'DEFAULT':
+                        for (t = 0, tl = codes.length; t < tl; t++)
+                            stack.push(codes[t]);
+                        codes = [];
+                        classes = [];
+                        break;
+                    case 'BOLD':
+                        bold = true;
+                        break;
+                    case '':
+                        break;
+                    default:
+                        if (text[t].startsWith('B_')) {
+                            text[t] = text[t].substr(2);
+                            if (bold) {
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
+                                codes.push('</span>');
+                            }
+                            stack.push('<span style=border: inherit;text-decoration:inherit;"background-color: #' + _colorCodes[text[t]] + '">');
+                            codes.push('</span>');
+                            bold = false;
+                            continue;
+                        }
+                        else if (_colorCodes[text[t]]) {
+                            if (bold && !_colorCodes['BOLD%^%^' + text[t]]) {
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes["BOLD%^%^WHITE"] + '">');
+                                codes.push('</span>');
+                            }
+                            else if (bold) {
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^' + text[t]] + '">');
+                                codes.push('</span>');
+                                continue;
+                            }
+                            stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes[text[t]] + '">');
+                            codes.push('</span>');
+                            continue;
+                        }
+                        else if (bold) {
+                            stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes["BOLD%^%^WHITE"] + '">');
+                            codes.push('</span>');
+                        }
+                        if (classes.length) {
+                            stack.push('<span class="' + classes.join(' ') + '">');
+                            codes.push('</span>');
+                            classes = '';
+                        }
+                        stack.push(text[t]);
+                        bold = false;
+                        break;
+                }
+            }
+            if (classes.length) {
+                stack.push('<span class="' + classes.join(' ') + '">');
+                codes.push('</span>');
+            }
+            for (t = 0, tl = codes.length; t < tl; t++)
+                stack.push(codes[t]);
             //format text
-            tinymce.activeEditor.execCommand('mceInsertContent', false, text);
+            tinymce.activeEditor.execCommand('insertHTML', false, stack.join(''));
 
         }
 
@@ -1233,6 +1324,7 @@
             for (b = 0, bl = _bold.length; b < bl; b++) {
                 _colors["B" + _bold[b]] = _colors[nearestHex("#" + _bold[b]).substr(1)].toUpperCase();
             }
+            _colorCodes = invert(_colors);
             tinymce.activeEditor.settings.textcolor_map = _ColorTable;
         }
 
