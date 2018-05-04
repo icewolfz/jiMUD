@@ -59,11 +59,10 @@ export class DockManager extends EventEmitter {
 
         window.addEventListener('resize', (e) => {
             this.doUpdate(UpdateType.resize);
-            this.$scrollMenu.style.maxHeight = (this.$tabpane.clientHeight - 4) + 'px';
         });
-        document.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('load', () => {
             this.doUpdate(UpdateType.resize);
-        }, false);
+        });
         document.addEventListener('keyup', (e) => {
             const tl = this.panels.length;
             this.emit('keyup', e);
@@ -431,7 +430,7 @@ export class DockManager extends EventEmitter {
         let panel;
         if (skipPanel)
             skipPanel = this.getPanelIndex(skipPanel);
-        for (idx = 0; idx < tl; idx++) {
+        for (idx = tl - 1; idx >= 0; idx--) {
             if (idx === skipPanel) continue;
             panel = this.panels[idx];
             e = { index: idx, id: panel.id, panel: panel, cancel: false };
@@ -653,6 +652,7 @@ export class DockManager extends EventEmitter {
         window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.resize) === UpdateType.resize) {
                 this.resize();
+                this.$scrollMenu.style.maxHeight = (this.$tabpane.clientHeight - 4) + 'px';
                 this.$tabstrip.scrollLeft = this._scroll;
                 this.updateScrollButtons();
                 this._updating &= ~UpdateType.resize;
