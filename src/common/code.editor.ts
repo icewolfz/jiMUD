@@ -1,6 +1,6 @@
 import EventEmitter = require('events');
 import { existsSync, formatSize, capitalize } from './library';
-const { clipboard } = require('electron');
+const { clipboard, ipcRenderer } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
@@ -147,7 +147,7 @@ abstract class EditorBase extends EventEmitter {
 
     abstract get selected(): string;
     abstract focus(): void;
-    abstract resize() :void;
+    abstract resize(): void;
     abstract supports(what): boolean;
 
     abstract set spellcheck(value: boolean);
@@ -171,7 +171,7 @@ abstract class EditorBase extends EventEmitter {
     }
     get new(): boolean {
         return (this.state & FileState.new) === FileState.new;
-    }   
+    }
 }
 
 export class CodeEditor extends EditorBase {
@@ -430,7 +430,19 @@ export class CodeEditor extends EditorBase {
                 {
                     label: 'Formatting',
                     submenu: [
-                        { label: 'Insert Color...' },
+                        {
+                            label: 'Insert Color...',
+                            click: () => {
+                                ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
+                                var setcolor = (event, type, color, code, window) => {
+                                    if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
+                                        return;
+                                    this.$editor.insert('%^'+code.replace(/ /g, '%^%^')+'%^');
+                                    ipcRenderer.removeListener('set-color', setcolor);
+                                }
+                                ipcRenderer.on('set-color', setcolor);
+                            }
+                        },
                         { type: 'separator' },
                         {
                             label: 'To Upper Case',
@@ -575,7 +587,7 @@ export class CodeEditor extends EditorBase {
     public focus(): void {
         this.$editor.focus();
     }
-    
+
     public resize() {
         this.$editor.resize(true);
     }
@@ -607,7 +619,7 @@ export class VirtualEditor extends EditorBase {
     public replace() { }
     public supports(what) { return false; }
     public focus(): void { }
-    public resize() {}
+    public resize() { }
 }
 
 enum TokenType {
