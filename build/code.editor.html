@@ -207,7 +207,7 @@
                 enabled: false,
             },
             {
-                label: 'Paste to ^Advanced Editor',
+                label: 'Paste to Advanced Editor',
                 accelerator: "CmdOrCtrl+Shift+V",
                 click: doEditor,
                 enabled: false,
@@ -620,6 +620,8 @@
         }
         if (!options.outputSize || options.outputSize < 170)
             options.outputSize = 170;
+        if(!options.maxRecent)
+            options.maxRecent = 15;
         /*
         try {
             if (!spellchecker && options.spellchecking)
