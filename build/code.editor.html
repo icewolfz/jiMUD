@@ -813,6 +813,7 @@
         if (open && !options.output)
             toggleOutput();
         outputDisplay.append('<div>' + text + '</div>');
+        outputDisplay[0].scrollTop = outputDisplay[0].scrollHeight;
     }
 
     $(document).ready(() => {
