@@ -620,7 +620,7 @@
         }
         if (!options.outputSize || options.outputSize < 170)
             options.outputSize = 170;
-        if(!options.maxRecent)
+        if (!options.maxRecent)
             options.maxRecent = 15;
         /*
         try {
@@ -1460,13 +1460,17 @@
                 //logOutput(manager.active.editor.filename+': Indenting complete');
             });
             p.editor.on('progress-start', (type) => {
-                logOutput(manager.active.editor.filename + ': Indenting started', true);
+                if (type === 'indent')
+                    logOutput(manager.active.editor.filename + ': Indenting started', true);
+                else if (type === 'format')
+                    logOutput(manager.active.editor.filename + ': Formatting started', true);
             });
-            p.editor.on('progress', (p, type) => {
-
-            });
+            //p.editor.on('progress', (p, type) => {});
             p.editor.on('progress-complete', (type) => {
-                logOutput(manager.active.editor.filename + ': Indenting finished', true);
+                if (type === 'indent')
+                    logOutput(manager.active.editor.filename + ': Indenting finished', true);
+                else if (type === 'format')
+                    logOutput(manager.active.editor.filename + ': Formatting finished', true);
             });
             p.editor.on('output', (msg) => {
                 logOutput(msg, true);

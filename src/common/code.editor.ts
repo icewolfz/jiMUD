@@ -183,11 +183,13 @@ export class CodeEditor extends EditorBase {
     private $sbSize: HTMLElement;
     private $sbMsg: HTMLElement;
     private $indenter: lpcIndenter;
+    private $formatter: lpcFormatter;
     private $annotations = [];
 
     constructor(options?: EditorOptions) {
         super(options);
         this.$indenter = new lpcIndenter();
+        this.$formatter = new lpcFormatter();
         this.$indenter.on('error', (e) => {
             this.$editor.setReadOnly(false);
             this.$annotations.push({
@@ -197,8 +199,8 @@ export class CodeEditor extends EditorBase {
                 this.$session.setAnnotations(this.$annotations);
             this.emit('error', e, 'indent');
         });
-        this.$indenter.on('start', (p) => {
-            this.emit('progress-start', p, 'indent');
+        this.$indenter.on('start', () => {
+            this.emit('progress-start', 'indent');
         });
         this.$indenter.on('progress', (p) => {
             this.emit('progress', p, 'indent');
@@ -437,7 +439,7 @@ export class CodeEditor extends EditorBase {
                                 var setcolor = (event, type, color, code, window) => {
                                     if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
                                         return;
-                                    this.$editor.insert('%^'+code.replace(/ /g, '%^%^')+'%^');
+                                    this.$editor.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
                                     ipcRenderer.removeListener('set-color', setcolor);
                                 }
                                 ipcRenderer.on('set-color', setcolor);
@@ -543,11 +545,26 @@ export class CodeEditor extends EditorBase {
                         },
                         {
                             label: 'Format File',
-                            accelerator: 'CmdOrCtrl+Shift+F'
+                            accelerator: 'CmdOrCtrl+Shift+F',
+                            click: () => {
+                                this.emit('progress-start', 'format');
+                                this.$editor.setReadOnly(true);
+                                var Range = ace.require('ace/range').Range;
+                                this.$session.replace(new Range(0, 0, this.$session.getLength(), Number.MAX_VALUE), this.$formatter.format(this.$session.getValue()));                            
+                                this.$editor.setReadOnly(false);
+                                this.emit('progress-complete', 'format');
+                            }
                         },
                         {
                             label: 'Format and Indent File',
-                            accelerator: 'CmdOrCtrl+Shift+I'
+                            accelerator: 'CmdOrCtrl+Shift+I',
+                            click: () => {
+                                this.emit('progress-start', 'format');
+                                this.$editor.setReadOnly(true);
+                                var code = this.$formatter.format(this.$session.getValue());
+                                this.emit('progress-complete', 'format');
+                                this.$indenter.indent(code);
+                            }
                         }
                     ]
                 },
@@ -1143,6 +1160,763 @@ export class lpcIndenter extends EventEmitter {
 
 }
 
-export class lpcFormatter extends EventEmitter {
+enum FormatTokenType {
+    unknown,
+    text,
+    keyword,
+    datatype,
+    modifier,
+    constant,
+    parenLmapping,
+    parenLarray,
+    parenLclosure,
+    parenLparen,
+    parenLbrace,
+    parenLbracket,
+    parenRarray,
+    parenRbrace,
+    parenRbracket,
+    parenRmapping,
+    parenRbracken,
+    parenRclosure,
+    parenRparen,
+    string,
+    whitespace,    
+    newline,
+    operator,
+    operatorBase,
+    operatorMethod,
+    operatorNot,
+    commentInline,
+    commentLeft,
+    commentRight,
+    flatten,
+    semicolon,
+    precompiler,
+    comma,
+    stringblock
+}
 
+interface FormatToken {
+    value: string;
+    type: FormatTokenType;
+}
+
+export class lpcFormatter extends EventEmitter {
+    private $src = "";
+    private $position = 0;
+    private tokens = [];
+    private block = [];
+    private b = [];
+
+    public format(source) {
+        if (!source || source.length === 0)
+            return "";
+
+        this.block = [];
+        this.b = [];
+        this.$src = source;
+        this.$position = 0;
+        this.tokens = [];
+        this.tokenize();
+        this.emit('start');
+        var tp = 0;
+        var tl = this.tokens.length;
+        var op = "";
+        var s, e, t, t2, tll;
+        var pc, incase;
+        var incomment = 0;
+        var inclosure = 0;
+        var inif = 0;
+        var p = 0;
+        var mblock = 0;
+        var leading;
+        for (; tp < tl; tp++) {
+            leading = "";
+            for (t = 0, tll = this.tokens[tp].length; t < tll; t++) {
+                if (this.tokens[tp][t].type !== FormatTokenType.whitespace)
+                    break;
+                op += this.tokens[tp][t].value;
+                leading += this.tokens[tp][t].value;
+            }
+            s = t;
+            pc = this.tokens[tp][t].type === FormatTokenType.precompiler ? 1 : 0;
+            incase = 0;
+            if (incomment === 1) incomment = 0;
+            while (t < tll) {
+                if (this.tokens[tp][t].type === FormatTokenType.stringblock && t + 1 < tll)
+                    mblock = this.tokens[tp][t + 1].type;
+                if (!mblock) {
+                    if (incomment === 0 && inif && this.tokens[tp][t].type === FormatTokenType.parenLparen)
+                        p++;
+                    else if (this.tokens[tp][t].type === FormatTokenType.parenLclosure)
+                        inclosure++;
+                    else if (this.tokens[tp][t].type === FormatTokenType.parenRclosure)
+                        inclosure--;
+                    else if (incomment === 0 && this.tokens[tp][t].type === FormatTokenType.commentInline)
+                        incomment = 1;
+                    else if (incomment === 0 && this.tokens[tp][t].type === FormatTokenType.commentInline)
+                        incomment = 2;
+                    else if (this.tokens[tp][t].type === FormatTokenType.commentRight)
+                        incomment = 0;
+                    else if (!pc && incomment === 0 && inclosure === 0 && s !== t && this.tokens[tp][t].type === FormatTokenType.keyword) {
+                        switch (this.tokens[tp][t].value) {
+                            case "break":
+                            case "case":
+                            case "continue":
+                            case "default":
+                            case "do":
+                            case "else":
+                            case "for":
+                            case "foreach":
+                            case "goto":
+                            case "return":
+                            case "switch":
+                            case "while":
+                            case "catch":
+                            case "try":
+                            case "throw":
+                            case "using":
+                                if (!op.rtrim().endsWith("\n"))
+                                    op += "\n" + leading + "   ";
+                                break;
+                            case "if":
+                                if (!op.endsWith("else ") && !op.rtrim().endsWith("\n"))
+                                    op += "\n" + leading + "   ";
+                                break;
+                        }
+                    }
+                }
+                incase = (incase || this.tokens[tp][t].value === "case" || this.tokens[tp][t].value === "default") ? 1 : 0;
+                if (!mblock && incomment === 0) {
+                    if (s !== t) {
+                        if (this.tokens[tp][t].type === FormatTokenType.comma || this.tokens[tp][t].type === FormatTokenType.semicolon)
+                            op = op.rtrim();
+                        else if (!pc && this.tokens[tp][t].type === FormatTokenType.operator) {
+                            if (!incase || (incase && this.tokens[tp][t].value !== ":")) {
+                                op = op.rtrim();
+                                op += " ";
+                            }
+                        }
+                        else if (this.tokens[tp][t].type === FormatTokenType.parenLclosure || this.tokens[tp][t].type === FormatTokenType.parenRclosure || this.tokens[tp][t].type === FormatTokenType.parenLmapping || this.tokens[tp][t].type === FormatTokenType.parenRmapping || this.tokens[tp][t].type === FormatTokenType.parenRarray || this.tokens[tp][t].type === FormatTokenType.parenLarray) {
+                            op = op.rtrim();
+                            op += " ";
+                        }
+                    }
+                    if ((this.tokens[tp][t].type === FormatTokenType.parenRbrace || this.tokens[tp][t].type === FormatTokenType.parenLbrace) && s !== t && !op.rtrim().endsWith("\n"))
+                        op += "\n" + leading;
+                }
+                op += this.tokens[tp][t].value;
+                e = t;
+                if (!mblock && incomment === 0) {
+                    if (t + 1 < tll) {
+                        if (this.tokens[tp][t].type === FormatTokenType.parenLbrace || this.tokens[tp][t].type === FormatTokenType.parenRbrace) {
+                            t++;
+                            for (; t < tll; t++) {
+                                if (this.tokens[tp][t].type === FormatTokenType.whitespace) {
+                                    op += this.tokens[tp][t].value;
+                                    continue;
+                                }
+                                break;
+                            }
+                            if (this.tokens[tp][t].type !== FormatTokenType.newline && !op.rtrim().endsWith("\n"))
+                                op += "\n" + leading;
+                        }
+                        else if (!pc && this.tokens[tp][t].type === FormatTokenType.operator || this.tokens[tp][t].type === FormatTokenType.comma || this.tokens[tp][t].type === FormatTokenType.semicolon) {
+                            t2 = t + 1;
+                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
+                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                    t++;
+                                    e++;
+                                    t2++;
+                                    if (t2 >= tll)
+                                        break;
+                                }
+                                if (t2 < tll) {
+                                    op = op.rtrim();
+                                    op += " ";
+                                }
+                            }
+                        }
+                        else if ((this.tokens[tp][t].type === FormatTokenType.parenLclosure || this.tokens[tp][t].type === FormatTokenType.parenRclosure || this.tokens[tp][t].type === FormatTokenType.parenLmapping || this.tokens[tp][t].type === FormatTokenType.parenRmapping || this.tokens[tp][t].type === FormatTokenType.parenRarray || this.tokens[tp][t].type === FormatTokenType.parenLarray)) {
+                            t2 = t + 1;
+                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
+                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                    t++;
+                                    e++;
+                                    t2++;
+                                    if (t2 >= tll)
+                                        break;
+                                }
+                                if (t2 < tll) {
+                                    op = op.rtrim();
+                                    op += " ";
+                                }
+                            }
+                        }
+                        else if (!pc && inclosure === 0 && this.tokens[tp][t].type === FormatTokenType.keyword) {
+                            t2 = t + 1;
+                            switch (this.tokens[tp][t].value) {
+                                case "return":
+                                    while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                        t++;
+                                        e++;
+                                        t2++;
+                                        if (t2 >= tll)
+                                            break;
+                                    }
+                                    if (this.tokens[tp][t2].type !== FormatTokenType.semicolon)
+                                        op += " ";
+                                    break;
+                                case "break":
+                                case "continue":
+                                case "default":
+                                    while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                        t++;
+                                        e++;
+                                        t2++;
+                                        if (t2 >= tll)
+                                            break;
+                                    }
+                                    break;
+                                case "case":
+                                case "do":
+                                case "else":
+                                case "for":
+                                case "foreach":
+                                case "goto":
+                                case "switch":
+                                case "while":
+                                case "catch":
+                                case "try":
+                                case "throw":
+                                case "using":
+                                    break;
+                                case "if":
+                                    while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                        t++;
+                                        e++;
+                                        t2++;
+                                        if (t2 >= tll)
+                                            break;
+                                    }
+                                    inif = 1;
+                                    break;
+                            }
+                        }
+                    }
+                    if (inif && this.tokens[tp][t].type === "paren.rparen") {
+                        p--;
+                        if (p === 0) {
+                            t2 = t + 1;
+                            if (this.tokens[tp][t2].type !== FormatTokenType.newline && this.tokens[tp][t].type !== FormatTokenType.parenLbrace && this.tokens[tp][t].type !== FormatTokenType.keyword) {
+                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                    t++;
+                                    e++;
+                                    t2++;
+                                    if (t2 >= tll)
+                                        break;
+                                }
+                                if (t2 < tll && this.tokens[tp][t2].type !== FormatTokenType.newline && this.tokens[tp][t2].type !== FormatTokenType.parenLbrace && this.tokens[tp][t2].type !== FormatTokenType.keyword) {
+                                    op = op.rtrim();
+                                    op += "\n" + leading;
+                                }
+                            }
+                            inif = 0;
+                        }
+                    }
+                }
+                if (mblock === this.tokens[tp][t].value)
+                    mblock = 0;
+                t = e;
+                t++;
+            }
+        }
+        this.emit('end');
+        return op;
+    };
+
+    private typetoken(txt) {
+        switch (txt) {
+            case "break":
+            case "case":
+            case "continue":
+            case "default":
+            case "do":
+            case "else":
+            case "for":
+            case "foreach":
+            case "goto":
+            case "if":
+            case "return":
+            case "switch":
+            case "while":
+            case "catch":
+            case "try":
+            case "throw":
+            case "using":
+                return { value: txt, type: FormatTokenType.keyword };
+            case "object":
+            case "function":
+            case "float":
+            case "mapping":
+            case "string":
+            case "int":
+            case "struct":
+            case "void":
+            case "class":
+            case "status":
+            case "mixed":
+            case "buffer":
+            case "array":
+                return { value: txt, type: FormatTokenType.datatype };
+            case "private":
+            case "protected":
+            case "public":
+            case "static":
+            case "varargs":
+            case "nosave":
+            case "nomask":
+            case "virtual":
+            case "inherit":
+                return { value: txt, type: FormatTokenType.modifier };
+            case "MUDOS":
+            case "__PORT__":
+            case "__ARCH__":
+            case "__COMPILER__":
+            case "__OPTIMIZATION__":
+            case "MUD_NAME":
+            case "HAS_ED":
+            case "HAS_PRINTF":
+            case "HAS_RUSAGE":
+            case "HAS_DEBUG_LEVEL":
+            case "__DIR__":
+            case "FLUFFOS":
+            case "__WIN32__":
+            case "__HAS_RUSAGE__":
+            case "__M64__":
+            case "__PACKAGE_DB__":
+            case "__GET_CHAR_IS_BUFFERED__":
+            case "__DSLIB__":
+            case "__DWLIB__":
+            case "__FD_SETSIZE__":
+            case "__VERSION__":
+            case "__DEBUG__":
+            case "SIZEOFINT":
+            case "MAX_INT":
+            case "MIN_INT":
+            case "MAX_FLOAT":
+            case "MIN_FLOAT":
+                return { value: txt, type: FormatTokenType.constant };
+        }
+        return { value: txt, type: FormatTokenType.text };
+    }
+
+    private getToken(): FormatToken {
+        var len = this.$src.length;
+        var idx = this.$position;
+        var s = this.$src;
+        var val = "";
+        var state = 0;
+        var c;
+        for (; idx < len; idx++) {
+            c = s.charAt(idx);
+            //i = s.charCodeAt(idx);
+            switch (state) {
+                case 1:
+                    switch (c) {
+                        case "[":
+                            this.$position = idx + 1;
+                            state = 0;
+                            return { value: "([", type: FormatTokenType.parenLmapping };
+                        case "{":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "({", type: FormatTokenType.parenLarray };
+                        case ":":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "(:", type: FormatTokenType.parenLclosure };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: "(", type: FormatTokenType.parenLparen };
+                    }
+                case 2:
+                    switch (c) {
+                        case ")":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "})", type: FormatTokenType.parenRarray };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: "}", type: FormatTokenType.parenRbrace };
+                    }
+                case 3:
+                    switch (c) {
+                        case ")":
+                            state = 0;
+                            if (this.b.length) {
+                                this.$position = idx;
+                                this.b.pop();
+                                return { value: "]", type: FormatTokenType.parenRbracket };
+                            }
+                            this.$position = idx + 1;
+                            return { value: "])", type: FormatTokenType.parenRmapping };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            this.b.pop();
+                            return { value: "]", type: FormatTokenType.parenRbracket };
+                    }
+                case 4:
+                    if (c == "\\") {
+                        val += c;
+                        state = 5;
+                    }
+                    else if (c == '"') {
+                        val += c;
+                        this.$position = idx + 1;
+                        state = 0;
+                        return { value: val, type: FormatTokenType.string };
+                    }
+                    else {
+                        val += c;
+                        this.$position = idx + 1;
+                    }
+                    break;
+                case 5:
+                    val += c;
+                    this.$position = idx + 1;
+                    state = 4;
+                    break;
+                case 6:
+                    if (c == " " || c == "\t") {
+                        val += c;
+                        this.$position = idx + 1;
+                    }
+                    else {
+                        this.$position = idx;
+                        state = 0;
+                        return { value: val, type: FormatTokenType.whitespace };
+                    }
+                    break;
+                case 7:
+                    switch (c) {
+                        case ")":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: ":)", type: FormatTokenType.parenRclosure };
+                        case ":":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "::", type: FormatTokenType.operatorBase };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: ":", type: FormatTokenType.operator };
+                    }
+                case 8:
+                    switch (c) {
+                        case "/":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "//", type: FormatTokenType.commentInline };
+                        case "*":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "/*", type: FormatTokenType.commentLeft };
+                        case "=":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "/=", type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: "/", type: FormatTokenType.operator };
+                    }
+                case 9:
+                    switch (c) {
+                        case "/":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "*/", type: FormatTokenType.commentRight };
+                        case "=":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "*=", type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: "*", type: FormatTokenType.operator };
+                    }
+                case 10:
+                    switch (c) {
+                        case val:
+                        case "=":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: val + c, type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: val, type: FormatTokenType.operator };
+                    }
+                case 11:// -- -= ->
+                    switch (c) {
+                        case "-":
+                        case "=":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: val + c, type: FormatTokenType.operator };
+                        case ">":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: "->", type: FormatTokenType.operatorMethod };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: "-", type: FormatTokenType.operator };
+                    }
+                case 12:
+                    switch (c) {
+                        case "=":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: val + c, type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: val, type: FormatTokenType.operator };
+                    }
+                case 13:
+                    switch (c) {
+                        case "=":
+                            state = 0;
+                            this.$position = idx + 1;
+                            return { value: val + c, type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: val, type: FormatTokenType.operatorNot };
+                    }
+                case 14:
+                    switch (c) {
+                        case ".":
+                            val += c;
+                            this.$position = idx + 1;
+                            if (val.length === 3) {
+                                state = 0;
+                                return { value: val, type: FormatTokenType.flatten };
+                            }
+                            break;
+                        default:
+                            state = 0;
+                            this.$position = idx;
+                            return { value: val, type: FormatTokenType.unknown };
+                    }
+                    break;
+                default:
+                    switch (c) {
+                        case '(':
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 1;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: "(", type: FormatTokenType.parenLparen };
+                            }
+                            break;
+                        case ')':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            return { value: ")", type: FormatTokenType.parenRparen };
+                        case '{':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            return { value: '{', type: FormatTokenType.parenLbrace };
+                        case '}':
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 2;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: "}", type: FormatTokenType.parenRbrace };
+                            }
+                            break;
+                        case ':':
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 7;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: ":", type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '/':
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 8;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: "/", type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '*':
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 9;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: "*", type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '[':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            this.b.push('[');
+                            return { value: '[', type: FormatTokenType.parenLbracket };
+                        case ']':
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 3;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                this.b.pop();
+                                return { value: "]", type: FormatTokenType.parenRbracket };
+                            }
+                            break;
+                        case '"':
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 4;
+                            val = "\"";
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: "\"", type: FormatTokenType.text };
+                            }
+                            break;
+                        case '\r':
+                            this.$position = idx + 1;
+                            break;
+                        case '\n':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            return { value: '\n', type: FormatTokenType.newline };
+                        case ' ':
+                        case '\t':
+                            if (val.length > 0) return this.typetoken(val);
+                            val += c;
+                            this.$position = idx + 1;
+                            state = 6;
+                            break;
+                        case '#':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            return { value: c, type: FormatTokenType.precompiler};
+                        case '&': //&& &=
+                        case '|': // || |=
+                        case '+': // ++ +=
+                        case '<': // << <=
+                        case '>': // >> >=
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 10;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: c, type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '-':// -- -= ->
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 11;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: c, type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '=':// ==
+                        case '%':// %=
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 12;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: c, type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '!':// !=
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 13;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: c, type: FormatTokenType.operatorNot };
+                            }
+                            break;
+                        case '.'://...
+                            if (val.length > 0) return this.typetoken(val);
+
+                            state = 14;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: c, type: FormatTokenType.unknown };
+                            }
+                            break;
+                        case '?':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            return { value: c, type: FormatTokenType.operator };
+                        case ';':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            return { value: c, type: FormatTokenType.semicolon };
+                        case '\\':
+                        case '\'':
+                        case '~':
+                        case '.':
+                        case '^':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            return { value: c, type: FormatTokenType.text };
+                        case ',':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            return { value: c, type: FormatTokenType.comma };
+                        case '@':
+                            if (val.length > 0) return this.typetoken(val);
+                            this.$position = idx + 1;
+                            return { value: c, type: FormatTokenType.stringblock };
+                        default:
+                            if (c === "_" || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+                                val += c;
+                                this.$position = idx + 1;
+                            }
+                            else {
+                                if (val.length > 0) return this.typetoken(val);
+                                this.$position = idx + 1;
+                                return { value: c, type: FormatTokenType.unknown };
+                            }
+                            break;
+                    }
+                    break;
+            }
+        }
+        if (idx >= len && val.length === 0)
+            return null;
+        if (state === 6)
+            return { value: val, type: FormatTokenType.whitespace };
+        return this.typetoken(val);
+    }
+
+    private tokenize() {
+        var token: FormatToken = this.getToken();
+        var t = [];
+        while (token) {
+            t.push(token);
+            if (token.type === FormatTokenType.newline) {
+                this.tokens.push(t);
+                t = [];
+            }
+            token = this.getToken();
+        }
+        if (t.length)
+            this.tokens.push(t);
+    }
 }
