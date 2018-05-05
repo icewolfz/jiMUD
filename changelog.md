@@ -1,31 +1,24 @@
 # Changelog
 
-## 0.4.x
+## 0.4.43
 
 - **New:**
+  - Status: dominant weapon hand is now bordered with red
   - Code editor: allows you to view and edit code, good for immortals
   - Immortal tools: New [open file in external editor](docs/immortal.md) preference, allows you to choose to ignore the new internal code editor
   - Advanced editor:
     - Can send formated text to open code editor to be inserted at current cursor
     - Copy formatted, copy selected text with the format codes, using Ctrl+Shift+C or context menu
-    - Paste formatted, paste text formatted with pinkfish codes and have it display in the editor with full formatting, Ctrl+Shift+P or context menu
+    - Paste formatted, paste text formatted with pinkfish codes and have it display in the editor with full formatting, Ctrl+Shift+P or context menu  
 - **Changed:**
+  - Upgrade ace editor to newest build
+  - Upgrade several 3rd party dependencies
   - Immortal tools:
     - Rename old editor to external editor
     - Add new editor using new internal code editor.
   - Display: Optimize display creation
   - Advanced editor: Changed bold black to send mono11, as many clients cant handle bold black and the mud will handle converts of the code to other clients
   - Remove keyboard shortcut for toggling dev tools as they are mint for advanced debugging of client
-- **Fixed:**
-  - Fixed color picker not being a modal dialog in some instances
-
-## 0.4.43
-
-- **New:**
-  - Status: dominant weapon hand is now bordered with red
-- **Changed:**
-  - Upgrade ace editor to newest build
-  - Upgrade several 3rd party dependencies
 - **Fixed:**
   - Immortal tools:
     - Buffer size was not correctly being stored as a number when changed from default in preferences
@@ -36,6 +29,7 @@
   - Character manager:
     - Profiles where not correctly saving when switching characters
     - Profile menu list state was being updated to match correctly enabled profiles
+  - Fixed color picker not being a modal dialog in some instances
 
 ## 0.4.42 2018-04-23
 
