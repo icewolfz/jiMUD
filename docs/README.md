@@ -96,6 +96,7 @@ Basic questions answered about jiMUD
 - [Assets](assets.md)
 - [Mapper](mapper.md)
 - [Immortal Tools](immortal.md)
+- [Code editor](codeeditor.md)
 
 ## Known Issues
 

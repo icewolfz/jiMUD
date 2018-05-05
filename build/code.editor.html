@@ -26,7 +26,6 @@
     <script src="../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="../lib/ace/ext-statusbar.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-language_tools.js" type="text/javascript"></script>
-    <script src="../lib/ace/ext-settings_menu.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-themelist.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-modelist.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-spellcheck.js"></script>
@@ -348,7 +347,7 @@
                     label: '&Preferences...',
                     accelerator: "CmdOrCtrl+Comma",
                     click: () => {
-                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=300,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=450,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     }
                 },
                 { type: 'separator' },
@@ -620,7 +619,110 @@
                     persistent: false,
                     alwaysOnTopClient: true,
                     alwaysOnTop: false
+                },
+                editorOptions: {
+                    "selectionStyle": "text",
+                    "highlightActiveLine": true,
+                    "highlightSelectedWord": true,
+                    "readOnly": false,
+                    "copyWithEmptySelection": false,
+                    "cursorStyle": "ace",
+                    "mergeUndoDeltas": true,
+                    "behavioursEnabled": true,
+                    "wrapBehavioursEnabled": true,
+                    "hScrollBarAlwaysVisible": false,
+                    "vScrollBarAlwaysVisible": false,
+                    "highlightGutterLine": true,
+                    "animatedScroll": false,
+                    "showInvisibles": false,
+                    "showPrintMargin": true,
+                    "printMarginColumn": 80,
+                    "printMargin": 80,
+                    "fadeFoldWidgets": false,
+                    "showFoldWidgets": true,
+                    "showLineNumbers": true,
+                    "showGutter": true,
+                    "displayIndentGuides": true,
+                    "fontSize": 12,
+                    "scrollPastEnd": 0,
+                    "theme": "ace/theme/visual_studio",
+                    "maxPixelHeight": 0,
+                    "scrollSpeed": 2,
+                    "dragDelay": 0,
+                    "dragEnabled": true,
+                    "focusTimeout": 0,
+                    "tooltipFollowsMouse": true,
+                    "firstLineNumber": 1,
+                    "overwrite": false,
+                    "newLineMode": "unix",
+                    "useWorker": true,
+                    "useSoftTabs": true,
+                    "navigateWithinSoftTabs": false,
+                    "tabSize": 3,
+                    "wrap": "off",
+                    "indentedSoftWrap": true,
+                    "foldStyle": "markbegin",
+                    "mode": "ace/mode/lpc",
+                    "enableMultiselect": true,
+                    "enableBlockSelect": true,
+                    "enableBasicAutocompletion": true,
+                    "enableLiveAutocompletion": true,
+                    "enableSnippets": true,
+                    "spellcheck": true
                 }
+            };
+            saveOptions();
+        }
+        else if (!options.editorOptions) {
+            options.editorOptions = {
+                "selectionStyle": "text",
+                "highlightActiveLine": true,
+                "highlightSelectedWord": true,
+                "readOnly": false,
+                "copyWithEmptySelection": false,
+                "cursorStyle": "ace",
+                "mergeUndoDeltas": true,
+                "behavioursEnabled": true,
+                "wrapBehavioursEnabled": true,
+                "hScrollBarAlwaysVisible": false,
+                "vScrollBarAlwaysVisible": false,
+                "highlightGutterLine": true,
+                "animatedScroll": false,
+                "showInvisibles": false,
+                "showPrintMargin": true,
+                "printMarginColumn": 80,
+                "printMargin": 80,
+                "fadeFoldWidgets": false,
+                "showFoldWidgets": true,
+                "showLineNumbers": true,
+                "showGutter": true,
+                "displayIndentGuides": true,
+                "fontSize": 12,
+                "scrollPastEnd": 0,
+                "theme": "ace/theme/visual_studio",
+                "maxPixelHeight": 0,
+                "scrollSpeed": 2,
+                "dragDelay": 0,
+                "dragEnabled": true,
+                "focusTimeout": 0,
+                "tooltipFollowsMouse": true,
+                "firstLineNumber": 1,
+                "overwrite": false,
+                "newLineMode": "unix",
+                "useWorker": true,
+                "useSoftTabs": true,
+                "navigateWithinSoftTabs": false,
+                "tabSize": 3,
+                "wrap": "off",
+                "indentedSoftWrap": true,
+                "foldStyle": "markbegin",
+                "mode": "ace/mode/lpc",
+                "enableMultiselect": true,
+                "enableBlockSelect": true,
+                "enableBasicAutocompletion": true,
+                "enableLiveAutocompletion": true,
+                "enableSnippets": true,
+                "spellcheck": true
             };
             saveOptions();
         }
@@ -824,7 +926,6 @@
 
     $(document).ready(() => {
         loadOptions();
-
         $('#btm-drag-bar').mousedown(function (e) {
             e.preventDefault();
             outputDragging = true;
@@ -1002,6 +1103,10 @@
     ipcRenderer.on('setting-changed', (event, data) => {
         if (data.type === "extensions" && data.name === "code-editor") {
             loadOptions(data.value);
+            for (var p = 0, l = manager.panels.length; p < l; p++) {
+                if (manager.panels[p].editor.type === 1)
+                    manager.panels[p].editor.options = options.editorOptions;
+            }
         }
     });
 
@@ -1298,6 +1403,7 @@
             //p.editor = new VirtualEditor(data);
             //else            
             p.editor = new CodeEditor(data);
+            p.editor.options = options.editorOptions;
             if (!_watched[data.file]) {
                 _watched[data.file] = 1;
                 watcher.add(data.file);

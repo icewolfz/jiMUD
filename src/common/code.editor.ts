@@ -172,6 +172,10 @@ abstract class EditorBase extends EventEmitter {
     get new(): boolean {
         return (this.state & FileState.new) === FileState.new;
     }
+
+    abstract set options(value);
+    abstract get options();
+    abstract get type();
 }
 
 export class CodeEditor extends EditorBase {
@@ -550,7 +554,7 @@ export class CodeEditor extends EditorBase {
                                 this.emit('progress-start', 'format');
                                 this.$editor.setReadOnly(true);
                                 var Range = ace.require('ace/range').Range;
-                                this.$session.replace(new Range(0, 0, this.$session.getLength(), Number.MAX_VALUE), this.$formatter.format(this.$session.getValue()));                            
+                                this.$session.replace(new Range(0, 0, this.$session.getLength(), Number.MAX_VALUE), this.$formatter.format(this.$session.getValue()));
                                 this.$editor.setReadOnly(false);
                                 this.emit('progress-complete', 'format');
                             }
@@ -608,6 +612,18 @@ export class CodeEditor extends EditorBase {
     public resize() {
         this.$editor.resize(true);
     }
+
+    public set options(value) {
+        var mode = this.$editor.getOption('mode');
+        this.$editor.setOptions(value);
+        this.$session.setMode(mode);
+    }
+    public get options() {
+        return this.$editor.getOptions();
+    }
+    public get type() {
+        return 1;
+    }
 }
 
 export class VirtualEditor extends EditorBase {
@@ -637,6 +653,11 @@ export class VirtualEditor extends EditorBase {
     public supports(what) { return false; }
     public focus(): void { }
     public resize() { }
+    public set options(value) { }
+    public get options() { return null; }
+    public get type() {
+        return 2;
+    }
 }
 
 enum TokenType {
@@ -1181,7 +1202,7 @@ enum FormatTokenType {
     parenRclosure,
     parenRparen,
     string,
-    whitespace,    
+    whitespace,
     newline,
     operator,
     operatorBase,
@@ -1807,7 +1828,7 @@ export class lpcFormatter extends EventEmitter {
                         case '#':
                             if (val.length > 0) return this.typetoken(val);
                             this.$position = idx + 1;
-                            return { value: c, type: FormatTokenType.precompiler};
+                            return { value: c, type: FormatTokenType.precompiler };
                         case '&': //&& &=
                         case '|': // || |=
                         case '+': // ++ +=
