@@ -115,7 +115,7 @@
         <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
     </div>
 
-    <dialog id="newArea" title="Create new area" style="width:400px;height:240px;padding:5px;">
+    <dialog id="newArea" data-title="Create new area" style="width:400px;height:348px;padding:5px;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('newArea').close();">&times;</button>
             <div style="padding-top: 2px;">Create new area...</div>
@@ -132,7 +132,14 @@
                             </button>
                         </span>
                     </div>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Local path where files will be generated</span>
                     <div class="form-error"></div>
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="control-label" style="width: 100%">Remote path
+                    <input class="form-control" style="width:100%" type="text" id="newarea-remote-path">
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Remote path for area, if blank will default to /realms/character/area</span>
                 </label>
             </div>
             <div class="form-group">
@@ -140,6 +147,7 @@
                     Name
                     <input class="form-control" style="width:100%" type="text" id="newarea-name" style="width:100%">
                     <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Area name, used as folder name</span>
                     <div class="form-error"></div>
                 </label>
             </div>
@@ -150,7 +158,7 @@
         </div>
     </dialog>
 
-    <dialog id="newVirtualArea" title="Create new virtual area" style="width:400px;height:450px;padding:5px;">
+    <dialog id="newVirtualArea" data-title="Create new virtual area" style="width:400px;height:450px;padding:5px;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('newVirtualArea').close();">&times;</button>
             <div style="padding-top: 2px;">Create new virtual area...</div>
@@ -264,7 +272,7 @@
         </div>
     </dialog>
 
-    <dialog id="monsterWizard" title="Create new monster" style="width:500px;height:208px;padding:5px;">
+    <dialog id="monsterWizard" data-title="Create new monster" style="width:500px;height:208px;padding:5px;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('monsterWizard').close();">&times;</button>
             <div style="padding-top: 2px;">Create new monster...</div>
@@ -595,11 +603,13 @@
                             //accelerator: "CmdOrCtrl+N",
                             click: newArea
                         },
+                        /*
                         {
                             label: '&Virtual Area...',
                             //accelerator: "CmdOrCtrl+N",
                             click: newVirtualArea
                         },
+                        */
                         { type: 'separator' },
                         {
                             label: '&Room...',
@@ -1303,12 +1313,14 @@
                     newArea();
                 }
             }));
+            /*
             addMenu.append(new MenuItem({
                 label: 'New virtual area...', click() {
                     clearButton('#btn-add-dropdown');
                     newVirtualArea();
                 }
             }));
+            */
             addMenu.append(new MenuItem({ type: 'separator' }));
             addMenu.append(new MenuItem({
                 label: 'New room...', click() {
@@ -1381,7 +1393,7 @@
                             {
                                 type: 'question',
                                 title: 'Open dialog',
-                                message: elems[e].title + ' is open, exit?',
+                                message: (elems[e].dataset.title || 'Dialog') + ' is open, exit?',
                                 buttons: ['Yes', 'No'],
                                 defaultId: 1
                             }) === 1)
@@ -1478,7 +1490,22 @@
         updatePanel(manager.active);
     }
 
+    function parseFileTemplate(template, data) {
+        if (!data || !template || template.length === 0) return template;
+        var d;
+        for (d in data) {
+            if (!data.hasOwnProperty(d))
+                continue;
+            if (data[d].regex)
+                template = template.replace(data[d].regex, data[d].value);
+            else
+                template = template.replace(new RegExp('{' + d + '}', 'g'), data[d]);
+        }
+        return template;
+    }
+
     function newArea() {
+        $('#newArea *').attr('disabled', false);
         var p = $("#newarea-path").parent().parent();
         p.removeClass("has-error");
         p.removeClass("has-feedback");
@@ -1486,7 +1513,7 @@
         p = $("#newarea-name").parent();
         p.removeClass("has-error");
         p.removeClass("has-feedback");
-        $('#newarea-path').val((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : ''));
+        $('#newarea-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
         $('#newarea-name').val('');
         document.getElementById('newArea').showModal();
     }
@@ -1536,6 +1563,38 @@
             $('#newarea-path').focus();
             return;
         }
+        options.browse = $('#newarea-path').val();
+        saveOptions();
+        $('#newArea *').attr('disabled', true);
+        var templatePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'area'));
+        var template = walkSync(templatePath);
+        var templateRegex = new RegExp('^' + templatePath.replace(/\\/g, '\\\\'));
+        var c = 0;
+        var cl = template.dirs.length;
+        fs.mkdirSync(aPath);
+        for (; c < cl; c++)
+            fs.mkdirSync(template.dirs[c].replace(templateRegex, aPath));
+        c = 0;
+        cl = template.files.length;
+        var character = capitalize(remote.getGlobal('characterLogin') || remote.getGlobal('character')) || 'Unknown';
+        var r = $('#newarea-remote-path').val() || '/realms/' + character + '/' + $('#newarea-name').val();
+        if (r.endsWith('/'))
+            r = r.substr(0, r.length - 1);
+        var data = {
+            'your name': character,
+            'character': character,
+            'name': character,
+            'date': moment().format('YYYY-MM-DD'),
+            'area': $('#newarea-name').val(),
+            'path': r
+        };
+        var value;
+        for (; c < cl; c++) {
+            value = fs.readFileSync(template.files[c], 'utf8');
+            value = parseFileTemplate(value, data);
+            fs.writeFileSync(template.files[c].replace(templateRegex, aPath), data);
+        }
+        document.getElementById('newArea').close();
     }
 
     function validName(name) {
