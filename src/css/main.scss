@@ -466,6 +466,11 @@ body {
     -webkit-mask-image: radial-gradient(circle 9px at 100% 0, transparent 0, transparent 7px, black 7px);
 }
 
+dialog {
+    border: 1px solid black;
+    box-shadow: 3px 3px 5px #535353;
+}
+
 .dialog-footer {
     background-color: #F5F5F5;
     box-shadow: inset 0 1px 0 #fff;
