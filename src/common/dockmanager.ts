@@ -9,7 +9,7 @@ export enum UpdateType {
 }
 
 export interface DockMangerOptions {
-    container?;
+    container?: string | JQuery | HTMLElement;
 }
 
 export interface Panel {
