@@ -1476,14 +1476,7 @@
 
     function newFromFile(file, name) {
         if (!file || file.length === 0) return;
-        var character = capitalize(remote.getGlobal('characterLogin') || remote.getGlobal('character'));
-        var value = fs.readFileSync(file, 'utf8');
-        if (value) {
-            value = value.replace(/{your name}/g, character);
-            value = value.replace(/{character}/g, character);
-            value = value.replace(/{name}/g, character);
-            value = value.replace(/{date}/g, moment().format('YYYY-MM-DD'));
-        }
+        var value = parseFileTemplate(fs.readFileSync(file, 'utf8'));
         createEditor({ file: 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c', new: true, value: value });
         newCounter++;
         doUpdate(1);
@@ -1491,7 +1484,8 @@
     }
 
     function parseFileTemplate(template, data) {
-        if (!data || !template || template.length === 0) return template;
+        if (!template || template.length === 0) return template;
+        if (!data) data = baseParseData();
         var d;
         for (d in data) {
             if (!data.hasOwnProperty(d))
@@ -1502,6 +1496,16 @@
                 template = template.replace(new RegExp('{' + d + '}', 'g'), data[d]);
         }
         return template;
+    }
+
+    function baseParseData() {
+        var character = capitalize(remote.getGlobal('characterLogin') || remote.getGlobal('character')) || 'Unknown';
+        return {
+            'your name': character,
+            'character': character,
+            'name': character,
+            'date': moment().format('YYYY-MM-DD')
+        };
     }
 
     function newArea() {
@@ -1576,18 +1580,11 @@
             fs.mkdirSync(template.dirs[c].replace(templateRegex, aPath));
         c = 0;
         cl = template.files.length;
-        var character = capitalize(remote.getGlobal('characterLogin') || remote.getGlobal('character')) || 'Unknown';
-        var r = $('#newarea-remote-path').val() || '/realms/' + character + '/' + $('#newarea-name').val();
-        if (r.endsWith('/'))
-            r = r.substr(0, r.length - 1);
-        var data = {
-            'your name': character,
-            'character': character,
-            'name': character,
-            'date': moment().format('YYYY-MM-DD'),
-            'area': $('#newarea-name').val(),
-            'path': r
-        };
+        var data = baseParseData();
+        data.area = $('#newarea-name').val();
+        data.path = $('#newarea-remote-path').val() || '/realms/' + data.name.toLowerCase() + '/' + $('#newarea-name').val().toLowerCase();
+        if (data.path.endsWith('/'))
+            data.path = data.path.substr(0, data.path.length - 1);
         var value;
         for (; c < cl; c++) {
             value = fs.readFileSync(template.files[c], 'utf8');
