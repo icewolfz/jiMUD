@@ -8,7 +8,7 @@
  * @typeof include
  * @doc /doc/build/virtual/generic_virtual
  */
-#define RMS "{path}" //the root path of area
+#define RMS "{path}/" //the root path of area
 #define MON (RMS+"mon/") //the path to all monsters
 #define OBJ (RMS+"obj/") //the path to all objects
 #define STD (RMS+"std/") //the path to all standard files

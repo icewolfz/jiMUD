@@ -10,9 +10,8 @@
  * @doc /doc/build/room/Basic
  */
 #include <std.h>
-#include "../area.h"
 
-inherit BASEROOM;
+inherit STD_ROOM;
  
 /**
  * Create
@@ -25,6 +24,10 @@ varargs void create(int x, int y, int z, int terrainIdx, int itemIdx, int exits)
    set_property("item id", i);
    set_property("exit id", e);    
    ::create();
+   set_properties( ([ 
+     "indoors":0,
+     "light":3
+    ]) );   
 }
          
 /**
@@ -34,4 +37,21 @@ varargs void create(int x, int y, int z, int terrainIdx, int itemIdx, int exits)
  */
 void compile_done(){
              
+}
+
+/**
+ * Reset
+ * 
+ * Reset function triggered every 7 to 15 mins, add monsters or reset data as needed
+ */
+void reset() {
+   string tmp;
+   ::reset();
+   //virtual area so check exits, use the exit id as exits may not be created on first reset
+   //Perform a probably check to allow disabling of default monsters
+   if (query_property("no clone monsters") || !query_property("exit id"))
+      return;
+   // If monsters already in room do not create more
+   if(sizeof(filter(query_living_contents(), (: sscanf(base_name($1), "{path}/%s", tmp) :))))
+      return;
 }
