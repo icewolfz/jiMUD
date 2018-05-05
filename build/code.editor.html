@@ -5,8 +5,6 @@
     <meta charset="UTF-8">
     <title>Code Editor</title>
     <link rel="shortcut icon" href="../assets/icons/png/ied.png" />
-    <link href="css/cm.css" rel="stylesheet" type="text/css" />
-    <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
@@ -14,6 +12,9 @@
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
     <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/cm.css" rel="stylesheet" type="text/css" />
+    <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
+
     <script>
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
@@ -114,115 +115,152 @@
         <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
     </div>
 
-    <dialog id="newArea" title="Create new area" style="width:400px;height:150px;padding:5px;">
-        <div style="margin-top:6px;height:26px;position:relative">
-            <a id="areaBrowse" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-browse'" onclick="areaBrowse()" style="position:absolute;right:0;top:0">Browse</a>
-            Create area in:
-            <span id="areaPathlbl">/</span>
-            <input type="hidden" id="areaPath" name="c" value="/">
+    <dialog id="newArea" title="Create new area" style="width:400px;height:240px;padding:5px;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('newArea').close();">&times;</button>
+            <div style="padding-top: 2px;">Create new area...</div>
         </div>
-        <div style="padding-top:6px;">Name:
-            <input type="text" class="easyui-validatebox" id="areaname" style="width: 330px" data-options="required:true,validType:'varName'">
+        <div class="dialog-body" style="padding-top:40px">
+            <div class="form-group">
+                <label class="control-label" style="width:100%">
+                    Save path
+                    <div class="input-group">
+                        <input type="text" id="newarea-path" style="width:100%" class="input-sm form-control" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-default btn-sm" type="button" id="btn-newarea-path">
+                                &hellip;
+                            </button>
+                        </span>
+                    </div>
+                    <div class="form-error"></div>
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="control-label" style="width:100%">
+                    Name
+                    <input class="form-control" style="width:100%" type="text" id="newarea-name" style="width:100%">
+                    <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+                    <div class="form-error"></div>
+                </label>
+            </div>
         </div>
-        <div id="areaButtons">
-            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="createArea()">Ok</a>
-            <a id="areaclose" href="javascript:void(0)" class="easyui-linkbutton" onclick="$('#newArea').dialog('close');">Cancel</a>
+        <div class="dialog-footer">
+            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('newArea').close();">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-primary" onclick="createArea()">Finish</button>
         </div>
     </dialog>
 
-    <dialog id="newvArea" title="Create new virtual area" style="width:400px;height:450px;padding:5px;">
-        <div style="margin-top:6px;height:26px;position:relative">
-            <a id="vareaBrowse" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-browse'" onclick="vareaBrowse()" style="position:absolute;right:0;top:0">Browse</a>
-            Create virtual area in:
-            <span id="vareaPathlbl">/</span>
-            <input type="hidden" id="vareaPath" name="c" value="/">
+    <dialog id="newVirtualArea" title="Create new virtual area" style="width:400px;height:450px;padding:5px;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('newVirtualArea').close();">&times;</button>
+            <div style="padding-top: 2px;">Create new virtual area...</div>
         </div>
-        <div>
-            <label for="createnarea">
-                <input type="checkbox" id="createnarea">Create area</label>
-        </div>
-        <div style="padding-top:6px;">Area Name:
-            <input type="text" class="easyui-validatebox" id="vareaname" style="width: 300px" disabled="disabled" data-options="validType:'varName'">
-        </div>
-        <hr>
-        <div>
-            <span>
-                <label for="vareawidth" class="l-btn-text">Width</label>
-                <input class="easyui-numberspinner" style="float: left;width:45px;" id="vareawidth" data-options="min:2,max:100,value:1">
-            </span>
-            <span>
-                <label for="varealength" class="l-btn-text">Length</label>
-                <input class="easyui-numberspinner" style="float: left;width:45px;" id="varealength" data-options="min:2,max:100,value:1">
-            </span>
-            <span>
-                <label for="vareadepth" class="l-btn-text">Depth</label>
-                <input class="easyui-numberspinner" style="float: left;width:45px;" id="vareadepth" data-options="min:1,max:100,value:1">
-            </span>
-        </div>
-        <div>
-            <div id="defaultsettings">
-                <label>
-                    <input type="checkbox" id="eCoords">Enable Coordinates</label>
-                <label class="l-btn-text" style="display: none">Room cache size
-                    <input class="easyui-numberspinner" style="float: left;width:55px;" id="vcache" data-options="min:1,max:500,value:200">
+        <div class="dialog-body" style="padding-top:40px">
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width:100%">
+                    Save path
+                    <div class="input-group">
+                        <input type="text" id="newvirtualarea-path" style="width:100%" class="input-sm form-control" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-default btn-sm" type="button" id="btn-newvirtualarea-path">
+                                &hellip;
+                            </button>
+                        </span>
+                    </div>
                 </label>
             </div>
-            <fieldset id="defaultexits">
-                <legend>Default Exits</legend>
-                <input type="hidden" id="des" value="170">
-                <label for="deUp">
-                    <input type="checkbox" value="512" id="deUp">Up</label>
-                <label for="deDown">
-                    <input type="checkbox" value="256" id="deDown">Down</label>
-                <label for="deNorth">
-                    <input type="checkbox" value="128" id="deNorth" checked="checked">North</label>
-                <label for="deNorthEast">
-                    <input type="checkbox" value="64" id="deNorthEast">NorthEast</label>
-                <label for="deEast">
-                    <input type="checkbox" value="32" id="deEast" checked="checked">East</label>
-                <label for="deSouthEast">
-                    <input type="checkbox" value="16" id="deSouthEast">SouthEast</label>
-                <label for="deSouth">
-                    <input type="checkbox" value="8" id="deSouth" checked="checked">South</label>
-                <label for="deSouthWest">
-                    <input type="checkbox" value="4" id="deSouthWest">SouthWest</label>
-                <label for="deWest">
-                    <input type="checkbox" value="2" id="deWest" checked="checked">West</label>
-                <label for="deNorthWest">
-                    <input type="checkbox" value="1" id="deNorthWest">NorthWest</label>
-                <label for="deNone">
-                    <input type="checkbox" value="0" id="deNone">None</label>
-            </fieldset>
-            <fieldset id="defaultstates">
-                <legend>Default States</legend>
-                <input type="hidden" id="dss" value="0">
-                <label for="dsNoAttack">
-                    <input type="checkbox" value="512" id="dsNoAttack">No Attack</label>
-                <label for="dsNoMagic">
-                    <input type="checkbox" value="256" id="dsNoMagic">No Magic</label>
-                <label for="dsCouncil">
-                    <input type="checkbox" value="128" id="dsCouncil">Council</label>
-                <label for="dsOutdoors">
-                    <input type="checkbox" value="64" id="dsOutdoors">Outdoors</label>
-                <label for="dsIndoors">
-                    <input type="checkbox" value="32" id="dsIndoors">Indoors</label>
-                <label for="dsWater">
-                    <input type="checkbox" value="16" id="dsWater">Water</label>
-                <label for="dsHot">
-                    <input type="checkbox" value="8" id="dsHot">Hot</label>
-                <label for="dsCold">
-                    <input type="checkbox" value="4" id="dsCold">Cold</label>
-                <label for="dsSinkingUp">
-                    <input type="checkbox" value="2" id="dsSinkingUp">SinkingUp</label>
-                <label for="dsSinkingDown">
-                    <input type="checkbox" value="1" id="dsSinkingDown">SinkingDown</label>
-                <label for="dsNone">
-                    <input type="checkbox" value="0" id="dsNone" checked="checked">None</label>
-            </fieldset>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width:100%">
+                    Area
+                    <div class="input-group" style="width:100%">
+                        <input type="text" id="newvirtualarea-area" class="input-sm form-control" style="width:100%" />
+                        <div class="input-group-addon">
+                            <label>
+                                <input type="checkbox" id="newvirtualarea-area-enabled" /> Enable</label>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <hr>
+            <div>
+                <span>
+                    <label for="vareawidth" class="l-btn-text">Width</label>
+                    <input class="easyui-numberspinner" style="float: left;width:45px;" id="vareawidth" data-options="min:2,max:100,value:1">
+                </span>
+                <span>
+                    <label for="varealength" class="l-btn-text">Length</label>
+                    <input class="easyui-numberspinner" style="float: left;width:45px;" id="varealength" data-options="min:2,max:100,value:1">
+                </span>
+                <span>
+                    <label for="vareadepth" class="l-btn-text">Depth</label>
+                    <input class="easyui-numberspinner" style="float: left;width:45px;" id="vareadepth" data-options="min:1,max:100,value:1">
+                </span>
+            </div>
+            <div>
+                <div id="defaultsettings">
+                    <label>
+                        <input type="checkbox" id="eCoords">Enable Coordinates</label>
+                    <label class="l-btn-text" style="display: none">Room cache size
+                        <input class="easyui-numberspinner" style="float: left;width:55px;" id="vcache" data-options="min:1,max:500,value:200">
+                    </label>
+                </div>
+                <fieldset id="defaultexits">
+                    <legend>Default Exits</legend>
+                    <input type="hidden" id="des" value="170">
+                    <label for="deUp">
+                        <input type="checkbox" value="512" id="deUp">Up</label>
+                    <label for="deDown">
+                        <input type="checkbox" value="256" id="deDown">Down</label>
+                    <label for="deNorth">
+                        <input type="checkbox" value="128" id="deNorth" checked="checked">North</label>
+                    <label for="deNorthEast">
+                        <input type="checkbox" value="64" id="deNorthEast">NorthEast</label>
+                    <label for="deEast">
+                        <input type="checkbox" value="32" id="deEast" checked="checked">East</label>
+                    <label for="deSouthEast">
+                        <input type="checkbox" value="16" id="deSouthEast">SouthEast</label>
+                    <label for="deSouth">
+                        <input type="checkbox" value="8" id="deSouth" checked="checked">South</label>
+                    <label for="deSouthWest">
+                        <input type="checkbox" value="4" id="deSouthWest">SouthWest</label>
+                    <label for="deWest">
+                        <input type="checkbox" value="2" id="deWest" checked="checked">West</label>
+                    <label for="deNorthWest">
+                        <input type="checkbox" value="1" id="deNorthWest">NorthWest</label>
+                    <label for="deNone">
+                        <input type="checkbox" value="0" id="deNone">None</label>
+                </fieldset>
+                <fieldset id="defaultstates">
+                    <legend>Default States</legend>
+                    <input type="hidden" id="dss" value="0">
+                    <label for="dsNoAttack">
+                        <input type="checkbox" value="512" id="dsNoAttack">No Attack</label>
+                    <label for="dsNoMagic">
+                        <input type="checkbox" value="256" id="dsNoMagic">No Magic</label>
+                    <label for="dsCouncil">
+                        <input type="checkbox" value="128" id="dsCouncil">Council</label>
+                    <label for="dsOutdoors">
+                        <input type="checkbox" value="64" id="dsOutdoors">Outdoors</label>
+                    <label for="dsIndoors">
+                        <input type="checkbox" value="32" id="dsIndoors">Indoors</label>
+                    <label for="dsWater">
+                        <input type="checkbox" value="16" id="dsWater">Water</label>
+                    <label for="dsHot">
+                        <input type="checkbox" value="8" id="dsHot">Hot</label>
+                    <label for="dsCold">
+                        <input type="checkbox" value="4" id="dsCold">Cold</label>
+                    <label for="dsSinkingUp">
+                        <input type="checkbox" value="2" id="dsSinkingUp">SinkingUp</label>
+                    <label for="dsSinkingDown">
+                        <input type="checkbox" value="1" id="dsSinkingDown">SinkingDown</label>
+                    <label for="dsNone">
+                        <input type="checkbox" value="0" id="dsNone" checked="checked">None</label>
+                </fieldset>
+            </div>
         </div>
-        <div id="vareaButtons">
-            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="createvArea()">Ok</a>
-            <a id="vareaclose" href="javascript:void(0)" class="easyui-linkbutton" onclick="$('#newvArea').dialog('close');">Cancel</a>
+        <div class="dialog-footer">
+            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('newVirtualArea').close();">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-primary" onclick="createVirtualArea()">Finish</button>
         </div>
     </dialog>
 
@@ -231,7 +269,7 @@
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('monsterWizard').close();">&times;</button>
             <div style="padding-top: 2px;">Create new monster...</div>
         </div>
-        <div class="dialog-body" style="padding-top:25px">
+        <div class="dialog-body" style="padding-top:30px">
             <div id="monwiz0" style="height:100%;width:100%;text-align:center;font-size:12pt;">
                 <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left">
                 <br> Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.
@@ -361,26 +399,23 @@
             </div>
         </div>
         <div class="dialog-footer">
-            <div id="monwizButtons">
-                <select id="monwizJump" style="float: left" class="form-control selectpicker" onchange="doWizard(this.selectedIndex, 'monwiz', 'goto');" data-width="200px">
-                    <option>Welcome</option>
-                    <option>General Properties</option>
-                    <option>Description</option>
-                    <option>Description Continued</option>
-                    <option>Physical Properties</option>
-                    <option>Finish</option>
-                </select>
-                <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('monsterWizard').close();">Cancel</button>
-                <button style="float: right" type="button" class="btn btn-primary" onclick="doWizard('last', 'monwiz');">Finish</button>
-                <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(1, 'monwiz');">
-                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                </button>
-                <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(-1, 'monwiz');">
-                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
-                </button>
-            </div>
+            <select id="monwizJump" style="float: left" class="form-control selectpicker" onchange="doWizard(this.selectedIndex, 'monwiz', 'goto');" data-width="200px">
+                <option>Welcome</option>
+                <option>General Properties</option>
+                <option>Description</option>
+                <option>Description Continued</option>
+                <option>Physical Properties</option>
+                <option>Finish</option>
+            </select>
+            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('monsterWizard').close();">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-primary" onclick="doWizard('last', 'monwiz');">Finish</button>
+            <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(1, 'monwiz');">
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(-1, 'monwiz');">
+                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+            </button>
         </div>
-
     </dialog>
 </body>
 <script>
@@ -390,7 +425,7 @@
 
     const { dialog, Menu, MenuItem } = remote;
     const { Menubar } = require('./js/menubar');
-    const { parseTemplate, capitalize } = require('./js/library');
+    const { parseTemplate, capitalize, existsSync, isDirSync } = require('./js/library');
     const { Settings } = require('./js/settings');
 
     const moment = require('moment');
@@ -1294,6 +1329,31 @@
             }));
             addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
         });
+
+        $("#btn-newarea-path").on('click', () => {
+            dialog.showOpenDialog(remote.getCurrentWindow(), {
+                defaultPath: $("#newarea-path").val(),
+                properties: ['openDirectory', 'createDirectory']
+            },
+                function (fileNames) {
+                    if (fileNames === undefined) {
+                        return;
+                    }
+                    $("#newarea-path").val(fileNames[0]);
+                });
+        });
+        $("#btn-newvirtualarea-path").on('click', () => {
+            dialog.showOpenDialog(remote.getCurrentWindow(), {
+                defaultPath: $("#newvirtualarea-path").val(),
+                properties: ['openDirectory', 'createDirectory']
+            },
+                function (fileNames) {
+                    if (fileNames === undefined) {
+                        return;
+                    }
+                    $("#newvirtualarea-path").val(fileNames[0]);
+                });
+        });
         createWatcher();
         var o, ol;
         if (options.opened && options.reopen) {
@@ -1419,7 +1479,71 @@
     }
 
     function newArea() {
+        var p = $("#newarea-path").parent().parent();
+        p.removeClass("has-error");
+        p.removeClass("has-feedback");
+        $("button", p).removeClass('btn-danger');
+        p = $("#newarea-name").parent();
+        p.removeClass("has-error");
+        p.removeClass("has-feedback");
+        $('#newarea-path').val((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : ''));
+        $('#newarea-name').val('');
+        document.getElementById('newArea').showModal();
+    }
 
+    function createArea() {
+        var p;
+        p = $("#newarea-path").parent().parent();
+        p.removeClass("has-error");
+        p.removeClass("has-feedback");
+        $("button", p).removeClass('btn-danger');
+        p = $("#newarea-name").parent();
+        p.removeClass("has-error");
+        p.removeClass("has-feedback");
+        if (!existsSync($('#newarea-path').val())) {
+            p = $("#newarea-path").parent().parent();
+            p.addClass("has-error");
+            p.addClass("has-feedback");
+            $("button", p).addClass('btn-danger');
+            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Path does not exist</small>");
+            $('#newarea-path').focus();
+            return;
+        }
+        if (!isDirSync($('#newarea-path').val())) {
+            p = $("#newarea-path").parent();
+            p.addClass("has-error");
+            p.addClass("has-feedback");
+            $("button", p).addClass('btn-danger');
+            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid path</small>");
+            $('#newarea-path').focus();
+            return;
+        }
+        if (!validName($('#newarea-name').val())) {
+            p = $("#newarea-name").parent();
+            p.addClass("has-error");
+            p.addClass("has-feedback");
+            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid, can only contain letters, numbers, and _</small>");
+            $('#newarea-name').focus();
+            return;
+        }
+        var aPath = path.join($('#newarea-path').val(), $('#newarea-name').val());
+        if (existsSync(aPath)) {
+            p = $("#newarea-path").parent().parent();
+            p.addClass("has-error");
+            p.addClass("has-feedback");
+            $("button", p).addClass('btn-danger');
+            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Directory with area name already exist</small>");
+            $('#newarea-path').focus();
+            return;
+        }
+    }
+
+    function validName(name) {
+        if (!name || name.length === 0)
+            return false;
+        if (!name.match(/^[a-zA-Z0-9_]+$/g))
+            return false;
+        return true;
     }
 
     function newVirtualArea() {

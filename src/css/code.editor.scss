@@ -230,3 +230,32 @@ body {
     cursor: row-resize;
     z-index: 999;
 }
+
+.form-control-feedback,
+.form-error {
+    display: none;
+}
+
+.has-error .form-control-feedback {
+    display: inline;
+    top: 20px;
+}
+
+.has-error .form-error {
+    display: block;
+}
+
+.aura-error,
+.form-error,
+.has-error a {
+    color: #A94442;
+}
+
+.has-error .input-group .form-control-feedback {
+    top: -2px;
+    right: 30px;
+}
+
+dialog .close {
+    outline: none !important;
+}
