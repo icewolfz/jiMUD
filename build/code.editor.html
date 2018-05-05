@@ -113,6 +113,275 @@
         </div>
         <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
     </div>
+
+    <dialog id="newArea" title="Create new area" style="width:400px;height:150px;padding:5px;">
+        <div style="margin-top:6px;height:26px;position:relative">
+            <a id="areaBrowse" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-browse'" onclick="areaBrowse()" style="position:absolute;right:0;top:0">Browse</a>
+            Create area in:
+            <span id="areaPathlbl">/</span>
+            <input type="hidden" id="areaPath" name="c" value="/">
+        </div>
+        <div style="padding-top:6px;">Name:
+            <input type="text" class="easyui-validatebox" id="areaname" style="width: 330px" data-options="required:true,validType:'varName'">
+        </div>
+        <div id="areaButtons">
+            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="createArea()">Ok</a>
+            <a id="areaclose" href="javascript:void(0)" class="easyui-linkbutton" onclick="$('#newArea').dialog('close');">Cancel</a>
+        </div>
+    </dialog>
+
+    <dialog id="newvArea" title="Create new virtual area" style="width:400px;height:450px;padding:5px;">
+        <div style="margin-top:6px;height:26px;position:relative">
+            <a id="vareaBrowse" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-browse'" onclick="vareaBrowse()" style="position:absolute;right:0;top:0">Browse</a>
+            Create virtual area in:
+            <span id="vareaPathlbl">/</span>
+            <input type="hidden" id="vareaPath" name="c" value="/">
+        </div>
+        <div>
+            <label for="createnarea">
+                <input type="checkbox" id="createnarea">Create area</label>
+        </div>
+        <div style="padding-top:6px;">Area Name:
+            <input type="text" class="easyui-validatebox" id="vareaname" style="width: 300px" disabled="disabled" data-options="validType:'varName'">
+        </div>
+        <hr>
+        <div>
+            <span>
+                <label for="vareawidth" class="l-btn-text">Width</label>
+                <input class="easyui-numberspinner" style="float: left;width:45px;" id="vareawidth" data-options="min:2,max:100,value:1">
+            </span>
+            <span>
+                <label for="varealength" class="l-btn-text">Length</label>
+                <input class="easyui-numberspinner" style="float: left;width:45px;" id="varealength" data-options="min:2,max:100,value:1">
+            </span>
+            <span>
+                <label for="vareadepth" class="l-btn-text">Depth</label>
+                <input class="easyui-numberspinner" style="float: left;width:45px;" id="vareadepth" data-options="min:1,max:100,value:1">
+            </span>
+        </div>
+        <div>
+            <div id="defaultsettings">
+                <label>
+                    <input type="checkbox" id="eCoords">Enable Coordinates</label>
+                <label class="l-btn-text" style="display: none">Room cache size
+                    <input class="easyui-numberspinner" style="float: left;width:55px;" id="vcache" data-options="min:1,max:500,value:200">
+                </label>
+            </div>
+            <fieldset id="defaultexits">
+                <legend>Default Exits</legend>
+                <input type="hidden" id="des" value="170">
+                <label for="deUp">
+                    <input type="checkbox" value="512" id="deUp">Up</label>
+                <label for="deDown">
+                    <input type="checkbox" value="256" id="deDown">Down</label>
+                <label for="deNorth">
+                    <input type="checkbox" value="128" id="deNorth" checked="checked">North</label>
+                <label for="deNorthEast">
+                    <input type="checkbox" value="64" id="deNorthEast">NorthEast</label>
+                <label for="deEast">
+                    <input type="checkbox" value="32" id="deEast" checked="checked">East</label>
+                <label for="deSouthEast">
+                    <input type="checkbox" value="16" id="deSouthEast">SouthEast</label>
+                <label for="deSouth">
+                    <input type="checkbox" value="8" id="deSouth" checked="checked">South</label>
+                <label for="deSouthWest">
+                    <input type="checkbox" value="4" id="deSouthWest">SouthWest</label>
+                <label for="deWest">
+                    <input type="checkbox" value="2" id="deWest" checked="checked">West</label>
+                <label for="deNorthWest">
+                    <input type="checkbox" value="1" id="deNorthWest">NorthWest</label>
+                <label for="deNone">
+                    <input type="checkbox" value="0" id="deNone">None</label>
+            </fieldset>
+            <fieldset id="defaultstates">
+                <legend>Default States</legend>
+                <input type="hidden" id="dss" value="0">
+                <label for="dsNoAttack">
+                    <input type="checkbox" value="512" id="dsNoAttack">No Attack</label>
+                <label for="dsNoMagic">
+                    <input type="checkbox" value="256" id="dsNoMagic">No Magic</label>
+                <label for="dsCouncil">
+                    <input type="checkbox" value="128" id="dsCouncil">Council</label>
+                <label for="dsOutdoors">
+                    <input type="checkbox" value="64" id="dsOutdoors">Outdoors</label>
+                <label for="dsIndoors">
+                    <input type="checkbox" value="32" id="dsIndoors">Indoors</label>
+                <label for="dsWater">
+                    <input type="checkbox" value="16" id="dsWater">Water</label>
+                <label for="dsHot">
+                    <input type="checkbox" value="8" id="dsHot">Hot</label>
+                <label for="dsCold">
+                    <input type="checkbox" value="4" id="dsCold">Cold</label>
+                <label for="dsSinkingUp">
+                    <input type="checkbox" value="2" id="dsSinkingUp">SinkingUp</label>
+                <label for="dsSinkingDown">
+                    <input type="checkbox" value="1" id="dsSinkingDown">SinkingDown</label>
+                <label for="dsNone">
+                    <input type="checkbox" value="0" id="dsNone" checked="checked">None</label>
+            </fieldset>
+        </div>
+        <div id="vareaButtons">
+            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="createvArea()">Ok</a>
+            <a id="vareaclose" href="javascript:void(0)" class="easyui-linkbutton" onclick="$('#newvArea').dialog('close');">Cancel</a>
+        </div>
+    </dialog>
+
+    <dialog id="monsterWizard" title="Create new monster" style="width:500px;height:208px;padding:5px;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('monsterWizard').close();">&times;</button>
+            <div style="padding-top: 2px;">Create new monster...</div>
+        </div>
+        <div class="dialog-body" style="padding-top:25px">
+            <div id="monwiz0" style="height:100%;width:100%;text-align:center;font-size:12pt;">
+                <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left">
+                <br> Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.
+            </div>
+            <div id="monwiz1" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+                <label style="width:100%">
+                    <div style="width: 70px;display:inline-block">Type:</div>
+                    <select id="monwizType" class="easyui-combobox" data-options="editable:false,onSelect:doMonType" style="width: 130px">
+                        <option>Standard</option>
+                        <option>Armor Repair</option>
+                        <option>Barkeep</option>
+                        <option>Cleric Trainer</option>
+                        <option>Command Trainer</option>
+                        <option>Healer</option>
+                        <option>Jeweler</option>
+                        <option>Lockpick Repair</option>
+                        <option>Mage Trainer</option>
+                        <option>Edible Monster</option>
+                        <option>Getable Monster</option>
+                        <option>Sage</option>
+                        <option>Skill Trainer</option>
+                        <option>Smith</option>
+                        <option>Summon Monster</option>
+                        <option>Tattooist</option>
+                        <option>Vendor</option>
+                        <option>Weapon Repair</option>
+                    </select>
+                </label>
+                <label>Level:
+                    <input id="monwizLevel" class="easyui-numberspinner" data-options="min:1,max:500" style="width: 50px" value="1">
+                </label>
+                <label>Alignment:
+                    <select id="monwizAlignment" class="easyui-combobox" style="width: 90px">
+                        <option>demonic</option>
+                        <option>evil</option>
+                        <option>bad</option>
+                        <option>malevolent</option>
+                        <option>mean</option>
+                        <option selected="selected">neutral</option>
+                        <option>nice</option>
+                        <option>benevolent</option>
+                        <option>good</option>
+                        <option>righteous</option>
+                        <option>saintly</option>
+                    </select>
+                </label>
+                <label style="width:100%;display:block">
+                    <div style="width: 70px;display:inline-block">Race:</div>
+                    <select style="width:400px" id="monwizRace" class="easyui-combobox" data-options="url:'/auth/dev?a=monraces',valueField:'value',textField:'value',method:'get'"></select>
+                </label>
+                <label style="width:100%;display:block;">
+                    <div style="width: 70px;display:inline-block">Class:</div>
+                    <select style="width:400px" id="monwizClass" class="easyui-combobox" data-options="url:'/auth/dev?a=classes',valueField:'value',textField:'value',method:'get',formatter:classFormatter"></select>
+                </label>
+                <label style="width:100%;display:block;">
+                    <div style="width: 70px;display:inline-block">Language:</div>
+                    <select style="width:400px" id="monwizLang" class="easyui-combobox" data-options="url:'/auth/dev?a=languages',valueField:'value',textField:'value',method:'get',prompt:'Defaults based on race'"></select>
+                </label>
+                <label>
+                    <div style="width: 70px;display:inline-block">Ridable:</div>
+                    <input type="checkbox" id="monwizRide">
+                </label>
+                <label>Flys:
+                    <input type="checkbox" id="monwizFly">
+                </label>
+            </div>
+            <div id="monwiz2" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+                <label style="width:100%;display:block">
+                    <div style="width: 50px;display:inline-block">Name:</div>
+                    <input id="monwizName" style="width:420px" class="easyui-textbox">
+                </label>
+                <label style="width:100%;display:block">
+                    <div style="width: 50px;display:inline-block">Short:</div>
+                    <input id="monwizShort" style="width:420px" class="easyui-textbox">
+                </label>
+                <label style="width:100%;display:block;margin-top:2px;">
+                    <div style="width: 50px;display:inline-block;">Long:</div>
+                    <span style="float:right;padding-right:2px;">
+                        <textarea id="monwizLong" style="width:420px;height:75px;resize: none;" wrap="off" class="easyui-textbox" data-options="multiline:true"></textarea>
+                    </span>
+                </label>
+            </div>
+            <div id="monwizDesc2" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+                <label style="width:100%;display:block;">
+                    <div style="width: 80px;display:inline-block;">Nouns:</div>
+                    <span style="padding-right:2px;">
+                        <textarea id="monwizNouns" style="width:388px;height:60px;resize: none;" wrap="off" class="easyui-textbox" data-options="multiline:true,prompt:'A comma delimited list of words'"></textarea>
+                    </span>
+                    <label style="width:100%;display:block;margin-top:2px;">
+                        <div style="width: 80px;display:inline-block;">Adjectives:</div>
+                        <span style="padding-right:2px;">
+                            <textarea id="monwizAdjs" style="width:388px;height:60px;resize: none;" wrap="off" class="easyui-textbox" data-options="multiline:true,prompt:'A comma delimited list of words'"></textarea>
+                        </span>
+                    </label>
+            </div>
+            <div id="monwiz3" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+                <label style="width:100%;display:block">
+                    <div style="width: 75px;display:inline-block">Mass:</div>
+                    <input id="monwizMass" class="easyui-numberspinner" data-options="min:0" style="width: 100px" value="0"> A mass of 0 will use default mass</label>
+                <label style="width:100%;display:block">
+                    <div style="width: 75px;display:inline-block">Height:</div>
+                    <input id="monwizHeight" class="easyui-numberspinner" data-options="min:1" style="width: 100px" value="1"> inches</label>
+                <label style="width:100%;display:block">
+                    <div style="width: 75px;display:inline-block">Eye color:</div>
+                    <select style="width:395px" id="monwizEyes" class="easyui-combobox" data-options="url:'/auth/dev?a=colors',valueField:'color',textField:'color',method:'get'"></select>
+                </label>
+                <label style="width:100%;display:block">
+                    <div style="width: 75px;display:inline-block">Hair color:</div>
+                    <select style="width:395px" id="monwizHair" class="easyui-combobox" data-options="url:'/auth/dev?a=colors',valueField:'color',textField:'color',method:'get'"></select>
+                </label>
+                <label style="width:100%;display:block">
+                    <div style="width: 75px;display:inline-block">Body type:</div>
+                    <select style="width:395px" id="monwizBodytype" class="easyui-combobox" data-options="url:'/auth/dev?a=monraces',valueField:'value',textField:'value',method:'get',prompt:'Defaults based on race'"></select>
+                </label>
+            </div>
+            <div id="monwiz4" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+                change based on monster type, may not even always need this panel
+            </div>
+            <div id="monwizBarkeep" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+                barkeeper
+            </div>
+            <div id="monwiz5" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+                <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left"> To finish your monster simply click finished
+                <div style="height:100px;width:345px;overflow:auto;border:1px groove">
+                    <span id="monwizSummary"></span>
+                </div>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <div id="monwizButtons">
+                <select id="monwizJump" style="float: left" class="form-control selectpicker" onchange="doWizard(this.selectedIndex, 'monwiz', 'goto');" data-width="200px">
+                    <option>Welcome</option>
+                    <option>General Properties</option>
+                    <option>Description</option>
+                    <option>Description Continued</option>
+                    <option>Physical Properties</option>
+                    <option>Finish</option>
+                </select>
+                <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('monsterWizard').close();">Cancel</button>
+                <button style="float: right" type="button" class="btn btn-primary" onclick="doWizard('last', 'monwiz');">Finish</button>
+                <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(1, 'monwiz');">
+                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                </button>
+                <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(-1, 'monwiz');">
+                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+    </dialog>
 </body>
 <script>
     const { remote, ipcRenderer, webFrame } = require('electron');
@@ -171,7 +440,7 @@
         }
     });
 
-    var menuTemplates = loadTemplates(parseTemplate(path.join('{assets}', 'templates')), '');
+    var menuTemplates = loadTemplates(parseTemplate(path.join('{assets}', 'templates')), '', ['wizards']);
     var subMenus = {
         'edit': [
             {
@@ -289,23 +558,23 @@
                         {
                             label: '&Area...',
                             //accelerator: "CmdOrCtrl+N",
-                            click: () => { }
+                            click: newArea
                         },
                         {
                             label: '&Virtual Area...',
                             //accelerator: "CmdOrCtrl+N",
-                            click: () => { }
+                            click: newVirtualArea
                         },
                         { type: 'separator' },
                         {
                             label: '&Room...',
                             //accelerator: "CmdOrCtrl+N",
-                            click: () => { }
+                            click: roomWizard
                         },
                         {
                             label: '&Monster...',
                             //accelerator: "CmdOrCtrl+N",
-                            click: () => { }
+                            click: () => monsterWizard
                         },
                         { type: 'separator' },
                         {
@@ -996,26 +1265,26 @@
             addMenu.append(new MenuItem({
                 label: 'New area...', click() {
                     clearButton('#btn-add-dropdown');
-
+                    newArea();
                 }
             }));
             addMenu.append(new MenuItem({
                 label: 'New virtual area...', click() {
                     clearButton('#btn-add-dropdown');
-
+                    newVirtualArea();
                 }
             }));
             addMenu.append(new MenuItem({ type: 'separator' }));
             addMenu.append(new MenuItem({
                 label: 'New room...', click() {
                     clearButton('#btn-add-dropdown');
-
+                    roomWizard();
                 }
             }));
             addMenu.append(new MenuItem({
                 label: 'New monster...', click() {
                     clearButton('#btn-add-dropdown');
-
+                    monsterWizard();
                 }
             }));
             addMenu.append(new MenuItem({ type: 'separator' }));
@@ -1043,6 +1312,22 @@
         if (!closeWindow) {
             evt.returnValue = false;
             setTimeout(() => {
+                var elems = document.body.getElementsByTagName("dialog");
+                var e = 0, el = elems.length;
+                for (; e < el; e++) {
+                    if (elems[e].open) {
+                        if (dialog.showMessageBox(
+                            remote.getCurrentWindow(),
+                            {
+                                type: 'question',
+                                title: 'Open dialog',
+                                message: elems[e].title + ' is open, exit?',
+                                buttons: ['Yes', 'No'],
+                                defaultId: 1
+                            }) === 1)
+                            return 'no';
+                    }
+                }
                 var p, l = manager.panels.length;
                 var opened = [];
                 //check if need to save
@@ -1131,6 +1416,22 @@
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
+    }
+
+    function newArea() {
+
+    }
+
+    function newVirtualArea() {
+
+    }
+
+    function roomWizard() {
+        newFromFile(parseTemplate(path.join('{assets}', 'templates', 'rooms', 'base.c')), 'room');
+    }
+
+    function monsterWizard() {
+        newFromFile(parseTemplate(path.join('{assets}', 'templates', 'monsters', 'base.c')), 'monster');
     }
 
     function openFile(file, remoteFile) {
@@ -1336,13 +1637,15 @@
         return a.localeCompare(b);
     }
 
-    function loadTemplates(p, root) {
+    function loadTemplates(p, root, exclude) {
         const menu = [];
         const files = fs.readdirSync(p);
         files.sort((a, b) => { return sortFiles(a, b, p); });
         const fl = files.length;
         var base = false;
         for (let f = 0; f < fl; f++) {
+            if (exclude && exclude.indexOf(files[f]) !== -1)
+                continue;
             if (fs.lstatSync(path.join(p, files[f])).isDirectory()) {
                 menu.push({
                     label: capitalize(path.basename(files[f], path.extname(files[f])).replace(/_/g, ' ')),
