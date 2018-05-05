@@ -154,122 +154,183 @@
         </div>
         <div class="dialog-footer">
             <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('newArea').close();">Cancel</button>
-            <button style="float: right" type="button" class="btn btn-primary" onclick="createArea()">Finish</button>
+            <button style="float: right" type="button" class="btn btn-primary" onclick="createArea()">Ok</button>
         </div>
     </dialog>
 
-    <dialog id="newVirtualArea" data-title="Create new virtual area" style="width:400px;height:450px;padding:5px;">
+    <dialog id="newVirtualArea" data-title="Create new virtual area" style="width:400px;height:450px;padding:0px;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('newVirtualArea').close();">&times;</button>
             <div style="padding-top: 2px;">Create new virtual area...</div>
         </div>
-        <div class="dialog-body" style="padding-top:40px">
-            <div class="col-sm-12 form-group">
-                <label class="control-label" style="width:100%">
-                    Save path
-                    <div class="input-group">
-                        <input type="text" id="newvirtualarea-path" style="width:100%" class="input-sm form-control" />
-                        <span class="input-group-btn">
-                            <button class="btn btn-default btn-sm" type="button" id="btn-newvirtualarea-path">
-                                &hellip;
-                            </button>
-                        </span>
+        <div class="dialog-body" style="padding-top:33px">
+            <ul class="nav nav-tabs" role="tablist" style="background-color: #F5F5F5;box-shadow: inset 0 -1px 0 #fff;">
+                <li role="presentation" class="active">
+                    <a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a>
+                </li>
+                <li role="presentation">
+                    <a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab">Advanced</a>
+                </li>
+            </ul>
+            <div class="tab-content" style="overflow: auto;height: 324px;">
+                <div role="tabpanel" class="container tab-pane fade in active" id="general" style="width: auto;">
+                    <div class="form-group">
+                        <label class="control-label" style="width:100%">
+                            Save path
+                            <div class="input-group">
+                                <input type="text" id="newvirtualarea-path" style="width:100%" class="input-sm form-control" />
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default btn-sm" type="button" id="btn-newvirtualarea-path">
+                                        &hellip;
+                                    </button>
+                                </span>
+                            </div>
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Local path where files will be generated</span>
+                            <div class="form-error"></div>
+                        </label>
                     </div>
-                </label>
-            </div>
-            <div class="col-sm-12 form-group">
-                <label class="control-label" style="width:100%">
-                    Area
-                    <div class="input-group" style="width:100%">
-                        <input type="text" id="newvirtualarea-area" class="input-sm form-control" style="width:100%" />
-                        <div class="input-group-addon">
-                            <label>
-                                <input type="checkbox" id="newvirtualarea-area-enabled" /> Enable</label>
+                    <div class="form-group">
+                        <label class="control-label" style="width: 100%">Remote path
+                            <input class="form-control" style="width:100%" type="text" id="newvirtualarea-remote-path">
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Remote path for area, if blank will default to /realms/character/area</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" style="width:100%">
+                            Area
+                            <div class="input-group" style="width:100%">
+                                <input type="text" id="newvirtualarea-area" disabled="disabled" class="input-sm form-control" style="width:100%" />
+                                <div class="input-group-addon">
+                                    <label>
+                                        <input type="checkbox" id="newvirtualarea-area-enabled" onchange="$('#newvirtualarea-area').attr('disabled', !this.checked);" /> Create
+                                    </label>
+                                </div>
+                            </div>
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Area name, used as folder name</span>
+                            <div class="form-error"></div>
+                        </label>
+                    </div>
+                    <div class="col-sm-4 form-group">
+                        <label class="control-label">
+                            Width
+                            <input type="number" id="newvirtualarea-width" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                        </label>
+                    </div>
+                    <div class="col-sm-4 form-group">
+                        <label class="control-label">
+                            Height
+                            <input type="number" id="newvirtualarea-height" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                        </label>
+                    </div>
+                    <div class="col-sm-4 form-group">
+                        <label class="control-label">
+                            Depth
+                            <input type="number" id="newvirtualarea-depth" class="input-sm form-control" value="1" min="2" max="100" style="width: 100%" />
+                        </label>
+                    </div>
+                </div>
+                <div role="tabpanel" class="container tab-pane fade" id="advanced" style="width: auto;overflow:auto">
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="newvirtualarea-coordinates" /> Coordinates
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Room cache
+                            <input type="number" id="newvirtualarea-cache" class="input-sm form-control" value="200" min="1" max="500" style="width: 100%" />
+                        </label>
+                    </div>
+                    <div class="col-sm-12 form-group">
+                        <label class="control-label">Default Exits</label>
+                        <div id="newvirtualarea-default-exits">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="512" id="deUp">Up
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="256" id="deDown">Down
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="128" id="deNorth" checked="checked">North
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="64" id="deNorthEast">NorthEast
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="32" id="deEast" checked="checked">East
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="16" id="deSouthEast">SouthEast
+                                </label>
+                            </div>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="8" id="deSouth" checked="checked">South
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="4" id="deSouthWest">SouthWest
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="2" id="deWest" checked="checked">West
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="1" id="deNorthWest">NorthWest
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="0" id="eNone">None
+                                </label>
+                            </div>
                         </div>
                     </div>
-                </label>
-            </div>
-            <hr>
-            <div>
-                <span>
-                    <label for="vareawidth" class="l-btn-text">Width</label>
-                    <input class="easyui-numberspinner" style="float: left;width:45px;" id="vareawidth" data-options="min:2,max:100,value:1">
-                </span>
-                <span>
-                    <label for="varealength" class="l-btn-text">Length</label>
-                    <input class="easyui-numberspinner" style="float: left;width:45px;" id="varealength" data-options="min:2,max:100,value:1">
-                </span>
-                <span>
-                    <label for="vareadepth" class="l-btn-text">Depth</label>
-                    <input class="easyui-numberspinner" style="float: left;width:45px;" id="vareadepth" data-options="min:1,max:100,value:1">
-                </span>
-            </div>
-            <div>
-                <div id="defaultsettings">
-                    <label>
-                        <input type="checkbox" id="eCoords">Enable Coordinates</label>
-                    <label class="l-btn-text" style="display: none">Room cache size
-                        <input class="easyui-numberspinner" style="float: left;width:55px;" id="vcache" data-options="min:1,max:500,value:200">
-                    </label>
+                    <div class="col-sm-12 form-group">
+                        <label class="control-label">Default States</label>
+                        <div id="newvirtualarea-default-states">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="512" id="dsNoAttack">No Attack
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="256" id="dsNoMagic">No Magic
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="128" id="dsCouncil">Council
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="64" id="dsOutdoors">Outdoors
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="32" id="dsIndoors">Indoors
+                                </label>
+                            </div>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="16" id="dsWater">Water
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="8" id="dsHot">Hot
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="4" id="dsCold">Cold
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="2" id="dsSinkingUp">SinkingUp
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="1" id="dsSinkingDown">SinkingDown
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" value="0" id="sNone" checked="checked">None
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <fieldset id="defaultexits">
-                    <legend>Default Exits</legend>
-                    <input type="hidden" id="des" value="170">
-                    <label for="deUp">
-                        <input type="checkbox" value="512" id="deUp">Up</label>
-                    <label for="deDown">
-                        <input type="checkbox" value="256" id="deDown">Down</label>
-                    <label for="deNorth">
-                        <input type="checkbox" value="128" id="deNorth" checked="checked">North</label>
-                    <label for="deNorthEast">
-                        <input type="checkbox" value="64" id="deNorthEast">NorthEast</label>
-                    <label for="deEast">
-                        <input type="checkbox" value="32" id="deEast" checked="checked">East</label>
-                    <label for="deSouthEast">
-                        <input type="checkbox" value="16" id="deSouthEast">SouthEast</label>
-                    <label for="deSouth">
-                        <input type="checkbox" value="8" id="deSouth" checked="checked">South</label>
-                    <label for="deSouthWest">
-                        <input type="checkbox" value="4" id="deSouthWest">SouthWest</label>
-                    <label for="deWest">
-                        <input type="checkbox" value="2" id="deWest" checked="checked">West</label>
-                    <label for="deNorthWest">
-                        <input type="checkbox" value="1" id="deNorthWest">NorthWest</label>
-                    <label for="deNone">
-                        <input type="checkbox" value="0" id="deNone">None</label>
-                </fieldset>
-                <fieldset id="defaultstates">
-                    <legend>Default States</legend>
-                    <input type="hidden" id="dss" value="0">
-                    <label for="dsNoAttack">
-                        <input type="checkbox" value="512" id="dsNoAttack">No Attack</label>
-                    <label for="dsNoMagic">
-                        <input type="checkbox" value="256" id="dsNoMagic">No Magic</label>
-                    <label for="dsCouncil">
-                        <input type="checkbox" value="128" id="dsCouncil">Council</label>
-                    <label for="dsOutdoors">
-                        <input type="checkbox" value="64" id="dsOutdoors">Outdoors</label>
-                    <label for="dsIndoors">
-                        <input type="checkbox" value="32" id="dsIndoors">Indoors</label>
-                    <label for="dsWater">
-                        <input type="checkbox" value="16" id="dsWater">Water</label>
-                    <label for="dsHot">
-                        <input type="checkbox" value="8" id="dsHot">Hot</label>
-                    <label for="dsCold">
-                        <input type="checkbox" value="4" id="dsCold">Cold</label>
-                    <label for="dsSinkingUp">
-                        <input type="checkbox" value="2" id="dsSinkingUp">SinkingUp</label>
-                    <label for="dsSinkingDown">
-                        <input type="checkbox" value="1" id="dsSinkingDown">SinkingDown</label>
-                    <label for="dsNone">
-                        <input type="checkbox" value="0" id="dsNone" checked="checked">None</label>
-                </fieldset>
             </div>
-        </div>
-        <div class="dialog-footer">
-            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('newVirtualArea').close();">Cancel</button>
-            <button style="float: right" type="button" class="btn btn-primary" onclick="createVirtualArea()">Finish</button>
-        </div>
+            <div class="dialog-footer">
+                <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('newVirtualArea').close();">Cancel</button>
+                <button style="float: right" type="button" class="btn btn-primary" onclick="createVirtualArea()">Ok</button>
+            </div>
     </dialog>
 
     <dialog id="monsterWizard" data-title="Create new monster" style="width:500px;height:208px;padding:5px;">
@@ -1293,7 +1354,6 @@
             }
         });
 
-
         $('#btn-add-dropdown').click(function () {
             $(this).addClass('open');
             const pos = $(this).offset();
@@ -1366,6 +1426,45 @@
                     $("#newvirtualarea-path").val(fileNames[0]);
                 });
         });
+
+        $('#eNone').on('change', function (e) {
+            $('#newvirtualarea-default-exits input[id^="de"]').prop('checked', false);
+            if (!this.checked) {
+                e.preventDefault();
+                $('#eNone').prop('checked', true);
+                $('.btn-group input').parent().removeClass('active');
+                $('.btn-group input:checked').parent().addClass('active');
+                return false;
+            }
+            $('.btn-group input').parent().removeClass('active');
+            $('.btn-group input:checked').parent().addClass('active');
+        });
+
+        $('#newvirtualarea-default-exits input[id^="de"]').on('change', function (e) {
+            $('#eNone').prop('checked', false);
+            $('.btn-group input').parent().removeClass('active');
+            $('.btn-group input:checked').parent().addClass('active');
+        });
+
+        $('#sNone').on('change', function (e) {
+            $('#newvirtualarea-default-states input[id^="ds"]').prop('checked', false);
+            if (!this.checked) {
+                e.preventDefault();
+                $('#sNone').prop('checked', true);
+                $('.btn-group input').parent().removeClass('active');
+                $('.btn-group input:checked').parent().addClass('active');
+                return false;
+            }
+            $('.btn-group input').parent().removeClass('active');
+            $('.btn-group input:checked').parent().addClass('active');
+        });
+
+        $('#newvirtualarea-default-states input[id^="ds"]').on('change', function (e) {
+            $('#sNone').prop('checked', false);
+            $('.btn-group input').parent().removeClass('active');
+            $('.btn-group input:checked').parent().addClass('active');
+        });
+
         createWatcher();
         var o, ol;
         if (options.opened && options.reopen) {
@@ -1603,7 +1702,11 @@
     }
 
     function newVirtualArea() {
-
+        $('#newvirtualarea-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
+        $('#newvirtualarea-area').val('');
+        $('.btn-group input').parent().removeClass('active');
+        $('.btn-group input:checked').parent().addClass('active');
+        document.getElementById('newVirtualArea').showModal();
     }
 
     function roomWizard() {
