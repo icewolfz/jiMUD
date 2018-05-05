@@ -1684,11 +1684,14 @@
         data.path = $('#newarea-remote-path').val() || '/realms/' + data.name.toLowerCase() + '/' + $('#newarea-name').val().toLowerCase();
         if (data.path.endsWith('/'))
             data.path = data.path.substr(0, data.path.length - 1);
+        if (!data.path.startsWith('/'))
+            data.path = '/' + data.path;
         var value;
         for (; c < cl; c++) {
             value = fs.readFileSync(template.files[c], 'utf8');
             value = parseFileTemplate(value, data);
             fs.writeFileSync(template.files[c].replace(templateRegex, aPath), data);
+            openFile(template.files[c].replace(templateRegex, aPath), template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/'));
         }
         document.getElementById('newArea').close();
     }
