@@ -1153,7 +1153,7 @@ export class lpcIndenter extends EventEmitter {
                 lines[ln] = this.indent_line(lines[ln], ln);
             if (ln < lines.length - 1) {
                 ce = Math.ceil(100 * ce / lines.length);
-                setTimeout(function () { this.indentLines(lines, ln, chunk); }, 5);
+                setTimeout(() => { this.indentLines(lines, ln, chunk); }, 5);
                 this.emit('progress', ce, c, chunk, lines);
             }
             else {
