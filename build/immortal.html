@@ -371,7 +371,13 @@
                     },
                     { type: 'separator' },
                     {
-                        role: 'toggledevtools'
+                        label: '&Toggle Developer Tools',
+                        click: () => {
+                            if (remote.getCurrentWindow().isDevToolsOpened())
+                                remote.getCurrentWindow().closeDevTools();
+                            else
+                                remote.getCurrentWindow().openDevTools();
+                        }
                     },
                     {
                         type: 'separator'

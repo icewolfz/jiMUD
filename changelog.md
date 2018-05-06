@@ -18,7 +18,7 @@
     - Add new editor using new internal code editor.
   - Display: Optimize display creation
   - Advanced editor: Changed bold black to send mono11, as many clients cant handle bold black and the mud will handle converts of the code to other clients
-  - Remove keyboard shortcut for toggling dev tools as they are mint for advanced debugging of client
+  - Remove keyboard shortcut for toggling dev tools for all windows as they are mint for advanced debugging of client
 - **Fixed:**
   - Immortal tools:
     - Buffer size was not correctly being stored as a number when changed from default in preferences
