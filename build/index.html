@@ -2009,7 +2009,7 @@
         ipcRenderer.send('show-window', 'code-editor', client.options.windows['code-editor'].options);
       }
       else
-        ipcRenderer.send('show-window', 'code-editor', { show: true, file: 'code.editor.html', icon: 'ied', alwaysOnTopClient: true });
+        ipcRenderer.send('show-window', 'code-editor', { show: true, file: 'code.editor.html', icon: 'code', alwaysOnTopClient: true });
     }
 
     function showMail() {
@@ -2166,7 +2166,7 @@
       <i class="fa fa-code-fork"></i>
     </a>
     <a href="javascript:void(0)" title="Code Editor" id="codeEditor" class="button" onclick="showCodeEditor()">
-      <i class="fa fa-pencil"></i>
+      <i class="fa fa-code"></i>
     </a>
     <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
       <i class="fa fa-gears"></i>
