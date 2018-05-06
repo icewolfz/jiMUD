@@ -205,12 +205,12 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-bovine {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -544px -897px;
 }
-
+/*
 .monster-buck {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
@@ -715,9 +715,9 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
-.monster-yak {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
 */
+
+.monster-muskox, .monster-yak {
+    background-image: url(#{$monsters}/dc-mon/animals/yak.png);
+}
+
