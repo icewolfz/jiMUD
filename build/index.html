@@ -283,7 +283,7 @@
           item.cmd = url[i] + extra;
           menu.append(item);
         }
-        menu.popup(remote.getCurrentWindow(), e.pageX, e.pageY);
+        menu.popup(remote.getCurrentWindow(), { x: e.pageX, y: e.pageY });
       }
       else if (pmt) {
         url = url.replace("&text;", $(el).text()) + extra;
