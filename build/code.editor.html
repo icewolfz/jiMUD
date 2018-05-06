@@ -1814,6 +1814,14 @@
                         return;
                     }
                     for (var f = 0, fl = fileNames.length; f < fl; f++) {
+                        if (!existsSync($('#newarea-path').val())) {
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'info',
+                                title: 'Path does not exist',
+                                message: 'The path \'' + fileNames[f] + '\' does not seem to exist anymore on disk.'
+                            });
+                            continue;
+                        }
                         addToRecent(fileNames[f]);
                         createEditor({ file: fileNames[f], open: true });
                     }
@@ -1849,7 +1857,18 @@
                     label: options.recent[r].file,
                     idx: r,
                     click: (item) => {
-                        openFile(options.recent[item.idx].file, options.recent[item.idx].remote);
+                        if (!existsSync($('#newarea-path').val())) {
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'info',
+                                title: 'Path does not exist',
+                                message: 'The path \'' + options.recent[item.idx].file + '\' does not seem to exist anymore on disk.'
+                            });
+                            options.recent = options.recent.slice(item.idx, 1);
+                            saveOptions();
+                            doUpdate(4);
+                        }
+                        else
+                            openFile(options.recent[item.idx].file, options.recent[item.idx].remote);
                     }
                 }
             );
