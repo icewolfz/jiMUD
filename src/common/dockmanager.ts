@@ -188,6 +188,21 @@ export class DockManager extends EventEmitter {
         this.$el = document.createElement('div');
         this.$el.id = 'cm';
         this.$el.className = 'cm';
+        this.$el.addEventListener('dragenter', (e) => {
+            this.emit('dragenter', e);
+            if (e.defaultPrevented)
+                return;
+        });
+        this.$el.addEventListener('dragover', (e) => {
+            this.emit('dragover', e);
+            if (e.defaultPrevented)
+                return;
+        });
+        this.$el.addEventListener('drop', (e) => {
+            this.emit('drop', e);
+            if (e.defaultPrevented)
+                return;
+        });
         this.$parent.appendChild(this.$el);
 
         this.$tabstrip = document.createElement('ul');
