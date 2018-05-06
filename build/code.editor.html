@@ -1214,16 +1214,19 @@
     function doCut() {
         if (manager.active && manager.active.editor && manager.active.editor.supports('cut'))
             manager.active.editor.cut();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function doCopy() {
         if (manager.active && manager.active.editor && manager.active.editor.supports('copy'))
             manager.active.editor.copy();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function doPaste() {
         if (manager.active && manager.active.editor && manager.active.editor.supports('paste'))
             manager.active.editor.paste();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function doEditor() {
@@ -1233,16 +1236,19 @@
         setTimeout(() => {
             ipcRenderer.send('send-editor', manager.active.editor.selected, 'editor');
         });
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function doRedo() {
         if (manager.active && manager.active.editor && manager.active.editor.supports('redo'))
             manager.active.editor.redo();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function doUndo() {
         if (manager.active && manager.active.editor && manager.active.editor.supports('undo'))
             manager.active.editor.undo();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function doFind() {
@@ -1258,6 +1264,7 @@
     function doRefresh() {
         if (manager.active && manager.active.editor && manager.active.editor.supports('refresh'))
             manager.active.editor.refresh();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function toggleOutput() {
@@ -1276,10 +1283,12 @@
         }
         $(window).trigger('resize');
         saveOptions();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function doClearOutput() {
         outputDisplay.empty();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function closeOutput() {
@@ -1288,6 +1297,7 @@
         output.css('display', 'none');
         $(window).trigger('resize');
         saveOptions();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function logOutput(text, open) {
@@ -1324,6 +1334,11 @@
             });
         });
 
+        $('#toolbar').on('click', () => {
+            if (manager.active && manager.active.editor)
+                manager.active.editor.focus();
+        });
+
         $(window).on('resize', () => {
             if (output.outerHeight() < 170 && (dock.outerHeight() + 28) > 172) {
                 options.outputSize = 170;
@@ -1335,6 +1350,7 @@
                 if (!manager.panels[p].editor) continue;
                 manager.panels[p].editor.resize();
             }
+            if (manager.active && manager.active.editor) manager.active.editor.focus();
         });
 
         $(document).mouseup(function (e) {
@@ -1350,6 +1366,7 @@
                 saveOptions();
                 $('#btm-ghost-bar').remove();
                 $(document).unbind('mousemove');
+                if (manager.active && manager.active.editor) manager.active.editor.focus();
                 outputDragging = false;
             }
         });
@@ -1769,6 +1786,7 @@
             openFile(template.files[c].replace(templateRegex, aPath), template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/'));
         }
         document.getElementById('newArea').close();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
     function validName(name) {
@@ -1814,7 +1832,7 @@
                         return;
                     }
                     for (var f = 0, fl = fileNames.length; f < fl; f++) {
-                        if (!existsSync($('#newarea-path').val())) {
+                        if (!existsSync(fileNames[f])) {
                             dialog.showMessageBox(remote.getCurrentWindow(), {
                                 type: 'info',
                                 title: 'Path does not exist',
@@ -1857,7 +1875,7 @@
                     label: options.recent[r].file,
                     idx: r,
                     click: (item) => {
-                        if (!existsSync($('#newarea-path').val())) {
+                        if (!existsSync(options.recent[item.idx].file)) {
                             dialog.showMessageBox(remote.getCurrentWindow(), {
                                 type: 'info',
                                 title: 'Path does not exist',
@@ -1898,6 +1916,8 @@
         if (panel.editor.new)
             return saveFileAs(panel);
         panel.editor.save();
+        if (manager.active && manager.active.editor)
+            manager.active.editor.focus();
         return true;
     }
 
@@ -1935,6 +1955,8 @@
         manager.setPanelTooltip(panel.editor.file, panel);
         manager.setPanelTitle(panel.editor.filename, panel);
         panel.editor.save();
+        if (manager.active && manager.active.editor)
+            manager.active.editor.focus();
         return true;
     }
 
@@ -1957,6 +1979,8 @@
             if (choice === 0)
                 panel.editor.revert();
         }
+        if (manager.active && manager.active.editor)
+            manager.active.editor.focus();
     }
 
     function revertAllFiles() {
@@ -1978,6 +2002,8 @@
         }
         if (panel)
             manager.removePanel(panel);
+        if (manager.active && manager.active.editor)
+            manager.active.editor.focus();
     }
 
     function closeAllFiles() {
@@ -2153,7 +2179,6 @@
                 doUpdate(2);
                 updatePanel(p);
             });
-
             p.editor.on('saved', () => {
                 doUpdate(2);
                 updatePanel(p);
