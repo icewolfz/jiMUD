@@ -30,6 +30,7 @@
         const { app, dialog, Menu, MenuItem } = remote;
         const { parseTemplate, existsSync, formatSize } = require('./js/library');
         const { Settings } = require('./js/settings');
+        const { Menubar } = require('./js/menubar');
         const fs = require('fs-extra');
         const child_process = require('child_process');
         const path = require('path');
@@ -52,7 +53,7 @@
         var _qUpdateTracker;
         var _focusRemote, _focusLocal;
 
-        var menu = [
+        var menubar = new Menubar([
             {
                 label: '&File',
                 id: 'file',
@@ -394,62 +395,8 @@
                 ]
             },
 
-        ];
-        var menubar = Menu.buildFromTemplate(menu);
-        remote.getCurrentWindow().setMenu(menubar);
+        ]);
 
-        function updateMenuItem(args) {
-            var item, i = 0, items;
-            var tItem, tItems;
-            if (args == null || args.menu == null) return;
-
-            if (!Array.isArray(args.menu))
-                args.menu = args.menu.split('|');
-
-            items = menubar.items;
-            tItems = menu;
-            try {
-                for (i = 0; i < args.menu.length; i++) {
-                    if (!items || items.length === 0) break;
-                    for (var m = 0; m < items.length; m++) {
-                        if (!items[m]) continue;
-                        if (items[m].id === args.menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
-                            item = items[m];
-                            tItem = tItems[m];
-                            if (item.submenu) {
-                                items = item.submenu.items;
-                                tItems = tItem.submenu;
-                            }
-                            else
-                                items = null;
-                            break;
-                        }
-                    }
-                }
-            }
-            catch (error) {
-                logError(error);
-                return;
-            }
-            if (!item)
-                return;
-            if (args.enabled != null)
-                item.enabled = args.enabled ? true : false;
-            if (args.checked != null)
-                item.checked = args.checked ? true : false;
-            if (args.icon != null)
-                item.icon = args.icon;
-            if (args.visible != null)
-                item.visible = args.visible ? true : false;
-            if (args.position != null)
-                item.position = args.position;
-
-            tItem.enabled = item.enabled;
-            tItem.checked = item.checked;
-            tItem.icon = item.icon;
-            tItem.visible = item.visible;
-            tItem.position = item.position;
-        }
 
         // List all files in a directory in Node.js recursively in a synchronous fashion
         var walkSync = function (dir, fileList, dirList, empty) {
@@ -709,13 +656,13 @@
             $('#bottom').css("height", options.queueSize);
             $('#main').css("bottom", options.queueSize);
 
-            updateMenuItem({ menu: 'view|sync folders', checked: options.syncFolders });
+            menubar.updateItem('view|sync folders', { checked: options.syncFolders });
             if (options.syncFolders)
                 $("#btn-sync").addClass("active");
             else
                 $('#btn-sync').removeClass('active');
-            updateMenuItem({ menu: 'edit|external editor', enabled: options.editor && options.editor.length > 0 });
-            updateMenuItem({ menu: 'view|show queue and log', checked: options.showQueue });
+            menubar.updateItem('edit|external editor', { enabled: options.editor && options.editor.length > 0 });
+            menubar.updateItem('view|show queue and log', { checked: options.showQueue });
             if (options.showQueue) {
                 $("#btn-queue").addClass("active");
                 $("#bottom").css('display', '');
@@ -1000,32 +947,32 @@
                 data = queueTable.rows({ selected: true }).data();
                 queueSelected = data.length != 0;
 
-                updateMenuItem({ menu: 'file|upload', enabled: localSelected });
-                updateMenuItem({ menu: 'file|download', enabled: remoteSelected });
+                menubar.updateItem('file|upload', { enabled: localSelected });
+                menubar.updateItem('file|download', { enabled: remoteSelected });
 
-                updateMenuItem({ menu: 'queue|start', enabled: queueSelected });
-                updateMenuItem({ menu: 'queue|pause', enabled: queueSelected });
-                updateMenuItem({ menu: 'queue|stop', enabled: queueSelected });
+                menubar.updateItem('queue|start', { enabled: queueSelected });
+                menubar.updateItem('queue|pause', { enabled: queueSelected });
+                menubar.updateItem('queue|stop', { enabled: queueSelected });
 
-                updateMenuItem({ menu: 'edit|local|rename', enabled: localSelected });
-                updateMenuItem({ menu: 'edit|local|delete', enabled: localSelected });
+                menubar.updateItem('edit|local|rename', { enabled: localSelected });
+                menubar.updateItem('edit|local|delete', { enabled: localSelected });
 
-                updateMenuItem({ menu: 'edit|local|reveal in explorer...', enabled: localSelected });
-                updateMenuItem({ menu: 'edit|local|open...', enabled: localSelected });
-                updateMenuItem({ menu: 'edit|local|open with editor...', enabled: localSelected });
-                updateMenuItem({ menu: 'edit|local|open with external editor...', enabled: localSelected && options.editor && options.editor.length > 0 });
+                menubar.updateItem('edit|local|reveal in explorer...', { enabled: localSelected });
+                menubar.updateItem('edit|local|open...', { enabled: localSelected });
+                menubar.updateItem('edit|local|open with editor...', { enabled: localSelected });
+                menubar.updateItem('edit|local|open with external editor...', { enabled: localSelected && options.editor && options.editor.length > 0 });
 
-                updateMenuItem({ menu: 'edit|remote|goto', enabled: remoteSelected });
-                updateMenuItem({ menu: 'edit|remote|change to directory', enabled: remoteSelected });
-                updateMenuItem({ menu: 'edit|remote|update', enabled: remoteSelected });
-                updateMenuItem({ menu: 'edit|remote|renew', enabled: remoteSelected });
-                updateMenuItem({ menu: 'edit|remote|clone', enabled: remoteSelected });
-                updateMenuItem({ menu: 'edit|remote|dest', enabled: remoteSelected });
-                updateMenuItem({ menu: 'edit|remote|backup', enabled: remoteSelected });
-                updateMenuItem({ menu: 'edit|remote|copy full path', enabled: remoteSelected });
+                menubar.updateItem('edit|remote|goto', { enabled: remoteSelected });
+                menubar.updateItem('edit|remote|change to directory', { enabled: remoteSelected });
+                menubar.updateItem('edit|remote|update', { enabled: remoteSelected });
+                menubar.updateItem('edit|remote|renew', { enabled: remoteSelected });
+                menubar.updateItem('edit|remote|clone', { enabled: remoteSelected });
+                menubar.updateItem('edit|remote|dest', { enabled: remoteSelected });
+                menubar.updateItem('edit|remote|backup', { enabled: remoteSelected });
+                menubar.updateItem('edit|remote|copy full path', { enabled: remoteSelected });
 
-                updateMenuItem({ menu: 'edit|remote|rename', enabled: remoteSelected });
-                updateMenuItem({ menu: 'edit|remote|delete', enabled: remoteSelected });
+                menubar.updateItem('edit|remote|rename', { enabled: remoteSelected });
+                menubar.updateItem('edit|remote|delete', { enabled: remoteSelected });
 
                 $("#btn-rename-local").prop('disabled', !localSelected);
                 $("#btn-delete-local").prop('disabled', !localSelected);
@@ -2850,7 +2797,7 @@
 
         function toggleSync() {
             options.syncFolders = !options.syncFolders;
-            updateMenuItem({ menu: 'view|sync folders', checked: options.syncFolders });
+            menubar.updateItem('view|sync folders', { checked: options.syncFolders });
             if (options.syncFolders)
                 $("#btn-sync").addClass("active");
             else
@@ -2860,7 +2807,7 @@
 
         function toggleQueue() {
             options.showQueue = !options.showQueue;
-            updateMenuItem({ menu: 'view|show queue and log', checked: options.showQueue });
+            menubar.updateItem('view|show queue and log', { checked: options.showQueue });
             if (options.showQueue) {
                 $("#btn-queue").addClass("active");
                 $("#bottom").css('display', '');

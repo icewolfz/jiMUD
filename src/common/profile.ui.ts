@@ -4,6 +4,7 @@ const { dialog, Menu, MenuItem, nativeImage } = remote;
 import { FilterArrayByKeyValue, parseTemplate, keyCharToCode, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode } from './library';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
 import { Settings } from './settings';
+import { Menubar } from './menubar';
 const path = require('path');
 const fs = require('fs');
 //const trash = require('trash');
@@ -129,7 +130,7 @@ enum UpdateState {
     Error
 }
 
-const menu: any[] = [
+const menubar: Menubar = new Menubar([
     {
         label: '&File',
         id: 'file',
@@ -208,60 +209,7 @@ const menu: any[] = [
             { label: '&Delete', enabled: false, accelerator: 'Delete', click: doDelete }
         ]
     }
-];
-
-const menubar = Menu.buildFromTemplate(menu);
-remote.getCurrentWindow().setMenu(menubar);
-
-function updateMenuItem(args) {
-    let item;
-    let i = 0;
-    let items;
-    let tItem;
-    let tItems;
-    if (args == null || args.menu == null) return;
-
-    if (!Array.isArray(args.menu))
-        args.menu = args.menu.split('|');
-
-    items = menubar.items;
-    tItems = menu;
-    for (i = 0; i < args.menu.length; i++) {
-        if (!items || items.length === 0) break;
-        for (let m = 0; m < items.length; m++) {
-            if (!items[m]) continue;
-            if (items[m].id === args.menu[i] || items[m].label.toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
-                item = items[m];
-                tItem = tItems[m];
-                if (item.submenu) {
-                    items = item.submenu.items;
-                    tItems = tItem.submenu;
-                }
-                else
-                    items = null;
-                break;
-            }
-        }
-    }
-    if (!item)
-        return;
-    if (args.enabled != null)
-        item.enabled = args.enabled ? true : false;
-    if (args.checked != null)
-        item.checked = args.checked ? true : false;
-    if (args.icon != null)
-        item.icon = args.icon;
-    if (args.visible != null)
-        item.visible = args.visible ? true : false;
-    if (args.position != null)
-        item.position = args.position;
-
-    tItem.enabled = item.enabled;
-    tItem.checked = item.checked;
-    tItem.icon = item.icon;
-    tItem.visible = item.visible;
-    tItem.position = item.position;
-}
+]);
 
 function addInputContext() {
     window.addEventListener('contextmenu', (e) => {
@@ -1434,7 +1382,7 @@ function canPaste() {
 
 function UpdatePaste() {
     $('#btn-paste').prop('disabled', !canPaste());
-    updateMenuItem({ menu: 'edit|paste', enabled: canPaste() });
+    menubar.updateItem('edit|paste', { enabled: canPaste() });
 }
 
 function getType(item) {
@@ -1543,8 +1491,8 @@ export function doUndo() {
                                 if (t === 'profile') {
                                     $('#btn-cut').prop('disabled', true);
                                     $('#btn-delete').prop('disabled', true);
-                                    updateMenuItem({ menu: 'edit|cut', enabled: false });
-                                    updateMenuItem({ menu: 'edit|delete', enabled: false });
+                                    menubar.updateItem('edit|cut', { enabled: false });
+                                    menubar.updateItem('edit|delete', { enabled: false });
                                 }
                             }
                             else
@@ -1554,13 +1502,13 @@ export function doUndo() {
                                 $('#btn-copy').prop('disabled', true);
                                 $('#btn-cut').prop('disabled', true);
                                 $('#btn-delete').prop('disabled', true);
-                                updateMenuItem({ menu: 'edit|cut', enabled: false });
-                                updateMenuItem({ menu: 'edit|copy', enabled: false });
-                                updateMenuItem({ menu: 'edit|delete', enabled: false });
+                                menubar.updateItem('edit|cut', { enabled: false });
+                                menubar.updateItem('edit|copy', { enabled: false });
+                                menubar.updateItem('edit|delete', { enabled: false });
                             }
                             else if (t === 'profile') {
                                 $('#btn-cut').prop('disabled', true);
-                                updateMenuItem({ menu: 'edit|cut', enabled: false });
+                                menubar.updateItem('edit|cut', { enabled: false });
                             }
                         }
                     });
@@ -1717,8 +1665,8 @@ export function doRedo() {
                                 if (t === 'profile') {
                                     $('#btn-cut').prop('disabled', true);
                                     $('#btn-delete').prop('disabled', true);
-                                    updateMenuItem({ menu: 'edit|cut', enabled: false });
-                                    updateMenuItem({ menu: 'edit|delete', enabled: false });
+                                    menubar.updateItem('edit|cut', { enabled: false });
+                                    menubar.updateItem('edit|delete', { enabled: false });
                                 }
                             }
                             else
@@ -1728,13 +1676,13 @@ export function doRedo() {
                                 $('#btn-copy').prop('disabled', true);
                                 $('#btn-cut').prop('disabled', true);
                                 $('#btn-delete').prop('disabled', true);
-                                updateMenuItem({ menu: 'edit|cut', enabled: false });
-                                updateMenuItem({ menu: 'edit|copy', enabled: false });
-                                updateMenuItem({ menu: 'edit|delete', enabled: false });
+                                menubar.updateItem('edit|cut', { enabled: false });
+                                menubar.updateItem('edit|copy', { enabled: false });
+                                menubar.updateItem('edit|delete', { enabled: false });
                             }
                             else if (t === 'profile') {
                                 $('#btn-cut').prop('disabled', true);
-                                updateMenuItem({ menu: 'edit|cut', enabled: false });
+                                menubar.updateItem('edit|cut', { enabled: false });
                             }
                         }
                     });
@@ -2155,9 +2103,9 @@ function buildTreeview(data) {
             $('#btn-cut').prop('disabled', false);
             $('#btn-copy').prop('disabled', false);
             $('#btn-delete').prop('disabled', false);
-            updateMenuItem({ menu: 'edit|cut', enabled: true });
-            updateMenuItem({ menu: 'edit|copy', enabled: true });
-            updateMenuItem({ menu: 'edit|delete', enabled: true });
+            menubar.updateItem('edit|cut', { enabled: true });
+            menubar.updateItem('edit|copy', { enabled: true });
+            menubar.updateItem('edit|delete', { enabled: true });
             UpdatePaste();
             switch (t) {
                 case 'aliases':
@@ -2173,8 +2121,8 @@ function buildTreeview(data) {
                                 if (t === 'profile') {
                                     $('#btn-cut').prop('disabled', true);
                                     $('#btn-delete').prop('disabled', true);
-                                    updateMenuItem({ menu: 'edit|cut', enabled: false });
-                                    updateMenuItem({ menu: 'edit|delete', enabled: false });
+                                    menubar.updateItem('edit|cut', { enabled: false });
+                                    menubar.updateItem('edit|delete', { enabled: false });
                                 }
                             }
                             else
@@ -2184,13 +2132,13 @@ function buildTreeview(data) {
                                 $('#btn-copy').prop('disabled', true);
                                 $('#btn-cut').prop('disabled', true);
                                 $('#btn-delete').prop('disabled', true);
-                                updateMenuItem({ menu: 'edit|cut', enabled: false });
-                                updateMenuItem({ menu: 'edit|copy', enabled: false });
-                                updateMenuItem({ menu: 'edit|delete', enabled: false });
+                                menubar.updateItem('edit|cut', { enabled: false });
+                                menubar.updateItem('edit|copy', { enabled: false });
+                                menubar.updateItem('edit|delete', { enabled: false });
                             }
                             else if (t === 'profile') {
                                 $('#btn-cut').prop('disabled', true);
-                                updateMenuItem({ menu: 'edit|cut', enabled: false });
+                                menubar.updateItem('edit|cut', { enabled: false });
                             }
                         }
                     });
@@ -3437,8 +3385,8 @@ function pushUndo(data) {
 function updateUndoState() {
     $('#btn-undo').prop('disabled', _undo.length === 0);
     $('#btn-redo').prop('disabled', _redo.length === 0);
-    updateMenuItem({ menu: 'edit|undo', enabled: _undo.length === 0 });
-    updateMenuItem({ menu: 'edit|redo', enabled: _redo.length === 0 });
+    menubar.updateItem('edit|undo', { enabled: _undo.length === 0 });
+    menubar.updateItem('edit|redo', { enabled: _redo.length === 0 });
 }
 
 function DeleteProfileConfirm(profile) {

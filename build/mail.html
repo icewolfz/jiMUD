@@ -33,6 +33,7 @@
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
         const { Mail } = require('./js/mail');
+        const { Menubar } = require('./js/menubar');
         const fs = require('fs-extra');
         const child_process = require('child_process');
         const path = require('path');
@@ -51,7 +52,7 @@
         var _currentLetter;
         var _messageLoading;
 
-        var menu = [
+        var menubar = new Menubar([
             {
                 label: '&File',
                 id: 'file',
@@ -203,7 +204,6 @@
                     }
                 ]
             },
-
             {
                 label: '&View',
                 submenu: [
@@ -283,57 +283,7 @@
                     },
                 ]
             },
-
-        ];
-        var menubar = Menu.buildFromTemplate(menu);
-        remote.getCurrentWindow().setMenu(menubar);
-
-        function updateMenuItem(args) {
-            var item, i = 0, items;
-            var tItem, tItems;
-            if (args == null || args.menu == null) return;
-
-            if (!Array.isArray(args.menu))
-                args.menu = args.menu.split('|');
-
-            items = menubar.items;
-            tItems = menu;
-            for (i = 0; i < args.menu.length; i++) {
-                if (!items || items.length === 0) break;
-                for (var m = 0; m < items.length; m++) {
-                    if (!items[m]) continue;
-                    if (items[m].id === args.menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === args.menu[i].toLowerCase()) {
-                        item = items[m];
-                        tItem = tItems[m];
-                        if (item.submenu) {
-                            items = item.submenu.items;
-                            tItems = tItem.submenu;
-                        }
-                        else
-                            items = null;
-                        break;
-                    }
-                }
-            }
-            if (!item)
-                return;
-            if (args.enabled != null)
-                item.enabled = args.enabled ? true : false;
-            if (args.checked != null)
-                item.checked = args.checked ? true : false;
-            if (args.icon != null)
-                item.icon = args.icon;
-            if (args.visible != null)
-                item.visible = args.visible ? true : false;
-            if (args.position != null)
-                item.position = args.position;
-
-            tItem.enabled = item.enabled;
-            tItem.checked = item.checked;
-            tItem.icon = item.icon;
-            tItem.visible = item.visible;
-            tItem.position = item.position;
-        }
+        ]);
 
         (function () {
             /*
@@ -1034,7 +984,7 @@
                 $('#view-headers').css('display', 'none');
                 $('#view-body').css('top', '12px');
             }
-            updateMenuItem({ menu: 'view|headers', checked: options.showHeaders });
+            menubar.updateItem('view|headers', { checked: options.showHeaders });
             if (options.showHeaders) {
                 $('#btn-show-headers i').removeClass('fa-chevron-down');
                 $('#btn-show-headers i').addClass('fa-chevron-up');
