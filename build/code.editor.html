@@ -788,6 +788,136 @@
     });
     manager.on('deactivated', (e) => {
     });
+    manager.on('dragenter', (e) => {
+        event.dataTransfer.dropEffect = "copy";
+        event.dataTransfer.effectAllowed = "copy";
+        if (e.dataTransfer.items) {
+            for (var i = 0; i < e.dataTransfer.items.length; i++) {
+                // If dropped items aren't files, reject them
+                if (e.dataTransfer.items[i].kind === 'file') {
+                    event.dataTransfer.dropEffect = "link";
+                    event.dataTransfer.effectAllowed = "link";
+                    event.preventDefault();
+                    event.cancelBubble = true;
+                    event.stopPropagation();
+                    return false;
+                }
+            }
+        }
+        else if (e.dataTransfer.files && e.dataTransfer.files.length) {
+            event.dataTransfer.dropEffect = "link";
+            event.dataTransfer.effectAllowed = "link";
+            event.preventDefault();
+            event.cancelBubble = true;
+            event.stopPropagation();
+            return false;
+        }
+    });
+    manager.on('dragover', (e) => {
+        event.dataTransfer.dropEffect = "copy";
+        event.dataTransfer.effectAllowed = "copy";
+        if (e.dataTransfer.items) {
+            for (var i = 0; i < e.dataTransfer.items.length; i++) {
+                // If dropped items aren't files, reject them
+                if (e.dataTransfer.items[i].kind === 'file') {
+                    event.dataTransfer.dropEffect = "link";
+                    event.dataTransfer.effectAllowed = "link";
+                    event.preventDefault();
+                    event.cancelBubble = true;
+                    event.stopPropagation();
+                    return false;
+                }
+            }
+        }
+        else if (e.dataTransfer.files && e.dataTransfer.files.length) {
+            event.dataTransfer.dropEffect = "link";
+            event.dataTransfer.effectAllowed = "link";
+            event.preventDefault();
+            event.cancelBubble = true;
+            event.stopPropagation();
+            return false;
+        }
+    });
+    manager.on('drop', (e) => {
+        var files = [];
+        var f, fl;
+        if (e.dataTransfer.items) {
+            for (var i = 0; i < e.dataTransfer.items.length; i++) {
+                // If dropped items aren't files, reject them
+                if (e.dataTransfer.items[i].kind === 'file')
+                    files.push(e.dataTransfer.items[i].getAsFile());
+            }
+        }
+        else if (e.dataTransfer.files && e.dataTransfer.files.length) {
+            for (f = 0, fl = e.dataTransfer.files.length; f < fl; f++)
+                files.push(e.dataTransfer.files[f]);
+        }
+        if (files.length) {
+            event.preventDefault();
+            event.cancelBubble = true;
+            event.stopPropagation();
+            for (f = 0, fl = files.length; f < fl; f++)
+                openFile(files[f].path);
+        }
+    });
+    manager.on('tab-contextmenu', (panelId, panel) => {
+        var temp = [];
+        if (panel.editor.supports('refresh')) {
+            temp.push({
+                label: 'Refresh',
+                click: () => {
+                    panel.editor.refresh();
+                    panel.editor.focus();
+                },
+                accelerator: "F5"
+            });
+        }
+        if (temp.length)
+            temp.push({ type: 'separator' });
+        if (panel.editor.changed) {
+            temp.push({
+                label: '&Save',
+                accelerator: "CmdOrCtrl+S",
+                click: () => { saveFile(panel); }
+            });
+        }
+        temp.push({
+            label: 'Save &As',
+            accelerator: "CmdOrCtrl+Shift+S",
+            click: () => { saveFileAs(panel); },
+        });
+        if (panel.editor.changed) {
+            if (temp.length)
+                temp.push({ type: 'separator' });
+            temp.push({
+                label: 'Revert',
+                click: () => { revertFile(panel); }
+            });
+        }
+        if (panel.editor.supports('menu|tab-context')) {
+            temp.push({ type: 'separator' });
+            temp = temp.concat(panel.editor.menu('tab-context'));
+        }
+        if (temp.length)
+            temp.push({ type: 'separator' });
+        temp.push({
+            label: '&Close',
+            click: () => { closeFile(panel); },
+            accelerator: "CmdOrCtrl+F4"
+        });
+        if (manager.panels.length > 1)
+            temp.push({
+                label: '&Close Others',
+                click: () => { manager.removeAllPanels(panel); }
+            });
+        if (manager.panels.length - 1 > manager.getPanelIndex(panel))
+            temp.push({
+                label: '&Close to the Right',
+                click: () => { manager.removeAllPanelsAfter(panel); }
+            });
+        let tabMenu = Menu.buildFromTemplate(temp);
+        tabMenu.popup(remote.getCurrentWindow());
+    });
 
     function updatePanel(panel) {
         if (panel.editor.new)
@@ -1481,82 +1611,6 @@
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
         });
-
-        manager.on('dragenter', (e) => {
-            event.dataTransfer.dropEffect = "copy";
-            event.dataTransfer.effectAllowed = "copy";
-            if (e.dataTransfer.items) {
-                for (var i = 0; i < e.dataTransfer.items.length; i++) {
-                    // If dropped items aren't files, reject them
-                    if (e.dataTransfer.items[i].kind === 'file') {
-                        event.dataTransfer.dropEffect = "link";
-                        event.dataTransfer.effectAllowed = "link";
-                        event.preventDefault();
-                        event.cancelBubble = true;
-                        event.stopPropagation();
-                        return false;
-                    }
-                }
-            }
-            else if (e.dataTransfer.files && e.dataTransfer.files.length) {
-                event.dataTransfer.dropEffect = "link";
-                event.dataTransfer.effectAllowed = "link";
-                event.preventDefault();
-                event.cancelBubble = true;
-                event.stopPropagation();
-                return false;
-            }
-        });
-
-        manager.on('dragover', (e) => {
-            event.dataTransfer.dropEffect = "copy";
-            event.dataTransfer.effectAllowed = "copy";
-            if (e.dataTransfer.items) {
-                for (var i = 0; i < e.dataTransfer.items.length; i++) {
-                    // If dropped items aren't files, reject them
-                    if (e.dataTransfer.items[i].kind === 'file') {
-                        event.dataTransfer.dropEffect = "link";
-                        event.dataTransfer.effectAllowed = "link";
-                        event.preventDefault();
-                        event.cancelBubble = true;
-                        event.stopPropagation();
-                        return false;
-                    }
-                }
-            }
-            else if (e.dataTransfer.files && e.dataTransfer.files.length) {
-                event.dataTransfer.dropEffect = "link";
-                event.dataTransfer.effectAllowed = "link";
-                event.preventDefault();
-                event.cancelBubble = true;
-                event.stopPropagation();
-                return false;
-            }
-        });
-
-        manager.on('drop', (e) => {
-            var files = [];
-            var f, fl;
-            if (e.dataTransfer.items) {
-                for (var i = 0; i < e.dataTransfer.items.length; i++) {
-                    // If dropped items aren't files, reject them
-                    if (e.dataTransfer.items[i].kind === 'file')
-                        files.push(e.dataTransfer.items[i].getAsFile());
-                }
-            }
-            else if (e.dataTransfer.files && e.dataTransfer.files.length) {
-                for (f = 0, fl = e.dataTransfer.files.length; f < fl; f++)
-                    files.push(e.dataTransfer.files[f]);
-            }
-            if (files.length) {
-                event.preventDefault();
-                event.cancelBubble = true;
-                event.stopPropagation();
-                for (f = 0, fl = files.length; f < fl; f++)
-                    openFile(files[f].path);
-            }
-        });
-
         createWatcher();
         var o, ol;
         if (options.opened && options.reopen) {
@@ -2253,8 +2307,7 @@
                     temp.push({ type: 'separator' });
                     temp.push({
                         label: 'Revert',
-                        click: () => { revertFile(); },
-                        enabled: false
+                        click: () => { revertFile(); }
                     });
                 }
                 if (p.editor.supports('find') || p.editor.supports('replace'))
