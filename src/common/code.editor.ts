@@ -240,6 +240,7 @@ export class CodeEditor extends EditorBase {
         this.parent.appendChild(fragment);
 
         this.$editor = ace.edit(this.$editorEl.id);
+        this.$editor.commands.removeCommand('showSettingsMenu');
         this.$editor.container.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             let position = this.$editor.selection.getCursor();
