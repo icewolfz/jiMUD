@@ -20,12 +20,12 @@
   "scripts": {
     "start": "electron .",
     "debug": "electron . -d --inspect-brk=5858",
-    "clean:dist": "rm -rf ./dist",
     "compile": "npm run sass && npm run compile:themes && npm run compile:worker && npm run compile:common && npm run min && echo Compile Done",
-    "compile:common": "tsc -p . --listEmittedFiles",
-    "compile:worker": "tsc -p ./src/worker --listEmittedFiles",
+    "clean": "npm run clean:code && npm run clean:css",
     "compile:debug": "npm run sass && npm run compile:themes && npm run compile:worker && npm run compile:common && copy out\\*.js build\\js\\ && echo Compile Done",
     "compile:debug-linux": "npm run sass && npm run compile:themes && npm run compile:worker && npm run compile:common && cp out/*.js build/js/ && echo Compile Done",
+    "compile:common": "tsc -p . --listEmittedFiles",
+    "compile:worker": "tsc -p ./src/worker --listEmittedFiles",
     "build": "npm run build:win64 && npm run build:linux",
     "build:osx": "electron-packager . $npm_package_productName --out=dist --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --overwrite --prune --asar --arch=all --platform=darwin --electronVersion=$npm_package_electronVersion --app-version=$npm_package_version --icon=./assets/icons/mac/app.icns",
     "build:win64": "electron-packager . %npm_package_productName% --out=dist --arch=x64 --platform=win32 --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/win/app.ico --win32metadata.CompanyName=\"jiMUD\" --win32metadata.ProductName=\"jiMUD\" --win32metadata.FileDescription=\"jiMUD\" --win32metadata.OriginalFilename=\"jiMUD.exe\" --appCopyright=\"Copyright © 2017-2018 Icewolfz. All rights reserved.\"",
@@ -76,9 +76,9 @@
     "release:win": "npm run release:win32 && npm run release:win64",
     "release:linux": "npm run release:linux32 && npm run release:linux64 && npm run release:linuxarm",
     "release:osx": "npm run compile && && npm run rebuild:osx && npm run build:osx && npm run package:osx && sleep 2 && npm run package:osx",
-    "clean": "npm run clean:code && npm run clean:css",
     "clean:code": "del /q .\\out\\*.js && del /q .\\build\\js\\*.js",
-    "clean:css": "del /q .\\build\\css\\*.css"
+    "clean:css": "del /q .\\build\\css\\*.css",
+    "clean:dist": "rm -rf ./dist"
   },
   "devDependencies": {
     "@types/bootstrap": "^3.3.39",
