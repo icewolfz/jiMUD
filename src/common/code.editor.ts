@@ -26,8 +26,6 @@ class DebugTimer {
 ace.config.set('basePath', '../lib/ace');
 ace.require('ace/ext/language_tools');
 
-let aceTooltip;
-
 export enum UpdateType {
     none = 0, resize = 1
 }
@@ -190,6 +188,7 @@ export class CodeEditor extends EditorBase {
     private $formatter: lpcFormatter;
     private $annotations = [];
     private $saving = false;
+    private $tooltip;
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -254,12 +253,7 @@ export class CodeEditor extends EditorBase {
         this.$editor.getSelectedText = function () {
             return this.session.getTextRange(this.getSelectionRange());
         };
-
-        if (!aceTooltip) {
-            const Tooltip = ace.require('ace/tooltip').Tooltip;
-            aceTooltip = new Tooltip($('#content')[0]);
-        }
-
+        this.$tooltip = new (ace.require('ace/tooltip').Tooltip)(this.$editor.container);
         this.$editor.setTheme('ace/theme/visual_studio');
         this.$session.setUseSoftTabs(true);
 
@@ -300,6 +294,30 @@ export class CodeEditor extends EditorBase {
             this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
             this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
         })
+        this.$session.on('changeFold', () => {
+            this.$tooltip.hide();
+        })
+        this.$editor.on('mousemove', (e) => {
+            var pos = e.getDocumentPosition();
+            var fold = this.$session.getFoldAt(pos.row, pos.column, 1);
+            if (fold) {
+                var t = this.$session.getDocument().getTextRange(fold.range).replace(/^\n+|\s+$/g, '');
+                var s = t.split(/\n/);
+                if (s.length > 10) {
+                    t = s.slice(0, 10).join("\n").replace(/\s+$/g, '') + "\n...";
+                }
+                var h = $(window).height();
+                var th = this.$tooltip.getHeight();
+                var x = e.clientX;
+                var y = e.clientY;
+                if (y + th > h)
+                    y = y - th;
+                this.$tooltip.show(t, x, y);
+                e.stop();
+            }
+            else
+                this.$tooltip.hide();
+        });
         this.emit('created');
     }
 
