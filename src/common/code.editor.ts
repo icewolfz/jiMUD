@@ -189,6 +189,7 @@ export class CodeEditor extends EditorBase {
     private $indenter: lpcIndenter;
     private $formatter: lpcFormatter;
     private $annotations = [];
+    private $saving = false;
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -345,6 +346,7 @@ export class CodeEditor extends EditorBase {
     }
 
     public save() {
+        this.$saving = true;
         this.write(this.$session.getValue());
         this.changed = false;
         this.new = false;
@@ -367,7 +369,10 @@ export class CodeEditor extends EditorBase {
             case 'add':
             case 'change':
             case 'unlink':
-                this.emit('reload', action);
+                if (!this.$saving)
+                    this.emit('reload', action);
+                else
+                    this.$saving = false;
                 break;
         }
     }
