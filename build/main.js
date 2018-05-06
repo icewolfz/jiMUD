@@ -1409,13 +1409,14 @@ app.on('ready', () => {
       case "--help":
       case "-?":
       case "/?":
-        console.log('-h, --help                    Print console help');
-        console.log('-d, --debug                   Enable dev tools for all windows');
-        console.log('-s=[file], --setting=[file]   Override default setting file');
-        console.log('-mf=[file], --map=[file]      Override default map file');
-        console.log('-c=[name], --character=[name] Allows you to load/create a character from character database');
-        console.log('-pf=[list], --profiles[]      Set which profiles will be enabled, if not found will default');
-        console.log('-v, --version                 Print current version');
+        console.log('-h, --help                      Print console help');
+        console.log('-d, --debug                     Enable dev tools for all windows');
+        console.log('-s=[file], --setting=[file]     Override default setting file');
+        console.log('-mf=[file], --map=[file]        Override default map file');
+        console.log('-c=[name], --character=[name]   Allows you to load/create a character from character database');
+        console.log('-pf=[list], --profiles[]        Set which profiles will be enabled, if not found will default');
+        console.log('-v, --version                   Print current version');
+        console.log('-e, --e, -e=[file], --e=[file]  Print current version');
         app.quit();
         return;
       case "--version":

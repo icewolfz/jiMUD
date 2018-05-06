@@ -494,36 +494,36 @@
       }
       return items;
     }
-/*
-    function buildMenuItems(items) {
-      if (!items || items.length === 0)
-        return [];
-      var menuItems = [], item;
-      for (var x = 0, xl = items.length; x < xl; x++) {
-        if (!items[x].enabled) continue;
-        if (items[x].caption === '-')
-          item = { type: 'separator' };
-        else {
-          item = {
-            label: items[x].caption,
-            item: items[x],
-            click: (item) => {
-              executeContext(item.item);
+    /*
+        function buildMenuItems(items) {
+          if (!items || items.length === 0)
+            return [];
+          var menuItems = [], item;
+          for (var x = 0, xl = items.length; x < xl; x++) {
+            if (!items[x].enabled) continue;
+            if (items[x].caption === '-')
+              item = { type: 'separator' };
+            else {
+              item = {
+                label: items[x].caption,
+                item: items[x],
+                click: (item) => {
+                  executeContext(item.item);
+                }
+              };
+              if (items[x].items) {
+                var sub = buildMenuItems(items[x].items);
+                if (sub.length > 0)
+                  item.submenu = sub;
+              }
+              if (items[x].icon && items[x].icon.length > 0)
+                item.icon = nativeImage.createFromPath(parseTemplate(items[x].icon)).resize({ width: 16, height: 16 });
             }
-          };
-          if (items[x].items) {
-            var sub = buildMenuItems(items[x].items);
-            if (sub.length > 0)
-              item.submenu = sub;
+            menuItems.push(new MenuItem(item));
           }
-          if (items[x].icon && items[x].icon.length > 0)
-            item.icon = nativeImage.createFromPath(parseTemplate(items[x].icon)).resize({ width: 16, height: 16 });
+          return menuItems;
         }
-        menuItems.push(new MenuItem(item));
-      }
-      return menuItems;
-    }
-*/
+    */
     function buildContextMenu() {
       _context = [];
       var context = client.contexts;
@@ -1465,7 +1465,7 @@
           click: () => {
             toggleView("button.codeEditor");
           }
-        }));                
+        }));
         c.append(new MenuItem({
           label: 'Preferences',
           type: 'checkbox',
@@ -1635,6 +1635,22 @@
       if (client.options.showCharacterManager)
         showCharacters();
       autoConnect();
+
+      setTimeout(() => {
+        remote.process.argv.forEach((val, index) => {
+          if (val === '-e' || val === '--e' || val === '--editor' || val === '-editor')
+            showCodeEditor();
+          else if (val.startsWith("-e=") || val.startsWith("-e:"))
+            ipcRenderer.send('open-editor', val.substring(3));
+          else if (val.startsWith("--e=") || val.startsWith("--e:"))
+            ipcRenderer.send('open-editor', val.substring(4));
+          else if (val.startsWith("-editor=") || val.startsWith("-editor:"))
+            ipcRenderer.send('open-editor', val.substring(8));
+          else if (val.startsWith("--editor=") || val.startsWith("--editor:"))
+            ipcRenderer.send('open-editor', val.substring(9));
+        });
+      }, 500);
+
       client.raise('opened');
     }
 
@@ -1994,7 +2010,7 @@
       }
       else
         ipcRenderer.send('show-window', 'code-editor', { show: true, file: 'code.editor.html', icon: 'ied', alwaysOnTopClient: true });
-    }    
+    }
 
     function showMail() {
       if (client.options.windows['mail'] && client.options.windows['mail'].options) {
@@ -2151,7 +2167,7 @@
     </a>
     <a href="javascript:void(0)" title="Code Editor" id="codeEditor" class="button" onclick="showCodeEditor()">
       <i class="fa fa-pencil"></i>
-    </a>    
+    </a>
     <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
       <i class="fa fa-gears"></i>
     </a>

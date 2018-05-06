@@ -76,13 +76,14 @@ Basic questions answered about jiMUD
 
 ## Command line arguments
 
-- `-h, --help`                    Print console help
-- `-d, --debug`                   Enable dev tools for all windows
-- `-s=[file], --setting=[file]`   Override default setting file
-- `-mf=[file], --map=[file]`      Override default map file
-- `-c=[name], --character=[name]` Allows you to load/create a character from character database
-- `-pf=[list], --profiles[]`      Set which profiles will be enabled, if not found will default
-- `-v, --version`                 Print current version
+- `-h, --help`                                Print console help
+- `-d, --debug`                               Enable dev tools for all windows
+- `-s=[file], --setting=[file]`               Override default setting file
+- `-mf=[file], --map=[file]`                  Override default map file
+- `-c=[name], --character=[name]`             Allows you to load/create a character from character database
+- `-pf=[list], --profiles[]`                  Set which profiles will be enabled, if not found will default
+- `-v, --version`                             Print current version
+- `-e, --editor, -e=[file], --editor=[file]`  Open code editor
 
 ## References
 
