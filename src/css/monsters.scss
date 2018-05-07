@@ -71,13 +71,7 @@ $monsters: "./../../assets/monsters";
 }
 
 .monster-red-dragon {
-    /*0.667 * width/height for 48 to 32*/
     background-image: url(#{$monsters}/32x32-6.png);
-
-  /*
-background-position: -533.5px -117.5px;  
-background-size: 661px 522px;
-*/
     background-position: -808px -184px;
     animation: monster-red-dragon-sprite 0.8s steps(2) infinite;
 }
@@ -100,6 +94,18 @@ background-size: 661px 522px;
     }
 }
 
+.monster-kraken {
+    background-image: url(#{$monsters}/drake.png);
+    background-position: -641px -688px;
+    animation: monster-kraken-sprite 0.8s steps(2) infinite;
+}
+
+@keyframes monster-kraken-sprite {
+    100% {
+        background-position: 641px -752px;
+    }
+}
+
 .monster-alligator {
     background-image: url(#{$monsters}/32x32-5.png);
     background-position: -352px -800px;
@@ -115,17 +121,20 @@ background-size: 661px 522px;
     background-position: -448px -192px;
 }
 
-/*
-.monster-ogre, .monster-half-ogre {}
-*/
+.monster-ogre, .monster-half-ogre {
+    background-image: url(#{$monsters}/dc-mon/ogre.png);
+}
+
 .monster-orc, .monster-half-orc {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -544px -96px;
 }
 
-/*
-.monster-gnome {}
-*/
+.monster-gnome {
+    background-image: url(#{$monsters}/32x32-3.png);
+    background-position: -256px -352px;
+}
+
 .monster-goblin {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -544px -32px;
@@ -136,52 +145,75 @@ background-size: 661px 522px;
     background-position: -544px -64px;
 }
 
-/*
-.monster-half-elf {}
+.monster-half-elf {
+    background-image: url(#{$monsters}/32x32-5.png);
+    background-position: -160px -97px;
+}
 
-.monster-half-elf {}
+.monster-halfling {
+    background-image: url(#{$monsters}/dc-mon/halfling.png);
+}
 
-.monster-halfling {}
-*/
 .monster-hobbit {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -352px -32px;
 }
 
-/*
-.monster-gargoyle {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -352px -32px;
+.monster-ettin {
+    background-image: url(#{$monsters}/dc-mon/ettin.png);
 }
-*/
+
+.monster-gargoyle {
+    background-image: url(#{$monsters}/dc-mon/nonliving/gargoyle.png);
+}
+
 .monster-nymph {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -448px -608px;
 }
-/*
-.monster-wildelf {}
+
+.monster-elf {
+    background-image: url(#{$monsters}/32x32-5.png);
+    background-position: -160px -97px;
+}
+
+.monster-wildelf {
+    background-image: url(#{$monsters}/32x32-5.png);
+    background-position: -160px -128px;
+}
 
 .monster-amphibian {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/giant_newt.png);
+}
+
+.monster-frog {
+    background-image: url(#{$monsters}/dc-mon/animals/giant_frog.png);
+}
+
+.monster-bullfrog {
+    background-image: url(#{$monsters}/dc-mon/animals/blink_frog.png);
 }
 
 .monster-ant {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/giant_ant.png);
 }
 
+.monster-basilisk {
+    background-image: url(#{$monsters}/dc-mon/animals/giant_ant.png);
+}
+
+/*
 .monster-antelope {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-arachnid {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/redback-2.png);
 }
 
-.monster-avian {
+/*
+.monster-avian, .monster-large-avian {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
@@ -190,17 +222,16 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-bat {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/giant_bat.png);
 }
 
 .monster-bear {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/bear.png);
 }
 
+/*
 .monster-bird {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
@@ -208,25 +239,21 @@ background-size: 661px 522px;
 */
 .monster-bovine {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -544px -897px;
+    background-position: -544px -896px;
 }
+
 /*
 .monster-buck {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-bug {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/boulder_beetle.png);
 }
 
+/*
 .monster-bugbear {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
-
-.monster-bullfrog {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
@@ -240,22 +267,22 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-canine {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -160px -416px;
 }
 
 .monster-cat {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -256px -352px;
 }
 
 .monster-centaur {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/centaur.png);
 }
 
+/*
 .monster-cervine {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
@@ -265,32 +292,34 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-cow {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -544px -896px;
 }
 
 .monster-coyote {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -160px -320px;
 }
 
 .monster-crab {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -352px -448px;
 }
 
+/*
 .monster-cricket {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-crustacean {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/32x32-5.png);
+    background-position: -352px -448px;
 }
 
+/*
 .monster-deer {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
@@ -300,17 +329,21 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-dog {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -160px -416px;
 }
 
 .monster-donkey {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -736px -160px;
 }
-*/
+
+.monster-pegasus {
+    background-image: url(#{$monsters}/32x32-2.png);
+    background-position: -736px -224px;
+}
 
 .monster-dragon {
     background-image: url(#{$monsters}/32x32-6.png);
@@ -324,27 +357,19 @@ background-size: 661px 522px;
     }
 }
 
-/*
-.monster-elf {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
-
 .monster-drake {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/fire_drake.png);
 }
 
 .monster-elephant {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/elephant.png);
 }
 
 .monster-elephantidae {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/elephant.png);
 }
 
+/*
 .monster-elk {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
@@ -354,131 +379,102 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-equine {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -736px -160px;
 }
 
+/*
 .monster-faerie {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-feline {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -256px -352px;
 }
 
+/*
 .monster-ferret {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-fish {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/big_fish.png);
 }
 
-.monster-frog {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
-
+/*
 .monster-gazelle {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-gnoll {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/gnoll.png);
 }
 
 .monster-goat {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -544px -768px;
 }
 
+/*
 .monster-hippogriff {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-horse {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -736px -160px;
 }
 
 .monster-human {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/human.png);
 }
 
 .monster-humanoid {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/human.png);
 }
 
 .monster-insect {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/boulder_beetle.png);
 }
 
 .monster-insectoid {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/boulder_beetle.png);
 }
 
 .monster-kangaroo {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -832px -544px;
 }
-*/
+
 .monster-kobold {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -448px -32px;
 }
+
 .monster-kobold.monster-cleric {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -448px -128px;
 }
+
 /*
-.monster-large {
+.monster-large-bird, .monster-large_bird {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
-.monster-avian {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
-
-.monster-large {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
-
-.monster-bird {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
-
-.monster-large-bird {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
-
-.monster-leporine {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
-
+*/
 .monster-lizard {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/32x32-5.png);
+    background-position: -352 -705px;
 }
 
+/*
 .monster-lizardfolk {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
@@ -493,52 +489,57 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-lupine {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/wolf.png);
 }
 
 .monster-mammal {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/rat.png);
 }
 
 .monster-mammoth {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -448px -899px;
 }
 
+/*
 .monster-marmoset {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-monkey {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/32x32-3.png);
+    background-position: -640px -480px;
 }
 
+.monster-ape, .monster-gorilla {
+    background-image: url(#{$monsters}/32x32-3.png);
+    background-position: -640px -512px;
+}
+
+/*
 .monster-moose {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-mule {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -736px -160px;
 }
-
+/*
 .monster-musteline {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-naga {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/naga.png);
 }
 
+/*
 .monster-ostridge {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
@@ -553,65 +554,69 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-owlbear {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/32x32-3.png);
+    background-position: -640px -544px;
 }
 
 .monster-pachyderm {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/elephant.png);
 }
 
 .monster-parrot {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -160px -192px;
 }
 
+/*
 .monster-penguin {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-pig {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/hog.png);
 }
 
 .monster-plant {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/fungi_plants/plant.png);
 }
 
 .monster-pony {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -736px -128px;
 }
 
+/*
 .monster-porcupine {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-rabbit {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -640px -64px;
 }
 
+.monster-leporine {
+    background-image: url(#{$monsters}/32x32-2.png);
+    background-position: -640px -64px;
+}
+
+/*
 .monster-reindeer {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-reptile {
-    background-image: url(#{$monsters}/32x32-2.png);
+    background-image: url(#{$monsters}/dc-mon/aniamls/alligator.png);
     background-position: -640px -32px;
 }
-*/
 
 .monster-rodent {
-    background-image: url(#{$monsters}/32x32-2.png);
+    background-image: url(#{$monsters}/dc-mon/aniamls/rat.png);
     background-position: -640px -32px;
 }
 
@@ -620,47 +625,57 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-scorpion {
-    background-image: url(#{$monsters}/32x32-2.png);
+    background-image: url(#{$monsters}/dc-mon/aniamls/giant_scorpion.png);
     background-position: -640px -32px;
 }
 
+/*
 .monster-seal {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
+*/
+.monster-queen-ant {
+    background-image: url(#{$monsters}/dc-mon/aniamls/queen_ant.png);
+}
 
 .monster-serpant {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/snake.png);
 }
 
 .monster-sheep {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/sheep.png);
 }
 
+/*
 .monster-skunk {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
+*/
 .monster-snake {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/snake.png);
 }
 
 .monster-spider {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/redback-2.png);
 }
 
 .monster-squid {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/drake.png);
+    background-position: -641px -688px;
+    animation: monster-kraken-sprite 0.8s steps(2) infinite;
 }
 
+@keyframes monster-squid-sprite {
+    100% {
+        background-position: 641px -752px;
+    }
+}
+
+/*
 .monster-squirrel {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
@@ -670,54 +685,116 @@ background-size: 661px 522px;
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
+*/
+
+.monster-shark {
+    background-image: url(#{$monsters}/32x32-5.png);
+    background-position: -352px -416px;
+}
 
 .monster-swine {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/aniamls/hog.png);
 }
 
 .monster-tree {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/fungi_plants/plant.png);
 }
 
 .monster-turtle {
-    background-image: url(#{$monsters}/32x32-2.png);
+    background-image: url(#{$monsters}/dc-mon/animals/snapping_turtle.png);
     background-position: -640px -32px;
 }
 
 .monster-unicorn {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -736px -32px;
 }
 
 .monster-ursine {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/bear.png);
 }
-*/
+
 .monster-wolf {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -160px -608px;
 }
-/*
+
 .monster-wolverine {
     background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-position: -160px -864px;
 }
 
 .monster-worm {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/worm.png);
 }
 
 .monster-wyvern {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/dc-mon/animals/wyvern.png);
 }
-*/
 
-.monster-muskox, .monster-yak {
+.monster-muskox,
+.monster-yak {
     background-image: url(#{$monsters}/dc-mon/animals/yak.png);
 }
 
+.monster-yeti {
+    background-image: url(#{$monsters}/32x32-3.png);
+    background-position: -640px -576px;
+}
+
+.monster-elemental, .monster-fire-elemental {
+    background-image: url(#{$monsters}/dc-mon/nonliving/fire_elemental.png);
+}
+
+.monster-earth-elemental {
+    background-image: url(#{$monsters}/dc-mon/nonliving/earth_elemental.png);
+}
+
+.monster-water-elemental {
+    background-image: url(#{$monsters}/dc-mon/nonliving/water_elemental.png);
+}
+
+.monster-air-elemental {
+    background-image: url(#{$monsters}/dc-mon/nonliving/air_elemental.png);
+}
+
+.monster-golem {
+    background-image: url(#{$monsters}/dc-mon/nonliving/clay_golem.png);
+}
+
+.monster-rock-golem, .monster-stone-golem {
+    background-image: url(#{$monsters}/dc-mon/nonliving/stone_golem.png);
+}
+
+.monster-crystal-golem {
+    background-image: url(#{$monsters}/dc-mon/nonliving/crystal_golem.png);
+}
+
+.monster-wood-golem {
+    background-image: url(#{$monsters}/dc-mon/nonliving/wood_golem.png);
+}
+
+.monster-shadow {
+    background-image: url(#{$monsters}/32x32-5.png);
+    background-position: -256px -32px;
+}
+
+.monster-carrion-crawler {
+    background-image: url(#{$monsters}/32x32-5.png);
+    background-position: -640px -640px; 
+}
+
+.monster-troll {
+    background-image: url(#{$monsters}/32x32-3.png);
+    background-position: -544px -576px; 
+}
+
+.monster-ice-troll {
+    background-image: url(#{$monsters}/32x32-3.png);
+    background-position: -544px -608px; 
+}
+
+.monster-wight {
+    background-image: url(#{$monsters}/32x32-3.png);
+    background-position: -640px -288px; 
+}
