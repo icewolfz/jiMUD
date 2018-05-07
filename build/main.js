@@ -17,6 +17,7 @@ const { TrayClick } = require('./js/types');
 // be closed automatically when the JavaScript object is garbage collected.
 let win, winWho, winMap, winProfiles, winEditor, winChat, winCode;//winHelp
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
+let edset;
 let chatReady = false;
 let reload = null;
 let tray = null;
@@ -1214,7 +1215,8 @@ function createWindow() {
           winChat.destroy();
         }
         if (winCode) {
-          var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+          if (!edset)
+            edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
           if (winCode != null)
             edset.window.show = true;
           edset.state = getWindowState('code-editor', winCode);
@@ -1298,7 +1300,8 @@ function createWindow() {
       winChat.destroy();
     }
     if (winCode && winCode.getParentWindow() == win) {
-      var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+      if (!edset)
+        edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
       edset.window.show = true;
       edset.state = getWindowState('code-editor', winCode);
       edset.save(parseTemplate(path.join('{data}', 'editor.json'))); winCode.destroy();
@@ -1352,7 +1355,8 @@ function createWindow() {
       }
     }
 
-    var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+    if (!edset)
+      edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
     if (edset.window.show)
       showCodeEditor(true);
   });
@@ -2997,7 +3001,8 @@ function closeWindows(save, clear, force) {
 
 function createCodeEditor(show, loading, loaded) {
   if (winCode) return;
-  var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+  if (!edset)
+    edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
   var s = loadWindowState('mapper');
   if (!edset.state)
     edset.state = {
@@ -3080,7 +3085,8 @@ function createCodeEditor(show, loading, loaded) {
   });
 
   winCode.on('close', (e) => {
-    edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+    if (!edset)
+      edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
     if (winCode && winCode.getParentWindow() == win)
       edset.window.show = false;
     else if (winCode != null)
@@ -3133,8 +3139,9 @@ function createCodeEditor(show, loading, loaded) {
 }
 
 function showCodeEditor(loading) {
-  var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-  edset.show = true;
+  if (!edset)
+    edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+  edset.window.show = true;
   edset.save(parseTemplate(path.join('{data}', 'editor.json')));
   if (winCode != null) {
     if (codeMax)
