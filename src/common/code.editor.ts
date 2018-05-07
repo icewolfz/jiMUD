@@ -1268,7 +1268,7 @@ export class lpcFormatter extends EventEmitter {
         var tp = 0;
         var tl = this.tokens.length;
         var op = "";
-        var s, e, t, t2, tll;
+        var s, e, t, t2, tll, t3, t1;
         var pc, incase;
         var incomment = 0;
         var inclosure = 0;
@@ -1339,8 +1339,22 @@ export class lpcFormatter extends EventEmitter {
                             op = op.rtrim();
                         else if (!pc && this.tokens[tp][t].type === FormatTokenType.operator) {
                             if (!incase || (incase && this.tokens[tp][t].value !== ":")) {
-                                op = op.rtrim();
-                                op += " ";
+                                if (this.tokens[tp][t].value === '-') {
+                                    t3 = t - 1;
+                                    while (t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.whitespace) {
+                                        t3--;
+                                        if (t3 <= 0)
+                                            break;
+                                    }
+                                    if (t3 < 0 || this.tokens[tp][t3].type !== FormatTokenType.operatorNot) {
+                                        op = op.rtrim();
+                                        op += " ";
+                                    }
+                                }
+                                else {
+                                    op = op.rtrim();
+                                    op += " ";
+                                }
                             }
                         }
                         else if (this.tokens[tp][t].type === FormatTokenType.parenLclosure || this.tokens[tp][t].type === FormatTokenType.parenRclosure || this.tokens[tp][t].type === FormatTokenType.parenLmapping || this.tokens[tp][t].type === FormatTokenType.parenRmapping || this.tokens[tp][t].type === FormatTokenType.parenRarray || this.tokens[tp][t].type === FormatTokenType.parenLarray) {
@@ -1369,6 +1383,8 @@ export class lpcFormatter extends EventEmitter {
                         }
                         else if (!pc && this.tokens[tp][t].type === FormatTokenType.operator || this.tokens[tp][t].type === FormatTokenType.comma || this.tokens[tp][t].type === FormatTokenType.semicolon) {
                             t2 = t + 1;
+                            t3 = t - 1;
+                            t1 = t;
                             if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
                                 while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
                                     t++;
@@ -1377,9 +1393,55 @@ export class lpcFormatter extends EventEmitter {
                                     if (t2 >= tll)
                                         break;
                                 }
+                                while (t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.whitespace) {
+                                    t3--;
+                                    if (t3 <= 0)
+                                        break;
+                                }
                                 if (t2 < tll) {
-                                    op = op.rtrim();
-                                    op += " ";
+                                    //only - matters as only operator that can standalone for signage
+                                    if (this.tokens[tp][t1].value === '-') {
+                                        //previous is text so should add a space
+                                        if (t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.text) {
+                                            op = op.rtrim();
+                                            op += " ";
+                                        }
+                                    } //datatype + * is an array no space after
+                                    else if (this.tokens[tp][t1].value === '*') {
+                                        //previous is text so should add a space
+                                        if (t3 < 0 || (t3 >= 0 && this.tokens[tp][t3].type !== FormatTokenType.datatype)) {
+                                            op = op.rtrim();
+                                            op += " ";
+                                        }
+                                    }
+                                    else {
+                                        op = op.rtrim();
+                                        op += " ";
+                                    }
+                                }
+                            }
+                        }
+                        else if (!pc && this.tokens[tp][t].type === FormatTokenType.operatorNot && this.tokens[tp][t].value === '!') {
+                            t2 = t + 1;
+                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
+                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                    t2++;
+                                    if (t2 >= tll)
+                                        break;
+                                }
+                                if (t2 < tll) {
+                                    if (this.tokens[tp][t2].type === FormatTokenType.text) {
+                                        e = t2 - 1;
+                                        t = t2 - 1;
+                                    }
+                                    else if (this.tokens[tp][t2].type === FormatTokenType.operator && this.tokens[tp][t2].value === '-') {
+                                        e = t2 - 1;
+                                        t = t2 - 1;
+                                    }
+                                    else if (this.tokens[tp][t2].type === FormatTokenType.operatorNot && this.tokens[tp][t2].value === '!') {
+                                        e = t2 - 1;
+                                        t = t2 - 1;
+                                    }
                                 }
                             }
                         }
@@ -1454,7 +1516,7 @@ export class lpcFormatter extends EventEmitter {
                         p--;
                         if (p === 0) {
                             t2 = t + 1;
-                            if (this.tokens[tp][t2].type !== FormatTokenType.newline && this.tokens[tp][t].type !== FormatTokenType.parenLbrace && this.tokens[tp][t].type !== FormatTokenType.keyword) {
+                            if (t2 < tll && this.tokens[tp][t2].type !== FormatTokenType.newline && this.tokens[tp][t].type !== FormatTokenType.parenLbrace && this.tokens[tp][t].type !== FormatTokenType.keyword) {
                                 while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
