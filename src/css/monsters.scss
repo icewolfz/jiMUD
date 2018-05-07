@@ -95,7 +95,7 @@ $monsters: "./../../assets/monsters";
 }
 
 .monster-kraken {
-    background-image: url(#{$monsters}/drake.png);
+    background-image: url(#{$monsters}/32x32-6.png);
     background-position: -641px -688px;
     animation: monster-kraken-sprite 0.8s steps(2) infinite;
 }
@@ -484,12 +484,12 @@ $monsters: "./../../assets/monsters";
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -640px -32px;
 }
-
-.monster-llama {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
-}
 */
+.monster-llama {
+    background-image: url(#{$monsters}/32x32-4.png);
+    background-position: -64px -32px;
+}
+
 .monster-lupine {
     background-image: url(#{$monsters}/dc-mon/aniamls/wolf.png);
 }
@@ -797,4 +797,9 @@ $monsters: "./../../assets/monsters";
 .monster-wight {
     background-image: url(#{$monsters}/32x32-3.png);
     background-position: -640px -288px; 
+}
+
+.monster-mummy {
+    background-image: url(#{$monsters}/32x32-4.png);
+    background-position: -160px -64px; 
 }
