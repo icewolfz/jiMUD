@@ -86,7 +86,7 @@
         const { dialog } = remote;
         const path = require('path');
         const EditorSettings = require('./js/code.editor.settings').EditorSettings;
-        
+
         var _settings;
         if (window.module) module.module;
         $(window).keydown((event) => {
@@ -142,6 +142,7 @@
                     case 'alwaysOnTopClient':
                     case 'persistent':
                     case 'alwaysOnTop':
+                        _settings.window[$(this).attr('id')] = this.checked;
                         break;
                     case 'selectionStyle':
                         setValue($(this).attr('id'), this.checked ? 'line' : 'text');
@@ -257,16 +258,10 @@
             $('#editorOptions-selectionStyle').prop('checked', _settings.editorOptions.selectionStyle === "line");
             $('#editorOptions-printMarginColumn').val(_settings.editorOptions.printMarginColumn);
 
-            if (!_settings.windows["code-editor"] || !_settings.windows["code-editor"].options) {
-                $("#persistent").prop('checked', false);
-                $("#alwaysOnTopClient").prop('checked', true);
-                $("#alwaysOnTop").prop('checked', false);
-            }
-            else {
-                $("#persistent").prop('checked', _settings.windows["code-editor"].options.persistent);
-                $("#alwaysOnTopClient").prop('checked', _settings.windows["code-editor"].options.alwaysOnTopClient);
-                $("#alwaysOnTop").prop('checked', _settings.windows["code-editor"].options.alwaysOnTop);
-            }
+            $("#persistent").prop('checked', _settings.window.persistent);
+            $("#alwaysOnTopClient").prop('checked', _settings.window.alwaysOnTopClient);
+            $("#alwaysOnTop").prop('checked', _settings.window.alwaysOnTop);
+
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
         }
