@@ -11,7 +11,9 @@ The code editor allows immortals or those wanting to code lpc files using a grap
 
 ## Preferences
 
-### Generael
+Editor preferences are stored in their own file independent of client or character settings and saved to `{data}/editor.json`, this allows the editor to not be required to reload every time settings are changed for each character and reduce load times
+
+### General
 
 - `Max recent items` max number of items to store in recent list
 - `Remember open files on reload` remember open files when editor reopened
