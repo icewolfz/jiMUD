@@ -914,6 +914,10 @@ function createTray() {
       label: '&Manage profiles...',
       click: showProfiles,
     },
+    {
+      label: '&Code editor...',
+      click: showCodeEditor,
+    },
     { type: 'separator' },
     {
       label: '&Preferences...',
