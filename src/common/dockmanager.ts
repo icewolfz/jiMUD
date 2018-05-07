@@ -5,7 +5,7 @@ const { Menu, MenuItem } = remote;
 const { URL } = require('url');
 
 export enum UpdateType {
-    none = 0, resize = 1, scroll = 2, scrollToTab = 4
+    none = 0, resize = 1, scroll = 2, scrollToTab = 4, stripState = 8
 }
 
 export interface DockMangerOptions {
@@ -45,7 +45,7 @@ export class DockManager extends EventEmitter {
     public set hideTabstrip(value: boolean) {
         if (this._hideTabstrip !== value) {
             this._hideTabstrip = value;
-            this.updateStripState();
+            this.doUpdate(UpdateType.stripState);
         }
     }
 
@@ -313,7 +313,7 @@ export class DockManager extends EventEmitter {
                 this.switchToPanelByIndex(this.panels.length - 1);
         }
         this.$scrollMenu.style.maxHeight = (this.$tabpane.clientHeight - 4) + 'px';
-        this.updateStripState();
+        this.doUpdate(UpdateType.stripState);
         $('.dropdown-toggle').dropdown();
     }
 
@@ -404,9 +404,8 @@ export class DockManager extends EventEmitter {
         this.setPanelTitle(title || '');
         this.setPanelIcon(panel.iconCls);
         this.setPanelTooltip(tooltip || '');
-        this.updateStripState();
         this.emit('add', { index: this.panels.length - 1, id: panel.id, panel: panel });
-        this.doUpdate(UpdateType.resize);
+        this.doUpdate(UpdateType.resize & UpdateType.stripState);
         return panel;
     }
 
@@ -433,9 +432,8 @@ export class DockManager extends EventEmitter {
                 idx--;
             this.switchToPanelByIndex(idx);
         }
-        this.updateStripState();
         this.emit('removed', { index: idx, id: panel.id, panel: panel });
-        this.doUpdate(UpdateType.resize);
+        this.doUpdate(UpdateType.resize & UpdateType.stripState);
     }
 
     public removeAllPanels(skipPanel?) {
@@ -464,8 +462,7 @@ export class DockManager extends EventEmitter {
             this.active = null;
         else if (!this.active)
             this.switchToPanelByIndex(skipPanel || 0);
-        this.updateStripState();
-        this.doUpdate(UpdateType.resize);
+        this.doUpdate(UpdateType.resize & UpdateType.stripState);
     }
 
     public removeAllPanelsAfter(afterPanel?) {
@@ -497,8 +494,7 @@ export class DockManager extends EventEmitter {
             this.active = null;
         else if (!this.active)
             this.switchToPanel(afterPanel);
-        this.updateStripState();
-        this.doUpdate(UpdateType.resize);
+        this.doUpdate(UpdateType.resize & UpdateType.stripState);
     }
 
     public removeAllPanelsBefore(beforePanel?) {
@@ -529,8 +525,7 @@ export class DockManager extends EventEmitter {
             this.active = null;
         else if (!this.active)
             this.switchToPanel(beforePanel);
-        this.updateStripState();
-        this.doUpdate(UpdateType.resize);
+        this.doUpdate(UpdateType.resize & UpdateType.stripState);
     }
 
     public switchToPanelByIndex(idx) {
@@ -671,6 +666,10 @@ export class DockManager extends EventEmitter {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
+            if ((this._updating & UpdateType.stripState) === UpdateType.stripState) {
+                this.updateStripState();
+                this._updating &= ~UpdateType.stripState;
+            }
             if ((this._updating & UpdateType.resize) === UpdateType.resize) {
                 this.resize();
                 this.$scrollMenu.style.maxHeight = (this.$tabpane.clientHeight - 4) + 'px';

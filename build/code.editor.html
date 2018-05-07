@@ -513,6 +513,8 @@
     var outputDragging = false;
     var output = $('#output');
     var outputDisplay = $('#output-display');
+    var _editors = {};
+    var _recent = [];
 
     outputDisplay.on('keydown', (e) => {
         if (event.ctrlKey) {
@@ -779,6 +781,7 @@
     });
     manager.on('removed', (e) => {
         e.panel.editor.close();
+        delete _editors[e.panel.editor.file];
         doUpdate(1);
     });
     manager.on('activated', (e) => {
@@ -966,12 +969,16 @@
         var changed = (manager.active && manager.active.editor) ? (manager.active.editor.changed || manager.active.editor.new) : false;
         var changedAll = false;
         var revertAll = false;
-        for (var p = 0, l = manager.panels.length; p < l; p++) {
+        var keys = Object.keys(_editors);
+        var k = keys.length;
+        var p;
+        while (k--) {
             //no editor or of not changed and new try next
-            if (!manager.panels[p].editor || (!manager.panels[p].editor.changed && !manager.panels[p].editor.new))
+            p = keys[k];
+            if (!_editors[p] || (!_editors[p].editor.changed && !_editors[p].editor.new))
                 continue;
             changedAll = true;
-            if (manager.panels[p].editor.changed && !manager.panels[p].editor.new)
+            if (_editors[p].editor.changed && !_editors[p].editor.new)
                 revertAll = true;
             if (revertAll && changedAll)
                 break; //do not need to check all as soon as one has been found
@@ -1079,24 +1086,33 @@
             })
             .on('add', (file, stats) => {
                 log(`File ${file} has been added`);
-                for (var p = 0, l = manager.panels.length; p < l; p++)
-                    manager.panels[p].editor.watch('add', file, stats);
+                fireWatch('add', file, stats);
             })
             .on('change', (file, stats) => {
                 log(`File ${file} has been changed`);
-                for (var p = 0, l = manager.panels.length; p < l; p++)
-                    manager.panels[p].editor.watch('change', file, stats);
+                fireWatch('change', file, stats);
             })
             .on('unlink', file => {
                 log(`File ${file} has been removed`);
-                for (var p = 0, l = manager.panels.length; p < l; p++)
-                    manager.panels[p].editor.watch('unlink', file);
+                fireWatch('unlink', file);
             })
             .on('raw', (event, file, details) => {
                 log('Raw event info:', event, file, details);
-                for (var p = 0, l = manager.panels.length; p < l; p++)
-                    manager.panels[p].editor.watch('raw', file, details);
+                fireWatch('raw', file, details);
             });
+    }
+
+    function fireWatch(editor, event, file, args) {
+        var keys = Object.keys(_editors);
+        var k = keys.length;
+        var p;
+        while (k--) {
+            p = keys[k];
+            //no editor or of not changed and new try next
+            if (!_editors[p])
+                continue;
+            _editors[p].editor.watch(event, file, args);
+        }
     }
 
     function closing() {
@@ -1351,9 +1367,13 @@
                 dock.css("bottom", options.outputSize);
                 saveOptions();
             }
-            for (var p = 0, l = manager.panels.length; p < l; p++) {
-                if (!manager.panels[p].editor) continue;
-                manager.panels[p].editor.resize();
+            var keys = Object.keys(_editors);
+            var k = keys.length;
+            var p;
+            while (k--) {
+                p = keys[k];
+                if (!_editors[p]) continue;
+                _editors[p].editor.resize();
             }
             if (manager.active && manager.active.editor) manager.active.editor.focus();
         });
@@ -1488,10 +1508,12 @@
         });
         createWatcher();
         var o, ol;
+        //var start = new Date().getTime();
         if (options.opened && options.reopen) {
             for (o = 0, ol = options.opened.length; o < ol; o++)
                 openFile(options.opened[o].file, options.opened.remote);
         }
+        //console.log(new Date().getTime() - start);
         if (_open) {
             for (o = 0, ol = _open.length; o < ol; o++)
                 openFile(_open[o][0], _open[o][1]);
@@ -1520,18 +1542,21 @@
                             return 'no';
                     }
                 }
-                var p, l = manager.panels.length;
                 var opened = [];
-                //check if need to save
-                for (p = 0; p < l; p++) {
-                    if (!manager.panels[p].editor.new)
+                var keys = Object.keys(_editors);
+                var k = keys.length;
+                var p;
+                while (k--) {
+                    p = keys[k];
+                    if (!_editors[p]) continue;
+                    if (!_editors[p].editor.new)
                         opened.push({
-                            file: manager.panels[p].editor.file,
-                            remote: manager.panels[p].remote
+                            file: _editors[p].editor.file,
+                            remote: _editors[p].remote
                         });
-                    if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
+                    if (!_editors[p].editor.new && !_editors[p].editor.changed)
                         continue;
-                    if (!confirmSave(manager.panels[p]))
+                    if (!confirmSave(_editors[p]))
                         return 'no';
                 }
                 if (!options) loadOptions();
@@ -1540,8 +1565,9 @@
                     saveOptions();
                 }
                 //clean up
-                for (p = 0; p < l; p++)
-                    manager.panels[p].editor.close();
+                p = keys.length;
+                while (p--)
+                    _editors[keys[p]].editor.close();
                 if (watcher)
                     watcher.close();
                 closeWindow = true;
@@ -1575,11 +1601,14 @@
 
     ipcRenderer.on('editor-setting-changed', (event, data) => {
         loadOptions();
-        for (var p = 0, l = manager.panels.length; p < l; p++) {
-            if (manager.panels[p].editor.type === 1)
-                manager.panels[p].editor.options = options.editorOptions;
+        var keys = Object.keys(_editors);
+        var k = keys.length;
+        var p;
+        while (k--) {
+            p = keys[k];
+            if (_editors[p].editor.type === 1)
+                _editors[p].editor.options = options.editorOptions;
         }
-
     });
 
     function newFile() {
@@ -1770,7 +1799,8 @@
                 });
         }
         else {
-            addToRecent(file, remoteFile);
+            _recent.unshift({ file: file, remote: remoteFile });
+            doUpdate(8);
             createEditor({ file: file, open: true, remote: remoteFile });
         }
     }
@@ -1778,11 +1808,13 @@
     function addToRecent(file, remoteFile) {
         if (!options) loadOptions();
         if (!options.recent) options.recent = [];
-        var recent = [{ file: file, remote: remoteFile }];
-        for (var r = 0, rl = options.recent.length; r < rl; r++) {
+        var recent = [];
+        var r = options.recent.length;
+        while (r--) {
             if (options.recent[r].file !== file)
-                recent.push(options.recent[r]);
+                recent.unshift(options.recent[r]);
         }
+        recent.unshift({ file: file, remote: remoteFile });
         if (recent.length > options.maxRecent)
             options.recent = recent.slice(0, options.maxRecent);
         else
@@ -1791,10 +1823,21 @@
         doUpdate(4);
     }
 
+    function flushRecent() {
+        if (!_recent.length) return;
+        var r = _recent.length;
+        while (r--) {
+            addToRecent(_recent[r].file, _recent[r].remoteFile);
+        }
+        _recent = [];
+        doUpdate(4);
+    }
+
     function buildRecent() {
         var menu = [];
-        for (var r = 0, rl = options.recent.length; r < rl; r++) {
-            menu.push(
+        var r = options.recent.length;
+        while (r--) {
+            menu.unshift(
                 {
                     label: options.recent[r].file,
                     idx: r,
@@ -1815,7 +1858,7 @@
                 }
             );
             if (r < 10)
-                menu[r].accelerator = 'CmdOrCtrl+' + (r + 1);
+                menu[0].accelerator = 'CmdOrCtrl+' + (r + 1);
         }
         if (menu.length > 0) {
             menu.push({ type: 'separator' });
@@ -1846,11 +1889,14 @@
     }
 
     function saveAllFiles() {
-        for (var p = 0, l = manager.panels.length; p < l; p++) {
-            //not changed and new try next
-            if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
+        var keys = Object.keys(_editors);
+        var k = keys.length;
+        var p;
+        while (k--) {
+            p = keys[k];
+            if (!_editors[p].editor.new && !_editors[p].editor.changed)
                 continue;
-            if (!saveFile(manager.panels[p]))
+            if (!saveFile(_editors[p]))
                 return false;
         }
         return true;
@@ -1908,11 +1954,15 @@
     }
 
     function revertAllFiles() {
-        for (var p = 0, l = manager.panels.length; p < l; p++) {
+        var keys = Object.keys(_editors);
+        var k = keys.length;
+        var p;
+        while (k--) {
+            p = keys[k];
             //not changed and new try next
-            if (!manager.panels[p].editor.new && !manager.panels[p].editor.changed)
+            if (!_editors[p].editor.new && !_editors[p].editor.changed)
                 continue;
-            if (!revertFile(manager.panels[p]))
+            if (!revertFile(_editors[p]))
                 return false;
         }
         return true;
@@ -2016,11 +2066,7 @@
     function findEditor(file) {
         if (!file || file.length === 0)
             return 0;
-        for (var p = 0, l = manager.panels.length; p < l; p++) {
-            if (manager.panels[p].editor.file === file)
-                return manager.panels[p];
-        }
-        return 0;
+        return _editors[file];
     }
 
     function createEditor(data) {//file, open, remoteFile, _new, value) {
@@ -2223,6 +2269,7 @@
         }
         p.spellCheck = options.spellCheck;
         p.editor.focus();
+        _editors[data.file] = p;
         return p.editor;
     }
 
@@ -2243,6 +2290,10 @@
             if ((this._updating & 4) === 4) {
                 buildRecent();
                 _updating &= ~4;
+            }
+            if ((this._updating & 8) === 8) {
+                flushRecent();
+                _updating &= ~8;
             }
             doUpdate(_updating);
         });
