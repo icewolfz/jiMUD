@@ -664,9 +664,9 @@ $monsters: "./../../assets/monsters";
 }
 
 .monster-squid {
-    background-image: url(#{$monsters}/drake.png);
+    background-image: url(#{$monsters}/32x32-6.png);
     background-position: -641px -688px;
-    animation: monster-kraken-sprite 0.8s steps(2) infinite;
+    animation: monster-squid-sprite 0.8s steps(2) infinite;
 }
 
 @keyframes monster-squid-sprite {
