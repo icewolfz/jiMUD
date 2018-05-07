@@ -1258,11 +1258,46 @@
       let closeWindow = false;
 
       window.onbeforeunload = function (evt) {
+        var choice, count = 0;
+        var windows;
+        var current;
         if (!closeWindow && client.options.askonclose && client.connected) {
           evt.returnValue = false;
 
           setTimeout(() => {
-            var choice = dialog.showMessageBox(
+            if (client.options.askonchildren) {
+              windows = remote.BrowserWindow.getAllWindows();
+              current = remote.getCurrentWindow();
+              for (var w = 0, wl = windows.length; w < wl; w++) {
+                if (windows[w] === current || !windows[w].isVisible())
+                  continue;
+                if (!windows[w].getTitle().startsWith('Code Editor'))
+                  continue;
+                if (windows[w].getParentWindow() !== current)
+                  continue;
+                count++;
+              }
+              if (count > 0) {
+                choice = dialog.showMessageBox(
+                  remote.getCurrentWindow(),
+                  {
+                    type: 'warning',
+                    title: 'Code editor open',
+                    message: 'Code editor open, will lose any unsaved work, close anyways?',
+                    buttons: ['Yes', 'No', 'Never ask again'],
+                    defaultId: 1
+                  });
+                if (choice === 2) {
+                  client.options.askonchildren = false;
+                  client.saveOptions();
+                }
+                if (choice === 1) {
+                  evt.returnValue = false;
+                  return 'no';
+                }
+              }
+            }
+            choice = dialog.showMessageBox(
               remote.getCurrentWindow(),
               {
                 type: 'warning',
@@ -1282,6 +1317,45 @@
             if (choice !== 0) {
               evt.returnValue = false;
               return 'no';
+            }
+            client.raise('closed');
+            closeWindow = true;
+            remote.getCurrentWindow().close();
+          });
+          return;
+        }
+        else if (!closeWindow && client.options.askonchildren) {
+          evt.returnValue = false;
+          setTimeout(() => {
+            windows = remote.BrowserWindow.getAllWindows();
+            current = remote.getCurrentWindow();
+            for (var w = 0, wl = windows.length; w < wl; w++) {
+              if (windows[w] === current || !windows[w].isVisible())
+                continue;
+              if (!windows[w].getTitle().startsWith('Code Editor'))
+                continue;
+              if (windows[w].getParentWindow() !== current)
+                continue;
+              count++;
+            }
+            if (count > 0) {
+              choice = dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                  type: 'warning',
+                  title: 'Code editor open',
+                  message: 'Code editor open, will lose any unsaved work, close anyways?',
+                  buttons: ['Yes', 'No', 'Never ask again'],
+                  defaultId: 1
+                });
+              if (choice === 2) {
+                client.options.askonchildren = false;
+                client.saveOptions();
+              }
+              else if (choice === 1) {
+                evt.returnValue = false;
+                return 'no';
+              }
             }
             client.raise('closed');
             closeWindow = true;
@@ -1635,22 +1709,6 @@
       if (client.options.showCharacterManager)
         showCharacters();
       autoConnect();
-
-      setTimeout(() => {
-        remote.process.argv.forEach((val, index) => {
-          if (val === '-e' || val === '--e' || val === '--editor' || val === '-editor')
-            showCodeEditor();
-          else if (val.startsWith("-e=") || val.startsWith("-e:"))
-            ipcRenderer.send('open-editor', val.substring(3));
-          else if (val.startsWith("--e=") || val.startsWith("--e:"))
-            ipcRenderer.send('open-editor', val.substring(4));
-          else if (val.startsWith("-editor=") || val.startsWith("-editor:"))
-            ipcRenderer.send('open-editor', val.substring(8));
-          else if (val.startsWith("--editor=") || val.startsWith("--editor:"))
-            ipcRenderer.send('open-editor', val.substring(9));
-        });
-      }, 500);
-
       client.raise('opened');
     }
 
@@ -2004,12 +2062,7 @@
     }
 
     function showCodeEditor() {
-      if (client.options.windows['code-editor'] && client.options.windows['code-editor'].options) {
-        client.options.windows['code-editor'].options.show = true;
-        ipcRenderer.send('show-window', 'code-editor', client.options.windows['code-editor'].options);
-      }
-      else
-        ipcRenderer.send('show-window', 'code-editor', { show: true, file: 'code.editor.html', icon: 'code', alwaysOnTopClient: true });
+      ipcRenderer.send('show-window', 'code-editor');
     }
 
     function showMail() {

@@ -140,6 +140,7 @@ export class Settings {
     public AutoCopySelectedToClipboard: boolean = false;
     public autoCreateCharacter: boolean = false;
     public askonclose: boolean = true;
+    public askonchildren: boolean = true;
     public dev: boolean = false;
     public mapper: Mapper = new Mapper();
     public profiles: Profiles = new Profiles();

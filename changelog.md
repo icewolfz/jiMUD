@@ -4,7 +4,11 @@
 
 - **New:**
   - Status: dominant weapon hand is now bordered with red
-  - Code editor: allows you to view and edit code, good for immortals
+  - Code editor:
+    - Allows you to view and edit code lpc code
+    - When closing if left open will remind you before closing
+    - Multi tabbed interface to open multiple files
+    - Drop files on to main code area to open
   - Immortal tools: New [open file in external editor](docs/immortal.md) preference, allows you to choose to ignore the new internal code editor
   - Advanced editor:
     - Can send formated text to open code editor to be inserted at current cursor

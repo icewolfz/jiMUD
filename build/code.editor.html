@@ -491,11 +491,11 @@
     const { remote, ipcRenderer, webFrame } = require('electron');
     const { DockManager } = require('./js/dockmanager');
     const { CodeEditor, VirtualEditor } = require('./js/code.editor');
+    const { EditorSettings } = require('./js/code.editor.settings');
 
     const { dialog, Menu, MenuItem } = remote;
     const { Menubar } = require('./js/menubar');
     const { parseTemplate, capitalize, existsSync, isDirSync } = require('./js/library');
-    const { Settings } = require('./js/settings');
 
     const moment = require('moment');
     const chokidar = require('chokidar');
@@ -1105,132 +1105,7 @@
     }
 
     function loadOptions(data) {
-        if (!data) {
-            var set = Settings.load(remote.getGlobal('settingsFile'));
-            options = set.extensions["code-editor"];
-        }
-        else
-            options = data;
-        if (!options) {
-            options = {
-                spellchecking: true,
-                recent: [],
-                opened: [],
-                maxRecent: 15,
-                reopen: true,
-                outputSize: 170,
-                output: false,
-                options: {
-                    persistent: false,
-                    alwaysOnTopClient: true,
-                    alwaysOnTop: false
-                },
-                editorOptions: {
-                    "selectionStyle": "text",
-                    "highlightActiveLine": true,
-                    "highlightSelectedWord": true,
-                    "readOnly": false,
-                    "copyWithEmptySelection": false,
-                    "cursorStyle": "ace",
-                    "mergeUndoDeltas": true,
-                    "behavioursEnabled": true,
-                    "wrapBehavioursEnabled": true,
-                    "hScrollBarAlwaysVisible": false,
-                    "vScrollBarAlwaysVisible": false,
-                    "highlightGutterLine": true,
-                    "animatedScroll": false,
-                    "showInvisibles": false,
-                    "showPrintMargin": true,
-                    "printMarginColumn": 80,
-                    "printMargin": 80,
-                    "fadeFoldWidgets": false,
-                    "showFoldWidgets": true,
-                    "showLineNumbers": true,
-                    "showGutter": true,
-                    "displayIndentGuides": true,
-                    "fontSize": 12,
-                    "scrollPastEnd": 0,
-                    "theme": "ace/theme/visual_studio",
-                    "maxPixelHeight": 0,
-                    "scrollSpeed": 2,
-                    "dragDelay": 0,
-                    "dragEnabled": true,
-                    "focusTimeout": 0,
-                    "tooltipFollowsMouse": true,
-                    "firstLineNumber": 1,
-                    "overwrite": false,
-                    "newLineMode": "unix",
-                    "useWorker": true,
-                    "useSoftTabs": true,
-                    "navigateWithinSoftTabs": false,
-                    "tabSize": 3,
-                    "wrap": "off",
-                    "indentedSoftWrap": true,
-                    "foldStyle": "markbegin",
-                    "mode": "ace/mode/lpc",
-                    "enableMultiselect": true,
-                    "enableBlockSelect": true,
-                    "enableBasicAutocompletion": true,
-                    "enableLiveAutocompletion": true,
-                    "enableSnippets": true,
-                    "spellcheck": true
-                }
-            };
-            saveOptions();
-        }
-        else if (!options.editorOptions) {
-            options.editorOptions = {
-                "selectionStyle": "text",
-                "highlightActiveLine": true,
-                "highlightSelectedWord": true,
-                "readOnly": false,
-                "copyWithEmptySelection": false,
-                "cursorStyle": "ace",
-                "mergeUndoDeltas": true,
-                "behavioursEnabled": true,
-                "wrapBehavioursEnabled": true,
-                "hScrollBarAlwaysVisible": false,
-                "vScrollBarAlwaysVisible": false,
-                "highlightGutterLine": true,
-                "animatedScroll": false,
-                "showInvisibles": false,
-                "showPrintMargin": true,
-                "printMarginColumn": 80,
-                "printMargin": 80,
-                "fadeFoldWidgets": false,
-                "showFoldWidgets": true,
-                "showLineNumbers": true,
-                "showGutter": true,
-                "displayIndentGuides": true,
-                "fontSize": 12,
-                "scrollPastEnd": 0,
-                "theme": "ace/theme/visual_studio",
-                "maxPixelHeight": 0,
-                "scrollSpeed": 2,
-                "dragDelay": 0,
-                "dragEnabled": true,
-                "focusTimeout": 0,
-                "tooltipFollowsMouse": true,
-                "firstLineNumber": 1,
-                "overwrite": false,
-                "newLineMode": "unix",
-                "useWorker": true,
-                "useSoftTabs": true,
-                "navigateWithinSoftTabs": false,
-                "tabSize": 3,
-                "wrap": "off",
-                "indentedSoftWrap": true,
-                "foldStyle": "markbegin",
-                "mode": "ace/mode/lpc",
-                "enableMultiselect": true,
-                "enableBlockSelect": true,
-                "enableBasicAutocompletion": true,
-                "enableLiveAutocompletion": true,
-                "enableSnippets": true,
-                "spellcheck": true
-            };
-            saveOptions();
-        }
+        options = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
         if (!options.outputSize || options.outputSize < 170)
             options.outputSize = 170;
         if (!options.maxRecent)
@@ -1257,7 +1132,7 @@
     }
 
     function saveOptions() {
-        ipcRenderer.send('setting-changed', { type: 'extensions', name: 'code-editor', value: options });
+        options.save(parseTemplate(path.join('{data}', 'editor.json')));
     }
 
     function getFileIcon(file) {
@@ -1698,18 +1573,13 @@
         //_ied.processGMCP(data.mod, data.obj);
     });
 
-    ipcRenderer.on('reload-options', (event) => {
+    ipcRenderer.on('editor-setting-changed', (event, data) => {
         loadOptions();
-    });
-
-    ipcRenderer.on('setting-changed', (event, data) => {
-        if (data.type === "extensions" && data.name === "code-editor") {
-            loadOptions(data.value);
-            for (var p = 0, l = manager.panels.length; p < l; p++) {
-                if (manager.panels[p].editor.type === 1)
-                    manager.panels[p].editor.options = options.editorOptions;
-            }
+        for (var p = 0, l = manager.panels.length; p < l; p++) {
+            if (manager.panels[p].editor.type === 1)
+                manager.panels[p].editor.options = options.editorOptions;
         }
+
     });
 
     function newFile() {
@@ -2335,16 +2205,16 @@
             });
             p.editor.on('progress-start', (type) => {
                 if (type === 'indent')
-                    logOutput(manager.active.editor.filename + ': Indenting started', true);
+                    logOutput(manager.active.editor.filename + ': Indenting started');
                 else if (type === 'format')
-                    logOutput(manager.active.editor.filename + ': Formatting started', true);
+                    logOutput(manager.active.editor.filename + ': Formatting started');
             });
             //p.editor.on('progress', (p, type) => {});
             p.editor.on('progress-complete', (type) => {
                 if (type === 'indent')
-                    logOutput(manager.active.editor.filename + ': Indenting finished', true);
+                    logOutput(manager.active.editor.filename + ': Indenting finished');
                 else if (type === 'format')
-                    logOutput(manager.active.editor.filename + ': Formatting finished', true);
+                    logOutput(manager.active.editor.filename + ': Formatting finished');
             });
             p.editor.on('output', (msg) => {
                 logOutput(msg, true);

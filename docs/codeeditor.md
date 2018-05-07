@@ -39,7 +39,7 @@ The code editor allows immortals or those wanting to code lpc files using a grap
 
 ### Window
 
-- `Always on top of parent` causes window to remain on top of main client
+- `Always on top of parent` causes window to remain on top of main client, **Requires restart on windows**, **Note:** if set enabled, main window will warn if open to prevent lose of data, if off code editor will remain open independent of main window closing
 - `Always on top of all` causes window to be on top of all windows
 - `Persistent` will attempt to reload tools when client is loaded
 

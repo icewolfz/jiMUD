@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const url = require('url');
 const settings = require('./js/settings');
+const { EditorSettings } = require('./js/code.editor.settings');
 const { TrayClick } = require('./js/types');
 
 
@@ -14,8 +15,8 @@ const { TrayClick } = require('./js/types');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winWho, winMap, winProfiles, winEditor, winChat;//winHelp
-let set, mapperMax = false, editorMax = false, chatMax = false;
+let win, winWho, winMap, winProfiles, winEditor, winChat, winCode;//winHelp
+let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let chatReady = false;
 let reload = null;
 let tray = null;
@@ -392,10 +393,7 @@ var menuTemp = [
             label: 'Code &editor',
             id: "codeEditorbutton",
             type: 'checkbox',
-            checked: false,
-            click: () => {
-              win.webContents.executeJavaScript('toggleView("button.codeEditor")');
-            }
+            click: showCodeEditor
           },
           {
             label: '&Preferences',
@@ -534,9 +532,7 @@ var menuTemp = [
       {
         label: '&Code editor...',
         id: 'codeeditor',
-        click: () => {
-          win.webContents.executeJavaScript('showCodeEditor()');
-        }
+        click: showCodeEditor
       },
       {
         label: '&Map...',
@@ -1217,15 +1213,14 @@ function createWindow() {
           set.windows['chat'] = getWindowState('chat', winChat);
           winChat.destroy();
         }
-        for (var name in windows) {
-          if (!windows.hasOwnProperty(name) || !windows[name].window)
-            continue;
-          windows[name].window.webContents.executeJavaScript('closing();');
-          windows[name].window.webContents.executeJavaScript('closed();');
-          set.windows[name] = getWindowState(name, windows[name].window);
-          set.windows[name].options = copyWindowOptions(name);
-          windows[name].window.destroy();
+        if (winCode) {
+          var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+          if (winCode != null)
+            edset.window.show = true;
+          edset.state = getWindowState('code-editor', winCode);
+          edset.save(parseTemplate(path.join('{data}', 'editor.json'))); winCode.destroy();
         }
+        closeWindows(false, true);
         logError(`Client unresponsive, closed.\n`, true);
         set.save(global.settingsFile);
         win.destroy();
@@ -1289,6 +1284,27 @@ function createWindow() {
 
   // Emitted when the window is closed.
   win.on('closed', () => {
+    if (winMap) {
+      set.windows['mapper'] = getWindowState('mapper', winMap);
+      winMap.webContents.executeJavaScript('save();');
+      winMap.destroy();
+    }
+    if (winEditor) {
+      set.windows['editor'] = getWindowState('editor', winEditor);
+      winEditor.destroy();
+    }
+    if (winChat) {
+      set.windows['chat'] = getWindowState('chat', winChat);
+      winChat.destroy();
+    }
+    if (winCode && winCode.getParentWindow() == win) {
+      var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+      edset.window.show = true;
+      edset.state = getWindowState('code-editor', winCode);
+      edset.save(parseTemplate(path.join('{data}', 'editor.json'))); winCode.destroy();
+    }
+    closeWindows(true, false);
+    set.save(global.settingsFile);
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
@@ -1335,6 +1351,10 @@ function createWindow() {
           createNewWindow(name, set.windows[name]);
       }
     }
+
+    var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+    if (edset.window.show)
+      showCodeEditor(true);
   });
 
   win.on('close', (e) => {
@@ -1350,29 +1370,6 @@ function createWindow() {
       });
       set.save(global.settingsFile);
       return;
-    }
-
-    if (winMap) {
-      set.windows['mapper'] = getWindowState('mapper', winMap);
-      winMap.webContents.executeJavaScript('save();');
-      winMap.destroy();
-    }
-    if (winEditor) {
-      set.windows['editor'] = getWindowState('editor', winEditor);
-      winEditor.destroy();
-    }
-    if (winChat) {
-      set.windows['chat'] = getWindowState('chat', winChat);
-      winChat.destroy();
-    }
-    for (var name in windows) {
-      if (!windows.hasOwnProperty(name) || !windows[name].window)
-        continue;
-      windows[name].window.webContents.executeJavaScript('closing();');
-      windows[name].window.webContents.executeJavaScript('closed();');
-      set.windows[name] = getWindowState(name, windows[name].window);
-      set.windows[name].options = copyWindowOptions(name);
-      windows[name].window.destroy();
     }
     set.save(global.settingsFile);
   });
@@ -1431,7 +1428,21 @@ app.on('ready', () => {
       case "--d":
         global.debug = true;
         break;
+      case '-e':
+      case '--e':
+      case '--editor':
+      case '-editor':
+        showCodeEditor();
+        break;
     }
+    if (val.startsWith("-e=") || val.startsWith("-e:"))
+      openEditor(val.substring(3));
+    else if (val.startsWith("--e=") || val.startsWith("--e:"))
+      openEditor(val.substring(4));
+    else if (val.startsWith("-editor=") || val.startsWith("-editor:"))
+      openEditor(val.substring(8));
+    else if (val.startsWith("--editor=") || val.startsWith("--editor:"))
+      openEditor(val.substring(9));
 
     if (val.startsWith("--character=") || val.startsWith("--character:")) {
       global.character = val.substring(12);
@@ -1578,7 +1589,7 @@ ipcMain.on('load-char', (event, char) => {
     }
     return;
   }
-  closeWindows();
+  closeWindows(false, true);
   set.windows['main'] = getWindowState('main', win);
   if (winMap) {
     set.windows['mapper'] = getWindowState('mapper', winMap);
@@ -1650,7 +1661,7 @@ ipcMain.on('options-changed', (event, save) => {
 
 ipcMain.on('reload-options', (event, save) => {
   resetProfiles();
-  closeWindows(save);
+  closeWindows(save, true, true);
   if (win && win.webContents)
     win.webContents.send('reload-options');
   set = settings.Settings.load(global.settingsFile);
@@ -1763,19 +1774,20 @@ ipcMain.on('set-color', (event, type, color, code, window) => {
 
 ipcMain.on('open-editor', (event, file, remote) => {
   if (win && win.webContents) {
-    win.webContents.executeJavaScript('showCodeEditor()');
+    showCodeEditor();
+    //win.webContents.executeJavaScript('showCodeEditor()');
     openEditor(file, remote);
   }
 });
 
 function openEditor(file, remote) {
-  if (!windows['code-editor'] || !windows['code-editor'].window || !windows['code-editor'].window.webContents || !windows['code-editor'].ready) {
+  if (!winCode) {
     setTimeout(() => {
       openEditor(file, remote);
     }, 1000);
   }
   else {
-    windows['code-editor'].window.webContents.send('open-editor', file, remote);
+    winCode.webContents.send('open-editor', file, remote);
   }
 }
 
@@ -1924,6 +1936,16 @@ ipcMain.on('setting-changed', (event, data) => {
     }
 });
 
+ipcMain.on('editor-setting-changed', (event, data) => {
+  if (winCode)
+    winCode.webContents.send('editor-setting-changed');
+  if (winCode.setParentWindow)
+    winCode.setParentWindow(data.alwaysOnTopClient ? win : null);
+  winCode.setSkipTaskbar((data.alwaysOnTopClient || data.alwaysOnTop) ? true : false);
+  if (data.persistent && !winCode)
+    createCodeEditor();
+});
+
 ipcMain.on('GMCP-received', (event, data) => {
   if (winMap)
     winMap.webContents.send('GMCP-received', data);
@@ -1982,6 +2004,8 @@ ipcMain.on('show-window', (event, window, args) => {
     showChat();
   else if (window === "color")
     showColor(args);
+  else if (window === 'code-editor')
+    showCodeEditor();
   else if (windows[window] && windows[window].window)
     showWindow(window, windows[window]);
   else
@@ -2951,10 +2975,11 @@ function loadWindowScripts(window, name) {
   }
 }
 
-function closeWindows(save) {
+function closeWindows(save, clear, force) {
   if (!set)
     set = settings.Settings.load(global.settingsFile);
   var name;
+  var ce = false;
   for (name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -2964,7 +2989,164 @@ function closeWindows(save) {
     set.windows[name].options = copyWindowOptions(name);
     windows[name].window.destroy();
   }
-  windows = {};
+  if (clear)
+    windows = {};
   if (save)
     set.save(global.settingsFile);
+}
+
+function createCodeEditor(show, loading, loaded) {
+  if (winCode) return;
+  var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+  var s = loadWindowState('mapper');
+  if (!edset.state)
+    edset.state = {
+      x: 0,
+      y: 0,
+      width: 800,
+      height: 600,
+    };
+  states['code-editor'] = edset.state;
+  winCode = new BrowserWindow({
+    parent: edset.window.alwaysOnTopClient ? win : null,
+    alwaysOnTop: edset.window.alwaysOnTop,
+    title: 'Code editor',
+    x: s.x,
+    y: s.y,
+    width: s.width,
+    height: s.height,
+    backgroundColor: 'window',
+    show: false,
+    skipTaskbar: (edset.window.alwaysOnTopClient || edset.window.alwaysOnTop) ? true : false,
+    icon: path.join(__dirname, '../assets/icons/png/code.png')
+  });
+
+  if (s.fullscreen)
+    winCode.setFullScreen(s.fullscreen);
+  winCode.setMenu(null);
+  winCode.loadURL(url.format({
+    pathname: path.join(__dirname, 'code.editor.html'),
+    protocol: 'file:',
+    slashes: true
+  }));
+
+  winCode.webContents.on('crashed', (event, killed) => {
+    logError(`Code editor crashed, killed: ${killed}\n`, true);
+  });
+
+  winCode.on('closed', () => {
+    winCode = null;
+  });
+
+  winCode.on('resize', () => {
+    if (!winCode.isMaximized() && !winCode.isFullScreen())
+      trackWindowState('code-editor', winCode);
+  });
+
+  winCode.on('move', () => {
+    trackWindowState('code-editor', winCode);
+  });
+
+  winCode.on('maximize', () => {
+    trackWindowState('code-editor', winCode);
+    states['code-editor'].maximized = true;
+  });
+
+  winCode.on('unmaximize', () => {
+    trackWindowState('code-editor', winCode);
+    states['code-editor'].maximized = false;
+  });
+
+  if (global.debug)
+    winCode.webContents.openDevTools();
+
+  winCode.once('ready-to-show', () => {
+    loadWindowScripts(winCode, "code.editor");
+    addInputContext(winCode);
+    if (show) {
+      if (s.maximized)
+        winCode.maximize();
+      else
+        winCode.show();
+    }
+    else
+      codeMax = s.maximized;
+    if (loading) {
+      clearTimeout(loadid);
+      loadid = setTimeout(() => { win.focus(); }, 500);
+    }
+    if (loaded)
+      loaded();
+  });
+
+  winCode.on('close', (e) => {
+    edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+    if (winCode && winCode.getParentWindow() == win)
+      edset.window.show = false;
+    else if (winCode != null)
+      edset.window.show = true;
+    edset.state = getWindowState('code-editor', winCode);
+    edset.save(parseTemplate(path.join('{data}', 'editor.json')));
+  });
+
+  winCode.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+    event.preventDefault();
+    if (frameName === 'modal') {
+      // open window as modal
+      Object.assign(options, {
+        modal: true,
+        parent: winCode,
+        movable: false,
+        minimizable: false,
+        maximizable: false,
+        skipTaskbar: true,
+        resizable: false
+      });
+
+      var b = winCode.getBounds();
+      options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
+      options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
+    }
+    options.show = false;
+    const w = new BrowserWindow(options);
+    if (global.debug)
+      w.webContents.openDevTools();
+    w.setMenu(null);
+    w.once('ready-to-show', () => {
+      loadWindowScripts(w, frameName);
+      addInputContext(w);
+      w.show();
+    });
+    w.webContents.on('crashed', (event, killed) => {
+      logError(`${url} crashed, killed: ${killed}\n`, true);
+    });
+
+    w.on('close', () => {
+      if (w.getParentWindow()) {
+        w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
+      }
+    });
+    w.loadURL(url);
+    event.newGuest = w;
+  });
+
+}
+
+function showCodeEditor(loading) {
+  var edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+  edset.show = true;
+  edset.save(parseTemplate(path.join('{data}', 'editor.json')));
+  if (winCode != null) {
+    if (codeMax)
+      winCode.maximize();
+    else
+      winCode.show();
+    codeMax = false;
+    if (loading) {
+      clearTimeout(loadid);
+      loadid = setTimeout(() => { win.focus(); }, 500);
+    }
+  }
+  else
+    createCodeEditor(true, loading);
 }

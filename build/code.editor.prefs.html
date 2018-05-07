@@ -81,11 +81,12 @@
         /* global ace */
         //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { TempType } = require('./js/types');
-        const Settings = require('./js/settings').Settings;
+        const { parseTemplate } = require("./js/library.js");
         const { remote, ipcRenderer } = require('electron');
         const { dialog } = remote;
         const path = require('path');
-
+        const EditorSettings = require('./js/code.editor.settings').EditorSettings;
+        
         var _settings;
         if (window.module) module.module;
         $(window).keydown((event) => {
@@ -98,9 +99,8 @@
                 $('.win32').css('display', 'block');
             else
                 $('.win32').css('display', 'none');
-            _settings = Settings.load(remote.getGlobal('settingsFile'));
+            _settings = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
 
-            
             var themelist = ace.require("ace/ext/themelist");
             themelist.themes.push({ caption: 'Visual Studio', theme: 'ace/theme/visual_studio' });
 
@@ -156,43 +156,43 @@
                 switch ($(this).attr('id')) {
                     case 'editorOptions-keyboardHandler-0':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.keyboardHandler = null;
+                            _settings.editorOptions.keyboardHandler = null;
                         break;
                     case 'editorOptions-keyboardHandler-1':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.keyboardHandler = 'ace/keyboard/vim';
+                            _settings.editorOptions.keyboardHandler = 'ace/keyboard/vim';
                         break;
                     case 'teditorOptions-keyboardHandler-2':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.keyboardHandler = 'ace/keyboard/emacs';
+                            _settings.editorOptions.keyboardHandler = 'ace/keyboard/emacs';
                         break;
                     case 'editorOptions-wrap-0':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.wrap = 'off';
+                            _settings.editorOptions.wrap = 'off';
                         break;
                     case 'editorOptions-wrap-1':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.wrap = 'free';
+                            _settings.editorOptions.wrap = 'free';
                         break;
                     case 'editorOptions-wrap-2':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.wrap = 80;
+                            _settings.editorOptions.wrap = 80;
                         break;
                     case 'editorOptions-wrap-3':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.wrap = 40;
+                            _settings.editorOptions.wrap = 40;
                         break;
                     case 'editorOptions-scrollPastEnd-0':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.scrollPastEnd = 0;
+                            _settings.editorOptions.scrollPastEnd = 0;
                         break;
                     case 'editorOptions-scrollPastEnd-1':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.scrollPastEnd = 0.5;
+                            _settings.editorOptions.scrollPastEnd = 0.5;
                         break;
                     case 'editorOptions-scrollPastEnd-2':
                         if (this.checked)
-                            _settings.extensions["code-editor"].editorOptions.scrollPastEnd = 1;
+                            _settings.editorOptions.scrollPastEnd = 1;
                         break;
                 }
             });
@@ -217,122 +217,45 @@
                 value = parseFloat(value);
             option = option.split('-');
             if (option.length === 2)
-                _settings.extensions["code-editor"][option[0]][option[1]] = value;
+                _settings[option[0]][option[1]] = value;
             else
-                _settings.extensions["code-editor"][option[0]] = value;
-        }
-
-        function defaultSettings() {
-            return {
-                spellchecking: true,
-                recent: [],
-                opened: [],
-                maxRecent: 15,
-                reopen: true,
-                outputSize: 170,
-                output: false,
-                options: {
-                    persistent: false,
-                    alwaysOnTopClient: true,
-                    alwaysOnTop: false
-                },
-                editorOptions: {
-                    "selectionStyle": "text",
-                    "highlightActiveLine": true,
-                    "highlightSelectedWord": true,
-                    "readOnly": false,
-                    "copyWithEmptySelection": false,
-                    "cursorStyle": "ace",
-                    "mergeUndoDeltas": true,
-                    "behavioursEnabled": true,
-                    "wrapBehavioursEnabled": true,
-                    "hScrollBarAlwaysVisible": false,
-                    "vScrollBarAlwaysVisible": false,
-                    "highlightGutterLine": true,
-                    "animatedScroll": false,
-                    "showInvisibles": false,
-                    "showPrintMargin": true,
-                    "printMarginColumn": 80,
-                    "printMargin": 80,
-                    "fadeFoldWidgets": false,
-                    "showFoldWidgets": true,
-                    "showLineNumbers": true,
-                    "showGutter": true,
-                    "displayIndentGuides": true,
-                    "fontSize": 12,
-                    "scrollPastEnd": 0,
-                    "theme": "ace/theme/visual_studio",
-                    "maxPixelHeight": 0,
-                    "scrollSpeed": 2,
-                    "dragDelay": 0,
-                    "dragEnabled": true,
-                    "focusTimeout": 0,
-                    "tooltipFollowsMouse": true,
-                    "firstLineNumber": 1,
-                    "overwrite": false,
-                    "newLineMode": "unix",
-                    "useWorker": true,
-                    "useSoftTabs": true,
-                    "navigateWithinSoftTabs": false,
-                    "tabSize": 3,
-                    "wrap": "off",
-                    "indentedSoftWrap": true,
-                    "foldStyle": "markbegin",
-                    "mode": "ace/mode/lpc",
-                    "enableMultiselect": true,
-                    "enableBlockSelect": true,
-                    "enableBasicAutocompletion": true,
-                    "enableLiveAutocompletion": true,
-                    "enableSnippets": true,
-                    "spellcheck": true
-                }
-            };
+                _settings[option[0]] = value;
         }
 
         function loadSettings() {
-            if (!_settings.extensions["code-editor"])
-                _settings.extensions["code-editor"] = defaultSettings();
-            else {
-                if (!_settings.extensions["code-editor"].hasOwnProperty('focusOnFinished'))
-                    _settings.extensions["code-editor"].focusOnFinished = true;
-                if (!_settings.extensions["code-editor"].hasOwnProperty('selectOnFinished'))
-                    _settings.extensions["code-editor"].selectOnFinished = true;
-            }
-            $("#reopen").prop('checked', _settings.extensions["code-editor"].reopen);
-            $("#maxRecent").val(_settings.extensions["code-editor"].maxRecent);
-            if (!_settings.extensions["code-editor"].editorOptions)
-                _settings.extensions["code-editor"].editorOptions = defaultSettings().editorOptions;
+            $("#reopen").prop('checked', _settings.reopen);
+            $("#maxRecent").val(_settings.maxRecent);
             let option;
-            for (option in _settings.extensions["code-editor"].editorOptions) {
-                if (!_settings.extensions["code-editor"].editorOptions.hasOwnProperty(option))
+            for (option in _settings.editorOptions) {
+                if (!_settings.editorOptions.hasOwnProperty(option))
                     continue;
-                if (typeof (_settings.extensions["code-editor"].editorOptions[option]) !== "boolean")
+                if (typeof (_settings.editorOptions[option]) !== "boolean")
                     continue;
-                $('#editorOptions-' + option).prop('checked', _settings.extensions["code-editor"].editorOptions[option]);
+                $('#editorOptions-' + option).prop('checked', _settings.editorOptions[option]);
             }
 
-            $('#editorOptions-theme').val(_settings.extensions["code-editor"].editorOptions.theme);
+            $('#editorOptions-theme').val(_settings.editorOptions.theme);
             $('#editorOptions-theme').selectpicker('render');
-            $('#editorOptions-foldStyle').val(_settings.extensions["code-editor"].editorOptions.foldStyle);
+            $('#editorOptions-foldStyle').val(_settings.editorOptions.foldStyle);
             $('#editorOptions-foldStyle').selectpicker('render');
-            $('#editorOptions-mergeUndoDeltas').val('' + _settings.extensions["code-editor"].editorOptions.mergeUndoDeltas);
+            $('#editorOptions-mergeUndoDeltas').val('' + _settings.editorOptions.mergeUndoDeltas);
             $('#editorOptions-mergeUndoDeltas').selectpicker('render');
-            $('#editorOptions-cursorStyle').val(_settings.extensions["code-editor"].editorOptions.cursorStyle);
+            $('#editorOptions-cursorStyle').val(_settings.editorOptions.cursorStyle);
             $('#editorOptions-cursorStyle').selectpicker('render');
-            $('#editorOptions-keyboardHandler-0').prop('checked', !_settings.extensions["code-editor"].editorOptions.keyboardHandler);
-            $('#editorOptions-keyboardHandler-1').prop('checked', _settings.extensions["code-editor"].editorOptions.keyboardHandler === 'ace/keyboard/vim');
-            $('#editorOptions-keyboardHandler-2').prop('checked', _settings.extensions["code-editor"].editorOptions.keyboardHandler === 'ace/keyboard/emacs');
-            $('#editorOptions-fontSize').val(_settings.extensions["code-editor"].editorOptions.fontSize);
-            $('#editorOptions-wrap-0').prop('checked', _settings.extensions["code-editor"].editorOptions.wrap === "off");
-            $('#editorOptions-wrap-1').prop('checked', _settings.extensions["code-editor"].editorOptions.wrap === 'free');
-            $('#editorOptions-wrap-2').prop('checked', _settings.extensions["code-editor"].editorOptions.wrap === 80);
-            $('#editorOptions-wrap-3').prop('checked', _settings.extensions["code-editor"].editorOptions.wrap === 40);
-            $('#editorOptions-tabSize').val(_settings.extensions["code-editor"].editorOptions.tabSize);
-            $('#editorOptions-scrollPastEnd-0').prop('checked', _settings.extensions["code-editor"].editorOptions.scrollPastEnd === 0);
-            $('#editorOptions-scrollPastEnd-1').prop('checked', _settings.extensions["code-editor"].editorOptions.scrollPastEnd === 0.5);
-            $('#editorOptions-scrollPastEnd-2').prop('checked', _settings.extensions["code-editor"].editorOptions.scrollPastEnd === 1);
-            $('#editorOptions-selectionStyle').prop('checked', _settings.extensions["code-editor"].editorOptions.selectionStyle === "line");
-            $('#editorOptions-printMarginColumn').val(_settings.extensions["code-editor"].editorOptions.printMarginColumn);
+            $('#editorOptions-keyboardHandler-0').prop('checked', !_settings.editorOptions.keyboardHandler);
+            $('#editorOptions-keyboardHandler-1').prop('checked', _settings.editorOptions.keyboardHandler === 'ace/keyboard/vim');
+            $('#editorOptions-keyboardHandler-2').prop('checked', _settings.editorOptions.keyboardHandler === 'ace/keyboard/emacs');
+            $('#editorOptions-fontSize').val(_settings.editorOptions.fontSize);
+            $('#editorOptions-wrap-0').prop('checked', _settings.editorOptions.wrap === "off");
+            $('#editorOptions-wrap-1').prop('checked', _settings.editorOptions.wrap === 'free');
+            $('#editorOptions-wrap-2').prop('checked', _settings.editorOptions.wrap === 80);
+            $('#editorOptions-wrap-3').prop('checked', _settings.editorOptions.wrap === 40);
+            $('#editorOptions-tabSize').val(_settings.editorOptions.tabSize);
+            $('#editorOptions-scrollPastEnd-0').prop('checked', _settings.editorOptions.scrollPastEnd === 0);
+            $('#editorOptions-scrollPastEnd-1').prop('checked', _settings.editorOptions.scrollPastEnd === 0.5);
+            $('#editorOptions-scrollPastEnd-2').prop('checked', _settings.editorOptions.scrollPastEnd === 1);
+            $('#editorOptions-selectionStyle').prop('checked', _settings.editorOptions.selectionStyle === "line");
+            $('#editorOptions-printMarginColumn').val(_settings.editorOptions.printMarginColumn);
 
             if (!_settings.windows["code-editor"] || !_settings.windows["code-editor"].options) {
                 $("#persistent").prop('checked', false);
@@ -349,21 +272,13 @@
         }
 
         function resetSettings() {
-            _settings.extensions["code-editor"] = defaultSettings();
+            _settings = new EditorSettings();
             loadSettings();
         }
 
         function saveSettings() {
-            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'code-editor', value: _settings.extensions["code-editor"] });
-            ipcRenderer.send('setting-changed', {
-                type: 'windows',
-                name: 'code-editor',
-                value: {
-                    persistent: $("#persistent").prop('checked'),
-                    alwaysOnTopClient: $("#alwaysOnTopClient").prop('checked'),
-                    alwaysOnTop: $("#alwaysOnTop").prop('checked')
-                }
-            });
+            _settings.save(parseTemplate(path.join('{data}', 'editor.json')));
+            ipcRenderer.send('editor-setting-changed', _settings.window);
             window.close();
         }
     </script>
@@ -561,8 +476,9 @@
                 <div class="col-xs-12">
                     <div class="col-xs-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="alwaysOnTopClient" /> Always on top of parent
+                            <input type="checkbox" id="alwaysOnTopClient" /> Always on top of client
                             <span class="win32 help-block" style="display:none;font-size: 0.8em;margin:0;padding:0">Requires restart</span>
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">When disabled editor will remain open even if client closed</span>
                         </label>
                     </div>
                     <div class="col-xs-6 form-group">
@@ -571,11 +487,13 @@
                         </label>
                     </div>
                 </div>
+                <!--
                 <div class="col-xs-6 form-group">
                     <label class="control-label">
                         <input type="checkbox" id="persistent" /> Persistent
                     </label>
                 </div>
+                -->
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="advanced">
                 <div class="col-sm-6 form-group">
