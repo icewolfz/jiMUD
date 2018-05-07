@@ -24,6 +24,7 @@ let tray = null;
 let overlay = 0;
 let windows = {};
 let loadid;
+var editorOnly = false;
 
 app.setAppUserModelId('jiMUD');
 
@@ -1414,14 +1415,15 @@ app.on('ready', () => {
       case "--help":
       case "-?":
       case "/?":
-        console.log('-h, --help                      Print console help');
-        console.log('-d, --debug                     Enable dev tools for all windows');
-        console.log('-s=[file], --setting=[file]     Override default setting file');
-        console.log('-mf=[file], --map=[file]        Override default map file');
-        console.log('-c=[name], --character=[name]   Allows you to load/create a character from character database');
-        console.log('-pf=[list], --profiles[]        Set which profiles will be enabled, if not found will default');
-        console.log('-v, --version                   Print current version');
-        console.log('-e, --e, -e=[file], --e=[file]  Print current version');
+        console.log('-h, --help                          Print console help');
+        console.log('-d, --debug                         Enable dev tools for all windows');
+        console.log('-s=[file], --setting=[file]         Override default setting file');
+        console.log('-mf=[file], --map=[file]            Override default map file');
+        console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
+        console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
+        console.log('-v, --version                       Print current version');
+        console.log('-e, --e, -e=[file], --e=[file]      Print current version');
+        console.log('-eo, --eo, -eo=[file], --eo=[file]  Print current version');
         app.quit();
         return;
       case "--version":
@@ -1442,8 +1444,21 @@ app.on('ready', () => {
       case '-editor':
         showCodeEditor();
         break;
+      case '-eo':
+      case '--eo':
+        editorOnly = true;
+        break;
     }
-    if (val.startsWith("-e=") || val.startsWith("-e:"))
+    if (val.startsWith("-eo=") || val.startsWith("-eo:")) {
+      editorOnly = true;
+      openEditor(val.substring(4));
+    }
+    else if (val.startsWith("--eo=") || val.startsWith("--eo:")) {
+      editorOnly = true;
+      openEditor(val.substring(5));
+    }
+
+    else if (val.startsWith("-e=") || val.startsWith("-e:"))
       openEditor(val.substring(3));
     else if (val.startsWith("--e=") || val.startsWith("--e:"))
       openEditor(val.substring(4));
@@ -1484,9 +1499,12 @@ app.on('ready', () => {
     if (val.startsWith("-pf=") || val.startsWith("-pf:"))
       global.profiles = parseTemplate(val.substring(4)).split(',');
   });
-
-  createTray();
-  createWindow();
+  if (editorOnly)
+    showCodeEditor();
+  else {
+    createTray();
+    createWindow();
+  }
 });
 
 // Quit when all windows are closed.
@@ -3017,7 +3035,7 @@ function createCodeEditor(show, loading, loaded) {
     };
   states['code-editor'] = edset.state;
   winCode = new BrowserWindow({
-    parent: edset.window.alwaysOnTopClient ? win : null,
+    parent: editorOnly ? null : (edset.window.alwaysOnTopClient ? win : null),
     alwaysOnTop: edset.window.alwaysOnTop,
     title: 'Code editor',
     x: s.x,
@@ -3026,7 +3044,7 @@ function createCodeEditor(show, loading, loaded) {
     height: s.height,
     backgroundColor: 'window',
     show: false,
-    skipTaskbar: (edset.window.alwaysOnTopClient || edset.window.alwaysOnTop) ? true : false,
+    skipTaskbar: editorOnly ? false : ((edset.window.alwaysOnTopClient || edset.window.alwaysOnTop) ? true : false),
     icon: path.join(__dirname, '../assets/icons/png/code.png')
   });
 
@@ -3082,7 +3100,8 @@ function createCodeEditor(show, loading, loaded) {
       codeMax = s.maximized;
     if (loading) {
       clearTimeout(loadid);
-      loadid = setTimeout(() => { win.focus(); }, 500);
+      if (!editorOnly)
+        loadid = setTimeout(() => { win.focus(); }, 500);
     }
     if (loaded)
       loaded();
@@ -3091,10 +3110,12 @@ function createCodeEditor(show, loading, loaded) {
   winCode.on('close', (e) => {
     if (!edset)
       edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-    if (winCode && winCode.getParentWindow() == win)
-      edset.window.show = false;
-    else if (winCode != null)
-      edset.window.show = true;
+    if (!editorOnly) {
+      if (winCode && winCode.getParentWindow() == win)
+        edset.window.show = false;
+      else if (winCode != null)
+        edset.window.show = true;
+    }
     edset.state = getWindowState('code-editor', winCode);
     edset.save(parseTemplate(path.join('{data}', 'editor.json')));
   });

@@ -84,6 +84,7 @@ Basic questions answered about jiMUD
 - `-pf=[list], --profiles[]`                  Set which profiles will be enabled, if not found will default
 - `-v, --version`                             Print current version
 - `-e, --editor, -e=[file], --editor=[file]`  Open code editor
+- `-eo, --eo, -eo=[file], --eo=[file]`        Open only the code editor
 
 ## References
 
