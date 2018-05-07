@@ -1450,7 +1450,7 @@ export class lpcFormatter extends EventEmitter {
                             }
                         }
                     }
-                    if (inif && this.tokens[tp][t].type === "paren.rparen") {
+                    if (inif && this.tokens[tp][t].type === FormatTokenType.parenRparen) {
                         p--;
                         if (p === 0) {
                             t2 = t + 1;
