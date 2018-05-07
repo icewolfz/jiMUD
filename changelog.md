@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.43
+## 0.4.43 2018-05-07
 
 - **New:**
   - Status: dominant weapon hand is now bordered with red
