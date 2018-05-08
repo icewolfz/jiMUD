@@ -2281,19 +2281,19 @@
         if (_updating === 0)
             return;
         window.requestAnimationFrame(() => {
-            if ((this._updating & 1) === 1) {
+            if ((_updating & 1) === 1) {
                 updateUI();
                 _updating &= ~1;
             }
-            if ((this._updating & 2) === 2) {
+            if ((_updating & 2) === 2) {
                 updateUIChange();
                 _updating &= ~2;
             }
-            if ((this._updating & 4) === 4) {
+            if ((_updating & 4) === 4) {
                 buildRecent();
                 _updating &= ~4;
             }
-            if ((this._updating & 8) === 8) {
+            if ((_updating & 8) === 8) {
                 flushRecent();
                 _updating &= ~8;
             }
