@@ -3046,7 +3046,7 @@ function createCodeEditor(show, loading, loaded) {
     y: s.y,
     width: s.width,
     height: s.height,
-    backgroundColor: 'window',
+    backgroundColor: 'grey',
     show: false,
     skipTaskbar: editorOnly ? false : ((edset.window.alwaysOnTopClient || edset.window.alwaysOnTop) ? true : false),
     icon: path.join(__dirname, '../assets/icons/png/code.png')
