@@ -737,7 +737,8 @@ export class CodeEditor2 extends EditorBase {
                 language: 'cpp',
                 autoIndent: true,
                 scrollBeyondLastLine: false,
-                rulers: [80]
+                rulers: [80],
+                contextmenu: false
             });
             this.$editor.getModel().updateOptions({
                 tabSize: 3,
