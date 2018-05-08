@@ -5,6 +5,8 @@ const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
 
+const loader = require('monaco-loader')
+
 declare let ace;
 
 class DebugTimer {
@@ -22,9 +24,6 @@ class DebugTimer {
         console.debug(lbl + ': ' + t);
     }
 }
-
-ace.config.set('basePath', '../lib/ace');
-ace.require('ace/ext/language_tools');
 
 export enum UpdateType {
     none = 0, resize = 1
@@ -683,6 +682,102 @@ export class VirtualEditor extends EditorBase {
         return 2;
     }
 }
+
+export class CodeEditor2 extends EditorBase {
+    private $el: HTMLElement;
+    private $editor;
+    private $loaded;
+
+    constructor(options?: EditorOptions) {
+        super(options);
+        if (options.value) {
+            this.checkReady(() => {
+                this.$editor.setValue(options.value);
+                this.changed = false;
+            });
+        }
+    }
+
+
+    public createControl() {
+        this.$el = document.createElement('div');
+        this.$el.id = this.parent.id + '-editor';
+        this.$el.classList.add('editor');
+        this.parent.appendChild(this.$el);
+        loader().then((monaco) => {
+            this.$editor = monaco.editor.create(this.$el, {
+                language: 'cpp',
+                autoIndent: true,
+                scrollBeyondLastLine: false,
+                rulers: [80]
+            });
+            this.$editor.getModel().updateOptions({
+                tabSize: 3,
+                insertSpaces: true
+            });
+            var r = this.$loaded.length;
+            while (r--)
+                this.$loaded[r]();
+            setTimeout(() => {
+                this.resize();
+            }, 100);
+        })
+    }
+
+    public refresh() { }
+
+    public open() {
+        if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
+            return;
+        this.checkReady(() => {
+            this.$editor.setValue(this.read());
+            this.emit('opened');
+            this.state |= FileState.opened;
+            this.changed = false;
+        });
+    }
+
+    public save() { }
+
+    public revert() { }
+
+    public get selected() { return ''; }
+    public selectAll() { };
+    public cut() { }
+    public copy() { }
+    public paste() { }
+    public delete() { }
+    public undo() { }
+    public redo() { }
+    public close() { }
+    public watch(action: string, file: string, details?) { }
+    public set spellcheck(value: boolean) { };
+    public find() { }
+    public replace() { }
+    public supports(what) { return false; }
+    public focus(): void { }
+    public resize() {
+        this.checkReady(() => {
+            this.$editor.layout();
+        })
+    }
+    public set options(value) { }
+    public get options() { return null; }
+    public get type() {
+        return 2;
+    }
+
+    public checkReady(callback) {
+        if (!this.$editor) {
+            if (!this.$loaded) this.$loaded = [];
+            this.$loaded.unshift(callback);
+            return false;
+        }
+        else if (callback)
+            callback();
+    }
+}
+
 
 enum TokenType {
     SEMICOLON = 0,
