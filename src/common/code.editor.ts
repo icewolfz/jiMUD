@@ -11,11 +11,11 @@ declare let ace;
 declare let monaco: any;
 
 interface loadMonacoOptions {
-    baseUrl?
+    baseUrl?: string
 }
 
 //based on monaco-loader(https://github.com/felixrieseberg/monaco-loader), inlined to reduce load times
-function loadMonaco(options: loadMonacoOptions = {}) {
+export function loadMonaco(options: loadMonacoOptions = {}) {
     return new Promise((resolve, reject) => {
         const monacoDir = path.join(__dirname, '..', '..', 'node_modules', 'monaco-editor');
         const loader: any = require(path.join(monacoDir, '/min/vs/loader.js'));
@@ -37,7 +37,7 @@ function loadMonaco(options: loadMonacoOptions = {}) {
     });
 }
 
-class DebugTimer {
+export class DebugTimer {
     private $s = [];
 
     public start() {
@@ -719,10 +719,8 @@ export class CodeEditor2 extends EditorBase {
     constructor(options?: EditorOptions) {
         super(options);
         if (options.value) {
-            this.checkReady(() => {
-                this.$editor.setValue(options.value);
-                this.changed = false;
-            });
+            this.$editor.setValue(options.value);
+            this.changed = false;
         }
     }
 
@@ -732,25 +730,27 @@ export class CodeEditor2 extends EditorBase {
         this.$el.id = this.parent.id + '-editor';
         this.$el.classList.add('editor');
         this.parent.appendChild(this.$el);
-        loadMonaco().then((monaco: any) => {
-            this.$editor = monaco.editor.create(this.$el, {
-                language: 'cpp',
-                autoIndent: true,
-                scrollBeyondLastLine: false,
-                rulers: [80],
-                contextmenu: false
-            });
-            this.$editor.getModel().updateOptions({
-                tabSize: 3,
-                insertSpaces: true
-            });
+        //loadMonaco().then((monaco: any) => {
+        this.$editor = monaco.editor.create(this.$el, {
+            language: 'cpp',
+            autoIndent: true,
+            scrollBeyondLastLine: false,
+            rulers: [80],
+            contextmenu: false
+        });
+        this.$editor.getModel().updateOptions({
+            tabSize: 3,
+            insertSpaces: true
+        });
+        if (this.$loaded) {
             var r = this.$loaded.length;
             while (r--)
                 this.$loaded[r]();
-            setTimeout(() => {
-                this.resize();
-            }, 100);
-        });
+        }
+        setTimeout(() => {
+            this.resize();
+        }, 100);
+        //});
     }
 
     public refresh() { }
@@ -758,12 +758,10 @@ export class CodeEditor2 extends EditorBase {
     public open() {
         if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
             return;
-        this.checkReady(() => {
-            this.$editor.setValue(this.read());
-            this.emit('opened');
-            this.state |= FileState.opened;
-            this.changed = false;
-        });
+        this.$editor.setValue(this.read());
+        this.emit('opened');
+        this.state |= FileState.opened;
+        this.changed = false;
     }
 
     public save() { }
@@ -786,9 +784,7 @@ export class CodeEditor2 extends EditorBase {
     public supports(what) { return false; }
     public focus(): void { }
     public resize() {
-        this.checkReady(() => {
-            this.$editor.layout();
-        })
+        this.$editor.layout();
     }
     public set options(value) { }
     public get options() { return null; }

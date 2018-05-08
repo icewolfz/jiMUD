@@ -484,7 +484,7 @@
 <script>
     const { remote, ipcRenderer, webFrame } = require('electron');
     const { DockManager } = require('./js/dockmanager');
-    const { CodeEditor2, VirtualEditor } = require('./js/code.editor');
+    const { DebugTimer, loadMonaco, CodeEditor2, VirtualEditor } = require('./js/code.editor');
     const { EditorSettings } = require('./js/code.editor.settings');
 
     const { dialog, Menu, MenuItem } = remote;
@@ -1326,7 +1326,12 @@
     }
 
     $(document).ready(() => {
+        var timer = new DebugTimer();
+        timer.start();
+        timer.start();
         loadOptions();
+        timer.end('Options initialized');
+        timer.start();
         $('#btm-drag-bar').mousedown(function (e) {
             e.preventDefault();
             outputDragging = true;
@@ -1501,20 +1506,28 @@
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
         });
+        timer.end('UI initialized');
+        timer.start();
         createWatcher();
-        var o, ol;
-        //var start = new Date().getTime();
-        if (options.opened && options.reopen) {
-            for (o = 0, ol = options.opened.length; o < ol; o++)
-                openFile(options.opened[o].file, options.opened.remote);
-        }
-        //console.log(new Date().getTime() - start);
-        if (_open) {
-            for (o = 0, ol = _open.length; o < ol; o++)
-                openFile(_open[o][0], _open[o][1]);
-            _open = 0;
-        }
-        _loading = 0;
+        timer.end('Watcher initialized');
+        timer.start();
+        loadMonaco().then((monaco) => {
+            var o, ol;
+            //var start = new Date().getTime();
+            if (options.opened && options.reopen) {
+                for (o = 0, ol = options.opened.length; o < ol; o++)
+                    openFile(options.opened[o].file, options.opened.remote);
+            }
+            //console.log(new Date().getTime() - start);
+            if (_open) {
+                for (o = 0, ol = _open.length; o < ol; o++)
+                    openFile(_open[o][0], _open[o][1]);
+                _open = 0;
+            }
+            timer.end('Editor initialized');
+            timer.end('Final end');
+            _loading = 0;
+        });
     });
 
     window.onbeforeunload = function (evt) {
