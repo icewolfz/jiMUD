@@ -1149,6 +1149,7 @@
 
     function saveOptions() {
         options.save(parseTemplate(path.join('{data}', 'editor.json')));
+        ipcRenderer.send('editor-settings-reload');
     }
 
     function getFileIcon(file) {
@@ -1560,10 +1561,11 @@
                         return 'no';
                 }
                 if (!options) loadOptions();
-                if (options.reopen) {
+                if (options.reopen)
                     options.opened = opened;
-                    saveOptions();
-                }
+                else
+                    options.opened = [];
+                saveOptions();
                 //clean up
                 p = keys.length;
                 while (p--)

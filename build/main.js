@@ -1972,6 +1972,10 @@ ipcMain.on('editor-setting-changed', (event, data) => {
     createCodeEditor();
 });
 
+ipcMain.on('editor-settings-saved', (event) => {
+  edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+});
+
 ipcMain.on('GMCP-received', (event, data) => {
   if (winMap)
     winMap.webContents.send('GMCP-received', data);
@@ -3108,8 +3112,8 @@ function createCodeEditor(show, loading, loaded) {
   });
 
   winCode.on('close', (e) => {
-    if (!edset)
-      edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+    //force a reload to make sure newest settings are saved
+    edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
     if (!editorOnly) {
       if (winCode && winCode.getParentWindow() == win)
         edset.window.show = false;
