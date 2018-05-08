@@ -5,9 +5,37 @@ const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
 
-const loader = require('monaco-loader')
+//const loader = require('monaco-loader')
 
 declare let ace;
+declare let monaco: any;
+
+interface loadMonacoOptions {
+    baseUrl?
+}
+
+//based on monaco-loader(https://github.com/felixrieseberg/monaco-loader), inlined to reduce load times
+function loadMonaco(options: loadMonacoOptions = {}) {
+    return new Promise((resolve, reject) => {
+        const monacoDir = path.join(__dirname, '..', '..', 'node_modules', 'monaco-editor');
+        const loader: any = require(path.join(monacoDir, '/min/vs/loader.js'));
+        if (!loader) {
+            return reject(`Found monaco-editor in ${monacoDir}, but failed to require!`);
+        }
+        loader.require.config({
+            baseUrl: options.baseUrl || `file:///${monacoDir}/min`
+        });
+        (<any>self).module = undefined;
+        (<any>self).process.browser = true;
+        loader.require(['vs/editor/editor.main'], () => {
+            if (monaco) {
+                resolve(monaco)
+            } else {
+                reject('Monaco loaded, but could not find global "monaco"')
+            }
+        })
+    });
+}
 
 class DebugTimer {
     private $s = [];
@@ -704,7 +732,7 @@ export class CodeEditor2 extends EditorBase {
         this.$el.id = this.parent.id + '-editor';
         this.$el.classList.add('editor');
         this.parent.appendChild(this.$el);
-        loader().then((monaco) => {
+        loadMonaco().then((monaco: any) => {
             this.$editor = monaco.editor.create(this.$el, {
                 language: 'cpp',
                 autoIndent: true,
@@ -721,7 +749,7 @@ export class CodeEditor2 extends EditorBase {
             setTimeout(() => {
                 this.resize();
             }, 100);
-        })
+        });
     }
 
     public refresh() { }
