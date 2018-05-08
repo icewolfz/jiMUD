@@ -11,6 +11,8 @@ export class Menubar {
     public window: Electron.BrowserWindow;
     public menu: any[];
     private _menubar;
+    private $cache = {};
+    private $updating;
 
     constructor(menu: any[], window?: Electron.BrowserWindow) {
         if (!window)
@@ -18,7 +20,7 @@ export class Menubar {
         else
             this.window = window;
         this.menu = menu;
-        this.rebuild();
+        this.doUpdate(1);
     }
 
     public getItem(menu: (string | string[]), type?: ItemType) {
@@ -28,18 +30,25 @@ export class Menubar {
         let tItem;
         let tItems;
         if (!menu) return null;
-        if (!Array.isArray(menu))
-            menu = menu.split('|');
+        if (!Array.isArray(menu)) {
+            if (this.$cache[menu.toLowerCase()] && type === ItemType.both)
+                return this.$cache[menu.toLowerCase()];
+            menu = menu.toLowerCase().split('|');
+        }
+        else
+            menu = menu.map(x => x.toLowerCase());
         items = this._menubar.items;
         tItems = this.menu;
         let il = menu.length;
         let f = 0;
         for (i = 0; i < il; i++) {
-            if (!menu[i] || !items || items.length === 0) break;            
-            let ml = items.length;
-            for (let m = 0; m < ml; m++) {
+            if (!menu[i] || !items || items.length === 0) break;
+            //let ml = items.length;
+            //for (let m = 0; m < ml; m++) {
+            let m = items.length;
+            while (m--) {
                 if (!items[m]) continue;
-                if (items[m].id === menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === menu[i].toLowerCase()) {
+                if (items[m].id === menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === menu[i]) {
                     item = items[m];
                     tItem = tItems[m];
                     if (item.submenu) {
@@ -57,8 +66,10 @@ export class Menubar {
             return null;
         if (type === ItemType.raw)
             return tItem;
-        if (type === ItemType.both)
+        if (type === ItemType.both) {
+            this.$cache[menu.join('|').toLowerCase()] = [item, tItem];
             return [item, tItem];
+        }
         return item;
     }
 
@@ -92,12 +103,27 @@ export class Menubar {
 
         if (options.submenu != null) {
             tItem.submenu = options.submenu;
-            this.rebuild();
+            this.doUpdate(1);
         }
     }
 
     public rebuild() {
         this._menubar = Menu.buildFromTemplate(this.menu);
         this.window.setMenu(this._menubar);
+        this.$cache = {};
+    }
+
+    private doUpdate(type) {
+        if (!type) return;
+        this.$updating |= type;
+        if (this.$updating === 0)
+            return;
+        window.requestAnimationFrame(() => {
+            if ((this.$updating & 1) === 1) {
+                this.rebuild();
+                this.$updating &= ~1;
+            }
+            this.doUpdate(this.$updating);
+        });
     }
 }
