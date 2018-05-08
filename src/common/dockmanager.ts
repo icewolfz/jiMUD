@@ -5,7 +5,11 @@ const { Menu, MenuItem } = remote;
 const { URL } = require('url');
 
 export enum UpdateType {
-    none = 0, resize = 1, scroll = 2, scrollToTab = 4, stripState = 8
+    none = 0, 
+    resize = 1, 
+    scroll = 2,
+     scrollToTab = 4, 
+     stripState = 8
 }
 
 export interface DockMangerOptions {
@@ -405,7 +409,7 @@ export class DockManager extends EventEmitter {
         this.setPanelIcon(panel.iconCls);
         this.setPanelTooltip(tooltip || '');
         this.emit('add', { index: this.panels.length - 1, id: panel.id, panel: panel });
-        this.doUpdate(UpdateType.resize & UpdateType.stripState);
+        this.doUpdate(UpdateType.resize | UpdateType.stripState);
         return panel;
     }
 
@@ -433,7 +437,7 @@ export class DockManager extends EventEmitter {
             this.switchToPanelByIndex(idx);
         }
         this.emit('removed', { index: idx, id: panel.id, panel: panel });
-        this.doUpdate(UpdateType.resize & UpdateType.stripState);
+        this.doUpdate(UpdateType.resize | UpdateType.stripState);
     }
 
     public removeAllPanels(skipPanel?) {
@@ -462,7 +466,7 @@ export class DockManager extends EventEmitter {
             this.active = null;
         else if (!this.active)
             this.switchToPanelByIndex(skipPanel || 0);
-        this.doUpdate(UpdateType.resize & UpdateType.stripState);
+        this.doUpdate(UpdateType.resize | UpdateType.stripState);
     }
 
     public removeAllPanelsAfter(afterPanel?) {
@@ -494,7 +498,7 @@ export class DockManager extends EventEmitter {
             this.active = null;
         else if (!this.active)
             this.switchToPanel(afterPanel);
-        this.doUpdate(UpdateType.resize & UpdateType.stripState);
+        this.doUpdate(UpdateType.resize | UpdateType.stripState);
     }
 
     public removeAllPanelsBefore(beforePanel?) {
@@ -525,7 +529,7 @@ export class DockManager extends EventEmitter {
             this.active = null;
         else if (!this.active)
             this.switchToPanel(beforePanel);
-        this.doUpdate(UpdateType.resize & UpdateType.stripState);
+        this.doUpdate(UpdateType.resize | UpdateType.stripState);
     }
 
     public switchToPanelByIndex(idx) {
