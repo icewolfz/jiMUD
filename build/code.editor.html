@@ -14,19 +14,20 @@
     <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
-
-    <script>
-        if (typeof module === 'object') { window.module = module; module = undefined; }
-    </script>
-    <script src="../lib/jquery.min.js" type="text/javascript"></script>
-    <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
-    <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
-    <script src="../lib/datatables.min.js" type="text/javascript"></script>
-    <script src="../lib/datatables.scrollresize.js" type="text/javascript"></script>
-    <script src="../lib/bootstrap-treeview.min.js"></script>
 </head>
 
 <body>
+    <div id="splashScreenMask" class="splash-mask"></div>
+    <div id="splashLayout" class="splash-layout">
+        <div id="SplashScreen" class="splash-screen">
+            <h1 id="splashTitle">jiMUD - Code editor</h1>
+            <h3>
+                <span class="fa fa-circle-o-notch fa-spin" title="Loading..."></span>
+                <span id="splashMessage">Loading...</span>
+            </h3>
+            <progress id="splashProgress" max="100"></progress>
+        </div>
+    </div>
     <div id="toolbar" class="btn-toolbar" role="toolbar">
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-default btn-xs" title="New File" onclick="newFile()">
@@ -481,6 +482,15 @@
         </div>
     </dialog>
 </body>
+<script>
+    if (typeof module === 'object') { window.module = module; module = undefined; }
+</script>
+<script src="../lib/jquery.min.js" type="text/javascript"></script>
+<script src="../lib/bootstrap.min.js" type="text/javascript"></script>
+<script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
+<script src="../lib/datatables.min.js" type="text/javascript"></script>
+<script src="../lib/datatables.scrollresize.js" type="text/javascript"></script>
+<script src="../lib/bootstrap-treeview.min.js"></script>
 <script>
     const { remote, ipcRenderer, webFrame } = require('electron');
     const { DockManager } = require('./js/dockmanager');
@@ -1326,12 +1336,19 @@
     }
 
     $(document).ready(() => {
+        var splashMsg = $("#splashMessage");
+        var splashPB = document.getElementById('splashProgress');
         var timer = new DebugTimer();
+        var pbMax = 6;
         timer.start();
         timer.start();
+        splashMsg.text('Initializing options');
         loadOptions();
+        splashPB.value = 1 / pbMax * 100;
+        splashMsg.text('Initialized options');
         timer.end('Options initialized');
         timer.start();
+        splashMsg.text('Initializing UI');
         $('#btm-drag-bar').mousedown(function (e) {
             e.preventDefault();
             outputDragging = true;
@@ -1506,15 +1523,24 @@
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
         });
+        splashPB.value = 2 / pbMax * 100;
+        splashMsg.text('Initialized UI');
         timer.end('UI initialized');
         timer.start();
+        splashMsg.text('Initializing file watcher');
         createWatcher();
+        splashPB.value = 3 / pbMax * 100;
+        splashMsg.text('Initialized file watcher');
         timer.end('Watcher initialized');
         timer.start();
+        splashMsg.text('Initializing editor');
         loadMonaco().then((monaco) => {
             var o, ol;
+            if (_open || (options.opened && options.reopen))
+                splashMsg.text('Opening files');
             //var start = new Date().getTime();
             if (options.opened && options.reopen) {
+                splashPB.value = 4 / pbMax * 100;
                 for (o = 0, ol = options.opened.length; o < ol; o++)
                     openFile(options.opened[o].file, options.opened.remote);
             }
@@ -1523,7 +1549,13 @@
                 for (o = 0, ol = _open.length; o < ol; o++)
                     openFile(_open[o][0], _open[o][1]);
                 _open = 0;
+                splashPB.value = 5 / pbMax * 100;
             }
+            if (_open || (options.opened && options.reopen))
+                splashMsg.text('Opened files');
+            splashPB.value = 6 / pbMax * 100;
+            $("#splashScreenMask").css('display', 'none');
+            $("#splashLayout").css('display', 'none');
             timer.end('Editor initialized');
             timer.end('Final end');
             _loading = 0;
