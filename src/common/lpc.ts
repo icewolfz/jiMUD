@@ -4,7 +4,7 @@ declare let monaco;
 
 import IRichLanguageConfiguration = monaco.languages.LanguageConfiguration;
 import ILanguage = monaco.languages.IMonarchLanguage;
-import CompletionItem = monaco.languages.CompletionItem;
+//import CompletionItem = monaco.languages.CompletionItem;
 /*
 export function LPCDef() {
     return {
@@ -15,13 +15,15 @@ export function LPCDef() {
     }
 }
 */
-export const complete: CompletionItem[] = [
+/*
+export const complete = [
     { label: 'this_player()', kind: monaco.languages.CompletionItemKind.Function },
     { label: 'this_object()', kind: monaco.languages.CompletionItemKind.Function },
     { label: 'message', kind: monaco.languages.CompletionItemKind.Function },
     { label: 'random', kind: monaco.languages.CompletionItemKind.Function }
 
 ]
+*/
 
 export const conf: IRichLanguageConfiguration = {
     comments: {

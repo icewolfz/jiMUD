@@ -1,7 +1,7 @@
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 import EventEmitter = require('events');
 import { existsSync, formatSize, capitalize } from './library';
-import { conf, language, complete } from './lpc';
+import { conf, language } from './lpc';
 const { clipboard, ipcRenderer } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
@@ -52,7 +52,13 @@ export function SetupEditor() {
 
                 monaco.languages.registerCompletionItemProvider('lpc', {
                     provideCompletionItems: function (model, position) {
-                        return <monaco.languages.CompletionItem[]>complete;
+                        return <monaco.languages.CompletionItem[]>[
+                            { label: 'this_player()', kind: monaco.languages.CompletionItemKind.Function },
+                            { label: 'this_object()', kind: monaco.languages.CompletionItemKind.Function },
+                            { label: 'message', kind: monaco.languages.CompletionItemKind.Function },
+                            { label: 'random', kind: monaco.languages.CompletionItemKind.Function }
+
+                        ];
                     }
                 });
             });
