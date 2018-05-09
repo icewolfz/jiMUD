@@ -499,7 +499,7 @@
 <script src="../lib/bootstrap-treeview.min.js"></script>
 <script>
     /*global _ready:true*/
-    const { remote, ipcRenderer, webFrame } = require('electron');
+    const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
     const { DebugTimer, CodeEditor2, VirtualEditor } = require('./js/code.editor');
     const { EditorSettings } = require('./js/code.editor.settings');
@@ -888,6 +888,14 @@
         }
         if (temp.length)
             temp.push({ type: 'separator' });
+        temp.push({
+            label: '&Copy path',
+            click: () => {
+                clipboard.writeText(panel.editor.file || '');
+                clipboard.writeText(panel.editor.file || '', 'selection');
+            }
+        });
+        temp.push({ type: 'separator' });
         if (panel.editor.changed) {
             temp.push({
                 label: '&Save',

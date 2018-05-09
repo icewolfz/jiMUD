@@ -1,5 +1,7 @@
+/// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 import EventEmitter = require('events');
 import { existsSync, formatSize, capitalize } from './library';
+import { conf, language, complete } from './lpc';
 const { clipboard, ipcRenderer } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
@@ -8,7 +10,6 @@ const crypto = require('crypto');
 //const loader = require('monaco-loader')
 
 declare let ace;
-declare let monaco: any;
 
 interface loadMonacoOptions {
     baseUrl?: string
@@ -39,7 +40,38 @@ export function loadMonaco(options: loadMonacoOptions = {}) {
 
 export function SetupEditor() {
     return new Promise((resolve, reject) => {
-        loadMonaco().then((monaco) => {
+        loadMonaco().then(() => {
+            monaco.languages.register({
+                id: 'lpc',
+                extensions: ['.c', '.h'],
+                aliases: ['LPC', 'LPc']
+            });
+            monaco.languages.onLanguage('lpc', () => {
+                monaco.languages.setMonarchTokensProvider('lpc', language);
+                monaco.languages.setLanguageConfiguration('lpc', conf);
+
+                monaco.languages.registerCompletionItemProvider('lpc', {
+                    provideCompletionItems: function (model, position) {
+                        return <monaco.languages.CompletionItem[]>complete;
+                    }
+                });
+            });
+            monaco.editor.defineTheme('lpcTheme', <monaco.editor.IStandaloneThemeData>{
+                base: 'vs',
+                inherit: true,
+                rules: [
+                    { token: 'keyword.directive.include', foreground: '008000', fontStyle: 'bold' },
+                    { token: 'keyword.directive', foreground: '008000', fontStyle: 'bold' },
+                    { token: 'parent', foreground: 'fdd835', fontStyle: 'bold' },
+                    { token: 'parent.function', foreground: 'fdd835', fontStyle: '' },
+                    { token: 'sefuns', foreground: '008080', fontStyle: 'bold' },
+                    { token: 'efuns', foreground: '008080' },
+                    { token: 'abbr', foreground: '008000', fontStyle: 'bold' },
+                    { token: 'datatype', foreground: 'ff0000' },
+                    { token: 'constant', foreground: 'ff0000', fontStyle: 'bold' },
+                ]
+            });
+
             resolve(monaco);
         });
     });
@@ -740,11 +772,12 @@ export class CodeEditor2 extends EditorBase {
         this.parent.appendChild(this.$el);
         //loadMonaco().then((monaco: any) => {
         this.$editor = monaco.editor.create(this.$el, {
-            language: 'cpp',
+            language: 'lpc',
             autoIndent: true,
             scrollBeyondLastLine: false,
             rulers: [80],
-            contextmenu: false
+            contextmenu: false,
+            theme: 'lpcTheme'
         });
         this.$editor.getModel().updateOptions({
             tabSize: 3,
