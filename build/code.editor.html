@@ -14,6 +14,13 @@
     <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
+    <script>
+        var _ready = false;
+        const { loadMonaco } = require('./js/code.editor');
+        loadMonaco().then((monaco) => {
+            _ready = true;
+        });        
+    </script>
 </head>
 
 <body>
@@ -491,9 +498,10 @@
 <script src="../lib/datatables.scrollresize.js" type="text/javascript"></script>
 <script src="../lib/bootstrap-treeview.min.js"></script>
 <script>
+    /*global _ready:true*/
     const { remote, ipcRenderer, webFrame } = require('electron');
     const { DockManager } = require('./js/dockmanager');
-    const { DebugTimer, loadMonaco, CodeEditor2, VirtualEditor } = require('./js/code.editor');
+    const { DebugTimer, CodeEditor2, VirtualEditor } = require('./js/code.editor');
     const { EditorSettings } = require('./js/code.editor.settings');
 
     const { dialog, Menu, MenuItem } = remote;
@@ -1334,8 +1342,9 @@
         outputDisplay[0].scrollTop = outputDisplay[0].scrollHeight;
     }
 
+    var timer = new DebugTimer();
+
     $(document).ready(() => {
-        var timer = new DebugTimer();
         timer.start();
         timer.start();
         loadOptions();
@@ -1520,26 +1529,32 @@
         createWatcher();
         timer.end('Watcher initialized');
         timer.start();
-        loadMonaco().then((monaco) => {
-            var o, ol;
-            //var start = new Date().getTime();
-            if (options.opened && options.reopen) {
-                for (o = 0, ol = options.opened.length; o < ol; o++)
-                    openFile(options.opened[o].file, options.opened.remote);
-            }
-            //console.log(new Date().getTime() - start);
-            if (_open) {
-                for (o = 0, ol = _open.length; o < ol; o++)
-                    openFile(_open[o][0], _open[o][1]);
-                _open = 0;
-            }
-            $("#splashScreenMask").css('display', 'none');
-            $("#splashLayout").css('display', 'none');
-            timer.end('Editor initialized');
-            timer.end('Final end');
-            _loading = 0;
-        });
+        postEditorLoad();
     });
+
+    function postEditorLoad() {
+        if (!_ready) {
+            setTimeout(postEditorLoad, 10);
+            return;
+        }
+        var o, ol;
+        //var start = new Date().getTime();
+        if (options.opened && options.reopen) {
+            for (o = 0, ol = options.opened.length; o < ol; o++)
+                openFile(options.opened[o].file, options.opened.remote);
+        }
+        //console.log(new Date().getTime() - start);
+        if (_open) {
+            for (o = 0, ol = _open.length; o < ol; o++)
+                openFile(_open[o][0], _open[o][1]);
+            _open = 0;
+        }
+        $("#splashScreenMask").css('display', 'none');
+        $("#splashLayout").css('display', 'none');
+        timer.end('Editor initialized');
+        timer.end('Final end');
+        _loading = 0;
+    }
 
     window.onbeforeunload = function (evt) {
         if (!closeWindow) {
