@@ -13,12 +13,6 @@
 		"semi": "error",
 		"no-global-assign": 0,
 		"no-delete-var": "off",
-		/*
-		"quotes": [
-			2,
-			"single"
-		],
-		*/
 		"no-trailing-spaces": "warn"
 	},
 	"extends": "eslint:recommended",
