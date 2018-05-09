@@ -27,7 +27,7 @@
     "compile:common": "tsc -p . --listEmittedFiles",
     "compile:worker": "tsc -p ./src/worker --listEmittedFiles",
     "compile:css": "node-sass src/css/ -o build/css/ --output-style compressed",
-    "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed",    
+    "compile:themes": "node-sass src/themes/ -o build/themes/ --output-style compressed",
     "build": "npm run build:win64 && npm run build:linux",
     "build:osx": "electron-packager . $npm_package_productName --out=dist --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --overwrite --prune --asar --arch=all --platform=darwin --electronVersion=$npm_package_electronVersion --app-version=$npm_package_version --icon=./assets/icons/mac/app.icns",
     "build:win64": "electron-packager . %npm_package_productName% --out=dist --arch=x64 --platform=win32 --ignore=\"^/(out|dist|.vscode|_raw|_bak|src|_test)$\" --prune --asar --overwrite --electronVersion=%npm_package_electronVersion% --app-version=%npm_package_version% --icon=./assets/icons/win/app.ico --win32metadata.CompanyName=\"jiMUD\" --win32metadata.ProductName=\"jiMUD\" --win32metadata.FileDescription=\"jiMUD\" --win32metadata.OriginalFilename=\"jiMUD.exe\" --appCopyright=\"Copyright © 2017-2018 Icewolfz. All rights reserved.\"",
@@ -94,7 +94,7 @@
     "electron-packager": "^8.7.2",
     "electron-rebuild": "^1.7.3",
     "eslint": "^4.19.1",
-    "eslint-plugin-html": "^3.2.2",
+    "eslint-plugin-html": "^4.0.3",
     "node-abi": "^2.4.0"
   },
   "build": {
