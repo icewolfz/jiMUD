@@ -16,8 +16,8 @@
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <script>
         var _ready = false;
-        const { loadMonaco } = require('./js/code.editor');
-        loadMonaco().then((monaco) => {
+        const { SetupEditor } = require('./js/code.editor');
+        SetupEditor().then((monaco) => {
             _ready = true;
         });        
     </script>

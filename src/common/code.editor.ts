@@ -37,6 +37,14 @@ export function loadMonaco(options: loadMonacoOptions = {}) {
     });
 }
 
+export function SetupEditor() {
+    return new Promise((resolve, reject) => {
+        loadMonaco().then((monaco) => {
+            resolve(monaco);
+        });
+    });
+}
+
 export class DebugTimer {
     private $s = [];
 
