@@ -279,7 +279,7 @@ abstract class EditorBase extends EventEmitter {
     abstract get type();
 }
 
-export class CodeEditor extends EditorBase {
+export class CodeAceEditor extends EditorBase {
     private $el: HTMLTextAreaElement;
     private $editorEl;
     private $editor;
@@ -787,7 +787,7 @@ export class VirtualEditor extends EditorBase {
     }
 }
 
-export class CodeEditor2 extends EditorBase {
+export class CodeMonacoEditor extends EditorBase {
     private $el: HTMLElement;
     private $editor;
     private $model;
@@ -807,7 +807,6 @@ export class CodeEditor2 extends EditorBase {
         this.$el.id = this.parent.id + '-editor';
         this.$el.classList.add('editor');
         this.parent.appendChild(this.$el);
-        //loadMonaco().then((monaco: any) => {
         this.$editor = monaco.editor.create(this.$el, {
             language: 'lpc',
             autoIndent: true,
@@ -829,7 +828,6 @@ export class CodeEditor2 extends EditorBase {
         setTimeout(() => {
             this.resize();
         }, 100);
-        //});
     }
 
     public refresh() { }
@@ -861,7 +859,7 @@ export class CodeEditor2 extends EditorBase {
     public find() { }
     public replace() { }
     public supports(what) { return false; }
-    public focus(): void { }
+    public focus(): void { this.$editor.focus(); }
     public resize() {
         this.$editor.layout();
     }
@@ -879,6 +877,10 @@ export class CodeEditor2 extends EditorBase {
         }
         else if (callback)
             callback();
+    }
+
+    public menu(menu) {
+        //$editor.getAction('editor.action.formatDocument').run()
     }
 }
 
