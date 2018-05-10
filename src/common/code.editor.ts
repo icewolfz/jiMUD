@@ -424,7 +424,7 @@ export class AceCodeEditor extends EditorBase {
         this.$sbSize.id = this.parent.id + '-filesize';
         this.$statusbar.appendChild(this.$sbSize);
         this.$sbMsg = document.createElement('span');
-        this.$sbMsg.id = this.parent.id + '-statusmessage';
+        this.$sbMsg.id = this.parent.id + '-status-message';
         this.$statusbar.appendChild(this.$sbSize);
         this.parent.appendChild(this.$statusbar);
         let StatusBar = ace.require('ace/ext/statusbar').StatusBar;
@@ -842,8 +842,12 @@ export class VirtualEditor extends EditorBase {
 export class MonacoCodeEditor extends EditorBase {
     private $el: HTMLElement;
     private $editor: monaco.editor.IStandaloneCodeEditor;
-    private $model;
+    private $model: monaco.editor.ITextModel;
     private $saving = false;
+    private $statusbar: HTMLElement;
+    private $sbSize: HTMLElement;
+    private $sbMsg: HTMLElement;
+    private $sbCursor: HTMLElement;
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -854,7 +858,6 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public createControl() {
-        //TODO create status bar
         //TODO tooltip show folded code
         this.$el = document.createElement('div');
         this.$el.id = this.parent.id + '-editor';
@@ -967,7 +970,7 @@ export class MonacoCodeEditor extends EditorBase {
 
         this.$editor.onContextMenu((e) => {
             this.emit('contextmenu', e);
-        })
+        });
         this.$editor.onDidChangeCursorSelection((e) => {
             this.emit('selection-changed');
             let selected = this.selected.length > 0;
@@ -977,7 +980,10 @@ export class MonacoCodeEditor extends EditorBase {
             this.emit('menu-update', 'edit|formatting|inverse case', { enabled: selected });
             this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
             this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
-        })
+        });
+        this.$editor.onDidChangeCursorPosition((e)=> {
+            this.$sbCursor.textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+        });
         this.$model = this.$editor.getModel();
         this.$model.updateOptions({
             tabSize: 3,
@@ -985,9 +991,27 @@ export class MonacoCodeEditor extends EditorBase {
         });
         this.$model.onDidChangeContent((e) => {
             this.changed = true;
-            //TODO update file size
+            this.$sbSize.textContent = 'Length: ' + this.$model.getValueLength().toLocaleString();
             this.emit('changed');
-        })
+        });
+        this.$statusbar = document.createElement('div');
+        this.$statusbar.id = this.parent.id + '-statusbar';
+        this.$statusbar.classList.add('statusbar');
+        this.$statusbar.innerHTML = '<span id="' + this.parent.id + '-filename" class="left"></span>';
+        this.$sbMsg = document.createElement('span');
+        this.$sbMsg.id = this.parent.id + '-status-message';
+        this.$statusbar.appendChild(this.$sbMsg);
+        this.$sbCursor = document.createElement('span');
+        this.$sbCursor.id = this.parent.id + '-status-cursor';
+        this.$sbCursor.classList.add('right');
+        this.$sbCursor.style.minWidth = '100px';
+        this.$statusbar.appendChild(this.$sbCursor);
+        this.$sbSize = document.createElement('span');
+        this.$sbSize.id = this.parent.id + '-filesize';
+        this.$sbSize.classList.add('right');
+        this.$statusbar.appendChild(this.$sbSize);        
+        this.parent.appendChild(this.$statusbar);
+
         setTimeout(() => {
             this.resize();
         }, 100);
