@@ -85,19 +85,19 @@ export function SetupEditor() {
                     });
                     var $formatter = new lpcFormatter();
                     var code = $formatter.format(model.getValue());
-                    $indenter.indent(code);
                     return new Promise<monaco.languages.TextEdit[]>((resolve, reject) => {
                         $indenter.on('complete', (lines) => {
                             resolve([{
                                 range: {
-                                    startLineNumber: 0,
-                                    startColumn: 0,
-                                    endColumn: model.getLineMinColumn(model.getLineCount()),
+                                    startLineNumber: 1,
+                                    startColumn: 1,
+                                    endColumn: model.getLineMaxColumn(model.getLineCount()),
                                     endLineNumber: model.getLineCount()
                                 },
                                 text: lines.join('\n')
                             }]);
                         });
+                        $indenter.indent(code);
                     });
                 }
             });
@@ -981,7 +981,7 @@ export class MonacoCodeEditor extends EditorBase {
             this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
             this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
         });
-        this.$editor.onDidChangeCursorPosition((e)=> {
+        this.$editor.onDidChangeCursorPosition((e) => {
             this.$sbCursor.textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
         });
         this.$model = this.$editor.getModel();
@@ -1009,7 +1009,7 @@ export class MonacoCodeEditor extends EditorBase {
         this.$sbSize = document.createElement('span');
         this.$sbSize.id = this.parent.id + '-filesize';
         this.$sbSize.classList.add('right');
-        this.$statusbar.appendChild(this.$sbSize);        
+        this.$statusbar.appendChild(this.$sbSize);
         this.parent.appendChild(this.$statusbar);
 
         setTimeout(() => {
@@ -1075,9 +1075,9 @@ export class MonacoCodeEditor extends EditorBase {
     public get selected() { return this.$model.getValueInRange(this.$editor.getSelection()) || ''; }
     public selectAll() {
         this.$editor.setSelection({
-            startLineNumber: 0,
-            startColumn: 0,
-            endColumn: this.$model.getLineMinColumn(this.$model.getLineCount()),
+            startLineNumber: 1,
+            startColumn: 1,
+            endColumn: this.$model.getLineMaxColumn(this.$model.getLineCount()),
             endLineNumber: this.$model.getLineCount()
         });
     };
@@ -1373,6 +1373,9 @@ export class lpcIndenter extends EventEmitter {
     private $f = [7, 1, 7, 1, 2, 1, 1, 6, 4, 2, 6, 7, 7, 7, 2, 0,];
     private $g = [2, 2, 1, 7, 1, 5, 5, 1, 3, 6, 2, 2, 2, 2, 2, 0,];
 
+    public shift = 3;
+    public halfShift = 2;
+
     private shiftLine(line) {
         if (!line || line.length === 0)
             return line;
@@ -1656,16 +1659,16 @@ export class lpcIndenter extends EventEmitter {
                     if ((token === TokenType.LBRACKET &&
                         (sp.current === TokenType.ROPERATOR || sp.current === TokenType.ELSE || sp.current === TokenType.XDO)) ||
                         token === TokenType.RBRACKET || (token === TokenType.IF && sp.current === TokenType.ELSE)) {
-                        i -= 3; //shift
+                        i -= this.shift; //shift
                     }
                     else if (token == TokenType.RHOOK || token == TokenType.ROPERATOR) {
-                        i -= 1; //shift / 2
+                        i -= this.halfShift; //shift / 2
                     }
                     /* shift the current line, if appropriate */
                     if (do_indent) {
                         this.$shi = i - indent_index + i2;
                         if (token == TokenType.TOKEN && sp.current == TokenType.LBRACKET && (ident === "case" || ident === "default"))
-                            this.$shi -= 3; //shift
+                            this.$shi -= this.shift; //shift
                         newLine = this.shiftLine(newLine || line);
                         //p += shi;
                         do_indent = false;
@@ -1673,7 +1676,7 @@ export class lpcIndenter extends EventEmitter {
                     /* change indentation after current token */
                     switch (token) {
                         case TokenType.SWITCH:
-                            //i += 3;
+                            //i += this.shift;
                             break;
                         case TokenType.IF:
                             break;
@@ -1683,7 +1686,7 @@ export class lpcIndenter extends EventEmitter {
                         case TokenType.XDO:
                             {
                                 /* add indentation */
-                                i += 3;
+                                i += this.shift;
                                 break;
                             }
                         case TokenType.LOPERATOR:
@@ -1692,14 +1695,14 @@ export class lpcIndenter extends EventEmitter {
                             /* Is this right? */
                             {
                                 /* half indent after ( [ ({ ([ */
-                                i += 1;
+                                i += this.halfShift;
                                 break;
                             }
                         case TokenType.SEMICOLON:
                             {
                                 /* in case it is followed by a comment */
                                 if (sp.current == TokenType.ROPERATOR || sp.current == TokenType.ELSE)
-                                    i -= 3;
+                                    i -= this.shift;
                                 break;
                             }
                     }
@@ -1834,6 +1837,8 @@ export class lpcFormatter extends EventEmitter {
     private block = [];
     private b = [];
 
+    public bracketsOnNewline = true;
+
     public format(source) {
         if (!source || source.length === 0)
             return "";
@@ -1942,8 +1947,16 @@ export class lpcFormatter extends EventEmitter {
                             op += " ";
                         }
                     }
-                    if ((this.tokens[tp][t].type === FormatTokenType.parenRbrace || this.tokens[tp][t].type === FormatTokenType.parenLbrace) && s !== t && !op.rtrim().endsWith("\n"))
+                    if (this.tokens[tp][t].type === FormatTokenType.parenRbrace && s !== t && !op.rtrim().endsWith("\n"))
                         op += "\n" + leading;
+                    else if (this.tokens[tp][t].type === FormatTokenType.parenLbrace) {
+                        if (!this.bracketsOnNewline && (op.rtrim().endsWith(")") || op.rtrim().endsWith(" else") || op.rtrim().endsWith("\nelse"))) {
+                            op = op.rtrim();
+                            op += " ";
+                        }
+                        else if (s !== t && !op.rtrim().endsWith("\n"))
+                            op += "\n" + leading;
+                    }
                 }
                 op += this.tokens[tp][t].value;
                 e = t;
