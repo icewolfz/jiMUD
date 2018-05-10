@@ -398,6 +398,8 @@
                     stack = stack.concat(buildHTMLStack($el.contents()));
                     stack.push("/" + tag);
                 }
+                else if (tag == 'BR' && $el.data('mce-bogus'))
+                    stack.push('RESET');
                 else {
                     stack.push(tag);
                     stack = stack.concat(buildHTMLStack($el.contents()));
@@ -445,251 +447,11 @@
                     break;
                 }
             }
-
-            //append and prepend parent formatting for proper text formatting
-            var data = buildHTMLStack($(start + tinymce.activeEditor.selection.getContent({ format: 'raw' }).replace(/<\/div><div>/g, "<br>") + end));
-            var buffer = [];
-            var codes = [];
-            var color, d, dl, rgb;
-            if (options.enableDebug)
-                ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
-            for (d = data.length - 1; d >= 0; d--) {
-                if (!data[d].startsWith('"') && data[d] != "BR")
-                    data.pop();
-                else
-                    break;
-            }
-
-            for (d = 0, dl = data.length; d < dl; d++) {
-                switch (data[d]) {
-                    case "BOLD":
-                    case "ITALIC":
-                    case "UNDERLINE":
-                    case "STRIKEOUT":
-                    case "DBLUNDERLINE":
-                    case "OVERLINE":
-                    case "FLASH":
-                    case "REVERSE":
-                        codes.push("%^" + data[d] + "%^");
-                        buffer.push("%^" + data[d] + "%^");
-                        break;
-                    case "/DBLUNDERLINE":
-                    case "/OVERLINE":
-                    case "/FLASH":
-                    case "/REVERSE":
-                    case "/UNDERLINE":
-                    case "/BOLD":
-                    case "/ITALIC":
-                    case "/STRIKEOUT":
-                        codes.pop();
-                        buffer.push("%^RESET%^");
-                        if (codes.length > 0)
-                            buffer.push(codes.join(''));
-                        break;
-                    case "SPAN":
-                    case "/SPAN":
-                    case "/BR":
-                    case "/DIV":
-                        break;
-                    case "DIV":
-                    case "BR":
-                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith("%^RESET%^"))
-                            buffer.push("%^RESET%^");
-                        buffer.push('\n');
-                        if (codes.length > 0)
-                            buffer.push(codes.join(''));
-                        break;
-                    default:
-                        if (data[d].startsWith("COLOR: #")) {
-                            color = data[d].substr(8);
-                            if (!_colors[color]) {
-                                rgb = new rgbcolor(color);
-                                color = nearestHex(rgb.toHex()).substr(1);
-                            }
-                            color = _colors[color];
-                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
-                                color = "mono11";
-                            codes.push("%^" + color + "%^");
-                            buffer.push("%^" + color + "%^");
-                        }
-                        else if (data[d].startsWith("COLOR: ")) {
-                            color = new rgbcolor(data[d].substr(7)).toHex().substr(1);
-                            if (!_colors[color])
-                                color = nearestHex("#" + color).substr(1);
-                            color = _colors[color];
-                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
-                                color = "mono11";
-                            codes.push("%^" + color + "%^");
-                            buffer.push("%^" + color + "%^");
-
-                        }
-                        else if (data[d].startsWith("/COLOR: ")) {
-                            codes.pop();
-                            buffer.push("%^RESET%^");
-                            if (codes.length > 0)
-                                buffer.push(codes.join(''));
-                        }
-                        else if (data[d].startsWith("BACKGROUND-COLOR: #")) {
-                            color = data[d].substr(19);
-                            if (!_colors[color]) {
-                                rgb = new rgbcolor(color);
-                                color = nearestHex(rgb.toHex()).substr(1);
-                            }
-                            if (_colors["B" + color])
-                                color = _colors["B" + color];
-                            else
-                                color = _colors[color];
-                            color = "%^B_" + color + "%^";
-                            codes.push(color);
-                            buffer.push(color);
-                        }
-                        else if (data[d].startsWith("BACKGROUND-COLOR: ")) {
-                            color = new rgbcolor(data[d].substr(18)).toHex().substr(1);
-                            if (!_colors[color])
-                                color = nearestHex("#" + color).substr(1);
-                            if (_colors["B" + color])
-                                color = _colors["B" + color];
-                            else
-                                color = _colors[color];
-                            color = "%^B_" + color + "%^";
-                            codes.push("%^" + color + "%^");
-                            buffer.push("%^" + color + "%^");
-                        }
-                        else if (data[d].startsWith("/BACKGROUND-COLOR: ")) {
-                            codes.pop();
-                            buffer.push("%^RESET%^");
-                            if (codes.length > 0)
-                                buffer.push(codes.join(''));
-                        }
-                        else if (data[d].startsWith('"'))
-                            buffer.push(data[d].substring(1, data[d].length - 1));
-                        break;
-                }
-            }
-            return buffer.join('');
+            return formatHtml($(start + tinymce.activeEditor.selection.getContent({ format: 'raw' }).replace(/<\/div><div>/g, "<br>") + end));
         }
 
         function getFormatedText() {
-            var data = buildHTMLStack($("<html>" + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, "<br>") + "</html>"));
-            var buffer = [];
-            var codes = [];
-            var color, d, dl, rgb;
-            if (options.enableDebug)
-                ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
-            for (d = data.length - 1; d >= 0; d--) {
-                if (!data[d].startsWith('"') && data[d] != "BR")
-                    data.pop();
-                else
-                    break;
-            }
-
-            for (d = 0, dl = data.length; d < dl; d++) {
-                switch (data[d]) {
-                    case "BOLD":
-                    case "ITALIC":
-                    case "UNDERLINE":
-                    case "STRIKEOUT":
-                    case "DBLUNDERLINE":
-                    case "OVERLINE":
-                    case "FLASH":
-                    case "REVERSE":
-                        codes.push("%^" + data[d] + "%^");
-                        buffer.push("%^" + data[d] + "%^");
-                        break;
-                    case "/DBLUNDERLINE":
-                    case "/OVERLINE":
-                    case "/FLASH":
-                    case "/REVERSE":
-                    case "/UNDERLINE":
-                    case "/BOLD":
-                    case "/ITALIC":
-                    case "/STRIKEOUT":
-                        codes.pop();
-                        buffer.push("%^RESET%^");
-                        if (codes.length > 0)
-                            buffer.push(codes.join(''));
-                        break;
-                    case "SPAN":
-                    case "/SPAN":
-                    case "/BR":
-                    case "/DIV":
-                        break;
-                    case "DIV":
-                    case "BR":
-                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith("%^RESET%^"))
-                            buffer.push("%^RESET%^");
-                        buffer.push('\n');
-                        if (codes.length > 0)
-                            buffer.push(codes.join(''));
-                        break;
-                    default:
-                        if (data[d].startsWith("COLOR: #")) {
-                            color = data[d].substr(8);
-                            if (!_colors[color]) {
-                                rgb = new rgbcolor(color);
-                                color = nearestHex(rgb.toHex()).substr(1);
-                            }
-                            color = _colors[color];
-                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
-                                color = "mono11";
-                            codes.push("%^" + color + "%^");
-                            buffer.push("%^" + color + "%^");
-                        }
-                        else if (data[d].startsWith("COLOR: ")) {
-                            color = new rgbcolor(data[d].substr(7)).toHex().substr(1);
-                            if (!_colors[color])
-                                color = nearestHex("#" + color).substr(1);
-                            color = _colors[color];
-                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
-                                color = "mono11";
-                            codes.push("%^" + color + "%^");
-                            buffer.push("%^" + color + "%^");
-
-                        }
-                        else if (data[d].startsWith("/COLOR: ")) {
-                            codes.pop();
-                            buffer.push("%^RESET%^");
-                            if (codes.length > 0)
-                                buffer.push(codes.join(''));
-                        }
-                        else if (data[d].startsWith("BACKGROUND-COLOR: #")) {
-                            color = data[d].substr(19);
-                            if (!_colors[color]) {
-                                rgb = new rgbcolor(color);
-                                color = nearestHex(rgb.toHex()).substr(1);
-                            }
-                            if (_colors["B" + color])
-                                color = _colors["B" + color];
-                            else
-                                color = _colors[color];
-                            color = "%^B_" + color + "%^";
-                            codes.push(color);
-                            buffer.push(color);
-                        }
-                        else if (data[d].startsWith("BACKGROUND-COLOR: ")) {
-                            color = new rgbcolor(data[d].substr(18)).toHex().substr(1);
-                            if (!_colors[color])
-                                color = nearestHex("#" + color).substr(1);
-                            if (_colors["B" + color])
-                                color = _colors["B" + color];
-                            else
-                                color = _colors[color];
-                            color = "%^B_" + color + "%^";
-                            codes.push("%^" + color + "%^");
-                            buffer.push("%^" + color + "%^");
-                        }
-                        else if (data[d].startsWith("/BACKGROUND-COLOR: ")) {
-                            codes.pop();
-                            buffer.push("%^RESET%^");
-                            if (codes.length > 0)
-                                buffer.push(codes.join(''));
-                        }
-                        else if (data[d].startsWith('"'))
-                            buffer.push(data[d].substring(1, data[d].length - 1));
-                        break;
-                }
-            }
-            return buffer.join('');
+            return formatHtml($("<html>" + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, "<br>") + "</html>"));
         }
 
         function getText() {
@@ -698,6 +460,135 @@
 
         function getHTML() {
             return tinymce.activeEditor.getContent({ format: 'html' });
+        }
+
+        function formatHtml(text) {
+            var data = buildHTMLStack(text);
+            var buffer = [];
+            var codes = [];
+            var color, d, dl, rgb;
+            if (options.enableDebug)
+                ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
+            for (d = data.length - 1; d >= 0; d--) {
+                if (!data[d].startsWith('"') && data[d] != "BR" && data[d] != "RESET")
+                    data.pop();
+                else
+                    break;
+            }
+
+            for (d = 0, dl = data.length; d < dl; d++) {
+                switch (data[d]) {
+                    case "BOLD":
+                    case "ITALIC":
+                    case "UNDERLINE":
+                    case "STRIKEOUT":
+                    case "DBLUNDERLINE":
+                    case "OVERLINE":
+                    case "FLASH":
+                    case "REVERSE":
+                        codes.push("%^" + data[d] + "%^");
+                        buffer.push("%^" + data[d] + "%^");
+                        break;
+                    case "/DBLUNDERLINE":
+                    case "/OVERLINE":
+                    case "/FLASH":
+                    case "/REVERSE":
+                    case "/UNDERLINE":
+                    case "/BOLD":
+                    case "/ITALIC":
+                    case "/STRIKEOUT":
+                        codes.pop();
+                        buffer.push("%^RESET%^");
+                        if (codes.length > 0)
+                            buffer.push(codes.join(''));
+                        break;
+                    case "SPAN":
+                    case "/SPAN":
+                    case "/BR":
+                    case "/DIV":
+                        break;
+                    case "DIV":
+                    case "BR":
+                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith("%^RESET%^"))
+                            buffer.push("%^RESET%^");
+                        buffer.push('\n');
+                        if (codes.length > 0)
+                            buffer.push(codes.join(''));
+                        break;
+                    case 'RESET':
+                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith("%^RESET%^"))
+                            buffer.push("%^RESET%^");
+                        if (codes.length > 0)
+                            buffer.push(codes.join(''));
+                        break;
+                    default:
+                        if (data[d].startsWith("COLOR: #")) {
+                            color = data[d].substr(8);
+                            if (!_colors[color]) {
+                                rgb = new rgbcolor(color);
+                                color = nearestHex(rgb.toHex()).substr(1);
+                            }
+                            color = _colors[color];
+                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                                color = "mono11";
+                            codes.push("%^" + color + "%^");
+                            buffer.push("%^" + color + "%^");
+                        }
+                        else if (data[d].startsWith("COLOR: ")) {
+                            color = new rgbcolor(data[d].substr(7)).toHex().substr(1);
+                            if (!_colors[color])
+                                color = nearestHex("#" + color).substr(1);
+                            color = _colors[color];
+                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                                color = "mono11";
+                            codes.push("%^" + color + "%^");
+                            buffer.push("%^" + color + "%^");
+
+                        }
+                        else if (data[d].startsWith("/COLOR: ")) {
+                            codes.pop();
+                            buffer.push("%^RESET%^");
+                            if (codes.length > 0)
+                                buffer.push(codes.join(''));
+                        }
+                        else if (data[d].startsWith("BACKGROUND-COLOR: #")) {
+                            color = data[d].substr(19);
+                            if (!_colors[color]) {
+                                rgb = new rgbcolor(color);
+                                color = nearestHex(rgb.toHex()).substr(1);
+                            }
+                            if (_colors["B" + color])
+                                color = _colors["B" + color];
+                            else
+                                color = _colors[color];
+                            color = "%^B_" + color + "%^";
+                            codes.push(color);
+                            buffer.push(color);
+                        }
+                        else if (data[d].startsWith("BACKGROUND-COLOR: ")) {
+                            color = new rgbcolor(data[d].substr(18)).toHex().substr(1);
+                            if (!_colors[color])
+                                color = nearestHex("#" + color).substr(1);
+                            if (_colors["B" + color])
+                                color = _colors["B" + color];
+                            else
+                                color = _colors[color];
+                            color = "%^B_" + color + "%^";
+                            codes.push("%^" + color + "%^");
+                            buffer.push("%^" + color + "%^");
+                        }
+                        else if (data[d].startsWith("/BACKGROUND-COLOR: ")) {
+                            codes.pop();
+                            buffer.push("%^RESET%^");
+                            if (codes.length > 0)
+                                buffer.push(codes.join(''));
+                        }
+                        else if (data[d].startsWith('"'))
+                            buffer.push(data[d].substring(1, data[d].length - 1));
+                        break;
+                }
+            }
+            return buffer.join('');
         }
 
         //{ color: 'red', hex: '#EA4235', rgb: { r: 234, g: 66, b: 53 } },

@@ -8,6 +8,8 @@
 - **Fixed:**
   - Code editor:
     - Fix insert color dialog
+  - Advanced editor:
+    - Fixed extra new line added when sending text to mud or code editor
 
 ## 0.4.44
 
