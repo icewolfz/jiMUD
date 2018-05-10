@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.x
+
+- **Changed:**
+  - Code editor:
+    - Replaced ace editor with monaco editor which is faster and offers more features
+
 ## 0.4.44
 
 ## 0.4.43 2018-05-07
