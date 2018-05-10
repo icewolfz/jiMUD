@@ -18,7 +18,7 @@ const { TrayClick } = require('./js/types');
 let win, winWho, winMap, winProfiles, winEditor, winChat, winCode;//winHelp
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let edset;
-let chatReady = false;
+let chatReady = false, codeReady = false, editorReady = false;
 let reload = null;
 let tray = null;
 let overlay = 0;
@@ -1791,6 +1791,8 @@ ipcMain.on('connected', (event) => {
 ipcMain.on('set-color', (event, type, color, code, window) => {
   if (winEditor)
     winEditor.webContents.send('set-color', type, color, code, window);
+  if (winCode)
+    winCode.webContents.send('set-color', type, color, code, window);
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -1799,15 +1801,13 @@ ipcMain.on('set-color', (event, type, color, code, window) => {
 });
 
 ipcMain.on('open-editor', (event, file, remote) => {
-  if (win && win.webContents) {
-    showCodeEditor();
-    //win.webContents.executeJavaScript('showCodeEditor()');
-    openEditor(file, remote);
-  }
+  showCodeEditor();
+  //win.webContents.executeJavaScript('showCodeEditor()');
+  openEditor(file, remote);
 });
 
 function openEditor(file, remote) {
-  if (!winCode) {
+  if (!codeReady || !winCode) {
     setTimeout(() => {
       openEditor(file, remote);
     }, 1000);
@@ -1842,15 +1842,35 @@ ipcMain.on('send', (event, raw, echo) => {
     win.webContents.send('send', raw, echo);
 });
 
-ipcMain.on('send-editor', (event, text, window) => {
-  if (winEditor)
-    winEditor.webContents.send('send-editor', text, window);
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('send-editor', text, window);
-  }
+ipcMain.on('send-editor', (event, text, window, show, args) => {
+  if (show)
+    showSelectedWindow(window, args);
+  sendEditor(text, window);
 });
+
+function sendEditor(text, window) {
+  if ((!codeReady || !winCode || !winCode.isVisible()) && window === 'code-editor') {
+    setTimeout(() => {
+      sendEditor(text, window);
+    }, 1000);
+  }
+  else if ((!editorReady || !winEditor || !winEditor.isVisible()) && window === 'editor') {
+    setTimeout(() => {
+      sendEditor(text, window);
+    }, 1000);
+  }
+  else {
+    if (winEditor)
+      winEditor.webContents.send('send-editor', text, window);
+    if (winCode)
+      winCode.webContents.send('send-editor', text, window);
+    for (var name in windows) {
+      if (!windows.hasOwnProperty(name) || !windows[name].window)
+        continue;
+      windows[name].window.webContents.send('send-editor', text, window);
+    }
+  }
+}
 
 ipcMain.on('log', (event, raw) => {
   console.log(raw);
@@ -2022,6 +2042,10 @@ ipcMain.on('set-progress-window', (event, window, args) => {
 });
 
 ipcMain.on('show-window', (event, window, args) => {
+  showSelectedWindow(window, args);
+});
+
+function showSelectedWindow(window, args) {
   if (window === "prefs")
     showPrefs();
   else if (window === "mapper")
@@ -2040,7 +2064,7 @@ ipcMain.on('show-window', (event, window, args) => {
     showWindow(window, windows[window]);
   else
     createNewWindow(window, args);
-});
+}
 
 ipcMain.on('import-map', (event, data) => {
   if (winMap)
@@ -2538,6 +2562,7 @@ function createEditor(show, loading) {
 
   winEditor.on('closed', () => {
     winEditor = null;
+    editorReady = false;
   });
 
   winEditor.on('resize', () => {
@@ -2577,6 +2602,7 @@ function createEditor(show, loading) {
       clearTimeout(loadid);
       loadid = setTimeout(() => { win.focus(); }, 500);
     }
+    editorReady = true;
   });
 
   winEditor.on('close', (e) => {
@@ -2585,7 +2611,7 @@ function createEditor(show, loading) {
     set.windows['editor'] = getWindowState('editor', winEditor);
     set.save(global.settingsFile);
     winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
-    if (set.editorPersistent) {
+    if (set.editorPersistent && !editorOnly) {
       e.preventDefault();
       winEditor.hide();
     }
@@ -3067,6 +3093,7 @@ function createCodeEditor(show, loading, loaded) {
 
   winCode.on('closed', () => {
     winCode = null;
+    codeReady = false;
   });
 
   winCode.on('resize', () => {
@@ -3109,6 +3136,7 @@ function createCodeEditor(show, loading, loaded) {
     }
     if (loaded)
       loaded();
+    codeReady = true;
   });
 
   winCode.on('close', (e) => {

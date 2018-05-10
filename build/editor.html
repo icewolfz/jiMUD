@@ -995,7 +995,7 @@
                         {
                             text: 'To code editor',
                             onclick: function () {
-                                ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor');
+                                ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor', true);
                             }
                         },
                     ]

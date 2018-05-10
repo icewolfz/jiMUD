@@ -901,6 +901,22 @@ export function capitalize(s) {
     return s.join(" ");
 }
 
+export function inverse(s) {
+    if (!s) return '';
+    s = s.split(" ");
+    var c;
+    for (var i = 0, il = s.length; i < il; i++) {
+        for (var p = 0, pl = s[i].length; p < pl; p++) {
+            c = s[i].charAt(p);
+            if (c >= 'A' && c <= 'Z')
+                s[i] = s[i].substr(0, p) + c.toLowerCase() + s[i].substr(p + 1);
+            else if (c >= 'a' && c <= 'z')
+                s[i] = s[i].substr(0, p) + c.toUpperCase() + s[i].substr(p + 1);
+        }
+    }
+    return s.join(' ');
+}
+
 export function invert(obj) {
     var new_obj = {};
     for (var prop in obj) {

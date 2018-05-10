@@ -1,6 +1,6 @@
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 import EventEmitter = require('events');
-import { existsSync, formatSize, capitalize } from './library';
+import { existsSync, formatSize, capitalize, inverse } from './library';
 import { conf, language } from './lpc';
 const { clipboard, ipcRenderer } = require('electron');
 const fs = require('fs-extra');
@@ -38,6 +38,7 @@ export function loadMonaco(options: loadMonacoOptions = {}) {
     });
 }
 
+//@TODO finish auto complete
 export function SetupEditor() {
     return new Promise((resolve, reject) => {
         loadMonaco().then(() => {
@@ -89,7 +90,7 @@ export function SetupEditor() {
                         $indenter.on('complete', (lines) => {
                             resolve([{
                                 range: {
-                                    startLineNumber:0,
+                                    startLineNumber: 0,
                                     startColumn: 0,
                                     endColumn: model.getLineMinColumn(model.getLineCount()),
                                     endLineNumber: model.getLineCount()
@@ -98,19 +99,66 @@ export function SetupEditor() {
                             }]);
                         });
                     });
-                    /*
-                    return new PromiseLike()
-                    return [{
-                        range: null,
-                        text: model.getValue()
-                    }]
-                    */
                 }
             });
 
             resolve(monaco);
         });
     });
+}
+
+/*
+borrowed from vscode replace command system to make it easier
+*/
+class ReplaceCommandThatPreservesSelection implements monaco.editor.ICommand {
+
+    private _range: monaco.Range;
+    private _text: string;
+    private _initialSelection: monaco.Selection;
+    private _selectionId: string;
+
+    constructor(editRange: monaco.Range, text: string, initialSelection: monaco.Selection) {
+        this._range = editRange;
+        this._text = text;
+        this._initialSelection = initialSelection;
+    }
+
+    public getEditOperations(model: monaco.editor.ITextModel, builder: monaco.editor.IEditOperationBuilder): void {
+        builder.addEditOperation(this._range, this._text);
+        this._selectionId = builder.trackSelection(this._initialSelection);
+    }
+
+    public computeCursorState(model: monaco.editor.ITextModel, helper: monaco.editor.ICursorStateComputerData): monaco.Selection {
+        return helper.getTrackedSelection(this._selectionId);
+    }
+}
+
+export class ReplaceCommand implements monaco.editor.ICommand {
+
+    private readonly _range: monaco.Range;
+    private readonly _text: string;
+    public readonly insertsAutoWhitespace: boolean;
+
+    constructor(range: monaco.Range, text: string, insertsAutoWhitespace: boolean = false) {
+        this._range = range;
+        this._text = text;
+        this.insertsAutoWhitespace = insertsAutoWhitespace;
+    }
+
+    public getEditOperations(model: monaco.editor.ITextModel, builder: monaco.editor.IEditOperationBuilder): void {
+        builder.addTrackedEditOperation(this._range, this._text);
+    }
+
+    public computeCursorState(model: monaco.editor.ITextModel, helper: monaco.editor.ICursorStateComputerData): monaco.Selection {
+        let inverseEditOperations = helper.getInverseEditOperations();
+        let srcRange = inverseEditOperations[0].range;
+        return new monaco.Selection(
+            srcRange.endLineNumber,
+            srcRange.endColumn,
+            srcRange.endLineNumber,
+            srcRange.endColumn
+        );
+    }
 }
 
 export class DebugTimer {
@@ -277,9 +325,10 @@ abstract class EditorBase extends EventEmitter {
     abstract set options(value);
     abstract get options();
     abstract get type();
+    abstract insert(text);
 }
 
-export class CodeAceEditor extends EditorBase {
+export class AceCodeEditor extends EditorBase {
     private $el: HTMLTextAreaElement;
     private $editorEl;
     private $editor;
@@ -751,6 +800,8 @@ export class CodeAceEditor extends EditorBase {
     public get type() {
         return 1;
     }
+
+    public insert(text) { }
 }
 
 export class VirtualEditor extends EditorBase {
@@ -785,13 +836,14 @@ export class VirtualEditor extends EditorBase {
     public get type() {
         return 2;
     }
+    public insert(text) { }
 }
 
-export class CodeMonacoEditor extends EditorBase {
+export class MonacoCodeEditor extends EditorBase {
     private $el: HTMLElement;
-    private $editor;
+    private $editor: monaco.editor.IStandaloneCodeEditor;
     private $model;
-    private $loaded;
+    private $saving = false;
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -801,8 +853,9 @@ export class CodeMonacoEditor extends EditorBase {
         }
     }
 
-
     public createControl() {
+        //TODO create status bar
+        //TODO tooltip show folded code
         this.$el = document.createElement('div');
         this.$el.id = this.parent.id + '-editor';
         this.$el.classList.add('editor');
@@ -815,22 +868,158 @@ export class CodeMonacoEditor extends EditorBase {
             contextmenu: false,
             theme: 'lpcTheme'
         });
+
+        this.$editor.addAction({
+            id: 'jimud.action.transformToInverse',
+            label: 'Transform to Inverse',
+            run: function (editor: monaco.editor.IStandaloneCodeEditor) {
+                let selections = editor.getSelections();
+                let model = editor.getModel();
+                let commands: monaco.editor.ICommand[] = [];
+
+                for (let i = 0, len = selections.length; i < len; i++) {
+                    let selection = selections[i];
+                    if (selection.isEmpty()) {
+                        let cursor = selection.getStartPosition();
+                        let word = model.getWordAtPosition(cursor);
+                        if (!word) {
+                            continue;
+                        }
+
+                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                        let text = model.getValueInRange(wordRange);
+                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                    } else {
+                        let text = model.getValueInRange(selection);
+                        commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
+                    }
+                }
+                editor.pushUndoStop();
+                editor.executeCommands(this.id, commands);
+                editor.pushUndoStop();
+            }
+        });
+
+        this.$editor.addAction({
+            id: 'jimud.action.transformToCapitalize',
+            label: 'Transform to Capitalize',
+            run: function (editor: monaco.editor.IStandaloneCodeEditor) {
+                let selections = editor.getSelections();
+                let model = editor.getModel();
+                let commands: monaco.editor.ICommand[] = [];
+
+                for (let i = 0, len = selections.length; i < len; i++) {
+                    let selection = selections[i];
+                    if (selection.isEmpty()) {
+                        let cursor = selection.getStartPosition();
+                        let word = model.getWordAtPosition(cursor);
+                        if (!word) {
+                            continue;
+                        }
+
+                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                        let text = model.getValueInRange(wordRange);
+                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                    } else {
+                        let text = model.getValueInRange(selection);
+                        commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                    }
+                }
+                editor.pushUndoStop();
+                editor.executeCommands(this.id, commands);
+                editor.pushUndoStop();
+            }
+        });
+
+        this.$editor.addAction({
+            id: 'jimud.action.insertColor',
+            label: 'Transform to Capitalize',
+            run: function (editor: monaco.editor.IStandaloneCodeEditor) {
+                let selections = editor.getSelections();
+                let model = editor.getModel();
+                let commands: monaco.editor.ICommand[] = [];
+
+                for (let i = 0, len = selections.length; i < len; i++) {
+                    let selection = selections[i];
+                    if (selection.isEmpty()) {
+                        let cursor = selection.getStartPosition();
+                        let word = model.getWordAtPosition(cursor);
+                        if (!word) {
+                            continue;
+                        }
+
+                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                        let text = model.getValueInRange(wordRange);
+                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                    } else {
+                        let text = model.getValueInRange(selection);
+                        commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                    }
+                }
+                editor.pushUndoStop();
+                editor.executeCommands(this.id, commands);
+                editor.pushUndoStop();
+            }
+        });
+
+        this.$editor.onContextMenu((e) => {
+            this.emit('contextmenu', e);
+        })
+        this.$editor.onDidChangeCursorSelection((e) => {
+            this.emit('selection-changed');
+            let selected = this.selected.length > 0;
+            this.emit('menu-update', 'edit|formatting|to upper case', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|to lower case', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|capitalize', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|inverse case', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
+            this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
+        })
         this.$model = this.$editor.getModel();
         this.$model.updateOptions({
             tabSize: 3,
             insertSpaces: true
         });
-        if (this.$loaded) {
-            var r = this.$loaded.length;
-            while (r--)
-                this.$loaded[r]();
-        }
+        this.$model.onDidChangeContent((e) => {
+            this.changed = true;
+            //TODO update file size
+            this.emit('changed');
+        })
         setTimeout(() => {
             this.resize();
         }, 100);
+        this.emit('created');
     }
 
-    public refresh() { }
+    get file(): string {
+        return super.file;
+    }
+    set file(value: string) {
+        if (this.file != value) {
+            super.file = value;
+            $('#' + this.parent.id + '-filename').text(value);
+            var ext = path.extname(this.file);
+            switch (ext) {
+                case '.c':
+                case '.h':
+                    //monaco.editor.setModelLanguage(this.$model, 'lpc');
+                    break;
+                default:
+                    var found = monaco.languages.getLanguages().filter(l => { return l.extensions.indexOf(ext) !== -1 });
+                    if (found.length > 0)
+                        monaco.editor.setModelLanguage(this.$model, found.slice(-1)[0].id);
+                    else
+                        monaco.editor.setModelLanguage(this.$model, 'plaintext');
+                    break;
+            }
+
+        }
+    }
+
+    public refresh() { this.emit('refreshed'); }
 
     public open() {
         if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
@@ -841,24 +1030,81 @@ export class CodeMonacoEditor extends EditorBase {
         this.changed = false;
     }
 
-    public save() { }
+    public save() {
+        this.$saving = true;
+        this.write(this.$model.getValue());
+        this.changed = false;
+        this.new = false;
+        this.emit('saved');
+    }
 
-    public revert() { }
+    public revert() {
+        if (!this.new)
+            this.open();
+        else {
+            this.$model.setValue('');
+        }
+        this.changed = false;
+        this.emit('reverted');
+    }
 
-    public get selected() { return ''; }
-    public selectAll() { };
-    public cut() { }
-    public copy() { }
-    public paste() { }
+    public get selected() { return this.$model.getValueInRange(this.$editor.getSelection()) || ''; }
+    public selectAll() {
+        this.$editor.setSelection({
+            startLineNumber: 0,
+            startColumn: 0,
+            endColumn: this.$model.getLineMinColumn(this.$model.getLineCount()),
+            endLineNumber: this.$model.getLineCount()
+        });
+    };
+    public cut() { this.$editor.getAction('editor.action.clipboardCutAction').run(); }
+    public copy() { this.$editor.getAction('editor.action.clipboardCopyAction').run(); }
+    public paste() { this.$editor.getAction('editor.action.clipboardPasteAction').run(); }
     public delete() { }
-    public undo() { }
-    public redo() { }
-    public close() { }
-    public watch(action: string, file: string, details?) { }
+    public undo() { this.$editor.trigger('', 'undo', null); }
+    public redo() { this.$editor.trigger('', 'redo', null); }
+    public close() {
+        if (this.file && this.file.length > 0 && !this.new)
+            this.emit('watch-stop', [this.file]);
+    }
+    public watch(action: string, file: string, details?) {
+        if (file != this.file || this.new)
+            return;
+        switch (action) {
+            case 'add':
+            case 'change':
+            case 'unlink':
+                if (!this.$saving)
+                    this.emit('reload', action);
+                else
+                    this.$saving = false;
+                break;
+        }
+    }
     public set spellcheck(value: boolean) { };
-    public find() { }
-    public replace() { }
-    public supports(what) { return false; }
+    public find() { this.$editor.getAction('actions.find').run(); }
+    public replace() { this.$editor.getAction('editor.action.startFindReplaceAction').run(); }
+    public supports(what) {
+        switch (what) {
+            case 'cut':
+            case 'copy':
+            case 'delete':
+                return this.selected.length > 0;
+            case 'undo':
+            case 'redo':
+            case 'indent':
+            case 'paste':
+            case 'find':
+            case 'replace':
+            case 'select-all':
+            case 'selectall':
+            case 'menu|edit':
+            case 'menu|context':
+            case 'menu|view':
+                return true;
+        }
+        return false;
+    }
     public focus(): void { this.$editor.focus(); }
     public resize() {
         this.$editor.layout();
@@ -869,21 +1115,130 @@ export class CodeMonacoEditor extends EditorBase {
         return 2;
     }
 
-    public checkReady(callback) {
-        if (!this.$editor) {
-            if (!this.$loaded) this.$loaded = [];
-            this.$loaded.unshift(callback);
-            return false;
+    public menu(menu) {
+        if (menu === 'edit' || menu === 'context') {
+            var selected = this.selected.length > 0;
+            return [
+                {
+                    label: 'Formatting',
+                    submenu: [
+                        {
+                            label: 'Insert Color...',
+                            click: () => {
+                                ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
+                                var setcolor = (event, type, color, code, window) => {
+                                    if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
+                                        return;
+                                    this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
+                                    ipcRenderer.removeListener('set-color', setcolor);
+                                }
+                                ipcRenderer.on('set-color', setcolor);
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'To Upper Case',
+                            enabled: selected,
+                            click: () => {
+                                this.$editor.getAction('editor.action.transformToUppercase').run();
+                            }
+                        },
+                        {
+                            label: 'To Lower Case',
+                            enabled: selected,
+                            click: () => {
+                                this.$editor.getAction('editor.action.transformToLowercase').run();
+                            }
+                        },
+                        {
+                            label: 'Capitalize',
+                            enabled: selected,
+                            click: () => {
+                                this.$editor.getAction('jimud.action.transformToCapitalize').run();
+                            }
+                        },
+                        {
+                            label: 'Inverse Case',
+                            enabled: selected,
+                            click: () => {
+                                this.$editor.getAction('jimud.action.transformToInverse').run();
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'Line Comment',
+                            accelerator: 'CmdOrCtrl+/',
+                            click: () => {
+                                this.$editor.getAction('editor.action.commentLine').run();
+                            }
+                        },
+                        {
+                            label: 'Block Comment',
+                            accelerator: 'Alt+Shift+A',
+                            click: () => {
+                                this.$editor.getAction('editor.action.blockComment').run();
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'Format Document',
+                            accelerator: 'Alt+Shift+F',
+                            click: () => {
+                                this.$editor.getAction('editor.action.formatDocument').run();
+                            }
+                        },
+                    ]
+                },
+                {
+                    label: 'Folding',
+                    submenu: [
+                        {
+                            label: 'Expand All',
+                            accelerator: "CmdOrCtrl+>",
+                            click: () => {
+                                this.$editor.getAction('editor.unfoldAll').run();
+                            }
+                        },
+                        {
+                            label: 'Collapse All',
+                            accelerator: "CmdOrCtrl+<",
+                            click: () => {
+                                this.$editor.getAction('editor.foldAll').run();
+                            }
+                        }
+                    ]
+                }
+            ]
         }
-        else if (callback)
-            callback();
+        if (menu === 'view')
+            return [
+                {
+                    label: 'Toggle Word Wrap',
+                    accelerator: 'Alt+Z',
+                    click: () => {
+                        this.$editor.updateOptions({ wordWrap: (this.$editor.getConfiguration().wrappingInfo.isViewportWrapping ? 'off' : 'on') });
+                    },
+                }
+            ]
     }
 
-    public menu(menu) {
-        //$editor.getAction('editor.action.formatDocument').run()
+    public insert(text) {
+        let selections = this.$editor.getSelections();
+        let commands: monaco.editor.ICommand[] = [];
+        for (let i = 0, len = selections.length; i < len; i++) {
+            let selection = selections[i];
+            if (selection.isEmpty()) {
+                let cursor = selection.getStartPosition();
+                commands.push(new ReplaceCommand(new monaco.Range(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column), text));
+            } else {
+                commands.push(new ReplaceCommand(selection, text));
+            }
+        }
+        this.$editor.pushUndoStop();
+        this.$editor.executeCommands('jiMUD.action.insert', commands);
+        this.$editor.pushUndoStop();
     }
 }
-
 
 enum TokenType {
     SEMICOLON = 0,

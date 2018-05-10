@@ -5,6 +5,9 @@
 - **Changed:**
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
+- **Fixed:**
+  - Code editor:
+    - Fix insert color dialog
 
 ## 0.4.44
 

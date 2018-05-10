@@ -501,7 +501,7 @@
     /*global _ready:true*/
     const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
-    const { DebugTimer, CodeMonacoEditor, VirtualEditor } = require('./js/code.editor');
+    const { DebugTimer, MonacoCodeEditor, VirtualEditor } = require('./js/code.editor');
     const { EditorSettings } = require('./js/code.editor.settings');
 
     const { dialog, Menu, MenuItem } = remote;
@@ -797,7 +797,7 @@
     });
     manager.on('activated', (e) => {
         if (e.panel.editor)
-            setTimeout(()=> {e.panel.editor.focus(); }, 50);
+            setTimeout(() => { e.panel.editor.focus(); }, 50);
         doUpdate(1);
     });
     manager.on('deactivated', (e) => {
@@ -1029,6 +1029,7 @@
         menubar.updateItem('edit|replace', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('replace') : false });
         $("#btn-refresh").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('refresh') : true);
         menubar.updateItem('view|refresh', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('refresh') : false });
+        menubar.updateItem('edit|select all', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('selectall') : false });
     }
 
     // List all files in a directory in Node.js recursively in a synchronous fashion
@@ -1273,10 +1274,7 @@
     function doEditor() {
         if (!manager.active || !manager.active.editor || !manager.active.editor.supports('copy'))
             return;
-        ipcRenderer.send('show-window', 'editor');
-        setTimeout(() => {
-            ipcRenderer.send('send-editor', manager.active.editor.selected, 'editor');
-        });
+        ipcRenderer.send('send-editor', manager.active.editor.selected, 'editor', true);
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -1633,6 +1631,12 @@
         }
         else
             openFile(file, remoteFile);
+    });
+
+    ipcRenderer.on('send-editor', (event, text, window) => {
+        if (!manager.active || !manager.active.editor || window != "code-editor") 
+            return;
+        manager.active.editor.insert(text);
     });
 
     ipcRenderer.on('GMCP-received', (event, data) => {
@@ -2124,7 +2128,7 @@
             //if (path.extname(file) === '.map')
             //p.editor = new VirtualEditor(data);
             //else            
-            p.editor = new CodeMonacoEditor(data);
+            p.editor = new MonacoCodeEditor(data);
             p.editor.options = options.editorOptions;
             if (!_watched[data.file]) {
                 _watched[data.file] = 1;
