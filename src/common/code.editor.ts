@@ -57,7 +57,6 @@ export function SetupEditor() {
                             { label: 'this_object()', kind: monaco.languages.CompletionItemKind.Function },
                             { label: 'message', kind: monaco.languages.CompletionItemKind.Function },
                             { label: 'random', kind: monaco.languages.CompletionItemKind.Function }
-
                         ];
                     }
                 });
@@ -76,6 +75,37 @@ export function SetupEditor() {
                     { token: 'datatype', foreground: 'ff0000' },
                     { token: 'constant', foreground: 'ff0000', fontStyle: 'bold' },
                 ]
+            });
+            monaco.languages.registerDocumentFormattingEditProvider('lpc', {
+                provideDocumentFormattingEdits(model, options, token): Promise<monaco.languages.TextEdit[]> {
+                    var $indenter = new lpcIndenter();
+                    $indenter.on('error', (e) => {
+                        reject(e);
+                    });
+                    var $formatter = new lpcFormatter();
+                    var code = $formatter.format(model.getValue());
+                    $indenter.indent(code);
+                    return new Promise<monaco.languages.TextEdit[]>((resolve, reject) => {
+                        $indenter.on('complete', (lines) => {
+                            resolve([{
+                                range: {
+                                    startLineNumber:0,
+                                    startColumn: 0,
+                                    endColumn: model.getLineMinColumn(model.getLineCount()),
+                                    endLineNumber: model.getLineCount()
+                                },
+                                text: lines.join('\n')
+                            }]);
+                        });
+                    });
+                    /*
+                    return new PromiseLike()
+                    return [{
+                        range: null,
+                        text: model.getValue()
+                    }]
+                    */
+                }
             });
 
             resolve(monaco);
@@ -760,6 +790,7 @@ export class VirtualEditor extends EditorBase {
 export class CodeEditor2 extends EditorBase {
     private $el: HTMLElement;
     private $editor;
+    private $model;
     private $loaded;
 
     constructor(options?: EditorOptions) {
@@ -785,7 +816,8 @@ export class CodeEditor2 extends EditorBase {
             contextmenu: false,
             theme: 'lpcTheme'
         });
-        this.$editor.getModel().updateOptions({
+        this.$model = this.$editor.getModel();
+        this.$model.updateOptions({
             tabSize: 3,
             insertSpaces: true
         });
