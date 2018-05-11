@@ -143,7 +143,6 @@ body {
     text-decoration: underline;
 }
 
-
 .statusbar {
     bottom: 0;
     position: absolute;
@@ -173,6 +172,15 @@ body {
 
 #statusbar-location {
     min-width: 100px;
+}
+
+#statusbar-file {
+    max-width: 40%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    direction: rtl;
 }
 
 .ace_status-indicator {

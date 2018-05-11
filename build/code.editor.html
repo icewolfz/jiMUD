@@ -1111,6 +1111,7 @@
         sbSize.textContent = enabled ? ('Length: ' + manager.active.editor.length.toLocaleString()) : '';
         sbMessage.textContent = '';
         sbName.textContent = enabled ? manager.active.editor.file : '';
+        sbName.title = enabled ? manager.active.editor.file : '';
         if (enabled && manager.active.editor.type === 1) {
             var l = manager.active.editor.location;
             sbLocation.textContent = enabled ? (`Ln ${l[1]}, Col ${l[0]}`) : 'Ln 0, Col 0';
