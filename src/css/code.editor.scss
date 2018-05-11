@@ -124,6 +124,7 @@ body {
     right: 0;
     overflow: auto;
     outline: none;
+    background: white;
 }
 
 .output .error {
@@ -180,7 +181,7 @@ body {
 
 .cm {
     top: 26px !important;
-    bottom: 20px !important;
+    bottom: 20px;
 }
 
 .cm-tabpane-container {

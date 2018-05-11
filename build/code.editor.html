@@ -1309,7 +1309,7 @@
             output.css('display', 'block');
         }
         else {
-            dock.css('bottom', '0');
+            dock.css('bottom', '');
             output.css('display', 'none');
         }
         buildRecent();
@@ -1465,7 +1465,7 @@
             output.css('display', 'block');
         }
         else {
-            dock.css('bottom', '0');
+            dock.css('bottom', '');
             output.css('display', 'none');
         }
         $(window).trigger('resize');
@@ -1480,7 +1480,7 @@
 
     function closeOutput() {
         options.output = false;
-        dock.css('bottom', '0');
+        dock.css('bottom', '');
         output.css('display', 'none');
         $(window).trigger('resize');
         doUpdate(16);
