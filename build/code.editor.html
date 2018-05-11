@@ -15,25 +15,28 @@
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <script>
+        /* global manager, inverse, capitalize */
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
+        const { ReplaceCommandThatPreservesSelection, ReplaceCommand } = require('./js/editor/monaco');
         SetupEditor().then((monaco) => {
-            window.$editor = monaco.editor.create(this.$el, {
+            window.$editor = monaco.editor.create(document.getElementById('cm-tabpane'), {
                 language: 'lpc',
                 autoIndent: true,
                 scrollBeyondLastLine: false,
                 rulers: [80],
                 contextmenu: false,
-                theme: 'lpcTheme'
+                theme: 'lpcTheme',
+                model: null
             });
 
             window.$editor.addAction({
                 id: 'jimud.action.transformToInverse',
                 label: 'Transform to Inverse',
-                run: function (editor: monaco.editor.IStandaloneCodeEditor) {
+                run: function (editor) {
                     let selections = editor.getSelections();
                     let model = editor.getModel();
-                    let commands: monaco.editor.ICommand[] = [];
+                    let commands = [];
 
                     for (let i = 0, len = selections.length; i < len; i++) {
                         let selection = selections[i];
@@ -62,10 +65,10 @@
             window.$editor.addAction({
                 id: 'jimud.action.transformToCapitalize',
                 label: 'Transform to Capitalize',
-                run: function (editor: monaco.editor.IStandaloneCodeEditor) {
+                run: function (editor) {
                     let selections = editor.getSelections();
                     let model = editor.getModel();
-                    let commands: monaco.editor.ICommand[] = [];
+                    let commands = [];
 
                     for (let i = 0, len = selections.length; i < len; i++) {
                         let selection = selections[i];
@@ -94,10 +97,10 @@
             window.$editor.addAction({
                 id: 'jimud.action.insertColor',
                 label: 'Transform to Capitalize',
-                run: function (editor: monaco.editor.IStandaloneCodeEditor) {
+                run: function (editor) {
                     let selections = editor.getSelections();
                     let model = editor.getModel();
-                    let commands: monaco.editor.ICommand[] = [];
+                    let commands = [];
 
                     for (let i = 0, len = selections.length; i < len; i++) {
                         let selection = selections[i];
@@ -124,23 +127,13 @@
             });
 
             window.$editor.onContextMenu((e) => {
-                this.emit('contextmenu', e);
+                manager.active.editor.emit('contextmenu', e);
             });
             window.$editor.onDidChangeCursorSelection((e) => {
                 manager.active.editor.selectionChanged(e);
-                /*
-                this.emit('selection-changed');
-                let selected = this.selected.length > 0;
-                this.emit('menu-update', 'edit|formatting|to upper case', { enabled: selected });
-                this.emit('menu-update', 'edit|formatting|to lower case', { enabled: selected });
-                this.emit('menu-update', 'edit|formatting|capitalize', { enabled: selected });
-                this.emit('menu-update', 'edit|formatting|inverse case', { enabled: selected });
-                this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
-                this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
-                */
             });
             window.$editor.onDidChangeCursorPosition((e) => {
-                this.emit('location-changed', e.position.column, e.position.lineNumber);
+                manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
             });
             _ready = true;
         });        
@@ -635,7 +628,7 @@
 
     const { dialog, Menu, MenuItem } = remote;
     const { Menubar } = require('./js/menubar');
-    const { parseTemplate, capitalize, existsSync, isDirSync } = require('./js/library');
+    const { inverse, parseTemplate, capitalize, existsSync, isDirSync } = require('./js/library');
 
     const moment = require('moment');
     const chokidar = require('chokidar');
@@ -927,15 +920,29 @@
     manager.on('removed', (e) => {
         e.panel.editor.close();
         delete _editors[e.panel.editor.file];
+        if (manager.panels.length === 0)
+            window.$editor.domElement.style.display = 'none';
         doUpdate(1);
     });
     manager.on('activated', (e) => {
         if (_opening !== 0) return;
-        if (e.panel.editor)
+        if (e.panel.editor) {
+            if (e.panel.editor.type === 1) {
+                window.$editor.domElement.style.display = '';
+                e.panel.editor.activate(window.$editor);
+                window.$editor.layout();
+            }
+            else
+                window.$editor.domElement.style.display = 'none';
             setTimeout(() => { e.panel.editor.focus(); }, 50);
+        }
+        else
+            window.$editor.domElement.style.display = 'none';
         doUpdate(1);
     });
     manager.on('deactivated', (e) => {
+        if (e.panel.editor.type === 1)
+            e.panel.editor.deactivate(window.$editor);
     });
     manager.on('dragenter', (e) => {
         event.dataTransfer.dropEffect = "copy";
@@ -1543,6 +1550,8 @@
                 _editors[p].editor.resize();
             }
             if (manager.active && manager.active.editor) manager.active.editor.focus();
+            if(window.$editor)
+                window.$editor.layout();
         });
 
         $(document).mouseup(function (e) {
@@ -1993,6 +2002,7 @@
         var panels = [];
         _opening++;
         timer.start();
+        timer.start();
         for (var f = 0, fl = files.length; f < fl; f++) {
             if (exists && !existsSync(files[f].file)) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2007,9 +2017,9 @@
         }
         timer.end('End creating panels');
         timer.start();
+        _opening--;
         manager.addPanels(panels);
         timer.end('End adding panels');
-        _opening--;
         timer.end("Open files loaded");
         doUpdate(25);
     }

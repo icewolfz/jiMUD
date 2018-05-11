@@ -10,11 +10,11 @@ body {
 
 .cm {
     top: 26px !important;
-    bottom: 20px! important;
+    bottom: 20px !important;
 }
 
 .cm-tabpane {
-    background-color: #f5f5f5;
+    border-top: 1px solid #ccc;
 }
 
 .btn-toolbar {
@@ -183,6 +183,10 @@ body {
 
 .ace_status-indicator {
     float: right;
+}
+
+.cm-tabpane-container {
+    padding-top: 1px;
 }
 
 .cm-tabstrip li {
