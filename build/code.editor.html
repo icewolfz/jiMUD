@@ -16,7 +16,7 @@
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <script>
         var _ready = false;
-        const { SetupEditor } = require('./js/code.editor');
+        const { SetupEditor } = require('./js/editor/code.editor');
         SetupEditor().then((monaco) => {
             _ready = true;
         });        
@@ -501,8 +501,8 @@
     /*global _ready:true*/
     const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
-    const { DebugTimer, MonacoCodeEditor, VirtualEditor } = require('./js/code.editor');
-    const { EditorSettings } = require('./js/code.editor.settings');
+    const { DebugTimer, MonacoCodeEditor, VirtualEditor } = require('./js/editor/code.editor');
+    const { EditorSettings } = require('./js/editor/code.editor.settings');
 
     const { dialog, Menu, MenuItem } = remote;
     const { Menubar } = require('./js/menubar');

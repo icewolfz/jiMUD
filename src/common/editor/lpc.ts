@@ -1,1265 +1,802 @@
-/// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
+/// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import EventEmitter = require('events');
-import { existsSync, formatSize, capitalize, inverse } from './library';
-import { conf, language, loadCompletion } from './lpc';
-const { clipboard, ipcRenderer } = require('electron');
+import { parseTemplate, walkSync } from './../library';
 const fs = require('fs-extra');
 const path = require('path');
-const crypto = require('crypto');
 
-//const loader = require('monaco-loader')
+import IRichLanguageConfiguration = monaco.languages.LanguageConfiguration;
+import ILanguage = monaco.languages.IMonarchLanguage;
 
-declare let ace;
+export const conf: IRichLanguageConfiguration = {
+    comments: {
+        lineComment: '//',
+        blockComment: ['/*', '*/'],
+    },
+    brackets: [
+        ['({', '})'],
+        ['([', '])'],
+        ['{', '}'],
+        ['[', ']'],
+        ['(', ')']
+    ],
+    autoClosingPairs: [
+        { open: '([', close: '])' },
+        { open: '({', close: '})' },
+        { open: '[', close: ']' },
+        { open: '{', close: '}' },
+        { open: '(', close: ')' },
+        { open: '\'', close: '\'', notIn: ['string', 'comment'] },
+        { open: '"', close: '"', notIn: ['string'] },
+    ],
+    surroundingPairs: [
+        { open: '({', close: '})' },
+        { open: '([', close: '])' },
+        { open: '{', close: '}' },
+        { open: '[', close: ']' },
+        { open: '(', close: ')' },
+        { open: '"', close: '"' },
+        { open: '\'', close: '\'' },
+    ],
+    folding: {
+        markers: {
+            start: new RegExp("^\\s*//\\s+[rR]egion\\b"),
+            end: new RegExp("^\\s*//\\s+[eE]nd[rR]egion\\b")
+        }
+    }
+};
 
-interface loadMonacoOptions {
-    baseUrl?: string
+export const language = <ILanguage>{
+    defaultToken: '',
+    tokenPostfix: '.c',
+
+    brackets: [
+        { token: 'delimiter.array', open: '({', close: '})' },
+        { token: 'delimiter.mapping', open: '([', close: '])' },
+        { token: 'delimiter.curly', open: '{', close: '}' },
+        { token: 'delimiter.parenthesis', open: '(', close: ')' },
+        { token: 'delimiter.square', open: '[', close: ']' },
+        { token: 'delimiter.angle', open: '<', close: '>' }
+    ],
+
+    keywords: [
+        'break',
+        'case',
+        'catch',
+        'class',
+        'const',
+        'continue',
+        'default',
+        'do',
+        'foreach',
+        'else',
+        'finally',
+        'for',
+        'goto',
+        'if',
+        'in',
+        'undefined',
+        'private',
+        'protected',
+        'public',
+        'return',
+        'static',
+        'struct',
+        'switch',
+        'this',
+        'try',
+        'virtual',
+        'while',
+        'nosave',
+        'varrags',
+        'nomask',
+        'inherit',
+
+    ],
+    datatypes: [
+        'void',
+        'float',
+        'int',
+        'object',
+        'function',
+        'mapping',
+        'string',
+        'mixed',
+        'object *',
+        'function *',
+        'float *',
+        'mapping *',
+        'string *',
+        'int *',
+        'mixed *',
+        'object*',
+        'function*',
+        'float*',
+        'mapping*',
+        'string*',
+        'int*',
+        'mixed*',
+        'buffer',
+    ],
+
+    const: [
+        'MUDOS',
+        '__PORT__',
+        '__ARCH__',
+        '__COMPILER__',
+        '__OPTIMIZATION__',
+        'MUD_NAME',
+        'HAS_ED',
+        'HAS_PRINTF',
+        'HAS_RUSAGE',
+        'HAS_DEBUG_LEVEL',
+        '__DIR__',
+        'FLUFFOS',
+        '__WIN32__',
+        '__HAS_RUSAGE__',
+        '__M64__',
+        '__PACKAGE_DB__',
+        '__GET_CHAR_IS_BUFFERED__',
+        '__DSLIB__',
+        '__DWLIB__',
+        '__FD_SETSIZE__',
+        '__VERSION__',
+        '__DEBUG__',
+        'SIZEOFINT',
+        'MAX_INT',
+        'MIN_INT',
+        'MAX_FLOAT',
+        'MIN_FLOAT'
+    ],
+
+    efuns: [
+        'allocate',
+        'filter_array',
+        'map_array',
+        'member_array',
+        'sort_array',
+        'unique_array',
+        'allocate_buffer',
+        'crc32',
+        'read_buffer',
+        'write_buffer',
+        'call_other',
+        'call_out',
+        'catch',
+        'origin',
+        'previous_object',
+        'query_shadowing',
+        'remove_call_out',
+        'shadow',
+        'this_object',
+        'throw',
+        'generate_source',
+        'ed_cmd',
+        'ed_start',
+        'query_ed_mode',
+        'cp',
+        'file_size',
+        'get_dir',
+        'link',
+        'mkdir',
+        'read_bytes',
+        'read_file',
+        'rename',
+        'rm',
+        'rmdir',
+        'stat',
+        'tail',
+        'write_bytes',
+        'write_file',
+        'acos',
+        'asin',
+        'atan',
+        'ceil',
+        'cos',
+        'exp',
+        'floor',
+        'log',
+        'pow',
+        'sin',
+        'sqrt',
+        'tan',
+        'to_int',
+        'apply',
+        'bind',
+        'evaluate',
+        'map',
+        'restore_variable',
+        'save_variable',
+        'sizeof',
+        'typeof',
+        'add_action',
+        'command',
+        'commands',
+        'disable_commands',
+        'disable_wizard',
+        'ed',
+        'enable_commands',
+        'exec',
+        'find_player',
+        'get_char',
+        'in_edit',
+        'in_input',
+        'input_to',
+        'interactive',
+        'message',
+        'notify_fail',
+        'printf',
+        'query_host_name',
+        'query_idle',
+        'query_ip_name',
+        'query_ip_number',
+        'query_snoop',
+        'query_snooping',
+        'receive',
+        'remove_action',
+        'resolve',
+        'say',
+        'set_this_player',
+        'shout',
+        'snoop',
+        'this_interactive',
+        'this_player',
+        'userp',
+        'users',
+        'write',
+        'cache_stats',
+        'debug_info',
+        'debugmalloc',
+        'dump_file_descriptors',
+        'dump_prog',
+        'dump_socket_status',
+        'dumpallobj',
+        'get_config',
+        'malloc_status',
+        'memory_info',
+        'moncontrol',
+        'mud_status',
+        'opcprof',
+        'query_load_average',
+        'refs',
+        'rusage',
+        'set_debug_level',
+        'set_malloc_mask',
+        'swap',
+        'time_expression',
+        'trace',
+        'traceprefix',
+        'allocate_mapping',
+        'each',
+        'filter_mapping',
+        'keys',
+        'map_delete',
+        'map_mapping',
+        'match_path',
+        'unique_mapping',
+        'values',
+        'author_stats',
+        'domain_stats',
+        'enable_wizard',
+        'export_uid',
+        'find_living',
+        'geteuid',
+        'getuid',
+        'living',
+        'livings',
+        'query_privs',
+        'set_author',
+        'set_light',
+        'set_living_name',
+        'set_privs',
+        'seteuid',
+        'wizardp',
+        'random',
+        'to_float',
+        'all_inventory',
+        'children',
+        'clone_object',
+        'clonep',
+        'deep_inventory',
+        'destruct',
+        'environment',
+        'file_name',
+        'first_inventory',
+        'load_object',
+        'master',
+        'move_object',
+        'new',
+        'next_inventory',
+        'objects',
+        'present',
+        'query_heart_beat',
+        'reload_object',
+        'restore_object',
+        'save_object',
+        'set_heart_beat',
+        'set_hide',
+        'virtualp',
+        'parse_command',
+        'process_string',
+        'process_value',
+        'query_verb',
+        'socket_accept',
+        'socket_acquire',
+        'socket_address',
+        'socket_bind',
+        'socket_close',
+        'socket_connect',
+        'socket_create',
+        'socket_error',
+        'socket_listen',
+        'socket_release',
+        'socket_write',
+        'break_string',
+        'capitalize',
+        'clear_bit',
+        'crypt',
+        'explode',
+        'implode',
+        'lower_case',
+        'upper_case',
+        'reg_assoc',
+        'regexp',
+        'replace_string',
+        'set_bit',
+        'sprintf',
+        'sscanf',
+        'strcmp',
+        'stringp',
+        'strlen',
+        'strsrch',
+        'test_bit',
+        'all_previous_objects',
+        'call_out_info',
+        'ctime',
+        'deep_inherit_list',
+        'error',
+        'eval_cost',
+        'find_call_out',
+        'function_exists',
+        'function_profile',
+        'inherit_list',
+        'inherits',
+        'localtime',
+        'max_eval_cost',
+        'reclaim_objects',
+        'replace_program',
+        'reset_eval_cost',
+        'set_eval_limit',
+        'set_reset',
+        'shutdown',
+        'time',
+        'uptime',
+        'find_object',
+        'functionp',
+        'intp',
+        'arrayp',
+        'stringp',
+        'pointerp',
+        'objectp',
+        'bufferp',
+        'floatp',
+        'nullp',
+        'undefinedp',
+        'errorp',
+        'mapp'
+    ],
+
+    sefuns: [
+        'year',
+        'wrap',
+        'wizardp',
+        'visible',
+        'version',
+        'user_path',
+        'user_exists',
+        'unguarded',
+        'unescape_string',
+        'undefined',
+        'translate_lines',
+        'translate_file',
+        'translate_block',
+        'translate',
+        'to_object',
+        'textencode',
+        'textdecode',
+        'trim',
+        'ltrim',
+        'rtrim',
+        'reverse_string',
+        'starts_with',
+        'ends_with',
+        'tell_room',
+        'tell_player',
+        'tell_object',
+        'syntax_evaluate',
+        'syntax_compile',
+        'substr',
+        'strip_whitespace',
+        'strip_leading_trailing',
+        'strip_colours',
+        'strip_colors',
+        'color_gradient',
+        'stack_size',
+        'stack_push',
+        'stack_pop',
+        'stack_peek',
+        'stack_init',
+        'simple_tense',
+        'item_list',
+        'shout_msg',
+        'shout_all',
+        'shout',
+        'sexplode',
+        'season',
+        'say',
+        'save_database',
+        'round',
+        'rexplode',
+        'render_columns',
+        'remove_item_from_array',
+        'remove_element_from_array',
+        'read_database',
+        'random_member',
+        'query_path',
+        'query_opposite_exit',
+        'query_night',
+        'query_host_port',
+        'present_tense',
+        'present_clones_children',
+        'present_clones',
+        'possessive_noun',
+        'pluralize',
+        'pick_elements',
+        'percent',
+        'path_file',
+        'past_tense',
+        'parse_objects',
+        'parse_eini_tree',
+        'parse_eini',
+        'owner_euid',
+        'ordinal_num',
+        'ordinal',
+        'newbiep',
+        'mumudlib_version',
+        'mud_name',
+        'mud_currencies',
+        'month',
+        'mkdir_p',
+        'minutes',
+        'midp',
+        'member_group',
+        'logins',
+        'log_file',
+        'load_object',
+        'load_database',
+        'legendp',
+        'iso_date_time',
+        'iso_date',
+        'instances',
+        'inWater',
+        'immortalp',
+        'identify',
+        'hour',
+        'high_mortalp',
+        'hiddenp',
+        'get_objects',
+        'get_object',
+        'format_string',
+        'format_stack',
+        'format_page',
+        'format_as_columns',
+        'find_object_or_load',
+        'file_exists',
+        'expand_exit',
+        'exclude_array',
+        'event_pending',
+        'event_log',
+        'event',
+        'elderp',
+        'editor_string',
+        'dump_socket_status',
+        'distinct_array',
+        'distance',
+        'deep_copy',
+        'day',
+        'date',
+        'database_filter',
+        'cut_spaces',
+        'currency_weight',
+        'currency_value',
+        'currency_rate',
+        'currency_inflation',
+        'creatorp',
+        'creator_file',
+        'copy',
+        'convert_name',
+        'consolidate',
+        'comma_number',
+        'comma_list',
+        'consolidate_list',
+        'combinations',
+        'clone_unique',
+        'clone_max_children',
+        'clone_max',
+        'clone',
+        'check_password',
+        'center',
+        'cardinal',
+        'capwords',
+        'bf_set',
+        'bf_query',
+        'bf_new',
+        'bf_dump',
+        'bf_count',
+        'bf_clear',
+        'bf_assoc',
+        'base_name',
+        'avg',
+        'atoi',
+        'arrange_string',
+        'archp',
+        'architecture',
+        'alphabet',
+        'all_users',
+        'all_plurals',
+        'all_combinations',
+        'adminp',
+        'add_vector',
+        'abs',
+        'a_or_an',
+        'string_parts',
+        'clower_case',
+        'cupper_case',
+        'sound',
+        'music',
+        'apprenticep',
+        'tztime',
+        'fansi',
+        'query_host_ip',
+        'color_rainbow',
+        'base64_encode',
+        'base64_decode',
+        'mudlib',
+        'mudlib_version',
+        'absolute_path',
+        'absolute_value',
+        'create_auto_load',
+        'save_auto_load',
+        'find_room'
+    ],
+
+    abbr: [
+        'FOOL',
+        'TP',
+        'TO',
+        'ENVTP',
+        'HIS',
+        'HE',
+        'HIM',
+        'QP',
+        'QS',
+        'QO',
+        'SJ',
+        'OJ',
+        'PS',
+        'TPQCN',
+        'TPQN',
+        'PO',
+        'ETP',
+        'ETO',
+        'ENVTO',
+        'QCN',
+        'QN'
+    ],
+
+    applies: [
+        'catch_tell',
+        'logon',
+        'net_dead',
+        'process_input',
+        'receive_message',
+        'receive_snoop',
+        'telnet_suboption',
+        'terminal_type',
+        'write_prompt',
+        //master
+        'author_file',
+        'compile_object',
+        'connect',
+        'crash',
+        'creator_file',
+        'domain_file',
+        'epilog',
+        'error_handler',
+        'flag',
+        'get_bb_uid',
+        'get_include_path',
+        'get_mud_stats',
+        'get_root_uid',
+        'get_save_file_name',
+        'log_error',
+        'make_path_absolute',
+        'object_name',
+        'preload',
+        'privs_file',
+        'retrieve_ed_setup',
+        'save_ed_setup',
+        'valid_bind',
+        'valid_database',
+        'valid_hide',
+        'valid_link',
+        'valid_object',
+        'valid_override',
+        'valid_read',
+        'valid_save_binary',
+        'valid_seteuid',
+        'valid_shadow',
+        'valid_socket',
+        'valid_write',
+        'view_errors',
+        //master end
+        'clean_up',
+        'create',
+        'id',
+        'init',
+        'move_or_destruct',
+        'reset',
+        'heart_beat'
+    ],
+
+    operators: [
+        '=', '>', '<', '!', '~', '?', ':',
+        '==', '<=', '>=', '!=', '&&', '||', '++', '--',
+        '+', '-', '*', '/', '&', '|', '^', '%', '<<',
+        '>>', '>>>', '+=', '-=', '*=', '/=', '&=', '|=',
+        '^=', '%=', '<<=', '>>=', '>>>=', '->', '::'
+    ],
+
+    // we include these common regular expressions
+    symbols: /[=><!~?:&|+\-*\/\^%]+/,
+    escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+    loatsuffix: /[fFlL]?/,
+    integersuffix: /(ll|LL|u|U|l|L)?(ll|LL|u|U|l|L)?/,
+    floatsuffix: /[fFlL]?/,
+
+    // The main tokenizer for our languages
+    tokenizer: {
+        root: [
+            //inherits
+            [/(\s*)(\w*)(::)(\w+)(\()/, ['', 'parent', 'delimiter', 'parent.function', { token: 'delimiter.parenthesis', open: '(', close: ')' }], '@brackets'],
+
+            // identifiers and keywords
+            [/[a-zA-Z_]\w*/, {
+                cases: {
+                    '@keywords': { token: 'keyword.$0' },
+                    '@datatypes': { token: 'datatype' },
+                    '@sefuns': { token: 'sefuns' },
+                    '@efuns': { token: 'efuns' },
+                    '@abbr': { token: 'abbr' },
+                    '@const': { token: 'constant' },
+                    '@applies': { token: 'applies' },
+                    '@default': 'identifier'
+                }
+            }],
+
+            // whitespace
+            { include: '@whitespace' },
+
+            [/^\s*#include/, { token: 'keyword.directive.include', next: '@include' }],
+
+            // Preprocessor directive
+            [/^\s*#\s*\w+/, 'keyword.directive'],
+
+            // delimiters and operators
+            [/[{}()\[\]]/, '@brackets'],
+            [/[<>](?!@symbols)/, '@brackets'],
+            [/@symbols/, {
+                cases: {
+                    '@operators': 'delimiter',
+                    '@default': ''
+                }
+            }],
+
+            // numbers
+            [/\d*\d+[eE]([\-+]?\d+)?(@floatsuffix)/, 'number.float'],
+            [/\d*\.\d+([eE][\-+]?\d+)?(@floatsuffix)/, 'number.float'],
+            [/0[xX][0-9a-fA-F']*[0-9a-fA-F](@integersuffix)/, 'number.hex'],
+            [/0[0-7']*[0-7](@integersuffix)/, 'number.octal'],
+            [/0[bB][0-1']*[0-1](@integersuffix)/, 'number.binary'],
+            [/\d[\d']*\d(@integersuffix)/, 'number'],
+            [/\d(@integersuffix)/, 'number'],
+
+            // delimiter: after number because of .\d floats
+            [/[;,.]/, 'delimiter'],
+
+            // strings
+            [/"([^"\\]|\\.)*$/, 'string.invalid'],  // non-teminated string
+            [/"/, 'string', '@string'],
+
+            // characters
+            [/'[^\\']'/, 'string'],
+            [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
+            [/'/, 'string.invalid']
+        ],
+
+        whitespace: [
+            [/[ \t\r\n]+/, ''],
+            [/\/\*\*(?!\/)/, 'comment.doc', '@doccomment'],
+            [/\/\*/, 'comment', '@comment'],
+            [/\/\/.*$/, 'comment'],
+        ],
+
+        comment: [
+            [/[^\/*]+/, 'comment'],
+            [/\*\//, 'comment', '@pop'],
+            [/[\/*]/, 'comment']
+        ],
+        //Identical copy of comment above, except for the addition of .doc
+        doccomment: [
+            [/[^\/*]+/, 'comment.doc'],
+            [/\*\//, 'comment.doc', '@pop'],
+            [/[\/*]/, 'comment.doc']
+        ],
+
+        string: [
+            [/[^\\"]+/, 'string'],
+            [/@escapes/, 'string.escape'],
+            [/\\./, 'string.escape.invalid'],
+            [/"/, 'string', '@pop']
+        ],
+
+        include: [
+            [/(\s*)(<)([^<>]*)(>)/, ['', 'keyword.directive.include.begin', 'string.include.identifier', { token: 'keyword.directive.include.end', next: '@pop' }]],
+            [/(\s*)(")([^"]*)(")/, ['', 'keyword.directive.include.begin', 'string.include.identifier', { token: 'keyword.directive.include.end', next: '@pop' }]]
+        ]
+    },
+};
+
+export function loadCompletion(): monaco.languages.CompletionItem[] {
+    let list: monaco.languages.CompletionItem[] = [
+        {
+            label: 'void create',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: 'void create() {\n   ::create();\n}'
+        },
+        {
+            label: 'void init',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: 'void init() {\n   ::init();\n}'
+        },
+        {
+            label: 'void reset',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: 'void reset() {\n   ::reset();\n}'
+        },
+    ];
+    const p = parseTemplate(path.join('{assets}', 'editor', 'docs'));
+    list = list.concat(getCompletionFromPath(path.join(p, 'applies', 'interactive'), monaco.languages.CompletionItemKind.Interface));
+    list = list.concat(getCompletionFromPath(path.join(p, 'applies', 'object'), monaco.languages.CompletionItemKind.Interface));
+    list = list.concat(getCompletionFromPath(path.join(p, 'constants'), monaco.languages.CompletionItemKind.Variable));
+    list = list.concat(getCompletionFromPath(path.join(p, 'efuns'), monaco.languages.CompletionItemKind.Function));
+    list = list.concat(getCompletionFromPath(path.join(p, 'sefuns'), monaco.languages.CompletionItemKind.Class));
+    return list;
 }
 
-//based on monaco-loader(https://github.com/felixrieseberg/monaco-loader), inlined to reduce load times
-export function loadMonaco(options: loadMonacoOptions = {}) {
-    return new Promise((resolve, reject) => {
-        const monacoDir = path.join(__dirname, '..', '..', 'node_modules', 'monaco-editor');
-        const loader: any = require(path.join(monacoDir, '/min/vs/loader.js'));
-        if (!loader) {
-            return reject(`Found monaco-editor in ${monacoDir}, but failed to require!`);
-        }
-        loader.require.config({
-            baseUrl: options.baseUrl || `file:///${monacoDir}/min`
-        });
-        (<any>self).module = undefined;
-        (<any>self).process.browser = true;
-        loader.require(['vs/editor/editor.main'], () => {
-            if (monaco) {
-                resolve(monaco)
-            } else {
-                reject('Monaco loaded, but could not find global "monaco"')
+function getCompletionFromPath(p, kind?: monaco.languages.CompletionItemKind): monaco.languages.CompletionItem[] {
+    let list = [];
+    let files = walkSync(p);
+    let l = files.files.length;
+    var f = 0;
+    for (; f < l; f++) {
+        list.push(
+            {
+                label: path.basename(files.files[f], path.extname(files.files[f])),
+                kind: kind
             }
-        })
-    });
-}
-
-//@TODO finish auto complete
-export function SetupEditor() {
-    return new Promise((resolve, reject) => {
-        loadMonaco().then(() => {
-            monaco.languages.register({
-                id: 'lpc',
-                extensions: ['.c', '.h'],
-                aliases: ['LPC', 'LPc']
-            });
-            monaco.languages.onLanguage('lpc', () => {
-                monaco.languages.setMonarchTokensProvider('lpc', language);
-                monaco.languages.setLanguageConfiguration('lpc', conf);
-                monaco.languages.registerCompletionItemProvider('lpc', {
-                    provideCompletionItems: function (model, position) {
-                        return loadCompletion();
-                    }
-                });
-            });
-            monaco.editor.defineTheme('lpcTheme', <monaco.editor.IStandaloneThemeData>{
-                base: 'vs',
-                inherit: true,
-                rules: [
-                    { token: 'keyword.directive.include', foreground: '008000', fontStyle: 'bold' },
-                    { token: 'keyword.directive', foreground: '008000', fontStyle: 'bold' },
-                    { token: 'parent', foreground: 'fdd835', fontStyle: 'bold' },
-                    { token: 'parent.function', foreground: 'fdd835', fontStyle: '' },
-                    { token: 'sefuns', foreground: '008080', fontStyle: 'bold' },
-                    { token: 'efuns', foreground: '008080' },
-                    { token: 'abbr', foreground: '008000', fontStyle: 'bold' },
-                    { token: 'datatype', foreground: 'ff0000' },
-                    { token: 'constant', foreground: 'ff0000', fontStyle: 'bold' },
-                    { token: 'applies', foreground: 'C45AEC', fontStyle: 'bold' },
-                ],
-                colors: {
-                    'editorGutter.background':'#f5f5f5'
-                }
-            });
-            monaco.languages.registerDocumentFormattingEditProvider('lpc', {
-                provideDocumentFormattingEdits(model, options, token): Promise<monaco.languages.TextEdit[]> {
-                    var $indenter = new lpcIndenter();
-                    $indenter.on('error', (e) => {
-                        reject(e);
-                    });
-                    var $formatter = new lpcFormatter();
-                    var code = $formatter.format(model.getValue());
-                    return new Promise<monaco.languages.TextEdit[]>((resolve, reject) => {
-                        $indenter.on('complete', (lines) => {
-                            resolve([{
-                                range: {
-                                    startLineNumber: 1,
-                                    startColumn: 1,
-                                    endColumn: model.getLineMaxColumn(model.getLineCount()),
-                                    endLineNumber: model.getLineCount()
-                                },
-                                text: lines.join('\n')
-                            }]);
-                        });
-                        $indenter.indent(code);
-                    });
-                }
-            });
-
-            resolve(monaco);
-        });
-    });
-}
-
-/*
-borrowed from vscode replace command system to make it easier
-*/
-class ReplaceCommandThatPreservesSelection implements monaco.editor.ICommand {
-
-    private _range: monaco.Range;
-    private _text: string;
-    private _initialSelection: monaco.Selection;
-    private _selectionId: string;
-
-    constructor(editRange: monaco.Range, text: string, initialSelection: monaco.Selection) {
-        this._range = editRange;
-        this._text = text;
-        this._initialSelection = initialSelection;
+        )
     }
-
-    public getEditOperations(model: monaco.editor.ITextModel, builder: monaco.editor.IEditOperationBuilder): void {
-        builder.addEditOperation(this._range, this._text);
-        this._selectionId = builder.trackSelection(this._initialSelection);
-    }
-
-    public computeCursorState(model: monaco.editor.ITextModel, helper: monaco.editor.ICursorStateComputerData): monaco.Selection {
-        return helper.getTrackedSelection(this._selectionId);
-    }
-}
-
-export class ReplaceCommand implements monaco.editor.ICommand {
-
-    private readonly _range: monaco.Range;
-    private readonly _text: string;
-    public readonly insertsAutoWhitespace: boolean;
-
-    constructor(range: monaco.Range, text: string, insertsAutoWhitespace: boolean = false) {
-        this._range = range;
-        this._text = text;
-        this.insertsAutoWhitespace = insertsAutoWhitespace;
-    }
-
-    public getEditOperations(model: monaco.editor.ITextModel, builder: monaco.editor.IEditOperationBuilder): void {
-        builder.addTrackedEditOperation(this._range, this._text);
-    }
-
-    public computeCursorState(model: monaco.editor.ITextModel, helper: monaco.editor.ICursorStateComputerData): monaco.Selection {
-        let inverseEditOperations = helper.getInverseEditOperations();
-        let srcRange = inverseEditOperations[0].range;
-        return new monaco.Selection(
-            srcRange.endLineNumber,
-            srcRange.endColumn,
-            srcRange.endLineNumber,
-            srcRange.endColumn
-        );
-    }
-}
-
-export class DebugTimer {
-    private $s = [];
-
-    public start() {
-        this.$s.push(new Date().getTime());
-    }
-    public end(lbl) {
-        if (this.$s.length === 0) return;
-        var e = new Date().getTime();
-        var t = e - this.$s.pop();
-        if (!lbl)
-            lbl = 'Execution time';
-        console.debug(lbl + ': ' + t);
-    }
-}
-
-export enum UpdateType {
-    none = 0, resize = 1
-}
-
-export interface EditorOptions {
-    file: string;
-    container?: any;
-    open?: boolean;
-    new?: boolean;
-    value?: any;
-    remote?: string;
-}
-
-export enum FileState {
-    closed = 0,
-    opened = 1,
-    changed = 2,
-    new = 4
-}
-
-abstract class EditorBase extends EventEmitter {
-
-    private $parent: HTMLElement;
-    private $file;
-    private $remote;
-    public state: FileState = FileState.closed;
-
-    get file(): string {
-        return this.$file;
-    }
-    set file(value: string) {
-        if (this.$file != value) {
-            if (this.$file && this.$file.length > 0 && !this.new)
-                this.emit('watch-stop', [this.$file]);
-            this.$file = value;
-            if (!this.new)
-                this.emit('watch', [this.$file]);
-        }
-    }
-
-    get filename(): string {
-        if (!this.$file || this.$file.length === 0)
-            return '';
-        return path.basename(this.$file);
-    }
-
-    get remote(): string {
-        return this.$remote;
-    }
-    set remote(value: string) {
-        if (this.$remote != value) {
-            this.$remote = value;
-        }
-    }
-
-    constructor(options?: EditorOptions) {
-        super();
-
-        if (options && options.container)
-            this.parent = options.container.container ? options.container.container : options.container;
-        else
-            this.parent = document.body;
-        this.file = options.file;
-        if (options.open)
-            this.open();
-        if (options.new)
-            this.state |= FileState.new;
-        if (options.remote)
-            this.remote = options.remote;
-    }
-
-    set parent(parent) {
-        if (typeof parent === 'string') {
-            if ((<string>parent).startsWith('#'))
-                this.$parent = document.getElementById((<string>parent).substr(1));
-            else
-                this.$parent = document.getElementById(parent);
-        }
-        else if (parent instanceof $)
-            this.$parent = parent[0];
-        else if (parent instanceof HTMLElement)
-            this.$parent = parent;
-        if (!this.$parent)
-            this.$parent = document.body;
-        this.createControl();
-    }
-
-    get parent(): HTMLElement { return this.$parent; }
-
-    abstract createControl();
-
-    public read(file?: string): string {
-        if (!file || file.length === 0)
-            file = this.file;
-        if (!file || file.length === 0)
-            return '';
-        return fs.readFileSync(this.file, 'utf8');
-    }
-
-    public write(data, file?: string) {
-        if (!file || file.length === 0)
-            file = this.file;
-        if (!file || file.length === 0) {
-            throw new Error('Invalid file');
-        }
-        fs.writeFileSync(this.file, data);
-    }
-
-    abstract revert(): void;
-
-    abstract open(): void;
-
-    abstract save(): void;
-
-    abstract close(); void;
-    abstract watch(action: string, file: string, details?): void;
-
-    abstract get selected(): string;
-    abstract focus(): void;
-    abstract resize(): void;
-    abstract supports(what): boolean;
-
-    abstract set spellcheck(value: boolean);
-
-    set changed(value: boolean) {
-        if (value)
-            this.state |= FileState.changed;
-        else
-            this.state &= ~FileState.changed;
-    }
-
-    get changed(): boolean {
-        return (this.state & FileState.changed) === FileState.changed;
-    }
-
-    set new(value: boolean) {
-        if (value)
-            this.state |= FileState.new;
-        else
-            this.state &= ~FileState.new;
-    }
-    get new(): boolean {
-        return (this.state & FileState.new) === FileState.new;
-    }
-
-    abstract set options(value);
-    abstract get options();
-    abstract get type();
-    abstract insert(text);
-}
-
-export class AceCodeEditor extends EditorBase {
-    private $el: HTMLTextAreaElement;
-    private $editorEl;
-    private $editor;
-    private $session;
-    private $statusbar: HTMLElement;
-    private $sbSize: HTMLElement;
-    private $sbMsg: HTMLElement;
-    private $indenter: lpcIndenter;
-    private $formatter: lpcFormatter;
-    private $annotations = [];
-    private $saving = false;
-    private $tooltip;
-
-    constructor(options?: EditorOptions) {
-        super(options);
-        this.$indenter = new lpcIndenter();
-        this.$formatter = new lpcFormatter();
-        this.$indenter.on('error', (e) => {
-            this.$editor.setReadOnly(false);
-            this.$annotations.push({
-                row: e.line, column: e.col, text: e.message, type: "error"
-            });
-            if (this.$annotations.length > 0)
-                this.$session.setAnnotations(this.$annotations);
-            this.emit('error', e, 'indent');
-        });
-        this.$indenter.on('start', () => {
-            this.emit('progress-start', 'indent');
-        });
-        this.$indenter.on('progress', (p) => {
-            this.emit('progress', p, 'indent');
-        });
-        this.$indenter.on('complete', (lines) => {
-            var Range = ace.require('ace/range').Range;
-            this.$session.replace(new Range(0, 0, this.$session.getLength(), Number.MAX_VALUE), lines.join('\n'));
-            this.$editor.setReadOnly(false);
-            this.emit('progress-complete', 'indent');
-        });
-        if (options.value) {
-            this.$el.value = options.value;
-            this.$session.setValue(options.value);
-            this.$session.getUndoManager().reset();
-            this.changed = false;
-        }
-    }
-
-    public createControl() {
-        if (this.$el) {
-            this.parent.removeChild(this.$el);
-        }
-        let fragment = document.createDocumentFragment();
-        this.$el = document.createElement('textarea');
-        this.$el.id = this.parent.id + '-textbox';
-        this.$el.style.display = 'none';
-        fragment.appendChild(this.$el);
-        this.$editorEl = document.createElement('pre');
-        this.$editorEl.classList.add('editor');
-        this.$editorEl.id = this.parent.id + '-editor';
-        fragment.appendChild(this.$editorEl);
-        this.parent.appendChild(fragment);
-
-        this.$editor = ace.edit(this.$editorEl.id);
-        this.$editor.commands.removeCommand('showSettingsMenu');
-        this.$editor.container.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            let position = this.$editor.selection.getCursor();
-            let token = this.$session.getTokenAt(position.row, position.column);
-            this.emit('contextmenu', e, token);
-            return false;
-        });
-        this.$session = this.$editor.getSession();
-
-        this.$editor.$blockScrolling = Infinity;
-        this.$editor.getSelectedText = function () {
-            return this.session.getTextRange(this.getSelectionRange());
-        };
-        this.$tooltip = new (ace.require('ace/tooltip').Tooltip)(this.$editor.container);
-        this.$editor.setTheme('ace/theme/visual_studio');
-        this.$session.setUseSoftTabs(true);
-
-        this.$editor.setOptions({
-            enableBasicAutocompletion: true,
-            enableSnippets: true,
-            enableLiveAutocompletion: true,
-            newLineMode: 'unix',
-            tabSize: 3
-        });
-        this.$statusbar = document.createElement('div');
-        this.$statusbar.id = this.parent.id + '-statusbar';
-        this.$statusbar.classList.add('statusbar');
-        this.$statusbar.innerHTML = '<span id="' + this.parent.id + '-filename"></span>';
-        this.$sbSize = document.createElement('span');
-        this.$sbSize.id = this.parent.id + '-filesize';
-        this.$statusbar.appendChild(this.$sbSize);
-        this.$sbMsg = document.createElement('span');
-        this.$sbMsg.id = this.parent.id + '-status-message';
-        this.$statusbar.appendChild(this.$sbSize);
-        this.parent.appendChild(this.$statusbar);
-        let StatusBar = ace.require('ace/ext/statusbar').StatusBar;
-        new StatusBar(this.$editor, this.$statusbar);
-
-        this.$session.on('change', (e) => {
-            var d = this.$session.getValue();
-            this.changed = true;
-            this.$sbSize.textContent = 'File size: ' + formatSize(d.length);
-            this.emit('changed');
-        });
-        this.$session.getSelection().on('changeSelection', () => {
-            this.emit('selection-changed');
-            let selected = this.selected.length > 0;
-            this.emit('menu-update', 'edit|formatting|to upper case', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|to lower case', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|capitalize', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|inverse case', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
-        })
-        this.$session.on('changeFold', () => {
-            this.$tooltip.hide();
-        })
-        this.$editor.on('mousemove', (e) => {
-            var pos = e.getDocumentPosition();
-            var fold = this.$session.getFoldAt(pos.row, pos.column, 1);
-            if (fold) {
-                var t = this.$session.getDocument().getTextRange(fold.range).replace(/^\n+|\s+$/g, '');
-                var s = t.split(/\n/);
-                if (s.length > 10) {
-                    t = s.slice(0, 10).join("\n").replace(/\s+$/g, '') + "\n...";
-                }
-                var h = $(window).height();
-                var th = this.$tooltip.getHeight();
-                var x = e.clientX;
-                var y = e.clientY;
-                if (y + th > h)
-                    y = y - th;
-                this.$tooltip.show(t, x, y);
-                e.stop();
-            }
-            else
-                this.$tooltip.hide();
-        });
-        this.emit('created');
-    }
-
-    public set spellcheck(value: boolean) {
-        this.$editor.setOption('spellcheck', value);
-    };
-
-    get file(): string {
-        return super.file;
-    }
-    set file(value: string) {
-        if (this.file != value) {
-            super.file = value;
-            $('#' + this.parent.id + '-filename').text(value);
-            switch (path.extname(this.file)) {
-                case '.c':
-                case '.h':
-                    this.$session.setMode('ace/mode/lpc');
-                    break;
-                default:
-                    this.$session.setMode(this.getModeByFileExtension(this.file));
-                    break;
-            }
-        }
-    }
-
-    private getModeByFileExtension(path) {
-        let list = ace.require("ace/ext/modelist");
-        return list.getModeForPath(path).mode;
-    }
-
-    public open() {
-        if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
-            return;
-        this.$el.value = this.read();
-        this.$session.setValue(this.$el.value);
-        this.emit('opened');
-        this.state |= FileState.opened;
-        this.changed = false;
-    }
-
-    public refresh() {
-        //this.open();
-        this.emit('refreshed');
-    }
-
-    public save() {
-        this.$saving = true;
-        this.write(this.$session.getValue());
-        this.changed = false;
-        this.new = false;
-        this.emit('saved');
-    }
-
-    public close() {
-        if (this.file && this.file.length > 0 && !this.new)
-            this.emit('watch-stop', [this.file]);
-    }
-
-    public get selected(): string {
-        return this.$session.getTextRange(this.$editor.getSelectionRange());
-    }
-
-    public watch(action: string, file: string, details?) {
-        if (file != this.file || this.new)
-            return;
-        switch (action) {
-            case 'add':
-            case 'change':
-            case 'unlink':
-                if (!this.$saving)
-                    this.emit('reload', action);
-                else
-                    this.$saving = false;
-                break;
-        }
-    }
-
-    public revert() {
-        if (!this.new)
-            this.open();
-        else {
-            this.$el.value = '';
-            this.$session.setValue('');
-        }
-        this.$session.getUndoManager().reset();
-        this.changed = false;
-        this.emit('reverted');
-    }
-
-    public selectAll() { this.$editor.selectAll() };
-
-    public cut() {
-        let text = this.$editor.getCopyText();
-        clipboard.writeText(text || '');
-        clipboard.writeText(text || '', 'selection');
-        this.$editor.execCommand('cut');
-    }
-    public copy() {
-        let text = this.$editor.getCopyText();
-        clipboard.writeText(text || '');
-        clipboard.writeText(text || '', 'selection');
-    }
-    public paste() {
-        let text = clipboard.readText();
-        if (text.length === 0)
-            return;
-        this.$editor.insert(text);
-    }
-    public delete() { this.$editor.remove("right"); }
-    public undo() { this.$editor.undo(); }
-    public redo() { this.$editor.redo(); }
-    public find() { this.$editor.execCommand('find'); }
-    public replace() { this.$editor.execCommand('replace'); }
-    public supports(what) {
-        switch (what) {
-            case 'undo':
-            case 'redo':
-            case 'cut':
-            case 'copy':
-                return this.selected.length > 0;
-            case 'indent':
-            case 'paste':
-            case 'find':
-            case 'replace':
-            case 'delete':
-            case 'select-all':
-            case 'selectall':
-            case 'menu|edit':
-            case 'menu|context':
-            case 'menu|view':
-                return true;
-        }
-        return false;
-    }
-
-    public menu(menu) {
-        if (menu === 'edit' || menu === 'context') {
-            return [
-                {
-                    label: 'Formatting',
-                    submenu: [
-                        {
-                            label: 'Insert Color...',
-                            click: () => {
-                                ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                var setcolor = (event, type, color, code, window) => {
-                                    if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
-                                        return;
-                                    this.$editor.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                    ipcRenderer.removeListener('set-color', setcolor);
-                                }
-                                ipcRenderer.on('set-color', setcolor);
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: 'To Upper Case',
-                            enabled: this.selected.length > 0,
-                            click: () => {
-                                var r = this.$editor.getSelectionRange();
-                                this.$session.replace(r, this.$editor.getSelectedText().toUpperCase());
-                                this.$session.getSelection().setSelectionRange(r);
-                            }
-                        },
-                        {
-                            label: 'To Lower Case',
-                            enabled: this.selected.length > 0,
-                            click: () => {
-                                var r = this.$editor.getSelectionRange();
-                                this.$session.replace(r, this.$editor.getSelectedText().toLowerCase());
-                                this.$session.getSelection().setSelectionRange(r);
-                            }
-                        },
-                        {
-                            label: 'Capitalize',
-                            enabled: this.selected.length > 0,
-                            click: () => {
-                                var r = this.$editor.getSelectionRange();
-                                this.$session.replace(r, capitalize(this.$editor.getSelectedText()));
-                                this.$session.getSelection().setSelectionRange(r);
-                            }
-                        },
-                        {
-                            label: 'Inverse Case',
-                            enabled: this.selected.length > 0,
-                            click: () => {
-                                var s = this.$editor.getSelectedText().split(" ");
-                                var c;
-                                for (var i = 0, il = s.length; i < il; i++) {
-                                    for (var p = 0, pl = s[i].length; p < pl; p++) {
-                                        c = s[i].charAt(p);
-                                        if (c >= 'A' && c <= 'Z')
-                                            s[i] = s[i].substr(0, p) + c.toLowerCase() + s[i].substr(p + 1);
-                                        else if (c >= 'a' && c <= 'z')
-                                            s[i] = s[i].substr(0, p) + c.toUpperCase() + s[i].substr(p + 1);
-                                    }
-                                }
-                                var r = this.$editor.getSelectionRange();
-                                this.$session.replace(r, s.join(" "));
-                                this.$session.getSelection().setSelectionRange(r);
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: 'Line Comment',
-                            enabled: this.selected.length > 0,
-                            accelerator: 'CmdOrCtrl+/',
-                            click: () => {
-                                var r = this.$editor.getSelectionRange();
-                                if (r.start.row !== r.end.row) {
-                                    let str = this.$editor.getSelectedText();
-                                    str = '// ' + str.replace(/(?:\r\n|\r|\n)/g, '\n// ');
-                                    this.$session.replace(r, str);
-                                    r.end.column += 3;
-                                }
-                                else {
-                                    this.$session.replace(r, "// " + this.$editor.getSelectedText());
-                                    r.end.column += 3;
-                                }
-                                this.$session.getSelection().setSelectionRange(r);
-                            }
-                        },
-                        {
-                            label: 'Block Comment',
-                            enabled: this.selected.length > 0,
-                            accelerator: 'Alt+Shift+A',
-                            click: () => {
-                                var r = this.$editor.getSelectionRange();
-                                // if (r.start.row !== r.end.row) {
-                                //     this.$session.replace(r, "/*\n" + this.$editor.getSelectedText() + "\n*/");
-                                //     r.end.row += 2;
-                                //     r.end.column = 2;
-                                // }
-                                // else {
-                                this.$session.replace(r, "/* " + this.$editor.getSelectedText() + " */");
-                                r.end.column += 6;
-                                //}
-
-                                this.$session.getSelection().setSelectionRange(r);
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: 'Indent File',
-                            accelerator: 'CmdOrCtrl+I',
-                            click: () => {
-                                var Range = ace.require('ace/range').Range;
-                                this.$editor.setReadOnly(true);
-                                this.$session.clearAnnotations();
-                                this.$indenter.indent(this.$session.getValue());
-                            }
-                        },
-                        {
-                            label: 'Format File',
-                            accelerator: 'CmdOrCtrl+Shift+F',
-                            click: () => {
-                                this.emit('progress-start', 'format');
-                                this.$editor.setReadOnly(true);
-                                var Range = ace.require('ace/range').Range;
-                                this.$session.replace(new Range(0, 0, this.$session.getLength(), Number.MAX_VALUE), this.$formatter.format(this.$session.getValue()));
-                                this.$editor.setReadOnly(false);
-                                this.emit('progress-complete', 'format');
-                            }
-                        },
-                        {
-                            label: 'Format and Indent File',
-                            accelerator: 'CmdOrCtrl+Shift+I',
-                            click: () => {
-                                this.emit('progress-start', 'format');
-                                this.$editor.setReadOnly(true);
-                                var code = this.$formatter.format(this.$session.getValue());
-                                this.emit('progress-complete', 'format');
-                                this.$indenter.indent(code);
-                            }
-                        }
-                    ]
-                },
-                {
-                    label: 'Folding',
-                    submenu: [
-                        {
-                            label: 'Expand All',
-                            accelerator: "CmdOrCtrl+>",
-                            click: () => {
-                                this.$session.unfold();
-                            }
-                        },
-                        {
-                            label: 'Collapse All',
-                            accelerator: "CmdOrCtrl+<",
-                            click: () => {
-                                this.$session.foldAll();
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-        if (menu === 'view')
-            return [
-                {
-                    label: 'Toggle Word Wrap',
-                    accelerator: 'Alt+Z',
-                    click: () => {
-                        this.$session.setUseWrapMode(!this.$session.getUseWrapMode());
-                    },
-                }
-            ]
-    }
-
-    public focus(): void {
-        this.$editor.focus();
-    }
-
-    public resize() {
-        this.$editor.resize(true);
-    }
-
-    public set options(value) {
-        var mode = this.$editor.getOption('mode');
-        this.$editor.setOptions(value);
-        this.$session.setMode(mode);
-    }
-    public get options() {
-        return this.$editor.getOptions();
-    }
-    public get type() {
-        return 1;
-    }
-
-    public insert(text) { }
-}
-
-export class VirtualEditor extends EditorBase {
-    public createControl() { }
-
-    public refresh() { }
-
-    public open() { }
-
-    public save() { }
-
-    public revert() { }
-
-    public get selected() { return ''; }
-    public selectAll() { };
-    public cut() { }
-    public copy() { }
-    public paste() { }
-    public delete() { }
-    public undo() { }
-    public redo() { }
-    public close() { }
-    public watch(action: string, file: string, details?) { }
-    public set spellcheck(value: boolean) { };
-    public find() { }
-    public replace() { }
-    public supports(what) { return false; }
-    public focus(): void { }
-    public resize() { }
-    public set options(value) { }
-    public get options() { return null; }
-    public get type() {
-        return 2;
-    }
-    public insert(text) { }
-}
-
-export class MonacoCodeEditor extends EditorBase {
-    private $el: HTMLElement;
-    private $editor: monaco.editor.IStandaloneCodeEditor;
-    private $model: monaco.editor.ITextModel;
-    private $saving = false;
-    private $statusbar: HTMLElement;
-    private $sbSize: HTMLElement;
-    private $sbMsg: HTMLElement;
-    private $sbCursor: HTMLElement;
-
-    constructor(options?: EditorOptions) {
-        super(options);
-        if (options.value) {
-            this.$editor.setValue(options.value);
-            this.changed = false;
-        }
-    }
-
-    public createControl() {
-        //TODO tooltip show folded code
-        this.$el = document.createElement('div');
-        this.$el.id = this.parent.id + '-editor';
-        this.$el.classList.add('editor');
-        this.parent.appendChild(this.$el);
-        this.$editor = monaco.editor.create(this.$el, {
-            language: 'lpc',
-            autoIndent: true,
-            scrollBeyondLastLine: false,
-            rulers: [80],
-            contextmenu: false,
-            theme: 'lpcTheme'
-        });
-
-        this.$editor.addAction({
-            id: 'jimud.action.transformToInverse',
-            label: 'Transform to Inverse',
-            run: function (editor: monaco.editor.IStandaloneCodeEditor) {
-                let selections = editor.getSelections();
-                let model = editor.getModel();
-                let commands: monaco.editor.ICommand[] = [];
-
-                for (let i = 0, len = selections.length; i < len; i++) {
-                    let selection = selections[i];
-                    if (selection.isEmpty()) {
-                        let cursor = selection.getStartPosition();
-                        let word = model.getWordAtPosition(cursor);
-                        if (!word) {
-                            continue;
-                        }
-
-                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                        let text = model.getValueInRange(wordRange);
-                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                    } else {
-                        let text = model.getValueInRange(selection);
-                        commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
-                    }
-                }
-                editor.pushUndoStop();
-                editor.executeCommands(this.id, commands);
-                editor.pushUndoStop();
-            }
-        });
-
-        this.$editor.addAction({
-            id: 'jimud.action.transformToCapitalize',
-            label: 'Transform to Capitalize',
-            run: function (editor: monaco.editor.IStandaloneCodeEditor) {
-                let selections = editor.getSelections();
-                let model = editor.getModel();
-                let commands: monaco.editor.ICommand[] = [];
-
-                for (let i = 0, len = selections.length; i < len; i++) {
-                    let selection = selections[i];
-                    if (selection.isEmpty()) {
-                        let cursor = selection.getStartPosition();
-                        let word = model.getWordAtPosition(cursor);
-                        if (!word) {
-                            continue;
-                        }
-
-                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                        let text = model.getValueInRange(wordRange);
-                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                    } else {
-                        let text = model.getValueInRange(selection);
-                        commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
-                    }
-                }
-                editor.pushUndoStop();
-                editor.executeCommands(this.id, commands);
-                editor.pushUndoStop();
-            }
-        });
-
-        this.$editor.addAction({
-            id: 'jimud.action.insertColor',
-            label: 'Transform to Capitalize',
-            run: function (editor: monaco.editor.IStandaloneCodeEditor) {
-                let selections = editor.getSelections();
-                let model = editor.getModel();
-                let commands: monaco.editor.ICommand[] = [];
-
-                for (let i = 0, len = selections.length; i < len; i++) {
-                    let selection = selections[i];
-                    if (selection.isEmpty()) {
-                        let cursor = selection.getStartPosition();
-                        let word = model.getWordAtPosition(cursor);
-                        if (!word) {
-                            continue;
-                        }
-
-                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                        let text = model.getValueInRange(wordRange);
-                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                    } else {
-                        let text = model.getValueInRange(selection);
-                        commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
-                    }
-                }
-                editor.pushUndoStop();
-                editor.executeCommands(this.id, commands);
-                editor.pushUndoStop();
-            }
-        });
-
-        this.$editor.onContextMenu((e) => {
-            this.emit('contextmenu', e);
-        });
-        this.$editor.onDidChangeCursorSelection((e) => {
-            this.emit('selection-changed');
-            let selected = this.selected.length > 0;
-            this.emit('menu-update', 'edit|formatting|to upper case', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|to lower case', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|capitalize', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|inverse case', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
-            this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
-        });
-        this.$editor.onDidChangeCursorPosition((e) => {
-            this.$sbCursor.textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
-        });
-        this.$model = this.$editor.getModel();
-        this.$model.updateOptions({
-            tabSize: 3,
-            insertSpaces: true
-        });
-        this.$model.onDidChangeContent((e) => {
-            this.changed = true;
-            this.$sbSize.textContent = 'Length: ' + this.$model.getValueLength().toLocaleString();
-            this.emit('changed');
-        });
-        this.$statusbar = document.createElement('div');
-        this.$statusbar.id = this.parent.id + '-statusbar';
-        this.$statusbar.classList.add('statusbar');
-        this.$statusbar.innerHTML = '<span id="' + this.parent.id + '-filename" class="left"></span>';
-        this.$sbMsg = document.createElement('span');
-        this.$sbMsg.id = this.parent.id + '-status-message';
-        this.$statusbar.appendChild(this.$sbMsg);
-        this.$sbCursor = document.createElement('span');
-        this.$sbCursor.id = this.parent.id + '-status-cursor';
-        this.$sbCursor.classList.add('right');
-        this.$sbCursor.style.minWidth = '100px';
-        this.$statusbar.appendChild(this.$sbCursor);
-        this.$sbSize = document.createElement('span');
-        this.$sbSize.id = this.parent.id + '-filesize';
-        this.$sbSize.classList.add('right');
-        this.$statusbar.appendChild(this.$sbSize);
-        this.parent.appendChild(this.$statusbar);
-
-        setTimeout(() => {
-            this.resize();
-        }, 100);
-        this.emit('created');
-    }
-
-    get file(): string {
-        return super.file;
-    }
-    set file(value: string) {
-        if (this.file != value) {
-            super.file = value;
-            $('#' + this.parent.id + '-filename').text(value);
-            var ext = path.extname(this.file);
-            switch (ext) {
-                case '.c':
-                case '.h':
-                    //monaco.editor.setModelLanguage(this.$model, 'lpc');
-                    break;
-                default:
-                    var found = monaco.languages.getLanguages().filter(l => { return l.extensions.indexOf(ext) !== -1 });
-                    if (found.length > 0)
-                        monaco.editor.setModelLanguage(this.$model, found.slice(-1)[0].id);
-                    else
-                        monaco.editor.setModelLanguage(this.$model, 'plaintext');
-                    break;
-            }
-
-        }
-    }
-
-    public refresh() { this.emit('refreshed'); }
-
-    public open() {
-        if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
-            return;
-        this.$editor.setValue(this.read());
-        this.emit('opened');
-        this.state |= FileState.opened;
-        this.changed = false;
-    }
-
-    public save() {
-        this.$saving = true;
-        this.write(this.$model.getValue());
-        this.changed = false;
-        this.new = false;
-        this.emit('saved');
-    }
-
-    public revert() {
-        if (!this.new)
-            this.open();
-        else {
-            this.$model.setValue('');
-        }
-        this.changed = false;
-        this.emit('reverted');
-    }
-
-    public get selected() { return this.$model.getValueInRange(this.$editor.getSelection()) || ''; }
-    public selectAll() {
-        this.$editor.setSelection({
-            startLineNumber: 1,
-            startColumn: 1,
-            endColumn: this.$model.getLineMaxColumn(this.$model.getLineCount()),
-            endLineNumber: this.$model.getLineCount()
-        });
-    };
-    public cut() { this.$editor.getAction('editor.action.clipboardCutAction').run(); }
-    public copy() { this.$editor.getAction('editor.action.clipboardCopyAction').run(); }
-    public paste() { this.$editor.getAction('editor.action.clipboardPasteAction').run(); }
-    public delete() { }
-    public undo() { this.$editor.trigger('', 'undo', null); }
-    public redo() { this.$editor.trigger('', 'redo', null); }
-    public close() {
-        if (this.file && this.file.length > 0 && !this.new)
-            this.emit('watch-stop', [this.file]);
-    }
-    public watch(action: string, file: string, details?) {
-        if (file != this.file || this.new)
-            return;
-        switch (action) {
-            case 'add':
-            case 'change':
-            case 'unlink':
-                if (!this.$saving)
-                    this.emit('reload', action);
-                else
-                    this.$saving = false;
-                break;
-        }
-    }
-    public set spellcheck(value: boolean) { };
-    public find() { this.$editor.getAction('actions.find').run(); }
-    public replace() { this.$editor.getAction('editor.action.startFindReplaceAction').run(); }
-    public supports(what) {
-        switch (what) {
-            case 'cut':
-            case 'copy':
-            case 'delete':
-                return this.selected.length > 0;
-            case 'undo':
-            case 'redo':
-            case 'indent':
-            case 'paste':
-            case 'find':
-            case 'replace':
-            case 'select-all':
-            case 'selectall':
-            case 'menu|edit':
-            case 'menu|context':
-            case 'menu|view':
-                return true;
-        }
-        return false;
-    }
-    public focus(): void { this.$editor.focus(); }
-    public resize() {
-        this.$editor.layout();
-    }
-    public set options(value) { }
-    public get options() { return null; }
-    public get type() {
-        return 2;
-    }
-
-    public menu(menu) {
-        if (menu === 'edit' || menu === 'context') {
-            var selected = this.selected.length > 0;
-            return [
-                {
-                    label: 'Formatting',
-                    submenu: [
-                        {
-                            label: 'Insert Color...',
-                            click: () => {
-                                ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                var setcolor = (event, type, color, code, window) => {
-                                    if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
-                                        return;
-                                    this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                    ipcRenderer.removeListener('set-color', setcolor);
-                                }
-                                ipcRenderer.on('set-color', setcolor);
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: 'To Upper Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('editor.action.transformToUppercase').run();
-                            }
-                        },
-                        {
-                            label: 'To Lower Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('editor.action.transformToLowercase').run();
-                            }
-                        },
-                        {
-                            label: 'Capitalize',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('jimud.action.transformToCapitalize').run();
-                            }
-                        },
-                        {
-                            label: 'Inverse Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('jimud.action.transformToInverse').run();
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: 'Line Comment',
-                            accelerator: 'CmdOrCtrl+/',
-                            click: () => {
-                                this.$editor.getAction('editor.action.commentLine').run();
-                            }
-                        },
-                        {
-                            label: 'Block Comment',
-                            accelerator: 'Alt+Shift+A',
-                            click: () => {
-                                this.$editor.getAction('editor.action.blockComment').run();
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: 'Format Document',
-                            accelerator: 'Alt+Shift+F',
-                            click: () => {
-                                this.$editor.getAction('editor.action.formatDocument').run();
-                            }
-                        },
-                    ]
-                },
-                {
-                    label: 'Folding',
-                    submenu: [
-                        {
-                            label: 'Expand All',
-                            accelerator: "CmdOrCtrl+>",
-                            click: () => {
-                                this.$editor.getAction('editor.unfoldAll').run();
-                            }
-                        },
-                        {
-                            label: 'Collapse All',
-                            accelerator: "CmdOrCtrl+<",
-                            click: () => {
-                                this.$editor.getAction('editor.foldAll').run();
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-        if (menu === 'view')
-            return [
-                {
-                    label: 'Toggle Word Wrap',
-                    accelerator: 'Alt+Z',
-                    click: () => {
-                        this.$editor.updateOptions({ wordWrap: (this.$editor.getConfiguration().wrappingInfo.isViewportWrapping ? 'off' : 'on') });
-                    },
-                }
-            ]
-    }
-
-    public insert(text) {
-        let selections = this.$editor.getSelections();
-        let commands: monaco.editor.ICommand[] = [];
-        for (let i = 0, len = selections.length; i < len; i++) {
-            let selection = selections[i];
-            if (selection.isEmpty()) {
-                let cursor = selection.getStartPosition();
-                commands.push(new ReplaceCommand(new monaco.Range(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column), text));
-            } else {
-                commands.push(new ReplaceCommand(selection, text));
-            }
-        }
-        this.$editor.pushUndoStop();
-        this.$editor.executeCommands('jiMUD.action.insert', commands);
-        this.$editor.pushUndoStop();
-    }
+    return list;
 }
 
 enum TokenType {
@@ -1744,6 +1281,7 @@ export class lpcIndenter extends EventEmitter {
         catch (e) {
             this.emit('error', e);
         }
+        return lines;
     }
 
     public reset() {
@@ -1766,24 +1304,13 @@ export class lpcIndenter extends EventEmitter {
         this.indentLines(lines, 0, 100);
     };
 
-    public indentEditor(editor) {
-        if (!editor) return;
-        let session = editor.getSession();
+    public indentAll(code) {
+        if (!code || code.length === 0)
+            return code;
         this.reset();
-        var ll = session.getLength();
-        var ln = 0, l;
-        try {
-            var Range = ace.require('ace/range').Range;
-            for (; ln < ll; ln++) {
-                l = session.getLine(ln);
-                session.replace(new Range(ln, 0, ln, l.length), this.indent_line(l, ln));
-            }
-        }
-        catch (e) {
-            this.emit('error', e);
-        }
-    };
-
+        var lines = code.split("\n");
+        return this.indentLines(lines, 0, lines.length).join('\n');
+    }
 }
 
 enum FormatTokenType {

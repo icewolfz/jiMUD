@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const url = require('url');
 const settings = require('./js/settings');
-const { EditorSettings } = require('./js/code.editor.settings');
+const { EditorSettings } = require('./js/editor/code.editor.settings');
 const { TrayClick } = require('./js/types');
 
 

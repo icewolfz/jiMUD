@@ -85,7 +85,7 @@
         const { remote, ipcRenderer } = require('electron');
         const { dialog } = remote;
         const path = require('path');
-        const EditorSettings = require('./js/code.editor.settings').EditorSettings;
+        const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
 
         var _settings;
         if (window.module) module.module;
