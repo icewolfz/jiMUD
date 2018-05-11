@@ -158,10 +158,6 @@ export class MonacoCodeEditor extends EditorBase {
     private $editor: monaco.editor.IStandaloneCodeEditor;
     private $model: monaco.editor.ITextModel;
     private $saving = false;
-    private $statusbar: HTMLElement;
-    private $sbSize: HTMLElement;
-    private $sbMsg: HTMLElement;
-    private $sbCursor: HTMLElement;
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -172,6 +168,7 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public createControl() {
+
         //TODO tooltip show folded code
         this.$el = document.createElement('div');
         this.$el.id = this.parent.id + '-editor';
@@ -296,7 +293,7 @@ export class MonacoCodeEditor extends EditorBase {
             this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
         });
         this.$editor.onDidChangeCursorPosition((e) => {
-            this.$sbCursor.textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+            this.emit('location-changed', e.position.column, e.position.lineNumber);
         });
         this.$model = this.$editor.getModel();
         this.$model.updateOptions({
@@ -305,26 +302,8 @@ export class MonacoCodeEditor extends EditorBase {
         });
         this.$model.onDidChangeContent((e) => {
             this.changed = true;
-            this.$sbSize.textContent = 'Length: ' + this.$model.getValueLength().toLocaleString();
-            this.emit('changed');
+            this.emit('changed', this.$model.getValueLength());
         });
-        this.$statusbar = document.createElement('div');
-        this.$statusbar.id = this.parent.id + '-statusbar';
-        this.$statusbar.classList.add('statusbar');
-        this.$statusbar.innerHTML = '<span id="' + this.parent.id + '-filename" class="left"></span>';
-        this.$sbMsg = document.createElement('span');
-        this.$sbMsg.id = this.parent.id + '-status-message';
-        this.$statusbar.appendChild(this.$sbMsg);
-        this.$sbCursor = document.createElement('span');
-        this.$sbCursor.id = this.parent.id + '-status-cursor';
-        this.$sbCursor.classList.add('right');
-        this.$sbCursor.style.minWidth = '100px';
-        this.$statusbar.appendChild(this.$sbCursor);
-        this.$sbSize = document.createElement('span');
-        this.$sbSize.id = this.parent.id + '-filesize';
-        this.$sbSize.classList.add('right');
-        this.$statusbar.appendChild(this.$sbSize);
-        this.parent.appendChild(this.$statusbar);
 
         setTimeout(() => {
             this.resize();
@@ -338,7 +317,6 @@ export class MonacoCodeEditor extends EditorBase {
     set file(value: string) {
         if (this.file != value) {
             super.file = value;
-            $('#' + this.parent.id + '-filename').text(value);
             var ext = path.extname(this.file);
             switch (ext) {
                 case '.c':
@@ -450,7 +428,7 @@ export class MonacoCodeEditor extends EditorBase {
     public set options(value) { }
     public get options() { return null; }
     public get type() {
-        return 2;
+        return 1;
     }
 
     public menu(menu) {
@@ -575,5 +553,18 @@ export class MonacoCodeEditor extends EditorBase {
         this.$editor.pushUndoStop();
         this.$editor.executeCommands('jiMUD.action.insert', commands);
         this.$editor.pushUndoStop();
+    }
+
+    public get location() { return [this.$editor.getPosition().column, this.$editor.getPosition().lineNumber]; }
+    public get length() { return this.$model.getValueLength(); }
+    public selectionChanged(e) {
+        this.emit('selection-changed');
+        let selected = this.selected.length > 0;
+        this.emit('menu-update', 'edit|formatting|to upper case', { enabled: selected });
+        this.emit('menu-update', 'edit|formatting|to lower case', { enabled: selected });
+        this.emit('menu-update', 'edit|formatting|capitalize', { enabled: selected });
+        this.emit('menu-update', 'edit|formatting|inverse case', { enabled: selected });
+        this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
+        this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
     }
 }

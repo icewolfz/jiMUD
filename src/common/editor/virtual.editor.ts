@@ -37,4 +37,6 @@ export class VirtualEditor extends EditorBase {
         return 2;
     }
     public insert(text) { }
+    public get location() { return [0, 0]; }
+    public get length() { return 0; }
 }

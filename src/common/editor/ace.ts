@@ -481,4 +481,6 @@ export class AceCodeEditor extends EditorBase {
     }
 
     public insert(text) { }
+    public get location() { return [0, 0]; }
+    public get length() { return 0; }    
 }

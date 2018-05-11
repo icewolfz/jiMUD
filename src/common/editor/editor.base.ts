@@ -147,6 +147,8 @@ export abstract class EditorBase extends EventEmitter {
     abstract get options();
     abstract get type();
     abstract insert(text);
+    abstract get location();
+    abstract get length();
 }
 
 export class DebugTimer {
@@ -161,6 +163,6 @@ export class DebugTimer {
         var t = e - this.$s.pop();
         if (!lbl)
             lbl = 'Execution time';
-        console.debug(lbl + ': ' + t);
+        console.log(lbl + ': ' + t);
     }
 }

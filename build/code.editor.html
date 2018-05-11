@@ -18,6 +18,130 @@
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
         SetupEditor().then((monaco) => {
+            window.$editor = monaco.editor.create(this.$el, {
+                language: 'lpc',
+                autoIndent: true,
+                scrollBeyondLastLine: false,
+                rulers: [80],
+                contextmenu: false,
+                theme: 'lpcTheme'
+            });
+
+            window.$editor.addAction({
+                id: 'jimud.action.transformToInverse',
+                label: 'Transform to Inverse',
+                run: function (editor: monaco.editor.IStandaloneCodeEditor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands: monaco.editor.ICommand[] = [];
+
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
+                            }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
+                        }
+                    }
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
+
+            window.$editor.addAction({
+                id: 'jimud.action.transformToCapitalize',
+                label: 'Transform to Capitalize',
+                run: function (editor: monaco.editor.IStandaloneCodeEditor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands: monaco.editor.ICommand[] = [];
+
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
+                            }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                        }
+                    }
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
+
+            window.$editor.addAction({
+                id: 'jimud.action.insertColor',
+                label: 'Transform to Capitalize',
+                run: function (editor: monaco.editor.IStandaloneCodeEditor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands: monaco.editor.ICommand[] = [];
+
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
+                            }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                        }
+                    }
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
+
+            window.$editor.onContextMenu((e) => {
+                this.emit('contextmenu', e);
+            });
+            window.$editor.onDidChangeCursorSelection((e) => {
+                manager.active.editor.selectionChanged(e);
+                /*
+                this.emit('selection-changed');
+                let selected = this.selected.length > 0;
+                this.emit('menu-update', 'edit|formatting|to upper case', { enabled: selected });
+                this.emit('menu-update', 'edit|formatting|to lower case', { enabled: selected });
+                this.emit('menu-update', 'edit|formatting|capitalize', { enabled: selected });
+                this.emit('menu-update', 'edit|formatting|inverse case', { enabled: selected });
+                this.emit('menu-update', 'edit|formatting|line comment', { enabled: selected });
+                this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
+                */
+            });
+            window.$editor.onDidChangeCursorPosition((e) => {
+                this.emit('location-changed', e.position.column, e.position.lineNumber);
+            });
             _ready = true;
         });        
     </script>
@@ -115,7 +239,12 @@
         </div>
         <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
     </div>
-
+    <div id="statusbar" class="statusbar">
+        <span id="statusbar-file" class="left"></span>
+        <span id="statusbar-message"></span>
+        <span id="statusbar-location" class="right"></span>
+        <span id="statusbar-size" class="right"></span>
+    </div>
     <dialog id="newArea" data-title="Create new area" style="width:400px;height:348px;padding:5px;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('newArea').close();">&times;</button>
@@ -527,6 +656,10 @@
     var outputDisplay = $('#output-display');
     var _editors = {};
     var _recent = [];
+    var sbSize = document.getElementById('statusbar-size');
+    var sbName = document.getElementById('statusbar-file');
+    var sbLocation = document.getElementById('statusbar-location');
+    var sbMessage = document.getElementById('statusbar-message');
 
     outputDisplay.on('keydown', (e) => {
         if (event.ctrlKey) {
@@ -872,10 +1005,7 @@
             event.preventDefault();
             event.cancelBubble = true;
             event.stopPropagation();
-            openStart();
-            for (f = 0, fl = files.length; f < fl; f++)
-                openFile(files[f].path);
-            openEnd();
+            openFiles(files);
         }
     });
     manager.on('tab-contextmenu', (panelId, panel) => {
@@ -973,6 +1103,15 @@
             buttons.append(...manager.active.editor.buttons);
         updateMenu('edit');
         updateMenu('view');
+        sbSize.textContent = enabled ? ('Length: ' + manager.active.editor.length.toLocaleString()) : '';
+        sbMessage.textContent = '';
+        sbName.textContent = enabled ? manager.active.editor.file : '';
+        if (enabled && manager.active.editor.type === 1) {
+            var l = manager.active.editor.location;
+            sbLocation.textContent = enabled ? (`Ln ${l[1]}, Col ${l[0]}`) : 'Ln 0, Col 0';
+        }
+        else
+            sbLocation.textContent = '';
         doUpdate(2);
     }
 
@@ -1325,7 +1464,7 @@
             output.css('display', 'none');
         }
         $(window).trigger('resize');
-        saveOptions();
+        doUpdate(16);
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -1339,7 +1478,7 @@
         dock.css('bottom', '0');
         output.css('display', 'none');
         $(window).trigger('resize');
-        saveOptions();
+        doUpdate(16);
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -1393,7 +1532,7 @@
                 options.outputSize = 170;
                 output.css("height", options.outputSize);
                 dock.css("bottom", options.outputSize);
-                saveOptions();
+                doUpdate(16);
             }
             var keys = Object.keys(_editors);
             var k = keys.length;
@@ -1416,7 +1555,7 @@
                     options.outputSize = document.body.clientHeight - e.pageY + 2;
                 output.css("height", options.outputSize);
                 dock.css("bottom", options.outputSize);
-                saveOptions();
+                doUpdate(16);
                 $('#btm-ghost-bar').remove();
                 $(document).unbind('mousemove');
                 if (manager.active && manager.active.editor) manager.active.editor.focus();
@@ -1549,18 +1688,12 @@
         }
         var o, ol;
         //var start = new Date().getTime();
-        openStart();
-        if (options.opened && options.reopen) {
-            for (o = 0, ol = options.opened.length; o < ol; o++)
-                openFile(options.opened[o].file, options.opened.remote);
-        }
-        //console.log(new Date().getTime() - start);
         if (_open) {
-            for (o = 0, ol = _open.length; o < ol; o++)
-                openFile(_open[o][0], _open[o][1]);
+            openFiles(options.opened.concat(_open.map((l) => { return { file: l[0], remote: [1] }; })));
             _open = 0;
         }
-        openEnd();
+        else
+            openFiles(options.opened);
         $("#splashScreenMask").css('display', 'none');
         $("#splashLayout").css('display', 'none');
         timer.end('Editor initialized');
@@ -1665,7 +1798,7 @@
     });
 
     function newFile() {
-        createEditor({ file: 'new_' + newCounter + '.c', new: true });
+        createEditor({ file: 'new_' + newCounter + '.c', new: true }, true);
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
@@ -1674,7 +1807,7 @@
     function newFromFile(file, name) {
         if (!file || file.length === 0) return;
         var value = parseFileTemplate(fs.readFileSync(file, 'utf8'));
-        createEditor({ file: 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c', new: true, value: value });
+        createEditor({ file: 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c', new: true, value: value }, true);
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
@@ -1765,7 +1898,7 @@
             return;
         }
         options.browse = $('#newarea-path').val();
-        saveOptions();
+        doUpdate(16);
         $('#newArea *').attr('disabled', true);
         var templatePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'area'));
         var template = walkSync(templatePath);
@@ -1785,14 +1918,19 @@
         if (!data.path.startsWith('/'))
             data.path = '/' + data.path;
         var value;
-        openStart();
+        var file;
+        var files = [];
         for (; c < cl; c++) {
             value = fs.readFileSync(template.files[c], 'utf8');
             value = parseFileTemplate(value, data);
-            fs.writeFileSync(template.files[c].replace(templateRegex, aPath), data);
-            openFile(template.files[c].replace(templateRegex, aPath), template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/'));
+            file = template.files[c].replace(templateRegex, aPath);
+            fs.writeFileSync(file, value);
+            files.push({
+                file: file,
+                remote: template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/')
+            });
         }
-        openEnd();
+        openFiles(files);
         document.getElementById('newArea').close();
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
@@ -1839,28 +1977,41 @@
                     if (fileNames === undefined) {
                         return;
                     }
-                    openStart();
-                    for (var f = 0, fl = fileNames.length; f < fl; f++) {
-                        if (!existsSync(fileNames[f])) {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
-                                type: 'info',
-                                title: 'Path does not exist',
-                                message: 'The path \'' + fileNames[f] + '\' does not seem to exist anymore on disk.'
-                            });
-                            continue;
-                        }
-                        addToRecent(fileNames[f]);
-                        createEditor({ file: fileNames[f], open: true });
-                    }
-                    openEnd();
+                    openFiles(fileNames.map((l) => { return { file: l }; }), true);
                 });
         }
         else {
             openStart();
             _recent.unshift({ file: file, remote: remoteFile });
-            createEditor({ file: file, open: true, remote: remoteFile });
+            createEditor({ file: file, open: true, remote: remoteFile }, true);
             openEnd();
         }
+    }
+
+    function openFiles(files, exists) {
+        if (files.length === 0) return;
+        var panels = [];
+        _opening++;
+        timer.start();
+        for (var f = 0, fl = files.length; f < fl; f++) {
+            if (exists && !existsSync(files[f].file)) {
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'info',
+                    title: 'Path does not exist',
+                    message: 'The path \'' + files[f].file + '\' does not seem to exist anymore on disk.'
+                });
+                continue;
+            }
+            _recent.unshift({ file: files[f].file || files[f].path, remote: files[f].remote });
+            panels.push(createEditor({ file: files[f].file || files[f].path, remote: files[f].remote, open: true }));
+        }
+        timer.end('End creating panels');
+        timer.start();
+        manager.addPanels(panels);
+        timer.end('End adding panels');
+        _opening--;
+        timer.end("Open files loaded");
+        doUpdate(25);
     }
 
     function openStart() {
@@ -1870,10 +2021,8 @@
 
     function openEnd() {
         _opening--;
-        if (_opening === 0) {
-            saveOptions();
-            doUpdate(9);
-        }
+        if (_opening === 0)
+            doUpdate(25);
         timer.end("Open files loaded");
     }
 
@@ -1891,10 +2040,8 @@
             options.recent = recent.slice(0, options.maxRecent);
         else
             options.recent = recent;
-        if (_opening === 0) {
-            saveOptions();
-            doUpdate(4);
-        }
+        if (_opening === 0)
+            doUpdate(20);
     }
 
     function flushRecent() {
@@ -1923,8 +2070,7 @@
                                 message: 'The path \'' + options.recent[item.idx].file + '\' does not seem to exist anymore on disk.'
                             });
                             options.recent = options.recent.slice(item.idx, 1);
-                            saveOptions();
-                            doUpdate(4);
+                            doUpdate(20);
                         }
                         else
                             openFile(options.recent[item.idx].file, options.recent[item.idx].remote);
@@ -1940,8 +2086,7 @@
                 label: 'Clear Recently Opened',
                 click: () => {
                     options.recent = [];
-                    saveOptions();
-                    doUpdate(4);
+                    doUpdate(20);
                 }
             });
         }
@@ -2143,7 +2288,7 @@
         return _editors[file];
     }
 
-    function createEditor(data) {//file, open, remoteFile, _new, value) {
+    function createEditor(data, add) {//file, open, remoteFile, _new, value) {
         timer.start();
         var p = findEditor(data.file);
         if (p) {
@@ -2151,12 +2296,16 @@
             manager.switchToPanel(p);
         }
         else {
-            p = manager.addPanel(path.basename(data.file), getFileIcon(data.file), data.file);
+            timer.start();
+            p = manager.createPanel(path.basename(data.file), getFileIcon(data.file), data.file);
+            timer.end("Raw panel created");
             data.container = p.pane;
             //if (path.extname(file) === '.map')
             //p.editor = new VirtualEditor(data);
-            //else            
+            //else        
+            timer.start();
             p.editor = new MonacoCodeEditor(data);
+            timer.end('Editor created');
             p.editor.options = options.editorOptions;
             if (!_watched[data.file]) {
                 _watched[data.file] = 1;
@@ -2220,9 +2369,10 @@
                     //p.editor.changed = true;
                 }
             });
-            p.editor.on('changed', () => {
+            p.editor.on('changed', (length) => {
                 doUpdate(2);
                 updatePanel(p);
+                sbSize.textContent = 'Length: ' + length.toLocaleString();
             });
             p.editor.on('saved', () => {
                 doUpdate(2);
@@ -2340,13 +2490,22 @@
             p.editor.on('output', (msg) => {
                 logOutput(msg, true);
             });
+            p.editor.on('location-changed', (x, y) => {
+                sbLocation.textContent = `Ln ${y}, Col ${x}`;
+            });
+            p.editor.on('status-message', (msg) => {
+                sbMessage.textContent = msg;
+            });
             _editors[data.file] = p;
             p.spellCheck = options.spellCheck;
-            doUpdate(1);
         }
-        p.editor.focus();
-        timer.end(data.file + " loaded");
-        return p.editor;
+        timer.end('Panel Created for ' + data.file);
+        if (add) {
+            manager.addPanels([p]);
+            doUpdate(1);
+            p.editor.focus();
+        }
+        return p;
     }
 
     function doUpdate(type) {
@@ -2370,6 +2529,10 @@
             if ((_updating & 8) === 8) {
                 flushRecent();
                 _updating &= ~8;
+            }
+            if ((_updating & 16) === 16) {
+                saveOptions();
+                _updating &= ~16;
             }
             doUpdate(_updating);
         });
