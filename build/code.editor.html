@@ -517,6 +517,7 @@
     var options, _updating = 0;
     var _loading = 1;
     var _open;
+    var _opening = 0;
     var newCounter = 1;
     let closeWindow = false;
     var watcher;
@@ -796,6 +797,7 @@
         doUpdate(1);
     });
     manager.on('activated', (e) => {
+        if (_opening !== 0) return;
         if (e.panel.editor)
             setTimeout(() => { e.panel.editor.focus(); }, 50);
         doUpdate(1);
@@ -870,8 +872,10 @@
             event.preventDefault();
             event.cancelBubble = true;
             event.stopPropagation();
+            openStart();
             for (f = 0, fl = files.length; f < fl; f++)
                 openFile(files[f].path);
+            openEnd();
         }
     });
     manager.on('tab-contextmenu', (panelId, panel) => {
@@ -1545,6 +1549,7 @@
         }
         var o, ol;
         //var start = new Date().getTime();
+        openStart();
         if (options.opened && options.reopen) {
             for (o = 0, ol = options.opened.length; o < ol; o++)
                 openFile(options.opened[o].file, options.opened.remote);
@@ -1555,6 +1560,7 @@
                 openFile(_open[o][0], _open[o][1]);
             _open = 0;
         }
+        openEnd();
         $("#splashScreenMask").css('display', 'none');
         $("#splashLayout").css('display', 'none');
         timer.end('Editor initialized');
@@ -1634,7 +1640,7 @@
     });
 
     ipcRenderer.on('send-editor', (event, text, window) => {
-        if (!manager.active || !manager.active.editor || window != "code-editor") 
+        if (!manager.active || !manager.active.editor || window != "code-editor")
             return;
         manager.active.editor.insert(text);
     });
@@ -1779,12 +1785,14 @@
         if (!data.path.startsWith('/'))
             data.path = '/' + data.path;
         var value;
+        openStart();
         for (; c < cl; c++) {
             value = fs.readFileSync(template.files[c], 'utf8');
             value = parseFileTemplate(value, data);
             fs.writeFileSync(template.files[c].replace(templateRegex, aPath), data);
             openFile(template.files[c].replace(templateRegex, aPath), template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/'));
         }
+        openEnd();
         document.getElementById('newArea').close();
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
@@ -1831,6 +1839,7 @@
                     if (fileNames === undefined) {
                         return;
                     }
+                    openStart();
                     for (var f = 0, fl = fileNames.length; f < fl; f++) {
                         if (!existsSync(fileNames[f])) {
                             dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -1843,13 +1852,29 @@
                         addToRecent(fileNames[f]);
                         createEditor({ file: fileNames[f], open: true });
                     }
+                    openEnd();
                 });
         }
         else {
+            openStart();
             _recent.unshift({ file: file, remote: remoteFile });
-            doUpdate(8);
             createEditor({ file: file, open: true, remote: remoteFile });
+            openEnd();
         }
+    }
+
+    function openStart() {
+        timer.start();
+        _opening++;
+    }
+
+    function openEnd() {
+        _opening--;
+        if (_opening === 0) {
+            saveOptions();
+            doUpdate(9);
+        }
+        timer.end("Open files loaded");
     }
 
     function addToRecent(file, remoteFile) {
@@ -1866,8 +1891,10 @@
             options.recent = recent.slice(0, options.maxRecent);
         else
             options.recent = recent;
-        saveOptions();
-        doUpdate(4);
+        if (_opening === 0) {
+            saveOptions();
+            doUpdate(4);
+        }
     }
 
     function flushRecent() {
@@ -2117,6 +2144,7 @@
     }
 
     function createEditor(data) {//file, open, remoteFile, _new, value) {
+        timer.start();
         var p = findEditor(data.file);
         if (p) {
             p.editor.remote = data.remote;
@@ -2312,11 +2340,12 @@
             p.editor.on('output', (msg) => {
                 logOutput(msg, true);
             });
+            _editors[data.file] = p;
+            p.spellCheck = options.spellCheck;
             doUpdate(1);
         }
-        p.spellCheck = options.spellCheck;
         p.editor.focus();
-        _editors[data.file] = p;
+        timer.end(data.file + " loaded");
         return p.editor;
     }
 
