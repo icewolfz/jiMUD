@@ -8,15 +8,6 @@ body {
     background-color: grey;
 }
 
-.cm {
-    top: 26px !important;
-    bottom: 20px !important;
-}
-
-.cm-tabpane {
-    border-top: 1px solid #ccc;
-}
-
 .btn-toolbar {
     background-color: rgb(245, 245, 245);
     margin-left: 0px !important;
@@ -151,9 +142,6 @@ body {
     text-decoration: underline;
 }
 
-.cm-tabpane-container {
-    background-color: grey;
-}
 
 .statusbar {
     bottom: 0;
@@ -166,27 +154,38 @@ body {
     background-color: rgb(245, 245, 245);
 }
 
+.statusbar span {
+    display: inline-block;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
 .statusbar span.left, .statusbar div.left {
-    padding-left: 4px;
-    padding-right: 4px;
     border-right: #ccc 1px solid;
 }
 
 .statusbar span.right, .statusbar div.left {
     float: right;
-    padding-left: 4px;
-    padding-right: 4px;
     border-left: #ccc 1px solid;
-    border-right: #ccc 0px solid;
     text-align: center;
+}
+
+#statusbar-location {
+    min-width: 100px;
 }
 
 .ace_status-indicator {
     float: right;
 }
 
+.cm {
+    top: 26px !important;
+    bottom: 20px !important;
+}
+
 .cm-tabpane-container {
-    padding-top: 1px;
+    background-color: grey;
+    bottom: 1px;
 }
 
 .cm-tabstrip li {
@@ -348,6 +347,10 @@ dialog .close {
 #splashProgress[value]::-webkit-progress-value {
     border-radius: 4px;
     background-color: #09c;
+}
+
+.monaco-editor {
+    border-top: 1px solid #ccc;
 }
 
 .monaco-editor .margin-view-overlays .current-line {

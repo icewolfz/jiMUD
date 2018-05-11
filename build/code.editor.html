@@ -18,7 +18,7 @@
         /* global manager, inverse, capitalize */
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
-        const { ReplaceCommandThatPreservesSelection, ReplaceCommand } = require('./js/editor/monaco');
+        const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
         SetupEditor().then((monaco) => {
             window.$editor = monaco.editor.create(document.getElementById('cm-tabpane'), {
                 language: 'lpc',
@@ -639,7 +639,6 @@
     var options, _updating = 0;
     var _loading = 1;
     var _open;
-    var _opening = 0;
     var newCounter = 1;
     let closeWindow = false;
     var watcher;
@@ -925,7 +924,6 @@
         doUpdate(1);
     });
     manager.on('activated', (e) => {
-        if (_opening !== 0) return;
         if (e.panel.editor) {
             if (e.panel.editor.type === 1) {
                 window.$editor.domElement.style.display = '';
@@ -1501,11 +1499,7 @@
     var timer = new DebugTimer();
 
     $(document).ready(() => {
-        timer.start();
-        timer.start();
         loadOptions();
-        timer.end('Options initialized');
-        timer.start();
         $('#btm-drag-bar').mousedown(function (e) {
             e.preventDefault();
             outputDragging = true;
@@ -1550,7 +1544,7 @@
                 _editors[p].editor.resize();
             }
             if (manager.active && manager.active.editor) manager.active.editor.focus();
-            if(window.$editor)
+            if (window.$editor)
                 window.$editor.layout();
         });
 
@@ -1682,11 +1676,7 @@
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
         });
-        timer.end('UI initialized');
-        timer.start();
         createWatcher();
-        timer.end('Watcher initialized');
-        timer.start();
         postEditorLoad();
     });
 
@@ -1705,8 +1695,6 @@
             openFiles(options.opened);
         $("#splashScreenMask").css('display', 'none');
         $("#splashLayout").css('display', 'none');
-        timer.end('Editor initialized');
-        timer.end('Final end');
         _loading = 0;
     }
 
@@ -1990,19 +1978,15 @@
                 });
         }
         else {
-            openStart();
             _recent.unshift({ file: file, remote: remoteFile });
             createEditor({ file: file, open: true, remote: remoteFile }, true);
-            openEnd();
+            doUpdate(25);
         }
     }
 
     function openFiles(files, exists) {
         if (files.length === 0) return;
         var panels = [];
-        _opening++;
-        timer.start();
-        timer.start();
         for (var f = 0, fl = files.length; f < fl; f++) {
             if (exists && !existsSync(files[f].file)) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2015,25 +1999,8 @@
             _recent.unshift({ file: files[f].file || files[f].path, remote: files[f].remote });
             panels.push(createEditor({ file: files[f].file || files[f].path, remote: files[f].remote, open: true }));
         }
-        timer.end('End creating panels');
-        timer.start();
-        _opening--;
         manager.addPanels(panels);
-        timer.end('End adding panels');
-        timer.end("Open files loaded");
         doUpdate(25);
-    }
-
-    function openStart() {
-        timer.start();
-        _opening++;
-    }
-
-    function openEnd() {
-        _opening--;
-        if (_opening === 0)
-            doUpdate(25);
-        timer.end("Open files loaded");
     }
 
     function addToRecent(file, remoteFile) {
@@ -2050,8 +2017,7 @@
             options.recent = recent.slice(0, options.maxRecent);
         else
             options.recent = recent;
-        if (_opening === 0)
-            doUpdate(20);
+        doUpdate(20);
     }
 
     function flushRecent() {
@@ -2299,23 +2265,18 @@
     }
 
     function createEditor(data, add) {//file, open, remoteFile, _new, value) {
-        timer.start();
         var p = findEditor(data.file);
         if (p) {
             p.editor.remote = data.remote;
             manager.switchToPanel(p);
         }
         else {
-            timer.start();
             p = manager.createPanel(path.basename(data.file), getFileIcon(data.file), data.file);
-            timer.end("Raw panel created");
             data.container = p.pane;
             //if (path.extname(file) === '.map')
             //p.editor = new VirtualEditor(data);
             //else        
-            timer.start();
             p.editor = new MonacoCodeEditor(data);
-            timer.end('Editor created');
             p.editor.options = options.editorOptions;
             if (!_watched[data.file]) {
                 _watched[data.file] = 1;
@@ -2509,7 +2470,6 @@
             _editors[data.file] = p;
             p.spellCheck = options.spellCheck;
         }
-        timer.end('Panel Created for ' + data.file);
         if (add) {
             manager.addPanels([p]);
             doUpdate(1);
