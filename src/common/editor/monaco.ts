@@ -161,7 +161,7 @@ export class ReplaceCommand implements monaco.editor.ICommand {
 
 export class MonacoCodeEditor extends EditorBase {
     private $el: HTMLElement;
-    //private $editor: monaco.editor.IStandaloneCodeEditor;
+    private $editor: monaco.editor.IStandaloneCodeEditor;
     private $model: monaco.editor.ITextModel;
     private $saving = false;
     private $state;
@@ -177,12 +177,6 @@ export class MonacoCodeEditor extends EditorBase {
     public createControl() {
 
         //TODO tooltip show folded code
-        /*
-        this.$el = document.createElement('div');
-        this.$el.id = this.parent.id + '-editor';
-        this.$el.classList.add('editor');
-        this.parent.appendChild(this.$el);
-        */
         this.$model = monaco.editor.createModel('', 'lpc')
         this.$model.updateOptions({
             tabSize: 3,
@@ -253,24 +247,41 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public get selected() {
-        var s = window.$editor.getSelection();
+        if (!this.$editor) return '';
+        var s = this.$editor.getSelection();
         if (!s) return '';
         return this.$model.getValueInRange(s) || '';
     }
     public selectAll() {
-        window.$editor.setSelection({
+        if (!this.$editor) return;
+        this.$editor.setSelection({
             startLineNumber: 1,
             startColumn: 1,
             endColumn: this.$model.getLineMaxColumn(this.$model.getLineCount()),
             endLineNumber: this.$model.getLineCount()
         });
     };
-    public cut() { window.$editor.getAction('editor.action.clipboardCutAction').run(); }
-    public copy() { window.$editor.getAction('editor.action.clipboardCopyAction').run(); }
-    public paste() { window.$editor.getAction('editor.action.clipboardPasteAction').run(); }
+    public cut() {
+        if (!this.$editor) return;
+        this.$editor.getAction('editor.action.clipboardCutAction').run();
+    }
+    public copy() {
+        if (!this.$editor) return;
+        this.$editor.getAction('editor.action.clipboardCopyAction').run();
+    }
+    public paste() {
+        if (!this.$editor) return;
+        this.$editor.getAction('editor.action.clipboardPasteAction').run();
+    }
     public delete() { }
-    public undo() { window.$editor.trigger('', 'undo', null); }
-    public redo() { window.$editor.trigger('', 'redo', null); }
+    public undo() {
+        if (!this.$editor) return;
+        this.$editor.trigger('', 'undo', null);
+    }
+    public redo() {
+        if (!this.$editor) return;
+        this.$editor.trigger('', 'redo', null);
+    }
     public close() {
         if (this.file && this.file.length > 0 && !this.new)
             this.emit('watch-stop', [this.file]);
@@ -290,8 +301,14 @@ export class MonacoCodeEditor extends EditorBase {
         }
     }
     public set spellcheck(value: boolean) { };
-    public find() { window.$editor.getAction('actions.find').run(); }
-    public replace() { window.$editor.getAction('editor.action.startFindReplaceAction').run(); }
+    public find() {
+        if (!this.$editor) return;
+        this.$editor.getAction('actions.find').run();
+    }
+    public replace() {
+        if (!this.$editor) return;
+        this.$editor.getAction('editor.action.startFindReplaceAction').run();
+    }
     public supports(what) {
         switch (what) {
             case 'cut':
@@ -313,9 +330,13 @@ export class MonacoCodeEditor extends EditorBase {
         }
         return false;
     }
-    public focus(): void { window.$editor.focus(); }
+    public focus(): void {
+        if (!this.$editor) return;
+        this.$editor.focus();
+    }
     public resize() {
-        window.$editor.layout();
+        if (!this.$editor) return;
+        this.$editor.layout();
     }
     public set options(value) { }
     public get options() { return null; }
@@ -348,28 +369,28 @@ export class MonacoCodeEditor extends EditorBase {
                             label: 'To Upper Case',
                             enabled: selected,
                             click: () => {
-                                window.$editor.getAction('editor.action.transformToUppercase').run();
+                                this.$editor.getAction('editor.action.transformToUppercase').run();
                             }
                         },
                         {
                             label: 'To Lower Case',
                             enabled: selected,
                             click: () => {
-                                window.$editor.getAction('editor.action.transformToLowercase').run();
+                                this.$editor.getAction('editor.action.transformToLowercase').run();
                             }
                         },
                         {
                             label: 'Capitalize',
                             enabled: selected,
                             click: () => {
-                                window.$editor.getAction('jimud.action.transformToCapitalize').run();
+                                this.$editor.getAction('jimud.action.transformToCapitalize').run();
                             }
                         },
                         {
                             label: 'Inverse Case',
                             enabled: selected,
                             click: () => {
-                                window.$editor.getAction('jimud.action.transformToInverse').run();
+                                this.$editor.getAction('jimud.action.transformToInverse').run();
                             }
                         },
                         { type: 'separator' },
@@ -377,14 +398,14 @@ export class MonacoCodeEditor extends EditorBase {
                             label: 'Line Comment',
                             accelerator: 'CmdOrCtrl+/',
                             click: () => {
-                                window.$editor.getAction('editor.action.commentLine').run();
+                                this.$editor.getAction('editor.action.commentLine').run();
                             }
                         },
                         {
                             label: 'Block Comment',
                             accelerator: 'Alt+Shift+A',
                             click: () => {
-                                window.$editor.getAction('editor.action.blockComment').run();
+                                this.$editor.getAction('editor.action.blockComment').run();
                             }
                         },
                         { type: 'separator' },
@@ -392,7 +413,7 @@ export class MonacoCodeEditor extends EditorBase {
                             label: 'Format Document',
                             accelerator: 'Alt+Shift+F',
                             click: () => {
-                                window.$editor.getAction('editor.action.formatDocument').run();
+                                this.$editor.getAction('editor.action.formatDocument').run();
                             }
                         },
                     ]
@@ -404,14 +425,14 @@ export class MonacoCodeEditor extends EditorBase {
                             label: 'Expand All',
                             accelerator: "CmdOrCtrl+>",
                             click: () => {
-                                window.$editor.getAction('editor.unfoldAll').run();
+                                this.$editor.getAction('editor.unfoldAll').run();
                             }
                         },
                         {
                             label: 'Collapse All',
                             accelerator: "CmdOrCtrl+<",
                             click: () => {
-                                window.$editor.getAction('editor.foldAll').run();
+                                this.$editor.getAction('editor.foldAll').run();
                             }
                         }
                     ]
@@ -424,14 +445,14 @@ export class MonacoCodeEditor extends EditorBase {
                     label: 'Toggle Word Wrap',
                     accelerator: 'Alt+Z',
                     click: () => {
-                        window.$editor.updateOptions({ wordWrap: (window.$editor.getConfiguration().wrappingInfo.isViewportWrapping ? 'off' : 'on') });
+                        this.$editor.updateOptions({ wordWrap: (this.$editor.getConfiguration().wrappingInfo.isViewportWrapping ? 'off' : 'on') });
                     },
                 }
             ]
     }
 
     public insert(text) {
-        let selections = window.$editor.getSelections();
+        let selections = this.$editor.getSelections();
         let commands: monaco.editor.ICommand[] = [];
         for (let i = 0, len = selections.length; i < len; i++) {
             let selection = selections[i];
@@ -442,15 +463,15 @@ export class MonacoCodeEditor extends EditorBase {
                 commands.push(new ReplaceCommand(selection, text));
             }
         }
-        window.$editor.pushUndoStop();
-        window.$editor.executeCommands('jiMUD.action.insert', commands);
-        window.$editor.pushUndoStop();
+        this.$editor.pushUndoStop();
+        this.$editor.executeCommands('jiMUD.action.insert', commands);
+        this.$editor.pushUndoStop();
     }
 
     public get location() {
-        if (!window.$editor.getPosition())
+        if (!this.$editor || !this.$editor.getPosition())
             return [0, 0];
-        return [window.$editor.getPosition().column, window.$editor.getPosition().lineNumber];
+        return [this.$editor.getPosition().column, this.$editor.getPosition().lineNumber];
     }
     public get length() { return this.$model.getValueLength(); }
     public selectionChanged(e) {
@@ -465,10 +486,12 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public activate(editor) {
+        this.$editor = editor;
         editor.setModel(this.$model)
         editor.restoreViewState(this.$state);
     }
     public deactivate(editor) {
+        this.$editor = null;
         this.$state = editor.saveViewState();
         editor.setModel(null);
     }
