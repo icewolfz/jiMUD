@@ -1,0 +1,27 @@
+varargs void sound(mixed sound, mixed targets, mixed exclude, string msg, int vol, int repeats, int priority, string msgcls)
+
+This plays a sound effect for the player object.
+    sound -
+        string - file name, can include a subfolder to better group sounds
+                if yo use Off as the file name it will stop playing all current sounds
+        int - a predefined index that is set in USER_D->get_sound_file(sound);
+    targets - the objects to play the sound to
+        object - either a room or player object, if room it will play the sound to all players in room
+        arary - an array of rooms or players to play sound to
+    exclude - object or objects to exclude can be room or players
+    msg - a message to be displayed after sound     
+    vol - the volume to play the sound at, 1 to 100, any # less then 0 is a volume of 0,
+          if 0 will be default volume of 100
+    repeats - how many times to repeat this sound, must be 1 or higher
+              -1 - loop sound until next sound replaces it
+    priority - the sounds priority, this determines how it will replace the currently playing sound
+                if priority is higher then current sound's priority it will stop current and begin playing this one
+                if lower or equal it will continue playing current sound
+                if no sounds is playing will play the new sound.    
+    msgcls - the message class for the message to display
+
+Example:
+    sound("explode.m4a", "/domains/oldkingdom/kieron/square.c); //this will play the explode.m4a if possible to the square
+
+See also: music, play_music, play_sound
+Defined in /adm/simule_efun/sound.c

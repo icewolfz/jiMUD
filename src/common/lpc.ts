@@ -1,29 +1,10 @@
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
-
-declare let monaco;
+import { parseTemplate, walkSync } from './library';
+const fs = require('fs-extra');
+const path = require('path');
 
 import IRichLanguageConfiguration = monaco.languages.LanguageConfiguration;
 import ILanguage = monaco.languages.IMonarchLanguage;
-//import CompletionItem = monaco.languages.CompletionItem;
-/*
-export function LPCDef() {
-    return {
-        id: 'lpc',
-        extensions: ['.c', '.h'],
-        aliases: ['LPC'],
-        //loader: () => _monaco.Promise.wrap(import('./cpp'))
-    }
-}
-*/
-/*
-export const complete = [
-    { label: 'this_player()', kind: monaco.languages.CompletionItemKind.Function },
-    { label: 'this_object()', kind: monaco.languages.CompletionItemKind.Function },
-    { label: 'message', kind: monaco.languages.CompletionItemKind.Function },
-    { label: 'random', kind: monaco.languages.CompletionItemKind.Function }
-
-]
-*/
 
 export const conf: IRichLanguageConfiguration = {
     comments: {
@@ -611,6 +592,61 @@ export const language = <ILanguage>{
         'QN'
     ],
 
+    applies: [
+        'catch_tell',
+        'logon',
+        'net_dead',
+        'process_input',
+        'receive_message',
+        'receive_snoop',
+        'telnet_suboption',
+        'terminal_type',
+        'write_prompt',
+        //master
+        'author_file',
+        'compile_object',
+        'connect',
+        'crash',
+        'creator_file',
+        'domain_file',
+        'epilog',
+        'error_handler',
+        'flag',
+        'get_bb_uid',
+        'get_include_path',
+        'get_mud_stats',
+        'get_root_uid',
+        'get_save_file_name',
+        'log_error',
+        'make_path_absolute',
+        'object_name',
+        'preload',
+        'privs_file',
+        'retrieve_ed_setup',
+        'save_ed_setup',
+        'valid_bind',
+        'valid_database',
+        'valid_hide',
+        'valid_link',
+        'valid_object',
+        'valid_override',
+        'valid_read',
+        'valid_save_binary',
+        'valid_seteuid',
+        'valid_shadow',
+        'valid_socket',
+        'valid_write',
+        'view_errors',
+        //master end
+        'clean_up',
+        'create',
+        'id',
+        'init',
+        'move_or_destruct',
+        'reset',
+        'heart_beat'
+    ],
+
     operators: [
         '=', '>', '<', '!', '~', '?', ':',
         '==', '<=', '>=', '!=', '&&', '||', '++', '--',
@@ -641,6 +677,7 @@ export const language = <ILanguage>{
                     '@efuns': { token: 'efuns' },
                     '@abbr': { token: 'abbr' },
                     '@const': { token: 'constant' },
+                    '@applies': { token: 'applies' },
                     '@default': 'identifier'
                 }
             }],
@@ -717,3 +754,46 @@ export const language = <ILanguage>{
         ]
     },
 };
+
+export function loadCompletion(): monaco.languages.CompletionItem[] {
+    let list: monaco.languages.CompletionItem[] = [
+        {
+            label: 'void create',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: 'void create() {\n   ::create();\n}'
+        },
+        {
+            label: 'void init',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: 'void init() {\n   ::init();\n}'
+        },
+        {
+            label: 'void reset',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: 'void reset() {\n   ::reset();\n}'
+        },
+    ];
+    const p = parseTemplate(path.join('{assets}', 'editor', 'docs'));
+    list = list.concat(getCompletionFromPath(path.join(p, 'applies', 'interactive'), monaco.languages.CompletionItemKind.Interface));
+    list = list.concat(getCompletionFromPath(path.join(p, 'applies', 'object'), monaco.languages.CompletionItemKind.Interface));
+    list = list.concat(getCompletionFromPath(path.join(p, 'constants'), monaco.languages.CompletionItemKind.Variable));
+    list = list.concat(getCompletionFromPath(path.join(p, 'efuns'), monaco.languages.CompletionItemKind.Function));
+    list = list.concat(getCompletionFromPath(path.join(p, 'sefuns'), monaco.languages.CompletionItemKind.Class));
+    return list;
+}
+
+function getCompletionFromPath(p, kind?: monaco.languages.CompletionItemKind): monaco.languages.CompletionItem[] {
+    let list = [];
+    let files = walkSync(p);
+    let l = files.files.length;
+    var f = 0;
+    for (; f < l; f++) {
+        list.push(
+            {
+                label: path.basename(files.files[f], path.extname(files.files[f])),
+                kind: kind
+            }
+        )
+    }
+    return list;
+}

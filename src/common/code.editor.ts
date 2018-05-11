@@ -1,7 +1,7 @@
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 import EventEmitter = require('events');
 import { existsSync, formatSize, capitalize, inverse } from './library';
-import { conf, language } from './lpc';
+import { conf, language, loadCompletion } from './lpc';
 const { clipboard, ipcRenderer } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
@@ -50,15 +50,9 @@ export function SetupEditor() {
             monaco.languages.onLanguage('lpc', () => {
                 monaco.languages.setMonarchTokensProvider('lpc', language);
                 monaco.languages.setLanguageConfiguration('lpc', conf);
-
                 monaco.languages.registerCompletionItemProvider('lpc', {
                     provideCompletionItems: function (model, position) {
-                        return <monaco.languages.CompletionItem[]>[
-                            { label: 'this_player()', kind: monaco.languages.CompletionItemKind.Function },
-                            { label: 'this_object()', kind: monaco.languages.CompletionItemKind.Function },
-                            { label: 'message', kind: monaco.languages.CompletionItemKind.Function },
-                            { label: 'random', kind: monaco.languages.CompletionItemKind.Function }
-                        ];
+                        return loadCompletion();
                     }
                 });
             });
@@ -75,7 +69,11 @@ export function SetupEditor() {
                     { token: 'abbr', foreground: '008000', fontStyle: 'bold' },
                     { token: 'datatype', foreground: 'ff0000' },
                     { token: 'constant', foreground: 'ff0000', fontStyle: 'bold' },
-                ]
+                    { token: 'applies', foreground: 'C45AEC', fontStyle: 'bold' },
+                ],
+                colors: {
+                    'editorGutter.background':'#f5f5f5'
+                }
             });
             monaco.languages.registerDocumentFormattingEditProvider('lpc', {
                 provideDocumentFormattingEdits(model, options, token): Promise<monaco.languages.TextEdit[]> {

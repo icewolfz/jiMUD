@@ -1,0 +1,6 @@
+string format_stack()
+
+Returns a string representing the call stack. Includes program, function, euid,
+uid, object and origin.
+
+

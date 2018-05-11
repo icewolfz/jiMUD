@@ -1,0 +1,14 @@
+Nightmare Mudlib 3.2 SimulEfun: random_member()
+
+varargs mixed random_member(mixed arr, int flag);
+
+DESCRIPTION
+Returns a random element from an array
+If a mapping, it will return a random key from the mapping
+If a mapping and flag is 1, it will return a random value from the mapping
+
+LOCATION
+/adm/simul_efun/random_member.c
+
+SEE ALSO
+member_array, map_delete, allocate

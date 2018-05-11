@@ -1,0 +1,26 @@
+void music(mixed sound, mixed targets, mixed exclude, string msg, int vol, int repeats, int continue, string msgcls)
+
+This plays a music effect for the player object.
+    sound -
+        string - file name, can include a subfolder to better group sounds
+                if yo use Off as the file name it will stop playing all current sounds
+        int - a predefined index that is set in USER_D->get_sound_file(sound);
+    targets - the objects to play the sound to
+        object - either a room or player object, if room it will play the sound to all players in room
+        arary - an array of rooms or players to play sound to
+    exclude - object or objects to exclude can be room or players
+    msg - a message to be displayed after music     
+    vol - the volume to play the sound at, 1 to 100, any # less then 0 is a volume of 0,
+          if 0 will be default volume of 100
+    repeats - how many times to repeat this sound, must be 1 or higher
+              -1 - loop sound until next sound replaces it
+    continue -
+            1 - will continue playing the sound if already playing
+            0 - will restart the music from the starty
+    msgcls - the message class for the message to display
+
+Example:
+    music("AddamsFamily.m4a", "/domains/oldkingdom/kieron/square.c"); //this will play the AddamsFamily.m4a if possible to the square room
+
+See also: music, play_music, play_sound
+Defined in /adm/simule_efun/sound.c

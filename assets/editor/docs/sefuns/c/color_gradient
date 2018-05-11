@@ -1,0 +1,30 @@
+varargs string color_gradient(string str, string *colors, int blksize, int c, int countspaces, int bg)
+
+DESCRIPTION
+This allows you to colorize a string based on an array of colors, based on a blocksize.
+
+string str - the string to color
+colors - an array of color codes OR an array of #s
+        # arrarys must be 2, 3 or 6 numbers in the values of 0 to 5, it will build color codes onthe RGB xterm system
+        if 2 #s it will create a grayscale gradient,
+        if #s are - it will go in reverse color order
+blksize - the # of letters assigned to each color, by default it will be length / # of colors
+        once the max color has been reached it will reverse the color array and color backwards
+int c - starting offset color, lets you pick where in the array you want to begin
+int countspaces - count spaces in the color blocks, default will ignore
+int bg - if using RGB or greyscale modes this will toggle to return background color codes
+
+EXAMPLES
+color_gradient("0123456790123456789", ({"%%^^RGB035%%^^","%%^^RGB135%%^^","%%^^RGB235%%^^","%%^^RGB335%%^^","%%^^RGB435%%^^"}), 1)
+   %^RGB035%^0%^RGB135%^1%^RGB235%^2%^RGB335%^3%^RGB435%^4%^RGB335%^5%^RGB235%^6%^RGB135%^7%^RGB035%^9%^RGB135%^0%^RGB235%^1%^RGB335%^2%^RGB435%^3%^RGB335%^4%^RGB235%^5%^RGB135%^6%^RGB035%^7%^RGB135%^8%^RGB235%^9%^RESET%^
+color_gradient("0123456790123456789", ({"%%^^RGB035%%^^","%%^^RGB135%%^^","%%^^RGB235%%^^","%%^^RGB335%%^^","%%^^RGB435%%^^"}))
+   %^RGB035%^0%^RGB035%^1%^RGB035%^2%^RGB135%^3%^RGB135%^4%^RGB135%^5%^RGB235%^6%^RGB235%^7%^RGB235%^9%^RGB335%^0%^RGB335%^1%^RGB335%^2%^RGB435%^3%^RGB435%^4%^RGB435%^5%^RGB335%^6%^RGB335%^7%^RGB335%^8%^RGB235%^9%^RESET%^
+color_gradient("0123456790123456789", ({"%%^^RESET%%^^%%^^RED%%^^","%%^^RESET%%^^%%^^ORANGE%%^^","%%^^YELLOW%%^^","%%^^RESET%%^^%%^^BOLD%%^^GREEN%%^^","%%^^RESET%%^^%%^^GREEN%%^^"}))
+   %^RESET%^%^RED%^0%^RESET%^%^RED%^1%^RESET%^%^RED%^2%^RESET%^%^ORANGE%^3%^RESET%^%^ORANGE%^4%^RESET%^%^ORANGE%^5%^YELLOW%^6%^YELLOW%^7%^YELLOW%^9%^RESET%^%^BOLD%^GREEN%^0%^RESET%^%^BOLD%^GREEN%^1%^RESET%^%^BOLD%^GREEN%^2%^RESET%^%^GREEN%^3%^RESET%^%^GREEN%^4%^RESET%^%^GREEN%^5%^RESET%^%^BOLD%^GREEN%^6%^RESET%^%^BOLD%^GREEN%^7%^RESET%^%^BOLD%^GREEN%^8%^YELLOW%^9%^RESET%^
+
+LOCATION
+/adm/simul_efun/interface.c
+
+SEE ALSO
+strip_colours()
+color_rainbow()

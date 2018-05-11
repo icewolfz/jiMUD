@@ -1,0 +1,16 @@
+varargs int present_clones_children(string s)
+
+DESCRIPTION
+Returns the global number of clones
+
+The only argument is the full path to object
+
+
+EXAMPLES
+present_clones_children("/std/obj/torch");  wil return the total count of torches create
+
+LOCATION
+/adm/simul_efun/misc.c
+
+SEE ALSO
+clone_max()

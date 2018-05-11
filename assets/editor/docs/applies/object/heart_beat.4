@@ -1,0 +1,15 @@
+.\"allows an object to do self-maintenance
+.TH heart_beat 4 "5 Sep 1994" MudOS "Driver Applies"
+
+.SH NAME
+reset - called periodically in objects in which it is enabled
+
+.SH SYNOPSIS
+void heart_beat( void );
+
+.SH DESCRIPTION
+If an object has called set_heart_beat(), this function will be called
+periodically in that object.
+
+.SH SEE ALSO
+set_heart_beat(3), query_heart_beat(3), create(4)

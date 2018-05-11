@@ -1,0 +1,8 @@
+int mkdir_p(string directory)
+
+Like "mkdir -p" in linux. If the dir already exists then it will not be
+created. If it does not exist then it will create as many directory components
+as it needs. Thus:
+   mkdir /realms/ideysus/something/somethingelse
+works, even if /realms/ideysus/something/ does not exist.
+

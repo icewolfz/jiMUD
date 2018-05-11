@@ -926,3 +926,54 @@ export function invert(obj) {
     }
     return new_obj;
 };
+
+export function walkSync(dir, fileList?, dirList?, empty?) {
+    var path = path || require('path');
+    var fs = fs || require('fs'),
+        files = fs.readdirSync(dir);
+    fileList = fileList || [];
+    dirList = dirList || [];
+    empty = empty || [];
+    if (files.length == 0)
+        empty.push(dir);
+    files.forEach(function (file) {
+        if (fs.statSync(path.join(dir, file)).isDirectory()) {
+            dirList.push(path.join(dir, file));
+            var t = walkSync(path.join(dir, file), fileList, dirList, empty);
+            fileList = t.files;
+            dirList = t.dirs;
+            empty = t.empty;
+        }
+        else {
+            fileList.push(path.join(dir, file));
+        }
+    });
+    return { files: fileList, dirs: dirList, empty: empty };
+};
+
+export function walk(dir, callback) {
+    var path = path || require('path');
+    var fs = fs || require('fs');
+    fs.readdir(dir, (err, files) => {
+        var fileList = [];
+        var dirList = [];
+        var empty = [];
+        if (files.length == 0)
+            empty.push(dir);
+        files.forEach(function (file) {
+            if (fs.statSync(path.join(dir, file)).isDirectory()) {
+                dirList.push(path.join(dir, file));
+                var t = walkSync(path.join(dir, file), fileList, dirList, empty);
+                fileList = t.files;
+                dirList = t.dirs;
+                empty = t.empty;
+            }
+            else {
+                fileList.push(path.join(dir, file));
+            }
+        });
+        if (callback)
+            callback(fileList, dirList, empty);
+
+    });
+};

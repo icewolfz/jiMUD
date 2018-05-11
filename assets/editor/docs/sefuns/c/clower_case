@@ -1,0 +1,16 @@
+Nightmare IV SimulEfun: clower_case()
+
+string clower_case(string str);
+
+DESCRIPTION
+works like lower_case but will ignore and leave color codes alone.
+
+EXAMPLES
+clower_case("%%^^BOLD%%^^EXAMPLE",); will return "%%^^BOLD%%^^example
+clower_case("BOLD%%^^EXAMPLE",); will return bold%%^^example
+
+LOCATION
+/adm/simul_efun/strings.c
+
+SEE ALSO 
+lower_case(), upper_case, cupper_case

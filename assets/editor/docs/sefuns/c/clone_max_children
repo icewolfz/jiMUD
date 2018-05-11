@@ -1,0 +1,21 @@
+varargs int clone_max_children(string s, int cnt, int max, object container, ...)
+
+DESCRIPTION
+Clones max number of s objects and moves them to container
+
+The first argument is the full path to an object to clone
+The second argument is the total amount of objects to clone minus any present in the container
+The third argument is max global count of objects to clone ever
+The forth argument is optional and is where the object are to be moved to, if not found it will use previous object
+
+Any other arguments will be passed to the objects new call
+
+EXAMPLES
+clone_max_children("/std/obj/torch", 1, 2); will clone 1 torch as long as there are no more then 2 already cloned
+clone_max_children("/std/obj/torch", 1, 2, this_player()); will clone 1 torch and move it to this_player as long as they only 1 or less
+
+LOCATION
+/adm/simul_efun/misc.c
+
+SEE ALSO
+present_clones()

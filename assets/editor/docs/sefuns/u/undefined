@@ -1,0 +1,4 @@
+mixed undefined()
+
+Returns a value for which undefinedp() returns true.
+

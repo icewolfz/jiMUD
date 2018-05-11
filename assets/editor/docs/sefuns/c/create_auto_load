@@ -1,0 +1,18 @@
+mixed create_auto_load(mixed data)
+
+mixed create_auto_load(string file)
+mixed create_auto_load(string data)
+mixed create_auto_load(array data)
+
+create an object or array of objects from auto loading data
+
+Will return an object or an array of objects built from supplied file or data
+
+string file - a valid file name to read data from and attmempt to recreate object
+string data - valid serilized data to recreate object from
+    valid data is save_auto_load serized data or save_variable(object->query_auto_load(target))
+array data - valid data from query_auto_load()
+
+SEE ALSO
+save_auto_load, query_auto_load
+

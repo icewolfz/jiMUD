@@ -1,0 +1,12 @@
+varargs string wrap(string str, int width, mixed indent)
+
+Wraps str so each line is less than width in length. This is done by inserting 
+newlines. wrap is aware of colour codes and will not insert newlines into them 
+in a valid colour encoded string.
+
+If indent is passed it is prefixed to wrapped lines (after the first line)
+If indent is an integer it shall be considered a number of spaces.
+
+SEE ALSO
+arrange_string(), format_page(), sprintf()
+
