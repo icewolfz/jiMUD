@@ -667,12 +667,16 @@ export class DockManager extends EventEmitter {
         else
             tab = this.getPanel(tab);
         if (!tab) return;
-        tab.icon.classList.remove(...tab.iconCls.split(' '));
+        if (tab.iconCls && tab.iconCls.length !== 0)
+            tab.icon.classList.remove(...tab.iconCls.split(' '));
         tab.icon.classList.add(...icon.split(' '));
+        tab.icon.style.backgroundImage = '';
+        tab.icon.style.backgroundImage = '';
         tab.iconCls = icon;
         const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).addClass(tab.icon.className);
+        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-image', '');
     }
 
     public setPanelIcon(icon: string, tab?, noMenu?: boolean) {
@@ -681,18 +685,13 @@ export class DockManager extends EventEmitter {
         else
             tab = this.getPanel(tab);
         if (!tab) return;
-        tab.icon.classList.remove(...tab.iconCls.split(' '));
+        if (tab.iconCls && tab.iconCls.length !== 0)
+            tab.icon.classList.remove(...tab.iconCls.split(' '));
         tab.iconCls = '';
         tab.icon.style.backgroundImage = `url(${icon})`;
-        tab.icon.style.backgroundPosition = 'center';
-        tab.icon.style.backgroundRepeat = 'no-repeat';
-        tab.icon.style.backgroundSize = '16px 16px';
         const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-image', `url(${icon})`);
-        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-position', 'center');
-        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-repeat', 'no-repeat');
-        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-size', '16px 16px');
     }
 
     public getPanel(idx) {

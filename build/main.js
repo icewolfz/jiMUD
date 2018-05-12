@@ -2003,8 +2003,8 @@ ipcMain.on('editor-setting-changed', (event, data) => {
   if (winCode)
     winCode.webContents.send('editor-setting-changed');
   if (winCode.setParentWindow)
-    winCode.setParentWindow(data.alwaysOnTopClient ? win : null);
-  winCode.setSkipTaskbar((data.alwaysOnTopClient || data.alwaysOnTop) ? true : false);
+    winCode.setParentWindow((!editorOnly && data.alwaysOnTopClient) ? win : null);
+  winCode.setSkipTaskbar((!editorOnly && (data.alwaysOnTopClient || data.alwaysOnTop)) ? true : false);
   if (!editorOnly && data.persistent && !winCode)
     createCodeEditor();
 });
@@ -3082,7 +3082,7 @@ function createCodeEditor(show, loading, loaded) {
     };
   states['code-editor'] = edset.state;
   winCode = new BrowserWindow({
-    parent: editorOnly ? null : (edset.window.alwaysOnTopClient ? win : null),
+    parent: (!editorOnly && edset.window.alwaysOnTopClient) ? win : null,
     alwaysOnTop: edset.window.alwaysOnTop,
     title: 'Code editor',
     x: s.x,
@@ -3091,7 +3091,7 @@ function createCodeEditor(show, loading, loaded) {
     height: s.height,
     backgroundColor: 'grey',
     show: false,
-    skipTaskbar: editorOnly ? false : ((edset.window.alwaysOnTopClient || edset.window.alwaysOnTop) ? true : false),
+    skipTaskbar: (!editorOnly && (edset.window.alwaysOnTopClient || edset.window.alwaysOnTop)) ? true : false,
     icon: path.join(__dirname, '../assets/icons/win/code.ico')
   });
 

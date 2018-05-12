@@ -1790,8 +1790,16 @@
         var p;
         while (k--) {
             p = keys[k];
-            if (_editors[p].editor.type === 1)
+            if (_editors[p].editor.type === 1) {
                 _editors[p].editor.options = options.editorOptions;
+                manager.setPanelIconClass(getFileIcon(_editors[p].editor.file), _editors[p]);
+                if (options.nativeIcons)
+                    app.getFileIcon(_editors[p].editor.file, { size: 'small' }, (err, icon) => {
+                        if (err || !icon) return;
+                        manager.setPanelIcon(icon.toDataURL(), _editors[p]);
+                    });
+            }
+
         }
     });
 

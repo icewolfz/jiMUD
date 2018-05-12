@@ -150,6 +150,8 @@ $tabHeight: 26;
     left: 3px;
     position: absolute;
     background-size: 16px 16px;
+    background-position: center;
+    background-repeat: no-repeat;   
 }
 
 #cm-scroll-menu .icon {
@@ -159,7 +161,9 @@ $tabHeight: 26;
     background-size: 16px 16px;
     display: inline-block;
     position: relative;
-    top: 2px;    
+    top: 2px;   
+    background-position: center;
+    background-repeat: no-repeat;      
 }
 
 .cm-tabstrip li .close {

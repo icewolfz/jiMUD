@@ -100,15 +100,9 @@
             else
                 $('.win32').css('display', 'none');
             _settings = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-           
             loadSettings();
             $('input[type="checkbox"]').change(function () {
                 switch ($(this).attr('id')) {
-                    case 'alwaysOnTopClient':
-                    case 'persistent':
-                    case 'alwaysOnTop':
-                        _settings.window[$(this).attr('id')] = this.checked;
-                        break;
                     default:
                         setValue($(this).attr('id'), this.checked);
                         break;
@@ -148,6 +142,13 @@
             $("#reopen").prop('checked', _settings.reopen);
             $("#maxRecent").val(_settings.maxRecent);
             let option;
+            for (option in _settings) {
+                if (!_settings.hasOwnProperty(option))
+                    continue;
+                if (typeof (_settings[option]) !== "boolean")
+                    continue;
+                $('#' + option).prop('checked', _settings[option]);
+            }
             for (option in _settings.editorOptions) {
                 if (!_settings.editorOptions.hasOwnProperty(option))
                     continue;
@@ -156,9 +157,9 @@
                 $('#editorOptions-' + option).prop('checked', _settings.editorOptions[option]);
             }
 
-            $("#persistent").prop('checked', _settings.window.persistent);
-            $("#alwaysOnTopClient").prop('checked', _settings.window.alwaysOnTopClient);
-            $("#alwaysOnTop").prop('checked', _settings.window.alwaysOnTop);
+            $("#window-persistent").prop('checked', _settings.window.persistent);
+            $("#window-alwaysOnTopClient").prop('checked', _settings.window.alwaysOnTopClient);
+            $("#window-alwaysOnTop").prop('checked', _settings.window.alwaysOnTop);
 
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
@@ -205,7 +206,7 @@
                     <label class="control-label">
                         <input type="checkbox" id="nativeIcons" /> Use native icons in tabs
                     </label>
-                </div>                
+                </div>
                 <div class="col-sm-6 form-group">
                     <label class="control-label">
                         <input type="checkbox" id="reopen" /> Remember open files on reload
@@ -225,26 +226,26 @@
                 <div class="col-xs-12">
                     <div class="col-xs-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="alwaysOnTopClient" /> Always on top of client
+                            <input type="checkbox" id="window-alwaysOnTopClient" /> Always on top of client
                             <span class="win32 help-block" style="display:none;font-size: 0.8em;margin:0;padding:0">Requires restart</span>
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">When disabled editor will remain open even if client closed</span>
                         </label>
                     </div>
                     <div class="col-xs-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="alwaysOnTop" /> Always on top of all
+                            <input type="checkbox" id="window-alwaysOnTop" /> Always on top of all
                         </label>
                     </div>
                 </div>
                 <div class="col-xs-6 form-group">
                     <label class="control-label">
-                        <input type="checkbox" id="persistent" /> Persistent
+                        <input type="checkbox" id="window-persistent" /> Persistent
                         <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Not applied when in editor only mode</span>
                     </label>
                 </div>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="advanced">
-                
+
             </div>
         </div>
         <div class="dialog-footer">
