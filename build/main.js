@@ -1367,6 +1367,7 @@ function createWindow() {
       showCodeEditor(true);
     else if (!editorOnly && edset.window.persistent)
       createCodeEditor();
+    updateJumpList();
   });
 
   win.on('close', (e) => {
@@ -3154,6 +3155,8 @@ function createCodeEditor(show, loading, loaded) {
     if (loaded)
       loaded();
     codeReady = true;
+    if (editorOnly)
+      updateJumpList();
   });
 
   winCode.on('close', (e) => {
@@ -3234,4 +3237,36 @@ function showCodeEditor(loading) {
   }
   else
     createCodeEditor(true, loading);
+}
+
+function updateJumpList() {
+  if (process.platform !== 'win32')
+    return;
+  const list = [];
+  //@TODO figure out some way to open editor window for current jimud instance
+  list.push({
+    type: 'tasks',
+    items: [
+      {
+        type: 'task',
+        title: "New Code Editor",
+        description: "Opens a new code editor",
+        program: process.execPath,
+        args: '-eo', // force editor only mode
+        iconPath: process.execPath,
+        iconIndex: 0
+      }
+    ]
+  });
+//@TODO add recent support, require instance check
+  /*
+  list.push({
+    type: 'recent'
+  });
+*/
+  try {
+    app.setJumpList(list);
+  } catch (error) {
+    logError(error);
+  }
 }
