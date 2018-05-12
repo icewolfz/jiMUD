@@ -10,6 +10,7 @@ export class EditorSettings {
     public reopen = true;
     public outputSize = 170;
     public output = false;
+    public nativeIcons: boolean = false;
     public window = {
         persistent: false,
         alwaysOnTopClient: true,

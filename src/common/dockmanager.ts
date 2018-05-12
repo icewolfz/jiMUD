@@ -408,7 +408,7 @@ export class DockManager extends EventEmitter {
         this.panels.push(panel);
         this.switchToPanelByIndex(this.panels.length - 1);
         this.setPanelTitle(title || '');
-        this.setPanelIcon(panel.iconCls);
+        this.setPanelIconClass(panel.iconCls);
         this.setPanelTooltip(tooltip || '');
         this.emit('add', { index: this.panels.length - 1, id: panel.id, panel: panel });
         this.doUpdate(UpdateType.resize | UpdateType.stripState | UpdateType.batchAdd);
@@ -459,7 +459,7 @@ export class DockManager extends EventEmitter {
         panel.title.classList.add('title');
         panel.icon.classList.add('icon');
         this.setPanelTitle(title || '', panel, true);
-        this.setPanelIcon(panel.iconCls, panel, true);
+        this.setPanelIconClass(panel.iconCls, panel, true);
         this.setPanelTooltip(tooltip || '', panel);
         return panel;
     }
@@ -661,7 +661,7 @@ export class DockManager extends EventEmitter {
         $(`#cm-scroll-dropdownmenu-${idx}-title`).html(text);
     }
 
-    public setPanelIcon(icon: string, tab?, noMenu?: boolean) {
+    public setPanelIconClass(icon: string, tab?, noMenu?: boolean) {
         if (tab === undefined)
             tab = this.active;
         else
@@ -673,6 +673,26 @@ export class DockManager extends EventEmitter {
         const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).addClass(tab.icon.className);
+    }
+
+    public setPanelIcon(icon: string, tab?, noMenu?: boolean) {
+        if (tab === undefined)
+            tab = this.active;
+        else
+            tab = this.getPanel(tab);
+        if (!tab) return;
+        tab.icon.classList.remove(...tab.iconCls.split(' '));
+        tab.iconCls = '';
+        tab.icon.style.backgroundImage = `url(${icon})`;
+        tab.icon.style.backgroundPosition = 'center';
+        tab.icon.style.backgroundRepeat = 'no-repeat';
+        tab.icon.style.backgroundSize = '16px 16px';
+        const idx = this.getPanelIndex(tab);
+        $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
+        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-image', `url(${icon})`);
+        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-position', 'center');
+        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-repeat', 'no-repeat');
+        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-size', '16px 16px');
     }
 
     public getPanel(idx) {

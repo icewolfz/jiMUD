@@ -626,7 +626,7 @@
     const { DebugTimer, MonacoCodeEditor, VirtualEditor } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
-    const { dialog, Menu, MenuItem } = remote;
+    const { dialog, Menu, MenuItem, app } = remote;
     const { Menubar } = require('./js/menubar');
     const { inverse, parseTemplate, capitalize, existsSync, isDirSync } = require('./js/library');
 
@@ -2278,6 +2278,11 @@
             //p.editor = new VirtualEditor(data);
             //else        
             p.editor = new MonacoCodeEditor(data);
+            if (options.nativeIcons)
+                app.getFileIcon(data.file, { size: 'small' }, (err, icon) => {
+                    if (err || !icon) return;
+                    manager.setPanelIcon(icon.toDataURL());
+                });
             p.editor.options = options.editorOptions;
             if (!_watched[data.file]) {
                 _watched[data.file] = 1;
