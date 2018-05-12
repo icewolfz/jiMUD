@@ -24,6 +24,7 @@ export interface Panel {
     icon: HTMLElement;
     title: HTMLElement;
     iconCls: string;
+    iconSrc?;
     isPanel: boolean;
 }
 
@@ -277,10 +278,13 @@ export class DockManager extends EventEmitter {
             menu.empty();
             const tl = this.panels.length;
             for (let t = 0; t < tl; t++) {
+                var icon = ''
+                if(this.panels[t].iconSrc)
+                    icon = ` style="background-image: url(${this.panels[t].iconSrc})"`;
                 if (this.panels[t] === this.active)
-                    menu.append(`<li><a href="#" class="active" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
+                    menu.append(`<li><a href="#" class="active" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
                 else
-                    menu.append(`<li><a href="#" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
+                    menu.append(`<li><a href="#" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
             }
             //$(this.$scrollDropdown).trigger('click.bs.dropdown');
         };
@@ -673,6 +677,7 @@ export class DockManager extends EventEmitter {
         tab.icon.style.backgroundImage = '';
         tab.icon.style.backgroundImage = '';
         tab.iconCls = icon;
+        tab.iconSrc = 0;
         const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).addClass(tab.icon.className);
@@ -688,6 +693,7 @@ export class DockManager extends EventEmitter {
         if (tab.iconCls && tab.iconCls.length !== 0)
             tab.icon.classList.remove(...tab.iconCls.split(' '));
         tab.iconCls = '';
+        tab.iconSrc = icon;
         tab.icon.style.backgroundImage = `url(${icon})`;
         const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
