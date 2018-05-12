@@ -87,7 +87,7 @@ export const language = <ILanguage>{
         'virtual',
         'while',
         'nosave',
-        'varrags',
+        'varargs',
         'nomask',
         'inherit',
 
