@@ -3075,7 +3075,7 @@ function createCodeEditor(show, loading, loaded) {
     backgroundColor: 'grey',
     show: false,
     skipTaskbar: editorOnly ? false : ((edset.window.alwaysOnTopClient || edset.window.alwaysOnTop) ? true : false),
-    icon: path.join(__dirname, '../assets/icons/png/code.png')
+    icon: path.join(__dirname, '../assets/icons/win/code.ico')
   });
 
   if (s.fullscreen)
