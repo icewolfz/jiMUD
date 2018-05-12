@@ -1794,7 +1794,7 @@
                 _editors[p].editor.options = options.editorOptions;
                 manager.setPanelIconClass(getFileIcon(_editors[p].editor.file), _editors[p]);
                 if (options.nativeIcons)
-                    app.getFileIcon(_editors[p].editor.file, { size: 'small' }, (err, icon) => {
+                    app.getFileIcon((path.extname(_editors[p].editor.file).length !== 0 ? _editors[p].editor.file : '.*'), { size: 'small' }, (err, icon) => {
                         if (err || !icon) return;
                         manager.setPanelIcon(icon.toDataURL(), _editors[p]);
                     });
@@ -2287,7 +2287,7 @@
             //else        
             p.editor = new MonacoCodeEditor(data);
             if (options.nativeIcons)
-                app.getFileIcon(data.file, { size: 'small' }, (err, icon) => {
+                app.getFileIcon((path.extname(data.file).length !== 0 ? data.file : '.*'), { size: 'small' }, (err, icon) => {
                     if (err || !icon) return;
                     manager.setPanelIcon(icon.toDataURL());
                 });
