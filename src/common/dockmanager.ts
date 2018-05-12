@@ -542,17 +542,16 @@ export class DockManager extends EventEmitter {
     }
 
     public removeAllPanelsAfter(afterPanel?) {
-        const tl = this.panels.length;
         let idx;
         let e;
         let panel;
         if (afterPanel === undefined)
             afterPanel = this.active;
-        idx = this.getPanelIndex(afterPanel);
-        if (idx === -1)
+        const tl = this.getPanelIndex(afterPanel);
+        if (tl === -1)
             return;
-        idx++;
-        for (; idx < tl; idx++) {
+        idx = this.panels.length - 1;
+        for (; idx > tl; idx--) {
             panel = this.panels[idx];
             e = { index: idx, id: panel.id, panel: panel, cancel: false };
             this.emit('remove', e);
@@ -583,7 +582,8 @@ export class DockManager extends EventEmitter {
         beforePanel = this.getPanelIndex(beforePanel);
         if (beforePanel === -1)
             return;
-        for (idx = 0; idx < beforePanel; idx++) {
+        idx = beforePanel - 1;
+        for (; idx >= 0; idx--) {
             panel = this.panels[idx];
             e = { index: idx, id: panel.id, panel: panel, cancel: false };
             this.emit('remove', e);

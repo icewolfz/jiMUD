@@ -2006,7 +2006,9 @@
                 continue;
             }
             _recent.unshift({ file: files[f].file || files[f].path, remote: files[f].remote });
-            panels.push(createEditor({ file: files[f].file || files[f].path, remote: files[f].remote, open: true }));
+            var p = createEditor({ file: files[f].file || files[f].path, remote: files[f].remote, open: true });
+            if (p)
+                panels.push(p);
         }
         manager.addPanels(panels);
         doUpdate(25);
@@ -2280,6 +2282,7 @@
         if (p) {
             p.editor.remote = data.remote;
             manager.switchToPanel(p);
+            return null;
         }
         else {
             p = manager.createPanel(path.basename(data.file), getFileIcon(data.file), data.file);
@@ -2291,7 +2294,7 @@
             if (options.nativeIcons)
                 app.getFileIcon((path.extname(data.file).length !== 0 ? data.file : '.*'), { size: 'small' }, (err, icon) => {
                     if (err || !icon) return;
-                    manager.setPanelIcon(icon.toDataURL());
+                    manager.setPanelIcon(icon.toDataURL(), p);
                 });
             p.editor.options = options.editorOptions;
             if (!_watched[data.file]) {
