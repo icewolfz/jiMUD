@@ -2,6 +2,10 @@
 
 ## 0.4.x
 
+- **New:**
+  - Code editor:
+    - Window can be persistent when not in editor only mode
+    - Native file icon option for tabs
 - **Changed:**
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
@@ -26,7 +30,7 @@
   - Advanced editor:
     - Can send formatted text to open code editor to be inserted at current cursor
     - Copy formatted, copy selected text with the format codes, using Ctrl+Shift+C or context menu
-    - Paste formatted, paste text formatted with pinkfish codes and have it display in the editor with full formatting, Ctrl+Shift+P or context menu  
+    - Paste formatted, paste text formatted with pinkfish codes and have it display in the editor with full formatting, Ctrl+Shift+P or context menu
   - More monster icons
 - **Changed:**
   - Upgrade ace editor to newest build

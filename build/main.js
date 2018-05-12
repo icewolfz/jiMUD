@@ -1345,6 +1345,7 @@ function createWindow() {
       showChat(true);
     else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
       createChat();
+
     for (var name in set.windows) {
       if (set.windows[name].options) {
         if (set.windows[name].options.show)
@@ -1364,6 +1365,8 @@ function createWindow() {
       edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
     if (edset.window.show)
       showCodeEditor(true);
+    else if (!editorOnly && edset.window.persistent)
+      createCodeEditor();
   });
 
   win.on('close', (e) => {
@@ -1598,6 +1601,12 @@ ipcMain.on('load-default', (event) => {
     showChat(true);
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
+  if (!edset)
+    edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+  if (edset.window.show)
+    showCodeEditor(true);
+  else if (!editorOnly && edset.window.persistent)
+    createCodeEditor();
 });
 
 ipcMain.on('load-char', (event, char) => {
@@ -1646,7 +1655,8 @@ ipcMain.on('load-char', (event, char) => {
     winEditor.destroy();
   if (winChat)
     winChat.destroy();
-
+  if (winCode)
+    winCode.destroy();
   if (win && win.webContents)
     win.webContents.send('change-options', global.settingsFile);
 
@@ -1664,6 +1674,13 @@ ipcMain.on('load-char', (event, char) => {
     showChat(true);
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
+
+  if (!edset)
+    edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+  if (edset.window.show)
+    showCodeEditor(true);
+  else if (!editorOnly && edset.window.persistent)
+    createCodeEditor();
 
   for (name in set.windows) {
     if (set.windows[name].options) {
@@ -1988,7 +2005,7 @@ ipcMain.on('editor-setting-changed', (event, data) => {
   if (winCode.setParentWindow)
     winCode.setParentWindow(data.alwaysOnTopClient ? win : null);
   winCode.setSkipTaskbar((data.alwaysOnTopClient || data.alwaysOnTop) ? true : false);
-  if (data.persistent && !winCode)
+  if (!editorOnly && data.persistent && !winCode)
     createCodeEditor();
 });
 
@@ -3150,6 +3167,10 @@ function createCodeEditor(show, loading, loaded) {
     }
     edset.state = getWindowState('code-editor', winCode);
     edset.save(parseTemplate(path.join('{data}', 'editor.json')));
+    if (!editorOnly && edset.window.persistent) {
+      e.preventDefault();
+      winCode.hide();
+    }
   });
 
   winCode.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
