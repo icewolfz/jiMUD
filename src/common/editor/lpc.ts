@@ -92,6 +92,7 @@ export const language = <ILanguage>{
         'inherit',
 
     ],
+    
     datatypes: [
         'void',
         'float',
@@ -667,7 +668,9 @@ export const language = <ILanguage>{
     tokenizer: {
         root: [
             //inherits
-            [/(\s*)(\w*)(::)(\w+)(\()/, ['', 'parent', 'delimiter', 'parent.function', { token: 'delimiter.parenthesis', open: '(', close: ')' }], '@brackets'],
+            [/(::)(\w+)(\()/, ['delimiter', 'parent.function', { token: 'delimiter.parenthesis', open: '(', close: ')' }], '@brackets'],
+            [/([\!.+])(::)(\w+)(\()/, ['','delimiter', 'parent.function', { token: 'delimiter.parenthesis', open: '(', close: ')' }], '@brackets'],
+            [/(\w*?)(::)(\w+)(\()/, ['parent', 'delimiter', 'parent.function', { token: 'delimiter.parenthesis', open: '(', close: ')' }], '@brackets'],
 
             // identifiers and keywords
             [/[a-zA-Z_]\w*/, {
