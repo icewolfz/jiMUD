@@ -172,6 +172,8 @@ export class MonacoCodeEditor extends EditorBase {
             this.$model.setValue(options.value);
             this.changed = false;
         }
+        if(options.options)
+            this.options = options.options;
     }
 
     public createControl() {

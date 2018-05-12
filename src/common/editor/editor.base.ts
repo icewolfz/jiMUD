@@ -9,6 +9,7 @@ export interface EditorOptions {
     new?: boolean;
     value?: any;
     remote?: string;
+    options?: any;
 }
 
 export enum FileState {

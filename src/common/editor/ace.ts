@@ -52,6 +52,8 @@ export class AceCodeEditor extends EditorBase {
             this.$session.getUndoManager().reset();
             this.changed = false;
         }
+        if(options.options)
+            this.options = options.options;
     }
 
     public createControl() {
