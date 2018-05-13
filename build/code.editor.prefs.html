@@ -207,7 +207,7 @@
             option = option.split('-');
             if (option.length === 3)
                 _settings[option[0]][option[1]][option[2]] = value;
-            if (option.length === 2)
+            else if (option.length === 2)
                 _settings[option[0]][option[1]] = value;
             else
                 _settings[option[0]] = value;
