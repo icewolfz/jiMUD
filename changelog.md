@@ -4,7 +4,7 @@
 
 - **New:**
   - Code editor:
-    - Window can be persistent preference when not in editor only mode
+    - Window can be persistent when not in editor only mode
     - [Use native icons in tabs](docs/codeeditor.md) preference to allow control over icon display
 - **Changed:**
   - Code editor:
