@@ -4,7 +4,7 @@
 
 - **New:**
   - Code editor:
-    - Window can be persistent when not in editor only mode
+    - Window can be persistent when not in editor only mode again
     - [Use native icons in tabs](docs/codeeditor.md) preference to allow control over icon display
 - **Changed:**
   - Code editor:
@@ -12,7 +12,7 @@
 - **Fixed:**
   - Code editor:
     - Fix insert color dialog
-    - Editor only losing taskbar icon when preference
+    - Editor only losing taskbar icon when preference changed
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
 
