@@ -823,10 +823,6 @@ enum TokenType {
     XEOT = 17,
 }
 
-/*
-
-*/
-
 class Stack {
     public size: number;
     private $stack = [];
@@ -1149,8 +1145,8 @@ export class lpcIndenter extends EventEmitter {
                                 (this.$stack.current != TokenType.XEOT && (
                                     this.$stack.getnext(1) === TokenType.LHOOK2 ||
                                     (this.$stack.getnext(1) === TokenType.ROPERATOR && this.$stack.getnext(2) == TokenType.LHOOK2) ||
-                                    (this.$stack.getnext(1) === TokenType.LHOOK && this.$stack.getnext(2) == TokenType.LHOOK2) ||
-                                    (this.$stack.getnext(1) === TokenType.LHOOK && this.$stack.getnext(2) == TokenType.TOKEN && this.$stack.getnext(3) == TokenType.LHOOK2)
+                                    (this.$stack.getnext(1) === TokenType.LHOOK && this.$stack.getnext(2) == TokenType.LHOOK2) || // handle nested array in mapping no token
+                                    (this.$stack.getnext(1) === TokenType.LHOOK && this.$stack.getnext(2) == TokenType.TOKEN && this.$stack.getnext(3) == TokenType.LHOOK2) //handled nested array in mapping
                                 )))) {
                             p++;
                             token = TokenType.RHOOK2;
@@ -1173,6 +1169,7 @@ export class lpcIndenter extends EventEmitter {
                             while (this.isalnum(line.charAt(p)) || line.charAt(p) === '_');
                             if (ident === "switch")
                                 token = TokenType.SWITCH;
+                            //track case and default for more indenting
                             else if (ident === "case" || ident === "default")
                                 token = TokenType.CASE;
                             else if (ident === "if")
@@ -1225,15 +1222,16 @@ export class lpcIndenter extends EventEmitter {
                         this.$shi = i - indent_index + i2;
                         //if (token == TokenType.CASE && sp.current == TokenType.LBRACKET && (ident === "case" || ident === "default"))
                         //this.$shi -= this.shift; //shift
-                        if (token == TokenType.CASE)
+                        if (token == TokenType.CASE) //if case shift back one just for this line
                             this.$shi -= this.shift; //shift
+                        //if in a switch and { shift back just for this line
                         else if (token === TokenType.LBRACKET &&
                             sp.current == TokenType.ROPERATOR &&
                             sp.getnext(1) == TokenType.LOPERATOR &&
                             sp.getnext(2) == TokenType.SWITCH
                         )
                             this.$shi -= this.shift;
-                            //1,4,3,12
+                        //if in a switch and ending } shift back just for this line
                         else if (token === TokenType.RBRACKET &&
                             sp.current == TokenType.LBRACKET &&
                             sp.getnext(1) == TokenType.ROPERATOR &&
