@@ -15,7 +15,7 @@
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <script>
-        /* global manager, inverse, capitalize */
+        /* global manager, inverse, capitalize, options */
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
@@ -135,6 +135,8 @@
             window.$editor.onDidChangeCursorPosition((e) => {
                 manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
             });
+            
+            window.$editor.updateOptions(options.editorOptions);
             _ready = true;
         });        
     </script>
@@ -861,7 +863,7 @@
                     label: '&Preferences...',
                     accelerator: "CmdOrCtrl+Comma",
                     click: () => {
-                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=450,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     }
                 },
                 { type: 'separator' },
@@ -1304,6 +1306,8 @@
             ipcRenderer.send('error', ex);
         }
         */
+        if (_ready)
+            window.$editor.updateOptions(options.editorOptions);
         output.css('height', options.outputSize + 'px');
         if (options.output) {
             dock.css('bottom', options.outputSize + 'px');
@@ -1791,7 +1795,7 @@
         while (k--) {
             p = keys[k];
             if (_editors[p].editor.type === 1) {
-                _editors[p].editor.options = options.editorOptions;
+                _editors[p].editor.options = options.modelOptions;
                 manager.setPanelIconClass(getFileIcon(_editors[p].editor.file), _editors[p]);
                 if (options.nativeIcons)
                     app.getFileIcon((path.extname(_editors[p].editor.file).length !== 0 ? _editors[p].editor.file : '.*'), { size: 'small' }, (err, icon) => {
@@ -2296,7 +2300,7 @@
                     if (err || !icon) return;
                     manager.setPanelIcon(icon.toDataURL(), p);
                 });
-            p.editor.options = options.editorOptions;
+            p.editor.options = options.modelOptions;
             if (!_watched[data.file]) {
                 _watched[data.file] = 1;
                 watcher.add(data.file);

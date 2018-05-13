@@ -172,18 +172,19 @@ export class MonacoCodeEditor extends EditorBase {
             this.$model.setValue(options.value);
             this.changed = false;
         }
-        if(options.options)
+        if (options.options)
             this.options = options.options;
+        else
+            this.options = {
+                tabSize: 3,
+                insertSpaces: true,
+                trimAutoWhitespace: true
+            };
     }
 
     public createControl() {
-
         //TODO tooltip show folded code
         this.$model = monaco.editor.createModel('', 'lpc')
-        this.$model.updateOptions({
-            tabSize: 3,
-            insertSpaces: true
-        });
         this.$model.onDidChangeContent((e) => {
             this.changed = true;
             this.emit('changed', this.$model.getValueLength());
@@ -340,7 +341,15 @@ export class MonacoCodeEditor extends EditorBase {
         if (!this.$editor) return;
         this.$editor.layout();
     }
-    public set options(value) { }
+    public set options(value) {
+        if (!value)
+            return;
+        this.$model.updateOptions({
+            tabSize: value.hasOwnProperty('tabSize') ? value.tabSize : 3,
+            insertSpaces: value.hasOwnProperty('tabSize') ? value.insertSpaces : true,
+            trimAutoWhitespace: value.hasOwnProperty('tabSize') ? value.trimAutoWhitespace : true
+        });
+    }
     public get options() { return null; }
     public get type() {
         return 1;
