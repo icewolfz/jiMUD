@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Code Editor</title>
-    <link rel="shortcut icon" href="../assets/icons/png/code.png" />
+    <link rel="shortcut icon" href="../assets/icons/win/code.ico" />
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
@@ -14,25 +14,145 @@
     <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
-
     <script>
-        if (typeof module === 'object') { window.module = module; module = undefined; }
+        /* global manager, inverse, capitalize, options */
+        var _ready = false;
+        const { SetupEditor } = require('./js/editor/code.editor');
+        const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
+        SetupEditor().then((monaco) => {
+            window.$editor = monaco.editor.create(document.getElementById('cm-tabpane'), {
+                language: 'lpc',
+                autoIndent: true,
+                scrollBeyondLastLine: false,
+                rulers: [80],
+                contextmenu: false,
+                theme: 'lpcTheme',
+                model: null
+            });
+
+            window.$editor.addAction({
+                id: 'jimud.action.transformToInverse',
+                label: 'Transform to Inverse',
+                run: function (editor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands = [];
+
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
+                            }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
+                        }
+                    }
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
+
+            window.$editor.addAction({
+                id: 'jimud.action.transformToCapitalize',
+                label: 'Transform to Capitalize',
+                run: function (editor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands = [];
+
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
+                            }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                        }
+                    }
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
+
+            window.$editor.addAction({
+                id: 'jimud.action.insertColor',
+                label: 'Transform to Capitalize',
+                run: function (editor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands = [];
+
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
+                            }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                        }
+                    }
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
+
+            window.$editor.onContextMenu((e) => {
+                manager.active.editor.emit('contextmenu', e);
+            });
+            window.$editor.onDidChangeCursorSelection((e) => {
+                manager.active.editor.selectionChanged(e);
+            });
+            window.$editor.onDidChangeCursorPosition((e) => {
+                manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
+            });
+            
+            window.$editor.updateOptions(options.editorOptions);
+            _ready = true;
+        });        
     </script>
-    <script src="../lib/jquery.min.js" type="text/javascript"></script>
-    <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
-    <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
-    <script src="../lib/datatables.min.js" type="text/javascript"></script>
-    <script src="../lib/datatables.scrollresize.js" type="text/javascript"></script>
-    <script src="../lib/bootstrap-treeview.min.js"></script>
-    <script src="../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../lib/ace/ext-statusbar.js" type="text/javascript"></script>
-    <script src="../lib/ace/ext-language_tools.js" type="text/javascript"></script>
-    <script src="../lib/ace/ext-themelist.js" type="text/javascript"></script>
-    <script src="../lib/ace/ext-modelist.js" type="text/javascript"></script>
-    <script src="../lib/ace/ext-spellcheck.js"></script>
 </head>
 
 <body>
+    <div id="splashScreenMask" class="splash-mask"></div>
+    <div id="splashLayout" class="splash-layout">
+        <div id="SplashScreen" class="splash-screen">
+            <h1 id="splashTitle">jiMUD - Code editor</h1>
+            <h3>
+                <!--span class="fa fa-circle-o-notch fa-spin" title="Loading..."></span-->
+                <span id="splashMessage">Loading...</span>
+            </h3>
+        </div>
+    </div>
     <div id="toolbar" class="btn-toolbar" role="toolbar">
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-default btn-xs" title="New File" onclick="newFile()">
@@ -114,7 +234,12 @@
         </div>
         <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
     </div>
-
+    <div id="statusbar" class="statusbar">
+        <span id="statusbar-file" class="left"></span>
+        <span id="statusbar-message"></span>
+        <span id="statusbar-location" class="right"></span>
+        <span id="statusbar-size" class="right"></span>
+    </div>
     <dialog id="newArea" data-title="Create new area" style="width:400px;height:348px;padding:5px;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('newArea').close();">&times;</button>
@@ -488,14 +613,24 @@
     </dialog>
 </body>
 <script>
-    const { remote, ipcRenderer, webFrame } = require('electron');
+    if (typeof module === 'object') { window.module = module; module = undefined; }
+</script>
+<script src="../lib/jquery.min.js" type="text/javascript"></script>
+<script src="../lib/bootstrap.min.js" type="text/javascript"></script>
+<script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
+<script src="../lib/datatables.min.js" type="text/javascript"></script>
+<script src="../lib/datatables.scrollresize.js" type="text/javascript"></script>
+<script src="../lib/bootstrap-treeview.min.js"></script>
+<script>
+    /*global _ready:true*/
+    const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
-    const { CodeEditor, VirtualEditor } = require('./js/code.editor');
-    const { EditorSettings } = require('./js/code.editor.settings');
+    const { DebugTimer, MonacoCodeEditor, VirtualEditor } = require('./js/editor/code.editor');
+    const { EditorSettings } = require('./js/editor/code.editor.settings');
 
-    const { dialog, Menu, MenuItem } = remote;
+    const { dialog, Menu, MenuItem, app } = remote;
     const { Menubar } = require('./js/menubar');
-    const { parseTemplate, capitalize, existsSync, isDirSync } = require('./js/library');
+    const { inverse, parseTemplate, capitalize, existsSync, isDirSync } = require('./js/library');
 
     const moment = require('moment');
     const chokidar = require('chokidar');
@@ -515,6 +650,10 @@
     var outputDisplay = $('#output-display');
     var _editors = {};
     var _recent = [];
+    var sbSize = document.getElementById('statusbar-size');
+    var sbName = document.getElementById('statusbar-file');
+    var sbLocation = document.getElementById('statusbar-location');
+    var sbMessage = document.getElementById('statusbar-message');
 
     outputDisplay.on('keydown', (e) => {
         if (event.ctrlKey) {
@@ -724,7 +863,7 @@
                     label: '&Preferences...',
                     accelerator: "CmdOrCtrl+Comma",
                     click: () => {
-                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=450,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     }
                 },
                 { type: 'separator' },
@@ -782,14 +921,28 @@
     manager.on('removed', (e) => {
         e.panel.editor.close();
         delete _editors[e.panel.editor.file];
+        if (manager.panels.length === 0)
+            window.$editor.domElement.style.display = 'none';
         doUpdate(1);
     });
     manager.on('activated', (e) => {
-        if (e.panel.editor)
-            e.panel.editor.focus();
+        if (e.panel.editor) {
+            if (e.panel.editor.type === 1) {
+                window.$editor.domElement.style.display = '';
+                e.panel.editor.activate(window.$editor);
+                window.$editor.layout();
+            }
+            else
+                window.$editor.domElement.style.display = 'none';
+            setTimeout(() => { e.panel.editor.focus(); }, 50);
+        }
+        else
+            window.$editor.domElement.style.display = 'none';
         doUpdate(1);
     });
     manager.on('deactivated', (e) => {
+        if (e.panel.editor.type === 1)
+            e.panel.editor.deactivate(window.$editor);
     });
     manager.on('dragenter', (e) => {
         event.dataTransfer.dropEffect = "copy";
@@ -859,8 +1012,7 @@
             event.preventDefault();
             event.cancelBubble = true;
             event.stopPropagation();
-            for (f = 0, fl = files.length; f < fl; f++)
-                openFile(files[f].path);
+            openFiles(files);
         }
     });
     manager.on('tab-contextmenu', (panelId, panel) => {
@@ -877,6 +1029,14 @@
         }
         if (temp.length)
             temp.push({ type: 'separator' });
+        temp.push({
+            label: '&Copy path',
+            click: () => {
+                clipboard.writeText(panel.editor.file || '');
+                clipboard.writeText(panel.editor.file || '', 'selection');
+            }
+        });
+        temp.push({ type: 'separator' });
         if (panel.editor.changed) {
             temp.push({
                 label: '&Save',
@@ -950,6 +1110,16 @@
             buttons.append(...manager.active.editor.buttons);
         updateMenu('edit');
         updateMenu('view');
+        sbSize.textContent = enabled ? ('Length: ' + manager.active.editor.length.toLocaleString()) : '';
+        sbMessage.textContent = '';
+        sbName.textContent = enabled ? manager.active.editor.file : '';
+        sbName.title = enabled ? manager.active.editor.file : '';
+        if (enabled && manager.active.editor.type === 1) {
+            var l = manager.active.editor.location;
+            sbLocation.textContent = enabled ? (`Ln ${l[1]}, Col ${l[0]}`) : 'Ln 0, Col 0';
+        }
+        else
+            sbLocation.textContent = '';
         doUpdate(2);
     }
 
@@ -1010,6 +1180,7 @@
         menubar.updateItem('edit|replace', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('replace') : false });
         $("#btn-refresh").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('refresh') : true);
         menubar.updateItem('view|refresh', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('refresh') : false });
+        menubar.updateItem('edit|select all', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('selectall') : false });
     }
 
     // List all files in a directory in Node.js recursively in a synchronous fashion
@@ -1135,13 +1306,15 @@
             ipcRenderer.send('error', ex);
         }
         */
+        if (_ready)
+            window.$editor.updateOptions(options.editorOptions);
         output.css('height', options.outputSize + 'px');
         if (options.output) {
             dock.css('bottom', options.outputSize + 'px');
             output.css('display', 'block');
         }
         else {
-            dock.css('bottom', '0');
+            dock.css('bottom', '');
             output.css('display', 'none');
         }
         buildRecent();
@@ -1254,10 +1427,7 @@
     function doEditor() {
         if (!manager.active || !manager.active.editor || !manager.active.editor.supports('copy'))
             return;
-        ipcRenderer.send('show-window', 'editor');
-        setTimeout(() => {
-            ipcRenderer.send('send-editor', manager.active.editor.selected, 'editor');
-        });
+        ipcRenderer.send('send-editor', manager.active.editor.selected, 'editor', true);
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -1300,11 +1470,11 @@
             output.css('display', 'block');
         }
         else {
-            dock.css('bottom', '0');
+            dock.css('bottom', '');
             output.css('display', 'none');
         }
         $(window).trigger('resize');
-        saveOptions();
+        doUpdate(16);
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -1315,10 +1485,10 @@
 
     function closeOutput() {
         options.output = false;
-        dock.css('bottom', '0');
+        dock.css('bottom', '');
         output.css('display', 'none');
         $(window).trigger('resize');
-        saveOptions();
+        doUpdate(16);
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -1330,6 +1500,8 @@
         outputDisplay.append('<div>' + text + '</div>');
         outputDisplay[0].scrollTop = outputDisplay[0].scrollHeight;
     }
+
+    var timer = new DebugTimer();
 
     $(document).ready(() => {
         loadOptions();
@@ -1366,7 +1538,7 @@
                 options.outputSize = 170;
                 output.css("height", options.outputSize);
                 dock.css("bottom", options.outputSize);
-                saveOptions();
+                doUpdate(16);
             }
             var keys = Object.keys(_editors);
             var k = keys.length;
@@ -1377,6 +1549,8 @@
                 _editors[p].editor.resize();
             }
             if (manager.active && manager.active.editor) manager.active.editor.focus();
+            if (window.$editor)
+                window.$editor.layout();
         });
 
         $(document).mouseup(function (e) {
@@ -1389,7 +1563,7 @@
                     options.outputSize = document.body.clientHeight - e.pageY + 2;
                 output.css("height", options.outputSize);
                 dock.css("bottom", options.outputSize);
-                saveOptions();
+                doUpdate(16);
                 $('#btm-ghost-bar').remove();
                 $(document).unbind('mousemove');
                 if (manager.active && manager.active.editor) manager.active.editor.focus();
@@ -1508,20 +1682,26 @@
             $('.btn-group input:checked').parent().addClass('active');
         });
         createWatcher();
+        postEditorLoad();
+    });
+
+    function postEditorLoad() {
+        if (!_ready) {
+            setTimeout(postEditorLoad, 10);
+            return;
+        }
         var o, ol;
         //var start = new Date().getTime();
-        if (options.opened && options.reopen) {
-            for (o = 0, ol = options.opened.length; o < ol; o++)
-                openFile(options.opened[o].file, options.opened.remote);
-        }
-        //console.log(new Date().getTime() - start);
         if (_open) {
-            for (o = 0, ol = _open.length; o < ol; o++)
-                openFile(_open[o][0], _open[o][1]);
+            openFiles(options.opened.concat(_open.map((l) => { return { file: l[0], remote: [1] }; })));
             _open = 0;
         }
+        else
+            openFiles(options.opened);
+        $("#splashScreenMask").css('display', 'none');
+        $("#splashLayout").css('display', 'none');
         _loading = 0;
-    });
+    }
 
     window.onbeforeunload = function (evt) {
         if (!closeWindow) {
@@ -1594,6 +1774,12 @@
             openFile(file, remoteFile);
     });
 
+    ipcRenderer.on('send-editor', (event, text, window) => {
+        if (!manager.active || !manager.active.editor || window != "code-editor")
+            return;
+        manager.active.editor.insert(text);
+    });
+
     ipcRenderer.on('GMCP-received', (event, data) => {
         if (options && options.debug)
             console.log(data);
@@ -1608,13 +1794,21 @@
         var p;
         while (k--) {
             p = keys[k];
-            if (_editors[p].editor.type === 1)
-                _editors[p].editor.options = options.editorOptions;
+            if (_editors[p].editor.type === 1) {
+                _editors[p].editor.options = options.modelOptions;
+                manager.setPanelIconClass(getFileIcon(_editors[p].editor.file), _editors[p]);
+                if (options.nativeIcons)
+                    app.getFileIcon((path.extname(_editors[p].editor.file).length !== 0 ? _editors[p].editor.file : '.*'), { size: 'small' }, (err, icon) => {
+                        if (err || !icon) return;
+                        manager.setPanelIcon(icon.toDataURL(), _editors[p]);
+                    });
+            }
+
         }
     });
 
     function newFile() {
-        createEditor({ file: 'new_' + newCounter + '.c', new: true });
+        createEditor({ file: 'new_' + newCounter + '.c', new: true }, true);
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
@@ -1623,7 +1817,7 @@
     function newFromFile(file, name) {
         if (!file || file.length === 0) return;
         var value = parseFileTemplate(fs.readFileSync(file, 'utf8'));
-        createEditor({ file: 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c', new: true, value: value });
+        createEditor({ file: 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c', new: true, value: value }, true);
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
@@ -1714,7 +1908,7 @@
             return;
         }
         options.browse = $('#newarea-path').val();
-        saveOptions();
+        doUpdate(16);
         $('#newArea *').attr('disabled', true);
         var templatePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'area'));
         var template = walkSync(templatePath);
@@ -1734,12 +1928,19 @@
         if (!data.path.startsWith('/'))
             data.path = '/' + data.path;
         var value;
+        var file;
+        var files = [];
         for (; c < cl; c++) {
             value = fs.readFileSync(template.files[c], 'utf8');
             value = parseFileTemplate(value, data);
-            fs.writeFileSync(template.files[c].replace(templateRegex, aPath), data);
-            openFile(template.files[c].replace(templateRegex, aPath), template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/'));
+            file = template.files[c].replace(templateRegex, aPath);
+            fs.writeFileSync(file, value);
+            files.push({
+                file: file,
+                remote: template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/')
+            });
         }
+        openFiles(files);
         document.getElementById('newArea').close();
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
@@ -1786,25 +1987,35 @@
                     if (fileNames === undefined) {
                         return;
                     }
-                    for (var f = 0, fl = fileNames.length; f < fl; f++) {
-                        if (!existsSync(fileNames[f])) {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
-                                type: 'info',
-                                title: 'Path does not exist',
-                                message: 'The path \'' + fileNames[f] + '\' does not seem to exist anymore on disk.'
-                            });
-                            continue;
-                        }
-                        addToRecent(fileNames[f]);
-                        createEditor({ file: fileNames[f], open: true });
-                    }
+                    openFiles(fileNames.map((l) => { return { file: l }; }), true);
                 });
         }
         else {
             _recent.unshift({ file: file, remote: remoteFile });
-            doUpdate(8);
-            createEditor({ file: file, open: true, remote: remoteFile });
+            createEditor({ file: file, open: true, remote: remoteFile }, true);
+            doUpdate(25);
         }
+    }
+
+    function openFiles(files, exists) {
+        if (files.length === 0) return;
+        var panels = [];
+        for (var f = 0, fl = files.length; f < fl; f++) {
+            if (exists && !existsSync(files[f].file)) {
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'info',
+                    title: 'Path does not exist',
+                    message: 'The path \'' + files[f].file + '\' does not seem to exist anymore on disk.'
+                });
+                continue;
+            }
+            _recent.unshift({ file: files[f].file || files[f].path, remote: files[f].remote });
+            var p = createEditor({ file: files[f].file || files[f].path, remote: files[f].remote, open: true });
+            if (p)
+                panels.push(p);
+        }
+        manager.addPanels(panels);
+        doUpdate(25);
     }
 
     function addToRecent(file, remoteFile) {
@@ -1821,8 +2032,8 @@
             options.recent = recent.slice(0, options.maxRecent);
         else
             options.recent = recent;
-        saveOptions();
-        doUpdate(4);
+        app.addRecentDocument(file);
+        doUpdate(20);
     }
 
     function flushRecent() {
@@ -1851,8 +2062,7 @@
                                 message: 'The path \'' + options.recent[item.idx].file + '\' does not seem to exist anymore on disk.'
                             });
                             options.recent = options.recent.slice(item.idx, 1);
-                            saveOptions();
-                            doUpdate(4);
+                            doUpdate(20);
                         }
                         else
                             openFile(options.recent[item.idx].file, options.recent[item.idx].remote);
@@ -1868,8 +2078,8 @@
                 label: 'Clear Recently Opened',
                 click: () => {
                     options.recent = [];
-                    saveOptions();
-                    doUpdate(4);
+                    app.clearRecentDocuments();
+                    doUpdate(20);
                 }
             });
         }
@@ -2071,20 +2281,26 @@
         return _editors[file];
     }
 
-    function createEditor(data) {//file, open, remoteFile, _new, value) {
+    function createEditor(data, add) {//file, open, remoteFile, _new, value) {
         var p = findEditor(data.file);
         if (p) {
             p.editor.remote = data.remote;
             manager.switchToPanel(p);
+            return null;
         }
         else {
-            p = manager.addPanel(path.basename(data.file), getFileIcon(data.file), data.file);
+            p = manager.createPanel(path.basename(data.file), getFileIcon(data.file), data.file);
             data.container = p.pane;
             //if (path.extname(file) === '.map')
             //p.editor = new VirtualEditor(data);
-            //else            
-            p.editor = new CodeEditor(data);
-            p.editor.options = options.editorOptions;
+            //else        
+            p.editor = new MonacoCodeEditor(data);
+            if (options.nativeIcons)
+                app.getFileIcon((path.extname(data.file).length !== 0 ? data.file : '.*'), { size: 'small' }, (err, icon) => {
+                    if (err || !icon) return;
+                    manager.setPanelIcon(icon.toDataURL(), p);
+                });
+            p.editor.options = options.modelOptions;
             if (!_watched[data.file]) {
                 _watched[data.file] = 1;
                 watcher.add(data.file);
@@ -2147,9 +2363,10 @@
                     //p.editor.changed = true;
                 }
             });
-            p.editor.on('changed', () => {
+            p.editor.on('changed', (length) => {
                 doUpdate(2);
                 updatePanel(p);
+                sbSize.textContent = 'Length: ' + length.toLocaleString();
             });
             p.editor.on('saved', () => {
                 doUpdate(2);
@@ -2267,12 +2484,21 @@
             p.editor.on('output', (msg) => {
                 logOutput(msg, true);
             });
-            doUpdate(1);
+            p.editor.on('location-changed', (x, y) => {
+                sbLocation.textContent = `Ln ${y}, Col ${x}`;
+            });
+            p.editor.on('status-message', (msg) => {
+                sbMessage.textContent = msg;
+            });
+            _editors[data.file] = p;
+            p.spellCheck = options.spellCheck;
         }
-        p.spellCheck = options.spellCheck;
-        p.editor.focus();
-        _editors[data.file] = p;
-        return p.editor;
+        if (add) {
+            manager.addPanels([p]);
+            doUpdate(1);
+            p.editor.focus();
+        }
+        return p;
     }
 
     function doUpdate(type) {
@@ -2296,6 +2522,10 @@
             if ((_updating & 8) === 8) {
                 flushRecent();
                 _updating &= ~8;
+            }
+            if ((_updating & 16) === 16) {
+                saveOptions();
+                _updating &= ~16;
             }
             doUpdate(_updating);
         });

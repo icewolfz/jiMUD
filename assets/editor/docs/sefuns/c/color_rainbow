@@ -1,0 +1,15 @@
+varargs string color_rainbow(string str, int offset, int bg)
+
+DESCRIPTION
+This allows you to colorize a string using standard 30 color rainbow gradient
+
+string str - the string to color
+int offset - the offset to start coloring out, can be any number, it will be normalized to the 30 selected colors
+int bg - if using RGB return background color codes
+
+LOCATION
+/adm/simul_efun/interface.c
+
+SEE ALSO
+strip_colours()
+color_gradient()

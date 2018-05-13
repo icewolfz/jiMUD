@@ -1,0 +1,11 @@
+string strip_colors(string str)
+string strip_colours(string str)
+
+DESCRIPTION
+This will strip all color codes from a string
+
+LOCATION
+/adm/simul_efun/interface.c
+
+SEE ALSO
+color_gradient

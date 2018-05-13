@@ -1,0 +1,13 @@
+Nightmare Mudlib 3.2 SimulEfun: load_database()
+
+mapping load_database(string file)
+
+DESCRIPTION
+You pass to this argument the name of a database file which you want loaded,
+it will attempt to read the database then convert the data into a valid lpc mapping.
+
+LOCATION
+/adm/simul_efun/read_database.c
+
+SEE ALSO
+save_database(), load_database(), log_file(), read_file(), write_file()

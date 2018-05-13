@@ -1,0 +1,19 @@
+varargs int clone_unique(string s, object container, ...)
+
+DESCRIPTION
+Clones max number of s objects and moves them to container
+
+The first argument is the full path to an object to clone
+The second argument is optional and is where the object are to be moved to, if not found it will use previous object
+
+Any other arguments will be passed to the object's new call
+
+EXAMPLES
+clone_unique("/std/obj/torch"); will clone exactly one torch as long as there are no other torches
+clone_unique("/std/obj/torch", this_player()); will clone exactly one torch and move it to this_player as long as there are no other torches
+
+LOCATION
+/adm/simul_efun/misc.c
+
+SEE ALSO
+clone_max(), clone_max_children(), present_clones()

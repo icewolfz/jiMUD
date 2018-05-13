@@ -1,0 +1,15 @@
+Nightmare Mudlib 3.2 SimulEfun: save_database()
+
+int save_database(string file, mapping data);
+
+DESCRIPTION
+You pass to this argument the name of a database file which you want written to and a mapping data,
+it will attempt to serilize all values using save_variable for proper restoring.
+
+Note any function pointers will be set to 0.
+
+LOCATION
+/adm/simul_efun/read_database.c
+
+SEE ALSO
+save_database(), load_database(), log_file(), read_file(), write_file()

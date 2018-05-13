@@ -1,0 +1,9 @@
+void editor_string(function f)
+
+A helper function to allow one to simply get a string from a user 
+via the editor with no need to mess around with temporary files, etc.
+
+When called this_player() is placed into an editor. When the player 
+exits the editor 'f' is called with a single parameter (either the 
+string they typed or undefined() if they exited).
+

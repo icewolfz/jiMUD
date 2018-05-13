@@ -1,0 +1,6 @@
+string* sexplode(string str, string del)
+
+Works like explode with SANE_EXPLODE_STRING, that is like
+reversible_explode_string but a single delimiter is removed
+from the both start and end of the output array if present.
+

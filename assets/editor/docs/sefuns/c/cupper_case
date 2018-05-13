@@ -1,0 +1,16 @@
+Nightmare IV SimulEfun: cupper_case()
+
+string cupper_case(string str);
+
+DESCRIPTION
+works like upper_case but will ignore and leave color codes alone.
+
+EXAMPLES
+clower_case("%%^^mono07%%^^example",); will return "%%^^mono07%%^^EXAMPLE
+clower_case("mono07%%^^example",); will return MONO07%%^^EXAMPLE
+
+LOCATION
+/adm/simul_efun/strings.c
+
+SEE ALSO 
+lower_case(), upper_case, cupper_case

@@ -1,0 +1,17 @@
+varargs string render_columns(mixed* data, string* titles,
+   string top_border_colour, string body_border_colour, int screen)
+
+Renders data into a series of columns. The first argument is an array of rows,
+where each row is an array of strings/integers (both of which align correctly)
+
+If the titles argument is non zero then it will be used as a header for
+each column (array of strings only).
+
+All the arrays in data and titles(if it is passed) must be the same size.
+
+If top_border_colour is non zero then a border will be drawn using
+top_border_colour as a colour. Similarly body_border_colour can be used to
+draw a border around data.
+
+screen is the maximum width that will be used.
+

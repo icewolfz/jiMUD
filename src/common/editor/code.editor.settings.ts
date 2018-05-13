@@ -1,0 +1,102 @@
+
+const fs = require('fs-extra');
+const path = require('path');
+
+export class EditorSettings {
+    public recent = [];
+    public opened = [];
+    public maxRecent = 15;
+    public reopen = true;
+    public outputSize = 170;
+    public output = false;
+    public nativeIcons: boolean = false;
+
+    public window = {
+        persistent: false,
+        alwaysOnTopClient: true,
+        alwaysOnTop: false,
+        show: false
+    };
+
+    public modelOptions = {
+        tabSize: 3,
+        insertSpaces: true,
+        trimAutoWhitespace: true,
+    }
+
+    public editorOptions = {
+        acceptSuggestionOnEnter: 'on',
+        autoClosingBrackets: true,
+        autoIndent: true,
+        cursorBlinking: 'blink',
+        cursorStyle: 'line',
+        emptySelectionClipboard: true,
+        find: {
+            seedSearchStringFromSelection: true
+        },
+        folding: true,
+        fontSize: 14,
+        fontFamily: "Consolas, 'Courier New', monospace",
+        fontWeight: 'normal',
+        lineNumbers: 'on',
+        links: true,
+        matchBrackets: true,
+        quickSuggestions: true,
+        renderWhitespace: 'none',
+        renderControlCharacters: false,
+        roundedSelection: true,
+        selectOnLineNumbers: true,
+        showFoldingControls: 'mouseover',
+        snippetSuggestions: 'inline',
+        useTabStops: true,
+        minimap: {
+            enabled: true,
+            maxColumn: 120,
+            renderCharacters: true,
+            showSlider: 'mouseover',
+            side: 'right'
+        }
+    };
+
+    public static load(file) {
+        try {
+            if (!fs.statSync(file).isFile())
+                return new EditorSettings();
+        }
+        catch (err) {
+            return new EditorSettings();
+        }
+        let data = fs.readFileSync(file, 'utf-8');
+        if (data.length === 0)
+            return new EditorSettings();
+        try {
+            data = JSON.parse(data);
+        }
+        catch (e) {
+            return new EditorSettings();
+        }
+        const settings = new EditorSettings();
+        let prop;
+        let prop2;
+
+        for (prop in data) {
+            if (!data.hasOwnProperty(prop)) {
+                continue;
+            }
+            if (prop === 'editorOptions' || prop === 'modelOptions') {
+                for (prop2 in data[prop]) {
+                    if (!data[prop].hasOwnProperty(prop2)) {
+                        continue;
+                    }
+                    settings[prop][prop2] = data[prop][prop2];
+                }
+            }
+            else
+                settings[prop] = data[prop];
+        }
+        return settings;
+    }
+    public save(file) {
+        fs.writeFileSync(file, JSON.stringify(this));
+    }
+}

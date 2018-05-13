@@ -85,7 +85,14 @@
         const { remote, ipcRenderer } = require('electron');
         const { dialog } = remote;
         const path = require('path');
-        const EditorSettings = require('./js/code.editor.settings').EditorSettings;
+        const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
+        var fontManager;
+        try {
+            fontManager = require('font-manager');
+        }
+        catch (ex) {
+            ipcRenderer.send('error', ex);
+        }
 
         var _settings;
         if (window.module) module.module;
@@ -99,54 +106,47 @@
                 $('.win32').css('display', 'block');
             else
                 $('.win32').css('display', 'none');
+
+            if (fontManager) {
+                fontManager.getAvailableFonts((fonts) => {
+                    var fl = fonts.length;
+                    var f = 0;
+                    var sFont = {};
+                    var ops = [];
+                    for (f = 0; f < fl; f++) {
+                        if (sFont[fonts[f].family]) continue;
+                        if (fonts[f].monospace)
+                            ops.push(`<option style="font-family: '${fonts[f].family}', monospace" value="'${fonts[f].family}', monospace">'${fonts[f].family}', monospace</option>`);
+                        else
+                            ops.push(`<option style="font-family: '${fonts[f].family}'" value="'${fonts[f].family}'">'${fonts[f].family}'</option>`);
+                        sFont[fonts[f].family] = true;
+                    }
+                    ops = ops.join('');
+                    $('#font-system').append(ops);
+                    $('#editorOptions-fontFamily').selectpicker('refresh');
+                });
+            }
+            $('#editorOptions-fontFamily').change(() => {
+                $('#editorOptions-font-sample').css('font-family', $('#editorOptions-fontFamily').val());
+                $('#editorOptions-font-sample').css('font-size', $('#editorOptions-fontSize').val());
+                $('#editorOptions-font-sample').css('font-weight', $('#editorOptions-fontWeight').val());
+            });
+
+            $('#editorOptions-fontSize').change(() => {
+                $('#editorOptions-font-sample').css("font-family", $("#editorOptions-fontFamily").val());
+                $('#editorOptions-font-sample').css("font-size", $("#editorOptions-fontSize").val());
+                $('#editorOptions-font-sample').css('font-weight', $('#editorOptions-fontWeight').val());
+            });
+
+            $('#editorOptions-fontWeight').change(() => {
+                $('#editorOptions-font-sample').css("font-family", $("#editorOptions-fontFamily").val());
+                $('#editorOptions-font-sample').css("font-size", $("#editorOptions-fontSize").val());
+                $('#editorOptions-font-sample').css('font-weight', $('#editorOptions-fontWeight').val());
+            });
             _settings = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-
-            var themelist = ace.require("ace/ext/themelist");
-            themelist.themes.push({ caption: 'Visual Studio', theme: 'ace/theme/visual_studio' });
-
-            themelist.themes.sort((a, b) => {
-                if (a.caption.toUpperCase() < b.caption.toUpperCase())
-                    return -1;
-                if (a.caption.toUpperCase() > b.caption.toUpperCase())
-                    return 1;
-                return 0;
-            });
-            /*
-            var modelist = ace.require("ace/ext/modelist");
-            modelist.modes.push({ caption: 'LPC', mode: 'ace/mode/lpc' });           
-            modelist.modes.sort((a, b) => {
-                if (a.caption.toUpperCase() < b.caption.toUpperCase())
-                    return -1;
-                if (a.caption.toUpperCase() > b.caption.toUpperCase())
-                    return 1;
-                return 0;
-            });
-            var modes = modelist.modes.map(function (x) {
-                return `<option value="${x.mode}">${x.caption}</option>`;
-            });            
-            */
-
-            var themes = { Bright: [], Dark: [] };
-            themelist.themes.forEach(function (x) {
-                themes[x.isDark ? "Dark" : "Bright"].push(`<option value="${x.theme}">${x.caption}</option>`);
-            });
-            themes.Bright.push(`<option value="ace/theme/visual_studio">Visual Studio</option>`);
-
-            $('#editorOptions-theme-dark').append(themes.Dark);
-            $('#editorOptions-theme-bright').append(themes.Bright);
-            $('#editorOptions-theme').selectpicker('refresh');
-
             loadSettings();
             $('input[type="checkbox"]').change(function () {
                 switch ($(this).attr('id')) {
-                    case 'alwaysOnTopClient':
-                    case 'persistent':
-                    case 'alwaysOnTop':
-                        _settings.window[$(this).attr('id')] = this.checked;
-                        break;
-                    case 'selectionStyle':
-                        setValue($(this).attr('id'), this.checked ? 'line' : 'text');
-                        break;
                     default:
                         setValue($(this).attr('id'), this.checked);
                         break;
@@ -155,45 +155,33 @@
 
             $('input[type="radio"]').change(function () {
                 switch ($(this).attr('id')) {
-                    case 'editorOptions-keyboardHandler-0':
+                    case 'editorOptions-acceptSuggestionOnEnter-0':
                         if (this.checked)
-                            _settings.editorOptions.keyboardHandler = null;
+                            _settings.editorOptions.acceptSuggestionOnEnter = 'on';
                         break;
-                    case 'editorOptions-keyboardHandler-1':
+                    case 'editorOptions-acceptSuggestionOnEnter-1':
                         if (this.checked)
-                            _settings.editorOptions.keyboardHandler = 'ace/keyboard/vim';
+                            _settings.editorOptions.acceptSuggestionOnEnter = 'smart';
                         break;
-                    case 'teditorOptions-keyboardHandler-2':
+                    case 'editorOptions-acceptSuggestionOnEnter-2':
                         if (this.checked)
-                            _settings.editorOptions.keyboardHandler = 'ace/keyboard/emacs';
+                            _settings.editorOptions.acceptSuggestionOnEnter = 'off';
                         break;
-                    case 'editorOptions-wrap-0':
+                    case 'editorOptions-cursorStyle-0':
                         if (this.checked)
-                            _settings.editorOptions.wrap = 'off';
+                            _settings.editorOptions.cursorStyle = 'block';
                         break;
-                    case 'editorOptions-wrap-1':
+                    case 'editorOptions-cursorStyle-1':
                         if (this.checked)
-                            _settings.editorOptions.wrap = 'free';
+                            _settings.editorOptions.cursorStyle = 'line';
                         break;
-                    case 'editorOptions-wrap-2':
+                    case 'editorOptions-minimap-side-1':
                         if (this.checked)
-                            _settings.editorOptions.wrap = 80;
+                            _settings.editorOptions.minimap.side = 'right';
                         break;
-                    case 'editorOptions-wrap-3':
+                    case 'editorOptions-minimap-side-0':
                         if (this.checked)
-                            _settings.editorOptions.wrap = 40;
-                        break;
-                    case 'editorOptions-scrollPastEnd-0':
-                        if (this.checked)
-                            _settings.editorOptions.scrollPastEnd = 0;
-                        break;
-                    case 'editorOptions-scrollPastEnd-1':
-                        if (this.checked)
-                            _settings.editorOptions.scrollPastEnd = 0.5;
-                        break;
-                    case 'editorOptions-scrollPastEnd-2':
-                        if (this.checked)
-                            _settings.editorOptions.scrollPastEnd = 1;
+                            _settings.editorOptions.minimap.side = 'left';
                         break;
                 }
             });
@@ -217,50 +205,72 @@
             if (typeof value == "string" && parseFloat(value).toString() == value)
                 value = parseFloat(value);
             option = option.split('-');
+            if (option.length === 3)
+                _settings[option[0]][option[1]][option[2]] = value;
             if (option.length === 2)
                 _settings[option[0]][option[1]] = value;
             else
                 _settings[option[0]] = value;
         }
 
+        function setSettings(obj, root) {
+            let option;
+            for (option in obj) {
+                if (!obj.hasOwnProperty(option))
+                    continue;
+                if (typeof (obj[option]) === "object") {
+                    setSettings(obj[option], root + option + '-');
+                    continue;
+                }
+                if (typeof (obj[option]) !== "boolean")
+                    continue;
+                $('#' + root + option).prop('checked', obj[option]);
+            }
+        }
+
         function loadSettings() {
             $("#reopen").prop('checked', _settings.reopen);
             $("#maxRecent").val(_settings.maxRecent);
-            let option;
-            for (option in _settings.editorOptions) {
-                if (!_settings.editorOptions.hasOwnProperty(option))
-                    continue;
-                if (typeof (_settings.editorOptions[option]) !== "boolean")
-                    continue;
-                $('#editorOptions-' + option).prop('checked', _settings.editorOptions[option]);
-            }
+            setSettings(_settings, '');
 
-            $('#editorOptions-theme').val(_settings.editorOptions.theme);
-            $('#editorOptions-theme').selectpicker('render');
-            $('#editorOptions-foldStyle').val(_settings.editorOptions.foldStyle);
-            $('#editorOptions-foldStyle').selectpicker('render');
-            $('#editorOptions-mergeUndoDeltas').val('' + _settings.editorOptions.mergeUndoDeltas);
-            $('#editorOptions-mergeUndoDeltas').selectpicker('render');
-            $('#editorOptions-cursorStyle').val(_settings.editorOptions.cursorStyle);
-            $('#editorOptions-cursorStyle').selectpicker('render');
-            $('#editorOptions-keyboardHandler-0').prop('checked', !_settings.editorOptions.keyboardHandler);
-            $('#editorOptions-keyboardHandler-1').prop('checked', _settings.editorOptions.keyboardHandler === 'ace/keyboard/vim');
-            $('#editorOptions-keyboardHandler-2').prop('checked', _settings.editorOptions.keyboardHandler === 'ace/keyboard/emacs');
+            $('#editorOptions-fontFamily').val(_settings.editorOptions.fontFamily);
+            $('#editorOptions-fontFamily').selectpicker('render');
+            $('#editorOptions-fontFamily').change();
             $('#editorOptions-fontSize').val(_settings.editorOptions.fontSize);
-            $('#editorOptions-wrap-0').prop('checked', _settings.editorOptions.wrap === "off");
-            $('#editorOptions-wrap-1').prop('checked', _settings.editorOptions.wrap === 'free');
-            $('#editorOptions-wrap-2').prop('checked', _settings.editorOptions.wrap === 80);
-            $('#editorOptions-wrap-3').prop('checked', _settings.editorOptions.wrap === 40);
-            $('#editorOptions-tabSize').val(_settings.editorOptions.tabSize);
-            $('#editorOptions-scrollPastEnd-0').prop('checked', _settings.editorOptions.scrollPastEnd === 0);
-            $('#editorOptions-scrollPastEnd-1').prop('checked', _settings.editorOptions.scrollPastEnd === 0.5);
-            $('#editorOptions-scrollPastEnd-2').prop('checked', _settings.editorOptions.scrollPastEnd === 1);
-            $('#editorOptions-selectionStyle').prop('checked', _settings.editorOptions.selectionStyle === "line");
-            $('#editorOptions-printMarginColumn').val(_settings.editorOptions.printMarginColumn);
+            $('#editorOptions-fontSize').change();
+            $('#editorOptions-fontWeight').val(_settings.editorOptions.fontWeight);
+            $('#editorOptions-fontWeight').selectpicker('render');
+            $('#editorOptions-acceptSuggestionOnEnter-0').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'on');
+            $('#editorOptions-acceptSuggestionOnEnter-1').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'smart');
+            $('#editorOptions-acceptSuggestionOnEnter-2').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'off');
 
-            $("#persistent").prop('checked', _settings.window.persistent);
-            $("#alwaysOnTopClient").prop('checked', _settings.window.alwaysOnTopClient);
-            $("#alwaysOnTop").prop('checked', _settings.window.alwaysOnTop);
+            $('#editorOptions-cursorBlinking-0').prop('checked', _settings.editorOptions.cursorBlinking === 'blink');
+            $('#editorOptions-cursorBlinking-1').prop('checked', _settings.editorOptions.cursorBlinking === 'smooth');
+            $('#editorOptions-cursorBlinking-2').prop('checked', _settings.editorOptions.cursorBlinking === 'phase');
+            $('#editorOptions-cursorBlinking-3').prop('checked', _settings.editorOptions.cursorBlinking === 'expand');
+            $('#editorOptions-cursorBlinking-4').prop('checked', _settings.editorOptions.cursorBlinking === 'solid');
+
+            $('#editorOptions-cursorStyle-0').prop('checked', _settings.editorOptions.cursorStyle === 'block');
+            $('#editorOptions-cursorStyle-1').prop('checked', _settings.editorOptions.cursorStyle === 'line');
+
+            $('#editorOptions-lineNumbers').val(_settings.editorOptions.lineNumbers);
+            $('#editorOptions-lineNumbers').selectpicker('render');
+            $('#editorOptions-renderWhitespace').val(_settings.editorOptions.renderWhitespace);
+            $('#editorOptions-renderWhitespace').selectpicker('render');
+            $('#editorOptions-showFoldingControls').val(_settings.editorOptions.showFoldingControls);
+            $('#editorOptions-showFoldingControls').selectpicker('render');
+            $('#editorOptions-snippetSuggestions').val(_settings.editorOptions.snippetSuggestions);
+            $('#editorOptions-snippetSuggestions').selectpicker('render');
+
+            $('#editorOptions-minimap-showSlider').val(_settings.editorOptions.minimap.showSlider);
+            $('#editorOptions-minimap-showSlider').selectpicker('render');
+
+            $('#editorOptions-minimap-maxColumn').val(_settings.editorOptions.minimap.maxColumn);
+
+            $('#editorOptions-minimap-side-1').prop('checked', _settings.editorOptions.minimap.side === 'right');
+            $('#editorOptions-minimap-side-0').prop('checked', _settings.editorOptions.minimap.side === 'left');
+
+            $('#modelOptions-tabSize').val(_settings.modelOptions.tabSize);
 
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
@@ -289,18 +299,26 @@
                 <a href="#editor" aria-controls="editor" role="tab" data-toggle="tab">Editor</a>
             </li>
             <li role="presentation">
+                <a href="#editorFont" aria-controls="editorFont" role="tab" data-toggle="tab">Editor Font</a>
+            </li>
+            <li role="presentation">
                 <a href="#window" aria-controls="window" role="tab" data-toggle="tab">Window</a>
             </li>
             <li role="presentation">
                 <a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab">Advanced Editor</a>
             </li>
         </ul>
-        <div class="tab-content" style="overflow: auto;height: 324px;">
+        <div class="tab-content" style="overflow: auto;height: 340px;">
             <div role="tabpanel" class="container tab-pane fade in active" id="general">
                 <div class="col-sm-6 form-group">
                     <label class="control-label">
                         Max recent items
                         <input type="number" id="maxRecent" class="input-sm form-control" min="1" max="2000" style="width: 100px" />
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="nativeIcons" /> Use native icons in tabs
                     </label>
                 </div>
                 <div class="col-sm-6 form-group">
@@ -311,260 +329,285 @@
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editor">
                 <div class="col-sm-6 form-group">
-                    <label class="control-label">Theme
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-autoClosingBrackets" /> Enable auto closing brackets
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-autoIndent" /> Enable auto indentation adjustment
+                    </label>
+                </div>
+
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-emptySelectionClipboard" /> Enable empty selection copying
+                    </label>
+                </div>
+
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-folding" /> Enable folding
+                    </label>
+                </div>
+
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-links" /> Enable detecting links
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-matchBrackets" /> Enable highlighting of matching brackets
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-selectOnLineNumbers" /> Select line when line number clicked
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="modelOptions-trimAutoWhitespace" /> Trim whitespace
+                    </label>
+                </div>
+                <div class="col-sm-12">
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">Line numbers
+                            <br>
+                            <select id="editorOptions-lineNumbers" class="form-control selectpicker" data-container="body" data-width="250px">
+                                <option value="on">On</option>
+                                <option value="off">Off</option>
+                                <option value="relative">Relative</option>
+                                <option value="interval">Interval</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">Show Folding Controls
+                            <br>
+                            <select id="editorOptions-showFoldingControls" class="form-control selectpicker" data-container="body" data-width="250px">
+                                <option value="always">Always</option>
+                                <option value="mouseover">Mouse over</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        Tab size
+                        <input type="number" id="modelOptions-tabSize" class="input-sm form-control" min="1" />
+                    </label>
+                </div>
+            </div>
+            <div role="tabpanel" class="container tab-pane fade" id="editorFont">
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Font
                         <br>
-                        <select id="editorOptions-theme" class="form-control selectpicker" data-container="body" data-width="300px">
-                            <optgroup id="editorOptions-theme-bright" label="Bright">
+                        <select id="editorOptions-fontFamily" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <optgroup label="Basic">
+                                <option value="Consolas, 'Courier New', monospace">Consolas, 'Courier New', monospace</option>
+                                <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
+                                <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
+                                <option value="Georgia, serif">Georgia, serif</option>
+                                <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
+                                <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
+                                <option value="Arial, Helvetica, sans-serif">Arial, Helvetica, sans-serif</option>
+                                <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
+                                <option value="'Comic Sans MS', cursive, sans-serif">'Comic Sans MS', cursive, sans-serif</option>
+                                <option value="Impact, Charcoal, sans-serif">Impact, Charcoal, sans-serif</option>
+                                <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
+                                <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
+                                <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
+                                <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
                             </optgroup>
-                            <optgroup id="editorOptions-theme-dark" label="Dark">
+                            <optgroup id="font-system" label="System">
                             </optgroup>
                         </select>
                     </label>
                 </div>
                 <div class="col-sm-6 form-group">
-                    <label class="control-label">Folding
+                    <label class="control-label">Font weight
                         <br>
-                        <select id="editorOptions-foldStyle" class="form-control selectpicker" data-container="body" data-width="300px">
-                            <option value="manual">Manual</option>
-                            <option value="markbegin">Mark begin</option>
-                            <option value="markbeginend">Mark begin and end</option>
+                        <select id="editorOptions-fontWeight" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="normal">Normal</option>
+                            <option value="bold">Bold</option>
+                            <option value="bolder">Bolder</option>
+                            <option value="lighter">Lighter</option>
+                            <option value="initial">Initial</option>
+                            <option value="inherit">Inherit</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="300">300</option>
+                            <option value="400">400</option>
+                            <option value="500">500</option>
+                            <option value="600">600</option>
+                            <option value="700">700</option>
+                            <option value="800">800</option>
+                            <option value="900">900</option>
                         </select>
                     </label>
                 </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label" style="width:100%">
-                        Font Size
-                        <div class="input-group" style="width: 60px">
-                            <input type="number" id="editorOptions-fontSize" style="width: 60px" class="input-sm form-control" />
-                            <div class="input-group-addon">px</div>
-                            <span class="input-group-btn">
-                                <button class="btn btn-default btn-sm" type="button" id="btn-logPath" onclick="$('#editorOptions-fontSize').val(12)">
-                                    12px
-                                </button>
-                                <button class="btn btn-default btn-sm" type="button" id="btn-logPath" onclick="$('#editorOptions-fontSize').val(24)">
-                                    24px
-                                </button>
-                            </span>
-                        </div>
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
+                <div class="col-sm-6 form-group">
                     <label class="control-label">
-                        Soft Tabs
-                        <div class="input-group" style="width: 60px">
-                            <input type="number" id="editorOptions-tabSize" class="input-sm form-control" style="width: 60px" />
-                            <div class="input-group-addon">
-                                <label>
-                                    <input type="checkbox" id="editorOptions-useSoftTabs" /> Enable</label>
-                            </div>
-                        </div>
+                        Font size
+                        <input type="number" id="editorOptions-fontSize" class="input-sm form-control" min="1" />
                     </label>
                 </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        Print margin
-                        <div class="input-group" style="width: 60px">
-                            <input type="number" id="editorOptions-printMarginColumn" class="input-sm form-control" style="width: 60px" />
-                            <div class="input-group-addon">
-                                <label>
-                                    <input type="checkbox" id="editorOptions-showPrintMargin" /> Show
-                                </label>
-                            </div>
-                        </div>
+
+                <div class="col-sm-12 form-group">
+                    <label class="control-label">Font sample
+                        <div id="editorOptions-font-sample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
                     </label>
                 </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">Keybinding</label>
-                    <div class="btn-group" data-toggle="buttons">
-                        <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-keyboardHandler" id="editorOptions-keyboardHandler-0"> Ace
-                        </label>
-                        <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-keyboardHandler" id="editorOptions-keyboardHandler-1"> Vim
-                        </label>
-                        <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-keyboardHandler" id="editorOptions-keyboardHandler-2"> Emacs
-                        </label>
-                    </div>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">Soft Wrap</label>
-                    <div class="btn-group" data-toggle="buttons">
-                        <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-wrap" id="editorOptions-wrap-0"> Off
-                        </label>
-                        <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-wrap" id="editorOptions-wrap-1"> Free
-                        </label>
-                        <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-wrap" id="editorOptions-wrap-2"> 80
-                        </label>
-                        <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-wrap" id="editorOptions-wrap-3"> 40
-                        </label>
-                    </div>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-behavioursEnabled" /> Enable Behaviours
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-selectionStyle" /> Full Line Selection
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-highlightActiveLine" /> Highlight Active Line
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-showLineNumbers" /> Show Line Numbers
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-showInvisibles" /> Show Invisibles
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-displayIndentGuides" /> Show Indent Guides
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-hScrollBarAlwaysVisible" /> Persistent Horizontal Scrollbar
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-vScrollBarAlwaysVisible" /> Persistent Vertical Scrollbar
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-highlightSelectedWord" /> Highlight selected word
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-fadeFoldWidgets" /> Fade Fold Widgets
-                    </label>
-                </div>
-                <div class="col-sm-4 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-enableLiveAutocompletion" /> Live Autocompletion
-                    </label>
-                </div>
-                <!--
-                <div class="col-xs-6 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="spellchecking" /> Spellchecking
-                    </label>
-                </div>
-                -->
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="window">
                 <div class="col-xs-12">
                     <div class="col-xs-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="alwaysOnTopClient" /> Always on top of client
+                            <input type="checkbox" id="window-alwaysOnTopClient" /> Always on top of client
                             <span class="win32 help-block" style="display:none;font-size: 0.8em;margin:0;padding:0">Requires restart</span>
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">When disabled editor will remain open even if client closed</span>
                         </label>
                     </div>
                     <div class="col-xs-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="alwaysOnTop" /> Always on top of all
+                            <input type="checkbox" id="window-alwaysOnTop" /> Always on top of all
                         </label>
                     </div>
                 </div>
-                <!--
                 <div class="col-xs-6 form-group">
                     <label class="control-label">
-                        <input type="checkbox" id="persistent" /> Persistent
+                        <input type="checkbox" id="window-persistent" /> Persistent
+                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Not applied when in editor only mode</span>
                     </label>
                 </div>
-                -->
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="advanced">
                 <div class="col-sm-6 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-showGutter" /> Show Gutter
-                    </label>
-                </div>
-                <div class="col-sm-6 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-fixedWidthGutter" /> Fixed Gutter Width
-                    </label>
-                </div>
-                <div class="col-sm-6 form-group">
-                    <label class="control-label">Cursor style
-                        <br>
-                        <select id="editorOptions-cursorStyle" class="form-control selectpicker" data-container="body" data-width="250px">
-                            <option value="ace">Ace</option>
-                            <option value="slim">Slim</option>
-                            <option value="smooth">Smooth</option>
-                            <option value="smooth slim">Smooth And Slim</option>
-                            <option value="wide">Wide</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="col-sm-6 form-group">
-                    <label class="control-label">Merge undo deltas
-                        <br>
-                        <select id="editorOptions-mergeUndoDeltas" class="form-control selectpicker" data-container="body" data-width="250px">
-                            <option value="always">Always</option>
-                            <option value="false">Never</option>
-                            <option value="true">Timed</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="col-sm-6 form-group">
-                    <label class="control-label">Overscroll</label>
+                    <label class="control-label">Cursor style</label>
                     <div class="btn-group" data-toggle="buttons">
                         <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-scrollPastEnd" id="editorOptions-scrollPastEnd-0"> None
+                            <input type="radio" name="editorOptions-cursorStyle" id="editorOptions-cursorStyle-0"> Block
                         </label>
                         <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-scrollPastEnd" id="editorOptions-scrollPastEnd-1"> Half
+                            <input type="radio" name="editorOptions-cursorStyle" id="editorOptions-cursorStyle-1"> Line
+                        </label>
+                    </div>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Accept suggestions on ENTER</label>
+                    <div class="btn-group" data-toggle="buttons">
+                        <label class="btn btn-default btn-xs">
+                            <input type="radio" name="acceptSuggestionOnEnter" id="editorOptions-acceptSuggestionOnEnter-0"> On
                         </label>
                         <label class="btn btn-default btn-xs">
-                            <input type="radio" name="editorOptions-scrollPastEnd" id="editorOptions-scrollPastEnd-2"> Full
+                            <input type="radio" name="acceptSuggestionOnEnter" id="editorOptions-acceptSuggestionOnEnter-1"> Smart
+                        </label>
+                        <label class="btn btn-default btn-xs">
+                            <input type="radio" name="acceptSuggestionOnEnter" id="editorOptions-acceptSuggestionOnEnter-3"> Off
+                        </label>
+                    </div>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Cursor animation style
+                        <br>
+                        <select id="editorOptions-cursorBlinking" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="blink">Blink</option>
+                            <option value="smooth">Smooth</option>
+                            <option value="phase">Phase</option>
+                            <option value="expand">Expand</option>
+                            <option value="solid">Solid</option>
+                        </select>
+                    </label>
+                </div>
+
+
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-find-seedSearchStringFromSelection" /> Seed find with selected text
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-quickSuggestions" /> Enable quick suggestions
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-renderControlCharacters" /> Enable rendering of control characters
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-roundedSelection" /> Render the editor selection with rounded borders
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Render whitespace
+                        <br>
+                        <select id="editorOptions-renderWhitespace" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="none">None</option>
+                            <option value="boundary">Boundary</option>
+                            <option value="all">All</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Enable snippet suggestions
+                        <br>
+                        <select id="editorOptions-snippetSuggestions" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="top">Top</option>
+                            <option value="bottom">Bottom</option>
+                            <option value="inline">Inline</option>
+                            <option value="none">None</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-useTabStops" /> Inserting and deleting whitespace follows tab stops
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-minimap-enabled" /> Enable the rendering of the minimap
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        Limit the width of the minimap
+                        <input type="number" id="editorOptions-minimap-maxColumn" class="input-sm form-control" min="1" />
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="contfrol-label">Show Minimap Slider
+                        <br>
+                        <select id="editorOptions-minimap-showSlider" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="always">Always</option>
+                            <option value="mouseover">Mouse over</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="editorOptions-minimap-renderCharacters" /> Render the actual text on a line in minimap
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Minimap location</label>
+                    <div class="btn-group" data-toggle="buttons">
+                        <label class="btn btn-default btn-xs">
+                            <input type="radio" name="editorOptions-minimap-side" id="editorOptions-minimap-side-0"> Left
+                        </label>
+                        <label class="btn btn-default btn-xs">
+                            <input type="radio" name="editorOptions-minimap-side" id="editorOptions-minimap-side-1"> Right
                         </label>
                     </div>
                 </div>
                 <div class="col-sm-6 form-group">
                     <label class="control-label">
-                        <input type="checkbox" id="editorOptions-navigateWithinSoftTabs" /> Atomic soft tabs
-                    </label>
-                </div>
-                <div class="col-sm-6 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-animatedScroll" /> Animate scrolling
-                    </label>
-                </div>
-                <div class="col-sm-6 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-copyWithEmptySelection" /> Copy without selection
-                    </label>
-                </div>
-                <div class="col-sm-6 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-useElasticTabstops" /> Elastic Tabstops
-                    </label>
-                </div>
-                <div class="col-sm-6 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-useIncrementalSearch" /> Incremental Search
-                    </label>
-                </div>
-                <div class="col-sm-6 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-indentedSoftWrap" /> Indented Soft Wrap
+                        <input type="checkbox" id="modelOptions-insertSpaces" /> Insert spaces
                     </label>
                 </div>
             </div>

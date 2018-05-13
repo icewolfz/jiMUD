@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const url = require('url');
 const settings = require('./js/settings');
-const { EditorSettings } = require('./js/code.editor.settings');
+const { EditorSettings } = require('./js/editor/code.editor.settings');
 const { TrayClick } = require('./js/types');
 
 
@@ -18,7 +18,7 @@ const { TrayClick } = require('./js/types');
 let win, winWho, winMap, winProfiles, winEditor, winChat, winCode;//winHelp
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let edset;
-let chatReady = false;
+let chatReady = false, codeReady = false, editorReady = false;
 let reload = null;
 let tray = null;
 let overlay = 0;
@@ -1345,6 +1345,7 @@ function createWindow() {
       showChat(true);
     else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
       createChat();
+
     for (var name in set.windows) {
       if (set.windows[name].options) {
         if (set.windows[name].options.show)
@@ -1364,6 +1365,9 @@ function createWindow() {
       edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
     if (edset.window.show)
       showCodeEditor(true);
+    else if (!editorOnly && edset.window.persistent)
+      createCodeEditor();
+    updateJumpList();
   });
 
   win.on('close', (e) => {
@@ -1598,6 +1602,12 @@ ipcMain.on('load-default', (event) => {
     showChat(true);
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
+  if (!edset)
+    edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+  if (edset.window.show)
+    showCodeEditor(true);
+  else if (!editorOnly && edset.window.persistent)
+    createCodeEditor();
 });
 
 ipcMain.on('load-char', (event, char) => {
@@ -1646,7 +1656,8 @@ ipcMain.on('load-char', (event, char) => {
     winEditor.destroy();
   if (winChat)
     winChat.destroy();
-
+  if (winCode)
+    winCode.destroy();
   if (win && win.webContents)
     win.webContents.send('change-options', global.settingsFile);
 
@@ -1664,6 +1675,13 @@ ipcMain.on('load-char', (event, char) => {
     showChat(true);
   else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
     createChat();
+
+  if (!edset)
+    edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+  if (edset.window.show)
+    showCodeEditor(true);
+  else if (!editorOnly && edset.window.persistent)
+    createCodeEditor();
 
   for (name in set.windows) {
     if (set.windows[name].options) {
@@ -1791,6 +1809,8 @@ ipcMain.on('connected', (event) => {
 ipcMain.on('set-color', (event, type, color, code, window) => {
   if (winEditor)
     winEditor.webContents.send('set-color', type, color, code, window);
+  if (winCode)
+    winCode.webContents.send('set-color', type, color, code, window);
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -1799,15 +1819,13 @@ ipcMain.on('set-color', (event, type, color, code, window) => {
 });
 
 ipcMain.on('open-editor', (event, file, remote) => {
-  if (win && win.webContents) {
-    showCodeEditor();
-    //win.webContents.executeJavaScript('showCodeEditor()');
-    openEditor(file, remote);
-  }
+  showCodeEditor();
+  //win.webContents.executeJavaScript('showCodeEditor()');
+  openEditor(file, remote);
 });
 
 function openEditor(file, remote) {
-  if (!winCode) {
+  if (!codeReady || !winCode) {
     setTimeout(() => {
       openEditor(file, remote);
     }, 1000);
@@ -1842,15 +1860,35 @@ ipcMain.on('send', (event, raw, echo) => {
     win.webContents.send('send', raw, echo);
 });
 
-ipcMain.on('send-editor', (event, text, window) => {
-  if (winEditor)
-    winEditor.webContents.send('send-editor', text, window);
-  for (var name in windows) {
-    if (!windows.hasOwnProperty(name) || !windows[name].window)
-      continue;
-    windows[name].window.webContents.send('send-editor', text, window);
-  }
+ipcMain.on('send-editor', (event, text, window, show, args) => {
+  if (show)
+    showSelectedWindow(window, args);
+  sendEditor(text, window);
 });
+
+function sendEditor(text, window) {
+  if ((!codeReady || !winCode || !winCode.isVisible()) && window === 'code-editor') {
+    setTimeout(() => {
+      sendEditor(text, window);
+    }, 1000);
+  }
+  else if ((!editorReady || !winEditor || !winEditor.isVisible()) && window === 'editor') {
+    setTimeout(() => {
+      sendEditor(text, window);
+    }, 1000);
+  }
+  else {
+    if (winEditor)
+      winEditor.webContents.send('send-editor', text, window);
+    if (winCode)
+      winCode.webContents.send('send-editor', text, window);
+    for (var name in windows) {
+      if (!windows.hasOwnProperty(name) || !windows[name].window)
+        continue;
+      windows[name].window.webContents.send('send-editor', text, window);
+    }
+  }
+}
 
 ipcMain.on('log', (event, raw) => {
   console.log(raw);
@@ -1966,9 +2004,9 @@ ipcMain.on('editor-setting-changed', (event, data) => {
   if (winCode)
     winCode.webContents.send('editor-setting-changed');
   if (winCode.setParentWindow)
-    winCode.setParentWindow(data.alwaysOnTopClient ? win : null);
-  winCode.setSkipTaskbar((data.alwaysOnTopClient || data.alwaysOnTop) ? true : false);
-  if (data.persistent && !winCode)
+    winCode.setParentWindow((!editorOnly && data.alwaysOnTopClient) ? win : null);
+  winCode.setSkipTaskbar((!editorOnly && (data.alwaysOnTopClient || data.alwaysOnTop)) ? true : false);
+  if (!editorOnly && data.persistent && !winCode)
     createCodeEditor();
 });
 
@@ -2022,6 +2060,10 @@ ipcMain.on('set-progress-window', (event, window, args) => {
 });
 
 ipcMain.on('show-window', (event, window, args) => {
+  showSelectedWindow(window, args);
+});
+
+function showSelectedWindow(window, args) {
   if (window === "prefs")
     showPrefs();
   else if (window === "mapper")
@@ -2040,7 +2082,7 @@ ipcMain.on('show-window', (event, window, args) => {
     showWindow(window, windows[window]);
   else
     createNewWindow(window, args);
-});
+}
 
 ipcMain.on('import-map', (event, data) => {
   if (winMap)
@@ -2538,6 +2580,7 @@ function createEditor(show, loading) {
 
   winEditor.on('closed', () => {
     winEditor = null;
+    editorReady = false;
   });
 
   winEditor.on('resize', () => {
@@ -2577,6 +2620,7 @@ function createEditor(show, loading) {
       clearTimeout(loadid);
       loadid = setTimeout(() => { win.focus(); }, 500);
     }
+    editorReady = true;
   });
 
   winEditor.on('close', (e) => {
@@ -2585,7 +2629,7 @@ function createEditor(show, loading) {
     set.windows['editor'] = getWindowState('editor', winEditor);
     set.save(global.settingsFile);
     winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
-    if (set.editorPersistent) {
+    if (set.editorPersistent && !editorOnly) {
       e.preventDefault();
       winEditor.hide();
     }
@@ -3039,7 +3083,7 @@ function createCodeEditor(show, loading, loaded) {
     };
   states['code-editor'] = edset.state;
   winCode = new BrowserWindow({
-    parent: editorOnly ? null : (edset.window.alwaysOnTopClient ? win : null),
+    parent: (!editorOnly && edset.window.alwaysOnTopClient) ? win : null,
     alwaysOnTop: edset.window.alwaysOnTop,
     title: 'Code editor',
     x: s.x,
@@ -3048,8 +3092,8 @@ function createCodeEditor(show, loading, loaded) {
     height: s.height,
     backgroundColor: 'grey',
     show: false,
-    skipTaskbar: editorOnly ? false : ((edset.window.alwaysOnTopClient || edset.window.alwaysOnTop) ? true : false),
-    icon: path.join(__dirname, '../assets/icons/png/code.png')
+    skipTaskbar: (!editorOnly && (edset.window.alwaysOnTopClient || edset.window.alwaysOnTop)) ? true : false,
+    icon: path.join(__dirname, '../assets/icons/win/code.ico')
   });
 
   if (s.fullscreen)
@@ -3067,6 +3111,7 @@ function createCodeEditor(show, loading, loaded) {
 
   winCode.on('closed', () => {
     winCode = null;
+    codeReady = false;
   });
 
   winCode.on('resize', () => {
@@ -3109,6 +3154,9 @@ function createCodeEditor(show, loading, loaded) {
     }
     if (loaded)
       loaded();
+    codeReady = true;
+    if (editorOnly)
+      updateJumpList();
   });
 
   winCode.on('close', (e) => {
@@ -3122,6 +3170,10 @@ function createCodeEditor(show, loading, loaded) {
     }
     edset.state = getWindowState('code-editor', winCode);
     edset.save(parseTemplate(path.join('{data}', 'editor.json')));
+    if (!editorOnly && edset.window.persistent) {
+      e.preventDefault();
+      winCode.hide();
+    }
   });
 
   winCode.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
@@ -3185,4 +3237,36 @@ function showCodeEditor(loading) {
   }
   else
     createCodeEditor(true, loading);
+}
+
+function updateJumpList() {
+  if (process.platform !== 'win32')
+    return;
+  const list = [];
+  //@TODO figure out some way to open editor window for current jimud instance
+  list.push({
+    type: 'tasks',
+    items: [
+      {
+        type: 'task',
+        title: "New Code Editor",
+        description: "Opens a new code editor",
+        program: process.execPath,
+        args: '-eo', // force editor only mode
+        iconPath: process.execPath,
+        iconIndex: 0
+      }
+    ]
+  });
+//@TODO add recent support, require instance check
+  /*
+  list.push({
+    type: 'recent'
+  });
+*/
+  try {
+    app.setJumpList(list);
+  } catch (error) {
+    logError(error);
+  }
 }

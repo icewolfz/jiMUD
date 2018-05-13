@@ -1,0 +1,21 @@
+Nightmare IV SimulEfun: clone()
+
+varargs int clone(string s, int amount, object container, ...);
+
+DESCRIPTION
+Clones object and moves them to container
+The first argument is the full path to an object to clone
+The second argument is the amount to create of an object
+The third argument is optional and is where the object are to be moved to, if not found it will use previous object
+
+Any other arguments will be passed to the objects new call
+
+EXAMPLES
+clone("/std/obj/torch", 2); will clone a torches and move to the object that called the function
+clone("/std/obj/torch", 2, this_player()); will clone 2 torches and move it to this_player.
+
+LOCATION
+/adm/simul_efun/misc.c
+
+SEE ALSO
+present_clones(), clone_max()

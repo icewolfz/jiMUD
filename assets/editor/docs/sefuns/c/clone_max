@@ -1,0 +1,21 @@
+Nightmare IV SimulEfun: clone_max()
+
+varargs int clone_max(string s, int max, object container, ...);
+
+DESCRIPTION
+Clones max number of s objects and moves them to container
+The first argument is the full path to an object to clone
+The second argument is the total amount of objects to clone minus any present in the container
+The third argument is optional and is where the object are to be moved to, if not found it will use previous object
+
+Any other arguments will be passed to the objects new call
+
+EXAMPLES
+clone_max("/std/obj/torch", 1); will clone 1 torch and move to the object that called the function
+clone_max("/std/obj/torch", 1, this_player()); will clone 1 torch and move it to this_player.
+
+LOCATION
+/adm/simul_efun/misc.c
+
+SEE ALSO
+present_clones()

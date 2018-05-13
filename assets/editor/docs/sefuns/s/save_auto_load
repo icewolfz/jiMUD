@@ -1,0 +1,29 @@
+varargs mixed save_auto_load(mixed ob, mixed file, object target)
+
+string save_auto_load(object ob)
+string save_auto_load(object ob, object target)
+string save_auto_load(object *ob)
+string save_auto_load(object *obs, object target)
+int save_auto_load(object ob, string file)
+int save_auto_load(object ob, string file, object target)
+int save_auto_load(object *ob, string file)
+int save_auto_load(object *ob, string file, object target)
+
+save or return seriailzed data of an autoloading object or array of objects
+
+object ob - the object to be saved, and saved if query_auto_load is enabled
+object *obs - an array of objects to be saved, if array contains non autoloading object they will be skipped
+                and only data for autoloading objects returned
+string file - the optional file name to save to
+object target - the one the object should autoload for, defaults to this_player()|previous_object()
+
+returns 0 if fails to save or object is non autoloading
+returns 1 if succesfully saved to file
+returns string if succesfully able to serialized autoloading data
+
+Note: if passing an array of objects, all non auto loading objects will be skipped
+    and no error will be returned only data on any autoloading objects
+
+SEE ALSO
+create_auto_load, query_auto_load
+

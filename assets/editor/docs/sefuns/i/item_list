@@ -1,0 +1,18 @@
+ShadowMUD SimulEfun: item_list()
+
+string item_list(mixed items...)
+
+mixed items - can be a string array or a string list
+
+DESCRIPTION
+Will return a formated list as string
+
+EXAMPLE
+    list_item("one", "two") //returns "one and two"
+    list_item("one", "two", "three") //returns "one, two, and three"
+    list_item( ({"one", "two"}) ) //returns "one and two"
+    list_item( ({"one", "two", "three"}) ) //returns "one, two, and three"
+
+LOCATION
+/adm/simul_efun/grammar.c
+

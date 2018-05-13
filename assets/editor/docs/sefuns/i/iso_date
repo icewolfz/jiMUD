@@ -1,0 +1,8 @@
+string iso_date(int time)
+
+Returns the date in iso format which makes it easy to sort. Much more
+useful in filenames than other date formats.
+
+See also: iso_date_time
+
+

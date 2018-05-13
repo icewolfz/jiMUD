@@ -1,0 +1,6 @@
+string* rexplode(string str, string del)
+
+Works like explode with REVERSIBLE_EXPLODE_STRING, that is:
+   implode(explode(str, del), del)==str
+
+

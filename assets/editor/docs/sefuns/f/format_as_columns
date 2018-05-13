@@ -1,0 +1,10 @@
+varargs string format_as_columns(string* items, int width, string indent,
+   int order)
+
+Format strings in "items" into columns. Other arguments are optional.
+"width" determines the maximum screen width, "indent" is a string to
+prepend to all new lines, if "order" is 1 then successive items fill rows first
+if order is 0 (or not passed) then the more natural column first order is used.
+left to right
+
+

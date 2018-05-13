@@ -1,0 +1,15 @@
+ShadowMUD SimulEfun: inWater()
+
+varargs int inWater(mixed object);
+
+DESCRIPTION
+Will tell if an object's environment is wet or in water. 
+If no object it will assume previous_object.
+
+EXAMPLE
+if(inWater())
+    do_damage(100, "torso", "drowing");
+
+LOCATION
+/adm/simul_efun/environment.c
+
