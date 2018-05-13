@@ -1435,8 +1435,8 @@ export class lpcFormatter extends EventEmitter {
             incase = 0;
             if (incomment === 1) incomment = 0;
             while (t < tll) {
-                if (this.tokens[tp][t].type === FormatTokenType.stringblock && t + 1 < tll)
-                    mblock = this.tokens[tp][t + 1].type;
+                if (incomment === 0 && this.tokens[tp][t].type === FormatTokenType.stringblock && t + 1 < tll)
+                    mblock = this.tokens[tp][t + 1].value;
                 if (!mblock) {
                     if (incomment === 0 && inif && this.tokens[tp][t].type === FormatTokenType.parenLparen)
                         p++;
