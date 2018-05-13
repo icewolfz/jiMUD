@@ -9,6 +9,7 @@
 - **Changed:**
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
+    - Moved folding from edit to view
 - **Fixed:**
   - Code editor:
     - Fix insert color dialog

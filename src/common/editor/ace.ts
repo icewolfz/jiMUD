@@ -52,7 +52,7 @@ export class AceCodeEditor extends EditorBase {
             this.$session.getUndoManager().reset();
             this.changed = false;
         }
-        if(options.options)
+        if (options.options)
             this.options = options.options;
     }
 
@@ -288,7 +288,150 @@ export class AceCodeEditor extends EditorBase {
     }
 
     public menu(menu) {
-        if (menu === 'edit' || menu === 'context') {
+        if (menu === 'edit') {
+            return [
+                {
+                    label: 'Formatting',
+                    submenu: [
+                        {
+                            label: 'Insert Color...',
+                            click: () => {
+                                ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
+                                var setcolor = (event, type, color, code, window) => {
+                                    if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
+                                        return;
+                                    this.$editor.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
+                                    ipcRenderer.removeListener('set-color', setcolor);
+                                }
+                                ipcRenderer.on('set-color', setcolor);
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'To Upper Case',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var r = this.$editor.getSelectionRange();
+                                this.$session.replace(r, this.$editor.getSelectedText().toUpperCase());
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        {
+                            label: 'To Lower Case',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var r = this.$editor.getSelectionRange();
+                                this.$session.replace(r, this.$editor.getSelectedText().toLowerCase());
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        {
+                            label: 'Capitalize',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var r = this.$editor.getSelectionRange();
+                                this.$session.replace(r, capitalize(this.$editor.getSelectedText()));
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        {
+                            label: 'Inverse Case',
+                            enabled: this.selected.length > 0,
+                            click: () => {
+                                var s = this.$editor.getSelectedText().split(" ");
+                                var c;
+                                for (var i = 0, il = s.length; i < il; i++) {
+                                    for (var p = 0, pl = s[i].length; p < pl; p++) {
+                                        c = s[i].charAt(p);
+                                        if (c >= 'A' && c <= 'Z')
+                                            s[i] = s[i].substr(0, p) + c.toLowerCase() + s[i].substr(p + 1);
+                                        else if (c >= 'a' && c <= 'z')
+                                            s[i] = s[i].substr(0, p) + c.toUpperCase() + s[i].substr(p + 1);
+                                    }
+                                }
+                                var r = this.$editor.getSelectionRange();
+                                this.$session.replace(r, s.join(" "));
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'Line Comment',
+                            enabled: this.selected.length > 0,
+                            accelerator: 'CmdOrCtrl+/',
+                            click: () => {
+                                var r = this.$editor.getSelectionRange();
+                                if (r.start.row !== r.end.row) {
+                                    let str = this.$editor.getSelectedText();
+                                    str = '// ' + str.replace(/(?:\r\n|\r|\n)/g, '\n// ');
+                                    this.$session.replace(r, str);
+                                    r.end.column += 3;
+                                }
+                                else {
+                                    this.$session.replace(r, "// " + this.$editor.getSelectedText());
+                                    r.end.column += 3;
+                                }
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        {
+                            label: 'Block Comment',
+                            enabled: this.selected.length > 0,
+                            accelerator: 'Alt+Shift+A',
+                            click: () => {
+                                var r = this.$editor.getSelectionRange();
+                                // if (r.start.row !== r.end.row) {
+                                //     this.$session.replace(r, "/*\n" + this.$editor.getSelectedText() + "\n*/");
+                                //     r.end.row += 2;
+                                //     r.end.column = 2;
+                                // }
+                                // else {
+                                this.$session.replace(r, "/* " + this.$editor.getSelectedText() + " */");
+                                r.end.column += 6;
+                                //}
+
+                                this.$session.getSelection().setSelectionRange(r);
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'Indent File',
+                            accelerator: 'CmdOrCtrl+I',
+                            click: () => {
+                                var Range = ace.require('ace/range').Range;
+                                this.$editor.setReadOnly(true);
+                                this.$session.clearAnnotations();
+                                this.$indenter.indent(this.$session.getValue());
+                            }
+                        },
+                        {
+                            label: 'Format File',
+                            accelerator: 'CmdOrCtrl+Shift+F',
+                            click: () => {
+                                this.emit('progress-start', 'format');
+                                this.$editor.setReadOnly(true);
+                                var Range = ace.require('ace/range').Range;
+                                this.$session.replace(new Range(0, 0, this.$session.getLength(), Number.MAX_VALUE), this.$formatter.format(this.$session.getValue()));
+                                this.$editor.setReadOnly(false);
+                                this.emit('progress-complete', 'format');
+                            }
+                        },
+                        {
+                            label: 'Format and Indent File',
+                            accelerator: 'CmdOrCtrl+Shift+I',
+                            click: () => {
+                                this.emit('progress-start', 'format');
+                                this.$editor.setReadOnly(true);
+                                var code = this.$formatter.format(this.$session.getValue());
+                                this.emit('progress-complete', 'format');
+                                this.$indenter.indent(code);
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+        else if (menu === 'context') {
             return [
                 {
                     label: 'Formatting',
@@ -458,6 +601,25 @@ export class AceCodeEditor extends EditorBase {
                     click: () => {
                         this.$session.setUseWrapMode(!this.$session.getUseWrapMode());
                     },
+                },
+                {
+                    label: 'Folding',
+                    submenu: [
+                        {
+                            label: 'Expand All',
+                            accelerator: "CmdOrCtrl+>",
+                            click: () => {
+                                this.$session.unfold();
+                            }
+                        },
+                        {
+                            label: 'Collapse All',
+                            accelerator: "CmdOrCtrl+<",
+                            click: () => {
+                                this.$session.foldAll();
+                            }
+                        }
+                    ]
                 }
             ]
     }
@@ -484,5 +646,5 @@ export class AceCodeEditor extends EditorBase {
 
     public insert(text) { }
     public get location() { return [0, 0]; }
-    public get length() { return 0; }    
+    public get length() { return 0; }
 }
