@@ -1413,7 +1413,7 @@ export class lpcFormatter extends EventEmitter {
                         inclosure--;
                     else if (incomment === 0 && this.tokens[tp][t].type === FormatTokenType.commentInline)
                         incomment = 1;
-                    else if (incomment === 0 && this.tokens[tp][t].type === FormatTokenType.commentInline)
+                    else if (incomment === 0 && this.tokens[tp][t].type === FormatTokenType.commentLeft)
                         incomment = 2;
                     else if (this.tokens[tp][t].type === FormatTokenType.commentRight)
                         incomment = 0;
