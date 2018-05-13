@@ -92,7 +92,7 @@ export const language = <ILanguage>{
         'inherit',
 
     ],
-    
+
     datatypes: [
         'void',
         'float',
@@ -669,7 +669,7 @@ export const language = <ILanguage>{
         root: [
             //inherits
             [/(::)(\w+)(\()/, ['delimiter', 'parent.function', { token: 'delimiter.parenthesis', open: '(', close: ')' }], '@brackets'],
-            [/([\!.+])(::)(\w+)(\()/, ['','delimiter', 'parent.function', { token: 'delimiter.parenthesis', open: '(', close: ')' }], '@brackets'],
+            [/([\!.+])(::)(\w+)(\()/, ['', 'delimiter', 'parent.function', { token: 'delimiter.parenthesis', open: '(', close: ')' }], '@brackets'],
             [/(\w*?)(::)(\w+)(\()/, ['parent', 'delimiter', 'parent.function', { token: 'delimiter.parenthesis', open: '(', close: ')' }], '@brackets'],
 
             // identifiers and keywords
@@ -809,17 +809,23 @@ enum TokenType {
     LOPERATOR = 3,
     ROPERATOR = 4,
     LHOOK = 5,
-    LHOOK2 = 6,
-    RHOOK = 7,
-    TOKEN = 8,
-    ELSE = 9,
-    IF = 10,
-    SWITCH = 11,
-    FOR = 12,
-    WHILE = 13,
-    XDO = 14,
-    XEOT = 15
+    RHOOK = 6,
+    LHOOK2 = 7,
+    RHOOK2 = 8,
+    TOKEN = 9,
+    ELSE = 10,
+    IF = 11,
+    SWITCH = 12,
+    FOR = 13,
+    WHILE = 14,
+    XDO = 15,
+    XEOT = 16,
+
 }
+
+/*
+
+*/
 
 class Stack {
     public size: number;
@@ -908,8 +914,8 @@ export class lpcIndenter extends EventEmitter {
     private $last_term_len;
     private $shi; /* the current shift (negative for left shift) */
 
-    private $f = [7, 1, 7, 1, 2, 1, 1, 6, 4, 2, 6, 7, 7, 7, 2, 0,];
-    private $g = [2, 2, 1, 7, 1, 5, 5, 1, 3, 6, 2, 2, 2, 2, 2, 0,];
+    private $f = [8, 1, 8, 1, 2, 1, 5, 1, 7, 4, 2, 7, 8, 8, 8, 2, 0];
+    private $g = [2, 2, 1, 8, 1, 5, 1, 7, 1, 3, 7, 2, 2, 2, 2, 2, 0];
 
     public shift = 3;
     public halfShift = 2;
@@ -1124,7 +1130,7 @@ export class lpcIndenter extends EventEmitter {
                     case ':':
                         if (line.charAt(p) === ')') {
                             p++;
-                            token = TokenType.RHOOK;
+                            token = TokenType.RHOOK2;
                             break;
                         }
                         token = TokenType.TOKEN;
@@ -1135,14 +1141,22 @@ export class lpcIndenter extends EventEmitter {
                             break;
                         }
                         p++;
-                        token = TokenType.RHOOK;
+                        token = TokenType.RHOOK2;
                         break;
                     case ']':
                         if (line.charAt(p) === ')' &&
                             (this.$stack.current === TokenType.LHOOK2 ||
-                                (this.$stack.current != TokenType.XEOT && (this.$stack.getnext(1) === TokenType.LHOOK2 || (this.$stack.getnext(1) === TokenType.ROPERATOR && this.$stack.getnext(2) == TokenType.LHOOK2)))))
+                                (this.$stack.current != TokenType.XEOT && (
+                                    this.$stack.getnext(1) === TokenType.LHOOK2 ||
+                                    (this.$stack.getnext(1) === TokenType.ROPERATOR && this.$stack.getnext(2) == TokenType.LHOOK2) ||
+                                    (this.$stack.getnext(1) === TokenType.LHOOK && this.$stack.getnext(2) == TokenType.LHOOK2) ||
+                                    (this.$stack.getnext(1) === TokenType.LHOOK && this.$stack.getnext(2) == TokenType.TOKEN && this.$stack.getnext(3) == TokenType.LHOOK2)
+                                )))) {
                             p++;
-                        token = TokenType.RHOOK;
+                            token = TokenType.RHOOK2;
+                        }
+                        else
+                            token = TokenType.RHOOK;
                         break;
                     case ')':
                         token = TokenType.RHOOK;
@@ -1199,7 +1213,7 @@ export class lpcIndenter extends EventEmitter {
                         token === TokenType.RBRACKET || (token === TokenType.IF && sp.current === TokenType.ELSE)) {
                         i -= this.shift; //shift
                     }
-                    else if (token == TokenType.RHOOK || token == TokenType.ROPERATOR) {
+                    else if (token == TokenType.RHOOK || token == TokenType.ROPERATOR || token == TokenType.RHOOK2) {
                         i -= this.halfShift; //shift / 2
                     }
                     /* shift the current line, if appropriate */
