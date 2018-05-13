@@ -21,24 +21,23 @@ Editor preferences are stored in their own file independent of client or charact
 
 ### Editor
 
-- `Theme` code editor theme
-- `Keybinding` The editor keybindings, Ace, vim or emacs
-- `Font Size` Editor font size
-- `Soft Wrap` Wrap lines
-- `Folding` how to mark fold regions
-- `Soft Tabs` enable soft tabs and how many spaces they are
-- `Enable Behaviours` enable auto-pairing of special characters, like quotation marks, parenthesis, or brackets.
-- `Full Line Selection` enable full line selection
-- `Highlight Active Line` whether or not highlight the current line
-- `Show Line Numbers` show line numbers
-- `Show Invisibles` display invisible markers like space, newline, and tabs
-- `Show Indent Guides` display indent guides
-- `Persistent Horizontal Scrollbar` persistent horizontal scrollbar
-- `Persistent Vertical Scrollbar` persistent vertical scrollbar
-- `Show Print Margin` show margin and at what character line it appears
-- `Highlight Selected Word` highlight all words that match selected text
-- `Fade Fold Widgets` hide fold widgets until mouse over
-- `Live Autocompletion` do autocompletion as you type
+- `Enable auto closing brackets` Whether or not to close brackets when open one entered
+- `Enable auto indentation adjustment` Indent next line based on previous line
+- `Enable empty selection copying` Copy current line when nothing is selected
+- `Enable folding` enable or disable code folding
+- `Enable detecting links` enable detection
+- `Enable highlighting of matching brackets` highlight the matching end bracket
+- `Select line when line number clicked` select line when line number clicked
+- `Trim whitespace` trim whitespace
+- `Line numbers` display line numbers
+- `Show Folding Controls` how to show folding controls
+- `Tab size` how many spaces equal a tab
+
+### Editor Font
+
+- `Font` the editor font
+- `Font weight` the editor font weight
+- `Font size` the editor font size
 
 ### Window
 
@@ -48,14 +47,19 @@ Editor preferences are stored in their own file independent of client or charact
 
 ### Advanced
 
-- `Show Gutter` gutter bar
-- `Fixed Gutter Width` fixed gutter bar with
-- `Cursor style` how the cursor looks
-- `Overscroll` determine editor overscroll
-- `Atomic soft tabs` enable atomic soft tabs
-- `Animate scrolling` animate scrolling or not
-- `Merge undo deltas` merge the deltas of undo
-- `Copy without selection` copy text with out selecting
-- `Elastic Tabstops` enable elastic tabstops
-- `Incremental Search` use incremental search
-- `Indented Soft Wrap` use Indented soft wrap
+- `Cursor style` how to display the cursor
+- `Cursor animation style` how to animate the cursor
+- `Accept suggestions on ENTER` accept suggested text when hitting enter
+- `Seed find with selected text` fill in find input with selected text
+- `Enable quick suggestions` enable quick suggestions
+- `Enable rendering of control characters` render control characters in editor
+- `Render the editor selection with rounded borders` add rounded corners to selection box
+- `Render whitespace` how to render whitespace
+- `Enable snippet suggestions` enable snippets
+- `Inserting and deleting whitespace follows tab stops` use tab stops
+- `Enable the rendering of the minimap` show minimap
+- `Limit the width of the minimap` how many columns to display in minimap
+- `Show Minimap Slider` when to display minimap slider
+- `Render the actual text on a line in minimap` show text or blocks in minimap
+- `Minimap location` where minimap is placed in editor
+- `Insert spaces`
