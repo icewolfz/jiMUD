@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.x
+## 0.4.44
 
 - **New:**
   - Code editor:
@@ -15,8 +15,6 @@
     - Editor only losing taskbar icon when preference
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
-
-## 0.4.44
 
 ## 0.4.43 2018-05-07
 
