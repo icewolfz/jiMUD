@@ -816,11 +816,11 @@ enum TokenType {
     ELSE = 10,
     IF = 11,
     SWITCH = 12,
-    FOR = 13,
-    WHILE = 14,
-    XDO = 15,
-    XEOT = 16,
-
+    CASE = 13,
+    FOR = 14,
+    WHILE = 15,
+    XDO = 16,
+    XEOT = 17,
 }
 
 /*
@@ -913,9 +913,9 @@ export class lpcIndenter extends EventEmitter {
     private $last_term;
     private $last_term_len;
     private $shi; /* the current shift (negative for left shift) */
-
-    private $f = [8, 1, 8, 1, 2, 1, 5, 1, 7, 4, 2, 7, 8, 8, 8, 2, 0];
-    private $g = [2, 2, 1, 8, 1, 5, 1, 7, 1, 3, 7, 2, 2, 2, 2, 2, 0];
+    //            0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
+    private $f = [8, 1, 8, 1, 2, 1, 5, 1, 7, 4, 2, 7, 8, 8, 8, 8, 2, 0];
+    private $g = [2, 2, 1, 8, 1, 5, 1, 7, 1, 3, 7, 2, 2, 8, 2, 2, 2, 0];
 
     public shift = 3;
     public halfShift = 2;
@@ -1173,6 +1173,8 @@ export class lpcIndenter extends EventEmitter {
                             while (this.isalnum(line.charAt(p)) || line.charAt(p) === '_');
                             if (ident === "switch")
                                 token = TokenType.SWITCH;
+                            else if (ident === "case" || ident === "default")
+                                token = TokenType.CASE;
                             else if (ident === "if")
                                 token = TokenType.IF;
                             else if (ident === "else")
@@ -1212,15 +1214,33 @@ export class lpcIndenter extends EventEmitter {
                         (sp.current === TokenType.ROPERATOR || sp.current === TokenType.ELSE || sp.current === TokenType.XDO)) ||
                         token === TokenType.RBRACKET || (token === TokenType.IF && sp.current === TokenType.ELSE)) {
                         i -= this.shift; //shift
+
                     }
                     else if (token == TokenType.RHOOK || token == TokenType.ROPERATOR || token == TokenType.RHOOK2) {
                         i -= this.halfShift; //shift / 2
                     }
+
                     /* shift the current line, if appropriate */
                     if (do_indent) {
                         this.$shi = i - indent_index + i2;
-                        if (token == TokenType.TOKEN && sp.current == TokenType.LBRACKET && (ident === "case" || ident === "default"))
+                        //if (token == TokenType.CASE && sp.current == TokenType.LBRACKET && (ident === "case" || ident === "default"))
+                        //this.$shi -= this.shift; //shift
+                        if (token == TokenType.CASE)
                             this.$shi -= this.shift; //shift
+                        else if (token === TokenType.LBRACKET &&
+                            sp.current == TokenType.ROPERATOR &&
+                            sp.getnext(1) == TokenType.LOPERATOR &&
+                            sp.getnext(2) == TokenType.SWITCH
+                        )
+                            this.$shi -= this.shift;
+                            //1,4,3,12
+                        else if (token === TokenType.RBRACKET &&
+                            sp.current == TokenType.LBRACKET &&
+                            sp.getnext(1) == TokenType.ROPERATOR &&
+                            sp.getnext(2) == TokenType.LOPERATOR &&
+                            sp.getnext(3) == TokenType.SWITCH
+                        )
+                            this.$shi -= this.shift;
                         newLine = this.shiftLine(newLine || line);
                         //p += shi;
                         do_indent = false;
@@ -1228,7 +1248,8 @@ export class lpcIndenter extends EventEmitter {
                     /* change indentation after current token */
                     switch (token) {
                         case TokenType.SWITCH:
-                            //i += this.shift;
+                        case TokenType.CASE:
+                            i += this.shift;
                             break;
                         case TokenType.IF:
                             break;
