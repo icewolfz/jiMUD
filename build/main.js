@@ -1224,7 +1224,10 @@ function createWindow() {
             edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
           if (winCode != null)
             edset.window.show = true;
-          edset.state = getWindowState('code-editor', winCode);
+          if (editorOnly)
+            edset.stateOnly = getWindowState('code-editor', winCode);
+          else
+            edset.state = getWindowState('code-editor', winCode);
           edset.save(parseTemplate(path.join('{data}', 'editor.json'))); winCode.destroy();
         }
         closeWindows(false, true);
@@ -1308,7 +1311,10 @@ function createWindow() {
       if (!edset)
         edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
       edset.window.show = true;
-      edset.state = getWindowState('code-editor', winCode);
+      if (editorOnly)
+        edset.stateOnly = getWindowState('code-editor', winCode);
+      else
+        edset.state = getWindowState('code-editor', winCode);
       edset.save(parseTemplate(path.join('{data}', 'editor.json'))); winCode.destroy();
     }
     closeWindows(true, false);
@@ -2222,7 +2228,42 @@ function getWindowState(id, window) {
 }
 
 function loadWindowState(window) {
-  set = settings.Settings.load(global.settingsFile);
+  if (!set)
+    set = settings.Settings.load(global.settingsFile);
+  if (window === 'code-editor') {
+    if (!edset)
+      edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+    if (editorOnly) {
+      if (!edset.stateOnly)
+        return {
+          x: 0,
+          y: 0,
+          width: 800,
+          height: 600,
+        };
+      states[window] = {
+        x: edset.stateOnly.x,
+        y: edset.stateOnly.y,
+        width: edset.stateOnly.width,
+        height: edset.stateOnly.height,
+      };
+      return edset.stateOnly;
+    }
+    if (!edset.state)
+      return {
+        x: 0,
+        y: 0,
+        width: 800,
+        height: 600,
+      };
+    states[window] = {
+      x: edset.state.x,
+      y: edset.state.y,
+      width: edset.state.width,
+      height: edset.state.height,
+    };
+    return edset.state;
+  }
   if (!set.windows || !set.windows[window])
     return {
       x: 0,
@@ -3073,15 +3114,28 @@ function createCodeEditor(show, loading, loaded) {
   if (winCode) return;
   if (!edset)
     edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-  var s = loadWindowState('mapper');
-  if (!edset.state)
-    edset.state = {
-      x: 0,
-      y: 0,
-      width: 800,
-      height: 600,
-    };
-  states['code-editor'] = edset.state;
+  var s = loadWindowState('code-editor');
+  if (editorOnly) {
+    if (!edset.stateOnly)
+      edset.stateOnly = {
+        x: 0,
+        y: 0,
+        width: 800,
+        height: 600,
+      };
+    states['code-editor'] = edset.stateOnly;
+  }
+  else {
+    if (!edset.state)
+      edset.state = {
+        x: 0,
+        y: 0,
+        width: 800,
+        height: 600,
+      };
+    states['code-editor'] = edset.state;
+  }
+  console.log(states['code-editor']);
   winCode = new BrowserWindow({
     parent: (!editorOnly && edset.window.alwaysOnTopClient) ? win : null,
     alwaysOnTop: edset.window.alwaysOnTop,
@@ -3167,8 +3221,10 @@ function createCodeEditor(show, loading, loaded) {
         edset.window.show = false;
       else if (winCode != null)
         edset.window.show = true;
+      edset.state = getWindowState('code-editor', winCode);
     }
-    edset.state = getWindowState('code-editor', winCode);
+    else
+      edset.stateOnly = getWindowState('code-editor', winCode);
     edset.save(parseTemplate(path.join('{data}', 'editor.json')));
     if (!editorOnly && edset.window.persistent) {
       e.preventDefault();
@@ -3258,7 +3314,7 @@ function updateJumpList() {
       }
     ]
   });
-//@TODO add recent support, require instance check
+  //@TODO add recent support, require instance check
   /*
   list.push({
     type: 'recent'

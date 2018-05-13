@@ -6,6 +6,7 @@
   - Code editor:
     - Window can be persistent when not in editor only mode again
     - [Use native icons in tabs](docs/codeeditor.md) preference to allow control over icon display
+    - When using editor only mode will maintain seperate window state systems
 - **Changed:**
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
@@ -14,6 +15,7 @@
   - Code editor:
     - Fix insert color dialog
     - Editor only losing taskbar icon when preference changed
+    - Fixed state loading
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
 
