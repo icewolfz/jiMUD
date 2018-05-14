@@ -37,6 +37,7 @@ You may drag files from local to queue or remote list to upload, from remote to 
 - `Upload files when changed` this will cause any file that has been changed in the current local folder to be automatically uploaded to the current remote folder
 - `Focus files on finish upload/download` will focus on the item in local if downloaded, or remote if uploaded
 - `Select files on finish upload/download` select item in local if downloaded, or remote if uploaded
+- `Enable compression` receive and send files compressed to try and improve upload/download speeds
 
 ### Editor
 

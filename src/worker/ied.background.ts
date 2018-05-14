@@ -11,7 +11,7 @@ self.addEventListener('message', (e: MessageEvent) => {
             postMessage({ event: 'decoded', file: e.data.file, data: decode(e.data.data), last: e.data.last, download: e.data.download });
             break;
         case 'encode':
-            postMessage({ event: 'encoded', file: e.data.file, data: encode(e.data.data), last: e.data.last, download: e.data.download });
+            postMessage({ event: 'encoded', file: e.data.file, data: encode(e.data.data), last: e.data.last, download: e.data.download, compressed: e.data.compress });
             break;
     }
 }, false);

@@ -7,6 +7,8 @@
     - Window can be persistent when not in editor only mode again
     - [Use native icons in tabs](docs/codeeditor.md) preference to allow control over icon display
     - When using editor only mode will maintain seperate window state systems
+  - Immortal tools:
+    - Download files in compressed format for faster speeds
 - **Changed:**
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features

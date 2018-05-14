@@ -13,6 +13,10 @@ const fs = require('fs');
 const path = require('path');
 const tmp = require('tmp');
 const { ipcRenderer } = require('electron');
+
+const ZLIB: any = require('./../../lib/inflate_stream.min.js').Zlib;
+const nZLIB = require("zlib");
+
 let fswin;
 if (process.platform.indexOf('win') === 0) {
     try {
@@ -39,6 +43,8 @@ export class IED extends EventEmitter {
     public queue: Item[] = [];
     public active: Item;
     public bufferSize: number = 0;
+    public compressUpload: boolean;
+    public compressDownload: boolean;
 
     get useTemp(): TempType { return this._temp; }
     set useTemp(value: TempType) {
@@ -77,7 +83,7 @@ export class IED extends EventEmitter {
                     }
                     this.emit('update', this.active);
                     if (!e.data.last) {
-                        ipcRenderer.send('send-gmcp', 'IED.download.more ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
+                        ipcRenderer.send('send-gmcp', 'IED.download.more ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, compress: this.active.compress ? 1 : 0 }));
                     }
                     else {
                         this.active.state = ItemState.done;
@@ -94,7 +100,7 @@ export class IED extends EventEmitter {
                     }
                     break;
                 case 'encoded':
-                    ipcRenderer.send('send-gmcp', 'IED.upload.chunk ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, data: e.data.data, last: e.data.last ? 1 : 0 }));
+                    ipcRenderer.send('send-gmcp', 'IED.upload.chunk ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, data: e.data.data, last: e.data.last ? 1 : 0, compressed: e.data.compressed ? 1 : 0 }));
                     if (e.data.last) {
                         this.active.state = ItemState.done;
                         this.emit('upload-finished', this.active);
@@ -278,8 +284,7 @@ export class IED extends EventEmitter {
                                 this.makeDirectoryParent(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
                             else if (obj.tag.startsWith('mkdirPIgnore:'))
                                 this.makeDirectoryParent(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
-                            else if (obj.tag.startsWith('dir:'))
-                            {
+                            else if (obj.tag.startsWith('dir:')) {
                                 delete this._paths[obj.tag];
                                 this.getDir(obj.path, true, obj.tag.substr(4), this._paths[obj.tag]);
                             }
@@ -332,7 +337,7 @@ export class IED extends EventEmitter {
                                 return;
                             }
                             this.active.chunks++;
-                            this._worker.postMessage({ action: 'decode', file: obj.path + '/' + obj.file, download: true, last: obj.last, data: obj.data });
+                            this._worker.postMessage({ action: 'decode', file: obj.path + '/' + obj.file, download: true, last: obj.last, data: obj.data, compress: obj.compress ? 1 : 0 });
                             if (obj.last)
                                 this.emit('message', 'Download last chunk: ' + obj.path + '/' + obj.file);
                             else
@@ -401,6 +406,7 @@ export class IED extends EventEmitter {
                 item = new Item('download:' + this._id);
                 this._id++;
             }
+            item.compress = this.compressDownload;
             item.tmp = this._temp;
             item.download = true;
             item.remote = file;
@@ -440,6 +446,7 @@ export class IED extends EventEmitter {
             item.download = true;
             item.remote = file;
             item.mkdir = mkdir;
+            item.compress = this.compressDownload;
             if (this._paths[tag]) {
                 item.local = path.join(this._paths[tag], path.basename(file));
                 delete this._paths[tag];
@@ -472,6 +479,7 @@ export class IED extends EventEmitter {
                 this._id++;
             }
             item.mkdir = mkdir;
+            item.compress = this.compressUpload;
             if (this._paths[tag]) {
                 item.local = this._paths[tag];
                 item.remote = file;
@@ -509,6 +517,7 @@ export class IED extends EventEmitter {
                 this._id++;
             }
             item.mkdir = mkdir;
+            item.compress = this.compressUpload;
             if (this._paths[tag]) {
                 item.local = this._paths[tag];
                 item.remote = remote;
@@ -851,11 +860,11 @@ export class IED extends EventEmitter {
         if (this.active.download) {
             if (!this.active.inProgress) {
                 this.active.inProgress = true;
-                ipcRenderer.send('send-gmcp', 'IED.download ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
+                ipcRenderer.send('send-gmcp', 'IED.download ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, compress: this.active.compress ? 1 : 0 }));
                 this.emit('message', 'Download start: ' + this.active.remote);
             }
             else {
-                ipcRenderer.send('send-gmcp', 'IED.download.more ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID }));
+                ipcRenderer.send('send-gmcp', 'IED.download.more ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, compress: this.active.compress ? 1 : 0 }));
                 this.emit('message', 'Download resume: ' + this.active.remote);
             }
         }
@@ -864,7 +873,7 @@ export class IED extends EventEmitter {
         }
         else {
             this.active.inProgress = true;
-            ipcRenderer.send('send-gmcp', 'IED.upload ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, size: this.active.totalSize, mkdir: this.active.mkdir }));
+            ipcRenderer.send('send-gmcp', 'IED.upload ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, size: this.active.totalSize, mkdir: this.active.mkdir, compressed: this.active.compress ? 1 : 0 }));
             this.emit('message', 'Upload start: ' + this.active.remote);
         }
     }
@@ -895,7 +904,8 @@ export class IED extends EventEmitter {
             file: obj.path + '/' + obj.file,
             download: false,
             last: (data.length < size || item.currentSize === item.totalSize),
-            data: data
+            data: data,
+            compress: item.compress
         });
         if (data.length < size || item.currentSize === item.totalSize)
             this.emit('message', 'Upload last chunk: ' + obj.path + '/' + obj.file);
@@ -927,6 +937,7 @@ export class Item {
     private _tmpObj;
     private append = false;
     private stream;
+    private _zStream: any = 0;
 
     public obj;
     public remote: string = '';
@@ -941,6 +952,7 @@ export class Item {
     public chunks: number = 0;
     public mkdir: boolean = false;
     public error: string;
+    public compress: boolean;
 
     constructor(id: string, download?: boolean) {
         this.ID = id;
@@ -989,6 +1001,9 @@ export class Item {
             buffer = new Buffer(size);
             br = fs.readSync(this.stream, buffer, 0, size, position);
         }
+        if (this.compress) {
+            //TODO add compressor
+        }
         return buffer.toString();
     }
 
@@ -1017,7 +1032,17 @@ export class Item {
             else
                 this.stream = fs.openSync(this._local, this.append ? 'a' : 'w');
         }
-        fs.writeSync(this.stream, data);
+        if (this.compress) {
+            if (!this._zStream)
+                this._zStream = new ZLIB.InflateStream();
+                //Buffer.from(data, '')
+            //data = nZLIB.inflateRawSync(data);
+            data = this._zStream.decompress(new Buffer(data, "binary"));
+            //var d = nZLIB.inflateRawSync(new Buffer(data, "binary"));
+            fs.writeSync(this.stream, data);
+        }
+        else
+            fs.writeSync(this.stream, data);
         this.append = true;
     }
 
@@ -1034,6 +1059,8 @@ export class Item {
     }
 
     public clean() {
+        if (this._zStream)
+            this._zStream = 0;
         if (this.stream)
             this.stream = fs.closeSync(this.stream);
     }

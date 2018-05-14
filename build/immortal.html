@@ -638,7 +638,8 @@
                     'showErrorsExtended': false,
                     'tempFile': TempType.extension,
                     'focusOnFinished': true,
-                    'selectOnFinished': true
+                    'selectOnFinished': true,
+                    'compress': false
                 };
                 saveOptions();
             }
@@ -682,6 +683,8 @@
                 _ied.remote = options.remote;
                 _ied.bufferSize = options.bufferSize;
                 _ied.useTemp = options.tempFile;
+                //_ied.compressUpload = options.compress;
+                _ied.compressDownload = options.compress;
             }
             ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: options });
         }
@@ -1285,6 +1288,8 @@
             _ied.remote = options.remote;
             _ied.bufferSize = options.bufferSize;
             _ied.useTemp = options.tempFile;
+            //_ied.compressUpload = options.compress;
+            _ied.compressDownload = options.compress;
             if (options.openEditor)
                 $('#btn-editor-remote').addClass('active');
             else
@@ -3430,6 +3435,8 @@
                     _ied.remote = options.remote;
                     _ied.bufferSize = options.bufferSize;
                     _ied.useTemp = options.tempFile;
+                    //_ied.compressUpload = options.compress;
+                    _ied.compressDownload = options.compress;
                 }
             }
         });

@@ -131,7 +131,7 @@
                 _settings.extensions["immortal"][$(this).attr('id')] = parseInt($(this).val(), 10);
             });
             $('.selectpicker').change(function () {
-                if($(this).attr('id') == 'bufferSize')
+                if ($(this).attr('id') == 'bufferSize')
                     _settings.extensions["immortal"][$(this).attr('id')] = parseInt($(this).val(), 10);
                 else
                     _settings.extensions["immortal"][$(this).attr('id')] = $(this).val();
@@ -160,24 +160,7 @@
 
         function loadSettings() {
             if (!_settings.extensions["immortal"])
-                _settings.extensions["immortal"] = {
-                    'local': '',
-                    'remote': '',
-                    'editor': '',
-                    'bufferSize': 0,
-                    'openEditor': true,
-                    'openExternalEditor':false,
-                    'queueSize': 250,
-                    'localSize': 400,
-                    'syncFolders': true,
-                    'showQueue': true,
-                    'showHidden': false,
-                    'uploadOnChange': false,
-                    'debug': false,
-                    'logErrors': false,
-                    'showErrorsExtended': false,
-                    'tempFile': TempType.extension
-                };
+                resetSettings();
             else {
                 if (!_settings.extensions["immortal"].hasOwnProperty('focusOnFinished'))
                     _settings.extensions["immortal"].focusOnFinished = true;
@@ -188,7 +171,7 @@
             $("#selectOnFinished").prop('checked', _settings.extensions["immortal"].selectOnFinished);
 
             $("#openEditor").prop('checked', _settings.extensions["immortal"].openEditor);
-            $("#openExternalEditor").prop('checked', _settings.extensions["immortal"].openExternalEditor);            
+            $("#openExternalEditor").prop('checked', _settings.extensions["immortal"].openExternalEditor);
             $("#syncFolders").prop('checked', _settings.extensions["immortal"].syncFolders);
             $("#showQueue").prop('checked', _settings.extensions["immortal"].showQueue);
             $("#showHidden").prop('checked', _settings.extensions["immortal"].showHidden);
@@ -199,6 +182,7 @@
             $('#tempFile-file').prop('checked', _settings.extensions["immortal"].tempFile === TempType.file);
 
             $("#debug").prop('checked', _settings.extensions["immortal"].debug);
+            $("#compress").prop('checked', _settings.extensions["immortal"].compress);
             $("#logErrors").prop('checked', _settings.extensions["immortal"].logErrors);
             $("#showErrorsExtended").prop('checked', _settings.extensions["immortal"].showErrorsExtended);
 
@@ -228,7 +212,7 @@
                 'editor': '',
                 'bufferSize': 0,
                 'openEditor': true,
-                'openExternalEditor':false,
+                'openExternalEditor': false,
                 'queueSize': 250,
                 'localSize': 400,
                 'syncFolders': true,
@@ -240,7 +224,8 @@
                 'showErrorsExtended': false,
                 'tempFile': TempType.extension,
                 'focusOnFinished': true,
-                'selectOnFinished': true
+                'selectOnFinished': true,
+                'compress': false
             };
             if (!_settings.windows["immortal"] || !_settings.windows["immortal"].options)
                 _settings.windows["immortal"].options = {
@@ -306,6 +291,11 @@
                         <input type="checkbox" id="uploadOnChange" /> Upload files when changed
                     </label>
                 </div>
+                <div class="col-xs-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="compress" /> Enable compression
+                    </label>
+                </div>
                 <div class="col-xs-12 form-group">
                     <div class="col-xs-6 form-group">
                         <label class="control-label">
@@ -329,7 +319,7 @@
                     <label class="control-label">
                         <input type="checkbox" id="openExternalEditor" /> Open file in external editor
                     </label>
-                </div>                
+                </div>
                 <div class="col-xs-12 form-group">
                     <label class="control-label" style="width:100%">
                         Path to editor
@@ -413,7 +403,7 @@
                     <label class="control-label">
                         <input type="checkbox" id="showErrorsExtended" /> Show extended error messages
                     </label>
-                </div>                
+                </div>
             </div>
         </div>
         <div class="dialog-footer">
