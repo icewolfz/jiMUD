@@ -8,8 +8,8 @@
     - [Use native icons in tabs](docs/codeeditor.md) preference to allow control over icon display
     - When using editor only mode will maintain seperate window state systems
   - Immortal tools:
-    - Downloadand or upload files in compressed format for faster speeds
-    - Add a max file check of 200,000 bytes and error if file is larger
+    - Download and or upload files in compressed format for faster speeds
+    - Added a max file check of 200,000 bytes and error if file is larger
 - **Changed:**
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
@@ -20,6 +20,7 @@
     - Editor only losing taskbar icon when preference changed
     - Fixed state loading
     - Fix file watching to ask if reload or keep open
+    - No longer loaded always after editor only mode used
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
 
