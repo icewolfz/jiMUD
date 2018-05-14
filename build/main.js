@@ -24,7 +24,6 @@ let tray = null;
 let overlay = 0;
 let windows = {};
 let loadid;
-var editorOnly = false;
 
 app.setAppUserModelId('jiMUD');
 
@@ -37,6 +36,7 @@ global.characterPass = null;
 global.dev = false;
 global.title = '';
 global.debug = false;
+global.editorOnly = false;
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
@@ -1222,7 +1222,7 @@ function createWindow() {
         if (winCode) {
           if (!edset)
             edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-          if (editorOnly)
+          if (global.editorOnly)
             edset.stateOnly = getWindowState('code-editor', winCode);
           else {
             if (winCode != null)
@@ -1311,7 +1311,7 @@ function createWindow() {
     if (winCode && winCode.getParentWindow() == win) {
       if (!edset)
         edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-      if (editorOnly)
+      if (global.editorOnly)
         edset.stateOnly = getWindowState('code-editor', winCode);
       else {
         edset.state = getWindowState('code-editor', winCode);
@@ -1373,7 +1373,7 @@ function createWindow() {
       edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
     if (edset.window.show)
       showCodeEditor(true);
-    else if (!editorOnly && edset.window.persistent)
+    else if (!global.editorOnly && edset.window.persistent)
       createCodeEditor();
     updateJumpList();
   });
@@ -1458,15 +1458,15 @@ app.on('ready', () => {
         break;
       case '-eo':
       case '--eo':
-        editorOnly = true;
+        global.editorOnly = true;
         break;
     }
     if (val.startsWith("-eo=") || val.startsWith("-eo:")) {
-      editorOnly = true;
+      global.editorOnly = true;
       openEditor(val.substring(4));
     }
     else if (val.startsWith("--eo=") || val.startsWith("--eo:")) {
-      editorOnly = true;
+      global.editorOnly = true;
       openEditor(val.substring(5));
     }
 
@@ -1511,7 +1511,7 @@ app.on('ready', () => {
     if (val.startsWith("-pf=") || val.startsWith("-pf:"))
       global.profiles = parseTemplate(val.substring(4)).split(',');
   });
-  if (editorOnly)
+  if (global.editorOnly)
     showCodeEditor();
   else {
     createTray();
@@ -1614,7 +1614,7 @@ ipcMain.on('load-default', (event) => {
     edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
   if (edset.window.show)
     showCodeEditor(true);
-  else if (!editorOnly && edset.window.persistent)
+  else if (!global.editorOnly && edset.window.persistent)
     createCodeEditor();
 });
 
@@ -1688,7 +1688,7 @@ ipcMain.on('load-char', (event, char) => {
     edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
   if (edset.window.show)
     showCodeEditor(true);
-  else if (!editorOnly && edset.window.persistent)
+  else if (!global.editorOnly && edset.window.persistent)
     createCodeEditor();
 
   for (name in set.windows) {
@@ -2012,9 +2012,9 @@ ipcMain.on('editor-setting-changed', (event, data) => {
   if (winCode)
     winCode.webContents.send('editor-setting-changed');
   if (winCode.setParentWindow)
-    winCode.setParentWindow((!editorOnly && data.alwaysOnTopClient) ? win : null);
-  winCode.setSkipTaskbar((!editorOnly && (data.alwaysOnTopClient || data.alwaysOnTop)) ? true : false);
-  if (!editorOnly && data.persistent && !winCode)
+    winCode.setParentWindow((!global.editorOnly && data.alwaysOnTopClient) ? win : null);
+  winCode.setSkipTaskbar((!global.editorOnly && (data.alwaysOnTopClient || data.alwaysOnTop)) ? true : false);
+  if (!global.editorOnly && data.persistent && !winCode)
     createCodeEditor();
 });
 
@@ -2235,7 +2235,7 @@ function loadWindowState(window) {
   if (window === 'code-editor') {
     if (!edset)
       edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-    if (editorOnly) {
+    if (global.editorOnly) {
       if (!edset.stateOnly)
         return {
           x: 0,
@@ -2672,7 +2672,7 @@ function createEditor(show, loading) {
     set.windows['editor'] = getWindowState('editor', winEditor);
     set.save(global.settingsFile);
     winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
-    if (set.editorPersistent && !editorOnly) {
+    if (set.editorPersistent && !global.editorOnly) {
       e.preventDefault();
       winEditor.hide();
     }
@@ -3117,7 +3117,7 @@ function createCodeEditor(show, loading, loaded) {
   if (!edset)
     edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
   var s = loadWindowState('code-editor');
-  if (editorOnly) {
+  if (global.editorOnly) {
     if (!edset.stateOnly)
       edset.stateOnly = {
         x: 0,
@@ -3139,7 +3139,7 @@ function createCodeEditor(show, loading, loaded) {
   }
   console.log(states['code-editor']);
   winCode = new BrowserWindow({
-    parent: (!editorOnly && edset.window.alwaysOnTopClient) ? win : null,
+    parent: (!global.editorOnly && edset.window.alwaysOnTopClient) ? win : null,
     alwaysOnTop: edset.window.alwaysOnTop,
     title: 'Code editor',
     x: s.x,
@@ -3148,7 +3148,7 @@ function createCodeEditor(show, loading, loaded) {
     height: s.height,
     backgroundColor: 'grey',
     show: false,
-    skipTaskbar: (!editorOnly && (edset.window.alwaysOnTopClient || edset.window.alwaysOnTop)) ? true : false,
+    skipTaskbar: (!global.editorOnly && (edset.window.alwaysOnTopClient || edset.window.alwaysOnTop)) ? true : false,
     icon: path.join(__dirname, '../assets/icons/win/code.ico')
   });
 
@@ -3205,20 +3205,20 @@ function createCodeEditor(show, loading, loaded) {
       codeMax = s.maximized;
     if (loading) {
       clearTimeout(loadid);
-      if (!editorOnly)
+      if (!global.editorOnly)
         loadid = setTimeout(() => { win.focus(); }, 500);
     }
     if (loaded)
       loaded();
     codeReady = true;
-    if (editorOnly)
+    if (global.editorOnly)
       updateJumpList();
   });
 
   winCode.on('close', (e) => {
     //force a reload to make sure newest settings are saved
     edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-    if (!editorOnly) {
+    if (!global.editorOnly) {
       if (winCode && winCode.getParentWindow() == win)
         edset.window.show = false;
       else if (winCode != null)
@@ -3228,7 +3228,7 @@ function createCodeEditor(show, loading, loaded) {
     else
       edset.stateOnly = getWindowState('code-editor', winCode);
     edset.save(parseTemplate(path.join('{data}', 'editor.json')));
-    if (!editorOnly && edset.window.persistent) {
+    if (!global.editorOnly && edset.window.persistent) {
       e.preventDefault();
       winCode.hide();
     }
@@ -3280,7 +3280,7 @@ function createCodeEditor(show, loading, loaded) {
 function showCodeEditor(loading) {
   if (!edset)
     edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-  if (!editorOnly)
+  if (!global.editorOnly)
     edset.window.show = true;
   edset.save(parseTemplate(path.join('{data}', 'editor.json')));
   if (winCode != null) {
