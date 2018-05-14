@@ -639,10 +639,12 @@
                     'tempFile': TempType.extension,
                     'focusOnFinished': true,
                     'selectOnFinished': true,
-                    'compress': false
+                    'compress': true
                 };
                 saveOptions();
             }
+            if (!options.hasOwnProperty('compress'))
+                options.compress = true;
             if (!options.hasOwnProperty('focusOnFinished'))
                 options.focusOnFinished = true;
             if (!options.hasOwnProperty('selectOnFinished'))
@@ -683,7 +685,7 @@
                 _ied.remote = options.remote;
                 _ied.bufferSize = options.bufferSize;
                 _ied.useTemp = options.tempFile;
-                //_ied.compressUpload = options.compress;
+                _ied.compressUpload = options.compress;
                 _ied.compressDownload = options.compress;
             }
             ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: options });
@@ -1288,7 +1290,7 @@
             _ied.remote = options.remote;
             _ied.bufferSize = options.bufferSize;
             _ied.useTemp = options.tempFile;
-            //_ied.compressUpload = options.compress;
+            _ied.compressUpload = options.compress;
             _ied.compressDownload = options.compress;
             if (options.openEditor)
                 $('#btn-editor-remote').addClass('active');
@@ -3435,7 +3437,7 @@
                     _ied.remote = options.remote;
                     _ied.bufferSize = options.bufferSize;
                     _ied.useTemp = options.tempFile;
-                    //_ied.compressUpload = options.compress;
+                    _ied.compressUpload = options.compress;
                     _ied.compressDownload = options.compress;
                 }
             }
@@ -3480,7 +3482,7 @@
                     _remote[path.basename(item.remote)] = {
                         name: path.basename(item.remote),
                         path: item.remote,
-                        size: item.totalSize,
+                        size: item.originalSize || item.totalSize,
                         type: path.extname(item.remote),
                         date: new Date().getTime(),
                         hidden: IED.isHidden(item.remote, true),

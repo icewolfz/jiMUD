@@ -15,6 +15,7 @@ const tmp = require('tmp');
 const { ipcRenderer } = require('electron');
 
 const ZLIB: any = require('./../../lib/inflate_stream.min.js').Zlib;
+const dZLIB: any = require('./../../lib/zlib/deflate.min.js').Zlib;
 //const nZLIB = require("zlib");
 
 let fswin;
@@ -326,6 +327,7 @@ export class IED extends EventEmitter {
                                 return;
                             }
                             this.active.totalSize = obj.size;
+                            this.active.originalSize = obj.size;
                             if (this.active.totalSize < 1)
                                 this.removeActive();
 
@@ -491,6 +493,11 @@ export class IED extends EventEmitter {
             item.tmp = this._temp;
             item.info = IED.getFileInfo(item.local);
             item.totalSize = item.info.size;
+            item.originalSize = item.info.size;
+            if (item.totalSize > 200000) {
+                item.state = ItemState.error;
+                item.error = 'File to large';
+            }
             this.addItem(item);
         }
         else {
@@ -529,6 +536,11 @@ export class IED extends EventEmitter {
             item.tmp = this._temp;
             item.info = IED.getFileInfo(item.local);
             item.totalSize = item.info.size;
+            item.originalSize = item.info.size;
+            if (item.totalSize > 200000) {
+                item.state = ItemState.error;
+                item.error = 'File to large';
+            }
             this.addItem(item);
         }
         else {
@@ -953,6 +965,7 @@ export class Item {
     public mkdir: boolean = false;
     public error: string;
     public compress: boolean;
+    public originalSize: number;
 
     constructor(id: string, download?: boolean) {
         this.ID = id;
@@ -989,6 +1002,13 @@ export class Item {
 
     public read(size: number, callback?: any) {
         const position = this.currentSize;
+        if (this.compress) {
+            if (!this._zStream) {
+                this._zStream = Buffer.from(new dZLIB.Deflate(fs.readFileSync(this._local)).compress());
+                this.totalSize = this._zStream.length;
+            }
+            return this._zStream.toString('binary', position, position + size);
+        }
         if (!this.stream)
             this.stream = fs.openSync(this._local, 'r+');
         let buffer: Buffer;
@@ -1000,9 +1020,6 @@ export class Item {
         else {
             buffer = new Buffer(size);
             br = fs.readSync(this.stream, buffer, 0, size, position);
-        }
-        if (this.compress) {
-            //TODO add compressor
         }
         return buffer.toString();
     }
@@ -1035,7 +1052,7 @@ export class Item {
         if (this.compress) {
             if (!this._zStream)
                 this._zStream = new ZLIB.InflateStream();
-                //Buffer.from(data, '')
+            //Buffer.from(data, '')
             //data = nZLIB.inflateRawSync(data);
             data = this._zStream.decompress(new Buffer(data, "binary"));
             //var d = nZLIB.inflateRawSync(new Buffer(data, "binary"));
