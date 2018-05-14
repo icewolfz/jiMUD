@@ -18,6 +18,7 @@
     - Fix insert color dialog
     - Editor only losing taskbar icon when preference changed
     - Fixed state loading
+    - Fix file watching to ask if reload or keep open
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
 
