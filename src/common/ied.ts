@@ -15,7 +15,7 @@ const tmp = require('tmp');
 const { ipcRenderer } = require('electron');
 
 const ZLIB: any = require('./../../lib/inflate_stream.min.js').Zlib;
-const nZLIB = require("zlib");
+//const nZLIB = require("zlib");
 
 let fswin;
 if (process.platform.indexOf('win') === 0) {
