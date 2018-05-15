@@ -95,7 +95,7 @@ export abstract class EditorBase extends EventEmitter {
             file = this.file;
         if (!file || file.length === 0)
             return '';
-        return fs.readFileSync(this.file, 'utf8');
+        return fs.readFileSync(file, 'utf8');
     }
 
     public write(data, file?: string) {
@@ -104,7 +104,7 @@ export abstract class EditorBase extends EventEmitter {
         if (!file || file.length === 0) {
             throw new Error('Invalid file');
         }
-        fs.writeFileSync(this.file, data);
+        fs.writeFileSync(file, data);
     }
 
     abstract revert(): void;
