@@ -14,6 +14,7 @@
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
     - Moved folding from edit to view
+    - Formatterl remove spaces after ( and before )
 - **Fixed:**
   - Code editor:
     - Fix insert color dialog

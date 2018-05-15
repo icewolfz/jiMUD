@@ -1366,7 +1366,6 @@ enum FormatTokenType {
     parenRbrace,
     parenRbracket,
     parenRmapping,
-    parenRbracken,
     parenRclosure,
     parenRparen,
     string,
@@ -1492,7 +1491,7 @@ export class lpcFormatter extends EventEmitter {
                                         if (t3 <= 0)
                                             break;
                                     }
-                                    if (t3 < 0 || this.tokens[tp][t3].type !== FormatTokenType.operatorNot) {
+                                    if (t3 < 0 || (this.tokens[tp][t3].type !== FormatTokenType.operatorNot && this.tokens[tp][t3].type !== FormatTokenType.parenLparen)) {
                                         op = op.rtrim();
                                         op += " ";
                                     }
@@ -1556,7 +1555,13 @@ export class lpcFormatter extends EventEmitter {
                                     //only - matters as only operator that can standalone for signage
                                     if (this.tokens[tp][t1].value === '-') {
                                         //previous is text so should add a space
-                                        if (t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.text) {
+                                        if (t3 >= 0 && (this.tokens[tp][t3].type === FormatTokenType.text ||
+                                            this.tokens[tp][t3].type === FormatTokenType.parenRparen ||
+                                            this.tokens[tp][t3].type === FormatTokenType.parenRbracket ||
+                                            this.tokens[tp][t3].type === FormatTokenType.parenRmapping ||
+                                            this.tokens[tp][t3].type === FormatTokenType.parenRclosure ||
+                                            this.tokens[tp][t3].type === FormatTokenType.parenRarray
+                                        )) {
                                             op = op.rtrim();
                                             op += " ";
                                         }
