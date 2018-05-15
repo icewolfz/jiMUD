@@ -1495,6 +1495,8 @@ export class lpcFormatter extends EventEmitter {
                                         op = op.rtrim();
                                         op += " ";
                                     }
+                                    else if(t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.parenLparen)
+                                        op.rtrim();
                                 }
                                 else {
                                     op = op.rtrim();
@@ -1506,6 +1508,8 @@ export class lpcFormatter extends EventEmitter {
                             op = op.rtrim();
                             op += " ";
                         }
+                        else if(this.tokens[tp][t].type === FormatTokenType.parenRparen)
+                            op = op.rtrim();
                     }
                     if (this.tokens[tp][t].type === FormatTokenType.parenRbrace && s !== t && !op.rtrim().endsWith("\n"))
                         op += "\n" + leading;
@@ -1620,6 +1624,22 @@ export class lpcFormatter extends EventEmitter {
                                 }
                             }
                         }
+                        else if ((this.tokens[tp][t].type === FormatTokenType.parenLparen)) {
+                            t2 = t + 1;
+                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
+                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                    t++;
+                                    e++;
+                                    t2++;
+                                    if (t2 >= tll)
+                                        break;
+                                }
+                                if (t2 < tll) {
+                                    op = op.rtrim();
+                                    //op += " ";
+                                }
+                            }
+                        }                        
                         else if (!pc && inclosure === 0 && this.tokens[tp][t].type === FormatTokenType.keyword) {
                             t2 = t + 1;
                             switch (this.tokens[tp][t].value) {
