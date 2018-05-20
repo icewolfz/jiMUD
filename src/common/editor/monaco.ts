@@ -241,7 +241,7 @@ export class MonacoCodeEditor extends EditorBase {
         this.emit('saved');
     }
 
-    public canSave() { return true; }
+    public canSaveAs() { return true; }
 
     public revert() {
         if (!this.new)

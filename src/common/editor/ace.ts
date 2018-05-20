@@ -207,7 +207,7 @@ export class AceCodeEditor extends EditorBase {
         this.emit('saved');
     }
 
-    public canSave() { return true; }
+    public canSaveAs() { return true; }
 
     public close() {
         if (this.file && this.file.length > 0 && !this.new)
