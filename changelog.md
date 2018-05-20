@@ -11,7 +11,7 @@
     - Download and or upload files in compressed format for faster speeds
     - Added a max file check of 200,000 bytes and error if file is larger
 - **Changed:**
-  - Switch to es2017/7
+  - Switch to es2017
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
     - Moved folding from edit to view
@@ -23,6 +23,7 @@
     - Fixed state loading
     - Fix file watching to ask if reload or keep open
     - No longer loaded always after editor only mode used
+    - Revert now correctly reverts new files to the inital start text instead of empty text, this allows you to revert templates and other generated files back to starting state
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
 

@@ -20,6 +20,7 @@ export class AceCodeEditor extends EditorBase {
     private $annotations = [];
     private $saving = false;
     private $tooltip;
+    private $startValue = '';
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -47,6 +48,7 @@ export class AceCodeEditor extends EditorBase {
             this.emit('progress-complete', 'indent');
         });
         if (options.value) {
+            this.$startValue = options.value;
             this.$el.value = options.value;
             this.$session.setValue(options.value);
             this.$session.getUndoManager().reset();
@@ -233,8 +235,8 @@ export class AceCodeEditor extends EditorBase {
         if (!this.new)
             this.open();
         else {
-            this.$el.value = '';
-            this.$session.setValue('');
+            this.$el.value = this.$startValue;
+            this.$session.setValue(this.$startValue);
         }
         this.$session.getUndoManager().reset();
         this.changed = false;

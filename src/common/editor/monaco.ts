@@ -165,10 +165,12 @@ export class MonacoCodeEditor extends EditorBase {
     private $model: monaco.editor.ITextModel;
     private $saving = false;
     private $state;
+    private $startValue = '';
 
     constructor(options?: EditorOptions) {
         super(options);
         if (options.value) {
+            this.$startValue = options.value || '';
             this.$model.setValue(options.value);
             this.changed = false;
         }
@@ -243,7 +245,7 @@ export class MonacoCodeEditor extends EditorBase {
         if (!this.new)
             this.open();
         else {
-            this.$model.setValue('');
+            this.$model.setValue(this.$startValue);
         }
         this.changed = false;
         this.emit('reverted');
