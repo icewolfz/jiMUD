@@ -5,8 +5,7 @@
  *
  * @arthur Icewolfz
  * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support
-   */
-
+ */
 import { Size, Point, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from './types';
 import EventEmitter = require('events');
 import { Parser } from './parser';

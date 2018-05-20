@@ -3302,7 +3302,7 @@ function updateJumpList() {
   if (process.platform !== 'win32')
     return;
   const list = [];
-  //@TODO figure out some way to open editor window for current jimud instance
+  //TODO figure out some way to open editor window for current jimud instance
   list.push({
     type: 'tasks',
     items: [
@@ -3317,7 +3317,7 @@ function updateJumpList() {
       }
     ]
   });
-  //@TODO add recent support, require instance check
+  //TODO add recent support, require instance check
   /*
   list.push({
     type: 'recent'
