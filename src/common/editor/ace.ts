@@ -207,6 +207,8 @@ export class AceCodeEditor extends EditorBase {
         this.emit('saved');
     }
 
+    public canSave() { return true; }
+
     public close() {
         if (this.file && this.file.length > 0 && !this.new)
             this.emit('watch-stop', [this.file]);

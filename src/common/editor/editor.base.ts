@@ -112,6 +112,7 @@ export abstract class EditorBase extends EventEmitter {
     abstract open(): void;
 
     abstract save(): void;
+    abstract canSave(): boolean;
 
     abstract close(); void;
     abstract watch(action: string, file: string, details?): void;
