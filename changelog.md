@@ -4,18 +4,25 @@
 
 - **New:**
   - Code editor:
+    - Virtual map editor
+      - Edit exits, descriptions, items, and external exits
+      - Generate external room files quickly based on current room settings
+      - Preview selected room as if on mud
+      - Generate exits by using numpad, and ctrl+numpad to remove exits
+      - Edit raw files directly when needed
     - Window can be persistent when not in editor only mode again
     - [Use native icons in tabs](docs/codeeditor.md) preference to allow control over icon display
     - When using editor only mode will maintain seperate window state systems
   - Immortal tools:
     - Download and or upload files in compressed format for faster speeds
     - Added a max file check of 200,000 bytes and error if file is larger
+    - Revert new files to initial starting code, either empty or template code
 - **Changed:**
   - Switch to es2017
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
     - Moved folding from edit to view
-    - Formatterl remove spaces after ( and before )
+    - Formatter: remove spaces after ( and before )
 - **Fixed:**
   - Code editor:
     - Fix insert color dialog
@@ -23,7 +30,7 @@
     - Fixed state loading
     - Fix file watching to ask if reload or keep open
     - No longer loaded always after editor only mode used
-    - Revert now correctly reverts new files to the inital start text instead of empty text, this allows you to revert templates and other generated files back to starting state
+    - Fix new monster from file menu not working
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
 

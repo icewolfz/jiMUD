@@ -58,6 +58,21 @@ export class EditorSettings {
         }
     };
 
+    public virtualOptions = {
+        showColors: false,
+        showTerrain: false,
+        rawFontSize: 16,
+        rawFontFamily: "Consolas, 'Courier New', monospace",
+        rawFontWeight: 'normal',
+        previewFontSize: 15,
+        previewFontFamily: "Consolas, 'Courier New', monospace",
+        editorWidth: 200,
+        previewHeight: 200,
+        live: true,
+        showRoomEditor: true,
+        showRoomPreview: true,
+    };
+
     public static load(file) {
         try {
             if (!fs.statSync(file).isFile())
@@ -83,7 +98,7 @@ export class EditorSettings {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'editorOptions' || prop === 'modelOptions') {
+            if (prop === 'editorOptions' || prop === 'modelOptions' || prop === 'virtualOptions') {
                 for (prop2 in data[prop]) {
                     if (!data[prop].hasOwnProperty(prop2)) {
                         continue;

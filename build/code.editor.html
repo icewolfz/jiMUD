@@ -20,7 +20,11 @@
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
         SetupEditor().then((monaco) => {
-            window.$editor = monaco.editor.create(document.getElementById('cm-tabpane'), {
+            var pane = document.getElementById('cm-tabpane');
+            var el = document.createElement('div');
+            el.classList.add('editor-container');
+            pane.appendChild(el);
+            window.$editor = monaco.editor.create(el, {
                 language: 'lpc',
                 autoIndent: true,
                 scrollBeyondLastLine: false,
@@ -135,7 +139,7 @@
             window.$editor.onDidChangeCursorPosition((e) => {
                 manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
             });
-            
+
             window.$editor.updateOptions(options.editorOptions);
             _ready = true;
         });        
@@ -236,7 +240,7 @@
     </div>
     <div id="statusbar" class="statusbar">
         <span id="statusbar-file" class="left"></span>
-        <span id="statusbar-message"></span>
+        <span id="statusbar-message" class="center"></span>
         <span id="statusbar-location" class="right"></span>
         <span id="statusbar-size" class="right"></span>
     </div>
@@ -630,7 +634,7 @@
 
     const { dialog, Menu, MenuItem, app } = remote;
     const { Menubar } = require('./js/menubar');
-    const { inverse, parseTemplate, capitalize, existsSync, isDirSync } = require('./js/library');
+    const { inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync } = require('./js/library');
 
     const moment = require('moment');
     const chokidar = require('chokidar');
@@ -760,6 +764,8 @@
             {
                 label: '&Output',
                 accelerator: 'CmdOrCtrl+Shift+U',
+                type: 'checkbox',
+                checked: false,
                 click: toggleOutput
             },
             { type: 'separator' },
@@ -821,7 +827,7 @@
                         {
                             label: '&Monster...',
                             //accelerator: "CmdOrCtrl+N",
-                            click: () => monsterWizard
+                            click: monsterWizard
                         },
                         { type: 'separator' },
                         {
@@ -932,8 +938,10 @@
                 e.panel.editor.activate(window.$editor);
                 window.$editor.layout();
             }
-            else
+            else {
                 window.$editor.domElement.style.display = 'none';
+                e.panel.editor.activate();
+            }
             setTimeout(() => { e.panel.editor.focus(); }, 50);
         }
         else
@@ -943,6 +951,8 @@
     manager.on('deactivated', (e) => {
         if (e.panel.editor.type === 1)
             e.panel.editor.deactivate(window.$editor);
+        else
+            e.panel.editor.deactivate();
     });
     manager.on('dragenter', (e) => {
         event.dataTransfer.dropEffect = "copy";
@@ -1120,6 +1130,7 @@
         }
         else
             sbLocation.textContent = '';
+        if (enabled && manager.active.editor.updateUI) manager.active.editor.updateUI();
         doUpdate(2);
     }
 
@@ -1148,7 +1159,7 @@
             if (!_editors[p] || (!_editors[p].editor.changed && !_editors[p].editor.new))
                 continue;
             changedAll = true;
-            if (_editors[p].editor.changed && !_editors[p].editor.new)
+            if (_editors[p].editor.changed)
                 revertAll = true;
             if (revertAll && changedAll)
                 break; //do not need to check all as soon as one has been found
@@ -1158,7 +1169,7 @@
         $("#btn-save-all").prop('disabled', !changedAll);
         menubar.updateItem('file|save all', { enabled: changedAll });
 
-        menubar.updateItem('file|revert', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.changed && !manager.active.editor.new) : false });
+        menubar.updateItem('file|revert', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.changed) : false });
         menubar.updateItem('file|revert all', { enabled: revertAll });
 
         $("#btn-undo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('undo') : true);
@@ -1182,58 +1193,6 @@
         menubar.updateItem('view|refresh', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('refresh') : false });
         menubar.updateItem('edit|select all', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('selectall') : false });
     }
-
-    // List all files in a directory in Node.js recursively in a synchronous fashion
-    var walkSync = function (dir, fileList, dirList, empty) {
-        var path = path || require('path');
-        var fs = fs || require('fs'),
-            files = fs.readdirSync(dir);
-        fileList = fileList || [];
-        dirList = dirList || [];
-        empty = empty || [];
-        if (files.length == 0)
-            empty.push(dir);
-        files.forEach(function (file) {
-            if (fs.statSync(path.join(dir, file)).isDirectory()) {
-                dirList.push(path.join(dir, file));
-                var t = walkSync(path.join(dir, file), fileList, dirList, empty);
-                fileList = t.files;
-                dirList = t.dirs;
-                empty = t.empty;
-            }
-            else {
-                fileList.push(path.join(dir, file));
-            }
-        });
-        return { files: fileList, dirs: dirList, empty: empty };
-    };
-
-    var walk = function (dir, callback) {
-        var path = path || require('path');
-        var fs = fs || require('fs');
-        fs.readdir(dir, (err, files) => {
-            var fileList = [];
-            var dirList = [];
-            var empty = [];
-            if (files.length == 0)
-                empty.push(dir);
-            files.forEach(function (file) {
-                if (fs.statSync(path.join(dir, file)).isDirectory()) {
-                    dirList.push(path.join(dir, file));
-                    var t = walkSync(path.join(dir, file), fileList, dirList, empty);
-                    fileList = t.files;
-                    dirList = t.dirs;
-                    empty = t.empty;
-                }
-                else {
-                    fileList.push(path.join(dir, file));
-                }
-            });
-            if (callback)
-                callback(fileList, dirList, empty);
-
-        });
-    };
 
     function createWatcher() {
         if (watcher)
@@ -1317,6 +1276,7 @@
             dock.css('bottom', '');
             output.css('display', 'none');
         }
+        menubar.updateItem('view|output', { checked: options.output });
         buildRecent();
     }
 
@@ -1464,6 +1424,7 @@
             options.output = false;
         else
             options.output = true;
+        menubar.updateItem('view|output', { checked: options.output });
         output.css('height', options.outputSize + 'px');
         if (options.output) {
             dock.css('bottom', options.outputSize + 'px');
@@ -1485,6 +1446,7 @@
 
     function closeOutput() {
         options.output = false;
+        menubar.updateItem('view|output', { checked: options.output });
         dock.css('bottom', '');
         output.css('display', 'none');
         $(window).trigger('resize');
@@ -1803,6 +1765,8 @@
                         manager.setPanelIcon(icon.toDataURL(), _editors[p]);
                     });
             }
+            else if (_editors[p].editor.type === 2)
+                _editors[p].editor.options = options.virtualOptions;
 
         }
     });
@@ -2134,6 +2098,8 @@
         if (file === undefined)
             return false;
         panel.editor.file = file;
+        if (!panel.editor.canSaveAs())
+            return false;
         manager.setPanelTooltip(panel.editor.file, panel);
         manager.setPanelTitle(panel.editor.filename, panel);
         panel.editor.save();
@@ -2148,8 +2114,22 @@
                 return false;
             panel = manager.active;
         }
-        if (panel.editor.changed && !panel.editor.new) {
-            var choice = dialog.showMessageBox(
+        var choice;
+        if (panel.editor.changed && panel.editor.new) {
+            choice = dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'question',
+                    title: 'Revert new file?',
+                    message: 'Revert ' + panel.editor.filename + ' to start and lose changes?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                });
+            if (choice === 0)
+                panel.editor.revert();
+        }
+        else if (panel.editor.changed && !panel.editor.new) {
+            choice = dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'question',
@@ -2171,8 +2151,8 @@
         var p;
         while (k--) {
             p = keys[k];
-            //not changed and new try next
-            if (!_editors[p].editor.new && !_editors[p].editor.changed)
+            //not changed try next
+            if (!_editors[p].editor.changed)
                 continue;
             if (!revertFile(_editors[p]))
                 return false;
@@ -2289,18 +2269,25 @@
             return null;
         }
         else {
+            _loading++;
             p = manager.createPanel(path.basename(data.file), getFileIcon(data.file), data.file);
             data.container = p.pane;
-            //if (path.extname(file) === '.map')
-            //p.editor = new VirtualEditor(data);
-            //else        
-            p.editor = new MonacoCodeEditor(data);
-            if (options.nativeIcons)
-                app.getFileIcon((path.extname(data.file).length !== 0 ? data.file : '.*'), { size: 'small' }, (err, icon) => {
-                    if (err || !icon) return;
-                    manager.setPanelIcon(icon.toDataURL(), p);
+            if (path.extname(data.file) === '.map') {
+                data.options = options.virtualOptions;
+                p.editor = new VirtualEditor(data);
+                p.editor.on('room-dblclick', (room)=> {
+                    // TODO open or create external room file
                 });
-            p.editor.options = options.modelOptions;
+            }
+            else {
+                p.editor = new MonacoCodeEditor(data);
+                if (options.nativeIcons)
+                    app.getFileIcon((path.extname(data.file).length !== 0 ? data.file : '.*'), { size: 'small' }, (err, icon) => {
+                        if (err || !icon) return;
+                        manager.setPanelIcon(icon.toDataURL(), p);
+                    });
+                p.editor.options = options.modelOptions;
+            }
             if (!_watched[data.file]) {
                 _watched[data.file] = 1;
                 watcher.add(data.file);
@@ -2328,7 +2315,7 @@
                     }
                 }
             });
-            p.editor.on('reload', (type) => {
+            p.editor.on('reload', (type, file) => {
                 var choice;
                 if (type === 'unlink') {
                     choice = dialog.showMessageBox(
@@ -2336,7 +2323,7 @@
                         {
                             type: 'question',
                             title: 'File deleted',
-                            message: p.editor.filename + ' has been deleted, keep open?',
+                            message: path.basename(file || p.editor.file) + ' has been deleted, keep open?',
                             buttons: ['Yes', 'No'],
                             defaultId: 1
                         });
@@ -2352,16 +2339,19 @@
                         {
                             type: 'question',
                             title: 'File changed',
-                            message: (p.editor.filename + ' has been changed, reload?'),
+                            message: path.basename((file || p.editor.file) + ' has been changed, reload?'),
                             buttons: ['Yes', 'No'],
                             defaultId: 1
                         });
                     //yes
                     if (choice === 0)
-                        p.editor.revert();
+                        p.editor.revert(file);
                     //else
                     //p.editor.changed = true;
                 }
+            });
+            p.editor.on('supports-changed', ()=> {
+                doUpdate(2);
             });
             p.editor.on('changed', (length) => {
                 doUpdate(2);
@@ -2381,6 +2371,15 @@
             });
             p.editor.on('menu-update', (menu, options) => {
                 menubar.updateItem(menu, options);
+            });
+            p.editor.on('rebuild-buttons', () => {
+                if (p !== manager.active) return;
+                var buttons = document.getElementById("editor-buttons");
+                while (buttons.firstChild) {
+                    buttons.removeChild(buttons.firstChild);
+                }
+                if (p.editor.supports('buttons'))
+                    buttons.append(...p.editor.buttons);
             });
             p.editor.on('contextmenu', (e, token) => {
                 var temp = [];
@@ -2485,13 +2484,26 @@
                 logOutput(msg, true);
             });
             p.editor.on('location-changed', (x, y) => {
-                sbLocation.textContent = `Ln ${y}, Col ${x}`;
+                if (p.editor.type == 1)
+                    sbLocation.textContent = `Ln ${y}, Col ${x}`;
+                else if (y != -1 && x != -1)
+                    sbLocation.textContent = `${x}, ${y}`;
+                else
+                    sbLocation.textContent = '';
             });
             p.editor.on('status-message', (msg) => {
                 sbMessage.textContent = msg;
             });
+            p.editor.on('option-changed', (option, value) => {
+                if (_loading) return;
+                if (p.editor.type === 2) {
+                    options.virtualOptions[option] = value;
+                    saveOptions();
+                }
+            });
             _editors[data.file] = p;
             p.spellCheck = options.spellCheck;
+            _loading--;
         }
         if (add) {
             manager.addPanels([p]);

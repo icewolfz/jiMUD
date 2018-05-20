@@ -123,26 +123,59 @@
                     }
                     ops = ops.join('');
                     $('#font-system').append(ops);
+                    $('#raw-font-system').append(ops);
+                    $('#preview-font-system').append(ops);
                     $('#editorOptions-fontFamily').selectpicker('refresh');
+                    $('#virtualOptions-rawFontFamily').selectpicker('refresh');
+                    $('#virtualOptions-previewFontFamily').selectpicker('refresh');
                 });
             }
             $('#editorOptions-fontFamily').change(() => {
                 $('#editorOptions-font-sample').css('font-family', $('#editorOptions-fontFamily').val());
-                $('#editorOptions-font-sample').css('font-size', $('#editorOptions-fontSize').val());
+                $('#editorOptions-font-sample').css('font-size', $('#editorOptions-fontSize').val() + 'px');
                 $('#editorOptions-font-sample').css('font-weight', $('#editorOptions-fontWeight').val());
             });
 
-            $('#editorOptions-fontSize').change(() => {
+            $('#editorOptions-fontSize').on('input', () => {
                 $('#editorOptions-font-sample').css("font-family", $("#editorOptions-fontFamily").val());
-                $('#editorOptions-font-sample').css("font-size", $("#editorOptions-fontSize").val());
+                $('#editorOptions-font-sample').css("font-size", $("#editorOptions-fontSize").val() + 'px');
                 $('#editorOptions-font-sample').css('font-weight', $('#editorOptions-fontWeight').val());
             });
 
             $('#editorOptions-fontWeight').change(() => {
                 $('#editorOptions-font-sample').css("font-family", $("#editorOptions-fontFamily").val());
-                $('#editorOptions-font-sample').css("font-size", $("#editorOptions-fontSize").val());
+                $('#editorOptions-font-sample').css("font-size", $("#editorOptions-fontSize").val() + 'px');
                 $('#editorOptions-font-sample').css('font-weight', $('#editorOptions-fontWeight').val());
             });
+
+            $('#virtualOptions-rawFontFamily').change(() => {
+                $('#virtualOptions-raw-font-sample').css('font-family', $('#virtualOptions-rawFontFamily').val());
+                $('#virtualOptions-raw-font-sample').css('font-size', $('#virtualOptions-rawFontSize').val() + 'px');
+                $('#virtualOptions-raw-font-sample').css('font-weight', $('#virtualOptions-rawFontWeight').val());
+            });
+
+            $('#virtualOptions-rawFontSize').on('input', () => {
+                $('#virtualOptions-raw-font-sample').css("font-family", $("#virtualOptions-rawFontFamily").val());
+                $('#virtualOptions-raw-font-sample').css("font-size", $("#virtualOptions-rawFontSize").val() + 'px');
+                $('#virtualOptions-raw-font-sample').css('font-weight', $('#virtualOptions-fontWeight').val());
+            });
+
+            $('#virtualOptions-rawFontWeight').change(() => {
+                $('#virtualOptions-raw-font-sample').css("font-family", $("#virtualOptions-rawFontFamily").val());
+                $('#virtualOptions-raw-font-sample').css("font-size", $("#virtualOptions-rawFontSize").val());
+                $('#virtualOptions-raw-font-sample').css('font-weight', $('#virtualOptions-rawFontWeight').val() + 'px');
+            });
+
+            $('#virtualOptions-previewFontFamily').change(() => {
+                $('#virtualOptions-preview-font-sample').css('font-family', $('#virtualOptions-previewFontFamily').val());
+                $('#virtualOptions-preview-font-sample').css('font-size', $('#virtualOptions-previewFontSize').val()) + 'px';
+            });
+
+            $('#virtualOptions-previewFontSize').on('input', () => {
+                $('#virtualOptions-preview-font-sample').css("font-family", $("#virtualOptions-previewFontFamily").val());
+                $('#virtualOptions-preview-font-sample').css("font-size", $("#virtualOptions-previewFontSize").val() + 'px');
+            });
+
             _settings = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
             loadSettings();
             $('input[type="checkbox"]').change(function () {
@@ -189,9 +222,16 @@
             $('input[type="text"]').change(function () {
                 setValue($(this).attr('id'), $(this).val());
             });
+            $('input[type="text"]').on('input', function () {
+                setValue($(this).attr('id'), $(this).val());
+            });
+
             $('input[type="number"]').change(function () {
                 setValue($(this).attr('id'), $(this).val());
             });
+            $('input[type="number"]').on('input', function () {
+                setValue($(this).attr('id'), $(this).val());
+            });            
             $('.selectpicker').change(function () {
                 setValue($(this).attr('id'), $(this).val());
             });
@@ -238,8 +278,26 @@
             $('#editorOptions-fontFamily').change();
             $('#editorOptions-fontSize').val(_settings.editorOptions.fontSize);
             $('#editorOptions-fontSize').change();
+            $('#editorOptions-fontSize').trigger('input');
             $('#editorOptions-fontWeight').val(_settings.editorOptions.fontWeight);
             $('#editorOptions-fontWeight').selectpicker('render');
+
+            $('#virtualOptions-rawFontFamily').val(_settings.virtualOptions.rawFontFamily);
+            $('#virtualOptions-rawFontFamily').selectpicker('render');
+            $('#virtualOptions-rawFontFamily').change();
+            $('#virtualOptions-rawFontSize').val(_settings.virtualOptions.rawFontSize);
+            $('#virtualOptions-rawFontSize').change();
+            $('#virtualOptions-rawFontSize').trigger('input');
+            $('#virtualOptions-rawFontWeight').val(_settings.virtualOptions.rawFontWeight);
+            $('#virtualOptions-rawFontWeight').selectpicker('render');
+
+            $('#virtualOptions-previewFontFamily').val(_settings.virtualOptions.previewFontFamily);
+            $('#virtualOptions-previewFontFamily').selectpicker('render');
+            $('#virtualOptions-previewFontFamily').change();
+            $('#virtualOptions-previewFontSize').val(_settings.virtualOptions.previewFontSize);
+            $('#virtualOptions-previewFontSize').change();
+            $('#virtualOptions-previewFontSize').trigger('input');
+
             $('#editorOptions-acceptSuggestionOnEnter-0').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'on');
             $('#editorOptions-acceptSuggestionOnEnter-1').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'smart');
             $('#editorOptions-acceptSuggestionOnEnter-2').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'off');
@@ -300,6 +358,9 @@
             </li>
             <li role="presentation">
                 <a href="#editorFont" aria-controls="editorFont" role="tab" data-toggle="tab">Editor Font</a>
+            </li>
+            <li role="presentation">
+                <a href="#virtualEditor" aria-controls="virtualEditor" role="tab" data-toggle="tab">Virtual Area Editor</a>
             </li>
             <li role="presentation">
                 <a href="#window" aria-controls="window" role="tab" data-toggle="tab">Window</a>
@@ -457,7 +518,105 @@
 
                 <div class="col-sm-12 form-group">
                     <label class="control-label">Font sample
-                        <div id="editorOptions-font-sample" style="margin: 0px; padding: 2px;font-size: 24pt;height:1.5em;width:100%;overflow:hidden;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+                        <div id="editorOptions-font-sample" style="margin: 0px; padding: 2px;height:1.5em;width:100%;overflow:hidden;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+                    </label>
+                </div>
+            </div>
+            <div role="tabpanel" class="container tab-pane fade" id="virtualEditor">
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Raw Font
+                        <br>
+                        <select id="virtualOptions-rawFontFamily" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <optgroup label="Basic">
+                                <option value="Consolas, 'Courier New', monospace">Consolas, 'Courier New', monospace</option>
+                                <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
+                                <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
+                                <option value="Georgia, serif">Georgia, serif</option>
+                                <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
+                                <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
+                                <option value="Arial, Helvetica, sans-serif">Arial, Helvetica, sans-serif</option>
+                                <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
+                                <option value="'Comic Sans MS', cursive, sans-serif">'Comic Sans MS', cursive, sans-serif</option>
+                                <option value="Impact, Charcoal, sans-serif">Impact, Charcoal, sans-serif</option>
+                                <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
+                                <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
+                                <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
+                                <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
+                            </optgroup>
+                            <optgroup id="raw-font-system" label="System">
+                            </optgroup>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Raw Font weight
+                        <br>
+                        <select id="virtualOptions-rawFontWeight" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="normal">Normal</option>
+                            <option value="bold">Bold</option>
+                            <option value="bolder">Bolder</option>
+                            <option value="lighter">Lighter</option>
+                            <option value="initial">Initial</option>
+                            <option value="inherit">Inherit</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="300">300</option>
+                            <option value="400">400</option>
+                            <option value="500">500</option>
+                            <option value="600">600</option>
+                            <option value="700">700</option>
+                            <option value="800">800</option>
+                            <option value="900">900</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        Raw Font size
+                        <input type="number" id="virtualOptions-rawFontSize" class="input-sm form-control" min="1" />
+                    </label>
+                </div>
+
+                <div class="col-sm-12 form-group">
+                    <label class="control-label">Raw Font sample
+                        <div id="virtualOptions-raw-font-sample" style="margin: 0px; padding: 2px;height:1.5em;width:100%;overflow:hidden;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Preview Font
+                        <br>
+                        <select id="virtualOptions-previewFontFamily" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <optgroup label="Basic">
+                                <option value="Consolas, 'Courier New', monospace">Consolas, 'Courier New', monospace</option>
+                                <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
+                                <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
+                                <option value="Georgia, serif">Georgia, serif</option>
+                                <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
+                                <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
+                                <option value="Arial, Helvetica, sans-serif">Arial, Helvetica, sans-serif</option>
+                                <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
+                                <option value="'Comic Sans MS', cursive, sans-serif">'Comic Sans MS', cursive, sans-serif</option>
+                                <option value="Impact, Charcoal, sans-serif">Impact, Charcoal, sans-serif</option>
+                                <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
+                                <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
+                                <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
+                                <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
+                            </optgroup>
+                            <optgroup id="preview-font-system" label="System">
+                            </optgroup>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        Preview Font size
+                        <input type="number" id="virtualOptions-previewFontSize" class="input-sm form-control" min="1" />
+                    </label>
+                </div>
+
+                <div class="col-sm-12 form-group">
+                    <label class="control-label">Preview Font sample
+                        <div id="virtualOptions-preview-font-sample" style="font-weight: normal;margin: 0px; padding: 2px;height:1.5em;width:100%;overflow:hidden;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
                     </label>
                 </div>
             </div>
