@@ -17,12 +17,15 @@
     - Download and or upload files in compressed format for faster speeds
     - Added a max file check of 200,000 bytes and error if file is larger
     - Revert new files to initial starting code, either empty or template code
+  - `-data-dir` command line argument, this allows you to override the default data storage folder with one of your own
+  - `-no-pd, -no-portable-dir` command line argument, this forces portable application to use the default data folder instead of the applicaton directory, `--data-dir` super cedes this
 - **Changed:**
   - Switch to es2017
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
     - Moved folding from edit to view
     - Formatter: remove spaces after ( and before )
+  - When using portable version it now defaults to using current application directory as data folder, use `-no-pd` to restore previous usage
 - **Fixed:**
   - Code editor:
     - Fix insert color dialog
@@ -33,6 +36,7 @@
     - Fix new monster from file menu not working
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
+  - Fix help display for command line for -e and -eo arguments
 
 ## 0.4.43 2018-05-07
 

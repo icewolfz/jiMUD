@@ -25,6 +25,30 @@ let overlay = 0;
 let windows = {};
 let loadid;
 
+var argv = require('yargs-parser')(process.argv, {
+  string: ['data-dir', 's', 'setting', 'm', 'mf', 'map', 'c', 'character', 'pf', 'profiles', '?'],
+  boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug'],
+  alias: {
+    'd': ['debug'],
+    'eo': ['editorOnly', 'editoronly'],
+    'h': ['help'],
+    'v': ['version'],
+    'no-pd': ['no-portable-dir'],
+    's': ['settings'],
+    'mf': ['map', 'm'],
+    'c': ['character', 'char'],
+    'pf': ['profiles']
+  },
+  configuration: {
+    'short-option-groups': false
+  }
+});
+
+if (argv['data-dir'] && argv['data-dir'].length > 0)
+  app.setPath('userData', argv['data-dir']);
+else if (process.env.PORTABLE_EXECUTABLE_DIR && !argv['no-pd'] && !argv['no-portable-dir'])
+  app.setPath('userData', process.env.PORTABLE_EXECUTABLE_DIR);
+
 app.setAppUserModelId('jiMUD');
 
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
@@ -1409,7 +1433,7 @@ function resetProfiles() {
   }
 }
 
-if (process.argv.indexOf('--disable-gpu') !== -1)
+if (argv['disable-gpu'])
   app.disableHardwareAcceleration();
 
 // This method will be called when Electron has finished
@@ -1420,97 +1444,115 @@ app.on('ready', () => {
     fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
 
   loadCharacters();
-
-  process.argv.forEach((val, index) => {
-    switch (val) {
-      case "-h":
-      case "--help":
-      case "-?":
-      case "/?":
-        console.log('-h, --help                          Print console help');
-        console.log('-d, --debug                         Enable dev tools for all windows');
-        console.log('-s=[file], --setting=[file]         Override default setting file');
-        console.log('-mf=[file], --map=[file]            Override default map file');
-        console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
-        console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
-        console.log('-v, --version                       Print current version');
-        console.log('-e, --e, -e=[file], --e=[file]      Print current version');
-        console.log('-eo, --eo, -eo=[file], --eo=[file]  Print current version');
-        app.quit();
-        return;
-      case "--version":
-      case "-v":
-      case "--v":
-        console.log(`jiMUD v${require("../package.json").version}`);
-        app.quit();
-        break;
-      case "-debug":
-      case "--debug":
-      case "-d":
-      case "--d":
-        global.debug = true;
-        break;
-      case '-e':
-      case '--e':
-      case '--editor':
-      case '-editor':
-        showCodeEditor();
-        break;
-      case '-eo':
-      case '--eo':
-        global.editorOnly = true;
-        break;
+  var a, al;
+  if (argv._.indexOf('/?') !== -1 || argv.h) {
+    var msg;
+    if (process.env.PORTABLE_EXECUTABLE_DIR) {
+      msg = '';
+      msg += '-h, --help - Print console help\n';
+      msg += '-d, --debug - Enable dev tools for all windows\n';
+      msg += '-s=[file], --setting=[file] - Override default setting file\n';
+      msg += '-mf=[file], --map=[file] - Override default map file\n';
+      msg += '-c=[name], --character=[name] - Allows you to load/create a character from character database\n';
+      msg += '-pf=[list], --profiles[] - Set which profiles will be enabled, if not found will default\n';
+      msg += '-v, --version - Print current version\n';
+      msg += '-e, --e, -e=[file], --e=[file] - Open code editor\n';
+      msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
+      if (process.env.PORTABLE_EXECUTABLE_DIR)
+        msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
+      msg += '-data-dir=[file] - Set a custom directory to store saved data';
+      dialog.showMessageBox({
+        type: 'info',
+        message: msg
+      });
     }
-    if (val.startsWith("-eo=") || val.startsWith("-eo:")) {
-      global.editorOnly = true;
-      openEditor(val.substring(4));
+    else {
+      console.log('-h, --help                          Print console help');
+      console.log('-d, --debug                         Enable dev tools for all windows');
+      console.log('-s=[file], --setting=[file]         Override default setting file');
+      console.log('-mf=[file], --map=[file]            Override default map file');
+      console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
+      console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
+      console.log('-v, --version                       Print current version');
+      console.log('-e, --e, -e=[file], --e=[file]      Open code editor');
+      console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
+      if (process.env.PORTABLE_EXECUTABLE_DIR)
+        console.log('-no-pd, -no-portable-dir            Do not use portable dir');
+      console.log('-data-dir=[file]                    Set a custom directory to store saved data');
     }
-    else if (val.startsWith("--eo=") || val.startsWith("--eo:")) {
-      global.editorOnly = true;
-      openEditor(val.substring(5));
+    app.quit();
+    return;
+  }
+  else if (argv.v) {
+    if (process.env.PORTABLE_EXECUTABLE_DIR)
+      dialog.showMessageBox({
+        type: 'info',
+        message: `jiMUD v${require("../package.json").version}`
+      });
+    else
+      console.log(`jiMUD v${require("../package.json").version}`);
+    app.quit();
+    return;
+  }
+  global.debug = argv.debug;
+
+  if (argv.eo) {
+    if (Array.isArray(argv.eo)) {
+      al = argv.eo.length;
+      a = 0;
+      for (; a < al; a++) {
+        if (typeof argv.eo[a] === 'string')
+          openEditor(argv.eo[a]);
+      }
     }
-
-    else if (val.startsWith("-e=") || val.startsWith("-e:"))
-      openEditor(val.substring(3));
-    else if (val.startsWith("--e=") || val.startsWith("--e:"))
-      openEditor(val.substring(4));
-    else if (val.startsWith("-editor=") || val.startsWith("-editor:"))
-      openEditor(val.substring(8));
-    else if (val.startsWith("--editor=") || val.startsWith("--editor:"))
-      openEditor(val.substring(9));
-
-    if (val.startsWith("--character=") || val.startsWith("--character:")) {
-      global.character = val.substring(12);
-      loadCharacter(global.character);
+    else if (typeof argv.eo === 'string') {
+      openEditor(argv.eo);
     }
-    if (val.startsWith("-c=") || val.startsWith("-c:")) {
-      global.character = val.substring(3);
-      loadCharacter(global.character);
+    global.editorOnly = true;
+  }
+  if (argv.e) {
+    showCodeEditor();
+    if (Array.isArray(argv.eo)) {
+      al = argv.eo.length;
+      a = 0;
+      for (; a < al; a++) {
+        if (typeof argv.eo[a] === 'string')
+          openEditor(argv.eo[a]);
+      }
     }
+    else if (typeof argv.eo === 'string') {
+      openEditor(argv.eo);
+    }
+  }
 
-    if (val.startsWith("--settings=") || val.startsWith("--settings:"))
-      global.settingsFile = parseTemplate(val.substring(11));
-    if (val.startsWith("-settings=") || val.startsWith("-settings:"))
-      global.settingsFile = parseTemplate(val.substring(10));
-    if (val.startsWith("-s=") || val.startsWith("-s:"))
-      global.settingsFile = parseTemplate(val.substring(3));
-    if (val.startsWith("-sf=") || val.startsWith("-sf:"))
-      global.settingsFile = parseTemplate(val.substring(4));
+  if (Array.isArray(argv.c)) {
+    global.character = argv.eo[0];
+    loadCharacter(global.character);
+  }
+  else if (argv.c) {
+    global.character = argv.eo[0];
+    loadCharacter(global.character);
+  }
+  if (Array.isArray(argv.s))
+    global.settingsFile = parseTemplate(argv.s[0]);
+  else if (argv.s)
+    global.settingsFile = parseTemplate(argv.s);
 
-    if (val.startsWith("--map=") || val.startsWith("--map:"))
-      global.mapFile = parseTemplate(val.substring(6));
-    if (val.startsWith("-map=") || val.startsWith("-map:"))
-      global.mapFile = parseTemplate(val.substring(5));
-    if (val.startsWith("-m=") || val.startsWith("-m:"))
-      global.mapFile = parseTemplate(val.substring(3));
-    if (val.startsWith("-mf=") || val.startsWith("-mf:"))
-      global.mapFile = parseTemplate(val.substring(4));
+  if (Array.isArray(argv.mf))
+    global.settingsFile = parseTemplate(argv.mf[0]);
+  else if (argv.mf)
+    global.settingsFile = parseTemplate(argv.mf);
 
-    if (val.startsWith("--profiles=") || val.startsWith("--profiles:"))
-      global.profiles = parseTemplate(val.substring(11)).split(',');
-    if (val.startsWith("-pf=") || val.startsWith("-pf:"))
-      global.profiles = parseTemplate(val.substring(4)).split(',');
-  });
+  if (Array.isArray(argv.pf))
+    global.settingsFile = parseTemplate(argv.pf[0]);
+  else if (argv.pf)
+    global.settingsFile = parseTemplate(argv.pf);
+
+  if (Array.isArray(argv.s))
+    global.settingsFile = parseTemplate(argv.s[0]);
+  else if (argv.s)
+    global.settingsFile = parseTemplate(argv.s);
+
   if (global.editorOnly)
     showCodeEditor();
   else {
@@ -3137,7 +3179,6 @@ function createCodeEditor(show, loading, loaded) {
       };
     states['code-editor'] = edset.state;
   }
-  console.log(states['code-editor']);
   winCode = new BrowserWindow({
     parent: (!global.editorOnly && edset.window.alwaysOnTopClient) ? win : null,
     alwaysOnTop: edset.window.alwaysOnTop,
