@@ -31,7 +31,7 @@ var argv = require('yargs-parser')(process.argv, {
   alias: {
     'd': ['debug'],
     'eo': ['editorOnly', 'editoronly'],
-    'h': ['help'],
+    'h': ['help', '?'],
     'v': ['version'],
     'no-pd': ['no-portable-dir'],
     's': ['settings'],
