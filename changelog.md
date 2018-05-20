@@ -11,6 +11,7 @@
     - Download and or upload files in compressed format for faster speeds
     - Added a max file check of 200,000 bytes and error if file is larger
 - **Changed:**
+  - Switch to es2017/7
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
     - Moved folding from edit to view
