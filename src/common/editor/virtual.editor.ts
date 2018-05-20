@@ -84,7 +84,7 @@ export class Room {
     public item = 0;
     public ee = 0;
     public state = 0;
-    public ef = 0;
+    public ef = false;
     public climbs = 0;
 
     constructor(x, y, z, e, t, i, s?) {
@@ -100,7 +100,7 @@ export class Room {
         this.item = i !== i ? 0 : i;
         this.ee = 0;
         this.state = s !== s ? 0 : s;
-        this.ef = 0;
+        this.ef = false;
         this.climbs = 0;
     }
 
@@ -1384,7 +1384,7 @@ export class VirtualEditor extends EditorBase {
             return;
         }
         if (this.$files)
-            this.emit('watch-stop', Object.keys(this.$files).map((f) => { return path.join(root, f); }))
+            this.emit('watch-stop', Object.keys(this.$files).filter((f) => { return this.$files[f]; }).map((f) => { return path.join(root, f); }))
         this.$files = {};
         this.$files['virtual.terrain'] = existsSync(path.join(root, 'virtual.terrain'));
         this.$files['terrain.desc'] = existsSync(path.join(root, 'terrain.desc'));
@@ -1404,7 +1404,8 @@ export class VirtualEditor extends EditorBase {
         if (this.$files['virtual.exits'])
             this.$externalRaw.value = this.read(path.join(root, 'virtual.exits'));
 
-        this.emit('watch', Object.keys(this.$files).map((f) => { return path.join(root, f); }));
+        this.emit('watch', Object.keys(this.$files).filter((f) => { return this.$files[f]; }).map((f) => { return path.join(root, f); }));
+        this.emit('watch', root);
         this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
         this.loadDescriptions();
         this.loadItems();
@@ -1530,11 +1531,36 @@ export class VirtualEditor extends EditorBase {
     public redo() { }
     public close() {
         let root = path.dirname(this.file);
-        this.emit('watch-stop', Object.keys(this.$files).map((f) => { return path.join(root, f); }));
+        this.emit('watch-stop', Object.keys(this.$files).filter((f) => { return this.$files[f]; }).map((f) => { return path.join(root, f); }));
+        this.emit('watch-stop', root);
     }
     public watch(action: string, file: string, details?) {
-        if (file != this.file || this.new)
+        if (this.new)
             return;
+        if (file === this.file)
+            this.watchAction(action, file);
+        var base = path.basename(file);
+        if (this.$files[base])
+            this.watchAction(action, file);
+        if ((/^\d+,\d+(,\d+)?\.c$/).test(base)) {
+            var c = base.substring(0, base.length - 2).split(',');
+            var r;
+            if (c.length === 3)
+                r = this.getRoom(c[0], c[1], c[2]);
+            else
+                r = this.getRoom(c[0], c[1]);
+            switch (action) {
+                case 'add':
+                case 'change':
+                case 'unlink':
+                    r.ef = existsSync(file);
+                    this.loadRoom(r);
+                    break;
+            }
+        }
+    }
+
+    private watchAction(action, file) {
         switch (action) {
             case 'add':
             case 'change':
@@ -1545,8 +1571,8 @@ export class VirtualEditor extends EditorBase {
                     this.$saving[path.basename(file)] = false;
                 break;
         }
-
     }
+
     public set spellcheck(value: boolean) { };
     public find() { }
     public replace() { }
