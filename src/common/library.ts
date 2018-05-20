@@ -977,3 +977,200 @@ export function walk(dir, callback) {
 
     });
 };
+
+export function Cardinal(x) {
+    var str;
+    if (x === 0) return "zero";
+    if (x < 0) {
+        str = "negative ";
+        x = Math.abs(x);
+    }
+    else
+        str = "";
+    switch (x) {
+        case 1:
+            return str + "one";
+        case 2:
+            return str + "two";
+        case 3:
+            return str + "three";
+        case 4:
+            return str + "four";
+        case 5:
+            return str + "five";
+        case 6:
+            return str + "six";
+        case 7:
+            return str + "seven";
+        case 8:
+            return str + "eight";
+        case 9:
+            return str + "nine";
+        case 10:
+            return str + "ten";
+        case 11:
+            return str + "eleven";
+        case 12:
+            return str + "twelve";
+        case 13:
+            return str + "thirteen";
+        case 14:
+            return str + "fourteen";
+        case 15:
+            return str + "fifteen";
+        case 16:
+            return str + "sixteen";
+        case 17:
+            return str + "seventeen";
+        case 18:
+            return str + "eighteen";
+        case 19:
+            return str + "nineteen";
+        case 20:
+            return str + "twenty";
+        default:
+            if (x > 1000000000)
+                return "over a billion";
+            else if (x / 1000000 > 0) {
+                if (x % 1000000 > 0)
+                    return +" million " + Cardinal(x % 1000000);
+                return Cardinal((x / 1000000) >> 0) + " million";
+            }
+            else if (x / 1000 > 0) {
+                if (x % 1000 > 0)
+                    return Cardinal((x / 1000) >> 0) + " thousand " + Cardinal(x % 1000);
+                return Cardinal((x / 1000) >> 0) + " thousand";
+            }
+            else if (x / 100 > 0) {
+                if (x % 100 > 0)
+                    return Cardinal((x / 100) >> 0) + " hundred" + Cardinal(x % 100);
+                return Cardinal((x / 100) >> 0) + " hundred";
+            }
+            else {
+                if (x % 10 > 0)
+                    str = "-" + Cardinal(x % 10);
+                else
+                    str = "";
+                switch (x / 10) {
+                    case 2:
+                        return "twenty" + str;
+                    case 3:
+                        return "thirty" + str;
+                    case 4:
+                        return "forty" + str;
+                    case 5:
+                        return "fifty" + str;
+                    case 6:
+                        return "sixty" + str;
+                    case 7:
+                        return "seventy" + str;
+                    case 8:
+                        return "eighty" + str;
+                    case 9:
+                        return "ninety" + str;
+                    default:
+                        return "error";
+                }
+            }
+    }
+}
+
+export function wordwrap(str, maxWidth, newLineStr?) {
+    var done = false, res = '', found, i;
+    newLineStr = newLineStr || '\n';    		
+    do {
+        found = false;
+        // Inserts new line at first whitespace of the line
+        for (i = maxWidth - 1; i >= 0; i--) {
+            if (testWhite(str.charAt(i))) {
+                res = res + [str.slice(0, i + 1), newLineStr].join('');
+                str = str.slice(i + 1);
+                found = true;
+                break;
+            }
+        }
+        // Inserts new line at maxWidth position, the word is too long to wrap
+        if (!found) {
+            res += [str.slice(0, maxWidth), newLineStr].join('');
+            str = str.slice(maxWidth);
+        }
+
+        if (str.length < maxWidth)
+            done = true;
+    } while (!done);
+    if (str.length > 0)
+        return res + str;
+    return res;
+}
+
+function testWhite(x) {
+    return /^\s$/.test(x.charAt(0));
+}
+
+
+export function splitQuoted(str, sep, t, e) {
+    if (typeof (t) === "undefined") t = 1 | 2;
+    if (typeof (e) === "undefined") e = 0;
+    if (!str || str.length === 0 || !sep || sep.length === 0)
+        return [str];
+    sep = sep.split("");
+    var q = false, sq = false;
+    var strs = [];
+    var p = 0, ps = 0;
+    var s = 0;
+    var sl = str.length;
+    var c;
+    for (; s < sl; s++) {
+        c = str.charAt(s);
+        if (c === '"' && (t & 2) == 2) {
+            if ((e & 2) == 2) {
+                if (s - 1 > 0 && str.charAt(s - 1) != '\\')
+                    q = !q;
+            }
+            else
+                q = !q;
+        }
+        else if (c === '\'' && (t & 1) == 1) {
+            if ((e & 1) == 1) {
+                if (s - 1 > 0 && str.charAt(s - 1) != '\\')
+                    sq = !sq;
+            }
+            else
+                sq = !sq;
+        }
+        else if (!sq && !q) {
+            for (var sp = 0, spl = sep.length; sp < spl; sp++) {
+                if (c == sep[sp]) {
+                    if (s > ps || s === 0) {
+                        strs.push(str.substring(ps, s));
+                        ps = s + 1;
+                        break;
+                    }
+                    else if (s === (sl - 1))
+                        strs.push("");
+                }
+            }
+        }
+    }
+    if (s === sl && s === ps && sep.indexOf(str.charAt(s - 1)) > -1) {
+        strs.push("");
+        ps = s + 1;
+    }
+    if (s > ps)
+        strs.push(str.substring(ps, s));
+    return strs;
+}
+
+export function leadingZeros(num, totalChars: number, padWith: string, trim?: boolean) {
+    num = num + "";
+    padWith = (padWith) ? padWith : "0";
+    if (num.length < totalChars) {
+        while (num.length < totalChars) {
+            num = padWith + num;
+        }
+    }
+    if (trim && num.length > totalChars) {
+        num = num.substring((num.length - totalChars), totalChars);
+    }
+    return num;
+}
