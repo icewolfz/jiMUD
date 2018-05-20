@@ -2275,7 +2275,7 @@
             if (path.extname(data.file) === '.map') {
                 data.options = options.virtualOptions;
                 p.editor = new VirtualEditor(data);
-                p.editor.on('room-dblclick', (room)=> {
+                p.editor.on('room-dblclick', (room) => {
                     //TODO: open or create external room file
                 });
             }
@@ -2328,10 +2328,10 @@
                             defaultId: 1
                         });
                     //no
-                    if (choice === 1)
+                    if (p.editor.file === file && choice === 1)
                         closeFile(p);
                     else
-                        p.editor.changed = true;
+                        p.editor.deleted(choice === 0, file);
                 }
                 else {
                     choice = dialog.showMessageBox(
@@ -2350,7 +2350,7 @@
                     //p.editor.changed = true;
                 }
             });
-            p.editor.on('supports-changed', ()=> {
+            p.editor.on('supports-changed', () => {
                 doUpdate(2);
             });
             p.editor.on('changed', (length) => {

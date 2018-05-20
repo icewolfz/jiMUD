@@ -337,6 +337,7 @@ export class VirtualEditor extends EditorBase {
             this.loadDescriptions();
             this.loadItems();
             this.loadExits();
+            this.clearRawChanged();
             this.changed = false;
         }
     }
@@ -350,6 +351,15 @@ export class VirtualEditor extends EditorBase {
 
     get changed(): boolean {
         return super.changed;
+    }
+
+    private clearRawChanged() {
+        this.$terrainRaw.dataset.changed = null;
+        this.$stateRaw.dataset.changed = null;
+        this.$descriptionRaw.dataset.changed = null;
+        this.$itemRaw.dataset.changed = null;
+        this.$externalRaw.dataset.changed = null;
+        this.$mapRaw.dataset.changed = null;
     }
 
     public createControl() {
@@ -1408,12 +1418,7 @@ export class VirtualEditor extends EditorBase {
         this.emit('opened');
         this.state |= FileState.opened;
         this.changed = false;
-        this.$terrainRaw.dataset.changed = null;
-        this.$stateRaw.dataset.changed = null;
-        this.$descriptionRaw.dataset.changed = null;
-        this.$itemRaw.dataset.changed = null;
-        this.$externalRaw.dataset.changed = null;
-        this.$mapRaw.dataset.changed = null;
+        this.clearRawChanged();
     }
 
     public save() {
@@ -1441,14 +1446,7 @@ export class VirtualEditor extends EditorBase {
             this.$saving['virtual.exits'] = true;
             this.write(this.$externalRaw.value, path.join(root, 'virtual.exits'));
         }
-
-        this.$terrainRaw.dataset.changed = null;
-        this.$stateRaw.dataset.changed = null;
-        this.$descriptionRaw.dataset.changed = null;
-        this.$itemRaw.dataset.changed = null;
-        this.$externalRaw.dataset.changed = null;
-        this.$mapRaw.dataset.changed = null;
-
+        this.clearRawChanged();
         this.changed = false;
         this.new = false;
         this.emit('saved');
@@ -1511,6 +1509,7 @@ export class VirtualEditor extends EditorBase {
             this.loadDescriptions();
             this.loadItems();
             this.loadExits();
+            this.clearRawChanged();
         }
         this.changed = false;
         this.emit('reverted');
@@ -1528,6 +1527,35 @@ export class VirtualEditor extends EditorBase {
         let root = path.dirname(this.file);
         this.emit('watch-stop', root);
     }
+    public deleted(keep, file?) {
+        var base = path.basename(file);
+        if (file === this.file) {
+            if (!keep) return;
+            this.$mapRaw.dataset.changed = 'true';
+            this.changed = true;
+        }
+        else if (this.$files[base]) {
+            switch (base) {
+                case 'virtual.terrain':
+                    this.$terrainRaw.dataset.changed = 'true';
+                    break;
+                case 'virtual.state':
+                    this.$stateRaw.dataset.changed = 'true';
+                    break;
+                case 'virtual.exits':
+                    this.$externalRaw.dataset.changed = 'true';
+                    break;
+                case 'terrain.desc':
+                    this.$descriptionRaw.dataset.changed = 'true';
+                    break;
+                case 'terrain.item':
+                    this.$itemRaw.dataset.changed = 'true';
+                    break;
+            }
+            this.changed = true;
+        }
+    }
+
     public watch(action: string, file: string, details?) {
         if (this.new)
             return;
@@ -3150,8 +3178,8 @@ export class VirtualEditor extends EditorBase {
         if (c) {
             if (room === this.$selectedRoom)
                 this.$roomEditor.object = room.clone();
-            this.changed = true;
             this.$mapRaw.dataset.changed = 'true';
+            this.changed = true;
         }
         this.UpdatePreview(room);
     }

@@ -209,6 +209,11 @@ export class AceCodeEditor extends EditorBase {
 
     public canSaveAs() { return true; }
 
+    public deleted(keep) {
+        if(keep)
+            this.changed = keep;
+    }
+
     public close() {
         if (this.file && this.file.length > 0 && !this.new)
             this.emit('watch-stop', [this.file]);

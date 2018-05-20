@@ -124,6 +124,8 @@ export abstract class EditorBase extends EventEmitter {
 
     abstract set spellcheck(value: boolean);
 
+    abstract deleted(keep):void;
+
     set changed(value: boolean) {
         if (value)
             this.state |= FileState.changed;

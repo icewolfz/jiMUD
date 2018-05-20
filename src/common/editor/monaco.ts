@@ -243,6 +243,11 @@ export class MonacoCodeEditor extends EditorBase {
 
     public canSaveAs() { return true; }
 
+    public deleted(keep) {
+        if(keep)
+            this.changed = keep;
+    }
+
     public revert() {
         if (!this.new)
             this.open();
