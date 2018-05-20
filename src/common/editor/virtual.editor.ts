@@ -1219,13 +1219,13 @@ export class VirtualEditor extends EditorBase {
                 property: 'terrain',
                 label: 'Terrain index',
                 min: 0,
-                max: (this.$descriptions ? this.$descriptions.length : 0)
+                max: Math.max((this.$descriptions ? this.$descriptions.length : 0), this.$maxTerrain)
             },
             {
                 property: 'item',
                 label: 'Item index',
                 min: 0,
-                max: (this.$items ? this.$items.length : 0)
+                max: Math.max((this.$items ? this.$items.length : 0), this.$maxTerrain, (this.$descriptions ? this.$descriptions.length : 0))
             },
             {
                 property: 'exits',
@@ -1326,8 +1326,6 @@ export class VirtualEditor extends EditorBase {
 
     private openRaw(file, raw, noRebuild?) {
         var base = path.basename(file);
-        if (this.$files[base])
-            this.emit('watch-stop', [file]);
         this.$files[base] = existsSync(file);
         if (this.$files[base])
             raw.value = this.read(file);
@@ -1383,8 +1381,7 @@ export class VirtualEditor extends EditorBase {
             }
             return;
         }
-        if (this.$files)
-            this.emit('watch-stop', Object.keys(this.$files).filter((f) => { return this.$files[f]; }).map((f) => { return path.join(root, f); }))
+        this.emit('watch-stop', [root]);
         this.$files = {};
         this.$files['virtual.terrain'] = existsSync(path.join(root, 'virtual.terrain'));
         this.$files['terrain.desc'] = existsSync(path.join(root, 'terrain.desc'));
@@ -1403,8 +1400,6 @@ export class VirtualEditor extends EditorBase {
             this.$itemRaw.value = this.read(path.join(root, 'terrain.item'));
         if (this.$files['virtual.exits'])
             this.$externalRaw.value = this.read(path.join(root, 'virtual.exits'));
-
-        this.emit('watch', Object.keys(this.$files).filter((f) => { return this.$files[f]; }).map((f) => { return path.join(root, f); }));
         this.emit('watch', root);
         this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
         this.loadDescriptions();
@@ -1531,17 +1526,24 @@ export class VirtualEditor extends EditorBase {
     public redo() { }
     public close() {
         let root = path.dirname(this.file);
-        this.emit('watch-stop', Object.keys(this.$files).filter((f) => { return this.$files[f]; }).map((f) => { return path.join(root, f); }));
         this.emit('watch-stop', root);
     }
     public watch(action: string, file: string, details?) {
         if (this.new)
             return;
-        if (file === this.file)
-            this.watchAction(action, file);
         var base = path.basename(file);
-        if (this.$files[base])
-            this.watchAction(action, file);
+        if (file === this.file || this.$files[base]) {
+            switch (action) {
+                case 'add':
+                case 'change':
+                case 'unlink':
+                    if (!this.$saving[path.basename(file)])
+                        this.emit('reload', action, file);
+                    else
+                        this.$saving[path.basename(file)] = false;
+                    break;
+            }
+        }
         if ((/^\d+,\d+(,\d+)?\.c$/).test(base)) {
             var c = base.substring(0, base.length - 2).split(',');
             var r;
@@ -1557,19 +1559,6 @@ export class VirtualEditor extends EditorBase {
                     this.loadRoom(r);
                     break;
             }
-        }
-    }
-
-    private watchAction(action, file) {
-        switch (action) {
-            case 'add':
-            case 'change':
-            case 'unlink':
-                if (!this.$saving[path.basename(file)])
-                    this.emit('reload', action, file);
-                else
-                    this.$saving[path.basename(file)] = false;
-                break;
         }
     }
 
@@ -3602,7 +3591,7 @@ export class VirtualEditor extends EditorBase {
                     property: 'terrain',
                     label: 'Terrain index',
                     min: 0,
-                    max: (this.$descriptions ? this.$descriptions.length : 0)
+                    max: Math.max((this.$descriptions ? this.$descriptions.length : 0), this.$maxTerrain)
                 }
             );
     }
@@ -3662,7 +3651,7 @@ export class VirtualEditor extends EditorBase {
                     property: 'item',
                     label: 'Item index',
                     min: 0,
-                    max: (this.$items ? this.$items.length : 0)
+                    max: Math.max((this.$items ? this.$items.length : 0), this.$maxTerrain, (this.$descriptions ? this.$descriptions.length : 0))
                 }
             );
     }
