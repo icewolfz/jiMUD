@@ -1,5 +1,5 @@
 import EventEmitter = require('events');
-import { capitalize } from './library';
+import { capitalize, resetCursor } from './library';
 import { createDeflate } from 'zlib';
 
 export interface PropertyGridOptions {
@@ -61,16 +61,16 @@ export class PropertyGrid extends EventEmitter {
     set object(value) {
         if (value === this.$object) return;
         var eProp;
-        if(this.$editorClick)
+        if (this.$editorClick)
             eProp = this.$editorClick.dataset.prop;
         this.clearEditor();
-        if(this.$object)
+        if (this.$object)
             delete this.$object['$propertyGrid'];
         this.$object = value;
         this.$object['$propertyGrid'] = true;
         this.buildProperties();
-        if(eProp)
-            this.createEditor(document.querySelector('[data-prop="'+eProp+'"]'));
+        if (eProp)
+            this.createEditor(document.querySelector('[data-prop="' + eProp + '"]'));
     }
 
     set parent(parent) {
@@ -236,7 +236,6 @@ export class PropertyGrid extends EventEmitter {
                     this.$editorClick = null;
                 });
                 lbl.addEventListener('click', (e) => {
-                    console.log(e.currentTarget);
                     e.preventDefault();
                     e.stopPropagation();
                     e.cancelBubble = true;
@@ -279,7 +278,7 @@ export class PropertyGrid extends EventEmitter {
                     value |= +this.$editor.checks[cl].value;
             }
         }
-        else
+        else if (this.$editor.editor)
             value = this.$editor.editor.value;
         oldValue = this.$object[this.$editor.property];
         if (value !== oldValue) {
@@ -289,9 +288,8 @@ export class PropertyGrid extends EventEmitter {
                 this.$editor.el.textContent = value;
             this.$object[prop] = value;
         }
-        if (this.$editor.type === EditorType.flag) {
+        if (this.$editor.clear)
             this.$editor.clear();
-        }
         if (this.$editor.editor && this.$editor.parentElement === this.$editor.el)
             this.$editor.el.removeChild(this.$editor.editor);
         else if (this.$editor.editor && this.$editor.editor.parentElement)
@@ -303,12 +301,12 @@ export class PropertyGrid extends EventEmitter {
         }
         this.$editor = null;
         //do last in case the event changes the property editor
-        if(value !== oldValue)
+        if (value !== oldValue)
             this.emit('value-changed', prop, value, oldValue);
     }
 
     private createEditor(el: HTMLElement) {
-        if(!el) return;
+        if (!el) return;
         var prop = el.dataset.prop;
         if (!prop) return;
         if (this.$editor) {
@@ -339,11 +337,14 @@ export class PropertyGrid extends EventEmitter {
             case EditorType.flag:
                 this.$editor.el.style.border = '1px solid #f2cb7f';
                 this.$editor.el.style.top = '-1px';
-                this.$editor.el.style.paddingRight = '18px';
+                this.$editor.el.style.paddingRight = '1px';
                 this.$editor.el.style.paddingLeft = '1px';
                 this.$editor.editor = document.createElement('button');
                 this.$editor.editor.innerHTML = '<span class="caret"></span>';
+                this.$editor.editor.dataset.editor = 'flag';
                 this.$editor.editor.classList.add('flag-editor');
+                this.$editor.editor.style.display = 'none';
+                /*
                 this.$editor.editor.addEventListener('click', (e) => {
                     this.clearEditor();
                     this.$prevEditor = null;
@@ -351,6 +352,7 @@ export class PropertyGrid extends EventEmitter {
                     e.stopPropagation();
                     e.cancelBubble = true;
                 });
+                */
                 this.$editor.dropdown = document.createElement('div');
                 this.$editor.dropdown.classList.add('flag-editor-dropdown');
                 this.$editor.dropdown.tabIndex = 1;
@@ -399,15 +401,11 @@ export class PropertyGrid extends EventEmitter {
                     this.$editor.el.style.paddingLeft = '';
                 };
                 this.$editor.dropdown.addEventListener('blur', (e) => {
-                    if (e.relatedTarget && e.relatedTarget.parentElement && e.relatedTarget.parentElement.parentElement == e.currentTarget) {
-                        this.$editor.dropdown.focus();
-                        return;
-                    }
                     var el = this.$editor.el;
                     this.clearEditor();
                     if (this.$editorClick !== el)
                         this.$prevEditor = null;
-                });
+                }, { once: true });
                 var b = this.$editor.el.getBoundingClientRect();
                 if (b.width < 150) {
                     this.$editor.dropdown.style.left = (b.left - 150 + b.width) + 'px';
@@ -429,17 +427,139 @@ export class PropertyGrid extends EventEmitter {
                 break;
             case EditorType.select:
                 break;
+            case EditorType.custom:
+            /*
+                this.$editor.editor = document.createElement('div');
+                this.$editor.editor.classList.add('property-grid-editor-mulitline');
+                values = document.createElement('div')
+                values.classList.add('property-grid-editor-multiline-container');
+                this.$editor.editor.appendChild(values);
+                this.$editor.editor.value = this.$object[prop];
+                var pEditor = document.createElement('textarea');
+                pEditor.classList.add('property-grid-editor');
+                pEditor.value = this.$object[prop];
+                pEditor.addEventListener('blur', (e) => {
+                    if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'multiline') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.cancelBubble = true;
+                        return;
+                    }
+                    this.$editor.editor.value = (<HTMLTextAreaElement>e.currentTarget).value;
+                    this.clearEditor();
+                });
+                pEditor.addEventListener('click', (e) => {
+                    pEditor.dataset.aOpen = null;
+                });
+                values.appendChild(pEditor);
+                vl = document.createElement('button');
+                vl.title = 'Open editor...'
+                //vl.innerHTML = '&hellip;';
+                vl.innerHTML = '<span class="caret"></span>';
+                vl.dataset.editor = 'multiline';
+                var tEditor;
+                var editorData = this.$editor;
+                vl.addEventListener('click', (e) => {
+                    var mDialog = <HTMLDialogElement>document.createElement('dialog');
+                    mDialog.style.width = '500px';
+                    mDialog.style.height = '300px';
+                    mDialog.style.padding = '5px';
+                    mDialog.addEventListener('close', () => {
+                        if (mDialog.parentElement)
+                            mDialog.parentElement.removeChild(mDialog);
+                        pEditor.focus();
+                    });
+                    var header = document.createElement('div');
+                    header.classList.add('dialog-header');
+                    header.style.fontWeight = 'bold';
+                    var button = document.createElement('button');
+                    button.classList.add('close');
+                    button.type = 'button';
+                    button.dataset.dismiss = 'modal';
+                    button.addEventListener('click', () => {
+                        mDialog.close();
+                        if (mDialog.parentElement)
+                            mDialog.parentElement.removeChild(mDialog);
+                        pEditor.focus();
+                    })
+                    button.innerHTML = '&times;';
+                    header.appendChild(button);
+                    var el = document.createElement('div');
+                    el.style.paddingTop = '2px';
+                    el.innerHTML = capitalize(this.$options[editorData.property].label || editorData.property) + '&hellip;';
+                    header.appendChild(el);
+                    mDialog.appendChild(header);
+                    header = document.createElement('div');
+                    header.classList.add('dialog-body');
+                    header.style.paddingTop = '40px';
+                    mDialog.appendChild(header);
+                    el = document.createElement('div');
+                    el.classList.add('form-group');
+                    el.style.margin = '0';
+                    el.style.position = 'absolute';
+                    el.style.left = '5px';
+                    el.style.right = '5px';
+                    el.style.bottom = '60px';
+                    el.style.top = '38px';
+                    header.appendChild(el);
+                    el.appendChild(tEditor);
+                    header = document.createElement('div');
+                    header.classList.add('dialog-footer');
+                    mDialog.appendChild(header);
+                    button = document.createElement('button');
+                    button.style.cssFloat = 'right';
+                    button.type = 'button';
+                    button.classList.add('btn', 'btn-default');
+                    button.addEventListener('click', () => {
+                        mDialog.close();
+                        if (mDialog.parentElement)
+                            mDialog.parentElement.removeChild(mDialog);
+                        pEditor.focus();
+                    });
+                    button.textContent = 'Cancel';
+                    header.appendChild(button);
+                    button = document.createElement('button');
+                    button.style.cssFloat = 'right';
+                    button.type = 'button';
+                    button.classList.add('btn', 'btn-primary');
+                    button.addEventListener('click', () => {
+                        this.$editor = editorData;
+                        this.$editor.editor.value = tEditor.value;
+                        this.clearEditor();
+                        mDialog.close();
+                        if (mDialog.parentElement)
+                            mDialog.parentElement.removeChild(mDialog);
+                        pEditor.focus();
+                    });
+                    button.textContent = 'Ok';
+                    header.appendChild(button);
+                    document.body.appendChild(mDialog);
+                    mDialog.showModal();
+                });
+                this.$editor.editor.focus = () => {
+                    this.$editor.editor.children[0].children[0].focus();
+                    resetCursor(this.$editor.editor.children[0].children[0]);
+                };
+                this.$editor.editor.appendChild(vl);
+                this.$editor.clear = () => {
+                    if (tEditor && tEditor.parentElement)
+                        tEditor.parentElement.removeChild(tEditor);
+                };
+                */
+                break;
             default:
-                this.$editor.editor = document.createElement('input');
-                this.$editor.editor.classList.add('property-grid-editor');
                 switch (typeof (this.$object[prop])) {
                     case 'boolean':
+                        this.$editor.editor = document.createElement('input');
+                        this.$editor.editor.classList.add('property-grid-editor');
                         this.$editor.editor.type = 'checkbox';
                         if (this.$object[prop])
                             this.$editor.editor.checked = true;
                         this.$editor.type = EditorType.check;
                         break;
                     case 'number':
+                        this.$editor.editor = document.createElement('input');
+                        this.$editor.editor.classList.add('property-grid-editor');
                         this.$editor.editor.type = 'number';
                         this.$editor.editor.value = this.$object[prop];
                         this.$editor.editor.max = max;
@@ -447,8 +567,13 @@ export class PropertyGrid extends EventEmitter {
                         this.$editor.type = EditorType.number;
                         break;
                     default:
+                        /*
+                        this.$editor.editor = document.createElement('input');
+                        this.$editor.editor.classList.add('property-grid-editor');
                         this.$editor.editor.type = 'text';
                         this.$editor.editor.value = this.$object[prop];
+                        */
+                        this.createMultilineEditor(prop);
                         break;
                 }
                 break;
@@ -457,15 +582,110 @@ export class PropertyGrid extends EventEmitter {
             if (this.$editor.type !== EditorType.custom && this.$editor.type !== EditorType.flag) {
                 this.$editor.editor.addEventListener('blur', (e) => {
                     this.clearEditor();
-                });
+                }, { once: true });
                 el.appendChild(this.$editor.editor);
                 this.$editor.editor.focus();
             }
-            else
+            else {
                 el.appendChild(this.$editor.editor);
+                if (this.$editor.focus)
+                    this.$editor.focus();
+            }
         }
         else
             this.$editor = null;
+    }
+
+    private createMultilineEditor(prop) {
+        this.$editor.editor = document.createElement('div');
+        this.$editor.editor.classList.add('property-grid-editor-mulitline');
+        var values = document.createElement('div')
+        values.classList.add('property-grid-editor-multiline-container');
+        this.$editor.editor.appendChild(values);
+        this.$editor.editor.value = this.$object[prop];
+        var pEditor = document.createElement('textarea');
+        pEditor.classList.add('property-grid-editor');
+        pEditor.value = this.$object[prop];
+        pEditor.addEventListener('blur', (e) => {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'multiline') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            this.$editor.editor.value = (<HTMLTextAreaElement>e.currentTarget).value;
+            this.clearEditor();
+        });
+        pEditor.addEventListener('click', (e) => {
+            pEditor.dataset.aOpen = null;
+        });
+        values.appendChild(pEditor);
+        var vl = document.createElement('button');
+        vl.title = 'Open editor...'
+        //vl.innerHTML = '&hellip;';
+        vl.innerHTML = '<span class="caret"></span>';
+        vl.dataset.editor = 'multiline';
+        var tEditor;
+        vl.addEventListener('click', (e) => {
+            if (pEditor.dataset.aOpen == 'true') {
+                pEditor.dataset.aOpen = null;
+                pEditor.focus();
+                resetCursor(pEditor);
+                return;
+            }
+            tEditor = document.createElement('textarea');
+            tEditor.style.height = '100%';
+            tEditor.style.whiteSpace = 'nowrap';
+            tEditor.value = pEditor.value;
+            tEditor.value = pEditor.value;
+            tEditor.addEventListener('keyup', (e) => {
+                if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
+                    pEditor.focus();
+                    resetCursor(pEditor);
+                    pEditor.dataset.aOpen = null;
+                }
+                return;
+            });
+            var b = this.$editor.el.getBoundingClientRect();
+            if (b.width < 300) {
+                tEditor.style.left = (b.left - 300 + b.width) + 'px';
+                tEditor.style.width = '300px';
+            }
+            else {
+                tEditor.style.left = b.left + 'px';
+                tEditor.style.width = (b.width) + 'px';
+            }
+            tEditor.style.top = (b.bottom) + 'px';
+            tEditor.style.height = '150px';
+            tEditor.style.zIndex = '100';
+            tEditor.style.position = 'absolute';
+            tEditor.addEventListener('blur', (e) => {
+                var ec = this.$editorClick;
+                pEditor.value = tEditor.value;
+                pEditor.dataset.aOpen = 'true';
+                tEditor.parentElement.removeChild(tEditor);
+                tEditor = null;
+                if (ec)
+                    this.createEditor(ec);
+                else {
+                    pEditor.focus();
+                    resetCursor(pEditor);
+                }
+            }, { once: true });
+            document.body.appendChild(tEditor);
+            tEditor.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.'
+            tEditor.focus();
+            resetCursor(tEditor);
+        });
+        this.$editor.editor.focus = () => {
+            this.$editor.editor.children[0].children[0].focus();
+            resetCursor(this.$editor.editor.children[0].children[0]);
+        };
+        this.$editor.editor.appendChild(vl);
+        this.$editor.clear = () => {
+            if (tEditor && tEditor.parentElement)
+                tEditor.parentElement.removeChild(tEditor);
+        };
     }
 
     private doUpdate(type?: UpdateType) {

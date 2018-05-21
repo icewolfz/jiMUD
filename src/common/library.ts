@@ -1174,3 +1174,21 @@ export function leadingZeros(num, totalChars: number, padWith: string, trim?: bo
     }
     return num;
 }
+
+export function resetCursor(txtElement) { 
+    txtElement.scrollTop = 0;
+    txtElement.scrollLeft = 0;
+    if(typeof txtElement.selectionStart === 'number') {
+        txtElement.selectionStart = 0;
+        txtElement.selectionEnd = 0;
+    }
+    else if (txtElement.setSelectionRange) { 
+        txtElement.focus(); 
+        txtElement.setSelectionRange(0, 0); 
+        txtElement.focus(); 
+    } else if (txtElement.createTextRange) { 
+        var range = txtElement.createTextRange();  
+        range.moveStart('character', 0); 
+        range.select(); 
+    } 
+}
