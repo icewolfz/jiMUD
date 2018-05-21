@@ -51,6 +51,28 @@ else if (process.env.PORTABLE_EXECUTABLE_DIR && !argv['no-pd'] && !argv['no-port
 
 app.setAppUserModelId('jiMUD');
 
+if (!process.env.PORTABLE_EXECUTABLE_DIR) {
+  if (argv._.indexOf('/?') !== -1 || argv.h) {
+    console.log('-h, --help                          Print console help');
+    console.log('-d, --debug                         Enable dev tools for all windows');
+    console.log('-s=[file], --setting=[file]         Override default setting file');
+    console.log('-mf=[file], --map=[file]            Override default map file');
+    console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
+    console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
+    console.log('-v, --version                       Print current version');
+    console.log('-e, --e, -e=[file], --e=[file]      Open code editor');
+    console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
+    console.log('-data-dir=[file]                    Set a custom directory to store saved data');
+    app.quit();
+    return;
+  }
+  else if (argv.v) {
+    console.log(`jiMUD v${require("../package.json").version}`);
+    app.quit();
+    return;
+  }
+}
+
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
 global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
 global.profiles = null;
@@ -1445,10 +1467,9 @@ app.on('ready', () => {
 
   loadCharacters();
   var a, al;
-  if (argv._.indexOf('/?') !== -1 || argv.h) {
-    var msg;
-    if (process.env.PORTABLE_EXECUTABLE_DIR) {
-      msg = '';
+  if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    if (argv._.indexOf('/?') !== -1 || argv.h) {
+      var msg = '';
       msg += '-h, --help - Print console help\n';
       msg += '-d, --debug - Enable dev tools for all windows\n';
       msg += '-s=[file], --setting=[file] - Override default setting file\n';
@@ -1458,15 +1479,12 @@ app.on('ready', () => {
       msg += '-v, --version - Print current version\n';
       msg += '-e, --e, -e=[file], --e=[file] - Open code editor\n';
       msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
-      if (process.env.PORTABLE_EXECUTABLE_DIR)
-        msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
+      msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
       msg += '-data-dir=[file] - Set a custom directory to store saved data';
       dialog.showMessageBox({
         type: 'info',
         message: msg
       });
-    }
-    else {
       console.log('-h, --help                          Print console help');
       console.log('-d, --debug                         Enable dev tools for all windows');
       console.log('-s=[file], --setting=[file]         Override default setting file');
@@ -1476,23 +1494,19 @@ app.on('ready', () => {
       console.log('-v, --version                       Print current version');
       console.log('-e, --e, -e=[file], --e=[file]      Open code editor');
       console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
-      if (process.env.PORTABLE_EXECUTABLE_DIR)
-        console.log('-no-pd, -no-portable-dir            Do not use portable dir');
       console.log('-data-dir=[file]                    Set a custom directory to store saved data');
+      app.quit();
+      return;
     }
-    app.quit();
-    return;
-  }
-  else if (argv.v) {
-    if (process.env.PORTABLE_EXECUTABLE_DIR)
+    else if (argv.v) {
       dialog.showMessageBox({
         type: 'info',
         message: `jiMUD v${require("../package.json").version}`
       });
-    else
       console.log(`jiMUD v${require("../package.json").version}`);
-    app.quit();
-    return;
+      app.quit();
+      return;
+    }
   }
   global.debug = argv.debug;
 
