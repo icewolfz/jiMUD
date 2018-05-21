@@ -26,8 +26,8 @@ let windows = {};
 let loadid;
 
 var argv = require('yargs-parser')(process.argv, {
-  string: ['data-dir', 's', 'setting', 'm', 'mf', 'map', 'c', 'character', 'pf', 'profiles', '?'],
-  boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug'],
+  string: ['data-dir', 's', 'setting', 'm', 'mf', 'map', 'c', 'character', 'pf', 'profiles'],
+  boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?'],
   alias: {
     'd': ['debug'],
     'eo': ['editorOnly', 'editoronly'],
