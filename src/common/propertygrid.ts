@@ -126,16 +126,16 @@ export class PropertyGrid extends EventEmitter {
     private editorType(prop) {
         if (!prop || !this.$options[prop] || !this.$options[prop].editor)
             return EditorType.default;
-        if (typeof this.$options[prop].editor === 'object')
+        if (this.$options[prop].editor)
             return this.$options[prop].editor.type || EditorType.default;
-        return this.$options[prop].editor;
+        return EditorType.default;
     }
 
     private editorValue(prop) {
         if (!prop || !this.$options[prop] || !this.$options[prop].editor)
             return undefined;
-        if (typeof this.$options[prop].editor === 'object')
-            return this.$options[prop].editor.value;
+        if (this.$options[prop].editor && this.$options[prop].editor.options)
+            return this.$options[prop].editor.options.value;
         return undefined;
     }
 
@@ -241,16 +241,20 @@ export class PropertyGrid extends EventEmitter {
                 if (layout[group][c].readonly)
                     lbl.classList.add('readonly');
                 if (typeof layout[group][c].value === 'boolean')
-                    lbl.title = capitalize(''+layout[group][c].value);
+                    lbl.title = capitalize('' + layout[group][c].value);
                 else
                     lbl.title = layout[group][c].value;
                 lbl.dataset.prop = layout[group][c].property;
                 lbl.dataset.readonly = layout[group][c].readonly;
                 lbl.addEventListener('mousedown', (e) => {
                     this.$editorClick = e.currentTarget;
+                    if (this.$editor && this.$editor.editor)
+                        this.$editor.editor.editorClick = this.$editorClick;
                 });
                 lbl.addEventListener('mouseup', (e) => {
                     this.$editorClick = null;
+                    if (this.$editor && this.$editor.editor)
+                        this.$editor.editor.editorClick = null;
                 });
                 lbl.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -273,21 +277,12 @@ export class PropertyGrid extends EventEmitter {
         this.$el.appendChild(frag);
     }
 
-    private clearEditor() {
+    public clearEditor() {
         if (!this.$editor) return;
         var value;
         var oldValue;
         var prop = this.$editor.property;
-        if (this.$editor.type === EditorType.check)
-            value = this.$editor.editor.value === 'true';
-        else if (this.$editor.type === EditorType.number) {
-            value = +this.$editor.editor.value;
-            if (value < this.$editor.min)
-                value = this.$editor.min;
-            if (value > this.$editor.max)
-                value = this.$editor.max;
-        }
-        else if (this.$editor.type === EditorType.flag) {
+        if (this.$editor.type === EditorType.flag) {
             var cl = this.$editor.dropdown.children.length;
             value = 0;
             while (cl--) {
@@ -307,8 +302,8 @@ export class PropertyGrid extends EventEmitter {
         }
         if (this.$editor.clear)
             this.$editor.clear();
-        if (this.$editor.editor && this.$editor.parentElement === this.$editor.el)
-            this.$editor.el.removeChild(this.$editor.editor);
+        if (this.$editor.editor && this.$editor.type === EditorType.custom)
+            this.$editor.editor.destroy();
         else if (this.$editor.editor && this.$editor.editor.parentElement)
             this.$editor.editor.parentElement.removeChild(this.$editor.editor);
         this.$prevEditor = {
@@ -322,7 +317,7 @@ export class PropertyGrid extends EventEmitter {
             this.emit('value-changed', prop, value, oldValue);
     }
 
-    private createEditor(el: HTMLElement) {
+    public createEditor(el: HTMLElement) {
         if (!el) return;
         var prop = el.dataset.prop;
         if (!prop) return;
@@ -338,20 +333,15 @@ export class PropertyGrid extends EventEmitter {
             type: EditorType.default,
         }
         var type = this.editorType(prop);
-        var value = this.editorValue(prop);
-        var max = 1000;
-        var min = 0;
-        if (this.$options[prop]) {
-            max = this.$options[prop].max || 1000;
-            min = this.$options[prop].min || 0;
-        }
-        this.$editor.min = min;
-        this.$editor.max = max;
+        var editorOptions;
+        if(this.$options[prop] && this.$options[prop].editor)
+            editorOptions = this.$options[prop].editor.options;
         this.$editor.type = type;
         var values;
         var vl;
         switch (type) {
             case EditorType.flag:
+                var value = this.editorValue(prop);
                 this.$editor.el.style.border = '1px solid #f2cb7f';
                 this.$editor.el.style.top = '-1px';
                 this.$editor.el.style.paddingRight = '1px';
@@ -377,8 +367,8 @@ export class PropertyGrid extends EventEmitter {
                 values = Object.keys(value).filter(key => !isNaN(Number(value[key])));
                 vl = values.length;
                 while (vl--) {
-                    if (this.$options[prop] && this.$options[prop].editor && this.$options[prop].editor.exclude) {
-                        if (this.$options[prop].editor.exclude.includes(values[vl]))
+                    if (editorOptions && editorOptions.exclude) {
+                        if (editorOptions.exclude.includes(values[vl]))
                             continue;
                     }
                     var l = document.createElement('label');
@@ -441,14 +431,17 @@ export class PropertyGrid extends EventEmitter {
                 this.$editor.dropdown.focus();
                 break;
             case EditorType.number:
-                this.$editor.editor = document.createElement('input');
-                this.$editor.editor.classList.add('property-grid-editor');
-                this.$editor.editor.type = 'number';
+                this.$editor.editor = new NumberValueEditor(this, el, editorOptions);
                 this.$editor.editor.value = this.$object[prop];
+                this.$editor.type = EditorType.custom;
                 break;
             case EditorType.select:
                 break;
             case EditorType.custom:
+                if (this.$options[prop] && this.$options[prop].editor && this.$options[prop].editor.editor) {
+                    this.$editor.editor = new this.$options[prop].editor.editor(this, el, editorOptions);
+                    this.$editor.editor.value = this.$object[prop];
+                }
                 /*
                     this.$editor.editor = document.createElement('div');
                     this.$editor.editor.classList.add('property-grid-editor-mulitline');
@@ -571,36 +564,19 @@ export class PropertyGrid extends EventEmitter {
             default:
                 switch (typeof (this.$object[prop])) {
                     case 'boolean':
-                        this.$editor.editor = document.createElement('select');
-                        this.$editor.editor.classList.add('property-grid-editor');
-                        this.$editor.editor.innserHTML = '<option value="true">True</option><option value="false">False</option>';
-                        this.$editor.editor.value = this.$object[prop] ? 'True' : 'False';
-                        /*
-                        this.$editor.editor = document.createElement('input');
-                        this.$editor.editor.classList.add('property-grid-editor');
-                        this.$editor.editor.type = 'checkbox';
-                        if (this.$object[prop])
-                            this.$editor.editor.checked = true;
-                        */
-                        this.$editor.type = EditorType.check;
+                        this.$editor.editor = new BooleanValueEditor(this, el, editorOptions);
+                        this.$editor.editor.value = this.$object[prop];
+                        this.$editor.type = EditorType.custom;
                         break;
                     case 'number':
-                        this.$editor.editor = document.createElement('input');
-                        this.$editor.editor.classList.add('property-grid-editor');
-                        this.$editor.editor.type = 'number';
+                        this.$editor.editor = new NumberValueEditor(this, el, editorOptions);
                         this.$editor.editor.value = this.$object[prop];
-                        this.$editor.editor.max = max;
-                        this.$editor.editor.min = min;
-                        this.$editor.type = EditorType.number;
+                        this.$editor.type = EditorType.custom;
                         break;
                     default:
-                        /*
-                        this.$editor.editor = document.createElement('input');
-                        this.$editor.editor.classList.add('property-grid-editor');
-                        this.$editor.editor.type = 'text';
+                        this.$editor.editor = new TextValueEditor(this, el, editorOptions);
                         this.$editor.editor.value = this.$object[prop];
-                        */
-                        this.createMultilineEditor(prop);
+                        this.$editor.type = EditorType.custom;
                         break;
                 }
                 break;
@@ -613,6 +589,8 @@ export class PropertyGrid extends EventEmitter {
                 el.appendChild(this.$editor.editor);
                 this.$editor.editor.focus();
             }
+            else if (this.$editor.type === EditorType.custom)
+                this.$editor.editor.focus();
             else {
                 el.appendChild(this.$editor.editor);
                 if (this.$editor.focus)
@@ -621,98 +599,6 @@ export class PropertyGrid extends EventEmitter {
         }
         else
             this.$editor = null;
-    }
-
-    private createMultilineEditor(prop) {
-        this.$editor.editor = document.createElement('div');
-        this.$editor.editor.classList.add('property-grid-editor-mulitline');
-        var values = document.createElement('div')
-        values.classList.add('property-grid-editor-multiline-container');
-        this.$editor.editor.appendChild(values);
-        this.$editor.editor.value = this.$object[prop];
-        var pEditor = document.createElement('textarea');
-        pEditor.classList.add('property-grid-editor');
-        pEditor.value = this.$object[prop];
-        pEditor.addEventListener('blur', (e) => {
-            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'multiline') {
-                e.preventDefault();
-                e.stopPropagation();
-                e.cancelBubble = true;
-                return;
-            }
-            this.$editor.editor.value = (<HTMLTextAreaElement>e.currentTarget).value;
-            this.clearEditor();
-        });
-        pEditor.addEventListener('click', (e) => {
-            pEditor.dataset.aOpen = null;
-        });
-        values.appendChild(pEditor);
-        var vl = document.createElement('button');
-        vl.title = 'Open editor...'
-        //vl.innerHTML = '&hellip;';
-        vl.innerHTML = '<span class="caret"></span>';
-        vl.dataset.editor = 'multiline';
-        var tEditor;
-        vl.addEventListener('click', (e) => {
-            if (pEditor.dataset.aOpen == 'true') {
-                pEditor.dataset.aOpen = null;
-                pEditor.focus();
-                resetCursor(pEditor);
-                return;
-            }
-            tEditor = document.createElement('textarea');
-            tEditor.style.height = '100%';
-            tEditor.style.whiteSpace = 'nowrap';
-            tEditor.value = pEditor.value;
-            tEditor.value = pEditor.value;
-            tEditor.addEventListener('keyup', (e) => {
-                if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
-                    pEditor.focus();
-                    resetCursor(pEditor);
-                    pEditor.dataset.aOpen = null;
-                }
-                return;
-            });
-            var b = this.$editor.el.getBoundingClientRect();
-            if (b.width < 300) {
-                tEditor.style.left = (b.left - 300 + b.width) + 'px';
-                tEditor.style.width = '300px';
-            }
-            else {
-                tEditor.style.left = b.left + 'px';
-                tEditor.style.width = (b.width) + 'px';
-            }
-            tEditor.style.top = (b.bottom) + 'px';
-            tEditor.style.height = '150px';
-            tEditor.style.zIndex = '100';
-            tEditor.style.position = 'absolute';
-            tEditor.addEventListener('blur', (e) => {
-                var ec = this.$editorClick;
-                pEditor.value = tEditor.value;
-                pEditor.dataset.aOpen = 'true';
-                tEditor.parentElement.removeChild(tEditor);
-                tEditor = null;
-                if (ec)
-                    this.createEditor(ec);
-                else {
-                    pEditor.focus();
-                    resetCursor(pEditor);
-                }
-            }, { once: true });
-            document.body.appendChild(tEditor);
-            tEditor.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.'
-            tEditor.focus();
-            resetCursor(tEditor);
-        });
-        this.$editor.editor.focus = () => {
-            this.$editor.editor.children[0].children[0].focus();
-            resetCursor(this.$editor.editor.children[0].children[0]);
-        };
-        this.$editor.editor.appendChild(vl);
-        this.$editor.clear = () => {
-            if (tEditor && tEditor.parentElement)
-                tEditor.parentElement.removeChild(tEditor);
-        };
     }
 
     private doUpdate(type?: UpdateType) {
@@ -729,4 +615,328 @@ export class PropertyGrid extends EventEmitter {
         });
     }
 
+}
+
+export abstract class ValueEditor extends EventEmitter {
+    private $parent: HTMLElement;
+    private $options: any;
+    private $grid: PropertyGrid;
+    public editorClick: any;
+
+    constructor(grid, parent, options?) {
+        super();
+        this.parent = parent;
+        this.propertyOptions = options;
+        this.grid = grid;
+    }
+
+    set grid(ops) {
+        this.$grid = ops;
+    }
+    get grid() { return this.$grid; }
+
+    set propertyOptions(ops) {
+        this.$options = ops;
+    }
+    get propertyOptions() { return this.$options; }
+
+    set parent(parent) {
+        if (typeof parent === 'string') {
+            if ((<string>parent).startsWith('#'))
+                this.$parent = document.getElementById((<string>parent).substr(1));
+            else
+                this.$parent = document.getElementById(parent);
+        }
+        else if (parent instanceof $)
+            this.$parent = parent[0];
+        else if (parent instanceof HTMLElement)
+            this.$parent = parent;
+        if (!this.$parent)
+            this.$parent = document.body;
+        this.create();
+    }
+
+    get parent(): HTMLElement { return this.$parent; }
+
+    abstract create(): void;
+    abstract focus(): void;
+    abstract destroy(): void;
+
+    abstract get value(): any;
+    abstract set value(value: any);
+
+}
+
+class TextValueEditor extends ValueEditor {
+    private $el: HTMLElement;
+    private $dropdown: HTMLTextAreaElement;
+    private $editor: HTMLTextAreaElement;
+    private $value;
+
+    create() {
+        this.$el = document.createElement('div');
+        this.$el.classList.add('property-grid-editor-mulitline');
+        var el = document.createElement('div');
+        el.classList.add('property-grid-editor-multiline-container');
+        this.$el.appendChild(el);
+        this.$editor = document.createElement('textarea');
+        this.$editor.classList.add('property-grid-editor')
+        this.$editor.addEventListener('blur', (e) => {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'multiline') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            this.grid.clearEditor();
+        });
+        this.$editor.addEventListener('click', (e) => {
+            this.$editor.dataset.aOpen = null;
+        });
+        el.appendChild(this.$editor);
+
+        var vl = document.createElement('button');
+        vl.title = 'Open editor...'
+        vl.innerHTML = '<span class="caret"></span>';
+        vl.dataset.editor = 'multiline';
+        vl.addEventListener('click', (e) => {
+            if (this.$editor.dataset.aOpen == 'true') {
+                this.$editor.dataset.aOpen = null;
+                this.$editor.focus();
+                resetCursor(this.$editor);
+                return;
+            }
+            this.$dropdown = document.createElement('textarea');
+            this.$dropdown.style.height = '100%';
+            this.$dropdown.style.whiteSpace = 'nowrap';
+            this.$dropdown.value = this.value;
+            this.$dropdown.addEventListener('keyup', (e) => {
+                if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
+                    this.focus();
+                    this.$editor.dataset.aOpen = null;
+                }
+                return;
+            });
+            var b = this.parent.getBoundingClientRect();
+            if (b.width < 300) {
+                this.$dropdown.style.left = (b.left - 300 + b.width) + 'px';
+                this.$dropdown.style.width = '300px';
+            }
+            else {
+                this.$dropdown.style.left = b.left + 'px';
+                this.$dropdown.style.width = (b.width) + 'px';
+            }
+            this.$dropdown.style.top = (b.bottom) + 'px';
+            this.$dropdown.style.height = '150px';
+            this.$dropdown.style.zIndex = '100';
+            this.$dropdown.style.position = 'absolute';
+            this.$dropdown.addEventListener('blur', (e) => {
+                var ec = this.editorClick;
+                this.$editor.value = this.$dropdown.value;
+                this.$editor.dataset.aOpen = 'true';
+                this.$dropdown.parentElement.removeChild(this.$dropdown);
+                this.$dropdown = null;
+                if (ec)
+                    this.grid.createEditor(ec);
+                else {
+                    this.focus();
+                }
+            }, { once: true });
+            document.body.appendChild(this.$dropdown);
+            this.$dropdown.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.'
+            this.$dropdown.focus();
+            resetCursor(this.$dropdown);
+        });
+        this.$el.appendChild(vl);
+        this.parent.appendChild(this.$el);
+    }
+    focus() {
+        this.$editor.focus();
+        resetCursor(this.$editor);
+    }
+    destroy() {
+        if (this.$dropdown && this.$dropdown.parentElement)
+            this.$dropdown.parentElement.removeChild(this.$dropdown);
+        if (this.$el.parentElement)
+            this.$el.parentElement.removeChild(this.$el);
+    }
+
+    get value() {
+        return this.$editor.value;
+    }
+    set value(value: any) {
+        this.$editor.value = value;
+    }
+}
+
+class BooleanValueEditor extends ValueEditor {
+    private $el: HTMLSelectElement;
+
+    private $value;
+
+    create() {
+        this.$el = document.createElement('select');
+        this.$el.classList.add('property-grid-editor');
+        this.$el.innerHTML = '<option value="true">True</option><option value="false">False</option>';
+        this.parent.appendChild(this.$el);
+    }
+    focus() {
+        this.$el.focus();
+    }
+    destroy() {
+        if (this.$el.parentElement)
+            this.$el.parentElement.removeChild(this.$el);
+    }
+
+    get value() {
+        return this.$el.value;
+    }
+    set value(value: any) {
+        this.$el.value = value ? 'True' : 'False';
+    }
+}
+
+class NumberValueEditor extends ValueEditor {
+    private $el: HTMLInputElement;
+
+    private $value;
+
+    create() {
+        this.$el = document.createElement('input');
+        this.$el.classList.add('property-grid-editor');
+        this.$el.type = 'number';
+        this.$el.max = this.propertyOptions ? (this.propertyOptions.max || 1000) : 1000;
+        this.$el.min = this.propertyOptions ? (this.propertyOptions.min || 0) : 0;
+        this.parent.appendChild(this.$el);
+    }
+    focus() {
+        this.$el.focus();
+    }
+    destroy() {
+        if (this.$el.parentElement)
+            this.$el.parentElement.removeChild(this.$el);
+    }
+
+    get value() {
+        var value = +this.$el.value;
+        if (value < +this.$el.min)
+            value = +this.$el.min;
+        if (value > +this.$el.max)
+            value = +this.$el.max;
+        return value;
+    }
+    set value(value: any) {
+        this.$el.value = value;
+    }
+}
+
+class FlagValueEditor extends ValueEditor {
+    private $el: HTMLElement;
+    private $dropdown: HTMLTextAreaElement;
+    private $editor: HTMLTextAreaElement;
+    private $value;
+
+    create() {
+        this.$el = document.createElement('div');
+        this.$el.classList.add('property-grid-editor-mulitline');
+        var el = document.createElement('div');
+        el.classList.add('property-grid-editor-multiline-container');
+        this.$el.appendChild(el);
+        this.$editor = document.createElement('textarea');
+        this.$editor.classList.add('property-grid-editor')
+        this.$editor.addEventListener('blur', (e) => {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'multiline') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            this.grid.clearEditor();
+        });
+        this.$editor.addEventListener('click', (e) => {
+            this.$editor.dataset.aOpen = null;
+        });
+        el.appendChild(this.$editor);
+
+        var vl = document.createElement('button');
+        vl.title = 'Open editor...'
+        vl.innerHTML = '<span class="caret"></span>';
+        vl.dataset.editor = 'multiline';
+        vl.addEventListener('click', (e) => {
+            if (this.$editor.dataset.aOpen == 'true') {
+                this.$editor.dataset.aOpen = null;
+                this.$editor.focus();
+                resetCursor(this.$editor);
+                return;
+            }
+            this.$dropdown = document.createElement('textarea');
+            this.$dropdown.style.height = '100%';
+            this.$dropdown.style.whiteSpace = 'nowrap';
+            this.$dropdown.value = this.value;
+            this.$dropdown.addEventListener('keyup', (e) => {
+                if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
+                    this.focus();
+                    this.$editor.dataset.aOpen = null;
+                }
+                return;
+            });
+            var b = this.parent.getBoundingClientRect();
+            if (b.width < 300) {
+                this.$dropdown.style.left = (b.left - 300 + b.width) + 'px';
+                this.$dropdown.style.width = '300px';
+            }
+            else {
+                this.$dropdown.style.left = b.left + 'px';
+                this.$dropdown.style.width = (b.width) + 'px';
+            }
+            this.$dropdown.style.top = (b.bottom) + 'px';
+            this.$dropdown.style.height = '150px';
+            this.$dropdown.style.zIndex = '100';
+            this.$dropdown.style.position = 'absolute';
+            this.$dropdown.addEventListener('blur', (e) => {
+                var ec = this.editorClick;
+                this.$editor.value = this.$dropdown.value;
+                this.$editor.dataset.aOpen = 'true';
+                this.$dropdown.parentElement.removeChild(this.$dropdown);
+                this.$dropdown = null;
+                if (ec)
+                    this.grid.createEditor(ec);
+                else {
+                    this.focus();
+                }
+            }, { once: true });
+            document.body.appendChild(this.$dropdown);
+            this.$dropdown.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.'
+            this.$dropdown.focus();
+            resetCursor(this.$dropdown);
+        });
+        this.$el.appendChild(vl);
+        this.parent.appendChild(this.$el);
+    }
+    focus() {
+        this.$editor.focus();
+        resetCursor(this.$editor);
+    }
+    destroy() {
+        if (this.$dropdown && this.$dropdown.parentElement)
+            this.$dropdown.parentElement.removeChild(this.$dropdown);
+        if (this.$el.parentElement)
+            this.$el.parentElement.removeChild(this.$el);
+    }
+
+    get value() {
+        /*
+        var cl = this.$editor.dropdown.children.length;
+        value = 0;
+        while (cl--) {
+            if (this.$editor.checks[cl].checked)
+                value |= +this.$editor.checks[cl].value;
+        }
+        */
+
+        return this.$editor.value;
+    }
+    set value(value: any) {
+        this.$editor.value = value;
+    }
 }

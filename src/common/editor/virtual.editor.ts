@@ -1,6 +1,6 @@
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { Splitter, Orientation } from './../splitter';
-import { PropertyGrid, EditorType } from './../propertygrid';
+import { PropertyGrid, EditorType, ValueEditor } from './../propertygrid';
 import { existsSync, capitalize, wordwrap, splitQuoted, leadingZeros, Cardinal, resetCursor } from './../library';
 const { clipboard, ipcRenderer, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -1282,13 +1282,21 @@ export class VirtualEditor extends EditorBase {
             {
                 property: 'terrain',
                 label: 'Terrain index',
-                min: 0,
+                editor: {
+                    options: {
+                        min: 0,
+                    }
+                },                
                 sort: 0
             },
             {
                 property: 'item',
                 label: 'Item index',
-                min: 0,
+                editor: {
+                    options: {
+                        min: 0,
+                    }
+                }, 
                 sort: 1
             },
             {
@@ -1296,8 +1304,10 @@ export class VirtualEditor extends EditorBase {
                 formatter: this.formatExits,
                 editor: {
                     type: EditorType.flag,
-                    value: RoomExit,
-                    exclude: ['Unknown']
+                    options: {
+                        value: RoomExit,
+                        exclude: ['Unknown']
+                    }
                 },
                 sort: 3
             },
@@ -1312,7 +1322,9 @@ export class VirtualEditor extends EditorBase {
                 formatter: this.formatState,
                 editor: {
                     type: EditorType.flag,
-                    value: RoomStates
+                    options: {
+                        value: RoomStates
+                    }
                 },
                 sort: 2
             },
@@ -1344,6 +1356,10 @@ export class VirtualEditor extends EditorBase {
                 property: 'terrainType',
                 group: 'Description',
                 label: 'Terrain',
+                editor: {
+                    type: EditorType.custom,
+                    editor: TerrainValueEditor
+                },
                 sort: 3
             },
             {
@@ -3971,5 +3987,107 @@ export class VirtualEditor extends EditorBase {
         resetCursor(this.$itemRaw);
         resetCursor(this.$externalRaw);
         resetCursor(this.$mapRaw);  
+    }
+}
+
+class TerrainValueEditor extends ValueEditor {
+    private $el: HTMLElement;
+    private $dropdown: HTMLTextAreaElement;
+    private $editor: HTMLTextAreaElement;
+    private $value;
+
+    create() {
+        this.$el = document.createElement('div');
+        this.$el.classList.add('property-grid-editor-mulitline');
+        var el = document.createElement('div');
+        el.classList.add('property-grid-editor-multiline-container');
+        this.$el.appendChild(el);
+        this.$editor = document.createElement('textarea');
+        this.$editor.classList.add('property-grid-editor')
+        this.$editor.addEventListener('blur', (e) => {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'multiline') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            this.grid.clearEditor();
+        });
+        this.$editor.addEventListener('click', (e) => {
+            this.$editor.dataset.aOpen = null;
+        });
+        el.appendChild(this.$editor);
+
+        var vl = document.createElement('button');
+        vl.title = 'Open editor...'
+        vl.innerHTML = '<span class="caret"></span>';
+        vl.dataset.editor = 'multiline';
+        vl.addEventListener('click', (e) => {
+            if (this.$editor.dataset.aOpen == 'true') {
+                this.$editor.dataset.aOpen = null;
+                this.$editor.focus();
+                resetCursor(this.$editor);
+                return;
+            }
+            this.$dropdown = document.createElement('textarea');
+            this.$dropdown.style.height = '100%';
+            this.$dropdown.style.whiteSpace = 'nowrap';
+            this.$dropdown.value = this.value;
+            this.$dropdown.addEventListener('keyup', (e) => {
+                if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
+                    this.focus();
+                    this.$editor.dataset.aOpen = null;
+                }
+                return;
+            });
+            var b = this.parent.getBoundingClientRect();
+            if (b.width < 300) {
+                this.$dropdown.style.left = (b.left - 300 + b.width) + 'px';
+                this.$dropdown.style.width = '300px';
+            }
+            else {
+                this.$dropdown.style.left = b.left + 'px';
+                this.$dropdown.style.width = (b.width) + 'px';
+            }
+            this.$dropdown.style.top = (b.bottom) + 'px';
+            this.$dropdown.style.height = '150px';
+            this.$dropdown.style.zIndex = '100';
+            this.$dropdown.style.position = 'absolute';
+            this.$dropdown.addEventListener('blur', (e) => {
+                var ec = this.editorClick;
+                this.$editor.value = this.$dropdown.value;
+                this.$editor.dataset.aOpen = 'true';
+                this.$dropdown.parentElement.removeChild(this.$dropdown);
+                this.$dropdown = null;
+                if (ec)
+                    this.grid.createEditor(ec);
+                else {
+                    this.focus();
+                }
+            }, { once: true });
+            document.body.appendChild(this.$dropdown);
+            this.$dropdown.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.'
+            this.$dropdown.focus();
+            resetCursor(this.$dropdown);
+        });
+        this.$el.appendChild(vl);
+        this.parent.appendChild(this.$el);
+    }
+    focus() {
+        this.$editor.focus();
+        resetCursor(this.$editor);
+    }
+    destroy() {
+        if (this.$dropdown && this.$dropdown.parentElement)
+            this.$dropdown.parentElement.removeChild(this.$dropdown);
+        if (this.$el.parentElement)
+            this.$el.parentElement.removeChild(this.$el);
+    }
+
+    get value() {
+        return this.$editor.value;
+    }
+    set value(value: any) {
+        this.$editor.value = value;
     }
 }
