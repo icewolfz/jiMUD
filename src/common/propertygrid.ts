@@ -291,7 +291,7 @@ export class PropertyGrid extends EventEmitter {
         oldValue = this.$object[this.$editor.property];
         if (value !== oldValue) {
             this.$object[prop] = value;
-            this.$editor.textContent = this.formatedValue(this.$editor.property);            
+            this.$editor.el.textContent = this.formatedValue(this.$editor.property);            
         }
         if (this.$editor.editor)
             this.$editor.editor.destroy();
