@@ -2328,12 +2328,12 @@ export class VirtualEditor extends EditorBase {
         ///ctx.translate(0.5,0.5);
         if (this.$selectedRoom === room) {
             if (this.$focused) {
-                ctx.fillStyle = "rgba(135, 206, 250, 0.25)";
-                ctx.strokeStyle = "rgba(135, 206, 250, 0.25)";
+                ctx.fillStyle = "rgba(135, 206, 250, 0.50)";
+                ctx.strokeStyle = "rgba(135, 206, 250, 0.50)";
             }
             else {
-                ctx.fillStyle = "rgba(221, 221, 221, 0.5)";
-                ctx.strokeStyle = "rgba(221, 221, 221, 0.5)";
+                ctx.fillStyle = "rgba(142, 142, 142, 0.50)";
+                ctx.strokeStyle = "rgba(142, 142, 142, 0.50)";
             }
             ctx.fillRoundedRect(1 + x, 1 + y, 30, 30, 8);
             ctx.strokeRoundedRect(1 + x, 1 + y, 30, 30, 8);
@@ -2486,7 +2486,7 @@ export class VirtualEditor extends EditorBase {
             }
             else {
                 ctx.fillStyle = "rgba(221, 221, 221, 0.75)";
-                ctx.strokeStyle = "rgba(221, 221, 221, 0.75)";
+                ctx.strokeStyle = "rgba(142, 142, 142, 0.75)";
             }
             ctx.fillRoundedRect(1 + x, 1 + y, 30, 30, 8);
             ctx.strokeRoundedRect(1 + x, 1 + y, 30, 30, 8);
