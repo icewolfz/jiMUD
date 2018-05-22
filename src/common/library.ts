@@ -566,7 +566,7 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
     let pS = 0;
     let s = 0;
     let c: string;
-    let pC: string;
+    let pC = '';
     let sp;
     const spl = sep.length;
     let spC: string;
@@ -575,15 +575,15 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
         c = this.charAt(s);
         if (c === '"' && (type & 2) === 2) {
             if ((escape & 2) === 2) {
-                if (pC !== '\\')
+                if (s === 0 || pC !== '\\')
                     quote = !quote;
             }
             else
                 quote = !quote;
         }
-        else if (c === '\'' && pC !== '\\' && (type & 1) === 1) {
+        else if (c === '\'' && (type & 1) === 1) {
             if ((escape & 1) === 1) {
-                if (pC !== '\\')
+                if (s === 0 || pC !== '\\')
                     sQuote = !sQuote;
             }
             else
@@ -1123,7 +1123,7 @@ export function splitQuoted(str, sep, t, e) {
     for (; s < sl; s++) {
         c = str.charAt(s);
         if (c === '"' && (t & 2) == 2) {
-            if ((e & 2) == 2) {
+            if ((e & 2) == 2 && s > 0) {
                 if (s - 1 > 0 && str.charAt(s - 1) != '\\')
                     q = !q;
             }
@@ -1131,7 +1131,7 @@ export function splitQuoted(str, sep, t, e) {
                 q = !q;
         }
         else if (c === '\'' && (t & 1) == 1) {
-            if ((e & 1) == 1) {
+            if ((e & 1) == 1 && s > 0) {
                 if (s - 1 > 0 && str.charAt(s - 1) != '\\')
                     sq = !sq;
             }
