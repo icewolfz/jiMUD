@@ -32,6 +32,7 @@ export class PropertyGrid extends EventEmitter {
     private $prevEditor;
     private $editorClick;
     private _updating;
+    private $readonly: any = false;
 
     constructor(options?: PropertyGridOptions) {
         super();
@@ -50,6 +51,32 @@ export class PropertyGrid extends EventEmitter {
             this.parent = document.body;
     }
 
+    get readonly() { return this.$readonly; }
+    set readonly(value) {
+        if (value !== this.$readonly) {
+            this.$readonly = value;
+            var eProp;
+            if (this.$editorClick)
+                eProp = this.$editorClick.dataset.prop;
+            this.buildProperties();
+            if (eProp && !this.isReadonly(eProp))
+                this.createEditor(document.querySelector('[data-prop="' + eProp + '"]'));
+        }
+    }
+
+    private isReadonly(prop) {
+        if(this.$options && this.$options[prop])
+        {
+            if(this.$options[prop].readonly)
+                return true;
+            if(this.$options[prop].editor && this.$options[prop].editor.type === EditorType.readonly)
+                return true;
+        }
+        if(typeof this.$readonly === 'function')
+            return this.$readonly(prop, this.object[prop], this.object);
+        return this.$readonly;
+    }
+
     get id() { return this.$id || (this.parent.id + '-property-grid'); }
     set id(value) {
         if (value === this.$id) return;
@@ -63,7 +90,6 @@ export class PropertyGrid extends EventEmitter {
         var eProp;
         if (this.$editorClick)
             eProp = this.$editorClick.dataset.prop;
-        this.clearEditor();
         if (this.$object)
             delete this.$object['$propertyGrid'];
         this.$object = value;
@@ -178,7 +204,7 @@ export class PropertyGrid extends EventEmitter {
                     name: this.$options[props[pl]].label || props[pl],
                     value: this.formatedValue(props[pl]),
                     property: props[pl],
-                    readonly: this.$options[props[pl]].readonly || (this.$options[props[pl]].editor ? this.$options[props[pl]].editor.type === EditorType.readonly : false)
+                    readonly: this.isReadonly(props[pl])
                 });
             }
             else {
@@ -186,6 +212,7 @@ export class PropertyGrid extends EventEmitter {
                     name: props[pl],
                     value: this.$object[props[pl]],
                     property: props[pl],
+                    readonly: this.isReadonly(props[pl])
                 });
             }
         }
