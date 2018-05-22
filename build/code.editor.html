@@ -139,8 +139,8 @@
             window.$editor.onDidChangeCursorPosition((e) => {
                 manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
             });
-
-            window.$editor.updateOptions(options.editorOptions);
+            if(options && options.editorOptions)
+                window.$editor.updateOptions(options.editorOptions);
             _ready = true;
         });        
     </script>

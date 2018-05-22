@@ -1,7 +1,7 @@
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { Splitter, Orientation } from './../splitter';
 import { PropertyGrid, EditorType } from './../propertygrid';
-import { existsSync, capitalize, wordwrap, splitQuoted, leadingZeros, Cardinal } from './../library';
+import { existsSync, capitalize, wordwrap, splitQuoted, leadingZeros, Cardinal, resetCursor } from './../library';
 const { clipboard, ipcRenderer, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
 const fs = require('fs-extra');
@@ -333,6 +333,7 @@ export class VirtualEditor extends EditorBase {
                 this.$externalRaw.value = this.$startValues['virtual.exits'];
                 this.$files['virtual.exits'] = true;
             }
+            this.resetRawCursors();
             this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
             this.loadDescriptions();
             this.loadItems();
@@ -420,7 +421,7 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(this.$itemRaw);
         this.$externalRaw = this.createRawControl();
         frag.appendChild(this.$externalRaw);
-        this.parent.appendChild(frag);
+        this.parent.appendChild(frag);  
         //#endregion
         //#region create map editor
         this.$splitterEditor = new Splitter({ parent: this.parent, orientation: Orientation.vertical });
@@ -1192,11 +1193,62 @@ export class VirtualEditor extends EditorBase {
         this.$roomEditor = new PropertyGrid({ parent: this.$splitterEditor.panel2 });
         this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
             var old = this.$selectedRoom.clone();
-            this.$selectedRoom[prop] = newValue;
-            if (prop === 'terrain' && this.$roomEditor.object.item === oldValue)
-                this.$selectedRoom.item = newValue;
-            this.RoomChanged(this.$selectedRoom, old);
-            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
+            var data;
+            switch (prop) {
+                case 'items':
+                    break;
+                case 'terrainType':
+                    prop = 'terrain';
+                case 'short':
+                case 'long':
+                case 'light':
+                case 'sound':
+                case 'smell':
+                    //invalide index
+                    if (this.$selectedRoom.terrain < 0) return;
+                    //get current data and if none set defaults and assign to the index
+                    if (!(data = this.$descriptions[this.$selectedRoom.terrain])) {
+                        data = {
+                            idx: this.$selectedRoom.terrain,
+                            short: '',
+                            light: 0,
+                            terrain: '',
+                            long: '',
+                            sound: '',
+                            smell: ''
+                        }                        
+                    }
+                    data[prop] = newValue
+                    //update the object data
+                    this.$descriptions[this.$selectedRoom.terrain] = data;
+                    //update the file data
+                    this.updateRaw(this.$descriptionRaw, data.idx * 3, [
+                        data.short + ":" + data.light + ":" + data.terrain, 
+                        data.long, 
+                        (data.smell.length > 0 ? data.smell : "0") + ":" + (data.sound.length > 0 ? data.sound : "0")
+                    ]);
+                    break;
+                case 'terrain':
+                    this.$selectedRoom[prop] = newValue;
+                    if (this.$roomEditor.object.item === oldValue)
+                        this.$selectedRoom.item = newValue;
+                    //new high terrain, clear cache and redraw whole map as colors should have shifted
+                    if (newValue > this.$maxTerrain) {
+                        this.$maxTerrain = newValue;
+                        this.$colorCache = null;
+                        this.doUpdate(UpdateType.drawMap);
+                    }
+                    else //else just redraw the current room
+                        this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                    this.RoomChanged(this.$selectedRoom, old);
+                    break;
+                default:
+                    this.$selectedRoom[prop] = newValue;
+                    this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                    this.RoomChanged(this.$selectedRoom, old);
+                    break;
+            }
+            this.UpdatePreview(this.$selectedRoom);
         });
         this.$roomEditor.propertyOptions([
             {
@@ -1218,37 +1270,42 @@ export class VirtualEditor extends EditorBase {
                 property: 'ee',
                 label: 'External exits',
                 readonly: true,
-                formatter: this.formatExits
+                formatter: this.formatExits,
+                sort: 5
             },
             {
                 property: 'ef',
                 label: 'External file',
-                readonly: true
+                readonly: true,
+                sort: 6
             },
             {
                 property: 'terrain',
                 label: 'Terrain index',
                 min: 0,
-                max: Math.max((this.$descriptions ? this.$descriptions.length : 0), this.$maxTerrain)
+                sort: 0
             },
             {
                 property: 'item',
                 label: 'Item index',
                 min: 0,
-                max: Math.max((this.$items ? this.$items.length : 0), this.$maxTerrain, (this.$descriptions ? this.$descriptions.length : 0))
+                sort: 1
             },
             {
                 property: 'exits',
                 formatter: this.formatExits,
                 editor: {
                     type: EditorType.flag,
-                    value: RoomExit
-                }
+                    value: RoomExit,
+                    exclude: ['Unknown']
+                },
+                sort: 3
             },
             {
                 property: 'climbs',
                 formatter: this.formatExits,
-                readonly: true
+                readonly: true,
+                sort: 4
             },
             {
                 property: 'state',
@@ -1256,11 +1313,57 @@ export class VirtualEditor extends EditorBase {
                 editor: {
                     type: EditorType.flag,
                     value: RoomStates
-                }
-            }
+                },
+                sort: 2
+            },
+            {
+                property: 'items',
+                group: 'Description',
+                formatter: this.formatItems,
+                editor: {
+                    type: EditorType.custom,
+                },
+                sort: 2
+            },
+            {
+                property: 'short',
+                group: 'Description',
+                sort: 0
+            },
+            {
+                property: 'long',
+                group: 'Description',
+                sort: 1
+            },
+            {
+                property: 'light',
+                group: 'Description',
+                sort: 4
+            },
+            {
+                property: 'terrainType',
+                group: 'Description',
+                label: 'Terrain',
+                sort: 3
+            },
+            {
+                property: 'sound',
+                group: 'Description',
+                sort: 5
+            },
+            {
+                property: 'smell',
+                group: 'Description',
+                sort: 5
+            },
         ]);
 
         //#endregion
+    }
+
+    private formatItems(prop, value) {
+        if (!value) return '';
+        return value.map(i => i.items).join(':');
     }
 
     private formatState(prop, value) {
@@ -1409,12 +1512,13 @@ export class VirtualEditor extends EditorBase {
         if (this.$files['terrain.item'])
             this.$itemRaw.value = this.read(path.join(root, 'terrain.item'));
         if (this.$files['virtual.exits'])
-            this.$externalRaw.value = this.read(path.join(root, 'virtual.exits'));
+            this.$externalRaw.value = this.read(path.join(root, 'virtual.exits'));            
         this.emit('watch', root);
         this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
         this.loadDescriptions();
         this.loadItems();
         this.loadExits();
+        this.resetRawCursors();
         this.emit('opened');
         this.state |= FileState.opened;
         this.changed = false;
@@ -1505,6 +1609,7 @@ export class VirtualEditor extends EditorBase {
                 this.$externalRaw.value = this.$startValues['virtual.exits'];
                 this.$files['virtual.exits'] = true;
             }
+            this.resetRawCursors();
             this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
             this.loadDescriptions();
             this.loadItems();
@@ -1512,6 +1617,7 @@ export class VirtualEditor extends EditorBase {
             this.clearRawChanged();
         }
         this.changed = false;
+        this.switchView(this.$view, true);
         this.emit('reverted');
     }
 
@@ -1988,8 +2094,8 @@ export class VirtualEditor extends EditorBase {
 
     }
 
-    public switchView(view: View) {
-        if (this.$view === view) return;
+    public switchView(view: View, force?) {
+        if (!force && this.$view === view) return;
         this.$label.style.display = '';
         switch (this.$view) {
             case View.map:
@@ -2494,12 +2600,7 @@ export class VirtualEditor extends EditorBase {
 
     private ChangeSelection(room) {
         this.$selectedRoom = room;
-        if (this.$selectedRoom) {
-            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
-            this.emit('room-selected', this.$selectedRoom);
-            this.$depthToolbar.value = '' + this.$selectedRoom.z;
-        }
-        this.$roomEditor.object = room.clone();
+        this.UpdateEditor(room);
         this.UpdatePreview(room);
     }
 
@@ -3177,11 +3278,41 @@ export class VirtualEditor extends EditorBase {
 
         if (c) {
             if (room === this.$selectedRoom)
-                this.$roomEditor.object = room.clone();
+                this.UpdateEditor(room);
             this.$mapRaw.dataset.changed = 'true';
             this.changed = true;
         }
         this.UpdatePreview(room);
+    }
+
+    private UpdateEditor(room) {
+        if (this.$selectedRoom) {
+            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
+            this.emit('room-selected', this.$selectedRoom);
+            this.$depthToolbar.value = '' + this.$selectedRoom.z;
+        }
+        var o = room.clone();
+        if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
+            o.items = this.$items[o.item].children.slice(0);
+        else
+            o.items = null;
+        if (o.terrain < this.$descriptions.length && o.terrain >= 0 && this.$descriptions[o.terrain]) {
+            o.short = this.$descriptions[o.terrain].short;
+            o.long = this.$descriptions[o.terrain].long;
+            o.light = this.$descriptions[o.terrain].light;
+            o.terrainType = this.$descriptions[o.terrain].terrain;
+            o.sound = this.$descriptions[o.terrain].sound;
+            o.smell = this.$descriptions[o.terrain].smell;
+        }
+        else {
+            o.short = '';
+            o.long = '';
+            o.light = 0;
+            o.terrainType = '';
+            o.sound = '';
+            o.smell = '';
+        }
+        this.$roomEditor.object = o;
     }
 
     private UpdatePreview(room) {
@@ -3281,7 +3412,7 @@ export class VirtualEditor extends EditorBase {
         }
         else {
             var data = this.$descriptions;
-            if (data.length === 0 || room.terrain < 0 || room.terrain >= data.length) {
+            if (data.length === 0 || room.terrain < 0 || room.terrain >= data.length || !data[room.terrain]) {
                 this.$roomPreview.short.textContent = '';
                 this.$roomPreview.long.textContent = 'Nothing to preview';
                 this.$roomPreview.smell.textContent = '';
@@ -3295,7 +3426,7 @@ export class VirtualEditor extends EditorBase {
                 this.$roomPreview.long.textContent = data.long;
                 str = this.$roomPreview.long.innerHTML;
 
-                if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item].children.length > 0) {
+                if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children.length > 0) {
                     items = items[room.item].children.sort(function (a, b) { return b.items.length - a.items.length; });
                     for (var c = 0, cl = items.length; c < cl; c++)
                         str = str.replace(new RegExp("\\b(" + items[c].items + ")\\b"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="' + items[c].description.replace(/"/g, '\\"') + '">' + items[c].items + '</span>');
@@ -3353,20 +3484,32 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
-    private removeRaw(raw, line, count) {
+    private removeRaw(raw, line, count, nochanged?) {
         if (typeof (count) === "undefined") count = 1;
         var lines = raw.value.split("\n");
         if (line < 0 || line >= lines.length) return;
         lines.splice(line, count);
         raw.value = lines.join("\n");
+        if(!nochanged)
+        {
+            this.changed = true;
+            raw.dataset.dirty = 'true';
+            raw.dataset.changed = 'true';            
+        }        
     }
 
-    private updateRaw(raw, line, str) {
+    private updateRaw(raw, line, str, nochanged?) {
         var lines = raw.value.split("\n");
         if (line < 0) return;
         for (var s = 0, sl = str.length; s < sl; s++)
             lines[line + s] = str[s];
         raw.value = lines.join("\n");
+        if(!nochanged)
+        {
+            this.changed = true;
+            raw.dataset.dirty = 'true';
+            raw.dataset.changed = 'true';            
+        }
     }
 
     private BuildRooms() {
@@ -3585,7 +3728,7 @@ export class VirtualEditor extends EditorBase {
             row = {
                 idx: c,
                 short: '',
-                light: '',
+                light: 0,
                 terrain: '',
                 long: '',
                 sound: '',
@@ -3613,15 +3756,6 @@ export class VirtualEditor extends EditorBase {
             rows.push(row);
         }
         this.$descriptions = rows;
-        if (this.$roomEditor)
-            this.$roomEditor.propertyOptions(
-                {
-                    property: 'terrain',
-                    label: 'Terrain index',
-                    min: 0,
-                    max: Math.max((this.$descriptions ? this.$descriptions.length : 0), this.$maxTerrain)
-                }
-            );
     }
 
     private loadItems() {
@@ -3647,7 +3781,6 @@ export class VirtualEditor extends EditorBase {
             tmp = row.items.split(":");
             tmp2 = row.description.split(":");
             if (tmp.length > 0) {
-                row.state = 'closed';
                 row.children = [];
                 for (i = 0, il = tmp.length; i < il; i++) {
                     if (i < tmp2.length)
@@ -3673,15 +3806,6 @@ export class VirtualEditor extends EditorBase {
             rows.push(row);
         }
         this.$items = rows;
-        if (this.$roomEditor)
-            this.$roomEditor.propertyOptions(
-                {
-                    property: 'item',
-                    label: 'Item index',
-                    min: 0,
-                    max: Math.max((this.$items ? this.$items.length : 0), this.$maxTerrain, (this.$descriptions ? this.$descriptions.length : 0))
-                }
-            );
     }
 
     private loadExits() {
@@ -3751,7 +3875,7 @@ export class VirtualEditor extends EditorBase {
         var t, c, cl, t2;
         var d = "#include <std.h>\n#include \"../area.h\"\n\ninherit BASEROOM;\n\n//create the base virtual room\nvoid create() {\n   ::create(" + r.x + ", " + r.y + ", " + r.z + ", " + r.terrain + ", " + r.item + ", " + r.exits + ");\n";
         var data;
-        if (this.$descriptions.length > 0 && r.terrain >= 0 && r.terrain < this.$descriptions.length) {
+        if (this.$descriptions.length > 0 && r.terrain >= 0 && r.terrain < this.$descriptions.length && this.$descriptions[r.terrain]) {
             data = this.$descriptions[r.terrain];
             if (data.light !== 0) {
                 d += "   set_properties( ([\n      \"light\":" + data.light + "\n   ]) );\n";
@@ -3774,7 +3898,7 @@ export class VirtualEditor extends EditorBase {
             if (data.terrain.length > 0 && data.terrain != "0")
                 d += "   set_terrain(\"" + data.terrain + "\");\n";
 
-            if (this.$items.length > 0 && r.item >= 0 && r.item < this.$items.length && this.$items[r.item].children.length > 0) {
+            if (this.$items.length > 0 && r.item >= 0 && r.item < this.$items.length && this.$items[r.item] && this.$items[r.item].children.length > 0) {
                 d += "   set_items( ([\n";
                 var items = this.$items[r.item].children;
                 for (c = 0, cl = items.length; c < cl; c++) {
@@ -3838,5 +3962,14 @@ export class VirtualEditor extends EditorBase {
         }
         d += "}";
         return d;
+    }
+
+    private resetRawCursors() {
+        resetCursor(this.$terrainRaw);
+        resetCursor(this.$stateRaw);
+        resetCursor(this.$descriptionRaw);
+        resetCursor(this.$itemRaw);
+        resetCursor(this.$externalRaw);
+        resetCursor(this.$mapRaw);  
     }
 }
