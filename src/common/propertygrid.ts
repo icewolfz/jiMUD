@@ -132,9 +132,9 @@ export class PropertyGrid extends EventEmitter {
     }
 
     private formatedValue(prop) {
-        if(!prop || !this.$object)
+        if (!prop || !this.$object)
             return null;
-        if(!this.$options[prop])
+        if (!this.$options[prop])
             return this.$object[prop];
         if (this.$options[prop].formatter)
             return this.$options[prop].formatter(prop, this.$object[prop], this.$object);
@@ -291,7 +291,7 @@ export class PropertyGrid extends EventEmitter {
         oldValue = this.$object[this.$editor.property];
         if (value !== oldValue) {
             this.$object[prop] = value;
-            this.$editor.el.textContent = this.formatedValue(this.$editor.property);            
+            this.$editor.el.textContent = this.formatedValue(this.$editor.property);
         }
         if (this.$editor.editor)
             this.$editor.editor.destroy();
@@ -336,7 +336,7 @@ export class PropertyGrid extends EventEmitter {
             case EditorType.number:
                 this.$editor.editor = new NumberValueEditor(this, el, editorOptions);
                 this.$editor.editor.value = this.$object[prop];
-               break;
+                break;
             case EditorType.select:
                 break;
             case EditorType.custom:
@@ -694,14 +694,15 @@ class FlagValueEditor extends ValueEditor {
                 this.$dropdown.style.width = (b.width) + 'px';
             }
             this.$dropdown.style.top = (b.bottom) + 'px';
-            this.$dropdown.style.height = '150px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
+            var height = 154;
             if (this.propertyOptions && this.propertyOptions.enum) {
                 var en = this.propertyOptions.enum;
                 var values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
                 var vl = values.length;
+                var height = vl * 22;
                 while (vl--) {
                     if (this.propertyOptions.exclude && this.propertyOptions.exclude.includes(values[vl]))
                         continue;
@@ -710,7 +711,7 @@ class FlagValueEditor extends ValueEditor {
                     i.type = 'checkbox';
                     i.value = en[values[vl]];
                     i.addEventListener('change', (e) => {
-                        var children = Array.from(this.$dropdown.children, c=>c.children[0]);
+                        var children = Array.from(this.$dropdown.children, c => c.children[0]);
                         var cl = children.length;
                         var child;
                         var value = 0;
@@ -730,10 +731,10 @@ class FlagValueEditor extends ValueEditor {
                                     none = child;
                                     child.checked = false;
                                 }
-                                else if(child.checked)
+                                else if (child.checked)
                                     value |= +child.value;
                             }
-                            if(none && value === 0)
+                            if (none && value === 0)
                                 none.checked = true;
                         }
                         this.value = value;
@@ -748,9 +749,14 @@ class FlagValueEditor extends ValueEditor {
                     this.$dropdown.appendChild(l);
                 }
             }
+            if (height < 154) {
+                this.$dropdown.style.height = height + 'px';
+                this.$dropdown.style.overflow = 'hidden';
+            }
+            else
+                this.$dropdown.style.height = '154px';
             document.body.appendChild(this.$dropdown);
             this.$dropdown.focus();
-            resetCursor(this.$dropdown);
         });
         this.$el.appendChild(vl);
         this.parent.appendChild(this.$el);

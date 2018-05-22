@@ -804,4 +804,17 @@ cause test to be brighter but more bold looking
 .property-grid-editor-flag-dropdown label {
     width: 100%;
     display: block;
+    padding-left: 2px;
+    padding-right: 2px;
+    margin: 0px;
+}
+
+.property-grid-editor-flag-dropdown label:hover, .property-grid-editor-flag-dropdown div:hover  {
+    background-color: rgba(135, 206, 250, 0.50);
+}
+
+.property-grid-editor-flag-dropdown div {
+    padding-left: 2px;
+    padding-right: 2px;   
+    width: 100%;
 }
