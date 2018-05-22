@@ -1077,7 +1077,7 @@ export function Cardinal(x) {
 
 export function wordwrap(str, maxWidth, newLineStr?) {
     var done = false, res = '', found, i;
-    newLineStr = newLineStr || '\n';    		
+    newLineStr = newLineStr || '\n';
     do {
         found = false;
         // Inserts new line at first whitespace of the line
@@ -1175,20 +1175,68 @@ export function leadingZeros(num, totalChars: number, padWith: string, trim?: bo
     return num;
 }
 
-export function resetCursor(txtElement) { 
+export function resetCursor(txtElement) {
     txtElement.scrollTop = 0;
     txtElement.scrollLeft = 0;
-    if(typeof txtElement.selectionStart === 'number') {
+    if (typeof txtElement.selectionStart === 'number') {
         txtElement.selectionStart = 0;
         txtElement.selectionEnd = 0;
     }
-    else if (txtElement.setSelectionRange) { 
-        txtElement.focus(); 
-        txtElement.setSelectionRange(0, 0); 
-        txtElement.focus(); 
-    } else if (txtElement.createTextRange) { 
-        var range = txtElement.createTextRange();  
-        range.moveStart('character', 0); 
-        range.select(); 
-    } 
+    else if (txtElement.setSelectionRange) {
+        txtElement.focus();
+        txtElement.setSelectionRange(0, 0);
+        txtElement.focus();
+    } else if (txtElement.createTextRange) {
+        var range = txtElement.createTextRange();
+        range.moveStart('character', 0);
+        range.select();
+    }
+}
+
+export function stringToEnum(str, en, ignoreCase?) {
+    if (!str || !en) return 0;
+    if (ignoreCase) 
+        str = str.toUpperCase();
+    //split strip and trim spaces
+    str = str.split(',').map(v=>v.trim());
+    //init value
+    var value = 0;
+    var sl = str.length;
+    //get the enum keys
+    var values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
+    var test = values.slice(0);
+    //ignore case just make everything upper
+    if (ignoreCase)
+        test = test.map(v => v.toUpperCase());
+    //loop the strings
+    while(sl--)
+    {
+        var vl = values.length;
+        //loop the enum to try and find the string value
+        while (vl--) {
+            //found value add it on
+            if (test[vl] === str[sl])
+            {
+                value |= en[values[vl]];
+                break;
+            }
+        }        
+    }
+    //return final value
+    return value;
+}
+
+export function enumToString(value, en) {
+    var state;
+    var states = Object.keys(en).filter(key => !isNaN(Number(en[key])));
+    if (value === 0)
+        return en[0];
+    var f = [];
+    state = states.length;
+    while (state--) {
+        if(en[states[state]] === 0) continue;
+        if ((value & en[states[state]]) === en[states[state]])
+            f.push(capitalize(states[state]));
+    }
+    return f.join(', ');
 }

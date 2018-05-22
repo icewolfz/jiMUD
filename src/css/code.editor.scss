@@ -736,7 +736,7 @@ cause test to be brighter but more bold looking
     width: auto;
 }
 
-.property-grid-editor-mulitline textarea {
+.property-grid-editor-dropdown textarea {
     border: 0px;
     outline: none;
     padding: 0;
@@ -749,7 +749,19 @@ cause test to be brighter but more bold looking
     text-overflow: ellipsis;
 }
 
-.property-grid-editor-mulitline {
+.property-grid-editor-dropdown input, .property-grid-editor-flag input {
+    border: 0px;
+    outline: none;
+    padding: 0;
+    padding-left: 1px;
+    padding-right: 1px;
+}
+
+.property-grid-editor-dropdown textarea.single {
+    white-space: normal;
+}
+
+.property-grid-editor-dropdown, .property-grid-editor-flag {
     border: 1px solid #f2cb7f;
     right: -1px;
     bottom: 0;
@@ -757,14 +769,12 @@ cause test to be brighter but more bold looking
     left: 0;
     position: absolute;
     width: 100%;
-
-    /*height: 40px;*/
     z-index: 100;
     overflow: hidden;
     background-color: white;
 }
 
-.property-grid-editor-multiline-container {
+.property-grid-editor-dropdown-container {
     right: 19px;
     position: absolute;
     top: -1px;
@@ -772,7 +782,7 @@ cause test to be brighter but more bold looking
     bottom: 0;
 }
 
-.property-grid-editor-mulitline button {
+.property-grid-editor-dropdown button, .property-grid-editor-flag button {
     width: 18px;
     right: 0;
     bottom: 0;
@@ -784,33 +794,14 @@ cause test to be brighter but more bold looking
     outline: none;
 }
 
-.property-grid .flag-editor {
-    right: 0;
-    bottom: 0;
-    top: 0;
-    position: absolute;
-    border: 0px;
-    outline: none;
-    padding: 0;
-    width: 16px;
-}
-
-.flag-editor-dropdown {
-    position: absolute;
+.property-grid-editor-flag-dropdown {
+    overflow:auto;
     background-color: white;
-    border: 1px solid black;
-    white-space: nowrap;
-    z-index: 1000000;
-    overflow: auto;
+    border: 1px solid #f2cb7f;
     outline: none;
 }
 
-.flag-editor-dropdown label {
+.property-grid-editor-flag-dropdown label {
     width: 100%;
     display: block;
 }
-
-/*
-input[type='checkbox'].property-grid-editor {
-}
-*/

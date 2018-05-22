@@ -1,5 +1,5 @@
 import EventEmitter = require('events');
-import { capitalize, resetCursor } from './library';
+import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 import { createDeflate } from 'zlib';
 
 export interface PropertyGridOptions {
@@ -131,12 +131,16 @@ export class PropertyGrid extends EventEmitter {
         return EditorType.default;
     }
 
-    private editorValue(prop) {
-        if (!prop || !this.$options[prop] || !this.$options[prop].editor)
-            return undefined;
-        if (this.$options[prop].editor && this.$options[prop].editor.options)
-            return this.$options[prop].editor.options.value;
-        return undefined;
+    private formatedValue(prop) {
+        if(!prop || !this.$object)
+            return null;
+        if(!this.$options[prop])
+            return this.$object[prop];
+        if (this.$options[prop].formatter)
+            return this.$options[prop].formatter(prop, this.$object[prop], this.$object);
+        if (this.$options[prop].editor && this.$options[prop].editor.options && this.$options[prop].editor.type === EditorType.flag)
+            return enumToString(this.$object[prop], this.$options[prop].editor.options.enum);
+        return this.$object[prop];
     }
 
     private buildProperties() {
@@ -172,7 +176,7 @@ export class PropertyGrid extends EventEmitter {
                     layout[group] = [];
                 layout[group].push({
                     name: this.$options[props[pl]].label || props[pl],
-                    value: this.$options[props[pl]].formatter ? this.$options[props[pl]].formatter(props[pl], this.$object[props[pl]], this.$object) : this.$object[props[pl]],
+                    value: this.formatedValue(props[pl]),
                     property: props[pl],
                     readonly: this.$options[props[pl]].readonly || (this.$options[props[pl]].editor ? this.$options[props[pl]].editor.type === EditorType.readonly : false)
                 });
@@ -282,30 +286,15 @@ export class PropertyGrid extends EventEmitter {
         var value;
         var oldValue;
         var prop = this.$editor.property;
-        if (this.$editor.type === EditorType.flag) {
-            var cl = this.$editor.dropdown.children.length;
-            value = 0;
-            while (cl--) {
-                if (this.$editor.checks[cl].checked)
-                    value |= +this.$editor.checks[cl].value;
-            }
-        }
-        else if (this.$editor.editor)
+        if (this.$editor.editor)
             value = this.$editor.editor.value;
         oldValue = this.$object[this.$editor.property];
         if (value !== oldValue) {
-            if (this.$options[this.$editor.property] && this.$options[this.$editor.property].formatter)
-                this.$editor.el.textContent = this.$options[this.$editor.property].formatter(this.$editor.property, value, this.$object)
-            else
-                this.$editor.el.textContent = value;
             this.$object[prop] = value;
+            this.$editor.textContent = this.formatedValue(this.$editor.property);            
         }
-        if (this.$editor.clear)
-            this.$editor.clear();
-        if (this.$editor.editor && this.$editor.type === EditorType.custom)
+        if (this.$editor.editor)
             this.$editor.editor.destroy();
-        else if (this.$editor.editor && this.$editor.editor.parentElement)
-            this.$editor.editor.parentElement.removeChild(this.$editor.editor);
         this.$prevEditor = {
             el: this.$editor.el,
             property: this.$editor.property,
@@ -334,107 +323,20 @@ export class PropertyGrid extends EventEmitter {
         }
         var type = this.editorType(prop);
         var editorOptions;
-        if(this.$options[prop] && this.$options[prop].editor)
+        if (this.$options[prop] && this.$options[prop].editor)
             editorOptions = this.$options[prop].editor.options;
         this.$editor.type = type;
         var values;
         var vl;
         switch (type) {
             case EditorType.flag:
-                var value = this.editorValue(prop);
-                this.$editor.el.style.border = '1px solid #f2cb7f';
-                this.$editor.el.style.top = '-1px';
-                this.$editor.el.style.paddingRight = '1px';
-                this.$editor.el.style.paddingLeft = '1px';
-                this.$editor.editor = document.createElement('button');
-                this.$editor.editor.innerHTML = '<span class="caret"></span>';
-                this.$editor.editor.dataset.editor = 'flag';
-                this.$editor.editor.classList.add('flag-editor');
-                this.$editor.editor.style.display = 'none';
-                /*
-                this.$editor.editor.addEventListener('click', (e) => {
-                    this.clearEditor();
-                    this.$prevEditor = null;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.cancelBubble = true;
-                });
-                */
-                this.$editor.dropdown = document.createElement('div');
-                this.$editor.dropdown.classList.add('flag-editor-dropdown');
-                this.$editor.dropdown.tabIndex = 1;
-                this.$editor.checks = [];
-                values = Object.keys(value).filter(key => !isNaN(Number(value[key])));
-                vl = values.length;
-                while (vl--) {
-                    if (editorOptions && editorOptions.exclude) {
-                        if (editorOptions.exclude.includes(values[vl]))
-                            continue;
-                    }
-                    var l = document.createElement('label');
-                    var i = document.createElement('input');
-                    i.type = 'checkbox';
-                    i.value = value[values[vl]];
-                    i.addEventListener('change', (e) => {
-                        var cl = this.$editor.checks.length;
-                        if ((<HTMLInputElement>e.currentTarget).value === '0') {
-                            while (cl--) {
-                                if (this.$editor.checks[cl].value !== '0')
-                                    this.$editor.checks[cl].checked = false;
-                            }
-                        }
-                        else {
-                            while (cl--) {
-                                if (this.$editor.checks[cl].value === '0') {
-                                    this.$editor.checks[cl].checked = false;
-                                    break;
-                                }
-                            }
-                        }
-                    });
-                    l.appendChild(i);
-                    l.appendChild(document.createTextNode(values[vl]));
-                    if (this.$object[prop] !== 0 && value[values[vl]] === 0)
-                        i.checked = false;
-                    else
-                        i.checked = (this.$object[prop] & value[values[vl]]) === value[values[vl]];
-                    this.$editor.dropdown.appendChild(l);
-                    this.$editor.checks.push(i);
-                }
-
-                document.body.appendChild(this.$editor.dropdown);
-                this.$editor.clear = () => {
-                    document.body.removeChild(this.$editor.dropdown);
-                    this.$editor.el.style.border = '';
-                    this.$editor.el.style.right = '';
-                    this.$editor.el.style.top = '';
-                    this.$editor.el.style.paddingRight = '';
-                    this.$editor.el.style.paddingLeft = '';
-                };
-                this.$editor.dropdown.addEventListener('blur', (e) => {
-                    var el = this.$editor.el;
-                    this.clearEditor();
-                    if (this.$editorClick !== el)
-                        this.$prevEditor = null;
-                }, { once: true });
-                var b = this.$editor.el.getBoundingClientRect();
-                if (b.width < 150) {
-                    this.$editor.dropdown.style.left = (b.left - 150 + b.width) + 'px';
-                    this.$editor.dropdown.style.width = '150px';
-                }
-                else {
-                    this.$editor.dropdown.style.left = b.left + 'px';
-                    this.$editor.dropdown.style.width = (b.width) + 'px';
-                }
-                this.$editor.dropdown.style.top = (b.bottom) + 'px';
-                this.$editor.dropdown.style.height = '200px';
-                this.$editor.dropdown.focus();
+                this.$editor.editor = new FlagValueEditor(this, el, editorOptions);
+                this.$editor.editor.value = this.$object[prop];
                 break;
             case EditorType.number:
                 this.$editor.editor = new NumberValueEditor(this, el, editorOptions);
                 this.$editor.editor.value = this.$object[prop];
-                this.$editor.type = EditorType.custom;
-                break;
+               break;
             case EditorType.select:
                 break;
             case EditorType.custom:
@@ -442,161 +344,26 @@ export class PropertyGrid extends EventEmitter {
                     this.$editor.editor = new this.$options[prop].editor.editor(this, el, editorOptions);
                     this.$editor.editor.value = this.$object[prop];
                 }
-                /*
-                    this.$editor.editor = document.createElement('div');
-                    this.$editor.editor.classList.add('property-grid-editor-mulitline');
-                    values = document.createElement('div')
-                    values.classList.add('property-grid-editor-multiline-container');
-                    this.$editor.editor.appendChild(values);
-                    this.$editor.editor.value = this.$object[prop];
-                    var pEditor = document.createElement('textarea');
-                    pEditor.classList.add('property-grid-editor');
-                    pEditor.value = this.$object[prop];
-                    pEditor.addEventListener('blur', (e) => {
-                        if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'multiline') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            e.cancelBubble = true;
-                            return;
-                        }
-                        this.$editor.editor.value = (<HTMLTextAreaElement>e.currentTarget).value;
-                        this.clearEditor();
-                    });
-                    pEditor.addEventListener('click', (e) => {
-                        pEditor.dataset.aOpen = null;
-                    });
-                    values.appendChild(pEditor);
-                    vl = document.createElement('button');
-                    vl.title = 'Open editor...'
-                    //vl.innerHTML = '&hellip;';
-                    vl.innerHTML = '<span class="caret"></span>';
-                    vl.dataset.editor = 'multiline';
-                    var tEditor;
-                    var editorData = this.$editor;
-                    vl.addEventListener('click', (e) => {
-                        var mDialog = <HTMLDialogElement>document.createElement('dialog');
-                        mDialog.style.width = '500px';
-                        mDialog.style.height = '300px';
-                        mDialog.style.padding = '5px';
-                        mDialog.addEventListener('close', () => {
-                            if (mDialog.parentElement)
-                                mDialog.parentElement.removeChild(mDialog);
-                            pEditor.focus();
-                        });
-                        var header = document.createElement('div');
-                        header.classList.add('dialog-header');
-                        header.style.fontWeight = 'bold';
-                        var button = document.createElement('button');
-                        button.classList.add('close');
-                        button.type = 'button';
-                        button.dataset.dismiss = 'modal';
-                        button.addEventListener('click', () => {
-                            mDialog.close();
-                            if (mDialog.parentElement)
-                                mDialog.parentElement.removeChild(mDialog);
-                            pEditor.focus();
-                        })
-                        button.innerHTML = '&times;';
-                        header.appendChild(button);
-                        var el = document.createElement('div');
-                        el.style.paddingTop = '2px';
-                        el.innerHTML = capitalize(this.$options[editorData.property].label || editorData.property) + '&hellip;';
-                        header.appendChild(el);
-                        mDialog.appendChild(header);
-                        header = document.createElement('div');
-                        header.classList.add('dialog-body');
-                        header.style.paddingTop = '40px';
-                        mDialog.appendChild(header);
-                        el = document.createElement('div');
-                        el.classList.add('form-group');
-                        el.style.margin = '0';
-                        el.style.position = 'absolute';
-                        el.style.left = '5px';
-                        el.style.right = '5px';
-                        el.style.bottom = '60px';
-                        el.style.top = '38px';
-                        header.appendChild(el);
-                        el.appendChild(tEditor);
-                        header = document.createElement('div');
-                        header.classList.add('dialog-footer');
-                        mDialog.appendChild(header);
-                        button = document.createElement('button');
-                        button.style.cssFloat = 'right';
-                        button.type = 'button';
-                        button.classList.add('btn', 'btn-default');
-                        button.addEventListener('click', () => {
-                            mDialog.close();
-                            if (mDialog.parentElement)
-                                mDialog.parentElement.removeChild(mDialog);
-                            pEditor.focus();
-                        });
-                        button.textContent = 'Cancel';
-                        header.appendChild(button);
-                        button = document.createElement('button');
-                        button.style.cssFloat = 'right';
-                        button.type = 'button';
-                        button.classList.add('btn', 'btn-primary');
-                        button.addEventListener('click', () => {
-                            this.$editor = editorData;
-                            this.$editor.editor.value = tEditor.value;
-                            this.clearEditor();
-                            mDialog.close();
-                            if (mDialog.parentElement)
-                                mDialog.parentElement.removeChild(mDialog);
-                            pEditor.focus();
-                        });
-                        button.textContent = 'Ok';
-                        header.appendChild(button);
-                        document.body.appendChild(mDialog);
-                        mDialog.showModal();
-                    });
-                    this.$editor.editor.focus = () => {
-                        this.$editor.editor.children[0].children[0].focus();
-                        resetCursor(this.$editor.editor.children[0].children[0]);
-                    };
-                    this.$editor.editor.appendChild(vl);
-                    this.$editor.clear = () => {
-                        if (tEditor && tEditor.parentElement)
-                            tEditor.parentElement.removeChild(tEditor);
-                    };
-                    */
                 break;
             default:
                 switch (typeof (this.$object[prop])) {
                     case 'boolean':
                         this.$editor.editor = new BooleanValueEditor(this, el, editorOptions);
                         this.$editor.editor.value = this.$object[prop];
-                        this.$editor.type = EditorType.custom;
                         break;
                     case 'number':
                         this.$editor.editor = new NumberValueEditor(this, el, editorOptions);
                         this.$editor.editor.value = this.$object[prop];
-                        this.$editor.type = EditorType.custom;
                         break;
                     default:
                         this.$editor.editor = new TextValueEditor(this, el, editorOptions);
                         this.$editor.editor.value = this.$object[prop];
-                        this.$editor.type = EditorType.custom;
                         break;
                 }
                 break;
         }
-        if (this.$editor.editor) {
-            if (this.$editor.type !== EditorType.custom && this.$editor.type !== EditorType.flag) {
-                this.$editor.editor.addEventListener('blur', (e) => {
-                    this.clearEditor();
-                }, { once: true });
-                el.appendChild(this.$editor.editor);
-                this.$editor.editor.focus();
-            }
-            else if (this.$editor.type === EditorType.custom)
-                this.$editor.editor.focus();
-            else {
-                el.appendChild(this.$editor.editor);
-                if (this.$editor.focus)
-                    this.$editor.focus();
-            }
-        }
+        if (this.$editor.editor)
+            this.$editor.editor.focus();
         else
             this.$editor = null;
     }
@@ -671,18 +438,20 @@ class TextValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $dropdown: HTMLTextAreaElement;
     private $editor: HTMLTextAreaElement;
-    private $value;
+    private $noEnter = false;
 
     create() {
         this.$el = document.createElement('div');
-        this.$el.classList.add('property-grid-editor-mulitline');
+        this.$el.classList.add('property-grid-editor-dropdown');
         var el = document.createElement('div');
-        el.classList.add('property-grid-editor-multiline-container');
+        el.classList.add('property-grid-editor-dropdown-container');
         this.$el.appendChild(el);
         this.$editor = document.createElement('textarea');
-        this.$editor.classList.add('property-grid-editor')
+        this.$editor.classList.add('property-grid-editor');
+        if (this.$noEnter)
+            this.$editor.classList.add('single');
         this.$editor.addEventListener('blur', (e) => {
-            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'multiline') {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
                 e.preventDefault();
                 e.stopPropagation();
                 e.cancelBubble = true;
@@ -693,12 +462,21 @@ class TextValueEditor extends ValueEditor {
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
         });
+        this.$editor.addEventListener('keyup', (e) => {
+            if (this.$noEnter && e.keyCode === 13) {
+                e.preventDefault();
+                this.$editor.blur();
+            }
+            else if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey))
+                this.$editor.blur();
+            return;
+        });
         el.appendChild(this.$editor);
 
         var vl = document.createElement('button');
         vl.title = 'Open editor...'
         vl.innerHTML = '<span class="caret"></span>';
-        vl.dataset.editor = 'multiline';
+        vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
             if (this.$editor.dataset.aOpen == 'true') {
                 this.$editor.dataset.aOpen = null;
@@ -711,7 +489,12 @@ class TextValueEditor extends ValueEditor {
             this.$dropdown.style.whiteSpace = 'nowrap';
             this.$dropdown.value = this.value;
             this.$dropdown.addEventListener('keyup', (e) => {
-                if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
+                if (this.$noEnter && e.keyCode === 13) {
+                    this.focus();
+                    this.$editor.dataset.aOpen = null;
+                    e.preventDefault();
+                }
+                else if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                 }
@@ -761,6 +544,13 @@ class TextValueEditor extends ValueEditor {
             this.$el.parentElement.removeChild(this.$el);
     }
 
+    set propertyOptions(ops) {
+        super.propertyOptions = ops;
+        if (ops)
+            this.$noEnter = ops.singleLine || ops.noReturn;
+    }
+    get propertyOptions() { return super.propertyOptions; }
+
     get value() {
         return this.$editor.value;
     }
@@ -772,12 +562,17 @@ class TextValueEditor extends ValueEditor {
 class BooleanValueEditor extends ValueEditor {
     private $el: HTMLSelectElement;
 
-    private $value;
-
     create() {
         this.$el = document.createElement('select');
         this.$el.classList.add('property-grid-editor');
         this.$el.innerHTML = '<option value="true">True</option><option value="false">False</option>';
+        this.$el.addEventListener('keyup', (e) => {
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                this.$el.blur();
+            }
+            return;
+        });
         this.parent.appendChild(this.$el);
     }
     focus() {
@@ -799,14 +594,17 @@ class BooleanValueEditor extends ValueEditor {
 class NumberValueEditor extends ValueEditor {
     private $el: HTMLInputElement;
 
-    private $value;
-
     create() {
         this.$el = document.createElement('input');
         this.$el.classList.add('property-grid-editor');
         this.$el.type = 'number';
         this.$el.max = this.propertyOptions ? (this.propertyOptions.max || 1000) : 1000;
         this.$el.min = this.propertyOptions ? (this.propertyOptions.min || 0) : 0;
+        this.$el.addEventListener('keyup', (e) => {
+            if (e.keyCode === 27)
+                this.$el.blur();
+            return;
+        });
         this.parent.appendChild(this.$el);
     }
     focus() {
@@ -832,20 +630,18 @@ class NumberValueEditor extends ValueEditor {
 
 class FlagValueEditor extends ValueEditor {
     private $el: HTMLElement;
-    private $dropdown: HTMLTextAreaElement;
-    private $editor: HTMLTextAreaElement;
+    private $dropdown: HTMLElement;
+    private $editor: HTMLInputElement;
     private $value;
 
     create() {
         this.$el = document.createElement('div');
-        this.$el.classList.add('property-grid-editor-mulitline');
-        var el = document.createElement('div');
-        el.classList.add('property-grid-editor-multiline-container');
-        this.$el.appendChild(el);
-        this.$editor = document.createElement('textarea');
-        this.$editor.classList.add('property-grid-editor')
+        this.$el.classList.add('property-grid-editor-flag');
+        this.$editor = document.createElement('input');
+        this.$editor.type = 'text';
+        this.$editor.classList.add('property-grid-editor');
         this.$editor.addEventListener('blur', (e) => {
-            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'multiline') {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
                 e.preventDefault();
                 e.stopPropagation();
                 e.cancelBubble = true;
@@ -853,15 +649,24 @@ class FlagValueEditor extends ValueEditor {
             }
             this.grid.clearEditor();
         });
+        this.$editor.addEventListener('focus', () => {
+            this.$editor.select();
+        })
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
         });
-        el.appendChild(this.$editor);
+        this.$editor.addEventListener('keyup', (e) => {
+            if (e.keyCode === 27 || e.keyCode === 13) {
+                this.$editor.blur();
+                e.preventDefault();
+            }
+        });
+        this.$el.appendChild(this.$editor);
 
         var vl = document.createElement('button');
         vl.title = 'Open editor...'
         vl.innerHTML = '<span class="caret"></span>';
-        vl.dataset.editor = 'multiline';
+        vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
             if (this.$editor.dataset.aOpen == 'true') {
                 this.$editor.dataset.aOpen = null;
@@ -869,20 +674,19 @@ class FlagValueEditor extends ValueEditor {
                 resetCursor(this.$editor);
                 return;
             }
-            this.$dropdown = document.createElement('textarea');
-            this.$dropdown.style.height = '100%';
-            this.$dropdown.style.whiteSpace = 'nowrap';
-            this.$dropdown.value = this.value;
+            this.$dropdown = document.createElement('div');
+            this.$dropdown.tabIndex = -1;
+            this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
             this.$dropdown.addEventListener('keyup', (e) => {
-                if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
+                if (e.keyCode === 27) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                 }
                 return;
             });
             var b = this.parent.getBoundingClientRect();
-            if (b.width < 300) {
-                this.$dropdown.style.left = (b.left - 300 + b.width) + 'px';
+            if (b.width < 150) {
+                this.$dropdown.style.left = (b.left - 150 + b.width) + 'px';
                 this.$dropdown.style.width = '300px';
             }
             else {
@@ -893,20 +697,58 @@ class FlagValueEditor extends ValueEditor {
             this.$dropdown.style.height = '150px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
-            this.$dropdown.addEventListener('blur', (e) => {
-                var ec = this.editorClick;
-                this.$editor.value = this.$dropdown.value;
-                this.$editor.dataset.aOpen = 'true';
-                this.$dropdown.parentElement.removeChild(this.$dropdown);
-                this.$dropdown = null;
-                if (ec)
-                    this.grid.createEditor(ec);
-                else {
-                    this.focus();
+            this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
+            if (this.propertyOptions && this.propertyOptions.enum) {
+                var en = this.propertyOptions.enum;
+                var values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
+                var vl = values.length;
+                while (vl--) {
+                    if (this.propertyOptions.exclude && this.propertyOptions.exclude.includes(values[vl]))
+                        continue;
+                    var l = document.createElement('label');
+                    var i = document.createElement('input');
+                    i.type = 'checkbox';
+                    i.value = en[values[vl]];
+                    i.addEventListener('change', (e) => {
+                        var children = Array.from(this.$dropdown.children, c=>c.children[0]);
+                        var cl = children.length;
+                        var child;
+                        var value = 0;
+                        if ((<HTMLInputElement>e.currentTarget).value === '0') {
+                            while (cl--) {
+                                child = children[cl];
+                                if (child.value !== '0')
+                                    child.checked = false;
+                            }
+                            child.checked = true;
+                        }
+                        else {
+                            var none;
+                            while (cl--) {
+                                child = children[cl];
+                                if (child.value === '0') {
+                                    none = child;
+                                    child.checked = false;
+                                }
+                                else if(child.checked)
+                                    value |= +child.value;
+                            }
+                            if(none && value === 0)
+                                none.checked = true;
+                        }
+                        this.value = value;
+                        this.$dropdown.focus();
+                    });
+                    l.appendChild(i);
+                    l.appendChild(document.createTextNode(values[vl]));
+                    if (this.$value !== 0 && en[values[vl]] === 0)
+                        i.checked = false;
+                    else
+                        i.checked = (this.$value & en[values[vl]]) === en[values[vl]];
+                    this.$dropdown.appendChild(l);
                 }
-            }, { once: true });
+            }
             document.body.appendChild(this.$dropdown);
-            this.$dropdown.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.'
             this.$dropdown.focus();
             resetCursor(this.$dropdown);
         });
@@ -924,19 +766,31 @@ class FlagValueEditor extends ValueEditor {
             this.$el.parentElement.removeChild(this.$el);
     }
 
-    get value() {
-        /*
-        var cl = this.$editor.dropdown.children.length;
-        value = 0;
-        while (cl--) {
-            if (this.$editor.checks[cl].checked)
-                value |= +this.$editor.checks[cl].value;
+    private $dropdownEvent = (e) => {
+        if (e.relatedTarget && (<HTMLElement>e.relatedTarget).parentElement && (<HTMLElement>e.relatedTarget).parentElement.parentElement == this.$dropdown) {
+            e.preventDefault();
+            this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
+            return;
         }
-        */
+        var ec = this.editorClick;
+        this.$editor.dataset.aOpen = 'true';
+        this.$dropdown.parentElement.removeChild(this.$dropdown);
+        this.$dropdown = null;
+        if (ec)
+            this.grid.createEditor(ec);
+        else {
+            this.focus();
+        }
+    }
 
-        return this.$editor.value;
+    get value() {
+        if (!this.propertyOptions) return 0;
+        return this.$value = stringToEnum(this.$editor.value, this.propertyOptions.enum, true);
     }
     set value(value: any) {
-        this.$editor.value = value;
+        if (!this.propertyOptions.enum) return;
+        this.$value = value;
+        this.$editor.value = enumToString(value, this.propertyOptions.enum);
     }
 }
+
