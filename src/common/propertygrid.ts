@@ -89,6 +89,7 @@ export class PropertyGrid extends EventEmitter {
         var eProp;
         if (this.$editorClick)
             eProp = this.$editorClick.dataset.prop;
+        this.clearEditor();
         if (this.$object)
             delete this.$object['$propertyGrid'];
         this.$object = value;
@@ -133,7 +134,7 @@ export class PropertyGrid extends EventEmitter {
     }
 
     public getPropertyOptions(prop) {
-        if(!prop || !this.$options) return null;
+        if (!prop || !this.$options) return null;
         return this.$options[prop];
     }
 
@@ -354,8 +355,22 @@ export class PropertyGrid extends EventEmitter {
         }
         var type = this.editorType(prop);
         var editorOptions;
-        if (this.$options[prop] && this.$options[prop].editor)
+        if (this.$options[prop] && this.$options[prop].editor) {
             editorOptions = this.$options[prop].editor.options;
+            if (this.$options[prop].editor.hasOwnProperty('show')) {
+                if (typeof this.$options[prop].editor.show === 'function') {
+                    if (!this.$options[prop].editor.show(prop, this.$object[prop], this.$object)) {
+                        this.$editor = null;
+                        return;
+                    }
+                }
+                else if (!this.$options[prop].editor.show) {
+                    this.$editor = null;
+                    return;
+                }
+
+            }
+        }
         this.$editor.type = type;
         var values;
         var vl;
