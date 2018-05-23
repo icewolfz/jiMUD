@@ -1254,16 +1254,18 @@ function createWindow() {
         set.windows['main'] = getWindowState('main', win);
         if (winMap) {
           set.windows['mapper'] = getWindowState('mapper', winMap);
-          winMap.webContents.executeJavaScript('save();');
-          winMap.destroy();
+          winMap.close();
+          winMap = null;
         }
         if (winEditor) {
           set.windows['editor'] = getWindowState('editor', winEditor);
-          winEditor.destroy();
+          winEditor.close();
+          winEditor = null;
         }
         if (winChat) {
           set.windows['chat'] = getWindowState('chat', winChat);
-          winChat.destroy();
+          winChat.close();
+          winChat = null;
         }
         if (winCode) {
           if (!edset)
@@ -1275,7 +1277,9 @@ function createWindow() {
               edset.window.show = true;
             edset.state = getWindowState('code-editor', winCode);
           }
-          edset.save(parseTemplate(path.join('{data}', 'editor.json'))); winCode.destroy();
+          edset.save(parseTemplate(path.join('{data}', 'editor.json')));
+          winCode.close();
+          winCode = null;
         }
         closeWindows(false, true);
         logError(`Client unresponsive, closed.\n`, true);
@@ -1343,16 +1347,18 @@ function createWindow() {
   win.on('closed', () => {
     if (winMap) {
       set.windows['mapper'] = getWindowState('mapper', winMap);
-      winMap.webContents.executeJavaScript('save();');
-      winMap.destroy();
+      winMap.close();
+      winMap = null;
     }
     if (winEditor) {
       set.windows['editor'] = getWindowState('editor', winEditor);
-      winEditor.destroy();
+      winEditor.close();
+      winEditor = null;
     }
     if (winChat) {
       set.windows['chat'] = getWindowState('chat', winChat);
-      winChat.destroy();
+      winChat.close();
+      winChat = null;
     }
     if (winCode && winCode.getParentWindow() == win) {
       if (!edset)
@@ -1363,7 +1369,9 @@ function createWindow() {
         edset.state = getWindowState('code-editor', winCode);
         edset.window.show = true;
       }
-      edset.save(parseTemplate(path.join('{data}', 'editor.json'))); winCode.destroy();
+      edset.save(parseTemplate(path.join('{data}', 'editor.json')));
+      winCode.close();
+      winCode = null;
     }
     closeWindows(true, false);
     set.save(global.settingsFile);
@@ -1426,7 +1434,7 @@ function createWindow() {
 
   win.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
-    set.windows['main'] = getWindowState('main', win);
+    set.windows['main'] = getWindowState('main', win||e.sender);
 
     if (winProfiles) {
       e.preventDefault();
@@ -1634,21 +1642,26 @@ ipcMain.on('load-default', (event) => {
   set = settings.Settings.load(global.settingsFile);
 
   if (winMap) {
-    winMap.webContents.executeJavaScript('save();');
-    winMap.destroy();
+    winMap.close();
+    winMap = null;
   }
 
-  if (winEditor)
-    winEditor.destroy();
-  if (winChat)
-    winChat.destroy();
+  if (winEditor) {
+    winEditor.close();
+    winEditor = null;
+  }
+  if (winChat) {
+    winChat.close();
+    winChat = null;
+  }
   for (name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.executeJavaScript('closed();');
     set.windows[name] = getWindowState(name, windows[name].window);
     set.windows[name].options = copyWindowOptions(name);
-    windows[name].window.destroy();
+    windows[name].window.close();
+    windows[name].window = null;
   }
   if (win && win.webContents)
     win.webContents.send('change-options', global.settingsFile);
@@ -1693,16 +1706,18 @@ ipcMain.on('load-char', (event, char) => {
   set.windows['main'] = getWindowState('main', win);
   if (winMap) {
     set.windows['mapper'] = getWindowState('mapper', winMap);
-    winMap.webContents.executeJavaScript('save();');
-    winMap.destroy();
+    winMap.close();
+    winMap = null;
   }
   if (winEditor) {
     set.windows['editor'] = getWindowState('editor', winEditor);
-    winEditor.destroy();
+    winEditor.close();
+    winEditor = null;
   }
   if (winChat) {
     set.windows['chat'] = getWindowState('chat', winChat);
-    winChat.destroy();
+    winChat.close();
+    winChat = null;
   }
   set.save(global.settingsFile);
   loadCharacter(char);
@@ -1712,16 +1727,22 @@ ipcMain.on('load-char', (event, char) => {
     win.webContents.send('load-char', char);
 
   if (winMap) {
-    winMap.webContents.executeJavaScript('save();');
-    winMap.destroy();
+    winMap.close();
+    winMap = null;
   }
 
-  if (winEditor)
-    winEditor.destroy();
-  if (winChat)
-    winChat.destroy();
-  if (winCode)
-    winCode.destroy();
+  if (winEditor) {
+    winEditor.close();
+    winEditor = null;
+  }
+  if (winChat) {
+    winChat.close();
+    winChat = null;
+  }
+  if (winCode) {
+    winCode.close();
+    winCode = null;
+  }
   if (win && win.webContents)
     win.webContents.send('change-options', global.settingsFile);
 
@@ -2541,10 +2562,9 @@ function createMapper(show, loading, loaded) {
     set = settings.Settings.load(global.settingsFile);
     if (win != null)
       set.showMapper = false;
-    set.windows['mapper'] = getWindowState('mapper', winMap);
+    set.windows['mapper'] = getWindowState('mapper', winMap || e.sender);
     set.save(global.settingsFile);
-    winMap.webContents.executeJavaScript('save();');
-    if (set.mapper.enabled || set.mapper.persistent) {
+    if (winMap && (set.mapper.enabled || set.mapper.persistent)) {
       e.preventDefault();
       winMap.hide();
     }
@@ -2725,10 +2745,13 @@ function createEditor(show, loading) {
   winEditor.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.showEditor = false;
-    set.windows['editor'] = getWindowState('editor', winEditor);
+    set.windows['editor'] = getWindowState('editor', winEditor||e.sender);
     set.save(global.settingsFile);
-    winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
-    if (set.editorPersistent && !global.editorOnly) {
+    if(!winEditor)
+      e.sender.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
+    else
+      winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
+    if (winEditor && (set.editorPersistent && !global.editorOnly)) {
       e.preventDefault();
       winEditor.hide();
     }
@@ -2839,9 +2862,9 @@ function createChat(show, loading) {
   winChat.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.showChat = false;
-    set.windows['chat'] = getWindowState('chat', winChat);
+    set.windows['chat'] = getWindowState('chat', winChat||e.sender);
     set.save(global.settingsFile);
-    if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines) {
+    if (winChat && (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)) {
       e.preventDefault();
       winChat.hide();
     }
@@ -2962,7 +2985,7 @@ function createNewWindow(name, options) {
     });
 
     w.on('close', () => {
-      if (w.getParentWindow()) {
+      if (w && w.getParentWindow()) {
         w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
       }
     });
@@ -2995,11 +3018,11 @@ function createNewWindow(name, options) {
 
   windows[name].window.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
-    set.windows[name] = getWindowState(name, windows[name].window);
+    set.windows[name] = getWindowState(name, windows[name].window||e.sender);
     windows[name].show = false;
     set.windows[name].options = copyWindowOptions(name);
     set.save(global.settingsFile);
-    if (windows[name].persistent) {
+    if (windows[name].window && windows[name].persistent) {
       e.preventDefault();
       windows[name].window.hide();
     }
@@ -3160,7 +3183,8 @@ function closeWindows(save, clear, force) {
     windows[name].window.webContents.executeJavaScript('closed();');
     set.windows[name] = getWindowState(name, windows[name].window);
     set.windows[name].options = copyWindowOptions(name);
-    windows[name].window.destroy();
+    windows[name].window.close();
+    windows[name].window = null;
   }
   if (clear)
     windows = {};
@@ -3281,9 +3305,9 @@ function createCodeEditor(show, loading, loaded) {
       edset.state = getWindowState('code-editor', winCode);
     }
     else
-      edset.stateOnly = getWindowState('code-editor', winCode);
+      edset.stateOnly = getWindowState('code-editor', winCode||e.sender);
     edset.save(parseTemplate(path.join('{data}', 'editor.json')));
-    if (!global.editorOnly && edset.window.persistent) {
+    if (winCode && !global.editorOnly && edset.window.persistent) {
       e.preventDefault();
       winCode.hide();
     }
@@ -3322,7 +3346,7 @@ function createCodeEditor(show, loading, loaded) {
     });
 
     w.on('close', () => {
-      if (w.getParentWindow()) {
+      if (w && w.getParentWindow()) {
         w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
       }
     });

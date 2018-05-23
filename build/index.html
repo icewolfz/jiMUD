@@ -1332,8 +1332,10 @@
             for (var w = 0, wl = windows.length; w < wl; w++) {
               if (windows[w] === current || !windows[w].isVisible())
                 continue;
-              if (!windows[w].getTitle().startsWith('Code Editor'))
+              if (!windows[w].getTitle().startsWith('Code Editor')) {
+                windows[w].close();
                 continue;
+              }
               if (windows[w].getParentWindow() !== current)
                 continue;
               count++;
@@ -1362,6 +1364,20 @@
             remote.getCurrentWindow().close();
           });
           return;
+        }
+        else if (!closeWindow) {
+          setTimeout(() => {
+            for (var w = 0, wl = windows.length; w < wl; w++) {
+              if (windows[w] === current || !windows[w].isVisible())
+                continue;
+              if (windows[w].getParentWindow() !== current)
+                continue;
+              windows[w].close();
+            }
+            client.raise('closed');
+            closeWindow = true;
+            remote.getCurrentWindow().close();
+          });
         }
         client.raise('closed');
         closeWindow = true;

@@ -26,6 +26,7 @@
     - Moved folding from edit to view
     - Formatter: remove spaces after ( and before ) and after and before ::
   - When using portable version it now defaults to using current application directory as data folder, use `-no-pd` to restore previous usage
+  - Mapper: all imported and exported data is normalized to try and ensure it is the correct data coming and going out
 - **Fixed:**
   - Code editor:
     - Fixed reopen order when restoring files
@@ -38,6 +39,11 @@
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
   - Fix help display for command line for -e and -eo arguments
+  - Force error into a string to ensure it is displayed.
+  - Mapper:
+    - Area list not being populated correctly on load
+    - Area list is now sorted in alphabetic order
+    - Mapper window was closing before mapper data was fully flushed to disk when [Load in memory](preferences.md#mapper) is enabled
 
 ## 0.4.43 2018-05-07
 

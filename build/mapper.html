@@ -150,45 +150,45 @@
       if (!roomEditor || !mapper.selected || mapper.selected.ID == null)
         return;
       var data = {};
-      data.X = parseInt($("#reX").val(), 10);
-      data.Y = parseInt($("#reY").val(), 10);
-      data.Z = parseInt($("#reZ").val(), 10) || 0;
-      data.Zone = parseInt($("#reZone").val(), 10);
-      data.Area = $("#reArea").val();
-      data.Background = $("#reBackground").val();
-      data.Env = $("#reTerrain").val();
-      data.Indoors = $("#reIndoors")[0].checked;
-      data.Notes = $("#reNotes").val();
-      data.Details = RoomDetails.None;
+      data.x = parseInt($("#reX").val(), 10);
+      data.y = parseInt($("#reY").val(), 10);
+      data.z = parseInt($("#reZ").val(), 10) || 0;
+      data.zone = parseInt($("#reZone").val(), 10);
+      data.area = $("#reArea").val();
+      data.background = $("#reBackground").val();
+      data.env = $("#reTerrain").val();
+      data.indoors = $("#reIndoors")[0].checked;
+      data.notes = $("#reNotes").val();
+      data.details = RoomDetails.None;
       if ($("#reDDock")[0].checked)
-        data.Details |= RoomDetails.Dock;
+        data.details |= RoomDetails.Dock;
       if ($("#reDPier")[0].checked)
-        data.Details |= RoomDetails.Pier;
+        data.details |= RoomDetails.Pier;
       if ($("#reDBank")[0].checked)
-        data.Details |= RoomDetails.Bank;
+        data.details |= RoomDetails.Bank;
       if ($("#reDShop")[0].checked)
-        data.Details |= RoomDetails.Shop;
+        data.details |= RoomDetails.Shop;
       if ($("#reDHospital")[0].checked)
-        data.Details |= RoomDetails.Hospital;
+        data.details |= RoomDetails.Hospital;
       if ($("#reDBar")[0].checked)
-        data.Details |= RoomDetails.Bar;
+        data.details |= RoomDetails.Bar;
       if ($("#reDRestaurant")[0].checked)
-        data.Details |= RoomDetails.Restaurant;
+        data.details |= RoomDetails.Restaurant;
       if ($("#reDWaterSource")[0].checked)
-        data.Details |= RoomDetails.WaterSource;
+        data.details |= RoomDetails.WaterSource;
       if ($("#reDTrainer")[0].checked)
-        data.Details |= RoomDetails.Trainer;
-      mapper.getRoom(mapper.selected.ID || mapper.selected.num, (room) => {
-        room.X = data.X;
-        room.Y = data.Y;
-        room.Z = data.Z;
-        room.Zone = data.Zone;
-        room.Area = data.Area;
-        room.Background = data.Background;
-        room.Env = data.Env;
-        room.Indoors = data.Indoors;
-        room.Details = data.Details;
-        room.Notes = data.Notes;
+        data.details |= RoomDetails.Trainer;
+      mapper.getRoom(mapper.selected.ID, (room) => {
+        room.x = data.x;
+        room.y = data.y;
+        room.z = data.z;
+        room.zone = data.zone;
+        room.area = data.area;
+        room.background = data.background;
+        room.env = data.env;
+        room.indoors = data.indoors;
+        room.details = data.details;
+        room.notes = data.notes;
         mapper.addOrUpdateRoom(room);
       });
     }
@@ -198,9 +198,24 @@
       mapper.save(callback);
     }
 
+    let closeWindow = false;
 
-    window.onbeforeunload = function () {
-      if (mapper) save();
+    window.onbeforeunload = function (evt) {
+      ipcRenderer.send('log', 'Mapper ready: ' + mapper.ready);
+      if (!closeWindow || !mapper.ready) {
+        evt.returnValue = false;
+        setTimeout(() => {
+          if (mapper) save(() => {
+            closeWindow = true;
+            remote.getCurrentWindow().close();
+          });
+        });
+        return 'no';
+      }
+      ipcRenderer.send('log', 'Mapper closed');
+      closeWindow = true;
+      remote.getCurrentWindow().close();
+      return;
     };
 
     $(document).ready(() => {
@@ -242,47 +257,47 @@
         if (!roomEditor || !room || room.ID == null)
           return;
         var data = {};
-        data.X = parseInt($("#reX").val(), 10);
-        data.Y = parseInt($("#reY").val(), 10);
-        data.Z = parseInt($("#reZ").val(), 10) || 0;
-        data.Zone = parseInt($("#reZone").val(), 10);
-        data.Area = $("#reArea").val();
-        data.Background = $("#reBackground").val();
-        data.Env = $("#reTerrain").val();
-        data.Indoors = $("#reIndoors")[0].checked;
-        data.Notes = $("#reNotes").val();
-        data.Details = RoomDetails.None;
+        data.x = parseInt($("#reX").val(), 10);
+        data.y = parseInt($("#reY").val(), 10);
+        data.z = parseInt($("#reZ").val(), 10) || 0;
+        data.zone = parseInt($("#reZone").val(), 10);
+        data.area = $("#reArea").val();
+        data.background = $("#reBackground").val();
+        data.env = $("#reTerrain").val();
+        data.indoors = $("#reIndoors")[0].checked;
+        data.notes = $("#reNotes").val();
+        data.details = RoomDetails.None;
         if ($("#reDDock")[0].checked)
-          data.Details |= RoomDetails.Dock;
+          data.details |= RoomDetails.Dock;
         if ($("#reDPier")[0].checked)
-          data.Details |= RoomDetails.Pier;
+          data.details |= RoomDetails.Pier;
         if ($("#reDBank")[0].checked)
-          data.Details |= RoomDetails.Bank;
+          data.details |= RoomDetails.Bank;
         if ($("#reDShop")[0].checked)
-          data.Details |= RoomDetails.Shop;
+          data.details |= RoomDetails.Shop;
         if ($("#reDHospital")[0].checked)
-          data.Details |= RoomDetails.Hospital;
+          data.details |= RoomDetails.Hospital;
         if ($("#reDBar")[0].checked)
-          data.Details |= RoomDetails.Bar;
+          data.details |= RoomDetails.Bar;
         if ($("#reDRestaurant")[0].checked)
-          data.Details |= RoomDetails.Restaurant;
+          data.details |= RoomDetails.Restaurant;
         if ($("#reDWaterSource")[0].checked)
-          data.Details |= RoomDetails.WaterSource;
+          data.details |= RoomDetails.WaterSource;
         if ($("#reDTrainer")[0].checked)
-          data.Details |= RoomDetails.Trainer;
-        mapper.getRoom(room.ID || room.num, (room) => {
-          if (room.X != data.X && room.Y != data.Y && room.Z != data.Z && room.Zone != data.Zone && room.Area != data.Area && room.Background != data.Background && room.Env != data.Env && room.Indoors != data.Indoors && room.Details != data.Details && room.Notes != data.Notes)
+          data.details |= RoomDetails.Trainer;
+        mapper.getRoom(room.ID, (room) => {
+          if (room.x != data.x && room.y != data.y && room.z != data.z && room.zone != data.zone && room.area != data.area && room.background != data.background && room.env != data.env && room.indoors != data.indoors && room.details != data.details && room.notes != data.notes)
             return;
-          room.X = data.X;
-          room.Y = data.Y;
-          room.Z = data.Z;
-          room.Zone = data.Zone;
-          room.Area = data.Area;
-          room.Background = data.Background;
-          room.Env = data.Env;
-          room.Indoors = data.Indoors;
-          room.Details = data.Details;
-          room.Notes = data.Notes;
+          room.x = data.x;
+          room.y = data.y;
+          room.z = data.z;
+          room.zone = data.zone;
+          room.area = data.area;
+          room.background = data.background;
+          room.env = data.env;
+          room.indoors = data.indoors;
+          room.details = data.details;
+          room.notes = data.notes;
           mapper.addOrUpdateRoom(room);
         });
       });
@@ -355,7 +370,7 @@
         else {
           $("#btn-walk").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
           $("#btn-highlight").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
-          $("#reName").text(room.Name || room.name || '');
+          $("#reName").text(room.name);
           $("#mapper-room input").prop("disabled", false);
           $("#mapper-room select").prop("disabled", false);
           $("#mapper-room button").prop("disabled", false);
@@ -365,26 +380,24 @@
           menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
           menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
 
-          $("#reX").val(room.X || room.x);
-          $("#reY").val(room.Y || room.y);
-          $("#reZ").val(room.Z || room.z || 0);
-          $("#reZone").val(room.Zone || room.zone);
-          $("#reArea").val(room.Area || room.area);
-          $("#reBackground").val(room.Background || room.background);
-          $("#reTerrain").val(room.Env || room.env);
-          $("#reIndoors").prop('checked', room.Indoors || room.indoors);
-          $("#reNotes").val(room.Notes || room.notes);
-          if (!room.Details && room.details)
-            room.Details = room.details;
-          $("#reDDock").prop('checked', (room.Details & RoomDetails.Dock) === RoomDetails.Dock);
-          $("#reDPier").prop('checked', (room.Details & RoomDetails.Pier) === RoomDetails.Pier);
-          $("#reDBank").prop('checked', (room.Details & RoomDetails.Bank) === RoomDetails.Bank);
-          $("#reDShop").prop('checked', (room.Details & RoomDetails.Shop) === RoomDetails.Shop);
-          $("#reDHospital").prop('checked', (room.Details & RoomDetails.Hospital) === RoomDetails.Hospital);
-          $("#reDBar").prop('checked', (room.Details & RoomDetails.Bar) === RoomDetails.Bar);
-          $("#reDRestaurant").prop('checked', (room.Details & RoomDetails.Restaurant) === RoomDetails.Restaurant);
-          $("#reDWaterSource").prop('checked', (room.Details & RoomDetails.WaterSource) === RoomDetails.WaterSource);
-          $("#reDTrainer").prop('checked', (room.Details & RoomDetails.Trainer) === RoomDetails.Trainer);
+          $("#reX").val(room.x);
+          $("#reY").val(room.y);
+          $("#reZ").val(room.z);
+          $("#reZone").val(room.zone);
+          $("#reArea").val(room.area);
+          $("#reBackground").val(room.background);
+          $("#reTerrain").val(room.env);
+          $("#reIndoors").prop('checked', room.indoors);
+          $("#reNotes").val(room.notes);
+          $("#reDDock").prop('checked', (room.details & RoomDetails.Dock) === RoomDetails.Dock);
+          $("#reDPier").prop('checked', (room.details & RoomDetails.Pier) === RoomDetails.Pier);
+          $("#reDBank").prop('checked', (room.details & RoomDetails.Bank) === RoomDetails.Bank);
+          $("#reDShop").prop('checked', (room.details & RoomDetails.Shop) === RoomDetails.Shop);
+          $("#reDHospital").prop('checked', (room.details & RoomDetails.Hospital) === RoomDetails.Hospital);
+          $("#reDBar").prop('checked', (room.details & RoomDetails.Bar) === RoomDetails.Bar);
+          $("#reDRestaurant").prop('checked', (room.details & RoomDetails.Restaurant) === RoomDetails.Restaurant);
+          $("#reDWaterSource").prop('checked', (room.details & RoomDetails.WaterSource) === RoomDetails.WaterSource);
+          $("#reDTrainer").prop('checked', (room.details & RoomDetails.Trainer) === RoomDetails.Trainer);
         }
       });
 
@@ -488,6 +501,13 @@
 
         var inputMenu = Menu.buildFromTemplate(menu);
         inputMenu.popup(remote.getCurrentWindow());
+      });
+
+      mapper.on('error', (err) => {
+        if (typeof err === 'string')
+          ipcRenderer.send('error', err);
+        else
+          ipcRenderer.send('error', err.stack || err.message);
       });
 
       $(window).on('resize', () => {
@@ -607,13 +627,17 @@
     });
 
     ipcRenderer.on('GMCP-received', (event, data) => {
-      if (!mapper)
+      processGMCP(data);
+    });
+
+    function processGMCP(data) {
+      if (!mapper || !mapper.ready)
         setTimeout(() => {
-          mapper.processGMCP(data.mod, data.obj);
-        });
+          processGMCP(data);
+        }, 100);
       else
         mapper.processGMCP(data.mod, data.obj);
-    });
+    }
 
     ipcRenderer.on('load-char', () => {
       mapper.mapFile = remote.getGlobal('mapFile');
@@ -645,7 +669,11 @@
     function updateAreas() {
       $("#select-area option").remove();
       $("#reArea option").remove();
-      mapper._db.all("SELECT DISTINCT Area from Rooms", (err, rows) => {
+      if (!mapper.ready) {
+        setTimeout(updateAreas, 10);
+        return;
+      }
+      mapper._db.all("SELECT DISTINCT Area from Rooms order by Area", (err, rows) => {
         if (rows && rows.length > 0) {
           for (var a = 0; a < rows.length; a++) {
             $("#select-area").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));

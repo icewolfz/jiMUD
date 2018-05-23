@@ -85,12 +85,19 @@ class Point {
 }
 
 class Room {
-    public ID = null;
+    public ID: string = null;
     public x: number = 0;
     public y: number = 0;
     public z: number = 0;
-    public area = null;
+    public area: string = null;
     public zone: number = 0;
+    public notes?: string;
+    public background?: string;
+    public env?: string;
+    public details?: RoomDetails;
+    public indoors?: number;
+    public exits?: any;
+    public name?: string;
 }
 
 interface MouseData {
@@ -130,6 +137,7 @@ export class Mapper extends EventEmitter {
     public commandDelayCount: number = 5;
     public _memorySavePeriod = 900000;
     public _memoryPeriod;
+    public ready: boolean = false;
 
     set enabled(value: boolean) {
         if (this._enabled !== value) {
@@ -145,23 +153,10 @@ export class Mapper extends EventEmitter {
     set mapFile(value: string) {
         if (value !== this._mapFile) {
             this.save(() => {
-                this._db.close(() => {
+                this._db.close((err) => {
+                    if (err) this.emit('error', err);
                     this._mapFile = value;
-                    if (this._memory) {
-                        this._db = new sqlite3.Database(':memory:');
-                        this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
-                    }
-                    else
-                        this._db = new sqlite3.Database(this._mapFile);
-                    this.createDatabase();
-                    this._db.serialize();
-                    if (this._memory) {
-                        this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
-                        this.createDatabase('Disk');
-                        this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
-                        this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
-                        this._db.run('DETACH DATABASE Disk');
-                    }
+                    this.initializeDatabase();
                 });
             });
         }
@@ -172,7 +167,8 @@ export class Mapper extends EventEmitter {
     set memory(value: boolean) {
         if (this._memory !== value) {
             this.save(() => {
-                this._db.close(() => {
+                this._db.close((err) => {
+                    if (err) this.emit('error', err);
                     this._memory = value;
                     this.initializeDatabase();
                 });
@@ -227,38 +223,74 @@ export class Mapper extends EventEmitter {
 
     get fillWalls(): boolean { return this._fillWalls; }
 
-    public createDatabase(prefix?) {
-        if (prefix)
+    public createDatabase(prefix?, callback?) {
+        if (typeof prefix === 'function') {
+            callback = prefix;
+            prefix = '';
+        }
+        else if (prefix)
             prefix += '.';
         else
             prefix = '';
         this._db.serialize(() => {
             //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
-            this._db.run('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)');
-            this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id on Rooms (ID);');
-            this._db.run('CREATE INDEX IF NOT EXISTS ' + prefix + 'exits_id on Exits (ID);');
+            this._db.run('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT)', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id on Rooms (ID);', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('CREATE INDEX IF NOT EXISTS ' + prefix + 'exits_id on Exits (ID);', (err) => {
+                if (err) this.emit('error', err);
+                if (callback)
+                    callback();
+            });
             //this._db.run("CREATE TABLE IF NOT EXISTS Areas (ID INTEGER PRIMARY KEY AUTOINCREMENT, Area TEXT)");
         });
+        this._db.serialize();
     }
 
     public initializeDatabase() {
+        this.ready = false;
         if (this._memory) {
             this._db = new sqlite3.Database(':memory:');
             this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
         }
         else
             this._db = new sqlite3.Database(this._mapFile);
-        this.createDatabase();
+        this.createDatabase(() => {
+            this.loadIntoMemory();
+        });
         this._db.serialize();
-        if (this._memory) {
-            this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk');
-            this.createDatabase('Disk');
-            this._db.run('INSERT INTO main.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms');
-            this._db.run('INSERT INTO main.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits');
-            this._db.run('DETACH DATABASE Disk');
+    }
+
+    private loadIntoMemory() {
+        if (!this._memory) {
+            this.ready = true;
+            return;
         }
+        this._db.serialize(() => {
+            this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this.createDatabase('Disk');
+            this._db.run('INSERT INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('INSERT INTO Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits', (err) => {
+                if (err) this.emit('error', err);
+            });
+            this._db.run('DETACH DATABASE Disk', (err) => {
+                if (err) this.emit('error', err);
+                this.ready = true;
+            });
+        });
     }
 
     constructor(canvas, memory?: boolean, memoryPeriod?: (number | string), map?: string) {
@@ -353,6 +385,10 @@ export class Mapper extends EventEmitter {
         this.refresh();
     }
 
+    public verbose() {
+        sqlite3.verbose();
+    }
+
     public getMapMousePos(evt): MouseData {
         const rect = this._canvas.getBoundingClientRect();
         return {
@@ -404,9 +440,10 @@ export class Mapper extends EventEmitter {
                 $y: y,
                 $z: z
             }, (err, rows) => {
+                if (err) this.emit('error', err);
                 if (callback) {
                     if (rows && rows.length > 0)
-                        callback({ ID: rows[0].ID, x: rows[0].X, y: rows[0].Y, z: rows[0].Z, area: rows[0].Area, zone: rows[0].Zone, background: rows[0].Background, env: rows[0].Env, indoors: rows[0].Indoor, name: rows[0].Name, details: rows[0].Details, notes: rows[0].Notes });
+                        callback(this.normalizeRoom(rows[0]));
                     else
                         callback(new Room());
                 }
@@ -418,9 +455,10 @@ export class Mapper extends EventEmitter {
                 $y: y,
                 $z: z
             }, (err, rows) => {
+                if (err) this.emit('error', err);
                 if (callback) {
                     if (rows && rows.length > 0)
-                        callback({ ID: rows[0].ID, x: rows[0].X, y: rows[0].Y, z: rows[0].Z, area: rows[0].Area, zone: rows[0].Zone, background: rows[0].Background, env: rows[0].Env, indoors: rows[0].Indoors, name: rows[0].Name, details: rows[0].Details, notes: rows[0].Notes });
+                        callback(this.normalizeRoom(rows[0]));
                     else
                         callback(new Room());
                 }
@@ -429,6 +467,10 @@ export class Mapper extends EventEmitter {
     }
 
     public draw(canvas?, context?, ex?: boolean, callback?) {
+        if (!this.ready) {
+            setTimeout(() => { this.doUpdate(UpdateType.draw) }, 10);
+            return;
+        }
         if (!canvas)
             canvas = this._canvas;
         if (!context)
@@ -468,6 +510,7 @@ export class Mapper extends EventEmitter {
                 $w: canvas.width,
                 $h: canvas.height
             }, (err, rows) => {
+                if (err) this.emit('error', err);
                 context.save();
                 if (ex) {
                     context.fillStyle = '#eae4d6';
@@ -519,6 +562,7 @@ export class Mapper extends EventEmitter {
                 $w: canvas.width,
                 $h: canvas.height
             }, (err, rows) => {
+                if (err) this.emit('error', err);
                 context.save();
                 if (ex) {
                     context.fillStyle = '#eae4d6';
@@ -612,13 +656,10 @@ export class Mapper extends EventEmitter {
         }
         else {
             this._db.get('SELECT * from Rooms WHERE Area = ? ORDER BY X, Y, Z', [area], (err, row) => {
+                if (err) this.emit('error', err);
                 if (row) {
-                    this.active.ID = row.ID;
-                    this.active.x = row.X;
-                    this.active.y = row.Y;
-                    this.active.z = row.Z;
-                    this.active.zone = row.Zone;
-                    this.setActive(this.sanitizeRoom(this.active));
+                    this.active = this.normalizeRoom(row)
+                    this.setActive(this.active);
                     this.focusActiveRoom();
                     this.emit('setting-changed', 'active', this.active);
                 }
@@ -643,8 +684,10 @@ export class Mapper extends EventEmitter {
     }
 
     public removeRoom(room) {
-        this._db.run('DELETE FROM Rooms WHERE ID = ?', [room.ID], () => {
-            this._db.run('Delete From Exits WHERE ID = ?', [room.ID], () => {
+        this._db.run('DELETE FROM Rooms WHERE ID = ?', [room.ID], (err) => {
+            if (err) this.emit('error', err);
+            this._db.run('Delete From Exits WHERE ID = ?', [room.ID], (err) => {
+                if (err) this.emit('error', err);
                 this.emit('remove-done', room);
                 if (room.ID === this.current.ID) {
                     this.current = new Room();
@@ -673,8 +716,10 @@ export class Mapper extends EventEmitter {
     }
 
     public clearArea() {
-        this._db.run('DELETE FROM Exits WHERE ID in (Select ID from Rooms WHERE Area = ?)', [this.active.area], () => {
-            this._db.run('DELETE FROM Rooms WHERE Area = ?', [this.active.area], () => {
+        this._db.run('DELETE FROM Exits WHERE ID in (Select ID from Rooms WHERE Area = ?)', [this.active.area], (err) => {
+            if (err) this.emit('error', err);
+            this._db.run('DELETE FROM Rooms WHERE Area = ?', [this.active.area], (err) => {
+                if (err) this.emit('error', err);
                 this.emit('clear-area-done', this.active.area);
                 this.reset();
                 this.refresh();
@@ -684,8 +729,10 @@ export class Mapper extends EventEmitter {
     }
 
     public clearAll() {
-        this._db.run('DELETE FROM Exits', () => {
-            this._db.run('DELETE FROM Rooms', () => {
+        this._db.run('DELETE FROM Exits', (err) => {
+            if (err) this.emit('error', err);
+            this._db.run('DELETE FROM Rooms', (err) => {
+                if (err) this.emit('error', err);
                 this.emit('clear-done');
                 this.reset();
                 this.refresh();
@@ -696,16 +743,24 @@ export class Mapper extends EventEmitter {
     }
 
     public processData(data) {
+        if(!this.ready)
+        {
+            setTimeout(()=>{
+                this.processData(data);
+            }, 10);
+            return;
+        }
         try {
             this._db.all('Select * FROM Rooms where ID = \'' + data.num + '\'', (err, rows) => {
-                let room;
+                if (err) this.emit('error', err);
+                let room: Room;
                 if (!rows || rows.length === 0) {
                     room = {
                         area: '',
                         details: 0,
                         exits: {},
                         name: '',
-                        num: 0,
+                        ID: '',
                         env: '',
                         x: 0,
                         y: 0,
@@ -783,18 +838,7 @@ export class Mapper extends EventEmitter {
                         });
                 }
                 else {
-                    this.updateCurrent({
-                        area: rows[0].Area,
-                        details: rows[0].Details,
-                        exits: {},
-                        name: rows[0].Name,
-                        num: rows[0].ID,
-                        env: rows[0].Env,
-                        x: rows[0].X,
-                        y: rows[0].Y,
-                        z: rows[0].Z,
-                        zone: rows[0].Zone
-                    }, data);
+                    this.updateCurrent(rows[0], data);
                 }
             });
         }
@@ -804,11 +848,7 @@ export class Mapper extends EventEmitter {
     }
 
     private updateCurrent(room, data) {
-        room.ID = data.num;
-        room.area = data.area;
-        room.name = data.name;
-        room.env = data.environment;
-        room.indoors = data.indoors;
+        room = this.normalizeRoom(room);
         let exit;
         for (exit in data.exits)
             room.exits[exit] = data.exits[exit];
@@ -850,7 +890,6 @@ export class Mapper extends EventEmitter {
                     break;
             }
         }
-        room = this.sanitizeRoom(room);
         this.addOrUpdateRoom(room);
         this.current.ID = room.ID;
         this.current.area = room.area;
@@ -871,9 +910,8 @@ export class Mapper extends EventEmitter {
     public getFreeZone(x, y, z, zone, callback) {
         if (!zone) zone = 0;
         this._db.serialize(() => {
-            //this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
-            //this._db.get('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
             this._db.get('SELECT DISTINCT Zone FROM Rooms ORDER BY Zone DESC LIMIT 1', (err, row) => {
+                if (err) this.emit('error', err);
                 if (!row) {
                     if (callback)
                         callback(zone);
@@ -887,8 +925,8 @@ export class Mapper extends EventEmitter {
     public roomExists(x, y, z, zone, callback) {
         if (!zone) zone = 0;
         this._db.serialize(() => {
-            //this._db.get('SELECT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
             this._db.get('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' AND Zone = ' + zone + ' ORDER BY Zone DESC LIMIT 1', (err, row) => {
+                if (err) this.emit('error', err);
                 if (!row) {
                     if (callback)
                         callback(false);
@@ -900,26 +938,36 @@ export class Mapper extends EventEmitter {
     }
 
     public updateRoom(room) {
-        //this._db.serialize(() => {
+        if (!this.ready) {
+            setTimeout(() => {
+                this.updateRoom(room);
+            }, 10);
+            return
+        }
+        room = this.normalizeRoom(room);
         this._db.run('Update Rooms SET Area = ?, Details = ?, Name = ?, Env = ?, X = ?, Y = ?, Z = ?, Zone = ?, Indoors = ? WHERE ID = ?',
             [
-                room.Area || room.area,
-                room.Details || room.details || RoomDetails.None,
-                room.Name || room.name,
-                room.Env || room.env,
-                room.X || room.x || 0,
-                room.Y || room.y || 0,
-                room.Z || room.z || 0,
-                room.Zone || room.zone || 0,
-                room.Indoors || room.indoors,
-                room.ID || room.num
+                room.area,
+                room.details,
+                room.name,
+                room.env,
+                room.x,
+                room.y,
+                room.z,
+                room.zone,
+                room.indoors,
+                room.ID
             ], (err) => {
                 if (err)
                     this.emit('error', err);
                 this._changed = true;
             });
-        this._db.run('Delete From Exits WHERE ID = ?', [room.ID || room.num]);
-        const stmt = this._db.prepare('INSERT INTO Exits VALUES (?, ?, ?, ?, ?)');
+        this._db.run('Delete From Exits WHERE ID = ?', [room.ID], (err) => {
+            if (err) this.emit('error', err);
+        });
+        const stmt = this._db.prepare('INSERT INTO Exits VALUES (?, ?, ?, ?, ?)', (err) => {
+            if (err) this.emit('error', err);
+        });
         let exit;
         for (exit in room.exits) {
             if (!room.exits.hasOwnProperty(exit)) continue;
@@ -927,36 +975,43 @@ export class Mapper extends EventEmitter {
         }
         stmt.finalize();
         this._changed = true;
-        //});
     }
 
     public addOrUpdateRoom(room) {
+        if (!this.ready) {
+            setTimeout(() => {
+                this.addOrUpdateRoom(room);
+            }, 10);
+            return
+        }
+        room = this.normalizeRoom(room);
         this._db.run('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ',
             [
-                room.ID || room.num,
-                room.Area || room.area,
-                room.Details || room.details || RoomDetails.None,
-                room.Name || room.name,
-                room.Env || room.env,
-                room.X || room.x || 0,
-                room.Y || room.y || 0,
-                room.Z || room.z || 0,
-                room.Zone || room.zone || 0,
-                room.Indoors || room.indoors,
-                room.Background || room.background,
-                room.Notes || room.notes
+                room.ID,
+                room.area,
+                room.details,
+                room.name,
+                room.env,
+                room.x,
+                room.y,
+                room.z,
+                room.zone,
+                room.indoors,
+                room.background,
+                room.notes
             ], (err) => {
                 if (err)
                     this.emit('error', err);
                 this.refresh();
                 this._changed = true;
             });
-        //this._db.run("Delete From Exits WHERE ID = ?", [room.ID || room.num]);
-        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
+        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)', (err) => {
+            if (err) this.emit('error', err);
+        });
         let exit;
         for (exit in room.exits) {
             if (!room.exits.hasOwnProperty(exit)) continue;
-            stmt.run(room.ID || room.num, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
+            stmt.run(room.ID, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
         stmt.finalize();
         this.refresh();
@@ -1462,9 +1517,16 @@ export class Mapper extends EventEmitter {
     }
 
     public getRoom(id, callback) {
+        if (!this.ready) {
+            setTimeout(() => {
+                this.getRoom(id, callback);
+            }, 10);
+            return
+        }
         this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Rooms.ID = $id', {
             $id: id
         }, (err, rows) => {
+            if (err) this.emit('error', err);
             const rooms = {};
             if (rows) {
                 const rl = rows.length;
@@ -1486,18 +1548,25 @@ export class Mapper extends EventEmitter {
                         };
                     }
                 }
-                if (callback) callback(rooms[rows[0].ID]);
+                if (callback) callback(this.normalizeRoom(rooms[rows[0].ID]));
             }
         });
     }
 
     public getRooms(area, level, zone, callback) {
+        if (!this.ready) {
+            setTimeout(() => {
+                this.getRooms(area, level, zone, callback);
+            }, 10);
+            return
+        }
         if (this._splitArea) {
             this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone', {
                 $area: area,
                 $zone: zone,
                 $z: level
             }, (err, rows) => {
+                if (err) this.emit('error', err);
                 const rooms = {};
                 if (rows) {
                     const rl = rows.length;
@@ -1510,7 +1579,7 @@ export class Mapper extends EventEmitter {
                             };
                         }
                         else {
-                            rooms[rows[r].ID] = clone(rows[r]);
+                            rooms[rows[r].ID] = this.normalizeRoom(clone(rows[r]));
                             rooms[rows[r].ID].exits = {};
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
@@ -1528,6 +1597,7 @@ export class Mapper extends EventEmitter {
                 $zone: zone,
                 $z: level
             }, (err, rows) => {
+                if (err) this.emit('error', err);
                 const rooms = {};
                 if (rows) {
                     const rl = rows.length;
@@ -1540,7 +1610,7 @@ export class Mapper extends EventEmitter {
                             };
                         }
                         else {
-                            rooms[rows[r].ID] = clone(rows[r]);
+                            rooms[rows[r].ID] = this.normalizeRoom(clone(rows[r]));
                             rooms[rows[r].ID].exits = {};
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
@@ -1811,12 +1881,12 @@ export class Mapper extends EventEmitter {
     public import(data, type?: ImportType) {
         if (!data) return;
         if (type === ImportType.Replace) {
-            this._db.run('DELETE FROM Exits', () => {
-                this._db.run('DELETE FROM Rooms', () => {
+            this._db.run('DELETE FROM Exits', (err) => {
+                if (err) this.emit('error', err);
+                this._db.run('DELETE FROM Rooms', (err) => {
+                    if (err) this.emit('error', err);
                     this.emit('clear-done');
                     this.reset();
-                    //this.refresh();
-                    //this.focusActiveRoom();
                     this.import(data, ImportType.Merge);
                     this._changed = true;
                 });
@@ -1831,7 +1901,9 @@ export class Mapper extends EventEmitter {
                 if (Array.isArray(data)) {
                     rl = data.length;
                     this.emit('import-progress', 0);
-                    const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ');
+                    const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (err) => {
+                        if (err) this.emit('error', err);
+                    });
                     idx = 1;
                     for (r = 0; r < rl; r++) {
                         if (this._cancelImport) {
@@ -1841,18 +1913,19 @@ export class Mapper extends EventEmitter {
                         }
                         if (!data[r]) continue;
                         rl += Object.keys(data[r].exits).length;
+                        data[r] = this.normalizeRoom(data[r]);
                         stmt2.run([
-                            data[r].ID || data[r].num,
-                            data[r].Area || data[r].area,
-                            data[r].Details || data[r].details,
-                            data[r].Name || data[r].name,
-                            data[r].Env || data[r].env,
-                            data[r].X || data[r].x,
-                            data[r].Y || data[r].y,
-                            data[r].Z || data[r].z,
-                            data[r].Zone || data[r].zone,
-                            data[r].Indoors || data[r].indoors,
-                            data[r].Background || data[r].background
+                            data[r].ID,
+                            data[r].area,
+                            data[r].details,
+                            data[r].name,
+                            data[r].env,
+                            data[r].x,
+                            data[r].y,
+                            data[r].z,
+                            data[r].zone,
+                            data[r].indoors,
+                            data[r].background
                         ],
                             (err) => {
                                 if (this._cancelImport) {
@@ -1863,17 +1936,17 @@ export class Mapper extends EventEmitter {
                                 }
                                 this.emit('import-progress', Math.floor(r / rl * 100));
                                 if (r >= rl) {
-                                    //this.reset();
                                     this.refresh();
                                     this.focusActiveRoom();
                                 }
                             });
-                        //this._db.run("Delete From Exits WHERE ID = ?", [data[r].ID]);
-                        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
+                        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)', (err) => {
+                            if (err) this.emit('error', err);
+                        });
                         let exit;
                         for (exit in data[r].exits) {
                             if (!data[r].exits.hasOwnProperty(exit)) continue;
-                            stmt.run(data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed,
+                            stmt.run(data[r].ID, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed,
                                 () => {
                                     if (this._cancelImport) {
                                         this.refresh();
@@ -1884,7 +1957,6 @@ export class Mapper extends EventEmitter {
                                     this.emit('import-progress', Math.floor(idx / rl * 100));
                                     idx++;
                                     if (idx >= rl) {
-                                        //this.reset();
                                         this.refresh();
                                         this.focusActiveRoom();
                                     }
@@ -1896,11 +1968,12 @@ export class Mapper extends EventEmitter {
                     if (rl === 0)
                         this.emit('import-progress', 100);
                     this._changed = true;
-                    //this.emit('import-progress', 100);
                 }
                 else {
                     this.emit('import-progress', 0);
-                    const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ');
+                    const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (err) => {
+                        if (err) this.emit('error', err);
+                    });
                     rl = Object.keys(data).length;
                     idx = 1;
                     for (r in data) {
@@ -1916,18 +1989,19 @@ export class Mapper extends EventEmitter {
                             return;
                         }
                         if (!data[r]) continue;
+                        data[r] = this.normalizeRoom(data[r]);
                         stmt2.run([
-                            data[r].ID || data[r].num,
-                            data[r].Area || data[r].area,
-                            data[r].Details || data[r].details,
-                            data[r].Name || data[r].name,
-                            data[r].Env || data[r].env,
-                            data[r].X || data[r].x,
-                            data[r].Y || data[r].y,
-                            data[r].Z || data[r].z,
-                            data[r].Zone || data[r].zone,
-                            data[r].Indoors || data[r].indoors,
-                            data[r].Background || data[r].background
+                            data[r].ID,
+                            data[r].area,
+                            data[r].details,
+                            data[r].name,
+                            data[r].env,
+                            data[r].x,
+                            data[r].y,
+                            data[r].z,
+                            data[r].zone,
+                            data[r].indoors,
+                            data[r].background
                         ],
                             (err) => {
                                 if (this._cancelImport) {
@@ -1939,17 +2013,17 @@ export class Mapper extends EventEmitter {
                                 this.emit('import-progress', Math.floor(idx / rl * 100));
                                 idx++;
                                 if (idx >= rl) {
-                                    //this.reset();
                                     this.refresh();
                                     this.focusActiveRoom();
                                 }
                             });
-                        //this._db.run("Delete From Exits WHERE ID = ?", [data[r].ID]);
-                        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
+                        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)', (err) => {
+                            if (err) this.emit('error', err);
+                        });
                         let exit;
                         for (exit in data[r].exits) {
                             if (!data[r].exits.hasOwnProperty(exit)) continue;
-                            stmt.run([data[r].ID || data[r].num, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed],
+                            stmt.run([data[r].ID, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed],
                                 () => {
                                     if (this._cancelImport) {
                                         this.refresh();
@@ -1960,7 +2034,6 @@ export class Mapper extends EventEmitter {
                                     this.emit('import-progress', Math.floor(idx / rl * 100));
                                     idx++;
                                     if (idx >= rl) {
-                                        //this.reset();
                                         this.refresh();
                                         this.focusActiveRoom();
                                     }
@@ -1981,6 +2054,7 @@ export class Mapper extends EventEmitter {
         this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area', {
             $area: this.active.area || ''
         }, (err, rows) => {
+            if (err) this.emit('error', err);
             const rooms = {};
             if (rows) {
                 const rl = rows.length;
@@ -2021,6 +2095,7 @@ export class Mapper extends EventEmitter {
 
     public exportAll(file: string) {
         this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID', (err, rows) => {
+            if (err) this.emit('error', err);
             const rooms = {};
             if (rows) {
                 const rl = rows.length;
@@ -2075,7 +2150,8 @@ export class Mapper extends EventEmitter {
 
     public compact() {
         this.emit('import-progress', 0);
-        this._db.run('VACUUM;', () => {
+        this._db.run('VACUUM;', (err) => {
+            if (err) this.emit('error', err);
             this.emit('import-progress', 100);
         });
     }
@@ -2086,35 +2162,70 @@ export class Mapper extends EventEmitter {
     }
 
     public save(callback?) {
+        if (!this.ready) {
+            setTimeout(() => {
+                this.save(callback);
+            }, 10);
+            return;
+        }
         if (this._memory) {
             if (!this._changed) {
                 if (callback)
                     callback();
                 return;
             }
-            this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk', (err) => {
-                if (err) this.emit('error', err);
+            this._db.serialize(() => {
+                this.ready = false;
+
+                this._db.exec(`
+            ATTACH DATABASE '${this._mapFile}' as Disk;
+            PRAGMA Disk.synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;
+            CREATE TABLE IF NOT EXISTS Disk.Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT);
+            CREATE TABLE IF NOT EXISTS Disk.Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER);
+            CREATE UNIQUE INDEX IF NOT EXISTS Disk.index_id on Rooms (ID);
+            CREATE INDEX IF NOT EXISTS Disk.exits_id on Exits (ID);
+            BEGIN TRANSACTION;
+            DELETE FROM Disk.Rooms;
+            INSERT INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Rooms;
+            DELETE FROM Disk.Exits;
+            INSERT INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Exits;
+            COMMIT TRANSACTION;
+            VACUUM Disk;
+            DETACH DATABASE Disk            
+            `, (err) => {
+                        if (err) this.emit('error', err);
+                        this.ready = true;
+                        if (callback) callback();
+                    });
+
+                /*
+                this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk', (err) => {
+                    if (err) this.emit('error', err);
+                });
+                this.createDatabase('Disk');
+                this._db.run('DELETE FROM Disk.Rooms', (err) => {
+                    if (err) this.emit('error', err);
+                });
+                this._db.run('DELETE FROM Disk.Exits', (err) => {
+                    if (err) this.emit('error', err);
+                });
+                this._db.run('INSERT INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Rooms', (err) => {
+                    if (err) this.emit('error', err);
+                });
+                this._db.run('INSERT INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Exits', (err) => {
+                    if (err) this.emit('error', err);
+                });
+                this._db.run('VACUUM Disk', (err) => {
+                    if (err) this.emit('error', err);
+                });
+                this._db.run('DETACH DATABASE Disk', (err) => {
+                    if (err) this.emit('error', err);
+                    this.ready = true;
+                    if (callback) callback();
+                });
+                */
             });
-            this.createDatabase('Disk');
-            this._db.run('DELETE FROM Disk.Rooms', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('DELETE FROM Disk.Exits', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('INSERT OR REPLACE INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM main.Rooms', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('INSERT OR REPLACE INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM main.Exits', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('VACUUM Disk', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('DETACH DATABASE Disk', (err) => {
-                if (err) this.emit('error', err);
-                if (callback) callback();
-            });
+            this._db.serialize();
             this._changed = false;
         }
         else if (callback)
@@ -2133,5 +2244,36 @@ export class Mapper extends EventEmitter {
             }
             this.doUpdate(this._updating);
         });
+    }
+
+    private normalizeRoom(r) {
+        let id = r.ID || r.num;
+        var room = {
+            area: r.Area || r.area || '',
+            details: r.Details || r.details || RoomDetails.None,
+            name: r.Name || r.name || '',
+            env: r.Env || r.env || r.environment || '',
+            x: +r.X || +r.x || 0,
+            y: +r.Y || +r.y || 0,
+            z: +r.Z || +r.z || 0,
+            zone: +r.Zone || +r.zone || 0,
+            indoors: +r.Indoors || +r.indoors || 0,
+            background: r.Background || r.background || '',
+            notes: r.Notes || r.notes || '',
+            ID: id ? '' + id : null,
+            exits: r.exits || {}
+        }
+        if (room.exits) {
+            for (var exit in room.exits) {
+                if (!room.exits.hasOwnProperty(exit)) continue;
+                var dest = room.exits[exit].DestID || room.exits[exit].num || null;
+                room.exits[exit] = {
+                    num: dest ? '' + dest : null,
+                    isdoor: +room.exits[exit].IsDoor || +room.exits[exit].isdoor || null,
+                    isclosed: +room.exits[exit].IsClosed || +room.exits[exit].isclosed || null
+                };
+            }
+        }
+        return room;
     }
 }
