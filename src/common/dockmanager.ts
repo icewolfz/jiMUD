@@ -121,9 +121,8 @@ export class DockManager extends EventEmitter {
         var m = this.$measure;
         for (let t = 0; t < tl; t++) {
             m.textContent = this.panels[t].title.textContent;
-            tWidth = m.clientWidth;
             //adjust for icon and close buttons
-            tWidth += 54;
+            tWidth = m.clientWidth + 54;
             if (tWidth > w)
                 w = tWidth;
         }
