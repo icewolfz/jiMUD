@@ -28,6 +28,7 @@
   - When using portable version it now defaults to using current application directory as data folder, use `-no-pd` to restore previous usage
 - **Fixed:**
   - Code editor:
+    - Fixed reopen order when restoring files
     - Fix insert color dialog
     - Editor only losing taskbar icon when preference changed
     - Fixed state loading

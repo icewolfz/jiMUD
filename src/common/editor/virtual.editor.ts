@@ -105,7 +105,7 @@ export class Room {
     }
 
     public clone() {
-        var r = new Room(this.x, this.y, this.x, this.exits, this.terrain, this.item, this.state);
+        var r = new Room(this.x, this.y, this.z, this.exits, this.terrain, this.item, this.state);
         r.climbs = this.climbs;
         r.ef = this.ef;
         r.ee = this.ee;
@@ -1199,12 +1199,25 @@ export class VirtualEditor extends EditorBase {
         this.$roomEditor.readonly = (prop, value, object) => {
             if (object && object.ef)
                 return prop !== 'ef';
+            if(prop === 'ef')
+                return true;
             return false;
         }
+        this.$roomEditor.on('open-file', (property) => {
+            var f;
+            if (this.$mapSize.depth > 1)
+                f = this.$selectedRoom.x + ',' + this.$selectedRoom.y + ',' + this.$selectedRoom.z + '.c';
+            else
+                f = this.$selectedRoom.x + ',' + this.$selectedRoom.y + '.c';
+            this.emit('open-file', path.join(path.dirname(this.file), f));
+        });
         this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
             var old = this.$selectedRoom.clone();
             var data;
             switch (prop) {
+                case 'ee':
+                case 'ef':
+                    break;
                 case 'items':
                     break;
                 case 'terrainType':
@@ -1260,7 +1273,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.UpdatePreview(this.$selectedRoom);
         });
-        this.$roomEditor.propertyOptions([
+        this.$roomEditor.setPropertyOptions([
             {
                 property: 'x',
                 group: 'Location',
@@ -1281,13 +1294,26 @@ export class VirtualEditor extends EditorBase {
                 label: 'External exits',
                 readonly: true,
                 formatter: this.formatExits,
-                sort: 5
+                sort: 5,
+                /*
+                editor: {
+                    type: EditorType.custom,
+                    editor: ExternalExitValueEditor
+                },
+                */
             },
             {
                 property: 'ef',
                 label: 'External file',
-                readonly: true,
-                sort: 6
+                sort: 6,
+                formatter: this.formatEF,
+                editor: {
+                    type: EditorType.custom,
+                    editor: FileOpenValueEditor,
+                    show: (prop, value, object)=> {
+                        return value;
+                    }
+                },
             },
             {
                 property: 'terrain',
@@ -1418,6 +1444,13 @@ export class VirtualEditor extends EditorBase {
                 f.push(capitalize(states[state]));
         }
         return f.join(', ');
+    }
+
+    private formatEF(prop, value, object) {
+        if (!object || !value) return 'None';
+        if (this.$mapSize > 1)
+            return object.x + ',' + object.y + ',' + object.z + '.c';
+        return object.x + ',' + object.y + '.c';
     }
 
     private createRawControl() {
@@ -3380,6 +3413,7 @@ export class VirtualEditor extends EditorBase {
             o.terrainType = room.terrain;
             o.sound = room.sound;
             o.smell = room.smell;
+            o.terrain = -1;
         }
         else {
             if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
@@ -3393,7 +3427,6 @@ export class VirtualEditor extends EditorBase {
                 o.terrainType = this.$descriptions[o.terrain].terrain;
                 o.sound = this.$descriptions[o.terrain].sound;
                 o.smell = this.$descriptions[o.terrain].smell;
-                o.terrain = -1;
             }
             else {
                 o.short = '';
@@ -3446,7 +3479,7 @@ export class VirtualEditor extends EditorBase {
                 }
                 str += '<br><br>';
                 this.$roomPreview.long.innerHTML = str;
-                if (items.length > 0) {
+                if (items && items.length > 0) {
                     for (var c = 0, cl = items.length; c < cl; c++) {
                         item = document.getElementById(this.parent.id + '-room-preview' + c);
                         if (item)
@@ -3530,9 +3563,11 @@ export class VirtualEditor extends EditorBase {
                     for (var c = 0, cl = items.length; c < cl; c++)
                         str = str.replace(new RegExp("\\b(" + items[c].item + ")\\b"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
                 }
+                else
+                    items = null;
                 str += '<br><br>';
                 this.$roomPreview.long.innerHTML = str;
-                if (items.length > 0) {
+                if (items && items.length > 0) {
                     for (var c = 0, cl = items.length; c < cl; c++) {
                         item = document.getElementById(this.parent.id + '-room-preview' + c);
                         if (item)
@@ -4246,6 +4281,79 @@ class TerrainValueEditor extends ValueEditor {
         this.$editor.value = value;
     }
 }
+
+
+class FileOpenValueEditor extends ValueEditor {
+    private $el: HTMLElement;
+    private $editor: HTMLInputElement;
+    private $value;
+
+    create() {
+        this.$el = document.createElement('div');
+        this.$el.classList.add('property-grid-editor-dropdown');
+        this.$editor = document.createElement('input');
+        this.$editor.type = 'text';
+        this.$editor.readOnly = true;
+        this.$editor.classList.add('property-grid-editor');
+        this.$editor.addEventListener('blur', (e) => {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            this.grid.clearEditor();
+        });
+        this.$editor.addEventListener('keyup', (e) => {
+            if (e.keyCode === 27 || e.keyCode === 13) {
+                this.$editor.blur();
+                e.preventDefault();
+            }
+        });
+        this.$el.appendChild(this.$editor);
+
+        var vl = document.createElement('button');
+        vl.title = 'Open file...'
+        vl.innerHTML = '&hellip;';
+        vl.dataset.editor = 'dropdown';
+        vl.addEventListener('click', (e) => {
+            this.grid.emit('open-file', this.property);
+        });
+        this.$el.appendChild(vl);
+        this.parent.appendChild(this.$el);
+    }
+    focus() {
+        this.$editor.focus();
+    }
+    destroy() {
+        if (this.$el.parentElement)
+            this.$el.parentElement.removeChild(this.$el);
+    }
+
+    private formatValue(value?) {
+        if (!value) value = this.$value;
+        if (!value)
+            return 'None';
+        var ops = this.grid.getPropertyOptions(this.property);
+        if (ops && ops.formatter)
+            return ops.formatter(this.property, value, this.grid.object);
+        if (this.propertyOptions && this.propertyOptions.type === EditorType.flag)
+            return enumToString(value, this.propertyOptions.enum);
+        if (typeof value === 'boolean')
+            return capitalize(''+value);
+        return value;
+    }
+
+    get value() {
+        return this.$value;
+    }
+    set value(value: any) {
+        this.$value = value;
+        this.$editor.value = this.formatValue(value);
+    }
+}
+
+
 /*
                     this.$editor.editor = document.createElement('div');
                     this.$editor.editor.classList.add('property-grid-editor-dropdown');

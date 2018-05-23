@@ -1693,7 +1693,7 @@
                     p = keys[k];
                     if (!_editors[p]) continue;
                     if (!_editors[p].editor.new)
-                        opened.push({
+                        opened.unshift({
                             file: _editors[p].editor.file,
                             remote: _editors[p].remote
                         });
@@ -2528,6 +2528,13 @@
                     options.virtualOptions[option] = value;
                     saveOptions();
                 }
+            });
+            p.editor.on('open-file', (file)=> {
+                if(existsSync(file))
+                    openFile(file);
+            });
+            p.editor.on('new-file', (file, value) => {
+                newFromValue(value, file);
             });
             _editors[data.file] = p;
             p.spellCheck = options.spellCheck;
