@@ -116,7 +116,7 @@ export class PropertyGrid extends EventEmitter {
 
     get parent(): HTMLElement { return this.$parent; }
 
-    public propertyOptions(prop: any, ops?) {
+    public setPropertyOptions(prop: any, ops?) {
         if (Array.isArray(prop)) {
             var l = prop.length;
             while (l--) {
@@ -130,6 +130,11 @@ export class PropertyGrid extends EventEmitter {
         else
             this.$options[prop] = ops;
         this.doUpdate(UpdateType.build);
+    }
+
+    public getPropertyOptions(prop) {
+        if(!prop || !this.$options) return null;
+        return this.$options[prop];
     }
 
     public propertyEditor(prop, ops) {
@@ -356,33 +361,33 @@ export class PropertyGrid extends EventEmitter {
         var vl;
         switch (type) {
             case EditorType.flag:
-                this.$editor.editor = new FlagValueEditor(this, el, editorOptions);
+                this.$editor.editor = new FlagValueEditor(this, el, prop, editorOptions);
                 this.$editor.editor.value = this.$object[prop];
                 break;
             case EditorType.number:
-                this.$editor.editor = new NumberValueEditor(this, el, editorOptions);
+                this.$editor.editor = new NumberValueEditor(this, el, prop, editorOptions);
                 this.$editor.editor.value = this.$object[prop];
                 break;
             case EditorType.select:
                 break;
             case EditorType.custom:
                 if (this.$options[prop] && this.$options[prop].editor && this.$options[prop].editor.editor) {
-                    this.$editor.editor = new this.$options[prop].editor.editor(this, el, editorOptions);
+                    this.$editor.editor = new this.$options[prop].editor.editor(this, el, prop, editorOptions);
                     this.$editor.editor.value = this.$object[prop];
                 }
                 break;
             default:
                 switch (typeof (this.$object[prop])) {
                     case 'boolean':
-                        this.$editor.editor = new BooleanValueEditor(this, el, editorOptions);
+                        this.$editor.editor = new BooleanValueEditor(this, el, prop, editorOptions);
                         this.$editor.editor.value = this.$object[prop];
                         break;
                     case 'number':
-                        this.$editor.editor = new NumberValueEditor(this, el, editorOptions);
+                        this.$editor.editor = new NumberValueEditor(this, el, prop, editorOptions);
                         this.$editor.editor.value = this.$object[prop];
                         break;
                     default:
-                        this.$editor.editor = new TextValueEditor(this, el, editorOptions);
+                        this.$editor.editor = new TextValueEditor(this, el, prop, editorOptions);
                         this.$editor.editor.value = this.$object[prop];
                         break;
                 }
@@ -415,12 +420,14 @@ export abstract class ValueEditor extends EventEmitter {
     private $options: any;
     private $grid: PropertyGrid;
     public editorClick: any;
+    public property;
 
-    constructor(grid, parent, options?) {
+    constructor(grid, parent, property?, options?) {
         super();
         this.parent = parent;
         this.propertyOptions = options;
         this.grid = grid;
+        this.property = property
     }
 
     set grid(ops) {
