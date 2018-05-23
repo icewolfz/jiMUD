@@ -1792,7 +1792,7 @@
             file = 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c';
             newCounter++;
         }
-        createEditor({ file: file, new: true, value: value || '' }, true);
+        createEditor({ file: file, new: true, value: parseFileTemplate(value || '') }, true);
         doUpdate(1);
         updatePanel(manager.active);
     }

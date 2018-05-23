@@ -3096,8 +3096,7 @@ export class VirtualEditor extends EditorBase {
                                 var exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
                                 for (exit in exits) {
                                     if (!exits.hasOwnProperty(exit)) continue;
-                                    if(exit === 'light')
-                                    {
+                                    if (exit === 'light') {
                                         r.light = +exits[exit];
                                         break;
                                     }
@@ -3978,7 +3977,12 @@ export class VirtualEditor extends EditorBase {
         if (!r)
             return '';
         var t, c, cl, t2;
-        var d = "#include <std.h>\n#include \"../area.h\"\n\ninherit BASEROOM;\n\n//create the base virtual room\nvoid create() {\n   ::create(" + r.x + ", " + r.y + ", " + r.z + ", " + r.terrain + ", " + r.item + ", " + r.exits + ");\n";
+        var d;
+        if (this.$mapSize.depth > 1)
+            d = "/**\n * External virtual room " + r.x + ", " + r.y + ", " + r.z + "\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */";
+        else
+            d = "/**\n * External virtual room " + r.x + ", " + r.y + "\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */";
+        d += "#include <std.h>\n#include \"../area.h\"\n\ninherit BASEROOM;\n\n/**\n * Create\n *\n * Create the base virtual room, passing correct parameters to baseroom\n */\nvoid create() {\n   ::create(" + r.x + ", " + r.y + ", " + r.z + ", " + r.terrain + ", " + r.item + ", " + r.exits + ");\n";
         var data;
         if (this.$descriptions.length > 0 && r.terrain >= 0 && r.terrain < this.$descriptions.length && this.$descriptions[r.terrain]) {
             data = this.$descriptions[r.terrain];
