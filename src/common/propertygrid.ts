@@ -65,14 +65,13 @@ export class PropertyGrid extends EventEmitter {
     }
 
     private isReadonly(prop) {
-        if(this.$options && this.$options[prop])
-        {
-            if(this.$options[prop].readonly)
+        if (this.$options && this.$options[prop]) {
+            if (this.$options[prop].readonly)
                 return true;
-            if(this.$options[prop].editor && this.$options[prop].editor.type === EditorType.readonly)
+            if (this.$options[prop].editor && this.$options[prop].editor.type === EditorType.readonly)
                 return true;
         }
-        if(typeof this.$readonly === 'function')
+        if (typeof this.$readonly === 'function')
             return this.$readonly(prop, this.object[prop], this.object);
         return this.$readonly;
     }
@@ -475,8 +474,19 @@ class TextValueEditor extends ValueEditor {
         this.$el.appendChild(el);
         this.$editor = document.createElement('textarea');
         this.$editor.classList.add('property-grid-editor');
-        if (this.$noEnter)
+        if (this.$noEnter) {
             this.$editor.classList.add('single');
+            this.$editor.addEventListener('paste', () => {
+                var sel = {
+                    start: this.$editor.selectionStart,
+                    end: this.$editor.selectionEnd
+                }
+                var initialLength = this.$editor.value.length;
+                window.setTimeout(() => {
+                    this.$editor.value = this.$editor.value.replace(/(?:\r\n|\r|\n)/g, '');
+                });
+            });
+        }
         this.$editor.addEventListener('blur', (e) => {
             if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
                 e.preventDefault();
