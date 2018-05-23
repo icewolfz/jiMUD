@@ -285,6 +285,11 @@ export class VirtualEditor extends EditorBase {
         return this.$selectedRoom;
     }
 
+    public get maxLevel() {
+        if (!this.$mapSize) return 0;
+        return this.$mapSize.depth;
+    }
+
     constructor(options?: VirtualEditorOptions) {
         super(options);
         if (options && options.options)
@@ -1191,6 +1196,11 @@ export class VirtualEditor extends EditorBase {
             this.setFocus(false);
         });
         this.$roomEditor = new PropertyGrid({ parent: this.$splitterEditor.panel2 });
+        this.$roomEditor.readonly = (prop, value, object) => {
+            if (object && object.ef)
+                return prop !== 'ef';
+            return false;
+        }
         this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
             var old = this.$selectedRoom.clone();
             var data;
@@ -1377,7 +1387,7 @@ export class VirtualEditor extends EditorBase {
 
     private formatItems(prop, value) {
         if (!value) return '';
-        return value.map(i => i.items).join(':');
+        return value.map(i => i.item).join(':');
     }
 
     private formatState(prop, value) {
@@ -2305,6 +2315,10 @@ export class VirtualEditor extends EditorBase {
         if (r.x >= this.$rooms[r.z][r.y].length)
             return;
         this.$rooms[r.z][r.y][r.x] = r;
+        if (this.$selectedRoom && this.$selectedRoom.at(r.x, r.y, r.z)) {
+            this.UpdateEditor(r);
+            this.UpdatePreview(r);
+        }
         if (r.z === this.$depth)
             this.DrawRoom(this.$mapContext, r, true, r.at(this.$mouse.rx, this.$mouse.ry));
     }
@@ -2630,7 +2644,7 @@ export class VirtualEditor extends EditorBase {
             f = r.x + "," + r.y + "," + r.z + ".c";
         else
             f = r.x + "," + r.y + ".c";
-        this.setRoom(this.parseRoomCode(r, this.read(path.join(path.dirname(this.file), f))))
+        this.setRoom(this.parseRoomCode(r, this.read(path.join(path.dirname(this.file), f))));
     }
 
     private parseRoomCode(r, code) {
@@ -2737,7 +2751,7 @@ export class VirtualEditor extends EditorBase {
                                     if (!quote && c === ';')
                                         break;
                                 }
-                                exit = splitQuoted(code.substring(idx, idx2 - 1).trim(), ",", 3, 3);
+                                exit = code.substring(idx, idx2 - 1).trim().splitQuote(",", 3, 3);
                                 if (exit.length > 0) {
                                     switch (this.parseString(exit[0])) {
                                         case "north":
@@ -3032,13 +3046,63 @@ export class VirtualEditor extends EditorBase {
                                 for (var item in items) {
                                     if (!items.hasOwnProperty(item)) continue;
                                     if (item.startsWith("({") && item.endsWith("})")) {
-                                        var k = splitQuoted(item.slice(2, -2), ",", 3, 3);
+                                        var k = item.slice(2, -2).splitQuote(",", 3, 3);
                                         for (var s = 0, sl = k.length; s < sl; s++)
-                                            r.items.push([this.parseString(k[s].trim()), this.parseString(items[item].trim())]);
+                                            r.item.push({
+                                                item: this.parseString(k[s].trim()),
+                                                description: this.parseString(items[item].trim())
+                                            });
                                     }
                                     else
-                                        r.items.push([this.parseString(item), this.parseString(items[item].trim())]);
+                                        r.items.push({
+                                            item: this.parseString(item),
+                                            description: this.parseString(items[item].trim())
+                                        });
                                 }
+                                break;
+                            case "set_property":
+                                idx++;
+                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
+                                    idx++;
+                                for (idx2 = idx; idx2 < len; idx2++) {
+                                    c = code.charAt(idx2);
+                                    if (c === '"') {
+                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
+                                            continue;
+                                        quote = !quote;
+                                    }
+                                    if (!quote && c === ';')
+                                        break;
+                                }
+                                exit = code.substring(idx, idx2 - 1).trim().splitQuote(",", 3, 3);
+                                if (this.parseString(exit[0]) === 'light')
+                                    r.light = + +this.parseString(exit[1]);
+                                idx = idx2;
+                                break;
+                            case 'set_properties':
+                                idx++;
+                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
+                                    idx++;
+                                for (idx2 = idx; idx2 < len; idx2++) {
+                                    c = code.charAt(idx2);
+                                    if (c === '"') {
+                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
+                                            continue;
+                                        quote = !quote;
+                                    }
+                                    if (!quote && c === ';')
+                                        break;
+                                }
+                                var exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
+                                for (exit in exits) {
+                                    if (!exits.hasOwnProperty(exit)) continue;
+                                    if(exit === 'light')
+                                    {
+                                        r.light = +exits[exit];
+                                        break;
+                                    }
+                                }
+                                idx = idx2;
                                 break;
                         }
                         ident = "";
@@ -3306,31 +3370,46 @@ export class VirtualEditor extends EditorBase {
             this.$depthToolbar.value = '' + this.$selectedRoom.z;
         }
         var o = room.clone();
-        if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
-            o.items = this.$items[o.item].children.slice(0);
-        else
-            o.items = null;
-        if (o.terrain < this.$descriptions.length && o.terrain >= 0 && this.$descriptions[o.terrain]) {
-            o.short = this.$descriptions[o.terrain].short;
-            o.long = this.$descriptions[o.terrain].long;
-            o.light = this.$descriptions[o.terrain].light;
-            o.terrainType = this.$descriptions[o.terrain].terrain;
-            o.sound = this.$descriptions[o.terrain].sound;
-            o.smell = this.$descriptions[o.terrain].smell;
+        if (o.ef) {
+            if (room.items)
+                o.items = room.items.slice(0);
+            else
+                o.items = [];
+            o.short = room.short;
+            o.long = room.long;
+            o.light = room.light || 0;
+            o.terrainType = room.terrain;
+            o.sound = room.sound;
+            o.smell = room.smell;
         }
         else {
-            o.short = '';
-            o.long = '';
-            o.light = 0;
-            o.terrainType = '';
-            o.sound = '';
-            o.smell = '';
+            if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
+                o.items = this.$items[o.item].children.slice(0);
+            else
+                o.items = [];
+            if (o.terrain < this.$descriptions.length && o.terrain >= 0 && this.$descriptions[o.terrain]) {
+                o.short = this.$descriptions[o.terrain].short;
+                o.long = this.$descriptions[o.terrain].long;
+                o.light = this.$descriptions[o.terrain].light;
+                o.terrainType = this.$descriptions[o.terrain].terrain;
+                o.sound = this.$descriptions[o.terrain].sound;
+                o.smell = this.$descriptions[o.terrain].smell;
+                o.terrain = -1;
+            }
+            else {
+                o.short = '';
+                o.long = '';
+                o.light = 0;
+                o.terrainType = '';
+                o.sound = '';
+                o.smell = '';
+            }
         }
         this.$roomEditor.object = o;
     }
 
     private UpdatePreview(room) {
-        var ex, e;
+        var ex, e, item;
         if (!room) {
             this.$roomPreview.short.textContent = '';
             this.$roomPreview.long.textContent = '';
@@ -3344,9 +3423,9 @@ export class VirtualEditor extends EditorBase {
                 this.$roomPreview.long.textContent = room.long;
                 str = this.$roomPreview.long.innerHTML;
                 if (room.items && room.items.length > 0) {
-                    items = room.items.sort(function (a, b) { return b[0].length - a[0].length; });
+                    items = room.items.sort(function (a, b) { return b.item.length - a.item.length; });
                     for (var c = 0, cl = items.length; c < cl; c++)
-                        str = str.replace(new RegExp("\\b(" + room.items[c][0] + ")\\b", "g"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="' + room.items[c][1].replace(/"/g, '\\"') + '">' + room.items[c][0] + '</span>');
+                        str = str.replace(new RegExp("\\b(" + items[c].item + ")\\b", "g"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
                 }
                 e = room.climbs;
                 if (e !== RoomExit.None) {
@@ -3368,6 +3447,13 @@ export class VirtualEditor extends EditorBase {
                 }
                 str += '<br><br>';
                 this.$roomPreview.long.innerHTML = str;
+                if (items.length > 0) {
+                    for (var c = 0, cl = items.length; c < cl; c++) {
+                        item = document.getElementById(this.parent.id + '-room-preview' + c);
+                        if (item)
+                            item.title = items[c].description;
+                    }
+                }
                 if (room.smell.length > 0 && room.smell != "0" && room.sound.length > 0 && room.sound != "0") {
                     this.$roomPreview.sound.style.display = 'block';
                     this.$roomPreview.smell.style.display = 'block';
@@ -3441,12 +3527,19 @@ export class VirtualEditor extends EditorBase {
                 str = this.$roomPreview.long.innerHTML;
 
                 if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children.length > 0) {
-                    items = items[room.item].children.sort(function (a, b) { return b.items.length - a.items.length; });
+                    items = items[room.item].children.sort(function (a, b) { return b.item.length - a.item.length; });
                     for (var c = 0, cl = items.length; c < cl; c++)
-                        str = str.replace(new RegExp("\\b(" + items[c].items + ")\\b"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="' + items[c].description.replace(/"/g, '\\"') + '">' + items[c].items + '</span>');
+                        str = str.replace(new RegExp("\\b(" + items[c].item + ")\\b"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
                 }
                 str += '<br><br>';
                 this.$roomPreview.long.innerHTML = str;
+                if (items.length > 0) {
+                    for (var c = 0, cl = items.length; c < cl; c++) {
+                        item = document.getElementById(this.parent.id + '-room-preview' + c);
+                        if (item)
+                            item.title = items[c].description;
+                    }
+                }
                 if (data.smell.length > 0 && data.smell != "0" && data.sound.length > 0 && data.sound != "0") {
                     this.$roomPreview.sound.style.display = 'block';
                     this.$roomPreview.smell.style.display = 'block';
@@ -3799,7 +3892,7 @@ export class VirtualEditor extends EditorBase {
                         row.children.push(
                             {
                                 idx: '',
-                                items: tmp[i],
+                                item: tmp[i],
                                 description: tmp2[i],
                                 tag: (c + 1) + "-" + i,
                                 parentId: c + 1
@@ -3808,7 +3901,7 @@ export class VirtualEditor extends EditorBase {
                         row.children.push(
                             {
                                 idx: '',
-                                items: tmp[i],
+                                item: tmp[i],
                                 description: '',
                                 tag: (c + 1) + "-" + i,
                                 parentId: c + 1
@@ -4102,9 +4195,8 @@ class TerrainValueEditor extends ValueEditor {
                 });
                 this.$dropdown.appendChild(el);
             }
-            if(height < 160)
-            {
-                this.$dropdown.style.height = height+ 'px';
+            if (height < 160) {
+                this.$dropdown.style.height = height + 'px';
                 this.$dropdown.style.overflow = 'hidden';
             }
             else
