@@ -1480,7 +1480,7 @@ export class lpcFormatter extends EventEmitter {
                 incase = (incase || this.tokens[tp][t].value === "case" || this.tokens[tp][t].value === "default") ? 1 : 0;
                 if (!mblock && incomment === 0) {
                     if (s !== t) {
-                        if (this.tokens[tp][t].type === FormatTokenType.comma || this.tokens[tp][t].type === FormatTokenType.semicolon)
+                        if (this.tokens[tp][t].type === FormatTokenType.comma || this.tokens[tp][t].type === FormatTokenType.semicolon || this.tokens[tp][t].type === FormatTokenType.operatorBase)
                             op = op.rtrim();
                         else if (!pc && this.tokens[tp][t].type === FormatTokenType.operator) {
                             if (!incase || (incase && this.tokens[tp][t].value !== ":")) {
@@ -1639,7 +1639,22 @@ export class lpcFormatter extends EventEmitter {
                                     //op += " ";
                                 }
                             }
-                        }                        
+                        }
+                        else if ((this.tokens[tp][t].type === FormatTokenType.operatorBase)) {
+                            t2 = t + 1;
+                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
+                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                    t++;
+                                    e++;
+                                    t2++;
+                                    if (t2 >= tll)
+                                        break;
+                                }
+                                if (t2 < tll) {
+                                    op = op.rtrim();
+                                }
+                            }
+                        }                                                
                         else if (!pc && inclosure === 0 && this.tokens[tp][t].type === FormatTokenType.keyword) {
                             t2 = t + 1;
                             switch (this.tokens[tp][t].value) {

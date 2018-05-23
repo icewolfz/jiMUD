@@ -24,7 +24,7 @@
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
     - Moved folding from edit to view
-    - Formatter: remove spaces after ( and before )
+    - Formatter: remove spaces after ( and before ) and after and before ::
   - When using portable version it now defaults to using current application directory as data folder, use `-no-pd` to restore previous usage
 - **Fixed:**
   - Code editor:
