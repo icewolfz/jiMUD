@@ -139,7 +139,7 @@
             window.$editor.onDidChangeCursorPosition((e) => {
                 manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
             });
-            if(options && options.editorOptions)
+            if (options && options.editorOptions)
                 window.$editor.updateOptions(options.editorOptions);
             _ready = true;
         });        
@@ -1771,7 +1771,7 @@
         }
     });
 
-    function newFile() {
+    function newFile(file) {
         createEditor({ file: 'new_' + newCounter + '.c', new: true }, true);
         newCounter++;
         doUpdate(1);
@@ -1783,6 +1783,16 @@
         var value = parseFileTemplate(fs.readFileSync(file, 'utf8'));
         createEditor({ file: 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c', new: true, value: value }, true);
         newCounter++;
+        doUpdate(1);
+        updatePanel(manager.active);
+    }
+
+    function newFromValue(value, file) {
+        if (!file || file.length === 0) {
+            file = 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c';
+            newCounter++;
+        }
+        createEditor({ file: file, new: true, value: value || '' }, true);
         doUpdate(1);
         updatePanel(manager.active);
     }
@@ -2276,7 +2286,25 @@
                 data.options = options.virtualOptions;
                 p.editor = new VirtualEditor(data);
                 p.editor.on('room-dblclick', (room) => {
-                    //TODO: open or create external room file
+                    var f;
+                    if (p.editor.maxLevel > 1)
+                        f = room.x + "," + room.y + "," + room.z + ".c";
+                    else
+                        f = room.x + "," + room.y + ".c";
+                    f = path.join(path.dirname(p.editor.file), f);
+                    if (existsSync(f))
+                        openFile(f);
+                    else if (dialog.showMessageBox(
+                        remote.getCurrentWindow(),
+                        {
+                            type: 'question',
+                            title: 'Create room?',
+                            message: 'Create new external room?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1
+                        }) === 0) {
+                        newFromValue(p.editor.externalCode(room), f);
+                    }
                 });
             }
             else {
