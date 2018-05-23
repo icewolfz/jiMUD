@@ -2356,7 +2356,7 @@
                             defaultId: 1
                         });
                     //no
-                    if (p.editor.file === file && choice === 1)
+                    if ((!file || p.editor.file === file) && choice === 1)
                         closeFile(p);
                     else
                         p.editor.deleted(choice === 0, file);
