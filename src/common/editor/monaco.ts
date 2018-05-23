@@ -235,7 +235,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public save() {
         this.$saving = true;
-        this.write(this.$model.getValue());
+        this.write(this.$model.getValue(monaco.editor.EndOfLinePreference.LF));
         this.changed = false;
         this.new = false;
         this.emit('saved');
