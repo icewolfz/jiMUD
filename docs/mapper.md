@@ -97,6 +97,7 @@ The x, y, z, zone are generated when a room is first added to the map based on t
 - `Mapper not loading` Possible corrupted map or error with mapper. You can determine the issue by loading jiMUD with the `--debug` command line argument to force the mapper developer tools to be opened and display any errors in the console.
 - `Mapper not saving` check folder permissions and ensure the data folder exist
 - `Auto walk out of order directions` Auto walk can sometimes get its directions out of order if computer is slow processing, fix by increasing the [Delay between directions](preferences.md#mapper) time until the problem is limited or disappears.
+- `Slow performance` Make sure you are not using --disable-gpu, with out the gpu it can cause the mapper to draw and perform slow
 
 ## Trouble shooting
 

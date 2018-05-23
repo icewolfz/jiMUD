@@ -25,6 +25,10 @@ Allows you to edit a virtual map easily with out having to know all file formats
 - View all external exits in a list editor to easily remove, add, or copy external exits
 - View all raw data files that exist and are related to the current map.
 
+## Know issues
+
+- `Slow performance` Make sure you are not using --disable-gpu, with out the gpu it can cause slow perfmance from maps taking 10 to 100 times longer to load
+
 ## Preferences
 
 Editor preferences are stored in their own file independent of client or character settings and saved to `{data}/editor.json`, this allows the editor to not be required to reload every time settings are changed for each character and reduce load times

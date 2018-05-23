@@ -120,4 +120,6 @@ Basic questions answered about jiMUD
   - Some styles will not flash when flashing is enabled depending on order of styles applied
   - Reverse style has wierd results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
   - Correction from context menu may remove applied styles depending on if they are just that word
+- General slow performance, do not use --disable-gpu it can impact overall performance  
 - [Mapper](mapper.md#know-issues)
+- [Code editor](codeeditor.md#know-issues)
