@@ -2,12 +2,28 @@
 
 The code editor allows immortals or those wanting to code lpc files using a graphical editor
 
-## Features
+## Code editor features
 
 - Syntax highlighting
 - Code folding
 - Templates to quickly create basic objects, rooms, monsters, weapons and armors
 - Formatting and indention system for making code easier and more standard
+
+## Virtual map editor
+
+Allows you to edit a virtual map easily with out having to know all file formats
+
+- Edit room exits for all basic directions plus up and down
+- Set states for each room
+- Set terrain and edit terrain for room and changes effect all rooms that have same indexes
+- Open/create external room files by double clicking a room or open from room editor
+- Edit external exits for any room
+- Edit list of room items for room with changes effecting all rooms with matching index
+- Room preview to show how the room will possibly look to a player, with underline marking for matching items, includes preview of external rooms
+- View all terrain descriptions in a list editor to easily remove, add or copy terrains
+- View all items in a list editor easily remove, add, or copy items
+- View all external exits in a list editor to easily remove, add, or copy external exits
+- View all raw data files that exist and are related to the current map.
 
 ## Preferences
 
