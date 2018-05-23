@@ -117,7 +117,7 @@ export class DockManager extends EventEmitter {
             this.panels[t].title.style.width = 'auto';
             tWidth = this.panels[t].title.scrollWidth || this.panels[t].title.clientWidth;
             //adjust for icon and close buttons
-            tWidth += 44;
+            tWidth += 54;
             if (tWidth > w)
                 w = tWidth;
             this.panels[t].title.style.overflow = '';
