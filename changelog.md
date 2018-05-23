@@ -5,7 +5,7 @@
 - **New:**
   - Code editor:
     - Virtual map editor
-      - Edit exits, descriptions, items, and external exits
+      - Edit exits, descriptions
       - Generate external room files quickly based on current room settings
       - Preview selected room as if on mud
       - Generate exits by using numpad, and ctrl+numpad to remove exits
