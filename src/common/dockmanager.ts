@@ -45,6 +45,7 @@ export class DockManager extends EventEmitter {
     private _scroll: number = 0;
     private _scrollTimer: NodeJS.Timer;
     private $addCache = [];
+    private $measure: HTMLElement;
 
     public get hideTabstrip(): boolean {
         return this._hideTabstrip;
@@ -100,6 +101,12 @@ export class DockManager extends EventEmitter {
             }
         });
         window.addEventListener('blur', () => { $('.dropdown.open').removeClass('open'); });
+        this.$measure = document.createElement('div');
+        this.$measure.classList.add('title');
+        this.$parent.appendChild(this.$measure);
+        this.$measure.style.position = 'absolute';
+        this.$measure.style.left = '-10px';
+        this.$measure.style.top = '-100px';
     }
 
     public resize() {
@@ -111,26 +118,21 @@ export class DockManager extends EventEmitter {
         this.$scrollDropdown.classList.add('hidden');
         let tWidth = 100;
         let w = 100;
-
+        var m = this.$measure;
         for (let t = 0; t < tl; t++) {
-            this.panels[t].title.style.overflow = 'visible';
-            this.panels[t].title.style.width = 'auto';
-            tWidth = this.panels[t].title.scrollWidth || this.panels[t].title.clientWidth;
+            m.textContent = this.panels[t].title.textContent;
+            tWidth = m.clientWidth;
             //adjust for icon and close buttons
             tWidth += 54;
             if (tWidth > w)
                 w = tWidth;
-            this.panels[t].title.style.overflow = '';
-            this.panels[t].title.style.width = '';
         }
-        /*
-                if (w > 200)
-                    w = 200;
-                */
+
         for (let t = 0; t < tl; t++) {
             this.panels[t].tab.style.width = `${w}px`;
             this.panels[t].title.style.maxWidth = `${w - 22}px`;
         }
+
 
         if (this.$tabstrip.scrollWidth > this.$parent.clientWidth)
             this.$tabstrip.classList.add('scroll');
