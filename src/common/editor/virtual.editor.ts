@@ -1,6 +1,7 @@
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { Splitter, Orientation } from './../splitter';
 import { PropertyGrid, EditorType, ValueEditor } from './../propertygrid';
+import { Datagrid } from './../datagrid';
 import { existsSync, capitalize, wordwrap, splitQuoted, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
 const { clipboard, ipcRenderer, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -1298,6 +1299,9 @@ export class VirtualEditor extends EditorBase {
                     type: EditorType.custom,
                     editor: ExternalExitValueEditor,
                     enum: RoomExit,
+                    options: {
+                        data: this.$exits
+                    }
                 },
             },
             {
@@ -1366,6 +1370,7 @@ export class VirtualEditor extends EditorBase {
                 formatter: this.formatItems,
                 editor: {
                     type: EditorType.custom,
+                    editor: ItemsValueEditor,
                 },
                 sort: 2
             },
@@ -1390,7 +1395,44 @@ export class VirtualEditor extends EditorBase {
                 label: 'Terrain',
                 editor: {
                     type: EditorType.custom,
-                    editor: TerrainValueEditor
+                    editor: DropdownEditValueEditor,
+                    options: {
+                        data: [
+                            "beach",
+                            "dirtroad",
+                            "icesheet",
+                            "prairie",
+                            "stone",
+                            "bog",
+                            "farmland",
+                            "jungle",
+                            "river",
+                            "swamp",
+                            "city",
+                            "forest",
+                            "lake",
+                            "rockdesert",
+                            "tundra",
+                            "cliff",
+                            "grass",
+                            "mountain",
+                            "rocky",
+                            "underwater",
+                            "cobble",
+                            "grassland",
+                            "ocean",
+                            "sand",
+                            "water",
+                            "desert",
+                            "highmountain",
+                            "pavedroad",
+                            "sanddesert",
+                            "dirt",
+                            "hills",
+                            "plains",
+                            "savannah"
+                        ]
+                    }
                 },
                 sort: 3
             },
@@ -3962,14 +4004,28 @@ export class VirtualEditor extends EditorBase {
             };
             tmp = data[c].split(":");
             tmp2 = tmp[0].split(",");
-            row.x = tmp2[0];
-            if (tmp2.length > 1) row.y = tmp2[1];
-            if (tmp2.length > 2) row.z = tmp2[2];
+            row.x = +tmp2[0];
+            if (tmp2.length > 1) row.y = +tmp2[1];
+            if (tmp2.length > 2) row.z = +tmp2[2];
             if (tmp.length > 1) row.exit = tmp[1];
             if (tmp.length > 2) row.dest = tmp[2];
             rows.push(row);
         }
         this.$exits = rows;
+        this.$roomEditor.setPropertyOptions({
+            property: 'ee',
+            label: 'External exits',
+            formatter: this.formatExits,
+            sort: 5,
+            editor: {
+                type: EditorType.custom,
+                editor: ExternalExitValueEditor,
+                enum: RoomExit,
+                options: {
+                    data: this.$exits
+                }
+            },
+        });
     }
 
     private reloadExits() {
@@ -4116,7 +4172,7 @@ export class VirtualEditor extends EditorBase {
     }
 }
 
-class TerrainValueEditor extends ValueEditor {
+class DropdownEditValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $dropdown: HTMLElement;
     private $editor: HTMLInputElement;
@@ -4185,46 +4241,12 @@ class TerrainValueEditor extends ValueEditor {
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
-            var terrains = [
-                "beach",
-                "dirtroad",
-                "icesheet",
-                "prairie",
-                "stone",
-                "bog",
-                "farmland",
-                "jungle",
-                "river",
-                "swamp",
-                "city",
-                "forest",
-                "lake",
-                "rockdesert",
-                "tundra",
-                "cliff",
-                "grass",
-                "mountain",
-                "rocky",
-                "underwater",
-                "cobble",
-                "grassland",
-                "ocean",
-                "sand",
-                "water",
-                "desert",
-                "highmountain",
-                "pavedroad",
-                "sanddesert",
-                "dirt",
-                "hills",
-                "plains",
-                "savannah"
-            ];
-            var tl = terrains.length;
+            var data = this.options ? this.options.data || [] : [];
+            var tl = data.length;
             var height = tl * 20;
             while (tl--) {
                 var el = document.createElement('div');
-                el.textContent = capitalize(terrains[tl]);
+                el.textContent = capitalize(data[tl]);
                 el.addEventListener('click', (e) => {
                     this.value = (<HTMLElement>e.currentTarget).textContent.toLowerCase();
                     this.focus();
@@ -4335,8 +4357,8 @@ class FileOpenValueEditor extends ValueEditor {
         var ops = this.grid.getPropertyOptions(this.property);
         if (ops && ops.formatter)
             return ops.formatter(this.property, value, this.grid.object);
-        if (this.propertyOptions && this.propertyOptions.enum)
-            return enumToString(value, this.propertyOptions.enum);
+        if (this.options && this.options.enum)
+            return enumToString(value, this.options.enum);
         if (typeof value === 'boolean')
             return capitalize('' + value);
         return value;
@@ -4405,7 +4427,7 @@ class ExternalExitValueEditor extends ValueEditor {
                 mDialog.close();
                 if (mDialog.parentElement)
                     mDialog.parentElement.removeChild(mDialog);
-                    this.focus();
+                this.focus();
             })
             button.innerHTML = '&times;';
             header.appendChild(button);
@@ -4419,7 +4441,7 @@ class ExternalExitValueEditor extends ValueEditor {
             header.style.paddingTop = '40px';
             mDialog.appendChild(header);
             el = document.createElement('div');
-            el.classList.add('form-group');
+            el.classList.add('form-group', 'datagrid-standard');
             el.style.margin = '0';
             el.style.position = 'absolute';
             el.style.left = '5px';
@@ -4427,7 +4449,19 @@ class ExternalExitValueEditor extends ValueEditor {
             el.style.bottom = '60px';
             el.style.top = '38px';
             header.appendChild(el);
-            //BODY!
+            var dg = new Datagrid({ parent: el });
+            dg.addColumns([{
+                text: 'Exit',
+                field: 'exit'
+            },
+            {
+                text: 'Destination',
+                field: 'dest',
+                spring: true,
+                width: 200
+            }]);
+            dg.addRows((this.options ? this.options.data || [] : []).slice().filter(e => e.x === this.grid.object.x && e.y === this.grid.object.y && e.z === this.grid.object.z));
+            (<any>window).dg = dg;
             header = document.createElement('div');
             header.classList.add('dialog-footer');
             mDialog.appendChild(header);
@@ -4439,7 +4473,7 @@ class ExternalExitValueEditor extends ValueEditor {
                 mDialog.close();
                 if (mDialog.parentElement)
                     mDialog.parentElement.removeChild(mDialog);
-                    this.focus();
+                this.focus();
             });
             button.textContent = 'Cancel';
             header.appendChild(button);
@@ -4477,8 +4511,8 @@ class ExternalExitValueEditor extends ValueEditor {
         var ops = this.grid.getPropertyOptions(this.property, 'formatter');
         if (ops)
             return ops(this.property, value, this.grid.object);
-        if (this.propertyOptions && this.propertyOptions.enum)
-            return enumToString(value, this.propertyOptions.enum);
+        if (this.options && this.options.enum)
+            return enumToString(value, this.options.enum);
         if (typeof value === 'boolean')
             return capitalize('' + value);
         return value;
@@ -4547,7 +4581,7 @@ class ItemsValueEditor extends ValueEditor {
                 mDialog.close();
                 if (mDialog.parentElement)
                     mDialog.parentElement.removeChild(mDialog);
-                    this.focus();
+                this.focus();
             })
             button.innerHTML = '&times;';
             header.appendChild(button);
@@ -4561,7 +4595,7 @@ class ItemsValueEditor extends ValueEditor {
             header.style.paddingTop = '40px';
             mDialog.appendChild(header);
             el = document.createElement('div');
-            el.classList.add('form-group');
+            el.classList.add('form-group', 'datagrid-standard');
             el.style.margin = '0';
             el.style.position = 'absolute';
             el.style.left = '5px';
@@ -4569,7 +4603,20 @@ class ItemsValueEditor extends ValueEditor {
             el.style.bottom = '60px';
             el.style.top = '38px';
             header.appendChild(el);
-            //BODY!
+            var dg = new Datagrid({ parent: el });
+            dg.addColumns([{
+                text: 'Item',
+                field: 'item',
+                width: 150
+            },
+            {
+                text: 'Description',
+                field: 'description',
+                spring: true,
+                width: 200
+            }]);
+            dg.addRows(this.$value || []);
+            (<any>window).dg = dg;
             header = document.createElement('div');
             header.classList.add('dialog-footer');
             mDialog.appendChild(header);
@@ -4581,7 +4628,7 @@ class ItemsValueEditor extends ValueEditor {
                 mDialog.close();
                 if (mDialog.parentElement)
                     mDialog.parentElement.removeChild(mDialog);
-                    this.focus();
+                this.focus();
             });
             button.textContent = 'Cancel';
             header.appendChild(button);
@@ -4619,8 +4666,8 @@ class ItemsValueEditor extends ValueEditor {
         var ops = this.grid.getPropertyOptions(this.property, 'formatter');
         if (ops)
             return ops(this.property, value, this.grid.object);
-        if (this.propertyOptions && this.propertyOptions.enum)
-            return enumToString(value, this.propertyOptions.enum);
+        if (this.options && this.options.enum)
+            return enumToString(value, this.options.enum);
         if (typeof value === 'boolean')
             return capitalize('' + value);
         return value;

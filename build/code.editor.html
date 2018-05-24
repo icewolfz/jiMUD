@@ -14,6 +14,7 @@
     <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
+    <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <script>
         /* global manager, inverse, capitalize, options */
         var _ready = false;
@@ -1948,6 +1949,7 @@
             dialog.showOpenDialog(remote.getCurrentWindow(),
                 {
                     filters: [
+                        { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
                         { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
                         { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
@@ -2098,6 +2100,7 @@
             title: 'Save as...',
             defaultPath: panel.editor.file,
             filters: [
+                { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },    
                 { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
                 { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
                 { name: 'Text files (*.txt)', extensions: ['txt'] },
