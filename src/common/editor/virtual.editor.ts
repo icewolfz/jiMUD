@@ -1199,7 +1199,7 @@ export class VirtualEditor extends EditorBase {
         this.$roomEditor.readonly = (prop, value, object) => {
             if (object && object.ef)
                 return prop !== 'ef';
-            if(prop === 'ef')
+            if (prop === 'ef')
                 return true;
             return false;
         }
@@ -1292,15 +1292,13 @@ export class VirtualEditor extends EditorBase {
             {
                 property: 'ee',
                 label: 'External exits',
-                readonly: true,
                 formatter: this.formatExits,
                 sort: 5,
-                /*
                 editor: {
                     type: EditorType.custom,
-                    editor: ExternalExitValueEditor
+                    editor: ExternalExitValueEditor,
+                    enum: RoomExit,
                 },
-                */
             },
             {
                 property: 'ef',
@@ -1310,7 +1308,7 @@ export class VirtualEditor extends EditorBase {
                 editor: {
                     type: EditorType.custom,
                     editor: FileOpenValueEditor,
-                    show: (prop, value, object)=> {
+                    show: (prop, value, object) => {
                         return value;
                     }
                 },
@@ -4337,10 +4335,10 @@ class FileOpenValueEditor extends ValueEditor {
         var ops = this.grid.getPropertyOptions(this.property);
         if (ops && ops.formatter)
             return ops.formatter(this.property, value, this.grid.object);
-        if (this.propertyOptions && this.propertyOptions.type === EditorType.flag)
+        if (this.propertyOptions && this.propertyOptions.enum)
             return enumToString(value, this.propertyOptions.enum);
         if (typeof value === 'boolean')
-            return capitalize(''+value);
+            return capitalize('' + value);
         return value;
     }
 
@@ -4353,122 +4351,286 @@ class FileOpenValueEditor extends ValueEditor {
     }
 }
 
+class ExternalExitValueEditor extends ValueEditor {
+    private $el: HTMLElement;
+    private $editor: HTMLInputElement;
+    private $value;
 
-/*
-                    this.$editor.editor = document.createElement('div');
-                    this.$editor.editor.classList.add('property-grid-editor-dropdown');
-                    values = document.createElement('div')
-                    values.classList.add('property-grid-editor-dropdown-container');
-                    this.$editor.editor.appendChild(values);
-                    this.$editor.editor.value = this.$object[prop];
-                    var pEditor = document.createElement('textarea');
-                    pEditor.classList.add('property-grid-editor');
-                    pEditor.value = this.$object[prop];
-                    pEditor.addEventListener('blur', (e) => {
-                        if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            e.cancelBubble = true;
-                            return;
-                        }
-                        this.$editor.editor.value = (<HTMLTextAreaElement>e.currentTarget).value;
-                        this.clearEditor();
-                    });
-                    pEditor.addEventListener('click', (e) => {
-                        pEditor.dataset.aOpen = null;
-                    });
-                    values.appendChild(pEditor);
-                    vl = document.createElement('button');
-                    vl.title = 'Open editor...'
-                    //vl.innerHTML = '&hellip;';
-                    vl.innerHTML = '<span class="caret"></span>';
-                    vl.dataset.editor = 'dropdown';
-                    var tEditor;
-                    var editorData = this.$editor;
-                    vl.addEventListener('click', (e) => {
-                        var mDialog = <HTMLDialogElement>document.createElement('dialog');
-                        mDialog.style.width = '500px';
-                        mDialog.style.height = '300px';
-                        mDialog.style.padding = '5px';
-                        mDialog.addEventListener('close', () => {
-                            if (mDialog.parentElement)
-                                mDialog.parentElement.removeChild(mDialog);
-                            pEditor.focus();
-                        });
-                        var header = document.createElement('div');
-                        header.classList.add('dialog-header');
-                        header.style.fontWeight = 'bold';
-                        var button = document.createElement('button');
-                        button.classList.add('close');
-                        button.type = 'button';
-                        button.dataset.dismiss = 'modal';
-                        button.addEventListener('click', () => {
-                            mDialog.close();
-                            if (mDialog.parentElement)
-                                mDialog.parentElement.removeChild(mDialog);
-                            pEditor.focus();
-                        })
-                        button.innerHTML = '&times;';
-                        header.appendChild(button);
-                        var el = document.createElement('div');
-                        el.style.paddingTop = '2px';
-                        el.innerHTML = capitalize(this.$options[editorData.property].label || editorData.property) + '&hellip;';
-                        header.appendChild(el);
-                        mDialog.appendChild(header);
-                        header = document.createElement('div');
-                        header.classList.add('dialog-body');
-                        header.style.paddingTop = '40px';
-                        mDialog.appendChild(header);
-                        el = document.createElement('div');
-                        el.classList.add('form-group');
-                        el.style.margin = '0';
-                        el.style.position = 'absolute';
-                        el.style.left = '5px';
-                        el.style.right = '5px';
-                        el.style.bottom = '60px';
-                        el.style.top = '38px';
-                        header.appendChild(el);
-                        el.appendChild(tEditor);
-                        header = document.createElement('div');
-                        header.classList.add('dialog-footer');
-                        mDialog.appendChild(header);
-                        button = document.createElement('button');
-                        button.style.cssFloat = 'right';
-                        button.type = 'button';
-                        button.classList.add('btn', 'btn-default');
-                        button.addEventListener('click', () => {
-                            mDialog.close();
-                            if (mDialog.parentElement)
-                                mDialog.parentElement.removeChild(mDialog);
-                            pEditor.focus();
-                        });
-                        button.textContent = 'Cancel';
-                        header.appendChild(button);
-                        button = document.createElement('button');
-                        button.style.cssFloat = 'right';
-                        button.type = 'button';
-                        button.classList.add('btn', 'btn-primary');
-                        button.addEventListener('click', () => {
-                            this.$editor = editorData;
-                            this.$editor.editor.value = tEditor.value;
-                            this.clearEditor();
-                            mDialog.close();
-                            if (mDialog.parentElement)
-                                mDialog.parentElement.removeChild(mDialog);
-                            pEditor.focus();
-                        });
-                        button.textContent = 'Ok';
-                        header.appendChild(button);
-                        document.body.appendChild(mDialog);
-                        mDialog.showModal();
-                    });
-                    this.$editor.editor.focus = () => {
-                        this.$editor.editor.children[0].children[0].focus();
-                        resetCursor(this.$editor.editor.children[0].children[0]);
-                    };
-                    this.$editor.editor.appendChild(vl);
-                    this.$editor.clear = () => {
-                        if (tEditor && tEditor.parentElement)
-                            tEditor.parentElement.removeChild(tEditor);
-                    };
-                    */
+    create() {
+        this.$el = document.createElement('div');
+        this.$el.classList.add('property-grid-editor-dropdown');
+        this.$editor = document.createElement('input');
+        this.$editor.type = 'text';
+        this.$editor.readOnly = true;
+        this.$editor.classList.add('property-grid-editor');
+        this.$editor.addEventListener('blur', (e) => {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            this.grid.clearEditor();
+        });
+        this.$editor.addEventListener('keyup', (e) => {
+            if (e.keyCode === 27 || e.keyCode === 13) {
+                this.$editor.blur();
+                e.preventDefault();
+            }
+        });
+        this.$el.appendChild(this.$editor);
+
+        var vl = document.createElement('button');
+        vl.title = 'Edit external exits...'
+        vl.innerHTML = '&hellip;';
+        vl.dataset.editor = 'dropdown';
+        vl.addEventListener('click', (e) => {
+            var mDialog = <HTMLDialogElement>document.createElement('dialog');
+            mDialog.style.width = '500px';
+            mDialog.style.height = '300px';
+            mDialog.style.padding = '5px';
+            mDialog.addEventListener('close', () => {
+                if (mDialog.parentElement)
+                    mDialog.parentElement.removeChild(mDialog);
+                this.focus();
+            });
+            var header = document.createElement('div');
+            header.classList.add('dialog-header');
+            header.style.fontWeight = 'bold';
+            var button = document.createElement('button');
+            button.classList.add('close');
+            button.type = 'button';
+            button.dataset.dismiss = 'modal';
+            button.addEventListener('click', () => {
+                mDialog.close();
+                if (mDialog.parentElement)
+                    mDialog.parentElement.removeChild(mDialog);
+                    this.focus();
+            })
+            button.innerHTML = '&times;';
+            header.appendChild(button);
+            var el = document.createElement('div');
+            el.style.paddingTop = '2px';
+            el.innerHTML = capitalize(this.grid.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
+            header.appendChild(el);
+            mDialog.appendChild(header);
+            header = document.createElement('div');
+            header.classList.add('dialog-body');
+            header.style.paddingTop = '40px';
+            mDialog.appendChild(header);
+            el = document.createElement('div');
+            el.classList.add('form-group');
+            el.style.margin = '0';
+            el.style.position = 'absolute';
+            el.style.left = '5px';
+            el.style.right = '5px';
+            el.style.bottom = '60px';
+            el.style.top = '38px';
+            header.appendChild(el);
+            //BODY!
+            header = document.createElement('div');
+            header.classList.add('dialog-footer');
+            mDialog.appendChild(header);
+            button = document.createElement('button');
+            button.style.cssFloat = 'right';
+            button.type = 'button';
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                mDialog.close();
+                if (mDialog.parentElement)
+                    mDialog.parentElement.removeChild(mDialog);
+                    this.focus();
+            });
+            button.textContent = 'Cancel';
+            header.appendChild(button);
+            button = document.createElement('button');
+            button.style.cssFloat = 'right';
+            button.type = 'button';
+            button.classList.add('btn', 'btn-primary');
+            button.addEventListener('click', () => {
+                //this.$value = 
+                mDialog.close();
+                if (mDialog.parentElement)
+                    mDialog.parentElement.removeChild(mDialog);
+                this.focus();
+            });
+            button.textContent = 'Ok';
+            header.appendChild(button);
+            document.body.appendChild(mDialog);
+            mDialog.showModal();
+        });
+        this.$el.appendChild(vl);
+        this.parent.appendChild(this.$el);
+    }
+    focus() {
+        this.$editor.focus();
+    }
+    destroy() {
+        if (this.$el.parentElement)
+            this.$el.parentElement.removeChild(this.$el);
+    }
+
+    private formatValue(value?) {
+        if (!value) value = this.$value;
+        if (!value)
+            return 'None';
+        var ops = this.grid.getPropertyOptions(this.property, 'formatter');
+        if (ops)
+            return ops(this.property, value, this.grid.object);
+        if (this.propertyOptions && this.propertyOptions.enum)
+            return enumToString(value, this.propertyOptions.enum);
+        if (typeof value === 'boolean')
+            return capitalize('' + value);
+        return value;
+    }
+
+    get value() {
+        return this.$value;
+    }
+    set value(value: any) {
+        this.$value = value;
+        this.$editor.value = this.formatValue(value);
+    }
+}
+
+class ItemsValueEditor extends ValueEditor {
+    private $el: HTMLElement;
+    private $editor: HTMLInputElement;
+    private $value;
+
+    create() {
+        this.$el = document.createElement('div');
+        this.$el.classList.add('property-grid-editor-dropdown');
+        this.$editor = document.createElement('input');
+        this.$editor.type = 'text';
+        this.$editor.readOnly = true;
+        this.$editor.classList.add('property-grid-editor');
+        this.$editor.addEventListener('blur', (e) => {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            this.grid.clearEditor();
+        });
+        this.$editor.addEventListener('keyup', (e) => {
+            if (e.keyCode === 27 || e.keyCode === 13) {
+                this.$editor.blur();
+                e.preventDefault();
+            }
+        });
+        this.$el.appendChild(this.$editor);
+
+        var vl = document.createElement('button');
+        vl.title = 'Edit items...'
+        vl.innerHTML = '&hellip;';
+        vl.dataset.editor = 'dropdown';
+        vl.addEventListener('click', (e) => {
+            var mDialog = <HTMLDialogElement>document.createElement('dialog');
+            mDialog.style.width = '500px';
+            mDialog.style.height = '300px';
+            mDialog.style.padding = '5px';
+            mDialog.addEventListener('close', () => {
+                if (mDialog.parentElement)
+                    mDialog.parentElement.removeChild(mDialog);
+                this.focus();
+            });
+            var header = document.createElement('div');
+            header.classList.add('dialog-header');
+            header.style.fontWeight = 'bold';
+            var button = document.createElement('button');
+            button.classList.add('close');
+            button.type = 'button';
+            button.dataset.dismiss = 'modal';
+            button.addEventListener('click', () => {
+                mDialog.close();
+                if (mDialog.parentElement)
+                    mDialog.parentElement.removeChild(mDialog);
+                    this.focus();
+            })
+            button.innerHTML = '&times;';
+            header.appendChild(button);
+            var el = document.createElement('div');
+            el.style.paddingTop = '2px';
+            el.innerHTML = capitalize(this.grid.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
+            header.appendChild(el);
+            mDialog.appendChild(header);
+            header = document.createElement('div');
+            header.classList.add('dialog-body');
+            header.style.paddingTop = '40px';
+            mDialog.appendChild(header);
+            el = document.createElement('div');
+            el.classList.add('form-group');
+            el.style.margin = '0';
+            el.style.position = 'absolute';
+            el.style.left = '5px';
+            el.style.right = '5px';
+            el.style.bottom = '60px';
+            el.style.top = '38px';
+            header.appendChild(el);
+            //BODY!
+            header = document.createElement('div');
+            header.classList.add('dialog-footer');
+            mDialog.appendChild(header);
+            button = document.createElement('button');
+            button.style.cssFloat = 'right';
+            button.type = 'button';
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                mDialog.close();
+                if (mDialog.parentElement)
+                    mDialog.parentElement.removeChild(mDialog);
+                    this.focus();
+            });
+            button.textContent = 'Cancel';
+            header.appendChild(button);
+            button = document.createElement('button');
+            button.style.cssFloat = 'right';
+            button.type = 'button';
+            button.classList.add('btn', 'btn-primary');
+            button.addEventListener('click', () => {
+                //this.$value = 
+                mDialog.close();
+                if (mDialog.parentElement)
+                    mDialog.parentElement.removeChild(mDialog);
+                this.focus();
+            });
+            button.textContent = 'Ok';
+            header.appendChild(button);
+            document.body.appendChild(mDialog);
+            mDialog.showModal();
+        });
+        this.$el.appendChild(vl);
+        this.parent.appendChild(this.$el);
+    }
+    focus() {
+        this.$editor.focus();
+    }
+    destroy() {
+        if (this.$el.parentElement)
+            this.$el.parentElement.removeChild(this.$el);
+    }
+
+    private formatValue(value?) {
+        if (!value) value = this.$value;
+        if (!value)
+            return 'None';
+        var ops = this.grid.getPropertyOptions(this.property, 'formatter');
+        if (ops)
+            return ops(this.property, value, this.grid.object);
+        if (this.propertyOptions && this.propertyOptions.enum)
+            return enumToString(value, this.propertyOptions.enum);
+        if (typeof value === 'boolean')
+            return capitalize('' + value);
+        return value;
+    }
+
+    get value() {
+        return this.$value;
+    }
+    set value(value: any) {
+        this.$value = value;
+        this.$editor.value = this.formatValue(value);
+    }
+}
