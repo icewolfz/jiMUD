@@ -129,7 +129,7 @@
     "lz-string": "^1.4.4",
     "mathjs-expression-parser": "^1.0.0",
     "moment": "^2.22.1",
-    "monaco-editor": "^0.12.0",
+    "monaco-editor": "^0.13.1",
     "resize-observer-polyfill": "^1.5.0",
     "rgbcolor": "^1.0.0",
     "spellchecker": "^3.4.4",
