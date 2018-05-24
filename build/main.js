@@ -3312,9 +3312,15 @@ function createCodeEditor(show, loading, loaded) {
       winCode.hide();
     }
   });
-
-  winCode.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+  
+  winCode.webContents.on('new-window', (event, URL, frameName, disposition, options, additionalFeatures) => {
     event.preventDefault();
+    var u = new url.URL(URL);
+    if(u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:')
+    {
+      shell.openExternal(URL);
+      return;
+    }
     if (frameName === 'modal') {
       // open window as modal
       Object.assign(options, {
@@ -3342,15 +3348,15 @@ function createCodeEditor(show, loading, loaded) {
       w.show();
     });
     w.webContents.on('crashed', (event, killed) => {
-      logError(`${url} crashed, killed: ${killed}\n`, true);
+      logError(`${URL} crashed, killed: ${killed}\n`, true);
     });
 
     w.on('close', () => {
       if (w && w.getParentWindow()) {
-        w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
+        w.getParentWindow().webContents.executeJavaScript(`childClosed('${URL}', '${frameName}');`);
       }
     });
-    w.loadURL(url);
+    w.loadURL(URL);
     event.newGuest = w;
   });
 
