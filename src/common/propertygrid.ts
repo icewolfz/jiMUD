@@ -443,7 +443,7 @@ export abstract class ValueEditor extends EventEmitter {
     constructor(grid, parent, property?, options?) {
         super();
         this.parent = parent;
-        this.propertyOptions = options;
+        this.options = options;
         this.grid = grid;
         this.property = property
     }
@@ -453,10 +453,10 @@ export abstract class ValueEditor extends EventEmitter {
     }
     get grid() { return this.$grid; }
 
-    set propertyOptions(ops) {
+    set options(ops) {
         this.$options = ops;
     }
-    get propertyOptions() { return this.$options; }
+    get options() { return this.$options; }
 
     set parent(parent) {
         if (typeof parent === 'string') {
@@ -606,12 +606,12 @@ class TextValueEditor extends ValueEditor {
             this.$el.parentElement.removeChild(this.$el);
     }
 
-    set propertyOptions(ops) {
-        super.propertyOptions = ops;
+    set options(ops) {
+        super.options = ops;
         if (ops)
             this.$noEnter = ops.singleLine || ops.noReturn;
     }
-    get propertyOptions() { return super.propertyOptions; }
+    get options() { return super.options; }
 
     get value() {
         return this.$editor.value;
@@ -660,8 +660,8 @@ class NumberValueEditor extends ValueEditor {
         this.$el = document.createElement('input');
         this.$el.classList.add('property-grid-editor');
         this.$el.type = 'number';
-        this.$el.max = this.propertyOptions ? (this.propertyOptions.max || 1000) : 1000;
-        this.$el.min = this.propertyOptions ? (this.propertyOptions.min || 0) : 0;
+        this.$el.max = this.options ? (this.options.max || 1000) : 1000;
+        this.$el.min = this.options ? (this.options.min || 0) : 0;
         this.$el.addEventListener('keyup', (e) => {
             if (e.keyCode === 27)
                 this.$el.blur();
@@ -760,13 +760,13 @@ class FlagValueEditor extends ValueEditor {
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
             var height = 154;
-            if (this.propertyOptions && this.propertyOptions.enum) {
-                var en = this.propertyOptions.enum;
+            if (this.options && this.options.enum) {
+                var en = this.options.enum;
                 var values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
                 var vl = values.length;
                 var height = vl * 22;
                 while (vl--) {
-                    if (this.propertyOptions.exclude && this.propertyOptions.exclude.includes(values[vl]))
+                    if (this.options.exclude && this.options.exclude.includes(values[vl]))
                         continue;
                     var l = document.createElement('label');
                     var i = document.createElement('input');
@@ -852,13 +852,13 @@ class FlagValueEditor extends ValueEditor {
     }
 
     get value() {
-        if (!this.propertyOptions) return 0;
-        return this.$value = stringToEnum(this.$editor.value, this.propertyOptions.enum, true);
+        if (!this.options) return 0;
+        return this.$value = stringToEnum(this.$editor.value, this.options.enum, true);
     }
     set value(value: any) {
-        if (!this.propertyOptions.enum) return;
+        if (!this.options.enum) return;
         this.$value = value;
-        this.$editor.value = enumToString(value, this.propertyOptions.enum);
+        this.$editor.value = enumToString(value, this.options.enum);
     }
 }
 
