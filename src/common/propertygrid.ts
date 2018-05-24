@@ -1,6 +1,5 @@
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
-import { createDeflate } from 'zlib';
 
 export interface PropertyGridOptions {
     container?: any;
@@ -133,8 +132,12 @@ export class PropertyGrid extends EventEmitter {
         this.doUpdate(UpdateType.build);
     }
 
-    public getPropertyOptions(prop) {
+    public getPropertyOptions(prop, ops?) {
         if (!prop || !this.$options) return null;
+        if (ops) {
+            if (!this.$options[prop]) return null;
+            return this.$options[prop][ops];
+        }
         return this.$options[prop];
     }
 
