@@ -32,7 +32,8 @@
 .datagrid-header {
     height: 24px;
     position: relative;
-    border-collapse: collapse;
+    /*border-collapse: collapse;*/
+    border-collapse: separate;
     text-shadow: 0 1px 0 #fff;
     background-color: #e0e0e0 !important;
     background-image: -webkit-linear-gradient(top, #fff 0, #e0e0e0 100%);
@@ -75,13 +76,15 @@
 }
 
 .datagrid-body-data {
-    border-collapse: collapse;
+    /*border-collapse: collapse;*/
+    border-collapse: separate;
 }
 
 .datagrid-footer {
     height: 24px;
     position: relative;
-    border-collapse: collapse;
+    /*border-collapse: collapse;*/
+    border-collapse: separate;
     min-width: 320px;
     width: 100%;
     text-shadow: 0 1px 0 #fff;
@@ -181,16 +184,54 @@
     height: 18px;
     line-height: 18px;
     border-bottom: 1px solid #ececec;
+    border-top: 1px solid transparent;
     font-size: 14px;
     cursor: default;
 }
 
-.datagrid-row:hover, .datagrid-row:hover .datagrid-cell-sorted {
+.datagrid-row .datagrid-cell {
+    border-bottom: 1px solid #ececec;
+    border-top: 1px solid transparent;
+}
+
+.datagrid.focused .datagrid-row.selected {
+    background-color: rgba(49, 106, 197, 0.75); /*#316ac5;*/
+    color: white;
+}
+
+.datagrid-row.selected {
+    background-color: rgba(221, 221, 221, 0.75); /*#316ac5;*/
+    color: black;
+}
+
+.datagrid.focused .datagrid-row:hover {
     /*border-color: #adadad;*/
     background-color: rgba(49, 106, 197, 0.5); /*#316ac5;*/
 
     /*#BBC2D6;*/
     color: white;
+}
+
+.datagrid-row:hover {
+    /*border-color: #adadad;*/
+    background-color: rgba(221, 221, 221, 0.5); /*#316ac5;*/
+
+    /*#BBC2D6;*/
+    color: black;
+}
+
+.datagrid.focused .datagrid-row.selected:hover {
+    background-color: rgba(49, 106, 197, 1); /*#316ac5;*/
+    color: white;
+}
+
+.datagrid-row.selected:hover {
+    background-color: rgba(221, 221, 221, 1); /*#316ac5;*/
+    color: black;
+}
+
+.datagrid-row:hover .datagrid-cell-sorted {
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .datagrid-row:hover a {
@@ -214,6 +255,10 @@
 
 .datagrid-cell-sorted {
     background-color: #ececec;
+}
+
+.datagrid-row.selected .datagrid-cell-sorted {
+    background-color: rgba(0, 0, 0, 0); /*#316ac5;*/
 }
 
 .datagrid-cell-wrap {
@@ -434,4 +479,14 @@ button.datagrid-footer-btn .glyphicon.datagrid-footer-btn-icon {
 
 .datagrid-column-tree {
     padding-left: 20px;
+}
+
+.datagrid.focused .datagrid-row.focused .datagrid-cell{
+    border-top: 1px solid #f2cb7f;
+    border-bottom: 1px solid #f2cb7f
+}
+
+.datagrid .datagrid-row.focused .datagrid-cell {
+    border-bottom: 1px solid rgba(221, 221, 221, 1);
+    border-top: 1px solid rgba(221, 221, 221, 1);
 }

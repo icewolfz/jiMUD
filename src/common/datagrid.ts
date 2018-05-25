@@ -2,6 +2,7 @@
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
+import { runInThisContext } from 'vm';
 const ResizeObserver = require('resize-observer-polyfill');
 
 export interface DatagridOptions {
@@ -46,6 +47,7 @@ export class Column {
     public width = 100;
     public wrap = false;
     public spring = false;
+    public editor = null;
 
     constructor(data) {
         if (data) {
@@ -79,12 +81,15 @@ export class Datagrid extends EventEmitter {
     private $resizer;
     private $observer: MutationObserver;
     private $sort = { order: SortOrder.ascending, column: -1 };
+    private $focused = -1;
 
     private $asc: HTMLElement;
     private $desc: HTMLElement;
     private $nosort: HTMLElement;
     private $viewState = [];
     private $firstColumn = 0;
+
+    private $selected = [];
 
     private $children = false;
 
@@ -154,7 +159,87 @@ export class Datagrid extends EventEmitter {
 
         this.$parent.dataset.datagrid = 'true';
         this.$parent.classList.add('datagrid');
-        this.$parent.tabIndex = -1;
+        this.$parent.tabIndex = 1;
+        this.$parent.addEventListener('blur', (e) => {
+            this.$parent.classList.remove('focused');
+        });
+        this.$parent.addEventListener('focus', (e) => {
+            this.$parent.classList.add('focused');
+        })
+
+        this.$parent.addEventListener('keydown', (e) => {
+            var el, idx;
+            switch (e.which) {
+                case 32://space
+                    if (e.ctrlKey) {
+                        if (this.$focused === -1) {
+                            this.$focused = 0;
+                        }
+                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        el.classList.add('focused');
+                        this.scrollToRow(el);
+                        if (el.classList.contains('selected')) {
+                            el.classList.remove('selected');
+                            idx = this.$selected.indexOf(idx);
+                            this.$selected.splice(idx, 1);
+                        }
+                        else {
+                            el.classList.add('selected');
+                            this.$selected.push(this.$focused);
+                        }
+                    }
+                    break;
+                case 38://up
+                    if (e.ctrlKey) {
+                        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
+                        if (this.$focused < 1)
+                            this.$focused = 0;
+                        else if (this.$focused > 0)
+                            this.$focused--;
+                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        el.classList.add('focused');
+                        this.scrollToRow(el);
+                    }
+                    else if (e.shiftKey) {
+
+                    }
+                    else {
+                        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+                        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
+                        if (this.$focused < 1)
+                            this.$focused = 0;
+                        else if (this.$focused > 0)
+                            this.$focused--;
+                        this.$selected = [this.$focused];
+                        (<HTMLElement>this.$body.firstChild).children[this.$focused].classList.add('selected', 'focused');
+                        this.scrollToRow((<HTMLElement>this.$body.firstChild).children[this.$focused]);
+                    }
+                    break;
+                case 40://down
+                    if (e.ctrlKey) {
+                        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
+                        if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length)
+                            this.$focused++;
+                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        el.classList.add('focused');
+                        this.scrollToRow(el);
+                    }
+                    else if (e.shiftKey) {
+
+                    }
+                    else {
+                        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+                        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
+                        if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length - 1)
+                            this.$focused++;
+                        this.$selected = [this.$focused];
+                        (<HTMLElement>this.$body.firstChild).children[this.$focused].classList.add('selected', 'focused');
+                        this.scrollToRow((<HTMLElement>this.$body.firstChild).children[this.$focused]);
+                    }
+
+                    break;
+            }
+        })
 
         this.$header = document.createElement('table');
         this.$header.classList.add('datagrid-header');
@@ -189,6 +274,10 @@ export class Datagrid extends EventEmitter {
             }
         });
         this.$observer.observe(this.$parent, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+    }
+
+    public focus() {
+        this.$parent.focus();
     }
 
     public addColumn(col) {
@@ -302,6 +391,8 @@ export class Datagrid extends EventEmitter {
 
         if (this.$sort.column < 0 || this.$sort.column >= this.$cols.length)
             return;
+        this.$selected = [];
+        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
         var prop;
         if (this.$cols[this.$sort.column].hasOwnProperty('index'))
             prop = this.$cols[this.$sort.column].index;
@@ -345,7 +436,6 @@ export class Datagrid extends EventEmitter {
             }
             return 0;
         });
-
     }
 
     public get sortedRows() {
@@ -371,6 +461,7 @@ export class Datagrid extends EventEmitter {
     }
 
     private updateRows() {
+        /*
         if (this.$springCols.length > 0) {
             for (var s = 0, sl = this.$springCols.length; s < sl; s++) {
                 var children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
@@ -381,6 +472,7 @@ export class Datagrid extends EventEmitter {
                 });
             }
         }
+        */
         while (this.$body.children[0].firstChild)
             this.$body.children[0].removeChild(this.$body.children[0].firstChild);
         var cols = this.$cols;
@@ -390,15 +482,19 @@ export class Datagrid extends EventEmitter {
         var frag = document.createDocumentFragment();
         var row, cell, data;
         var child, childLen;
+        var cnt = 0;
         for (var r = 0, l = sorted.length; r < l; r++) {
             data = rows[sorted[r]]
             //if (!this.$rowsHtml[sorted[r]])
             //this.$rowsHtml[sorted[r]] = this.generateRow(data, r, sorted[r]);
             //frag.appendChild(this.$rowsHtml[sorted[r]]);
-            frag.appendChild(this.generateRow(data, r, sorted[r]));
+            frag.appendChild(this.generateRow(cnt, data, r, sorted[r]));
+            cnt++;
             if (this.$children && data.children && this.$viewState[this.$sortedRows[r]]) {
-                for (child = 0, childLen = data.children.length; child < childLen; child++)
-                    frag.appendChild(this.generateRow(data.children[child], r, sorted[r], r, child));
+                for (child = 0, childLen = data.children.length; child < childLen; child++) {
+                    frag.appendChild(this.generateRow(cnt, data.children[child], r, sorted[r], r, child));
+                    cnt++
+                }
             }
         }
         this.$body.children[0].appendChild(frag);
@@ -419,15 +515,19 @@ export class Datagrid extends EventEmitter {
         var frag = document.createDocumentFragment();
         var row, cell, data;
         var child, childLen;
+        var cnt = 0;
         for (var r = 0, l = sorted.length; r < l; r++) {
             data = rows[sorted[r]]
             //if (!this.$rowsHtml[sorted[r]])
             //this.$rowsHtml[sorted[r]] = this.generateRow(data, r, sorted[r]);
             //frag.appendChild(this.$rowsHtml[sorted[r]]);
-            frag.appendChild(this.generateRow(data, r, sorted[r]));
+            frag.appendChild(this.generateRow(cnt, data, r, sorted[r]));
+            cnt++;
             if (this.$children && data.children && this.$viewState[this.$sortedRows[r]]) {
-                for (child = 0, childLen = data.children.length; child < childLen; child++)
-                    frag.appendChild(this.generateRow(data.children[child], r, sorted[r], r, child));
+                for (child = 0, childLen = data.children.length; child < childLen; child++) {
+                    frag.appendChild(this.generateRow(cnt, data.children[child], r, sorted[r], r, child));
+                    cnt++;
+                }
             }
         }
         this.$body.children[0].appendChild(frag);
@@ -465,7 +565,7 @@ export class Datagrid extends EventEmitter {
         this.doUpdate(UpdateType.resize);
     }
 
-    private generateRow(data, r, dataIdx, parent = -1, child = -1) {
+    private generateRow(cnt, data, r, dataIdx, parent = -1, child = -1) {
         var cols = this.$cols;
         var c, cl = cols.length;
         var w;
@@ -477,19 +577,82 @@ export class Datagrid extends EventEmitter {
             row.classList.add('datagrid-row-even');
         else
             row.classList.add('datagrid-row-odd');
+        if (this.$selected.indexOf(cnt) !== -1)
+            row.classList.add('selected');
         row.dataset.row = '' + r;
         row.dataset.parent = '' + parent;
 
         row.addEventListener('click', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
                 return;
-            var r = this.$sortedRows[+(<HTMLElement>e.currentTarget).dataset.row];
+            var row = <HTMLElement>e.currentTarget;
+            //var sIdx = +row.dataset.row;
+            var sIdx = [...row.parentElement.children].indexOf(row);
+            //var rowIdx = +(<HTMLElement>e.currentTarget);
+            var r = this.$sortedRows[sIdx];
+            var el;
             this.emit('row-click', e, { row: this.$rows[r], rowIndex: r });
+            Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
+            if (e.ctrlKey) {
+                if (row.classList.contains('selected')) {
+                    row.classList.remove('selected');
+                    sIdx = this.$selected.indexOf(sIdx);
+                    this.$selected.splice(sIdx, 1);
+                }
+                else {
+                    row.classList.add('selected');
+                    this.$selected.push(sIdx);
+                }
+                this.$focused = sIdx;
+                row.classList.add('focused');
+            }
+            else if (e.shiftKey) {
+                var start, end;
+                if (this.$selected.length === 0)
+                    start = this.$focused != -1 ? this.$focused : 0;
+                else
+                    start = this.$focused != -1 ? this.$focused : this.$selected[0];
+                Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+                this.$selected = [];
+                var cnt;
+                if (start > sIdx) {
+                    end = start;
+                    start = sIdx;
+                    cnt = end - start + 1;
+                    for (; end >= start; end--)
+                        this.$selected.push(end);
+
+                    while (row && cnt--) {
+                        row.classList.add('selected');
+                        row = <HTMLElement>row.nextSibling;
+                    }
+                }
+                else {
+                    end = sIdx;
+                    cnt = end - start + 1;
+                    for (; start <= end; start++)
+                        this.$selected.push(start);
+                    while (row && cnt--) {
+                        row.classList.add('selected');
+                        row = <HTMLElement>row.previousSibling;
+                    }
+                }
+                this.$focused = this.$selected[0];
+                el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                el.classList.add('focused');
+            }
+            else {
+                Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+                this.$selected = [sIdx];
+                row.classList.add('selected', 'focused');
+                this.$focused = sIdx;
+            }
         });
         row.addEventListener('dblclick', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
                 return;
-            var r = this.$sortedRows[+(<HTMLElement>e.currentTarget).dataset.row];
+            var sIdx = +(<HTMLElement>e.currentTarget).dataset.row;
+            var r = this.$sortedRows[sIdx];
             this.emit('row-dblclick', e, { row: this.$rows[r], rowIndex: r });
             if (e.defaultPrevented || e.cancelBubble)
                 return;
@@ -554,6 +717,9 @@ export class Datagrid extends EventEmitter {
                     lbl.classList.add('datagrid-collapse', 'fa', 'fa-chevron-right');
                 cell.insertBefore(lbl, cell.firstChild);
                 lbl.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.cancelBubble = true;
+                    e.stopPropagation();
                     var c = (<HTMLElement>e.currentTarget);
                     var rowEl = c.parentElement.parentElement;
                     var r: any = c.dataset.parent;
@@ -873,5 +1039,18 @@ export class Datagrid extends EventEmitter {
             }
             this.doUpdate(this._updating);
         });
+    }
+
+    public scrollToRow(row) {
+        if (typeof row === 'number')
+            row = this.$body.firstElementChild.children[row];
+        var top = row.offsetTop;
+        var height = row.offsetHeight;
+        var sTop = this.$body.parentElement.scrollTop;
+        var sHeight = this.$body.parentElement.clientHeight;
+        if (top + height >= sTop + sHeight)
+            this.$body.parentElement.scrollTop = top - sHeight + height;
+        else if (top < sTop)
+            this.$body.parentElement.scrollTop = top;
     }
 }

@@ -2244,10 +2244,13 @@ export class VirtualEditor extends EditorBase {
                 }, 10);
                 break;
             case View.terrains:
+                this.$terrainGrid.focus();
                 break;
             case View.items:
+                this.$itemGrid.focus();
                 break;
             case View.exits:
+                this.$exitGrid.focus();
                 break;
             case View.mapRaw:
                 this.$mapRaw.focus();
@@ -2400,6 +2403,7 @@ export class VirtualEditor extends EditorBase {
                 }
                 this.$label.textContent = 'Terrains';
                 this.$terrainGrid.parent.style.display = '';
+                this.$terrainGrid.focus();
                 break;
             case View.items:
                 if (this.$itemRaw.dataset.dirty === 'true') {
@@ -2409,6 +2413,7 @@ export class VirtualEditor extends EditorBase {
                 }
                 this.$label.textContent = 'Items';
                 this.$itemGrid.parent.style.display = '';
+                this.$itemGrid.focus();
                 break;
             case View.exits:
                 if (this.$externalRaw.dataset.dirty === 'true') {
@@ -2418,6 +2423,7 @@ export class VirtualEditor extends EditorBase {
                 }
                 this.$label.textContent = 'External exits';
                 this.$exitGrid.parent.style.display = '';
+                this.$exitGrid.focus();
                 break;
             case View.mapRaw:
                 this.$label.textContent = 'Map raw';
@@ -2456,8 +2462,12 @@ export class VirtualEditor extends EditorBase {
         this.emit('menu-update', 'view|External exits raw', { checked: view == View.exitsRaw });
         this.emit('menu-update', 'view|room editor', { enabled: view == View.map });
         this.emit('menu-update', 'view|room preview', { enabled: view == View.map });
+        this.emit('menu-update', 'view|show terrain', { enabled: view == View.map });
+        this.emit('menu-update', 'view|show colors', { enabled: view == View.map });
         this.setButtonDisabled('room editor', view != View.map);
         this.setButtonDisabled('room preview', view != View.map);
+        this.setButtonDisabled('terrain', view != View.map);
+        this.setButtonDisabled('colors', view != View.map);
         this.setButtonState('map', view == View.map);
         this.setButtonState('terrains', view == View.terrains);
         this.setButtonState('items', view == View.items);
