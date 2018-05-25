@@ -10,6 +10,7 @@ export class EditorSettings {
     public outputSize = 170;
     public output = false;
     public nativeIcons: boolean = false;
+    public spellchecking: true;
 
     public window = {
         persistent: false,

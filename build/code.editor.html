@@ -1257,7 +1257,6 @@
             options.outputSize = 170;
         if (!options.maxRecent)
             options.maxRecent = 15;
-        /*
         try {
             if (!spellchecker && options.spellchecking)
             spellchecker = require('spellchecker');
@@ -1265,7 +1264,6 @@
         catch (ex) {
             ipcRenderer.send('error', ex);
         }
-        */
         if (_ready)
             window.$editor.updateOptions(options.editorOptions);
         output.css('height', options.outputSize + 'px');
