@@ -82,6 +82,7 @@ export class Datagrid extends EventEmitter {
     private $observer: MutationObserver;
     private $sort = { order: SortOrder.ascending, column: -1 };
     private $focused = -1;
+    private $shiftStart = -1;
 
     private $asc: HTMLElement;
     private $desc: HTMLElement;
@@ -169,6 +170,7 @@ export class Datagrid extends EventEmitter {
 
         this.$parent.addEventListener('keydown', (e) => {
             var el, idx;
+            var start, end, cnt;
             switch (e.which) {
                 case 32://space
                     if (e.ctrlKey) {
@@ -187,51 +189,108 @@ export class Datagrid extends EventEmitter {
                             el.classList.add('selected');
                             this.$selected.push(this.$focused);
                         }
+                        this.$shiftStart = this.$focused;
                     }
                     break;
                 case 38://up
+                    Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
+                    if (this.$focused < 1)
+                        this.$focused = 0;
+                    else if (this.$focused > 0)
+                        this.$focused--;
                     if (e.ctrlKey) {
-                        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
-                        if (this.$focused < 1)
-                            this.$focused = 0;
-                        else if (this.$focused > 0)
-                            this.$focused--;
                         el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
                         el.classList.add('focused');
                         this.scrollToRow(el);
                     }
                     else if (e.shiftKey) {
-
+                        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+                        var start, end;
+                        if (this.$selected.length === 0)
+                            start = this.$focused != -1 ? this.$focused : 0;
+                        else if (this.$shiftStart !== -1)
+                            start = this.$shiftStart;
+                        else
+                            start = this.$selected[0];
+                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        this.$selected = [];
+                        if (start > this.$focused) {
+                            end = start;
+                            start = this.$focused;
+                            this.$shiftStart = end;
+                            cnt = end - start + 1;
+                            for (; end >= start; end--)
+                                this.$selected.push(end);
+                            while (el && cnt--) {
+                                el.classList.add('selected');
+                                el = <HTMLElement>el.nextSibling;
+                            }
+                        }
+                        else {
+                            end = this.$focused;
+                            cnt = end - start + 1;
+                            this.$shiftStart = start;
+                            for (; start <= end; start++)
+                                this.$selected.push(start);
+                            while (el && cnt--) {
+                                el.classList.add('selected');
+                                el = <HTMLElement>el.previousSibling;
+                            }
+                        }
+                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        el.classList.add('focused');
                     }
                     else {
                         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
-                        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
-                        if (this.$focused < 1)
-                            this.$focused = 0;
-                        else if (this.$focused > 0)
-                            this.$focused--;
                         this.$selected = [this.$focused];
                         (<HTMLElement>this.$body.firstChild).children[this.$focused].classList.add('selected', 'focused');
                         this.scrollToRow((<HTMLElement>this.$body.firstChild).children[this.$focused]);
+                        this.$shiftStart = this.$focused;
                     }
                     break;
                 case 40://down
+                    Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
+                    if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length)
+                        this.$focused++;
                     if (e.ctrlKey) {
-                        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
-                        if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length)
-                            this.$focused++;
                         el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
                         el.classList.add('focused');
                         this.scrollToRow(el);
                     }
                     else if (e.shiftKey) {
-
+                        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+                        var start, end;
+                        if (this.$selected.length === 0)
+                            start = this.$focused != -1 ? this.$focused : 0;
+                        else
+                            start = this.$selected[0];
+                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        if (start > this.$focused) {
+                            end = start;
+                            start = this.$focused;
+                            cnt = end - start + 1;
+                            for (; end >= start; end--)
+                                this.$selected.push(end);
+                            while (el && cnt--) {
+                                el.classList.add('selected');
+                                el = <HTMLElement>el.nextSibling;
+                            }
+                        }
+                        else {
+                            end = this.$focused;
+                            cnt = end - start + 1;
+                            for (; start <= end; start++)
+                                this.$selected.push(start);
+                            while (el && cnt--) {
+                                el.classList.add('selected');
+                                el = <HTMLElement>el.previousSibling;
+                            }
+                        }
+                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        el.classList.add('focused');
                     }
                     else {
                         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
-                        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
-                        if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length - 1)
-                            this.$focused++;
                         this.$selected = [this.$focused];
                         (<HTMLElement>this.$body.firstChild).children[this.$focused].classList.add('selected', 'focused');
                         this.scrollToRow((<HTMLElement>this.$body.firstChild).children[this.$focused]);
@@ -599,6 +658,7 @@ export class Datagrid extends EventEmitter {
             this.emit('row-click', e, { row: this.$rows[r], rowIndex: r });
             Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
             if (e.ctrlKey) {
+                this.$focused = sIdx;
                 if (row.classList.contains('selected')) {
                     row.classList.remove('selected');
                     sIdx = this.$selected.indexOf(sIdx);
@@ -607,22 +667,25 @@ export class Datagrid extends EventEmitter {
                 else {
                     row.classList.add('selected');
                     this.$selected.push(sIdx);
-                }
-                this.$focused = sIdx;
+                }                
                 row.classList.add('focused');
+                this.$shiftStart = this.$focused;
             }
             else if (e.shiftKey) {
                 var start, end;
                 if (this.$selected.length === 0)
                     start = this.$focused != -1 ? this.$focused : 0;
+                else if (this.$shiftStart != -1)
+                    start = this.$shiftStart;
                 else
-                    start = this.$focused != -1 ? this.$focused : this.$selected[0];
+                    start = this.$selected[0];
                 Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
                 this.$selected = [];
                 var cnt;
                 if (start > sIdx) {
                     end = start;
                     start = sIdx;
+                    this.$shiftStart = end;
                     cnt = end - start + 1;
                     for (; end >= start; end--)
                         this.$selected.push(end);
@@ -635,6 +698,7 @@ export class Datagrid extends EventEmitter {
                 else {
                     end = sIdx;
                     cnt = end - start + 1;
+                    this.$shiftStart = start;
                     for (; start <= end; start++)
                         this.$selected.push(start);
                     while (row && cnt--) {
@@ -642,7 +706,7 @@ export class Datagrid extends EventEmitter {
                         row = <HTMLElement>row.previousSibling;
                     }
                 }
-                this.$focused = this.$selected[0];
+                this.$focused = sIdx;
                 el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
                 el.classList.add('focused');
             }
@@ -651,6 +715,7 @@ export class Datagrid extends EventEmitter {
                 this.$selected = [sIdx];
                 row.classList.add('selected', 'focused');
                 this.$focused = sIdx;
+                this.$shiftStart = this.$focused;
             }
         });
         row.addEventListener('dblclick', (e) => {
