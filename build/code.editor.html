@@ -1721,9 +1721,11 @@
 
     window.onbeforeunload = function (evt) {
         if (!closeWindow) {
+            console.log(document.activeElement);
+            if(document.activeElement)
+                document.activeElement.blur();
             evt.returnValue = false;
             setTimeout(() => {
-                window.focus();
                 var elems = document.body.getElementsByTagName("dialog");
                 var e = 0, el = elems.length;
                 for (; e < el; e++) {
