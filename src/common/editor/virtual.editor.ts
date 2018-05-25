@@ -185,6 +185,9 @@ export class VirtualEditor extends EditorBase {
     private $externalRaw: HTMLTextAreaElement;
     private $splitterPreview: Splitter;
     private $splitterEditor: Splitter;
+    private $terrainGrid: Datagrid;
+    private $itemGrid: Datagrid;
+    private $exitGrid: Datagrid;
 
     private $startValues: any = {};
 
@@ -427,8 +430,144 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(this.$itemRaw);
         this.$externalRaw = this.createRawControl();
         frag.appendChild(this.$externalRaw);
-        this.parent.appendChild(frag);
         //#endregion
+        //#region create datagrids
+        el = document.createElement('div');
+        el.classList.add('datagrid-standard');
+        el.style.display = 'none';
+        frag.appendChild(el);
+        this.$terrainGrid = new Datagrid(el);
+        this.$terrainGrid.addColumns([{
+            text: 'Index',
+            field: 'idx',
+            width: 50
+        },
+        {
+            text: 'Short',
+            field: 'short',
+            width: 250
+        },
+        {
+            text: 'Light',
+            field: 'light',
+            width: 50
+        },
+        {
+            text: 'Terrain',
+            field: 'terrain',
+            width: 125
+        },
+        {
+            text: 'Long',
+            field: 'long',
+            spring: true,
+            width: 250,
+            wrap: true
+        },
+        {
+            text: 'Sound',
+            field: 'sound',
+            spring: true,
+            width: 250,
+            wrap: true
+        },
+        {
+            text: 'Smell',
+            field: 'smell',
+            spring: true,
+            width: 250,
+            wrap: true
+        }]);
+        this.$terrainGrid.sort(0);
+        el = document.createElement('div');
+        el.classList.add('datagrid-standard');
+        el.style.display = 'none';
+        frag.appendChild(el);
+        this.$itemGrid = new Datagrid(el);
+        this.$itemGrid.showChildren = true;
+        this.$itemGrid.addColumns([{
+            text: 'Index',
+            field: 'idx',
+            width: 50,
+            formatter: (data) => {
+                if (!data || data.parent !== -1) return '';
+                return data.cell;
+            },
+            tooltipFormatter: (data) => {
+                if (!data || data.parent !== -1) return '';
+                return data.cell;
+            }
+        }, {
+            text: 'Item',
+            field: 'item',
+            sortable:false,
+            width: 250,
+            formatter: (data) => {
+                if (!data) return '';
+                if (data.parent === -1 && data.row.children)
+                    return data.row.children.map((c) => c.item).join(':');
+                return data.cell;
+            },
+            tooltipFormatter: (data) => {
+                if (!data) return '';
+                if (data.parent === -1 && data.row.children)
+                    return data.row.children.map((c) => c.item).join(':');
+                return data.cell;
+            }
+        }, {
+            text: 'Description',
+            field: 'description',
+            width: 300,
+            spring: true,
+            sortable:false,
+            formatter: (data) => {
+                if (!data) return '';
+                if (data.parent === -1 && data.row.children)
+                    return data.row.children.map((c) => c.description).join(':');
+                return data.cell;
+            },
+            tooltipFormatter: (data) => {
+                if (!data) return '';
+                if (data.parent === -1 && data.row.children)
+                    return data.row.children.map((c) => c.description).join(':');
+                return data.cell;
+            }
+        }]);
+        this.$itemGrid.sort(0);
+        el = document.createElement('div');
+        el.classList.add('datagrid-standard');
+        el.style.display = 'none';
+        frag.appendChild(el);
+        this.$exitGrid = new Datagrid(el);
+        this.$exitGrid.columns = [
+            {
+                text: 'X',
+                field: 'x'
+            },
+            {
+                text: 'Y',
+                field: 'y'
+            },
+            {
+                text: 'Z',
+                field: 'z',
+                visible: false
+            },
+            {
+                text: 'Exit',
+                field: 'exit',
+                width: 150,
+            },
+            {
+                text: 'Destination',
+                field: 'dest',
+                width: 300,
+                spring: true
+            }
+        ];
+        this.$exitGrid.sort(0);
+        //#endregion
+        this.parent.appendChild(frag);
         //#region create map editor
         this.$splitterEditor = new Splitter({ parent: this.parent, orientation: Orientation.vertical });
         this.$splitterEditor.on('splitter-moved', (e) => {
@@ -2199,10 +2338,13 @@ export class VirtualEditor extends EditorBase {
                 this.$splitterEditor.hide();
                 break;
             case View.terrains:
+                this.$terrainGrid.parent.style.display = 'none';
                 break;
             case View.items:
+                this.$itemGrid.parent.style.display = 'none';
                 break;
             case View.exits:
+                this.$exitGrid.parent.style.display = 'none';
                 break;
             case View.mapRaw:
                 this.$mapRaw.style.display = '';
@@ -2257,6 +2399,7 @@ export class VirtualEditor extends EditorBase {
                     this.$terrainRaw.dataset.dirty = null;
                 }
                 this.$label.textContent = 'Terrains';
+                this.$terrainGrid.parent.style.display = '';
                 break;
             case View.items:
                 if (this.$itemRaw.dataset.dirty === 'true') {
@@ -2265,6 +2408,7 @@ export class VirtualEditor extends EditorBase {
                     this.$itemRaw.dataset.dirty = null;
                 }
                 this.$label.textContent = 'Items';
+                this.$itemGrid.parent.style.display = '';
                 break;
             case View.exits:
                 if (this.$externalRaw.dataset.dirty === 'true') {
@@ -2273,6 +2417,7 @@ export class VirtualEditor extends EditorBase {
                     this.$externalRaw.dataset.dirty = null;
                 }
                 this.$label.textContent = 'External exits';
+                this.$exitGrid.parent.style.display = '';
                 break;
             case View.mapRaw:
                 this.$label.textContent = 'Map raw';
@@ -3834,14 +3979,18 @@ export class VirtualEditor extends EditorBase {
                 this.DrawMap();
             }, 500);
         }
+        var cols = this.$exitGrid.columns;
         if (this.$mapSize.depth < 2) {
             this.$depth = 0;
+            cols[2].visible = false;
         }
         else {
             this.$depthToolbar.value = '' + this.$depth;
             this.$depthToolbar.max = '' + (this.$mapSize.depth - 1);
             this.$depthToolbar.min = '' + 0;
+            cols[2].visible = true;
         }
+        this.$exitGrid.columns = cols;
         this.emit('rebuild-buttons');
         Timer.end('BuildMap time');
     }
@@ -3935,6 +4084,7 @@ export class VirtualEditor extends EditorBase {
             rows.push(row);
         }
         this.$descriptions = rows;
+        this.$terrainGrid.rows = this.$descriptions;
     }
 
     private loadItems() {
@@ -3985,6 +4135,7 @@ export class VirtualEditor extends EditorBase {
             rows.push(row);
         }
         this.$items = rows;
+        this.$itemGrid.rows = this.$items;
     }
 
     private loadExits() {
@@ -4012,6 +4163,7 @@ export class VirtualEditor extends EditorBase {
             rows.push(row);
         }
         this.$exits = rows;
+        this.$exitGrid.rows = this.$exits;
         this.$roomEditor.setPropertyOptions({
             property: 'ee',
             label: 'External exits',
@@ -4449,7 +4601,7 @@ class ExternalExitValueEditor extends ValueEditor {
             el.style.bottom = '60px';
             el.style.top = '38px';
             header.appendChild(el);
-            var dg = new Datagrid({ parent: el });
+            var dg = new Datagrid(el);
             dg.addColumns([{
                 text: 'Exit',
                 field: 'exit'
@@ -4603,7 +4755,7 @@ class ItemsValueEditor extends ValueEditor {
             el.style.bottom = '60px';
             el.style.top = '38px';
             header.appendChild(el);
-            var dg = new Datagrid({ parent: el });
+            var dg = new Datagrid(el);
             dg.addColumns([{
                 text: 'Item',
                 field: 'item',
