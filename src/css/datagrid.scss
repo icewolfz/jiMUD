@@ -143,6 +143,10 @@
     overflow: hidden;
 }
 
+.datagrid-column-tree:active.datagrid-column-sortable:active {
+    padding-left: 26px;
+}
+
 .datagrid-column-sortable:active .datagrid-column-sorted {}
 
 .datagrid-column-sorted {}
@@ -404,4 +408,30 @@ button.datagrid-footer-btn .glyphicon.datagrid-footer-btn-icon {
     font-size: 10px;
     margin: 0px;
     top: 0px;
+}
+
+.datagrid-cell-parent {
+    padding-left: 20px;
+}
+
+.datagrid-cell-child {
+    padding-left: 40px;
+}
+
+.datagrid-collapse.fa-chevron-down {
+    float: left;
+    margin-left: -18px;
+    margin-top: 1px;
+    width: auto;
+}
+
+.datagrid-collapse.fa-chevron-right {
+    float: left;
+    margin-left: -15px;
+    margin-top: 3px;
+    width: auto;
+}
+
+.datagrid-column-tree {
+    padding-left: 20px;
 }
