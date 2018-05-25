@@ -690,6 +690,61 @@
         }
     });
 
+    window.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        var inputMenu = Menu.buildFromTemplate([
+            { role: 'undo' },
+            { role: 'redo' },
+            { type: 'separator' },
+            { role: 'cut' },
+            { role: 'copy' },
+            { role: 'paste' },
+            { type: 'separator' },
+            { role: 'selectall' },
+        ]);
+        if (remote.getGlobal('debug')) {
+            inputMenu.append(new MenuItem({ type: 'separator' }));
+            inputMenu.append(new MenuItem({
+                label: 'Inspect', click: () => {
+                    remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                }
+            }));
+        }
+        var word = e.srcElement.value.substring(e.srcElement.selectionStart, e.srcElement.selectionEnd);
+        var ol = word.length;
+        word = word.trimRight();
+        var ll = ol - word.length;
+        if (ll > 0)
+            e.srcElement.selectionEnd = e.srcElement.selectionEnd - ll;
+
+        if (options.spellchecking && spellchecker && spellchecker.isMisspelled(word)) {
+            var words = spellchecker.getCorrectionsForMisspelling(word);
+            if (words.length > 0)
+                inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+            var start = e.srcElement.selectionStart;
+            var end = e.srcElement.selectionEnd;
+            for (var w = words.length - 1; w >= 0; w--) {
+                inputMenu.insert(0, new MenuItem({
+                    label: words[w],
+                    start: start,
+                    end: end,
+                    click: function (item) {
+                        var value = e.srcElement.value;
+                        value = value.substring(0, item.start) + item.label + value.substring(item.end);
+                        e.srcElement.value = value;
+                        e.srcElement.selectionStart = start + item.label.length;
+                        e.srcElement.selectionEnd = start + item.label.length;
+                        e.srcElement.setSelectionRange(start + item.label.length, start + item.label.length);
+                        //e.srcElement.blur();
+                        e.srcElement.focus();
+                    }
+                }));
+            }
+        }
+        inputMenu.popup(remote.getCurrentWindow());
+
+    });
+
     var menuTemplates = loadTemplates(parseTemplate(path.join('{assets}', 'templates')), '', ['wizards']);
     var subMenus = {
         'edit': [
@@ -1259,7 +1314,7 @@
             options.maxRecent = 15;
         try {
             if (!spellchecker && options.spellchecking)
-            spellchecker = require('spellchecker');
+                spellchecker = require('spellchecker');
         }
         catch (ex) {
             ipcRenderer.send('error', ex);
@@ -1668,6 +1723,7 @@
         if (!closeWindow) {
             evt.returnValue = false;
             setTimeout(() => {
+                window.focus();
                 var elems = document.body.getElementsByTagName("dialog");
                 var e = 0, el = elems.length;
                 for (; e < el; e++) {
@@ -2098,7 +2154,7 @@
             title: 'Save as...',
             defaultPath: panel.editor.file,
             filters: [
-                { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },    
+                { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
                 { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
                 { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
                 { name: 'Text files (*.txt)', extensions: ['txt'] },
@@ -2530,8 +2586,8 @@
                     saveOptions();
                 }
             });
-            p.editor.on('open-file', (file)=> {
-                if(existsSync(file))
+            p.editor.on('open-file', (file) => {
+                if (existsSync(file))
                     openFile(file);
             });
             p.editor.on('new-file', (file, value) => {
