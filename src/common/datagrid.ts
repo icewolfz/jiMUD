@@ -22,7 +22,7 @@ export enum EditorType {
     readonly
 }
 
-export enum UpdateType { none = 0, columns = 1, rows = 2, resize = 4, sort = 8, resizeHeight = 16, resizeWidth = 32 }
+export enum UpdateType { none = 0, columns = 1, rows = 2, resize = 4, sort = 8, resizeHeight = 16, resizeWidth = 32, buildRows = 64, buildColumns }
 
 export class Column {
     public text = '';
@@ -62,11 +62,13 @@ enum SortOrder { ascending, descending }
 export class Datagrid extends EventEmitter {
     private $parent: HTMLElement;
     private $rows = [];
+    private $rowsHtml = [];
     private $sortedRows = [];
     private $sortedChildren = [];
     private $cols = [];
     private $springCols = [];
     private $colWidth = 470;
+    private $hiddenColumnCount = 0;
     private $header: HTMLElement;
     private $body: HTMLElement;
     private $dataBody: HTMLElement;
@@ -92,7 +94,7 @@ export class Datagrid extends EventEmitter {
     set showChildren(value) {
         if (value === this.$children) return;
         this.$children = value;
-        this.doUpdate(UpdateType.columns | UpdateType.rows);
+        this.doUpdate(UpdateType.columns | UpdateType.buildRows);
     }
 
     constructor(options?: any) {
@@ -192,25 +194,27 @@ export class Datagrid extends EventEmitter {
     public addColumn(col) {
         if (!col) return;
         this.$cols.push(new Column(col));
-        this.doUpdate(UpdateType.columns | UpdateType.rows);
+        this.doUpdate(UpdateType.columns | UpdateType.buildRows);
     }
 
     public addColumns(cols) {
         if (!cols) return;
         for (var c = 0, cl = cols.length; c < cl; c++)
             this.$cols.push(new Column(cols[c]));
-        this.doUpdate(UpdateType.columns | UpdateType.rows);
+        this.doUpdate(UpdateType.columns | UpdateType.buildRows);
     }
 
     public addRow(row) {
         if (!row) return;
         this.$rows.push(row);
+        this.$rowsHtml.push(null);
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
 
     public addRows(rows) {
         if (!rows) return;
         this.$rows = this.$rows.concat(rows);
+        this.$rowsHtml = this.$rowsHtml.concat(new Array(this.$rows.length));
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
 
@@ -219,7 +223,8 @@ export class Datagrid extends EventEmitter {
             row = this.$rows.indexOf(row);
         if (row === -1 || row >= this.$rows.length)
             return;
-        this.rows.splice(row, 1);
+        this.$rows.splice(row, 1);
+        this.$rowsHtml.splice(row, 1);
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
 
@@ -235,6 +240,7 @@ export class Datagrid extends EventEmitter {
         var row = rows.length;
         while (row--) {
             this.$rows.splice(rows[row], 1);
+            this.$rowsHtml.splice(rows[row], 1);
         }
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
@@ -243,6 +249,7 @@ export class Datagrid extends EventEmitter {
     set rows(value) {
         value = value || [];
         this.$rows = value;
+        this.$rowsHtml = new Array(this.$rows.length)
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
     get columns() { return this.$cols.slice(0); }
@@ -255,7 +262,7 @@ export class Datagrid extends EventEmitter {
         }
         this.$colWidth = cw;
         this.$cols = cols;
-        this.doUpdate(UpdateType.columns | UpdateType.rows);
+        this.doUpdate(UpdateType.columns | UpdateType.buildRows);
     }
 
     public sort(column?, order?: SortOrder) {
@@ -273,7 +280,7 @@ export class Datagrid extends EventEmitter {
                 Array.from(this.$header.querySelectorAll('.datagrid-column-sorted'), a => a.classList.remove('datagrid-column-sorted'));
                 Array.from(this.$body.querySelectorAll('.datagrid-cell-sorted'), a => a.classList.remove('datagrid-cell-sorted'));
                 this.$header.children[0].children[this.$sort.column].classList.add('datagrid-column-sorted');
-                Array.from(this.$body.querySelectorAll('.datagrid-row:nth-child(' + column + ')'), a => a.classList.add('datagrid-cell-sorted'));
+                Array.from(this.$body.querySelectorAll('.datagrid-row:nth-child(' + (column - this.$hiddenColumnCount) + ')'), a => a.classList.add('datagrid-cell-sorted'));
             }
             if (order != oldOrder && this.$header.children.length) {
                 Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-desc'), a => a.parentElement.removeChild(a));
@@ -287,7 +294,7 @@ export class Datagrid extends EventEmitter {
             this.doUpdate(UpdateType.columns | UpdateType.rows);
         }
         var rows = this.$rows;
-        //only copy if differnt lengths
+        //only copy if different lengths
         if (this.$sortedRows.length != rows.length) {
             this.$sortedRows = [...rows.keys()];
             this.$sortedChildren = [...rows.keys()];
@@ -364,6 +371,43 @@ export class Datagrid extends EventEmitter {
     }
 
     private updateRows() {
+        if (this.$springCols.length > 0) {
+            for (var s = 0, sl = this.$springCols.length; s < sl; s++) {
+                var children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
+                children.map(c => {
+                    c.style.width = this.$springCols[s].width + 'px';
+                    c.style.minWidth = this.$springCols[s].width + 'px';
+                    c.style.maxWidth = this.$springCols[s].width + 'px';
+                });
+            }
+        }
+        while (this.$body.children[0].firstChild)
+            this.$body.children[0].removeChild(this.$body.children[0].firstChild);
+        var cols = this.$cols;
+        var c, cl = cols.length;
+        var rows = this.$rows;
+        var sorted = this.$sortedRows;
+        var frag = document.createDocumentFragment();
+        var row, cell, data;
+        var child, childLen;
+        for (var r = 0, l = sorted.length; r < l; r++) {
+            data = rows[sorted[r]]
+            //if (!this.$rowsHtml[sorted[r]])
+            //this.$rowsHtml[sorted[r]] = this.generateRow(data, r, sorted[r]);
+            //frag.appendChild(this.$rowsHtml[sorted[r]]);
+            frag.appendChild(this.generateRow(data, r, sorted[r]));
+            if (this.$children && data.children && this.$viewState[this.$sortedRows[r]]) {
+                for (child = 0, childLen = data.children.length; child < childLen; child++)
+                    frag.appendChild(this.generateRow(data.children[child], r, sorted[r], r, child));
+            }
+        }
+        this.$body.children[0].appendChild(frag);
+        this.$dataWidth = this.$body.children[0].clientWidth;
+        this.$dataHeight = this.$body.children[0].clientHeight;
+        this.doUpdate(UpdateType.resize);
+    }
+
+    private buildRows() {
         while (this.$body.children[0].firstChild)
             this.$body.children[0].removeChild(this.$body.children[0].firstChild);
         while (this.$body.children[1].firstChild)
@@ -377,6 +421,9 @@ export class Datagrid extends EventEmitter {
         var child, childLen;
         for (var r = 0, l = sorted.length; r < l; r++) {
             data = rows[sorted[r]]
+            //if (!this.$rowsHtml[sorted[r]])
+            //this.$rowsHtml[sorted[r]] = this.generateRow(data, r, sorted[r]);
+            //frag.appendChild(this.$rowsHtml[sorted[r]]);
             frag.appendChild(this.generateRow(data, r, sorted[r]));
             if (this.$children && data.children && this.$viewState[this.$sortedRows[r]]) {
                 for (child = 0, childLen = data.children.length; child < childLen; child++)
@@ -545,7 +592,7 @@ export class Datagrid extends EventEmitter {
                     //this.updateRows();
                     if (this.$springCols.length > 0) {
                         for (var s = 0, sl = this.$springCols.length; s < sl; s++) {
-                            var children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1) + ')'));
+                            var children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
                             children.map(c => {
                                 c.style.width = this.$springCols[s].width + 'px';
                                 c.style.minWidth = this.$springCols[s].width + 'px';
@@ -599,6 +646,7 @@ export class Datagrid extends EventEmitter {
             this.$firstColumn = c;
             break;
         }
+        this.$hiddenColumnCount = cols.filter(c => !c.visible).length;
         for (var c = 0, cl = cols.length; c < cl; c++) {
             if (!cols[c].visible) continue;
             cell = document.createElement('td');
@@ -627,7 +675,7 @@ export class Datagrid extends EventEmitter {
                         Array.from(this.$header.querySelectorAll('.datagrid-column-sorted'), a => a.classList.remove('datagrid-column-sorted'));
                         Array.from(this.$body.querySelectorAll('.datagrid-cell-sorted'), a => a.classList.remove('datagrid-cell-sorted'));
                         (<HTMLElement>e.currentTarget).classList.add('datagrid-column-sorted');
-                        Array.from(this.$body.querySelectorAll('.datagrid-row:nth-child(' + idx + ')'), a => a.classList.add('datagrid-cell-sorted'));
+                        Array.from(this.$body.querySelectorAll('.datagrid-row:nth-child(' + (idx - this.$hiddenColumnCount) + ')'), a => a.classList.add('datagrid-cell-sorted'));
                         this.$sort.column = idx;
                     }
                     if (this.$sort.order)
@@ -716,7 +764,7 @@ export class Datagrid extends EventEmitter {
             var r = sw % 1;
             sw = ~~sw;
             for (var s = 0; s < sl; s++) {
-                var children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1) + ')'));
+                var children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
                 if (hWidth < this.$dataWidth) {
                     (<HTMLElement>cols[s]).style.width = this.$springCols[s].width + 'px';
                     (<HTMLElement>cols[s]).style.minWidth = this.$springCols[s].width + 'px';
@@ -804,6 +852,10 @@ export class Datagrid extends EventEmitter {
             if ((this._updating & UpdateType.rows) === UpdateType.rows) {
                 this.updateRows();
                 this._updating &= ~UpdateType.rows;
+            }
+            if ((this._updating & UpdateType.buildRows) === UpdateType.buildRows) {
+                this.buildRows();
+                this._updating &= ~UpdateType.buildRows;
             }
             if ((this._updating & UpdateType.resize) === UpdateType.resize) {
                 this.resize();
