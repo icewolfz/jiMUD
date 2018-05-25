@@ -238,6 +238,11 @@ export class Datagrid extends EventEmitter {
                     }
 
                     break;
+                case 110:
+                case 46: //delete
+                    //TODO get row data index, row and other data and send to event
+                    this.emit('delete-row');
+                    break;
             }
         })
 
@@ -743,7 +748,7 @@ export class Datagrid extends EventEmitter {
                                 r = +r;
                                 var frag = document.createDocumentFragment();
                                 for (var child = 0, childLen = data.children.length; child < childLen; child++)
-                                    frag.appendChild(this.generateRow(data.children[child], r, r, r));
+                                    frag.appendChild(this.generateRow(-1, data.children[child], r, r, r));
                                 rowEl.parentNode.insertBefore(frag, rowEl.nextSibling);
                             }
                             rowEl.dataset.children = 'true';
