@@ -3,6 +3,7 @@ import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 import { runInThisContext } from 'vm';
+import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor } from './value.editors';
 const ResizeObserver = require('resize-observer-polyfill');
 
 export interface DatagridOptions {
@@ -13,20 +14,10 @@ export interface DatagridOptions {
     rows?: any[];
 }
 
-export enum EditorType {
-    default,
-    flag,
-    number,
-    select,
-    check,
-    custom,
-    readonly
-}
-
 export enum UpdateType { none = 0, columns = 1, rows = 2, resize = 4, sort = 8, resizeHeight = 16, resizeWidth = 32, buildRows = 64, buildColumns }
 
 export class Column {
-    public text = '';
+    public label = '';
     public type = 0;
     public field = null;
     public sortable = true;
@@ -64,7 +55,6 @@ enum SortOrder { ascending, descending }
 export class Datagrid extends EventEmitter {
     private $parent: HTMLElement;
     private $rows = [];
-    private $rowsHtml = [];
     private $sortedRows = [];
     private $sortedChildren = [];
     private $cols = [];
@@ -83,6 +73,10 @@ export class Datagrid extends EventEmitter {
     private $sort = { order: SortOrder.ascending, column: -1 };
     private $focused = -1;
     private $shiftStart = -1;
+
+    private $editor;
+    private $prevEditor;
+    private $editorClick;
 
     private $asc: HTMLElement;
     private $desc: HTMLElement;
@@ -162,6 +156,8 @@ export class Datagrid extends EventEmitter {
         this.$parent.classList.add('datagrid');
         this.$parent.tabIndex = 1;
         this.$parent.addEventListener('blur', (e) => {
+            if (this.$parent.contains(<Node>e.relatedTarget))
+                return;
             this.$parent.classList.remove('focused');
         });
         this.$parent.addEventListener('focus', (e) => {
@@ -169,6 +165,7 @@ export class Datagrid extends EventEmitter {
         })
 
         this.$parent.addEventListener('keydown', (e) => {
+            if (this.$editor) return;
             var el, idx;
             var start, end, cnt;
             switch (e.which) {
@@ -360,14 +357,13 @@ export class Datagrid extends EventEmitter {
     public addRow(row) {
         if (!row) return;
         this.$rows.push(row);
-        this.$rowsHtml.push(null);
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
 
     public addRows(rows) {
         if (!rows) return;
+        this.$editorClick = null;
         this.$rows = this.$rows.concat(rows);
-        this.$rowsHtml = this.$rowsHtml.concat(new Array(this.$rows.length));
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
 
@@ -377,7 +373,6 @@ export class Datagrid extends EventEmitter {
         if (row === -1 || row >= this.$rows.length)
             return;
         this.$rows.splice(row, 1);
-        this.$rowsHtml.splice(row, 1);
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
 
@@ -393,7 +388,6 @@ export class Datagrid extends EventEmitter {
         var row = rows.length;
         while (row--) {
             this.$rows.splice(rows[row], 1);
-            this.$rowsHtml.splice(rows[row], 1);
         }
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
@@ -402,7 +396,6 @@ export class Datagrid extends EventEmitter {
     set rows(value) {
         value = value || [];
         this.$rows = value;
-        this.$rowsHtml = new Array(this.$rows.length)
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
     get columns() { return this.$cols.slice(0); }
@@ -549,9 +542,6 @@ export class Datagrid extends EventEmitter {
         var cnt = 0;
         for (var r = 0, l = sorted.length; r < l; r++) {
             data = rows[sorted[r]]
-            //if (!this.$rowsHtml[sorted[r]])
-            //this.$rowsHtml[sorted[r]] = this.generateRow(data, r, sorted[r]);
-            //frag.appendChild(this.$rowsHtml[sorted[r]]);
             frag.appendChild(this.generateRow(cnt, data, r, sorted[r]));
             cnt++;
             if (this.$children && data.children && this.$viewState[this.$sortedRows[r]]) {
@@ -582,9 +572,6 @@ export class Datagrid extends EventEmitter {
         var cnt = 0;
         for (var r = 0, l = sorted.length; r < l; r++) {
             data = rows[sorted[r]]
-            //if (!this.$rowsHtml[sorted[r]])
-            //this.$rowsHtml[sorted[r]] = this.generateRow(data, r, sorted[r]);
-            //frag.appendChild(this.$rowsHtml[sorted[r]]);
             frag.appendChild(this.generateRow(cnt, data, r, sorted[r]));
             cnt++;
             if (this.$children && data.children && this.$viewState[this.$sortedRows[r]]) {
@@ -667,7 +654,7 @@ export class Datagrid extends EventEmitter {
                 else {
                     row.classList.add('selected');
                     this.$selected.push(sIdx);
-                }                
+                }
                 row.classList.add('focused');
                 this.$shiftStart = this.$focused;
             }
@@ -721,12 +708,9 @@ export class Datagrid extends EventEmitter {
         row.addEventListener('dblclick', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
                 return;
-            var sIdx = +(<HTMLElement>e.currentTarget).dataset.row;
+            var sIdx = +(<HTMLElement>e.currentTarget).dataset.dataInde;
             var r = this.$sortedRows[sIdx];
             this.emit('row-dblclick', e, { row: this.$rows[r], rowIndex: r });
-            if (e.defaultPrevented || e.cancelBubble)
-                return;
-            //TODO add editor support
         });
         for (c = 0; c < cl; c++) {
             if (!cols[c].visible) continue;
@@ -755,12 +739,13 @@ export class Datagrid extends EventEmitter {
             cell.style.textAlign = cols[c].align || '';
             if (cols[c].styleFormatter)
                 cols[c].styleFormatter({ row: data, cell: data[field], rowIndex: r, column: c, index: idx, field: cols[c].field, rows: this.$rows, parent: parent, child: child, dataIndex: dataIdx });
-            cell.dataset.row = '' + r;
+            cell.dataset.row = '' + cnt;
             cell.dataset.column = '' + c;
             cell.dataset.field = cols[c].field || '';
             cell.dataset.index = '' + idx;
             cell.dataset.parent = '' + parent;
             cell.dataset.child = '' + child;
+            cell.dataset.dataIndex = '' + dataIdx
             var value = null;
             if (field)
                 value = data[field];
@@ -792,7 +777,7 @@ export class Datagrid extends EventEmitter {
                     e.stopPropagation();
                     var c = (<HTMLElement>e.currentTarget);
                     var rowEl = c.parentElement.parentElement;
-                    var r: any = c.dataset.parent;
+                    var r: any = +c.dataset.parent;
                     var sib = <HTMLElement>rowEl.nextElementSibling;
                     if (this.$viewState[this.$sortedRows[r]]) {
                         c.classList.remove('fa-chevron-down');
@@ -810,10 +795,9 @@ export class Datagrid extends EventEmitter {
 
                         if (rowEl.dataset.children !== 'true') {
                             if (this.$children && data.children) {
-                                r = +r;
                                 var frag = document.createDocumentFragment();
                                 for (var child = 0, childLen = data.children.length; child < childLen; child++)
-                                    frag.appendChild(this.generateRow(-1, data.children[child], r, r, r));
+                                    frag.appendChild(this.generateRow(r + child, data.children[child], r, r, r, child));
                                 rowEl.parentNode.insertBefore(frag, rowEl.nextSibling);
                             }
                             rowEl.dataset.children = 'true';
@@ -841,22 +825,55 @@ export class Datagrid extends EventEmitter {
                     this.doUpdate(UpdateType.resize);
                 });
             }
-
+            cell.addEventListener('mousedown', (e) => {
+                this.$editorClick = e.currentTarget;
+                if (this.$editor && this.$editor.editor)
+                    this.$editor.editor.editorClick = this.$editorClick;
+            });
+            cell.addEventListener('mouseup', (e) => {
+                this.$editorClick = null;
+                if (this.$editor && this.$editor.editor)
+                    this.$editor.editor.editorClick = null;
+            });
             cell.addEventListener('click', (e) => {
                 if (e.defaultPrevented || e.cancelBubble)
                     return;
                 var el = <HTMLElement>e.currentTarget;
-                var idx = +el.dataset.idx;
-                var row = +el.dataset.row;
+                var dataIdx = +el.dataset.dataIndex;
                 var field = el.dataset.field;
+                var parent = +el.dataset.parent;
+                var child = +el.dataset.child;
+                var idx = +el.dataset.idx;
                 var col = +el.dataset.column;
-                var data = { row: null, cell: null, index: idx, column: col, rowIndex: row, field: field, parent: parent };
-                if (row >= 0 && row < this.$rows.length) {
-                    data.row = this.$rows[row];
-                    if (idx >= 0 && idx <= this.$rows[row].length)
-                        data.cell = this.$rows[row][idx];
+                var data = { row: null, cell: null, index: idx, column: col, rowIndex: +el.dataset.row, field: field, parent: parent, child: child, dataIndex: dataIdx };
+                if (dataIdx >= 0 && dataIdx < this.$rows.length) {
+                    if (parent === -1) {
+                        data.row = this.$rows[dataIdx];
+                        if (field)
+                            data.cell = data.row[field]
+                        else if (idx >= 0 && idx <= data.row.length)
+                            data.cell = data.row[idx];
+                    }
+                    else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
+                        data.row = this.$rows[parent].children[child];
+                        if (field)
+                            data.cell = data.row[field]
+                        else if (idx >= 0 && idx <= data.row.length)
+                            data.cell = data.row[idx];
+                    }
                 }
                 this.emit('cell-click', e, data);
+                if (e.defaultPrevented || e.cancelBubble || this.$cols[col].readonly)
+                    return;
+                if (e.ctrlKey || e.shiftKey) {
+                    if (this.$editor) {
+                        e.preventDefault();
+                        e.cancelBubble = true;
+                        e.stopPropagation();
+                    }
+                    return;
+                }
+                this.createEditor(el);
             });
             row.appendChild(cell);
         }
@@ -932,11 +949,11 @@ export class Datagrid extends EventEmitter {
             cell.style.width = w + 'px';
             cell.style.textAlign = cols[c].align || '';
             if (cols[c].colStyleFormatter)
-                cols[c].colStyleFormatter({ cell: cell, column: cols[c], columnIndex: c, text: cols[c].text });
+                cols[c].colStyleFormatter({ cell: cell, column: cols[c], columnIndex: c, text: cols[c].label });
             if (cols[c].colFormatter)
-                cell.innerHTML = cols[c].colFormatter({ column: cols[c], columnIndex: c, text: cols[c].text });
+                cell.innerHTML = cols[c].colFormatter({ column: cols[c], columnIndex: c, text: cols[c].label });
             else
-                cell.textContent = cols[c].text;
+                cell.textContent = cols[c].label;
             if (cols[c].sortable) {
                 if (c === sCol && sOrder)
                     cell.appendChild(this.$desc.cloneNode());
@@ -1123,4 +1140,178 @@ export class Datagrid extends EventEmitter {
         else if (top < sTop)
             this.$body.parentElement.scrollTop = top;
     }
+
+    public getPropertyOptions(prop, ops?) {
+        if (!prop || !this.$cols)
+            return null;
+        var col = this.$cols.filter(s => s.field === prop);
+        if (col.length === 0) return;
+        col = col[0];
+        if (ops) {
+            return col[ops];
+        }
+        return col;
+    }
+
+    public clearEditor() {
+        if (!this.$editor) return;
+        var value;
+        var oldValue;
+        var prop = this.$editor.property;
+        if (this.$editor.editor)
+            value = this.$editor.editor.value;
+        oldValue = this.$editor.data[this.$editor.property];
+        var dataIdx, field, parent, child, idx, data;
+        if (value !== oldValue) {
+            this.$editor.data[prop] = value;
+            var col = this.$cols[this.$editor.column];
+            dataIdx = +this.$editor.el.dataset.dataIndex;
+            field = this.$editor.el.dataset.field;
+            parent = +this.$editor.el.dataset.parent;
+            child = +this.$editor.el.dataset.child;
+            idx = +this.$editor.el.dataset.idx;
+            data = { row: null, cell: null, index: idx, column: +this.$editor.el.dataset.column, rowIndex: +this.$editor.el.dataset.row, field: field, parent: parent, child: child, dataIndex: dataIdx };
+            if (dataIdx >= 0 && dataIdx < this.$rows.length) {
+                if (parent === -1) {
+                    data.row = this.$rows[dataIdx];
+                    if (field)
+                        data.cell = data.row[field]
+                    else if (idx >= 0 && idx <= data.row.length)
+                        data.cell = data.row[idx];
+                }
+                else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
+                    data.row = this.$rows[parent].children[child];
+                    if (field)
+                        data.cell = data.row[field]
+                    else if (idx >= 0 && idx <= data.row.length)
+                        data.cell = data.row[idx];
+                }
+            }
+            if (col.formatter)
+                this.$editor.el.textContent = col.formatter(data);
+            else
+                this.$editor.el.textContent = value || '';
+        }
+        if (this.$editor.editor)
+            this.$editor.editor.destroy();
+        this.$prevEditor = {
+            el: this.$editor.el,
+            property: this.$editor.property,
+            type: this.$editor.type
+        }
+        this.$editor = null;
+        //do last in case the event changes the property editor
+        if (value !== oldValue) {
+            this.emit('value-changed', value, oldValue, dataIdx, child);
+        }
+    }
+
+    public createEditor(el: HTMLElement) {
+        if (!el) return;
+        var prop = el.dataset.field;
+        var col = +el.dataset.column;
+        var row = [...el.parentElement.parentElement.children].indexOf(el.parentElement);
+        if (!prop) return;
+        if (this.$editor) {
+            if (this.$editor.property === prop && this.$editor.row === row)
+                return;
+            this.clearEditor();
+        }
+        this.$editor = {
+            el: el,
+            editor: null,
+            property: prop,
+            type: EditorType.default,
+            column: col,
+            row: row
+        }
+        var type = this.editorType(col);
+        var editorOptions;
+        if (this.$cols[col] && this.$cols[col].editor) {
+            editorOptions = this.$cols[col].editor.options;
+            if (this.$cols[col].editor.hasOwnProperty('show')) {
+                if (typeof this.$cols[col].editor.show === 'function') {
+                    if (!this.$cols[col].editor.show(col, { index: +el.dataset.idx, column: col, rowIndex: +el.dataset.row, field: el.dataset.field, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: +el.dataset.dataIndex })) {
+                        this.$editor = null;
+                        return;
+                    }
+                }
+                else if (!this.$cols[col].editor.show) {
+                    this.$editor = null;
+                    return;
+                }
+
+            }
+        }
+        this.$editor.type = type;
+        var values;
+        var vl;
+        var dataIdx = +this.$editor.el.dataset.dataIndex;
+        var parent = +this.$editor.el.dataset.parent;
+        var child = +this.$editor.el.dataset.child;
+        var data;
+        if (dataIdx >= 0 && dataIdx < this.$rows.length) {
+            if (parent === -1)
+                data = this.$rows[dataIdx];
+            else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
+                data = this.$rows[parent].children[child];
+            }
+        }
+        this.$editor.data = data;
+        switch (type) {
+            case EditorType.flag:
+                this.$editor.editor = new FlagValueEditor(this, el, prop, editorOptions);
+                this.$editor.editor.value = data[prop];
+                this.$editor.editor.data = data;
+                break;
+            case EditorType.number:
+                this.$editor.editor = new NumberValueEditor(this, el, prop, editorOptions);
+                this.$editor.editor.value = data[prop];
+                this.$editor.editor.data = data;
+                break;
+            case EditorType.select:
+                break;
+            case EditorType.custom:
+                if (this.$cols[col] && this.$cols[col].editor && this.$cols[col].editor.editor) {
+                    this.$editor.editor = new this.$cols[col].editor.editor(this, el, prop, editorOptions);
+                    this.$editor.editor.value = data[prop];
+                    this.$editor.editor.data = data;
+                }
+                break;
+            default:
+                switch (typeof (data[prop])) {
+                    case 'boolean':
+                        this.$editor.editor = new BooleanValueEditor(this, el, prop, editorOptions);
+                        this.$editor.editor.value = data[prop];
+                        this.$editor.editor.data = data;
+                        break;
+                    case 'number':
+                        this.$editor.editor = new NumberValueEditor(this, el, prop, editorOptions);
+                        this.$editor.editor.value = data[prop];
+                        this.$editor.editor.data = data;
+                        break;
+                    default:
+                        this.$editor.editor = new TextValueEditor(this, el, prop, editorOptions);
+                        this.$editor.editor.value = data[prop];
+                        this.$editor.editor.data = data;
+                        break;
+                }
+                break;
+        }
+        if (this.$editor.editor)
+            this.$editor.editor.focus();
+        else
+            this.$editor = null;
+    }
+
+    private editorType(col) {
+        if (col < 0 || col >= this.$cols.length)
+            return EditorType.default;
+        if (!this.$cols[col].editor)
+            return EditorType.default;
+        if (this.$cols[col].editor)
+            return this.$cols[col].editor.type || EditorType.default;
+        return EditorType.default;
+    }
+
 }

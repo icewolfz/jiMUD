@@ -730,13 +730,23 @@ cause test to be brighter but more bold looking
     padding-left: 2px;
     width: 100%;
     background-color: white;
+    color: black;
 }
 
-.property-grid-editor input[type=checkbox], input[type=checkbox].property-grid-editor {
+.datagrid .property-grid-editor,
+.datagrid .property-grid-editor-dropdown input,
+.datagrid .property-grid-editor-flag input {
+    bottom: initial;
+    padding: 2px 4px;
+}
+
+.property-grid-editor input[type=checkbox], 
+input[type=checkbox].property-grid-editor {
     width: auto;
 }
 
-.property-grid-editor-dropdown textarea {
+.property-grid-editor-dropdown textarea, 
+.property-grid-editor-dropdown-fill textarea {
     border: 0px;
     outline: none;
     padding: 0;
@@ -749,7 +759,9 @@ cause test to be brighter but more bold looking
     text-overflow: ellipsis;
 }
 
-.property-grid-editor-dropdown input, .property-grid-editor-flag input {
+.property-grid-editor-dropdown input,
+.property-grid-editor-dropdown-fill input,
+.property-grid-editor-flag input {
     border: 0px;
     outline: none;
     padding: 0;
@@ -757,11 +769,14 @@ cause test to be brighter but more bold looking
     padding-right: 1px;
 }
 
-.property-grid-editor-dropdown textarea.single {
+.property-grid-editor-dropdown textarea.single,
+.property-grid-editor-dropdown-fill textarea.single {
     white-space: normal;
 }
 
-.property-grid-editor-dropdown, .property-grid-editor-flag {
+.property-grid-editor-dropdown,
+.property-grid-editor-dropdown-fill,
+.property-grid-editor-flag {
     border: 1px solid #f2cb7f;
     right: -1px;
     bottom: 0;
@@ -772,9 +787,16 @@ cause test to be brighter but more bold looking
     z-index: 100;
     overflow: hidden;
     background-color: white;
+    color: black;
 }
 
-.property-grid-editor-dropdown-container {
+.datagrid .property-grid-editor-dropdown,
+.datagrid .property-grid-editor-flag {
+    height: 22px;
+}
+
+.property-grid-editor-dropdown-container,
+.property-grid-editor-dropdown-fill-container {
     right: 19px;
     position: absolute;
     top: -1px;
@@ -782,7 +804,9 @@ cause test to be brighter but more bold looking
     bottom: 0;
 }
 
-.property-grid-editor-dropdown button, .property-grid-editor-flag button {
+.property-grid-editor-dropdown button, 
+.property-grid-editor-dropdown-fill button,
+.property-grid-editor-flag button {
     width: 18px;
     right: 0;
     bottom: 0;
@@ -792,12 +816,14 @@ cause test to be brighter but more bold looking
     padding: 0;
     text-align: center;
     outline: none;
+    color: black;
 }
 
 .property-grid-editor-flag-dropdown {
-    overflow:auto;
+    overflow: auto;
     background-color: white;
     border: 1px solid #f2cb7f;
+    color: black;
     outline: none;
 }
 
@@ -809,12 +835,12 @@ cause test to be brighter but more bold looking
     margin: 0px;
 }
 
-.property-grid-editor-flag-dropdown label:hover, .property-grid-editor-flag-dropdown div:hover  {
-    background-color: rgba(135, 206, 250, 0.50);
+.property-grid-editor-flag-dropdown label:hover, .property-grid-editor-flag-dropdown div:hover {
+    background-color: rgba(135, 206, 250, 0.5);
 }
 
 .property-grid-editor-flag-dropdown div {
     padding-left: 2px;
-    padding-right: 2px;   
+    padding-right: 2px;
     width: 100%;
 }

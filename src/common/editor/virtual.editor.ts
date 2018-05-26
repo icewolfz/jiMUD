@@ -1,6 +1,7 @@
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { Splitter, Orientation } from './../splitter';
-import { PropertyGrid, EditorType, ValueEditor } from './../propertygrid';
+import { PropertyGrid } from './../propertygrid';
+import { EditorType, ValueEditor, DropdownEditValueEditor } from './../value.editors';
 import { Datagrid } from './../datagrid';
 import { existsSync, capitalize, wordwrap, splitQuoted, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
 const { clipboard, ipcRenderer, remote } = require('electron');
@@ -438,46 +439,111 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(el);
         this.$terrainGrid = new Datagrid(el);
         this.$terrainGrid.addColumns([{
-            text: 'Index',
+            label: 'Index',
             field: 'idx',
             width: 50
         },
         {
-            text: 'Short',
+            label: 'Short',
             field: 'short',
-            width: 250
+            width: 250,
+            editor: {
+                options: {
+                    singleLine: true
+                }
+            }
         },
         {
-            text: 'Light',
+            label: 'Light',
             field: 'light',
             width: 50
         },
         {
-            text: 'Terrain',
+            label: 'Terrain',
             field: 'terrain',
-            width: 125
+            width: 125,
+            editor: {
+                type: EditorType.custom,
+                editor: DropdownEditValueEditor,
+                options: {
+                    data: [
+                        "beach",
+                        "dirtroad",
+                        "icesheet",
+                        "prairie",
+                        "stone",
+                        "bog",
+                        "farmland",
+                        "jungle",
+                        "river",
+                        "swamp",
+                        "city",
+                        "forest",
+                        "lake",
+                        "rockdesert",
+                        "tundra",
+                        "cliff",
+                        "grass",
+                        "mountain",
+                        "rocky",
+                        "underwater",
+                        "cobble",
+                        "grassland",
+                        "ocean",
+                        "sand",
+                        "water",
+                        "desert",
+                        "highmountain",
+                        "pavedroad",
+                        "sanddesert",
+                        "dirt",
+                        "hills",
+                        "plains",
+                        "savannah"
+                    ]
+                }
+            },
         },
         {
-            text: 'Long',
+            label: 'Long',
             field: 'long',
             spring: true,
             width: 250,
-            wrap: true
+            wrap: true,
+            editor: {
+                options: {
+                    wrap: true
+                }
+            }
         },
         {
-            text: 'Sound',
+            label: 'Sound',
             field: 'sound',
             spring: true,
             width: 250,
-            wrap: true
+            wrap: true,
+            editor: {
+                options: {
+                    wrap: true
+                }
+            }
         },
         {
-            text: 'Smell',
+            label: 'Smell',
             field: 'smell',
             spring: true,
             width: 250,
-            wrap: true
+            wrap: true,
+            editor: {
+                options: {
+                    wrap: true
+                }
+            }
         }]);
+        this.$terrainGrid.on('cell-click', (e, data) => {
+            if (!data || data.column === 0)
+                e.preventDefault();
+        });
         this.$terrainGrid.sort(0);
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
@@ -485,8 +551,12 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(el);
         this.$itemGrid = new Datagrid(el);
         this.$itemGrid.showChildren = true;
+        this.$itemGrid.on('cell-click', (e, data) => {
+            if (!data || data.parent === -1 || data.column === 0)
+                e.preventDefault();
+        });
         this.$itemGrid.addColumns([{
-            text: 'Index',
+            label: 'Index',
             field: 'idx',
             width: 50,
             formatter: (data) => {
@@ -498,9 +568,9 @@ export class VirtualEditor extends EditorBase {
                 return data.cell;
             }
         }, {
-            text: 'Item',
+            label: 'Item',
             field: 'item',
-            sortable:false,
+            sortable: false,
             width: 250,
             formatter: (data) => {
                 if (!data) return '';
@@ -515,11 +585,11 @@ export class VirtualEditor extends EditorBase {
                 return data.cell;
             }
         }, {
-            text: 'Description',
+            label: 'Description',
             field: 'description',
             width: 300,
             spring: true,
-            sortable:false,
+            sortable: false,
             formatter: (data) => {
                 if (!data) return '';
                 if (data.parent === -1 && data.row.children)
@@ -541,25 +611,49 @@ export class VirtualEditor extends EditorBase {
         this.$exitGrid = new Datagrid(el);
         this.$exitGrid.columns = [
             {
-                text: 'X',
+                label: 'X',
                 field: 'x'
             },
             {
-                text: 'Y',
+                label: 'Y',
                 field: 'y'
             },
             {
-                text: 'Z',
+                label: 'Z',
                 field: 'z',
                 visible: false
             },
             {
-                text: 'Exit',
+                label: 'Exit',
                 field: 'exit',
                 width: 150,
+                editor: {
+                    type: EditorType.custom,
+                    editor: DropdownEditValueEditor,
+                    options: {
+                        data: [
+                            "surface",
+                            "dive",
+                            "swim",
+                            "portal",
+                            "down",
+                            "up",
+                            "enter",
+                            "out",
+                            "northwest",
+                            "west",
+                            "southwest",
+                            "south",
+                            "southeast",
+                            "east",
+                            "northeast",
+                            "north"
+                        ]
+                    }
+                },                
             },
             {
-                text: 'Destination',
+                label: 'Destination',
                 field: 'dest',
                 width: 300,
                 spring: true
@@ -1516,7 +1610,12 @@ export class VirtualEditor extends EditorBase {
             {
                 property: 'short',
                 group: 'Description',
-                sort: 0
+                sort: 0,
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
             },
             {
                 property: 'long',
@@ -4334,137 +4433,6 @@ export class VirtualEditor extends EditorBase {
     }
 }
 
-class DropdownEditValueEditor extends ValueEditor {
-    private $el: HTMLElement;
-    private $dropdown: HTMLElement;
-    private $editor: HTMLInputElement;
-    private $value;
-
-    create() {
-        this.$el = document.createElement('div');
-        this.$el.classList.add('property-grid-editor-flag');
-        this.$editor = document.createElement('input');
-        this.$editor.type = 'text';
-        this.$editor.classList.add('property-grid-editor');
-        this.$editor.addEventListener('blur', (e) => {
-            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
-                e.preventDefault();
-                e.stopPropagation();
-                e.cancelBubble = true;
-                return;
-            }
-            this.grid.clearEditor();
-        });
-        this.$editor.addEventListener('focus', () => {
-            this.$editor.select();
-        })
-        this.$editor.addEventListener('click', (e) => {
-            this.$editor.dataset.aOpen = null;
-        });
-        this.$editor.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27 || e.keyCode === 13) {
-                this.$editor.blur();
-                e.preventDefault();
-            }
-        });
-        this.$el.appendChild(this.$editor);
-
-        var vl = document.createElement('button');
-        vl.title = 'Open editor...'
-        vl.innerHTML = '<span class="caret"></span>';
-        vl.dataset.editor = 'dropdown';
-        vl.addEventListener('click', (e) => {
-            if (this.$editor.dataset.aOpen == 'true') {
-                this.$editor.dataset.aOpen = null;
-                this.$editor.focus();
-                resetCursor(this.$editor);
-                return;
-            }
-            this.$dropdown = document.createElement('div');
-            this.$dropdown.tabIndex = -1;
-            this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
-            this.$dropdown.addEventListener('keyup', (e) => {
-                if (e.keyCode === 27) {
-                    this.focus();
-                    this.$editor.dataset.aOpen = null;
-                }
-                return;
-            });
-            var b = this.parent.getBoundingClientRect();
-            if (b.width < 150) {
-                this.$dropdown.style.left = (b.left - 150 + b.width) + 'px';
-                this.$dropdown.style.width = '300px';
-            }
-            else {
-                this.$dropdown.style.left = b.left + 'px';
-                this.$dropdown.style.width = (b.width) + 'px';
-            }
-            this.$dropdown.style.top = (b.bottom) + 'px';
-            this.$dropdown.style.zIndex = '100';
-            this.$dropdown.style.position = 'absolute';
-            this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
-            var data = this.options ? this.options.data || [] : [];
-            var tl = data.length;
-            var height = tl * 20;
-            while (tl--) {
-                var el = document.createElement('div');
-                el.textContent = capitalize(data[tl]);
-                el.addEventListener('click', (e) => {
-                    this.value = (<HTMLElement>e.currentTarget).textContent.toLowerCase();
-                    this.focus();
-                    this.$editor.dataset.aOpen = null;
-                });
-                this.$dropdown.appendChild(el);
-            }
-            if (height < 160) {
-                this.$dropdown.style.height = height + 'px';
-                this.$dropdown.style.overflow = 'hidden';
-            }
-            else
-                this.$dropdown.style.height = '160px';
-            document.body.appendChild(this.$dropdown);
-            this.$dropdown.focus();
-        });
-        this.$el.appendChild(vl);
-        this.parent.appendChild(this.$el);
-    }
-    focus() {
-        this.$editor.focus();
-        resetCursor(this.$editor);
-    }
-    destroy() {
-        if (this.$dropdown && this.$dropdown.parentElement)
-            this.$dropdown.parentElement.removeChild(this.$dropdown);
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
-    }
-
-    private $dropdownEvent = (e) => {
-        if (e.relatedTarget && (<HTMLElement>e.relatedTarget).parentElement == this.$dropdown) {
-            e.preventDefault();
-            this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
-            return;
-        }
-        var ec = this.editorClick;
-        this.$editor.dataset.aOpen = 'true';
-        this.$dropdown.parentElement.removeChild(this.$dropdown);
-        this.$dropdown = null;
-        if (ec)
-            this.grid.createEditor(ec);
-        else {
-            this.focus();
-        }
-    }
-
-    get value() {
-        return this.$editor.value;
-    }
-    set value(value: any) {
-        this.$editor.value = value;
-    }
-}
-
-
 class FileOpenValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $editor: HTMLInputElement;
@@ -4484,7 +4452,7 @@ class FileOpenValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
-            this.grid.clearEditor();
+            this.control.clearEditor();
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -4499,7 +4467,7 @@ class FileOpenValueEditor extends ValueEditor {
         vl.innerHTML = '&hellip;';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
-            this.grid.emit('open-file', this.property);
+            this.control.emit('open-file', this.property);
         });
         this.$el.appendChild(vl);
         this.parent.appendChild(this.$el);
@@ -4516,9 +4484,9 @@ class FileOpenValueEditor extends ValueEditor {
         if (!value) value = this.$value;
         if (!value)
             return 'None';
-        var ops = this.grid.getPropertyOptions(this.property);
+        var ops = this.control.getPropertyOptions(this.property);
         if (ops && ops.formatter)
-            return ops.formatter(this.property, value, this.grid.object);
+            return ops.formatter(this.property, value, this.data);
         if (this.options && this.options.enum)
             return enumToString(value, this.options.enum);
         if (typeof value === 'boolean')
@@ -4554,7 +4522,7 @@ class ExternalExitValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
-            this.grid.clearEditor();
+            this.control.clearEditor();
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -4595,7 +4563,7 @@ class ExternalExitValueEditor extends ValueEditor {
             header.appendChild(button);
             var el = document.createElement('div');
             el.style.paddingTop = '2px';
-            el.innerHTML = capitalize(this.grid.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
+            el.innerHTML = capitalize(this.control.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
             header.appendChild(el);
             mDialog.appendChild(header);
             header = document.createElement('div');
@@ -4613,16 +4581,16 @@ class ExternalExitValueEditor extends ValueEditor {
             header.appendChild(el);
             var dg = new Datagrid(el);
             dg.addColumns([{
-                text: 'Exit',
+                label: 'Exit',
                 field: 'exit'
             },
             {
-                text: 'Destination',
+                label: 'Destination',
                 field: 'dest',
                 spring: true,
                 width: 200
             }]);
-            dg.addRows((this.options ? this.options.data || [] : []).slice().filter(e => e.x === this.grid.object.x && e.y === this.grid.object.y && e.z === this.grid.object.z));
+            dg.addRows((this.options ? this.options.data || [] : []).slice().filter(e => e.x === this.data.x && e.y === this.data.y && e.z === this.data.z));
             (<any>window).dg = dg;
             header = document.createElement('div');
             header.classList.add('dialog-footer');
@@ -4670,9 +4638,9 @@ class ExternalExitValueEditor extends ValueEditor {
         if (!value) value = this.$value;
         if (!value)
             return 'None';
-        var ops = this.grid.getPropertyOptions(this.property, 'formatter');
+        var ops = this.control.getPropertyOptions(this.property, 'formatter');
         if (ops)
-            return ops(this.property, value, this.grid.object);
+            return ops(this.property, value, this.data);
         if (this.options && this.options.enum)
             return enumToString(value, this.options.enum);
         if (typeof value === 'boolean')
@@ -4708,7 +4676,7 @@ class ItemsValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
-            this.grid.clearEditor();
+            this.control.clearEditor();
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -4749,7 +4717,7 @@ class ItemsValueEditor extends ValueEditor {
             header.appendChild(button);
             var el = document.createElement('div');
             el.style.paddingTop = '2px';
-            el.innerHTML = capitalize(this.grid.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
+            el.innerHTML = capitalize(this.control.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
             header.appendChild(el);
             mDialog.appendChild(header);
             header = document.createElement('div');
@@ -4767,12 +4735,12 @@ class ItemsValueEditor extends ValueEditor {
             header.appendChild(el);
             var dg = new Datagrid(el);
             dg.addColumns([{
-                text: 'Item',
+                label: 'Item',
                 field: 'item',
                 width: 150
             },
             {
-                text: 'Description',
+                label: 'Description',
                 field: 'description',
                 spring: true,
                 width: 200
@@ -4825,9 +4793,9 @@ class ItemsValueEditor extends ValueEditor {
         if (!value) value = this.$value;
         if (!value)
             return 'None';
-        var ops = this.grid.getPropertyOptions(this.property, 'formatter');
+        var ops = this.control.getPropertyOptions(this.property, 'formatter');
         if (ops)
-            return ops(this.property, value, this.grid.object);
+            return ops(this.property, value, this.data);
         if (this.options && this.options.enum)
             return enumToString(value, this.options.enum);
         if (typeof value === 'boolean')
