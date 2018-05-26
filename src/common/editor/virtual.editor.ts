@@ -540,7 +540,7 @@ export class VirtualEditor extends EditorBase {
                 }
             }
         }]);
-        this.$terrainGrid.on('cell-click', (e, data) => {
+        this.$terrainGrid.on('cell-dblclick', (e, data) => {
             if (!data || data.column === 0)
                 e.preventDefault();
         });
@@ -551,7 +551,7 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(el);
         this.$itemGrid = new Datagrid(el);
         this.$itemGrid.showChildren = true;
-        this.$itemGrid.on('cell-click', (e, data) => {
+        this.$itemGrid.on('cell-dblclick', (e, data) => {
             if (!data || data.parent === -1 || data.column === 0)
                 e.preventDefault();
         });
@@ -650,7 +650,7 @@ export class VirtualEditor extends EditorBase {
                             "north"
                         ]
                     }
-                },                
+                },
             },
             {
                 label: 'Destination',
@@ -4507,6 +4507,8 @@ class ExternalExitValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $editor: HTMLInputElement;
     private $value;
+    private $edit;
+    private $del;
 
     create() {
         this.$el = document.createElement('div');
@@ -4582,16 +4584,35 @@ class ExternalExitValueEditor extends ValueEditor {
             var dg = new Datagrid(el);
             dg.addColumns([{
                 label: 'Exit',
-                field: 'exit'
+                field: 'exit',
+                editor: {
+                    options: {
+                        container: mDialog
+                    }
+                }
             },
             {
                 label: 'Destination',
                 field: 'dest',
                 spring: true,
-                width: 200
+                width: 200,
+                editor: {
+                    options: {
+                        container: mDialog
+                    }
+                }
             }]);
             dg.addRows((this.options ? this.options.data || [] : []).slice().filter(e => e.x === this.data.x && e.y === this.data.y && e.z === this.data.z));
-            (<any>window).dg = dg;
+            dg.on('selection-changed', () => {
+                if (dg.selectedCount) {
+                    this.$edit.removeAttribute('disabled');
+                    this.$del.removeAttribute('disabled');                    
+                }
+                else {
+                    this.$edit.setAttribute('disabled', 'true');
+                    this.$del.setAttribute('disabled', 'true');
+                }
+            });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
             mDialog.appendChild(header);
@@ -4620,6 +4641,38 @@ class ExternalExitValueEditor extends ValueEditor {
             });
             button.textContent = 'Ok';
             header.appendChild(button);
+            el = document.createElement('div');
+            el.classList.add('btn-group');
+            el.style.cssFloat = 'left';
+            button = document.createElement('button');
+            button.type = 'button';
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+
+            });
+            button.innerHTML = '<i class="fa fa-plus"></i>';
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.type = 'button';
+            button.disabled = true;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+
+            });
+            button.innerHTML = '<i class="fa fa-edit"></i>';
+            this.$edit = button;
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.disabled = true;
+            button.type = 'button';
+            button.classList.add('btn', 'btn-danger');
+            button.addEventListener('click', () => {
+
+            });
+            button.innerHTML = '<i class="fa fa-times"></i>';
+            this.$del = button;
+            el.appendChild(button);
+            header.appendChild(el);
             document.body.appendChild(mDialog);
             mDialog.showModal();
         });
@@ -4661,6 +4714,8 @@ class ItemsValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $editor: HTMLInputElement;
     private $value;
+    private $edit;
+    private $del;
 
     create() {
         this.$el = document.createElement('div');
@@ -4737,16 +4792,35 @@ class ItemsValueEditor extends ValueEditor {
             dg.addColumns([{
                 label: 'Item',
                 field: 'item',
-                width: 150
+                width: 150,
+                editor: {
+                    options: {
+                        container: mDialog
+                    }
+                }
             },
             {
                 label: 'Description',
                 field: 'description',
                 spring: true,
-                width: 200
+                width: 200,
+                editor: {
+                    options: {
+                        container: mDialog
+                    }
+                }
             }]);
             dg.addRows(this.$value || []);
-            (<any>window).dg = dg;
+            dg.on('selection-changed', () => {
+                if (dg.selectedCount) {
+                    this.$edit.removeAttribute('disabled');
+                    this.$del.removeAttribute('disabled');                    
+                }
+                else {
+                    this.$edit.setAttribute('disabled', 'true');
+                    this.$del.setAttribute('disabled', 'true');
+                }
+            });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
             mDialog.appendChild(header);
@@ -4775,6 +4849,38 @@ class ItemsValueEditor extends ValueEditor {
             });
             button.textContent = 'Ok';
             header.appendChild(button);
+            el = document.createElement('div');
+            el.classList.add('btn-group');
+            el.style.cssFloat = 'left';
+            button = document.createElement('button');
+            button.type = 'button';
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+
+            });
+            button.innerHTML = '<i class="fa fa-plus"></i>';
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.type = 'button';
+            button.disabled = true;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+
+            });
+            button.innerHTML = '<i class="fa fa-edit"></i>';
+            this.$edit = button;
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.disabled = true;
+            button.type = 'button';
+            button.classList.add('btn', 'btn-danger');
+            button.addEventListener('click', () => {
+
+            });
+            button.innerHTML = '<i class="fa fa-times"></i>';
+            this.$del = button;
+            el.appendChild(button);
+            header.appendChild(el);            
             document.body.appendChild(mDialog);
             mDialog.showModal();
         });

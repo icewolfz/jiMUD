@@ -16,6 +16,7 @@ export abstract class ValueEditor extends EventEmitter {
     private $parent: HTMLElement;
     private $options: any;
     private $control: any;
+    private $container: HTMLElement;
     public editorClick: any;
     public property;
     public data;
@@ -63,6 +64,23 @@ export abstract class ValueEditor extends EventEmitter {
     abstract get value(): any;
     abstract set value(value: any);
 
+    public get container() {
+        if (this.$container)
+            return this.$container;
+        if (!this.options)
+            return this.$container = document.body;
+        if (typeof this.options.container === 'string') {
+            if ((<string>this.options.container).startsWith('#'))
+                return this.$container = document.getElementById((<string>this.options.container).substr(1)) || document.body;
+            else
+                return this.$container = document.body.querySelector(this.options.container) || document.body;
+        }
+        else if (this.options.container instanceof $)
+            return this.$container = this.options.container[0] || document.body;
+        else if (this.options.container instanceof HTMLElement)
+            return this.$container = this.options.container || document.body;
+        return this.$container = document.body;
+    }
 }
 
 export class TextValueEditor extends ValueEditor {
@@ -149,7 +167,7 @@ export class TextValueEditor extends ValueEditor {
                     e.stopPropagation();
                     return false;
                 }
-            });            
+            });
             this.$dropdown.addEventListener('keyup', (e) => {
                 if (this.$noEnter && e.keyCode === 13) {
                     this.focus();
@@ -163,15 +181,16 @@ export class TextValueEditor extends ValueEditor {
                 return;
             });
             var b = this.parent.getBoundingClientRect();
+            var c = this.container.getBoundingClientRect();
             if (b.width < 300) {
-                this.$dropdown.style.left = (b.left - 300 + b.width) + 'px';
+                this.$dropdown.style.left = (b.left - 300 + b.width - c.left) + 'px';
                 this.$dropdown.style.width = '300px';
             }
             else {
-                this.$dropdown.style.left = b.left + 'px';
+                this.$dropdown.style.left = (b.left - c.left) + 'px';
                 this.$dropdown.style.width = (b.width) + 'px';
             }
-            this.$dropdown.style.top = (b.bottom) + 'px';
+            this.$dropdown.style.top = (b.bottom - c.top) + 'px';
             this.$dropdown.style.height = '150px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
@@ -187,8 +206,8 @@ export class TextValueEditor extends ValueEditor {
                     this.focus();
                 }
             }, { once: true });
-            document.body.appendChild(this.$dropdown);
-            if(this.$noEnter)
+            this.container.appendChild(this.$dropdown);
+            if (this.$noEnter)
                 this.$dropdown.placeholder = 'Press enter to accept text.'
             else
                 this.$dropdown.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.'
@@ -215,7 +234,7 @@ export class TextValueEditor extends ValueEditor {
             this.$noEnter = ops.singleLine || ops.noReturn;
             this.$wrap = ops.wrap;
         }
-        if(this.$noEnter)
+        if (this.$noEnter)
             this.$editor.classList.add('single');
         else
             this.$editor.classList.add('remove');
@@ -252,6 +271,9 @@ export class BooleanValueEditor extends ValueEditor {
             }
             return;
         });
+        this.$el.addEventListener('blur', (e) => {
+            this.control.clearEditor();
+        });
         this.parent.appendChild(this.$el);
     }
     focus() {
@@ -283,6 +305,9 @@ export class NumberValueEditor extends ValueEditor {
             if (e.keyCode === 27)
                 this.$el.blur();
             return;
+        });
+        this.$el.addEventListener('blur', (e) => {
+            this.control.clearEditor();
         });
         this.parent.appendChild(this.$el);
     }
@@ -364,15 +389,16 @@ export class FlagValueEditor extends ValueEditor {
                 return;
             });
             var b = this.parent.getBoundingClientRect();
+            var c = this.container.getBoundingClientRect();
             if (b.width < 150) {
-                this.$dropdown.style.left = (b.left - 150 + b.width) + 'px';
+                this.$dropdown.style.left = (b.left - 150 + b.width - c.left) + 'px';
                 this.$dropdown.style.width = '150px';
             }
             else {
-                this.$dropdown.style.left = b.left + 'px';
+                this.$dropdown.style.left = (b.left - c.left) + 'px';
                 this.$dropdown.style.width = (b.width) + 'px';
             }
-            this.$dropdown.style.top = (b.top + this.$editor.parentElement.offsetHeight) + 'px';
+            this.$dropdown.style.top = (b.top + this.$editor.parentElement.offsetHeight - c.top) + 'px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
@@ -434,7 +460,7 @@ export class FlagValueEditor extends ValueEditor {
             }
             else
                 this.$dropdown.style.height = '154px';
-            document.body.appendChild(this.$dropdown);
+            this.container.appendChild(this.$dropdown);
             this.$dropdown.focus();
         });
         this.$el.appendChild(vl);
@@ -536,15 +562,16 @@ export class DropdownEditValueEditor extends ValueEditor {
                 return;
             });
             var b = this.parent.getBoundingClientRect();
+            var c = this.container.getBoundingClientRect();
             if (b.width < 150) {
-                this.$dropdown.style.left = (b.left - 150 + b.width) + 'px';
+                this.$dropdown.style.left = (b.left - 150 + b.width - c.left) + 'px';
                 this.$dropdown.style.width = '150px';
             }
             else {
-                this.$dropdown.style.left = b.left + 'px';
+                this.$dropdown.style.left = (b.left - c.left) + 'px';
                 this.$dropdown.style.width = (b.width) + 'px';
             }
-            this.$dropdown.style.top = (b.top + this.$editor.parentElement.offsetHeight) + 'px';
+            this.$dropdown.style.top = (b.top + this.$editor.parentElement.offsetHeight - c.top) + 'px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
@@ -567,7 +594,7 @@ export class DropdownEditValueEditor extends ValueEditor {
             }
             else
                 this.$dropdown.style.height = '160px';
-            document.body.appendChild(this.$dropdown);
+            this.container.appendChild(this.$dropdown);
             this.$dropdown.focus();
         });
         this.$el.appendChild(vl);

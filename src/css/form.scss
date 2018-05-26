@@ -14,8 +14,12 @@ dialog {
     border-bottom: 1px solid #fff;
 }
 
-.dialog-header .btn {
+.dialog-header .btn, .dialog-header .btn-group {
     margin: 5px;
+}
+
+.dialog-header .btn-group .btn {
+    margin: 0px;
 }
 
 .dialog-footer {
@@ -29,8 +33,12 @@ dialog {
     border-top: 1px solid #ddd;
 }
 
-.dialog-footer .btn {
+.dialog-footer .btn, .dialog-footer .btn-group {
     margin: 5px;
+}
+
+.dialog-footer .btn-group .btn {
+    margin: 0px;
 }
 
 .dialog-body .tab-pane {
