@@ -50,6 +50,7 @@ export class EditorSettings {
         showFoldingControls: 'mouseover',
         snippetSuggestions: 'inline',
         useTabStops: true,
+        scrollBeyondLastLine: true,
         minimap: {
             enabled: true,
             maxColumn: 120,

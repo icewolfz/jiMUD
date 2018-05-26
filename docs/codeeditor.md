@@ -50,6 +50,7 @@ Editor preferences are stored in their own file independent of client or charact
 - `Enable highlighting of matching brackets` highlight the matching end bracket
 - `Select line when line number clicked` select line when line number clicked
 - `Trim whitespace` trim whitespace
+- `Scroll beyond last line` allows you to scroll up to one screen past last line
 - `Line numbers` display line numbers
 - `Show Folding Controls` how to show folding controls
 - `Tab size` how many spaces equal a tab
