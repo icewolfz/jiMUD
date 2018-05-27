@@ -316,6 +316,8 @@ export class Datagrid extends EventEmitter {
         el.classList.add('datagrid-body');
         el.addEventListener('scroll', (e) => {
             this.$header.style.transform = 'translate(-' + (<HTMLElement>e.currentTarget).scrollLeft + ',0)';
+            if(this.$editor && this.$editor.editors.length > 0)
+                this.$editor.editors.map(ed=>ed.editor.scroll());
         })
         this.$body = document.createElement('table');
         this.$body.classList.add('datagrid-body-data');
@@ -1430,6 +1432,10 @@ export class Datagrid extends EventEmitter {
 
                 }
             }
+            if(!editorOptions)
+                editorOptions = { container: this.$body };
+            else if(!editorOptions.container)
+                editorOptions.container = this.$body;
             editor.type = type;
             var values;
             var vl;

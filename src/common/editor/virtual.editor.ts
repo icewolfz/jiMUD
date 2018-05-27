@@ -1485,8 +1485,8 @@ export class VirtualEditor extends EditorBase {
                     this.$items[this.$selectedRoom.item].children = newValue;
                     this.$itemGrid.rows = this.$items;
                     this.updateRaw(this.$itemRaw, this.$selectedRoom.item * 2, [
-                        newValue.map(i=>i.item).join(':'),
-                        newValue.map(i=>i.description).join(':'),
+                        newValue.map(i => i.item).join(':'),
+                        newValue.map(i => i.description).join(':'),
                     ]);
                     resetCursor(this.$itemRaw);
                     break;
@@ -1613,7 +1613,8 @@ export class VirtualEditor extends EditorBase {
                     type: EditorType.flag,
                     options: {
                         enum: RoomExit,
-                        exclude: ['Unknown']
+                        exclude: ['Unknown'],
+                        container: document.body
                     }
                 },
                 sort: 3
@@ -1629,7 +1630,8 @@ export class VirtualEditor extends EditorBase {
                 editor: {
                     type: EditorType.flag,
                     options: {
-                        enum: RoomStates
+                        enum: RoomStates,
+                        container: document.body
                     }
                 },
                 sort: 2
@@ -1650,7 +1652,8 @@ export class VirtualEditor extends EditorBase {
                 sort: 0,
                 editor: {
                     options: {
-                        singleLine: true
+                        singleLine: true,
+                        container: document.body
                     }
                 }
             },
@@ -1660,7 +1663,8 @@ export class VirtualEditor extends EditorBase {
                 sort: 1,
                 editor: {
                     options: {
-                        singleLine: true
+                        singleLine: true,
+                        container: document.body
                     }
                 }
             },
@@ -1710,7 +1714,8 @@ export class VirtualEditor extends EditorBase {
                             "hills",
                             "plains",
                             "savannah"
-                        ]
+                        ],
+                        container: document.body
                     }
                 },
                 sort: 3
@@ -1721,7 +1726,8 @@ export class VirtualEditor extends EditorBase {
                 sort: 5,
                 editor: {
                     options: {
-                        singleLine: true
+                        singleLine: true,
+                        container: document.body
                     }
                 }
             },
@@ -1731,7 +1737,8 @@ export class VirtualEditor extends EditorBase {
                 sort: 5,
                 editor: {
                     options: {
-                        singleLine: true
+                        singleLine: true,
+                        container: document.body
                     }
                 }
             },
@@ -4741,6 +4748,8 @@ class FileOpenValueEditor extends ValueEditor {
             this.$el.parentElement.removeChild(this.$el);
     }
 
+    public scroll() { }
+
     private formatValue(value?) {
         if (!value) value = this.$value;
         if (!value)
@@ -4924,7 +4933,7 @@ class ExternalExitValueEditor extends ValueEditor {
             button.style.cssFloat = 'right';
             button.type = 'button';
             button.classList.add('btn', 'btn-primary');
-            button.addEventListener('click', () => {                
+            button.addEventListener('click', () => {
                 if (this.$value.length > 0)
                     this.data.ee = this.$value.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
                 else
@@ -5005,6 +5014,8 @@ class ExternalExitValueEditor extends ValueEditor {
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
     }
+
+    public scroll() { }
 
     private formatValue(value?) {
         if (!value) value = this.$value;
@@ -5241,6 +5252,8 @@ class ItemsValueEditor extends ValueEditor {
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
     }
+
+    public scroll() { }
 
     private formatValue(value?) {
         if (!value) value = this.$value;

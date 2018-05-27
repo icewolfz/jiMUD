@@ -142,6 +142,10 @@ export class PropertyGrid extends EventEmitter {
         this.$el = document.createElement('ul');
         this.$el.id = this.id;
         this.$el.classList.add('property-grid');
+        this.$el.addEventListener('scroll', (e) => {
+            if (this.$editor && this.$editor.editor)
+                this.$editor.editor.scroll();
+        })
         this.$parent.appendChild(this.$el);
         window.addEventListener('beforeunload', () => {
             this.clearEditor();

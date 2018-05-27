@@ -841,12 +841,17 @@ input[type=checkbox].property-grid-editor {
     color: black;
 }
 
+.grid-editor-dropdown {
+    z-index: 2147483647;
+}
+
 .property-grid-editor-flag-dropdown {
     overflow: auto;
     background-color: white;
     border: 1px solid #f2cb7f;
     color: black;
     outline: none;
+    z-index: 2147483647;
 }
 
 .property-grid-editor-flag-dropdown label {

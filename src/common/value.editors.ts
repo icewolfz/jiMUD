@@ -66,6 +66,7 @@ export abstract class ValueEditor extends EventEmitter {
     abstract create(): void;
     abstract focus(): void;
     abstract destroy(): void;
+    abstract scroll(): void;
 
     abstract get value(): any;
     abstract set value(value: any);
@@ -73,19 +74,20 @@ export abstract class ValueEditor extends EventEmitter {
     public get container() {
         if (this.$container)
             return this.$container;
+        var d = (this.control.parent || document.body);
         if (!this.options)
-            return this.$container = document.body;
+            return this.$container = d;
         if (typeof this.options.container === 'string') {
             if ((<string>this.options.container).startsWith('#'))
-                return this.$container = document.getElementById((<string>this.options.container).substr(1)) || document.body;
+                return this.$container = document.getElementById((<string>this.options.container).substr(1)) || d;
             else
-                return this.$container = document.body.querySelector(this.options.container) || document.body;
+                return this.$container = document.body.querySelector(this.options.container) || d;
         }
         else if (this.options.container instanceof $)
-            return this.$container = this.options.container[0] || document.body;
+            return this.$container = this.options.container[0] || d;
         else if (this.options.container instanceof HTMLElement)
-            return this.$container = this.options.container || document.body;
-        return this.$container = document.body;
+            return this.$container = this.options.container || d;
+        return this.$container = d;
     }
 }
 
@@ -165,8 +167,8 @@ export class TextValueEditor extends ValueEditor {
                 return;
             }
             this.$dropdown = document.createElement('textarea');
+            this.$dropdown.classList.add('grid-editor-dropdown');
             (<any>this.$dropdown).editor = this.$editor;
-            this.$dropdown.style.height = '100%';
             if (!this.$wrap)
                 this.$dropdown.style.whiteSpace = 'nowrap';
             this.$dropdown.value = this.value;
@@ -233,6 +235,11 @@ export class TextValueEditor extends ValueEditor {
             this.$dropdown.parentElement.removeChild(this.$dropdown);
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
+    }
+
+    public scroll() {
+        if (this.$dropdown)
+            this.positionDropdown();
     }
 
     private positionDropdown() {
@@ -315,6 +322,8 @@ export class BooleanValueEditor extends ValueEditor {
             this.$el.parentElement.removeChild(this.$el);
     }
 
+    public scroll() { }
+
     get value() {
         return this.$el.value === 'true';
     }
@@ -350,6 +359,8 @@ export class NumberValueEditor extends ValueEditor {
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
     }
+
+    public scroll() { }
 
     get value() {
         var value = +this.$el.value;
@@ -499,6 +510,11 @@ export class FlagValueEditor extends ValueEditor {
             this.$dropdown.parentElement.removeChild(this.$dropdown);
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
+    }
+
+    public scroll() {
+        if (this.$dropdown)
+            this.positionDropdown();
     }
 
     private positionDropdown() {
@@ -655,6 +671,11 @@ export class DropdownEditValueEditor extends ValueEditor {
             this.$dropdown.parentElement.removeChild(this.$dropdown);
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
+    }
+
+    public scroll() {
+        if (this.$dropdown)
+            this.positionDropdown();
     }
 
     private positionDropdown() {
