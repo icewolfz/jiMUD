@@ -318,7 +318,7 @@ export class Datagrid extends EventEmitter {
         this.$dataBody = document.createElement('tbody');
         this.$body.appendChild(this.$dataBody);
         this.$body.appendChild(document.createElement('tfoot'));
-        this.$body.children[1].addEventListener('click', (e)=> {
+        this.$body.children[1].addEventListener('click', (e) => {
             this.$selected = [];
             Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
             this.emit('selection-changed');
@@ -492,7 +492,7 @@ export class Datagrid extends EventEmitter {
             return;
         this.$selected = [];
         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
-        this.emit('selection-changed');        
+        this.emit('selection-changed');
         var prop;
         if (this.$cols[this.$sort.column].hasOwnProperty('index'))
             prop = this.$cols[this.$sort.column].index;
@@ -675,6 +675,8 @@ export class Datagrid extends EventEmitter {
             row.classList.add('selected');
         row.dataset.row = '' + r;
         row.dataset.parent = '' + parent;
+        row.dataset.child = '' + child;
+        row.dataset.dataIndex = '' + dataIdx;
 
         row.addEventListener('click', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
@@ -748,13 +750,36 @@ export class Datagrid extends EventEmitter {
                 this.$shiftStart = this.$focused;
             }
             this.emit('selection-changed');
+            if(this.$editor && this.$editor.el != row)
+                this.clearEditor();
         });
         row.addEventListener('dblclick', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
                 return;
             var sIdx = +(<HTMLElement>e.currentTarget).dataset.dataInde;
             var r = this.$sortedRows[sIdx];
-            this.emit('row-dblclick', e, { row: this.$rows[r], rowIndex: r });
+
+            var el = <HTMLElement>e.currentTarget;
+            var dataIdx = +el.dataset.dataIndex;
+            var parent = +el.dataset.parent;
+            var child = +el.dataset.child;
+            this.emit('row-dblclick', e, { row: this.$rows[r], rowIndex: r, parent: parent, child: child, dataIndex: dataIdx });
+            if (e.defaultPrevented || e.cancelBubble)
+                return;
+            Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+            this.$selected = [sIdx];
+            el.classList.add('selected', 'focused');
+            this.createEditor(<HTMLElement>e.currentTarget, e.srcElement);
+        });
+        row.addEventListener('mousedown', (e) => {
+            this.$editorClick = e.currentTarget;
+            if (this.$editor && this.$editor.editors)
+                this.$editor.editors.map(e => e.editorClick = this.$editorClick);
+        });
+        row.addEventListener('mouseup', (e) => {
+            this.$editorClick = null;
+            if (this.$editor && this.$editor.editors)
+                this.$editor.editors.map(e => e.editorClick = null);
         });
         for (c = 0; c < cl; c++) {
             if (!cols[c].visible) continue;
@@ -872,16 +897,6 @@ export class Datagrid extends EventEmitter {
                     this.doUpdate(UpdateType.resize);
                 });
             }
-            cell.addEventListener('mousedown', (e) => {
-                this.$editorClick = e.currentTarget;
-                if (this.$editor && this.$editor.editor)
-                    this.$editor.editor.editorClick = this.$editorClick;
-            });
-            cell.addEventListener('mouseup', (e) => {
-                this.$editorClick = null;
-                if (this.$editor && this.$editor.editor)
-                    this.$editor.editor.editorClick = null;
-            });
             cell.addEventListener('click', (e) => {
                 if (e.defaultPrevented || e.cancelBubble)
                     return;
@@ -960,7 +975,6 @@ export class Datagrid extends EventEmitter {
                     }
                     return;
                 }
-                this.createEditor(el);
             });
             row.appendChild(cell);
         }
@@ -1240,155 +1254,189 @@ export class Datagrid extends EventEmitter {
         return col;
     }
 
-    public clearEditor() {
+    public clearEditor(evt?) {
         if (!this.$editor) return;
-        var value;
-        var oldValue;
-        var prop = this.$editor.property;
-        if (this.$editor.editor)
-            value = this.$editor.editor.value;
-        oldValue = this.$editor.data[this.$editor.property];
-        var dataIdx, field, parent, child, idx, data;
-        if (value !== oldValue) {
-            this.$editor.data[prop] = value;
-            var col = this.$cols[this.$editor.column];
-            dataIdx = +this.$editor.el.dataset.dataIndex;
-            field = this.$editor.el.dataset.field;
-            parent = +this.$editor.el.dataset.parent;
-            child = +this.$editor.el.dataset.child;
-            idx = +this.$editor.el.dataset.idx;
-            data = { row: null, cell: null, index: idx, column: +this.$editor.el.dataset.column, rowIndex: +this.$editor.el.dataset.row, field: field, parent: parent, child: child, dataIndex: dataIdx };
-            if (dataIdx >= 0 && dataIdx < this.$rows.length) {
-                if (parent === -1) {
-                    data.row = this.$rows[dataIdx];
-                    if (field)
-                        data.cell = data.row[field]
-                    else if (idx >= 0 && idx <= data.row.length)
-                        data.cell = data.row[idx];
-                }
-                else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
-                    data.row = this.$rows[parent].children[child];
-                    if (field)
-                        data.cell = data.row[field]
-                    else if (idx >= 0 && idx <= data.row.length)
-                        data.cell = data.row[idx];
-                }
-            }
-            if (col.formatter)
-                this.$editor.el.textContent = col.formatter(data);
-            else
-                this.$editor.el.textContent = value || '';
-        }
-        if (this.$editor.editor)
-            this.$editor.editor.destroy();
+        if (evt && evt.relatedTarget && (this.$editor.el.contains(evt.relatedTarget) || this.$editor.el.contains(evt.relatedTarget.editor)))
+            return;
+
+        var e = 0, el = this.$editor.editors.length;
         this.$prevEditor = {
-            el: this.$editor.el,
-            property: this.$editor.property,
-            type: this.$editor.type
+            el: el,
+            editors: []
+        }
+        for (; e < el; e++) {
+            var editor = this.$editor.editors[e];
+            var value;
+            var oldValue;
+            var prop = editor.property;
+            if (editor.editor)
+                value = editor.editor.value;
+            oldValue = editor.data[editor.property];
+            var dataIdx, field, parent, child, idx, data;
+            if (value !== oldValue) {
+                editor.data[prop] = value;
+                var col = this.$cols[editor.column];
+                dataIdx = +editor.el.dataset.dataIndex;
+                field = editor.el.dataset.field;
+                parent = +editor.el.dataset.parent;
+                child = +editor.el.dataset.child;
+                idx = +editor.el.dataset.idx;
+                data = { row: null, cell: null, index: idx, column: +editor.el.dataset.column, rowIndex: +editor.el.dataset.row, field: field, parent: parent, child: child, dataIndex: dataIdx };
+                if (dataIdx >= 0 && dataIdx < this.$rows.length) {
+                    if (parent === -1) {
+                        data.row = this.$rows[dataIdx];
+                        if (field)
+                            data.cell = data.row[field]
+                        else if (idx >= 0 && idx <= data.row.length)
+                            data.cell = data.row[idx];
+                    }
+                    else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
+                        data.row = this.$rows[parent].children[child];
+                        if (field)
+                            data.cell = data.row[field]
+                        else if (idx >= 0 && idx <= data.row.length)
+                            data.cell = data.row[idx];
+                    }
+                }
+                if (col.formatter)
+                    editor.el.textContent = col.formatter(data);
+                else
+                    editor.el.textContent = value || '';
+            }
+            if (editor.editor)
+                editor.editor.destroy();
+            this.$prevEditor.editors.push({
+                el: editor.el,
+                property: editor.property,
+                type: editor.type
+            });
+            //do last in case the event changes the property editor
+            if (value !== oldValue) {
+                this.emit('value-changed', value, oldValue, dataIdx, child);
+            }
         }
         this.$editor = null;
-        //do last in case the event changes the property editor
-        if (value !== oldValue) {
-            this.emit('value-changed', value, oldValue, dataIdx, child);
-        }
     }
 
-    public createEditor(el: HTMLElement) {
+    public createEditor(el: HTMLElement, fCol: any = 0) {
         if (!el) return;
-        var prop = el.dataset.field;
-        var col = +el.dataset.column;
-        var row = [...el.parentElement.parentElement.children].indexOf(el.parentElement);
-        if (!prop) return;
+        var row = [...el.parentElement.children].indexOf(el);
+        if (fCol)
+            fCol = [...fCol.parentElement.children].indexOf(fCol);
+        var cols = this.$cols;
         if (this.$editor) {
-            if (this.$editor.property === prop && this.$editor.row === row)
+            if (this.$editor && this.$editor.row === row)
                 return;
             this.clearEditor();
         }
+        var c;
+        var cl = el.children.length;
         this.$editor = {
             el: el,
-            editor: null,
-            property: prop,
-            type: EditorType.default,
-            column: col,
+            editors: [],
             row: row
         }
-        var type = this.editorType(col);
-        var editorOptions;
-        if (this.$cols[col] && this.$cols[col].editor) {
-            editorOptions = this.$cols[col].editor.options;
-            if (this.$cols[col].editor.hasOwnProperty('show')) {
-                if (typeof this.$cols[col].editor.show === 'function') {
-                    if (!this.$cols[col].editor.show(col, { index: +el.dataset.idx, column: col, rowIndex: +el.dataset.row, field: el.dataset.field, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: +el.dataset.dataIndex })) {
-                        this.$editor = null;
+        for (c = 0; c < cl; c++) {
+            var cell = <HTMLElement>el.children[c];
+            var prop = cell.dataset.field;
+            var col = +cell.dataset.column;
+            if (cols[c].readonly) {
+                fCol--;
+                continue;
+            }
+            if (!prop) return;
+            var editor = {
+                el: cell,
+                editor: null,
+                property: prop,
+                type: EditorType.default,
+                column: col,
+                row: row,
+                data
+            };
+            var type = this.editorType(col);
+            var editorOptions;
+            if (this.$cols[col] && this.$cols[col].editor) {
+                editorOptions = this.$cols[col].editor.options;
+                if (this.$cols[col].editor.hasOwnProperty('show')) {
+                    if (typeof this.$cols[col].editor.show === 'function') {
+                        if (!this.$cols[col].editor.show(col, { index: +el.dataset.idx, column: col, rowIndex: +el.dataset.row, field: el.dataset.field, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: +el.dataset.dataIndex })) {
+                            editor = null;
+                            return;
+                        }
+                    }
+                    else if (!this.$cols[col].editor.show) {
+                        editor = null;
                         return;
                     }
-                }
-                else if (!this.$cols[col].editor.show) {
-                    this.$editor = null;
-                    return;
-                }
 
-            }
-        }
-        this.$editor.type = type;
-        var values;
-        var vl;
-        var dataIdx = +this.$editor.el.dataset.dataIndex;
-        var parent = +this.$editor.el.dataset.parent;
-        var child = +this.$editor.el.dataset.child;
-        var data;
-        if (dataIdx >= 0 && dataIdx < this.$rows.length) {
-            if (parent === -1)
-                data = this.$rows[dataIdx];
-            else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
-                data = this.$rows[parent].children[child];
-            }
-        }
-        this.$editor.data = data;
-        switch (type) {
-            case EditorType.flag:
-                this.$editor.editor = new FlagValueEditor(this, el, prop, editorOptions);
-                this.$editor.editor.value = data[prop];
-                this.$editor.editor.data = data;
-                break;
-            case EditorType.number:
-                this.$editor.editor = new NumberValueEditor(this, el, prop, editorOptions);
-                this.$editor.editor.value = data[prop];
-                this.$editor.editor.data = data;
-                break;
-            case EditorType.select:
-                break;
-            case EditorType.custom:
-                if (this.$cols[col] && this.$cols[col].editor && this.$cols[col].editor.editor) {
-                    this.$editor.editor = new this.$cols[col].editor.editor(this, el, prop, editorOptions);
-                    this.$editor.editor.value = data[prop];
-                    this.$editor.editor.data = data;
                 }
-                break;
-            default:
-                switch (typeof (data[prop])) {
-                    case 'boolean':
-                        this.$editor.editor = new BooleanValueEditor(this, el, prop, editorOptions);
-                        this.$editor.editor.value = data[prop];
-                        this.$editor.editor.data = data;
-                        break;
-                    case 'number':
-                        this.$editor.editor = new NumberValueEditor(this, el, prop, editorOptions);
-                        this.$editor.editor.value = data[prop];
-                        this.$editor.editor.data = data;
-                        break;
-                    default:
-                        this.$editor.editor = new TextValueEditor(this, el, prop, editorOptions);
-                        this.$editor.editor.value = data[prop];
-                        this.$editor.editor.data = data;
-                        break;
+            }
+            editor.type = type;
+            var values;
+            var vl;
+            var dataIdx = +editor.el.dataset.dataIndex;
+            var parent = +editor.el.dataset.parent;
+            var child = +editor.el.dataset.child;
+            var data;
+            if (dataIdx >= 0 && dataIdx < this.$rows.length) {
+                if (parent === -1)
+                    data = this.$rows[dataIdx];
+                else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
+                    data = this.$rows[parent].children[child];
                 }
-                break;
+            }
+            editor.data = data;
+            switch (type) {
+                case EditorType.flag:
+                    editor.editor = new FlagValueEditor(this, cell, prop, editorOptions);
+                    editor.editor.value = data[prop];
+                    editor.editor.data = data;
+                    break;
+                case EditorType.number:
+                    editor.editor = new NumberValueEditor(this, cell, prop, editorOptions);
+                    editor.editor.value = data[prop];
+                    editor.editor.data = data;
+                    break;
+                case EditorType.select:
+                    break;
+                case EditorType.custom:
+                    if (this.$cols[col] && this.$cols[col].editor && this.$cols[col].editor.editor) {
+                        editor.editor = new this.$cols[col].editor.editor(this, cell, prop, editorOptions);
+                        editor.editor.value = data[prop];
+                        editor.editor.data = data;
+                    }
+                    break;
+                default:
+                    switch (typeof (data[prop])) {
+                        case 'boolean':
+                            editor.editor = new BooleanValueEditor(this, cell, prop, editorOptions);
+                            editor.editor.value = data[prop];
+                            editor.editor.data = data;
+                            break;
+                        case 'number':
+                            editor.editor = new NumberValueEditor(this, cell, prop, editorOptions);
+                            editor.editor.value = data[prop];
+                            editor.editor.data = data;
+                            break;
+                        default:
+                            editor.editor = new TextValueEditor(this, cell, prop, editorOptions);
+                            editor.editor.value = data[prop];
+                            editor.editor.data = data;
+                            break;
+                    }
+                    break;
+            }
+            if (editor)
+                this.$editor.editors.push(editor);
         }
-        if (this.$editor.editor)
-            this.$editor.editor.focus();
-        else
-            this.$editor = null;
+        if (this.$editor && this.$editor.editors.length) {
+            if (fCol >= this.$editor.editors.length)
+                fCol = this.$editor.editors.length - 1;
+            else if (fCol < 0)
+                fCol = 0;
+            this.$editor.editors[fCol].editor.focus();
+        }
     }
 
     private editorType(col) {

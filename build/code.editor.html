@@ -1722,7 +1722,7 @@
     window.onbeforeunload = function (evt) {
         if (!closeWindow) {
             console.log(document.activeElement);
-            if(document.activeElement)
+            if (document.activeElement)
                 document.activeElement.blur();
             evt.returnValue = false;
             setTimeout(() => {
@@ -2341,6 +2341,27 @@
             _loading++;
             p = manager.createPanel(path.basename(data.file), getFileIcon(data.file), data.file);
             data.container = p.pane;
+            data.watch = (files) => {
+                if (!files) return;
+                for (var f = 0, fl = files.length; f < fl; f++) {
+                    if (!_watched[files[f]]) {
+                        _watched[files[f]] = 1;
+                        watcher.add(files[f]);
+                    }
+                    else
+                        _watched[files[f]]++;
+                }
+            };
+            data.watchStop = (files) => {
+                if (!files) return;
+                for (var f = 0, fl = files.length; f < fl; f++) {
+                    _watched[files[f]]--;
+                    if (_watched[files[f]] === 0) {
+                        watcher.unwatch(files[f]);
+                        delete _watched[files[f]];
+                    }
+                }
+            };
             if (path.extname(data.file) === '.map') {
                 data.options = options.virtualOptions;
                 p.editor = new VirtualEditor(data);
@@ -2381,27 +2402,6 @@
             }
             else
                 _watched[data.file]++;
-            p.editor.on('watch', (files) => {
-                if (!files) return;
-                for (var f = 0, fl = files.length; f < fl; f++) {
-                    if (!_watched[files[f]]) {
-                        _watched[files[f]] = 1;
-                        watcher.add(files[f]);
-                    }
-                    else
-                        _watched[files[f]]++;
-                }
-            });
-            p.editor.on('watch-stop', (files) => {
-                if (!files) return;
-                for (var f = 0, fl = files.length; f < fl; f++) {
-                    _watched[files[f]]--;
-                    if (_watched[files[f]] === 0) {
-                        watcher.unwatch(files[f]);
-                        delete _watched[files[f]];
-                    }
-                }
-            });
             p.editor.on('reload', (type, file) => {
                 var choice;
                 if (type === 'unlink') {

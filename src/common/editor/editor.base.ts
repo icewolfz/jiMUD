@@ -5,11 +5,14 @@ const path = require('path');
 export interface EditorOptions {
     file: string;
     container?: any;
+    parent?: any;
     open?: boolean;
     new?: boolean;
     value?: any;
     remote?: string;
     options?: any;
+    watch?: Function;
+    watchStop?: Function;
 }
 
 export enum FileState {
@@ -56,8 +59,17 @@ export abstract class EditorBase extends EventEmitter {
 
     constructor(options?: EditorOptions) {
         super();
-
-        if (options && options.container)
+        if (!options) {
+            this.parent = document.body;
+            return;
+        }
+        if (options.watch)
+            this.on('watch', options.watch);
+        if (options.watchStop)
+            this.on('watch-stop', options.watchStop);
+        if (options.parent)
+            this.parent = options.parent;
+        else if (options.container)
             this.parent = options.container.container ? options.container.container : options.container;
         else
             this.parent = document.body;
@@ -124,7 +136,7 @@ export abstract class EditorBase extends EventEmitter {
 
     abstract set spellcheck(value: boolean);
 
-    abstract deleted(keep):void;
+    abstract deleted(keep): void;
 
     set changed(value: boolean) {
         if (value)

@@ -173,7 +173,7 @@ interface MousePosition {
 var Timer = new DebugTimer();
 
 export class VirtualEditor extends EditorBase {
-    private $files = {};
+    private $files;
     private $saving = {};
     private $view: View = View.map;
 
@@ -441,7 +441,8 @@ export class VirtualEditor extends EditorBase {
         this.$terrainGrid.addColumns([{
             label: 'Index',
             field: 'idx',
-            width: 50
+            width: 50,
+            readonly: true
         },
         {
             label: 'Short',
@@ -540,10 +541,6 @@ export class VirtualEditor extends EditorBase {
                 }
             }
         }]);
-        this.$terrainGrid.on('cell-dblclick', (e, data) => {
-            if (!data || data.column === 0)
-                e.preventDefault();
-        });
         this.$terrainGrid.sort(0);
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
@@ -551,14 +548,15 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(el);
         this.$itemGrid = new Datagrid(el);
         this.$itemGrid.showChildren = true;
-        this.$itemGrid.on('cell-dblclick', (e, data) => {
-            if (!data || data.parent === -1 || data.column === 0)
+        this.$itemGrid.on('row-dblclick', (e, data)=> {
+            if(!data || data.parent === -1)
                 e.preventDefault();
-        });
+        })
         this.$itemGrid.addColumns([{
             label: 'Index',
             field: 'idx',
             width: 50,
+            readonly: true,
             formatter: (data) => {
                 if (!data || data.parent !== -1) return '';
                 return data.cell;
@@ -583,6 +581,11 @@ export class VirtualEditor extends EditorBase {
                 if (data.parent === -1 && data.row.children)
                     return data.row.children.map((c) => c.item).join(':');
                 return data.cell;
+            },
+            editor: {
+                options: {
+                    singleLine: true
+                }
             }
         }, {
             label: 'Description',
@@ -1848,7 +1851,7 @@ export class VirtualEditor extends EditorBase {
             this.$itemRaw.value = this.read(path.join(root, 'terrain.item'));
         if (this.$files['virtual.exits'])
             this.$externalRaw.value = this.read(path.join(root, 'virtual.exits'));
-        this.emit('watch', root);
+        this.emit('watch', [root]);
         this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
         this.loadDescriptions();
         this.loadItems();
@@ -1966,7 +1969,7 @@ export class VirtualEditor extends EditorBase {
     public redo() { }
     public close() {
         let root = path.dirname(this.file);
-        this.emit('watch-stop', root);
+        this.emit('watch-stop', [root]);
     }
     public deleted(keep, file?) {
         var base = path.basename(file);
@@ -4440,6 +4443,7 @@ class FileOpenValueEditor extends ValueEditor {
 
     create() {
         this.$el = document.createElement('div');
+        this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown');
         this.$editor = document.createElement('input');
         this.$editor.type = 'text';
@@ -4452,7 +4456,7 @@ class FileOpenValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
-            this.control.clearEditor();
+            this.control.clearEditor(e);
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -4512,6 +4516,7 @@ class ExternalExitValueEditor extends ValueEditor {
 
     create() {
         this.$el = document.createElement('div');
+        this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown');
         this.$editor = document.createElement('input');
         this.$editor.type = 'text';
@@ -4524,7 +4529,7 @@ class ExternalExitValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
-            this.control.clearEditor();
+            this.control.clearEditor(e);
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -4719,6 +4724,7 @@ class ItemsValueEditor extends ValueEditor {
 
     create() {
         this.$el = document.createElement('div');
+        this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown');
         this.$editor = document.createElement('input');
         this.$editor.type = 'text';
@@ -4731,7 +4737,7 @@ class ItemsValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
-            this.control.clearEditor();
+            this.control.clearEditor(e);
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -4795,9 +4801,10 @@ class ItemsValueEditor extends ValueEditor {
                 width: 150,
                 editor: {
                     options: {
-                        container: mDialog
+                        container: mDialog,
+                        singleLine: true
                     }
-                }
+                },
             },
             {
                 label: 'Description',

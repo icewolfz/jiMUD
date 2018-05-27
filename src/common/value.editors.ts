@@ -92,6 +92,7 @@ export class TextValueEditor extends ValueEditor {
 
     create() {
         this.$el = document.createElement('div');
+        this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown-fill');
         var el = document.createElement('div');
         el.classList.add('property-grid-editor-dropdown-fill-container');
@@ -126,7 +127,7 @@ export class TextValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
-            this.control.clearEditor();
+            this.control.clearEditor(e);
         });
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
@@ -156,6 +157,7 @@ export class TextValueEditor extends ValueEditor {
                 return;
             }
             this.$dropdown = document.createElement('textarea');
+            (<any>this.$dropdown).editor = this.$editor;
             this.$dropdown.style.height = '100%';
             if (!this.$wrap)
                 this.$dropdown.style.whiteSpace = 'nowrap';
@@ -180,17 +182,7 @@ export class TextValueEditor extends ValueEditor {
                 }
                 return;
             });
-            var b = this.parent.getBoundingClientRect();
-            var c = this.container.getBoundingClientRect();
-            if (b.width < 300) {
-                this.$dropdown.style.left = (b.left - 300 + b.width - c.left) + 'px';
-                this.$dropdown.style.width = '300px';
-            }
-            else {
-                this.$dropdown.style.left = (b.left - c.left) + 'px';
-                this.$dropdown.style.width = (b.width) + 'px';
-            }
-            this.$dropdown.style.top = (b.bottom - c.top) + 'px';
+            this.positionDropdown();
             this.$dropdown.style.height = '150px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
@@ -202,6 +194,13 @@ export class TextValueEditor extends ValueEditor {
                 this.$dropdown = null;
                 if (ec)
                     this.control.createEditor(ec);
+                else if (e && e.relatedTarget && (<any>e.relatedTarget).tagNAME === 'BUTTON' && e.relatedTarget !== e.currentTarget) {
+                    (<HTMLButtonElement>e.relatedTarget).click();
+                    this.$editor.dataset.aOpen = null;
+                }
+                else if (e && e.relatedTarget && this.control.parent.contains(e.relatedTarget) && !this.$el.contains(<HTMLElement>e.relatedTarget)) {
+                    this.$editor.dataset.aOpen = null;
+                }
                 else {
                     this.focus();
                 }
@@ -226,6 +225,28 @@ export class TextValueEditor extends ValueEditor {
             this.$dropdown.parentElement.removeChild(this.$dropdown);
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
+    }
+
+    private positionDropdown() {
+        var b = this.parent.getBoundingClientRect();
+        var c = this.container.getBoundingClientRect();
+        var left = 0;
+        var width = 300;
+        var top = b.bottom - c.top;
+        if (b.width < 300) {
+            left = (b.left - 300 + b.width - c.left);
+        }
+        else {
+            left = b.left - c.left;
+            width = b.width;
+        }
+        //extends past bottom so open up
+        if (top + 150 > document.body.clientHeight)
+            top = b.top - 150;
+
+        this.$dropdown.style.left = left + 'px';
+        this.$dropdown.style.width = width + 'px';
+        this.$dropdown.style.top = top + 'px';
     }
 
     set options(ops) {
@@ -262,6 +283,7 @@ export class BooleanValueEditor extends ValueEditor {
 
     create() {
         this.$el = document.createElement('select');
+        this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor');
         this.$el.innerHTML = '<option value="true">True</option><option value="false">False</option>';
         this.$el.addEventListener('keyup', (e) => {
@@ -272,7 +294,7 @@ export class BooleanValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
-            this.control.clearEditor();
+            this.control.clearEditor(e);
         });
         this.parent.appendChild(this.$el);
     }
@@ -297,6 +319,7 @@ export class NumberValueEditor extends ValueEditor {
 
     create() {
         this.$el = document.createElement('input');
+        this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor');
         this.$el.type = 'number';
         this.$el.max = this.options ? (this.options.max || 1000) : 1000;
@@ -307,7 +330,7 @@ export class NumberValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
-            this.control.clearEditor();
+            this.control.clearEditor(e);
         });
         this.parent.appendChild(this.$el);
     }
@@ -340,6 +363,7 @@ export class FlagValueEditor extends ValueEditor {
 
     create() {
         this.$el = document.createElement('div');
+        this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-flag');
         this.$editor = document.createElement('input');
         this.$editor.type = 'text';
@@ -351,7 +375,7 @@ export class FlagValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
-            this.control.clearEditor();
+            this.control.clearEditor(e);
         });
         this.$editor.addEventListener('focus', () => {
             this.$editor.select();
@@ -379,6 +403,7 @@ export class FlagValueEditor extends ValueEditor {
                 return;
             }
             this.$dropdown = document.createElement('div');
+            (<any>this.$dropdown).editor = this.$editor;
             this.$dropdown.tabIndex = -1;
             this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
             this.$dropdown.addEventListener('keyup', (e) => {
@@ -388,17 +413,6 @@ export class FlagValueEditor extends ValueEditor {
                 }
                 return;
             });
-            var b = this.parent.getBoundingClientRect();
-            var c = this.container.getBoundingClientRect();
-            if (b.width < 150) {
-                this.$dropdown.style.left = (b.left - 150 + b.width - c.left) + 'px';
-                this.$dropdown.style.width = '150px';
-            }
-            else {
-                this.$dropdown.style.left = (b.left - c.left) + 'px';
-                this.$dropdown.style.width = (b.width) + 'px';
-            }
-            this.$dropdown.style.top = (b.top + this.$editor.parentElement.offsetHeight - c.top) + 'px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
@@ -460,6 +474,7 @@ export class FlagValueEditor extends ValueEditor {
             }
             else
                 this.$dropdown.style.height = '154px';
+            this.positionDropdown();
             this.container.appendChild(this.$dropdown);
             this.$dropdown.focus();
         });
@@ -477,6 +492,28 @@ export class FlagValueEditor extends ValueEditor {
             this.$el.parentElement.removeChild(this.$el);
     }
 
+    private positionDropdown() {
+        var b = this.parent.getBoundingClientRect();
+        var c = this.container.getBoundingClientRect();
+        var left = 0;
+        var width = 300;
+        var top = b.top + this.$editor.parentElement.offsetHeight - c.top;
+        if (b.width < 300) {
+            left = (b.left - 300 + b.width - c.left);
+        }
+        else {
+            left = b.left - c.left;
+            width = b.width;
+        }
+        //extends past bottom so open up
+        if (top + this.$dropdown.clientHeight > document.body.clientHeight)
+            top = b.top - this.$dropdown.clientHeight;
+
+        this.$dropdown.style.left = left + 'px';
+        this.$dropdown.style.width = width + 'px';
+        this.$dropdown.style.top = top + 'px';
+    }
+
     private $dropdownEvent = (e) => {
         if (e.relatedTarget && (<HTMLElement>e.relatedTarget).parentElement && (<HTMLElement>e.relatedTarget).parentElement.parentElement == this.$dropdown) {
             e.preventDefault();
@@ -489,6 +526,13 @@ export class FlagValueEditor extends ValueEditor {
         this.$dropdown = null;
         if (ec)
             this.control.createEditor(ec);
+        else if (e && e.relatedTarget && (<any>e.relatedTarget).tagNAME === 'BUTTON' && e.relatedTarget !== e.currentTarget) {
+            (<HTMLButtonElement>e.relatedTarget).click();
+            this.$editor.dataset.aOpen = null;
+        }
+        else if (e && e.relatedTarget && this.control.parent.contains(e.relatedTarget) && !this.$el.contains(<HTMLElement>e.relatedTarget)) {
+            this.$editor.dataset.aOpen = null;
+        }
         else {
             this.focus();
         }
@@ -513,6 +557,7 @@ export class DropdownEditValueEditor extends ValueEditor {
 
     create() {
         this.$el = document.createElement('div');
+        this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-flag');
         this.$editor = document.createElement('input');
         this.$editor.type = 'text';
@@ -524,7 +569,7 @@ export class DropdownEditValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
-            this.control.clearEditor();
+            this.control.clearEditor(e);
         });
         this.$editor.addEventListener('focus', () => {
             this.$editor.select();
@@ -552,6 +597,7 @@ export class DropdownEditValueEditor extends ValueEditor {
                 return;
             }
             this.$dropdown = document.createElement('div');
+            (<any>this.$dropdown).editor = this.$editor;
             this.$dropdown.tabIndex = -1;
             this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
             this.$dropdown.addEventListener('keyup', (e) => {
@@ -561,17 +607,6 @@ export class DropdownEditValueEditor extends ValueEditor {
                 }
                 return;
             });
-            var b = this.parent.getBoundingClientRect();
-            var c = this.container.getBoundingClientRect();
-            if (b.width < 150) {
-                this.$dropdown.style.left = (b.left - 150 + b.width - c.left) + 'px';
-                this.$dropdown.style.width = '150px';
-            }
-            else {
-                this.$dropdown.style.left = (b.left - c.left) + 'px';
-                this.$dropdown.style.width = (b.width) + 'px';
-            }
-            this.$dropdown.style.top = (b.top + this.$editor.parentElement.offsetHeight - c.top) + 'px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
@@ -594,6 +629,7 @@ export class DropdownEditValueEditor extends ValueEditor {
             }
             else
                 this.$dropdown.style.height = '160px';
+            this.positionDropdown();
             this.container.appendChild(this.$dropdown);
             this.$dropdown.focus();
         });
@@ -611,6 +647,28 @@ export class DropdownEditValueEditor extends ValueEditor {
             this.$el.parentElement.removeChild(this.$el);
     }
 
+    private positionDropdown() {
+        var b = this.parent.getBoundingClientRect();
+        var c = this.container.getBoundingClientRect();
+        var left = 0;
+        var width = 150;
+        var top = b.top + this.$editor.parentElement.offsetHeight - c.top;
+        if (b.width < 150) {
+            left = (b.left - 150 + b.width - c.left);
+        }
+        else {
+            left = b.left - c.left;
+            width = b.width;
+        }
+        //extends past bottom so open up
+        if (top + this.$dropdown.offsetHeight > document.body.clientHeight)
+            top = b.top - this.$dropdown.offsetHeight;
+
+        this.$dropdown.style.left = left + 'px';
+        this.$dropdown.style.width = width + 'px';
+        this.$dropdown.style.top = top + 'px';
+    }
+
     private $dropdownEvent = (e) => {
         if (e.relatedTarget && (<HTMLElement>e.relatedTarget).parentElement == this.$dropdown) {
             e.preventDefault();
@@ -623,6 +681,13 @@ export class DropdownEditValueEditor extends ValueEditor {
         this.$dropdown = null;
         if (ec)
             this.control.createEditor(ec);
+        else if (e && e.relatedTarget && (<any>e.relatedTarget).tagNAME === 'BUTTON' && e.relatedTarget !== e.currentTarget) {
+            (<HTMLButtonElement>e.relatedTarget).click();
+            this.$editor.dataset.aOpen = null;
+        }
+        else if (e && e.relatedTarget && this.control.parent.contains(e.relatedTarget) && !this.$el.contains(<HTMLElement>e.relatedTarget)) {
+            this.$editor.dataset.aOpen = null;
+        }
         else {
             this.focus();
         }
