@@ -1197,7 +1197,25 @@ export class Datagrid extends EventEmitter {
     }
 
     private resizeHeight() {
-        if (this.$dataHeight === 0) return;
+        if (this.$dataHeight === 0) 
+        {
+            var springrow = <HTMLElement>this.$body.querySelector('.datagrid-row-spring');
+            springrow.style.display = 'none';
+            springrow.style.height = '0px';   
+            helper = document.createElement('div');
+            helper.style.height = '100%';
+            helper.style.position = 'absolute';
+            helper.style.top = '0';
+            helper.style.left = '0';
+            helper.style.bottom = '0';             
+            this.$body.parentElement.appendChild(helper);
+            h = helper.clientHeight;
+            this.$body.parentElement.removeChild(helper);   
+            springrow.style.display = '';
+            springrow.style.height = h + 'px';     
+            this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + ',0)';                
+            return;
+        }
         var helper, style, h;
         var springrow = <HTMLElement>this.$body.querySelector('.datagrid-row-spring');
         springrow.style.display = 'none';
