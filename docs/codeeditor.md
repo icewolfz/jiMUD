@@ -61,6 +61,15 @@ Editor preferences are stored in their own file independent of client or charact
 - `Font weight` the editor font weight
 - `Font size` the editor font size
 
+### Virtual Area Editor
+
+- `Raw Font` font used for raw editors
+- `Raw Font weight` font weight for raw editors
+- `Raw Font size` font size for raw editors
+- `Enable or disable spellcheck on raw text editors` Enable or disable spellchecking on raw editors **Note:** When enabled it could cause performance issues due to the large amount of text
+- `Preview Font` font for room preview
+- `Preview Font size` font size for room preview
+
 ### Window
 
 - `Always on top of parent` causes window to remain on top of main client, **Requires restart on windows**, **Note:** if set enabled, main window will warn if open to prevent lose of data, if off code editor will remain open independent of main window closing

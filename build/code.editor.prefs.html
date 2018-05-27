@@ -593,6 +593,12 @@
                     </label>
                 </div>
                 <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="virtualOptions-rawSpellcheck" /> Enable or disable spellcheck on raw text editors
+                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">When enabled it could cause performance issues due to the large amount of text</span>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
                     <label class="control-label">Preview Font
                         <br>
                         <select id="virtualOptions-previewFontFamily" class="form-control selectpicker" data-container="body" data-width="250px">
@@ -690,8 +696,6 @@
                         </select>
                     </label>
                 </div>
-
-
                 <div class="col-sm-6 form-group">
                     <label class="control-label">
                         <input type="checkbox" id="editorOptions-find-seedSearchStringFromSelection" /> Seed find with selected text

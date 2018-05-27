@@ -313,6 +313,7 @@ export class VirtualEditor extends EditorBase {
                 live: true,
                 showRoomEditor: true,
                 showRoomPreview: true,
+                rawSpellcheck: false
             };
         if (options && options.new) {
             this.$startValues.map = options.value || '';
@@ -2444,26 +2445,32 @@ export class VirtualEditor extends EditorBase {
         this.$mapRaw.style.fontFamily = value.rawFontFamily;
         this.$mapRaw.style.fontSize = value.rawFontSize + 'px';
         this.$mapRaw.style.fontWeight = value.rawFontWeight;
+        this.$mapRaw.spellcheck = value.rawSpellcheck;
 
         this.$terrainRaw.style.fontFamily = value.rawFontFamily;
         this.$terrainRaw.style.fontSize = value.rawFontSize + 'px';
         this.$terrainRaw.style.fontWeight = value.rawFontWeight;
+        this.$terrainRaw.spellcheck = value.rawSpellcheck;
 
         this.$stateRaw.style.fontFamily = value.rawFontFamily;
         this.$stateRaw.style.fontSize = value.rawFontSize + 'px';
         this.$stateRaw.style.fontWeight = value.rawFontWeight;
+        this.$stateRaw.spellcheck = value.rawSpellcheck;
 
         this.$descriptionRaw.style.fontFamily = value.rawFontFamily;
         this.$descriptionRaw.style.fontSize = value.rawFontSize + 'px';
         this.$descriptionRaw.style.fontWeight = value.rawFontWeight;
+        this.$descriptionRaw.spellcheck = value.rawSpellcheck;
 
         this.$itemRaw.style.fontFamily = value.rawFontFamily;
         this.$itemRaw.style.fontSize = value.rawFontSize + 'px';
         this.$itemRaw.style.fontWeight = value.rawFontWeight;
+        this.$itemRaw.spellcheck = value.rawSpellcheck;
 
         this.$externalRaw.style.fontFamily = value.rawFontFamily;
         this.$externalRaw.style.fontSize = value.rawFontSize + 'px';
         this.$externalRaw.style.fontWeight = value.rawFontWeight;
+        this.$externalRaw.spellcheck = value.rawSpellcheck;
 
         this.$roomPreview.container.style.fontSize = value.previewFontSize + 'px';
         this.$roomPreview.container.style.fontFamily = value.previewFontFamily;

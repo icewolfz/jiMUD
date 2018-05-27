@@ -691,6 +691,8 @@
     });
 
     window.addEventListener('contextmenu', (e) => {
+        if(!options.spellchecking || !spellchecker || !e.srcElement || !e.srcElement.spellcheck || (e.srcElement.tagName !== 'TEXTAREA' && e.srcElement.tagName !== 'INPUT'))
+            return;
         e.preventDefault();
         var inputMenu = Menu.buildFromTemplate([
             { role: 'undo' },
@@ -710,35 +712,37 @@
                 }
             }));
         }
-        var word = e.srcElement.value.substring(e.srcElement.selectionStart, e.srcElement.selectionEnd);
-        var ol = word.length;
-        word = word.trimRight();
-        var ll = ol - word.length;
-        if (ll > 0)
-            e.srcElement.selectionEnd = e.srcElement.selectionEnd - ll;
+        if (options.spellchecking && spellchecker && e.srcElement.spellcheck && e.srcElement.value) {
+            var word = e.srcElement.value.substring(e.srcElement.selectionStart, e.srcElement.selectionEnd);
+            var ol = word.length;
+            word = word.trimRight();
+            var ll = ol - word.length;
+            if (ll > 0)
+                e.srcElement.selectionEnd = e.srcElement.selectionEnd - ll;
 
-        if (options.spellchecking && spellchecker && spellchecker.isMisspelled(word)) {
-            var words = spellchecker.getCorrectionsForMisspelling(word);
-            if (words.length > 0)
-                inputMenu.insert(0, new MenuItem({ type: 'separator' }));
-            var start = e.srcElement.selectionStart;
-            var end = e.srcElement.selectionEnd;
-            for (var w = words.length - 1; w >= 0; w--) {
-                inputMenu.insert(0, new MenuItem({
-                    label: words[w],
-                    start: start,
-                    end: end,
-                    click: function (item) {
-                        var value = e.srcElement.value;
-                        value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                        e.srcElement.value = value;
-                        e.srcElement.selectionStart = start + item.label.length;
-                        e.srcElement.selectionEnd = start + item.label.length;
-                        e.srcElement.setSelectionRange(start + item.label.length, start + item.label.length);
-                        //e.srcElement.blur();
-                        e.srcElement.focus();
-                    }
-                }));
+            if (spellchecker.isMisspelled(word)) {
+                var words = spellchecker.getCorrectionsForMisspelling(word);
+                if (words.length > 0)
+                    inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+                var start = e.srcElement.selectionStart;
+                var end = e.srcElement.selectionEnd;
+                for (var w = words.length - 1; w >= 0; w--) {
+                    inputMenu.insert(0, new MenuItem({
+                        label: words[w],
+                        start: start,
+                        end: end,
+                        click: function (item) {
+                            var value = e.srcElement.value;
+                            value = value.substring(0, item.start) + item.label + value.substring(item.end);
+                            e.srcElement.value = value;
+                            e.srcElement.selectionStart = start + item.label.length;
+                            e.srcElement.selectionEnd = start + item.label.length;
+                            e.srcElement.setSelectionRange(start + item.label.length, start + item.label.length);
+                            //e.srcElement.blur();
+                            e.srcElement.focus();
+                        }
+                    }));
+                }
             }
         }
         inputMenu.popup(remote.getCurrentWindow());

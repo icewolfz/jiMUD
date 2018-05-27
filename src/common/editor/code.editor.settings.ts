@@ -73,6 +73,7 @@ export class EditorSettings {
         live: true,
         showRoomEditor: true,
         showRoomPreview: true,
+        rawSpellcheck: false
     };
 
     public static load(file) {
