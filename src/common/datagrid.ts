@@ -388,13 +388,13 @@ export class Datagrid extends EventEmitter {
 
     public removeRows(rows) {
         rows = rows || [];
-        //get index and filter out invalid index
+        //get index and filter out invalid index, sort smallest to largest index as you always want to remove largest ot smallest
         rows.map((row) => {
             if (typeof row !== 'number')
                 this.$rows.indexOf(row);
             else
                 row
-        }).filter((row) => row < 0 || row >= this.$rows.length);
+        }).filter((row) => row < 0 || row >= this.$rows.length).sort();
         var row = rows.length;
         while (row--) {
             this.$rows.splice(rows[row], 1);

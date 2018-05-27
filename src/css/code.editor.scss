@@ -625,6 +625,11 @@ cause test to be brighter but more bold looking
     padding-left: 5px;
 }
 
+.virtual-editor-label .btn-group {
+    margin-left: 5px;
+    margin-top: -3px;
+}
+
 .room-preview {
     border-top: 1px solid #ccc;
     border-right: 1px solid #ccc;
@@ -744,6 +749,7 @@ cause test to be brighter but more bold looking
 .datagrid input.property-grid-editor, .datagrid select.property-grid-editor {
     border-right: 1px solid #f2cb7f;
 }
+
 .datagrid select.property-grid-editor {
     padding-left: 0;
     padding-right: 0;

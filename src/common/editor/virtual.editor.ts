@@ -2490,6 +2490,7 @@ export class VirtualEditor extends EditorBase {
 
     public switchView(view: View, force?) {
         if (!force && this.$view === view) return;
+        var bGroup, button;
         this.$label.style.display = '';
         switch (this.$view) {
             case View.map:
@@ -2557,6 +2558,63 @@ export class VirtualEditor extends EditorBase {
                     this.$terrainRaw.dataset.dirty = null;
                 }
                 this.$label.textContent = 'Terrains';
+                bGroup = document.createElement('div');
+                bGroup.classList.add('btn-group');
+
+                button = document.createElement('button');
+                button.type = 'button';
+                button.classList.add('btn', 'btn-default', 'btn-xs');
+                button.addEventListener('click', () => {
+                    /*
+                    dg.addRow({
+                        enabled: true,
+                        x: this.data.x,
+                        y: this.data.y,
+                        z: this.data.z,
+                        exit: '',
+                        dest: ''
+                    });
+                    dg.focus();
+                    dg.beginEdit(dg.rows.length - 1);
+                    */
+                });
+                button.title = 'Add terrain';
+                button.innerHTML = '<i class="fa fa-plus"></i> Add';
+                bGroup.appendChild(button);
+                button = document.createElement('button');
+                button.type = 'button';
+                button.disabled = true;
+                button.classList.add('btn', 'btn-default', 'btn-xs');
+                button.addEventListener('click', () => {
+                    //dg.beginEdit(dg.selected[0].row);
+                });
+                button.title = 'Edit terrain';
+                button.innerHTML = '<i class="fa fa-edit"></i> Edit';
+                bGroup.appendChild(button);
+                button = document.createElement('button');
+                button.disabled = true;
+                button.type = 'button';
+                button.title = 'Delete terrain(s)';
+                button.classList.add('btn', 'btn-danger', 'btn-xs');
+                button.addEventListener('click', () => {
+                    /*
+                    if (dialog.showMessageBox(
+                        remote.getCurrentWindow(),
+                        {
+                            type: 'warning',
+                            title: 'Delete',
+                            message: 'Delete terrain exit'+ (dg.selectedCount > 1 ? 's' : '') +'?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1
+                        })
+                        == 0) {
+                        //
+                    }
+                    */
+                });
+                button.innerHTML = '<i class="fa fa-times"></i> Delete';
+                bGroup.appendChild(button);                
+                this.$label.appendChild(bGroup);                
                 this.$terrainGrid.parent.style.display = '';
                 this.$terrainGrid.focus();
                 break;
@@ -2567,6 +2625,85 @@ export class VirtualEditor extends EditorBase {
                     this.$itemRaw.dataset.dirty = null;
                 }
                 this.$label.textContent = 'Items';
+                bGroup = document.createElement('div');
+                bGroup.classList.add('btn-group');
+
+                button = document.createElement('button');
+                button.type = 'button';
+                button.classList.add('btn', 'btn-default', 'btn-xs');
+                button.addEventListener('click', () => {
+                    /*
+                    dg.addRow({
+                        enabled: true,
+                        x: this.data.x,
+                        y: this.data.y,
+                        z: this.data.z,
+                        exit: '',
+                        dest: ''
+                    });
+                    dg.focus();
+                    dg.beginEdit(dg.rows.length - 1);
+                    */
+                });
+                button.title = 'Add item group';
+                button.innerHTML = '<i class="fa fa-plus-square-o"></i> Add group';
+                bGroup.appendChild(button);
+
+                button = document.createElement('button');
+                button.type = 'button';
+                button.disabled = true;
+                button.classList.add('btn', 'btn-default', 'btn-xs');
+                button.addEventListener('click', () => {
+                    /*
+                    dg.addRow({
+                        enabled: true,
+                        x: this.data.x,
+                        y: this.data.y,
+                        z: this.data.z,
+                        exit: '',
+                        dest: ''
+                    });
+                    dg.focus();
+                    dg.beginEdit(dg.rows.length - 1);
+                    */
+                });
+                button.title = 'Add item';
+                button.innerHTML = '<i class="fa fa-plus"></i> Add';
+                bGroup.appendChild(button);
+                button = document.createElement('button');
+                button.type = 'button';
+                button.disabled = true;
+                button.classList.add('btn', 'btn-default', 'btn-xs');
+                button.addEventListener('click', () => {
+                    //dg.beginEdit(dg.selected[0].row);
+                });
+                button.title = 'Edit item';
+                button.innerHTML = '<i class="fa fa-edit"></i> Edit';
+                bGroup.appendChild(button);
+                button = document.createElement('button');
+                button.disabled = true;
+                button.type = 'button';
+                button.title = 'Delete item(s)';
+                button.classList.add('btn', 'btn-danger', 'btn-xs');
+                button.addEventListener('click', () => {
+                    /*
+                    if (dialog.showMessageBox(
+                        remote.getCurrentWindow(),
+                        {
+                            type: 'warning',
+                            title: 'Delete',
+                            message: 'Delete selected item'+ (dg.selectedCount > 1 ? 's' : '') +'?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1
+                        })
+                        == 0) {
+                        //
+                    }
+                    */
+                });
+                button.innerHTML = '<i class="fa fa-times"></i> Delete';
+                bGroup.appendChild(button);                
+                this.$label.appendChild(bGroup);                
                 this.$itemGrid.parent.style.display = '';
                 this.$itemGrid.focus();
                 break;
@@ -2577,6 +2714,63 @@ export class VirtualEditor extends EditorBase {
                     this.$externalRaw.dataset.dirty = null;
                 }
                 this.$label.textContent = 'External exits';
+                bGroup = document.createElement('div');
+                bGroup.classList.add('btn-group');
+
+                button = document.createElement('button');
+                button.type = 'button';
+                button.classList.add('btn', 'btn-default', 'btn-xs');
+                button.addEventListener('click', () => {
+                    /*
+                    dg.addRow({
+                        enabled: true,
+                        x: this.data.x,
+                        y: this.data.y,
+                        z: this.data.z,
+                        exit: '',
+                        dest: ''
+                    });
+                    dg.focus();
+                    dg.beginEdit(dg.rows.length - 1);
+                    */
+                });
+                button.title = 'Add exit';
+                button.innerHTML = '<i class="fa fa-plus"></i> Add';
+                bGroup.appendChild(button);
+                button = document.createElement('button');
+                button.type = 'button';
+                button.disabled = true;
+                button.classList.add('btn', 'btn-default', 'btn-xs');
+                button.addEventListener('click', () => {
+                    //dg.beginEdit(dg.selected[0].row);
+                });
+                button.title = 'Edit exit';
+                button.innerHTML = '<i class="fa fa-edit"></i> Edit';
+                bGroup.appendChild(button);
+                button = document.createElement('button');
+                button.disabled = true;
+                button.type = 'button';
+                button.title = 'Delete exit(s)';
+                button.classList.add('btn', 'btn-danger', 'btn-xs');
+                button.addEventListener('click', () => {
+                    /*
+                    if (dialog.showMessageBox(
+                        remote.getCurrentWindow(),
+                        {
+                            type: 'warning',
+                            title: 'Delete',
+                            message: 'Delete selected exit'+ (dg.selectedCount > 1 ? 's' : '') +'?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1
+                        })
+                        == 0) {
+                        //
+                    }
+                    */
+                });
+                button.innerHTML = '<i class="fa fa-times"></i> Delete';
+                bGroup.appendChild(button);                
+                this.$label.appendChild(bGroup);
                 this.$exitGrid.parent.style.display = '';
                 this.$exitGrid.focus();
                 break;
@@ -4682,11 +4876,16 @@ class ExternalExitValueEditor extends ValueEditor {
             dg.on('selection-changed', () => {
                 if (dg.selectedCount) {
                     this.$edit.removeAttribute('disabled');
-                    this.$del.removeAttribute('disabled');
+                    this.$del.removeAttribute('disabled');                    
+                    if(dg.selectedCount > 1)
+                        this.$del.title = 'Delete exits';
+                    else
+                        this.$del.title = 'Delete exit';
                 }
                 else {
                     this.$edit.setAttribute('disabled', 'true');
                     this.$del.setAttribute('disabled', 'true');
+                    this.$del.title = 'Delete exit(s)';
                 }
             });
             header = document.createElement('div');
@@ -4740,6 +4939,7 @@ class ExternalExitValueEditor extends ValueEditor {
                 dg.focus();
                 dg.beginEdit(dg.rows.length - 1);
             });
+            button.title = 'Add exit';
             button.innerHTML = '<i class="fa fa-plus"></i>';
             el.appendChild(button);
             button = document.createElement('button');
@@ -4749,12 +4949,14 @@ class ExternalExitValueEditor extends ValueEditor {
             button.addEventListener('click', () => {
                 dg.beginEdit(dg.selected[0].row);
             });
+            button.title = 'Edit exit';
             button.innerHTML = '<i class="fa fa-edit"></i>';
             this.$edit = button;
             el.appendChild(button);
             button = document.createElement('button');
             button.disabled = true;
             button.type = 'button';
+            button.title = 'Delete exit(s)';
             button.classList.add('btn', 'btn-danger');
             button.addEventListener('click', () => {
                 if (dialog.showMessageBox(
@@ -4762,7 +4964,7 @@ class ExternalExitValueEditor extends ValueEditor {
                     {
                         type: 'warning',
                         title: 'Delete',
-                        message: 'Remove selected exits?',
+                        message: 'Delete selected exit'+ (dg.selectedCount > 1 ? 's' : '') +'?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1
                     })
