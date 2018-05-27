@@ -116,6 +116,8 @@ export class TextValueEditor extends ValueEditor {
             var initialLength = this.$editor.value.length;
             window.setTimeout(() => {
                 this.$editor.value = this.$editor.value.replace(/(?:\r\n|\r|\n)/g, '');
+                this.$editor.selectionStart = sel.start;
+                this.$editor.selectionEnd = sel.end;
             });
         });
         this.$editor.addEventListener('keydown', (e) => {
@@ -194,7 +196,7 @@ export class TextValueEditor extends ValueEditor {
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', (e) => {
                 var ec = this.editorClick;
-                this.$editor.value = this.$dropdown.value;
+                this.value = this.$dropdown.value;
                 this.$editor.dataset.aOpen = 'true';
                 this.$dropdown.parentElement.removeChild(this.$dropdown);
                 this.$dropdown = null;
@@ -281,6 +283,7 @@ export class TextValueEditor extends ValueEditor {
     }
     set value(value: any) {
         this.$editor.value = value;
+        resetCursor(this.$editor);
     }
 }
 
@@ -552,6 +555,7 @@ export class FlagValueEditor extends ValueEditor {
         if (!this.options.enum) return;
         this.$value = value;
         this.$editor.value = enumToString(value, this.options.enum);
+        resetCursor(this.$editor);
     }
 }
 
@@ -704,5 +708,6 @@ export class DropdownEditValueEditor extends ValueEditor {
     }
     set value(value: any) {
         this.$editor.value = value;
+        resetCursor(this.$editor);
     }
 }

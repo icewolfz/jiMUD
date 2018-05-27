@@ -1464,22 +1464,24 @@ export class VirtualEditor extends EditorBase {
             switch (prop) {
                 case 'external':
                     var nExternal = this.$exits.filter(e => e.x !== old.x || e.y !== old.y || e.z !== old.z);
-                    this.$selectedRoom.ee = newValue.map(e=>e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c)=>a|c);
+                    this.$selectedRoom.ee = newValue.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
                     nExternal = nExternal.concat(newValue);
                     this.$exits = nExternal;
                     this.$exitGrid.rows = this.$exits;
-                    if(this.$mapSize.depth > 1)
+                    if (this.$mapSize.depth > 1)
                         nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
                     else
                         nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
                     this.$externalRaw.value = '';
                     this.updateRaw(this.$externalRaw, 0, nExternal);
-                    this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));                   
+                    this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
                     break;
                 case 'ee':
                 case 'ef':
                     break;
                 case 'items':
+                    //this.$items[this.$selectedRoom.item].children = newValue;
+                    //this.$itemsGrid.rows = this.$items
                     break;
                 case 'terrainType':
                     prop = 'terrain';
@@ -2613,8 +2615,8 @@ export class VirtualEditor extends EditorBase {
                     */
                 });
                 button.innerHTML = '<i class="fa fa-times"></i> Delete';
-                bGroup.appendChild(button);                
-                this.$label.appendChild(bGroup);                
+                bGroup.appendChild(button);
+                this.$label.appendChild(bGroup);
                 this.$terrainGrid.parent.style.display = '';
                 this.$terrainGrid.focus();
                 break;
@@ -2702,8 +2704,8 @@ export class VirtualEditor extends EditorBase {
                     */
                 });
                 button.innerHTML = '<i class="fa fa-times"></i> Delete';
-                bGroup.appendChild(button);                
-                this.$label.appendChild(bGroup);                
+                bGroup.appendChild(button);
+                this.$label.appendChild(bGroup);
                 this.$itemGrid.parent.style.display = '';
                 this.$itemGrid.focus();
                 break;
@@ -2769,7 +2771,7 @@ export class VirtualEditor extends EditorBase {
                     */
                 });
                 button.innerHTML = '<i class="fa fa-times"></i> Delete';
-                bGroup.appendChild(button);                
+                bGroup.appendChild(button);
                 this.$label.appendChild(bGroup);
                 this.$exitGrid.parent.style.display = '';
                 this.$exitGrid.focus();
@@ -4745,6 +4747,7 @@ class FileOpenValueEditor extends ValueEditor {
     set value(value: any) {
         this.$value = value;
         this.$editor.value = this.formatValue(value);
+        resetCursor(this.$editor);
     }
 }
 
@@ -4876,8 +4879,8 @@ class ExternalExitValueEditor extends ValueEditor {
             dg.on('selection-changed', () => {
                 if (dg.selectedCount) {
                     this.$edit.removeAttribute('disabled');
-                    this.$del.removeAttribute('disabled');                    
-                    if(dg.selectedCount > 1)
+                    this.$del.removeAttribute('disabled');
+                    if (dg.selectedCount > 1)
                         this.$del.title = 'Delete exits';
                     else
                         this.$del.title = 'Delete exit';
@@ -4907,13 +4910,12 @@ class ExternalExitValueEditor extends ValueEditor {
             button.style.cssFloat = 'right';
             button.type = 'button';
             button.classList.add('btn', 'btn-primary');
-            button.addEventListener('click', () => {
-                this.$value = dg.rows;
-                if(this.$value.length > 0)
-                    this.data.ee = this.$value.map(e=>e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c)=>a|c);
+            button.addEventListener('click', () => {                
+                if (this.$value.length > 0)
+                    this.data.ee = this.$value.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
                 else
                     this.data.ee = 0;
-                this.$editor.value = this.formatValue(this.$value);
+                this.value = dg.rows;
                 mDialog.close();
                 if (mDialog.parentElement)
                     mDialog.parentElement.removeChild(mDialog);
@@ -4964,7 +4966,7 @@ class ExternalExitValueEditor extends ValueEditor {
                     {
                         type: 'warning',
                         title: 'Delete',
-                        message: 'Delete selected exit'+ (dg.selectedCount > 1 ? 's' : '') +'?',
+                        message: 'Delete selected exit' + (dg.selectedCount > 1 ? 's' : '') + '?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1
                     })
@@ -5010,6 +5012,7 @@ class ExternalExitValueEditor extends ValueEditor {
     set value(value: any) {
         this.$value = value;
         this.$editor.value = this.formatValue(value);
+        resetCursor(this.$editor);
     }
 }
 
@@ -5120,10 +5123,15 @@ class ItemsValueEditor extends ValueEditor {
                 if (dg.selectedCount) {
                     this.$edit.removeAttribute('disabled');
                     this.$del.removeAttribute('disabled');
+                    if (dg.selectedCount > 1)
+                        this.$del.title = 'Delete items';
+                    else
+                        this.$del.title = 'Delete exit';
                 }
                 else {
                     this.$edit.setAttribute('disabled', 'true');
                     this.$del.setAttribute('disabled', 'true');
+                    this.$del.title = 'Delete items(s)';
                 }
             });
             header = document.createElement('div');
@@ -5146,7 +5154,7 @@ class ItemsValueEditor extends ValueEditor {
             button.type = 'button';
             button.classList.add('btn', 'btn-primary');
             button.addEventListener('click', () => {
-                //this.$value = 
+                this.value = dg.rows;
                 mDialog.close();
                 if (mDialog.parentElement)
                     mDialog.parentElement.removeChild(mDialog);
@@ -5154,6 +5162,7 @@ class ItemsValueEditor extends ValueEditor {
             });
             button.textContent = 'Ok';
             header.appendChild(button);
+
             el = document.createElement('div');
             el.classList.add('btn-group');
             el.style.cssFloat = 'left';
@@ -5161,8 +5170,14 @@ class ItemsValueEditor extends ValueEditor {
             button.type = 'button';
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-
+                dg.addRow({
+                    item: '',
+                    description: ''
+                });
+                dg.focus();
+                dg.beginEdit(dg.rows.length - 1);
             });
+            button.title = 'Add item';
             button.innerHTML = '<i class="fa fa-plus"></i>';
             el.appendChild(button);
             button = document.createElement('button');
@@ -5170,17 +5185,30 @@ class ItemsValueEditor extends ValueEditor {
             button.disabled = true;
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-
+                dg.beginEdit(dg.selected[0].row);
             });
+            button.title = 'Edit item';
             button.innerHTML = '<i class="fa fa-edit"></i>';
             this.$edit = button;
             el.appendChild(button);
             button = document.createElement('button');
             button.disabled = true;
             button.type = 'button';
+            button.title = 'Delete item(s)';
             button.classList.add('btn', 'btn-danger');
             button.addEventListener('click', () => {
-
+                if (dialog.showMessageBox(
+                    remote.getCurrentWindow(),
+                    {
+                        type: 'warning',
+                        title: 'Delete',
+                        message: 'Delete selected item' + (dg.selectedCount > 1 ? 's' : '') + '?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    })
+                    == 0) {
+                    dg.removeRows(dg.selected.map(r => r.dataIndex));
+                }
             });
             button.innerHTML = '<i class="fa fa-times"></i>';
             this.$del = button;
@@ -5220,5 +5248,6 @@ class ItemsValueEditor extends ValueEditor {
     set value(value: any) {
         this.$value = value;
         this.$editor.value = this.formatValue(value);
+        resetCursor(this.$editor);
     }
 }
