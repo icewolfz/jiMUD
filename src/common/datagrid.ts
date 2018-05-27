@@ -23,16 +23,19 @@ export class Column {
     public sortable = true;
     public visible = true;
     public formatter = (data) => {
-        if (!data) return '';
+        if (!data) return '&nbsp;';
         switch (typeof (data.cell)) {
             case "string":
+                if(data.cell.length === 0)
+                    return '&nbsp;';
+                return data.cell;
             case "number":
             case "boolean":
                 return data.cell;
         }
         if (!data.cell)
-            return '';
-        return data.cell.value;
+            return '&nbsp;';
+        return data.cell.value || '&nbsp;';
     };
     public align = '';
     public width = 100;
@@ -363,14 +366,14 @@ export class Datagrid extends EventEmitter {
     public addRow(row) {
         if (!row) return;
         this.$rows.push(row);
-        this.doUpdate(UpdateType.rows | UpdateType.sort);
+        this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
     public addRows(rows) {
         if (!rows) return;
         this.$editorClick = null;
         this.$rows = this.$rows.concat(rows);
-        this.doUpdate(UpdateType.rows | UpdateType.sort);
+        this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
     public removeRow(row) {
@@ -379,7 +382,7 @@ export class Datagrid extends EventEmitter {
         if (row === -1 || row >= this.$rows.length)
             return;
         this.$rows.splice(row, 1);
-        this.doUpdate(UpdateType.rows | UpdateType.sort);
+        this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
     public removeRows(rows) {
@@ -395,7 +398,7 @@ export class Datagrid extends EventEmitter {
         while (row--) {
             this.$rows.splice(rows[row], 1);
         }
-        this.doUpdate(UpdateType.rows | UpdateType.sort);
+        this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
     get rows() { return this.$rows.slice(0); }
@@ -434,7 +437,11 @@ export class Datagrid extends EventEmitter {
                     parent: parent,
                     child: child,
                     index: this.$selected[sl],
-                    dataIndex: dataIndex
+                    dataIndex: dataIndex,
+                    beginEdit: () => {
+                        this.createEditor(el);
+                    },
+
                 });
             else
                 rows.unshift({
@@ -443,7 +450,10 @@ export class Datagrid extends EventEmitter {
                     parent: parent,
                     child: child,
                     index: this.$selected[sl],
-                    dataIndex: dataIndex
+                    dataIndex: dataIndex,
+                    beginEdit: () => {
+                        this.createEditor(el);
+                    }
                 });
         }
         return rows;
@@ -826,9 +836,11 @@ export class Datagrid extends EventEmitter {
             else
                 cell.title = value || '';
             if (cols[c].formatter)
-                cell.textContent = cols[c].formatter({ row: data, cell: value, rowIndex: r, column: c, index: idx, field: cols[c].field, rows: this.$rows, parent: parent, child: child, dataIndex: dataIdx });
+                cell.innerHTML = cols[c].formatter({ row: data, cell: value, rowIndex: r, column: c, index: idx, field: cols[c].field, rows: this.$rows, parent: parent, child: child, dataIndex: dataIdx });
+            else if(value && (''+value).length > 0)
+                cell.textContent = value;
             else
-                cell.textContent = value || '';
+                cell.innerHTML = '&nbsp;';
             if (c === 0 && parent != -1)
                 cell.classList.add('datagrid-cell-child');
             else if (this.$children && c === this.$firstColumn && data.children && data.children.length > 0) {
@@ -1269,8 +1281,11 @@ export class Datagrid extends EventEmitter {
             var value;
             var oldValue;
             var prop = editor.property;
-            if (editor.editor)
+            var eData;
+            if (editor.editor) {
                 value = editor.editor.value;
+                eData = editor.editor.data;
+            }
             oldValue = editor.data[editor.property];
             var dataIdx, field, parent, child, idx, data;
             if (value !== oldValue) {
@@ -1312,7 +1327,7 @@ export class Datagrid extends EventEmitter {
             });
             //do last in case the event changes the property editor
             if (value !== oldValue) {
-                this.emit('value-changed', value, oldValue, dataIdx, child);
+                this.emit('value-changed', value, oldValue, dataIdx, child, eData);
             }
         }
         this.$editor = null;
@@ -1390,50 +1405,39 @@ export class Datagrid extends EventEmitter {
             switch (type) {
                 case EditorType.flag:
                     editor.editor = new FlagValueEditor(this, cell, prop, editorOptions);
-                    editor.editor.value = data[prop];
-                    editor.editor.data = data;
                     break;
                 case EditorType.number:
                     editor.editor = new NumberValueEditor(this, cell, prop, editorOptions);
-                    editor.editor.value = data[prop];
-                    editor.editor.data = data;
                     break;
                 case EditorType.dropdown:
                     editor.editor = new DropdownEditValueEditor(this, cell, prop, editorOptions);
-                    editor.editor.value = data[prop];
-                    editor.editor.data = data;
                     break
                 case EditorType.select:
                     break;
                 case EditorType.custom:
-                    if (this.$cols[col] && this.$cols[col].editor && this.$cols[col].editor.editor) {
+                    if (this.$cols[col] && this.$cols[col].editor && this.$cols[col].editor.editor)
                         editor.editor = new this.$cols[col].editor.editor(this, cell, prop, editorOptions);
-                        editor.editor.value = data[prop];
-                        editor.editor.data = data;
-                    }
                     break;
                 default:
                     switch (typeof (data[prop])) {
                         case 'boolean':
                             editor.editor = new BooleanValueEditor(this, cell, prop, editorOptions);
-                            editor.editor.value = data[prop];
-                            editor.editor.data = data;
                             break;
                         case 'number':
                             editor.editor = new NumberValueEditor(this, cell, prop, editorOptions);
-                            editor.editor.value = data[prop];
-                            editor.editor.data = data;
                             break;
                         default:
                             editor.editor = new TextValueEditor(this, cell, prop, editorOptions);
-                            editor.editor.value = data[prop];
-                            editor.editor.data = data;
                             break;
                     }
                     break;
             }
             if (editor)
+            {
+                editor.editor.data = data;
+                editor.editor.value = data[prop];
                 this.$editor.editors.push(editor);
+            }
         }
         if (this.$editor && this.$editor.editors.length) {
             if (fCol >= this.$editor.editors.length)

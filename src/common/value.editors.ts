@@ -18,9 +18,9 @@ export abstract class ValueEditor extends EventEmitter {
     private $options: any;
     private $control: any;
     private $container: HTMLElement;
+    private $data: any;
     public editorClick: any;
     public property;
-    public data;
 
     constructor(control, parent, property?, options?) {
         super();
@@ -29,6 +29,11 @@ export abstract class ValueEditor extends EventEmitter {
         this.control = control;
         this.property = property
     }
+
+    set data(value) {
+        this.$data = value;
+    }
+    get data() { return this.$data; }
 
     set control(ops) {
         this.$control = ops;

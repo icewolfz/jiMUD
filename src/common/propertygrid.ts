@@ -312,8 +312,11 @@ export class PropertyGrid extends EventEmitter {
         var value;
         var oldValue;
         var prop = this.$editor.property;
-        if (this.$editor.editor)
+        var eData;
+        if (this.$editor.editor) {
             value = this.$editor.editor.value;
+            eData = this.$editor.editor.data;
+        }
         oldValue = this.$object[this.$editor.property];
         if (value !== oldValue) {
             this.$object[prop] = value;
@@ -371,50 +374,38 @@ export class PropertyGrid extends EventEmitter {
         switch (type) {
             case EditorType.flag:
                 this.$editor.editor = new FlagValueEditor(this, el, prop, editorOptions);
-                this.$editor.editor.value = this.$object[prop];
-                this.$editor.editor.data = this.object;
                 break;
             case EditorType.number:
                 this.$editor.editor = new NumberValueEditor(this, el, prop, editorOptions);
-                this.$editor.editor.value = this.$object[prop];
-                this.$editor.editor.data = this.object;
                 break;
             case EditorType.dropdown:
                 this.$editor.editor = new DropdownEditValueEditor(this, el, prop, editorOptions);
-                this.$editor.editor.value = this.$object[prop];
-                this.$editor.editor.data = this.object;
                 break
             case EditorType.select:
                 break;
             case EditorType.custom:
-                if (this.$options[prop] && this.$options[prop].editor && this.$options[prop].editor.editor) {
+                if (this.$options[prop] && this.$options[prop].editor && this.$options[prop].editor.editor)
                     this.$editor.editor = new this.$options[prop].editor.editor(this, el, prop, editorOptions);
-                    this.$editor.editor.value = this.$object[prop];
-                    this.$editor.editor.data = this.object;
-                }
                 break;
             default:
                 switch (typeof (this.$object[prop])) {
                     case 'boolean':
                         this.$editor.editor = new BooleanValueEditor(this, el, prop, editorOptions);
-                        this.$editor.editor.value = this.$object[prop];
-                        this.$editor.editor.data = this.object;
                         break;
                     case 'number':
                         this.$editor.editor = new NumberValueEditor(this, el, prop, editorOptions);
-                        this.$editor.editor.value = this.$object[prop];
-                        this.$editor.editor.data = this.object;
                         break;
                     default:
                         this.$editor.editor = new TextValueEditor(this, el, prop, editorOptions);
-                        this.$editor.editor.value = this.$object[prop];
-                        this.$editor.editor.data = this.object;
                         break;
                 }
                 break;
         }
-        if (this.$editor.editor)
+        if (this.$editor.editor) {
+            this.$editor.editor.data = this.object;
+            this.$editor.editor.value = this.$object[prop];
             this.$editor.editor.focus();
+        }
         else
             this.$editor = null;
     }
