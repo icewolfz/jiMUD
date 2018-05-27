@@ -5,7 +5,7 @@
 - **New:**
   - Code editor:
     - Virtual map editor
-      - Edit exits, descriptions
+      - Edit exits, descriptions, external exits
       - Generate external room files quickly based on current room settings
       - Preview selected room as if on mud
       - Generate exits by using numpad, and ctrl+numpad to remove exits
@@ -18,7 +18,7 @@
     - Added a max file check of 200,000 bytes and error if file is larger
     - Revert new files to initial starting code, either empty or template code
   - `-data-dir` command line argument, this allows you to override the default data storage folder with one of your own
-  - `-no-pd, -no-portable-dir` command line argument, this forces portable application to use the default data folder instead of the applicaton directory, `--data-dir` super cedes this
+  - `-no-pd, -no-portable-dir` command line argument, this forces portable application to use the default data folder instead of the application directory, `--data-dir` super cedes this
 - **Changed:**
   - Switch to es2017
   - Code editor:

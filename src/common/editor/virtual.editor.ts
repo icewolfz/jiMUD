@@ -512,7 +512,8 @@ export class VirtualEditor extends EditorBase {
             wrap: true,
             editor: {
                 options: {
-                    wrap: true
+                    wrap: true,
+                    singleLine: true
                 }
             }
         },
@@ -524,7 +525,8 @@ export class VirtualEditor extends EditorBase {
             wrap: true,
             editor: {
                 options: {
-                    wrap: true
+                    wrap: true,
+                    singleLine: true
                 }
             }
         },
@@ -536,7 +538,8 @@ export class VirtualEditor extends EditorBase {
             wrap: true,
             editor: {
                 options: {
-                    wrap: true
+                    wrap: true,
+                    singleLine: true
                 }
             }
         }]);
@@ -547,8 +550,8 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(el);
         this.$itemGrid = new Datagrid(el);
         this.$itemGrid.showChildren = true;
-        this.$itemGrid.on('row-dblclick', (e, data)=> {
-            if(!data || data.parent === -1)
+        this.$itemGrid.on('row-dblclick', (e, data) => {
+            if (!data || data.parent === -1)
                 e.preventDefault();
         })
         this.$itemGrid.addColumns([{
@@ -613,6 +616,10 @@ export class VirtualEditor extends EditorBase {
         this.$exitGrid = new Datagrid(el);
         this.$exitGrid.columns = [
             {
+                label: 'Enabled',
+                field: 'enabled'
+            },
+            {
                 label: 'X',
                 field: 'x'
             },
@@ -657,10 +664,15 @@ export class VirtualEditor extends EditorBase {
                 label: 'Destination',
                 field: 'dest',
                 width: 300,
-                spring: true
+                spring: true,
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
             }
         ];
-        this.$exitGrid.sort(0);
+        this.$exitGrid.sort(1);
         //#endregion
         this.parent.appendChild(frag);
         //#region create map editor
@@ -1450,6 +1462,20 @@ export class VirtualEditor extends EditorBase {
             var old = this.$selectedRoom.clone();
             var data;
             switch (prop) {
+                case 'external':
+                    var nExternal = this.$exits.filter(e => e.x !== old.x || e.y !== old.y || e.z !== old.z);
+                    this.$selectedRoom.ee = newValue.map(e=>e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c)=>a|c);
+                    nExternal = nExternal.concat(newValue);
+                    this.$exits = nExternal;
+                    this.$exitGrid.rows = this.$exits;
+                    if(this.$mapSize.depth > 1)
+                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                    else
+                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                    this.$externalRaw.value = '';
+                    this.updateRaw(this.$externalRaw, 0, nExternal);
+                    this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));                   
+                    break;
                 case 'ee':
                 case 'ef':
                     break;
@@ -1526,16 +1552,16 @@ export class VirtualEditor extends EditorBase {
             },
             {
                 property: 'ee',
+                visible: false
+            },
+            {
+                property: 'external',
                 label: 'External exits',
-                formatter: this.formatExits,
+                formatter: this.formatExternal,
                 sort: 5,
                 editor: {
                     type: EditorType.custom,
                     editor: ExternalExitValueEditor,
-                    enum: RoomExit,
-                    options: {
-                        data: this.$exits
-                    }
                 },
             },
             {
@@ -1621,7 +1647,12 @@ export class VirtualEditor extends EditorBase {
             {
                 property: 'long',
                 group: 'Description',
-                sort: 1
+                sort: 1,
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
             },
             {
                 property: 'light',
@@ -1677,12 +1708,22 @@ export class VirtualEditor extends EditorBase {
             {
                 property: 'sound',
                 group: 'Description',
-                sort: 5
+                sort: 5,
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
             },
             {
                 property: 'smell',
                 group: 'Description',
-                sort: 5
+                sort: 5,
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
             },
         ]);
 
@@ -1719,6 +1760,21 @@ export class VirtualEditor extends EditorBase {
         while (state--) {
             if (states[state] === 'None') continue;
             if ((value & RoomExit[states[state]]) === RoomExit[states[state]])
+                f.push(capitalize(states[state]));
+        }
+        return f.join(', ');
+    }
+
+    private formatExternal(prop, value, data) {
+        if (data.ee === 0)
+            return 'None';
+        var state;
+        var states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomExit[key])));
+        var f = [];
+        state = states.length;
+        while (state--) {
+            if (states[state] === 'None') continue;
+            if ((data.ee & RoomExit[states[state]]) === RoomExit[states[state]])
                 f.push(capitalize(states[state]));
         }
         return f.join(', ');
@@ -3730,6 +3786,7 @@ export class VirtualEditor extends EditorBase {
                 o.sound = '';
                 o.smell = '';
             }
+            o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z)
         }
         this.$roomEditor.object = o;
     }
@@ -4091,13 +4148,13 @@ export class VirtualEditor extends EditorBase {
         var cols = this.$exitGrid.columns;
         if (this.$mapSize.depth < 2) {
             this.$depth = 0;
-            cols[2].visible = false;
+            cols[3].visible = false;
         }
         else {
             this.$depthToolbar.value = '' + this.$depth;
             this.$depthToolbar.max = '' + (this.$mapSize.depth - 1);
             this.$depthToolbar.min = '' + 0;
-            cols[2].visible = true;
+            cols[3].visible = true;
         }
         this.$exitGrid.columns = cols;
         this.emit('rebuild-buttons');
@@ -4254,14 +4311,19 @@ export class VirtualEditor extends EditorBase {
         if (dl === 0) return;
         rows = [];
         for (c = 0; c < dl; c++) {
-            if (data[c].length === 0 || data[c].startsWith('#')) continue;
+            if (data[c].length === 0) continue;
             row = {
+                enabled: true,
                 x: 0,
                 y: 0,
                 z: 0,
                 exit: '',
                 dest: ''
             };
+            if (data[c].startsWith('#')) {
+                row.enabled = false;
+                data[c] = data[c].substr(1);
+            }
             tmp = data[c].split(":");
             tmp2 = tmp[0].split(",");
             row.x = +tmp2[0];
@@ -4273,20 +4335,6 @@ export class VirtualEditor extends EditorBase {
         }
         this.$exits = rows;
         this.$exitGrid.rows = this.$exits;
-        this.$roomEditor.setPropertyOptions({
-            property: 'ee',
-            label: 'External exits',
-            formatter: this.formatExits,
-            sort: 5,
-            editor: {
-                type: EditorType.custom,
-                editor: ExternalExitValueEditor,
-                enum: RoomExit,
-                options: {
-                    data: this.$exits
-                }
-            },
-        });
     }
 
     private reloadExits() {
@@ -4298,12 +4346,14 @@ export class VirtualEditor extends EditorBase {
         var my = this.$mouse.ry;
         //Remove old exits
         for (var d = 0, dl = od.length; d < dl; d++) {
+            if (!od[d].enabled) continue;
             r = this.getRoom(od[d].x, od[d].y, od[d].z);
             r.ee &= ~RoomExits[od[d].exit];
             this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
         }
         //Add new exits
         for (var d = 0, dl = this.$exits.length; d < dl; d++) {
+            if (!this.$exits[d].enabled) continue;
             r = this.getRoom(this.$exits[d].x, this.$exits[d].y, this.$exits[d].z);
             r.ee |= RoomExits[this.$exits[d].exit];
             this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
@@ -4413,7 +4463,7 @@ export class VirtualEditor extends EditorBase {
                 d += "      \"southwest\":VIR+\"" + (r.x - 1) + "," + (r.y + 1) + t + ".c\",\n";
 
             for (var ri = 0, rl = this.$exits.length; ri < rl; ri++) {
-                if (+this.$exits[ri].x !== r.x || +this.$exits[ri].y !== r.y || +this.$exits[ri].z !== r.z)
+                if (!this.$exits[ri].enabled || +this.$exits[ri].x !== r.x || +this.$exits[ri].y !== r.y || +this.$exits[ri].z !== r.z)
                     continue;
                 d += "      \"" + this.$exits[ri].exit + "\":\"" + this.$exits[ri].dest + "\",\n";
             }
@@ -4584,50 +4634,55 @@ class ExternalExitValueEditor extends ValueEditor {
             el.style.top = '38px';
             header.appendChild(el);
             var dg = new Datagrid(el);
-            dg.addColumns([{
-                label: 'Exit',
-                field: 'exit',
-                 editor: {
-                    type: EditorType.dropdown,
-                    options: {
-                        container: mDialog,
-                        data: [
-                            "surface",
-                            "dive",
-                            "swim",
-                            "portal",
-                            "down",
-                            "up",
-                            "enter",
-                            "out",
-                            "northwest",
-                            "west",
-                            "southwest",
-                            "south",
-                            "southeast",
-                            "east",
-                            "northeast",
-                            "north"
-                        ]
+            dg.addColumns([
+                {
+                    label: 'Enabled',
+                    field: 'enabled'
+                },
+                {
+                    label: 'Exit',
+                    field: 'exit',
+                    editor: {
+                        type: EditorType.dropdown,
+                        options: {
+                            container: mDialog,
+                            data: [
+                                "surface",
+                                "dive",
+                                "swim",
+                                "portal",
+                                "down",
+                                "up",
+                                "enter",
+                                "out",
+                                "northwest",
+                                "west",
+                                "southwest",
+                                "south",
+                                "southeast",
+                                "east",
+                                "northeast",
+                                "north"
+                            ]
+                        }
                     }
-                }                
-            },
-            {
-                label: 'Destination',
-                field: 'dest',
-                spring: true,
-                width: 200,
-                editor: {
-                    options: {
-                        container: mDialog
+                },
+                {
+                    label: 'Destination',
+                    field: 'dest',
+                    spring: true,
+                    width: 200,
+                    editor: {
+                        options: {
+                            container: mDialog
+                        }
                     }
-                }
-            }]);
-            dg.addRows((this.options ? this.options.data || [] : []).slice().filter(e => e.x === this.data.x && e.y === this.data.y && e.z === this.data.z));
+                }]);
+            dg.addRows(this.$value.slice() || []);
             dg.on('selection-changed', () => {
                 if (dg.selectedCount) {
                     this.$edit.removeAttribute('disabled');
-                    this.$del.removeAttribute('disabled');                    
+                    this.$del.removeAttribute('disabled');
                 }
                 else {
                     this.$edit.setAttribute('disabled', 'true');
@@ -4654,7 +4709,12 @@ class ExternalExitValueEditor extends ValueEditor {
             button.type = 'button';
             button.classList.add('btn', 'btn-primary');
             button.addEventListener('click', () => {
-                //this.$value = 
+                this.$value = dg.rows;
+                if(this.$value.length > 0)
+                    this.data.ee = this.$value.map(e=>e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c)=>a|c);
+                else
+                    this.data.ee = 0;
+                this.$editor.value = this.formatValue(this.$value);
                 mDialog.close();
                 if (mDialog.parentElement)
                     mDialog.parentElement.removeChild(mDialog);
@@ -4669,7 +4729,16 @@ class ExternalExitValueEditor extends ValueEditor {
             button.type = 'button';
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-
+                dg.addRow({
+                    enabled: true,
+                    x: this.data.x,
+                    y: this.data.y,
+                    z: this.data.z,
+                    exit: '',
+                    dest: ''
+                });
+                dg.focus();
+                dg.beginEdit(dg.rows.length - 1);
             });
             button.innerHTML = '<i class="fa fa-plus"></i>';
             el.appendChild(button);
@@ -4678,7 +4747,7 @@ class ExternalExitValueEditor extends ValueEditor {
             button.disabled = true;
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-
+                dg.beginEdit(dg.selected[0].row);
             });
             button.innerHTML = '<i class="fa fa-edit"></i>';
             this.$edit = button;
@@ -4688,7 +4757,18 @@ class ExternalExitValueEditor extends ValueEditor {
             button.type = 'button';
             button.classList.add('btn', 'btn-danger');
             button.addEventListener('click', () => {
-
+                if (dialog.showMessageBox(
+                    remote.getCurrentWindow(),
+                    {
+                        type: 'warning',
+                        title: 'Delete',
+                        message: 'Remove selected exits?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    })
+                    == 0) {
+                    dg.removeRows(dg.selected.map(r => r.dataIndex));
+                }
             });
             button.innerHTML = '<i class="fa fa-times"></i>';
             this.$del = button;
@@ -4833,11 +4913,11 @@ class ItemsValueEditor extends ValueEditor {
                     }
                 }
             }]);
-            dg.addRows(this.$value || []);
+            dg.addRows(this.$value.slice() || []);
             dg.on('selection-changed', () => {
                 if (dg.selectedCount) {
                     this.$edit.removeAttribute('disabled');
-                    this.$del.removeAttribute('disabled');                    
+                    this.$del.removeAttribute('disabled');
                 }
                 else {
                     this.$edit.setAttribute('disabled', 'true');
@@ -4903,7 +4983,7 @@ class ItemsValueEditor extends ValueEditor {
             button.innerHTML = '<i class="fa fa-times"></i>';
             this.$del = button;
             el.appendChild(button);
-            header.appendChild(el);            
+            header.appendChild(el);
             document.body.appendChild(mDialog);
             mDialog.showModal();
         });

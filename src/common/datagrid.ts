@@ -437,6 +437,7 @@ export class Datagrid extends EventEmitter {
                     el: el,
                     parent: parent,
                     child: child,
+                    row: sl,
                     index: this.$selected[sl],
                     dataIndex: dataIndex,
                     beginEdit: () => {
@@ -448,13 +449,11 @@ export class Datagrid extends EventEmitter {
                 rows.unshift({
                     data: this.$rows[parent].children[child],
                     el: el,
+                    row: sl,
                     parent: parent,
                     child: child,
                     index: this.$selected[sl],
                     dataIndex: dataIndex,
-                    beginEdit: () => {
-                        this.createEditor(el);
-                    }
                 });
         }
         return rows;
@@ -466,22 +465,26 @@ export class Datagrid extends EventEmitter {
 
     public beginEdit(row, col?) {
         //sort pending delay
-        if( (this._updating & UpdateType.sort) === UpdateType.sort)
-        {
-            setTimeout(()=> {
+        if ((this._updating & UpdateType.sort) === UpdateType.sort) {
+            setTimeout(() => {
                 this.beginEdit(row, col);
             }, 10);
             return;
         }
         if (typeof row !== 'number')
             row = this.$rows.indexOf(row);
-        if (row < 0) return;
-        if (row < this.$sortedRows.length)
-            row = this.$sortedRows.indexOf(row);
-        else if (row >= this.$rows.length)
-            return;
+        row = this.$sortedRows.indexOf(row);
         if (row === -1) return;
-        this.createEditor(<HTMLElement>(<HTMLElement>this.$body.firstChild).children[row], col);
+        if(this.$selected.indexOf(row) === -1)
+        {
+            Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+            this.$selected = [row];
+            this.emit('selection-changed');            
+        }
+        this.$focused = row;
+        var el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[row];
+        el.classList.add('selected', 'focused');
+        this.createEditor(el, col);
     }
 
     public sort(column?, order?: SortOrder) {
@@ -799,6 +802,7 @@ export class Datagrid extends EventEmitter {
                 return;
             Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
             this.$selected = [sIdx];
+            this.$focused = sIdx;
             el.classList.add('selected', 'focused');
             this.createEditor(<HTMLElement>e.currentTarget, e.srcElement);
         });
