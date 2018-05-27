@@ -1,6 +1,6 @@
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
-import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor } from './value.editors';
+import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropdownEditValueEditor } from './value.editors';
 
 export interface PropertyGridOptions {
     container?: any;
@@ -379,6 +379,11 @@ export class PropertyGrid extends EventEmitter {
                 this.$editor.editor.value = this.$object[prop];
                 this.$editor.editor.data = this.object;
                 break;
+            case EditorType.dropdown:
+                this.$editor.editor = new DropdownEditValueEditor(this, el, prop, editorOptions);
+                this.$editor.editor.value = this.$object[prop];
+                this.$editor.editor.data = this.object;
+                break
             case EditorType.select:
                 break;
             case EditorType.custom:

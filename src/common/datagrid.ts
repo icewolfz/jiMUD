@@ -3,7 +3,7 @@ import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 import { runInThisContext } from 'vm';
-import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor } from './value.editors';
+import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropdownEditValueEditor } from './value.editors';
 const ResizeObserver = require('resize-observer-polyfill');
 
 export interface DatagridOptions {
@@ -750,7 +750,7 @@ export class Datagrid extends EventEmitter {
                 this.$shiftStart = this.$focused;
             }
             this.emit('selection-changed');
-            if(this.$editor && this.$editor.el != row)
+            if (this.$editor && this.$editor.el != row)
                 this.clearEditor();
         });
         row.addEventListener('dblclick', (e) => {
@@ -1398,6 +1398,11 @@ export class Datagrid extends EventEmitter {
                     editor.editor.value = data[prop];
                     editor.editor.data = data;
                     break;
+                case EditorType.dropdown:
+                    editor.editor = new DropdownEditValueEditor(this, cell, prop, editorOptions);
+                    editor.editor.value = data[prop];
+                    editor.editor.data = data;
+                    break
                 case EditorType.select:
                     break;
                 case EditorType.custom:

@@ -1,7 +1,7 @@
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { Splitter, Orientation } from './../splitter';
 import { PropertyGrid } from './../propertygrid';
-import { EditorType, ValueEditor, DropdownEditValueEditor } from './../value.editors';
+import { EditorType, ValueEditor } from './../value.editors';
 import { Datagrid } from './../datagrid';
 import { existsSync, capitalize, wordwrap, splitQuoted, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
 const { clipboard, ipcRenderer, remote } = require('electron');
@@ -464,8 +464,7 @@ export class VirtualEditor extends EditorBase {
             field: 'terrain',
             width: 125,
             editor: {
-                type: EditorType.custom,
-                editor: DropdownEditValueEditor,
+                type: EditorType.dropdown,
                 options: {
                     data: [
                         "beach",
@@ -631,8 +630,7 @@ export class VirtualEditor extends EditorBase {
                 field: 'exit',
                 width: 150,
                 editor: {
-                    type: EditorType.custom,
-                    editor: DropdownEditValueEditor,
+                    type: EditorType.dropdown,
                     options: {
                         data: [
                             "surface",
@@ -1635,8 +1633,7 @@ export class VirtualEditor extends EditorBase {
                 group: 'Description',
                 label: 'Terrain',
                 editor: {
-                    type: EditorType.custom,
-                    editor: DropdownEditValueEditor,
+                    type: EditorType.dropdown,
                     options: {
                         data: [
                             "beach",
@@ -4590,11 +4587,30 @@ class ExternalExitValueEditor extends ValueEditor {
             dg.addColumns([{
                 label: 'Exit',
                 field: 'exit',
-                editor: {
+                 editor: {
+                    type: EditorType.dropdown,
                     options: {
-                        container: mDialog
+                        container: mDialog,
+                        data: [
+                            "surface",
+                            "dive",
+                            "swim",
+                            "portal",
+                            "down",
+                            "up",
+                            "enter",
+                            "out",
+                            "northwest",
+                            "west",
+                            "southwest",
+                            "south",
+                            "southeast",
+                            "east",
+                            "northeast",
+                            "north"
+                        ]
                     }
-                }
+                }                
             },
             {
                 label: 'Destination',

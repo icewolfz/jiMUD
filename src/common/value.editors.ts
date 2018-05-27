@@ -9,7 +9,8 @@ export enum EditorType {
     select,
     check,
     custom,
-    readonly
+    readonly,
+    dropdown
 }
 
 export abstract class ValueEditor extends EventEmitter {
