@@ -1475,13 +1475,19 @@ export class VirtualEditor extends EditorBase {
                     this.$externalRaw.value = '';
                     this.updateRaw(this.$externalRaw, 0, nExternal);
                     this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                    resetCursor(this.$externalRaw);
                     break;
                 case 'ee':
                 case 'ef':
                     break;
                 case 'items':
-                    //this.$items[this.$selectedRoom.item].children = newValue;
-                    //this.$itemsGrid.rows = this.$items
+                    this.$items[this.$selectedRoom.item].children = newValue;
+                    this.$itemGrid.rows = this.$items;
+                    this.updateRaw(this.$itemRaw, this.$selectedRoom.item * 2, [
+                        newValue.map(i=>i.item).join(':'),
+                        newValue.map(i=>i.description).join(':'),
+                    ]);
+                    resetCursor(this.$itemRaw);
                     break;
                 case 'terrainType':
                     prop = 'terrain';
@@ -1513,6 +1519,7 @@ export class VirtualEditor extends EditorBase {
                         data.long,
                         (data.smell.length > 0 ? data.smell : "0") + ":" + (data.sound.length > 0 ? data.sound : "0")
                     ]);
+                    resetCursor(this.$descriptionRaw);
                     break;
                 case 'terrain':
                     this.$selectedRoom[prop] = newValue;
@@ -3963,7 +3970,7 @@ export class VirtualEditor extends EditorBase {
         }
         else {
             if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
-                o.items = this.$items[o.item].children.slice(0);
+                o.items = this.$items[o.item].children.slice();
             else
                 o.items = [];
             if (o.terrain < this.$descriptions.length && o.terrain >= 0 && this.$descriptions[o.terrain]) {
@@ -4002,7 +4009,7 @@ export class VirtualEditor extends EditorBase {
                 this.$roomPreview.long.textContent = room.long;
                 str = this.$roomPreview.long.innerHTML;
                 if (room.items && room.items.length > 0) {
-                    items = room.items.sort(function (a, b) { return b.item.length - a.item.length; });
+                    items = room.items.slice().sort(function (a, b) { return b.item.length - a.item.length; });
                     for (var c = 0, cl = items.length; c < cl; c++)
                         str = str.replace(new RegExp("\\b(" + items[c].item + ")\\b", "g"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
                 }
@@ -4106,7 +4113,7 @@ export class VirtualEditor extends EditorBase {
                 str = this.$roomPreview.long.innerHTML;
 
                 if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children.length > 0) {
-                    items = items[room.item].children.sort(function (a, b) { return b.item.length - a.item.length; });
+                    items = items[room.item].children.slice().sort(function (a, b) { return b.item.length - a.item.length; });
                     for (var c = 0, cl = items.length; c < cl; c++)
                         str = str.replace(new RegExp("\\b(" + items[c].item + ")\\b"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
                 }
