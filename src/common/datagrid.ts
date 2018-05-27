@@ -26,12 +26,13 @@ export class Column {
         if (!data) return '&nbsp;';
         switch (typeof (data.cell)) {
             case "string":
-                if(data.cell.length === 0)
+                if (data.cell.length === 0)
                     return '&nbsp;';
                 return data.cell;
             case "number":
-            case "boolean":
                 return data.cell;
+            case "boolean":
+                return capitalize('' + data.cell);
         }
         if (!data.cell)
             return '&nbsp;';
@@ -463,6 +464,26 @@ export class Datagrid extends EventEmitter {
         return this.$selected.length;
     }
 
+    public beginEdit(row, col?) {
+        //sort pending delay
+        if( (this._updating & UpdateType.sort) === UpdateType.sort)
+        {
+            setTimeout(()=> {
+                this.beginEdit(row, col);
+            }, 10);
+            return;
+        }
+        if (typeof row !== 'number')
+            row = this.$rows.indexOf(row);
+        if (row < 0) return;
+        if (row < this.$sortedRows.length)
+            row = this.$sortedRows.indexOf(row);
+        else if (row >= this.$rows.length)
+            return;
+        if (row === -1) return;
+        this.createEditor(<HTMLElement>(<HTMLElement>this.$body.firstChild).children[row], col);
+    }
+
     public sort(column?, order?: SortOrder) {
         if (typeof column === 'object') {
             order = column.order || 0;
@@ -837,7 +858,7 @@ export class Datagrid extends EventEmitter {
                 cell.title = value || '';
             if (cols[c].formatter)
                 cell.innerHTML = cols[c].formatter({ row: data, cell: value, rowIndex: r, column: c, index: idx, field: cols[c].field, rows: this.$rows, parent: parent, child: child, dataIndex: dataIdx });
-            else if(value && (''+value).length > 0)
+            else if (value && ('' + value).length > 0)
                 cell.textContent = value;
             else
                 cell.innerHTML = '&nbsp;';
@@ -1432,8 +1453,7 @@ export class Datagrid extends EventEmitter {
                     }
                     break;
             }
-            if (editor)
-            {
+            if (editor) {
                 editor.editor.data = data;
                 editor.editor.value = data[prop];
                 this.$editor.editors.push(editor);

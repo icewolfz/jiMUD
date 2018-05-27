@@ -313,10 +313,10 @@ export class BooleanValueEditor extends ValueEditor {
     }
 
     get value() {
-        return this.$el.value;
+        return this.$el.value === 'true';
     }
     set value(value: any) {
-        this.$el.value = value ? 'True' : 'False';
+        this.$el.value = value ? 'true' : 'false';
     }
 }
 

@@ -738,14 +738,23 @@ cause test to be brighter but more bold looking
 .datagrid .property-grid-editor-flag input {
     bottom: initial;
     padding: 2px 4px;
+    outline: none;
 }
 
-.property-grid-editor input[type=checkbox], 
+.datagrid input.property-grid-editor, .datagrid select.property-grid-editor {
+    border-right: 1px solid #f2cb7f;
+}
+.datagrid select.property-grid-editor {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.property-grid-editor input[type=checkbox],
 input[type=checkbox].property-grid-editor {
     width: auto;
 }
 
-.property-grid-editor-dropdown textarea, 
+.property-grid-editor-dropdown textarea,
 .property-grid-editor-dropdown-fill textarea {
     border: 0px;
     outline: none;
@@ -791,6 +800,13 @@ input[type=checkbox].property-grid-editor {
 }
 
 .datagrid .property-grid-editor-dropdown,
+.datagrid .property-grid-editor-dropdown-fill,
+.datagrid .property-grid-editor-flag {
+    border: 1px solid white;
+    border-right: 1px solid #f2cb7f;
+}
+
+.datagrid .property-grid-editor-dropdown,
 .datagrid .property-grid-editor-flag {
     height: 22px;
 }
@@ -804,7 +820,7 @@ input[type=checkbox].property-grid-editor {
     bottom: 0;
 }
 
-.property-grid-editor-dropdown button, 
+.property-grid-editor-dropdown button,
 .property-grid-editor-dropdown-fill button,
 .property-grid-editor-flag button {
     width: 18px;
