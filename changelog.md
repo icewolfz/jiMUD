@@ -20,6 +20,7 @@
   - `-data-dir` command line argument, this allows you to override the default data storage folder with one of your own
   - `-no-pd, -no-portable-dir` command line argument, this forces portable application to use the default data folder instead of the application directory, `--data-dir` super cedes this
 - **Changed:**
+  - Upgrade to electron 2.0.2
   - Switch to es2017
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
