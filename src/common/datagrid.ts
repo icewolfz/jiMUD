@@ -421,6 +421,12 @@ export class Datagrid extends EventEmitter {
         this.removeRows(this.selected.map(r => r.dataIndex));
     }
 
+    public selectAll() {
+        Array.from(this.$body.querySelectorAll('.datagrid-row'), a => a.classList.add('selected'));
+        this.$selected = [...this.$sortedRows.keys()];
+        this.emit('selection-changed');
+    }
+
     public focus() {
         this.$parent.focus();
     }

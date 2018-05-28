@@ -544,6 +544,18 @@ export class VirtualEditor extends EditorBase {
                 }
             }
         }]);
+        this.$terrainGrid.on('delete', (e) => {
+            e.preventDefault = true;
+        });
+        this.$terrainGrid.on('cut', (e) => {
+            e.preventDefault = true;
+        });
+        this.$terrainGrid.on('copy', (e) => {
+            e.preventDefault = true;
+        });
+        this.$terrainGrid.on('paste', (e) => {
+            e.preventDefault = true;
+        });
         this.$terrainGrid.sort(0);
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
@@ -609,6 +621,18 @@ export class VirtualEditor extends EditorBase {
                 return data.cell;
             }
         }]);
+        this.$itemGrid.on('delete', (e) => {
+            e.preventDefault = true;
+        });
+        this.$itemGrid.on('cut', (e) => {
+            e.preventDefault = true;
+        });
+        this.$itemGrid.on('copy', (e) => {
+            e.preventDefault = true;
+        });
+        this.$itemGrid.on('paste', (e) => {
+            e.preventDefault = true;
+        });
         this.$itemGrid.sort(0);
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
@@ -2029,14 +2053,223 @@ export class VirtualEditor extends EditorBase {
         this.emit('reverted');
     }
 
-    public get selected() { return ''; }
-    public selectAll() { };
-    public cut() { }
-    public copy() { }
-    public paste() { }
-    public delete() { }
-    public undo() { }
-    public redo() { }
+    private getRawSelected(raw) {
+        if (!raw) return '';
+        return raw.value.substring(raw.selectionStart, raw.selectionEnd);
+    }
+
+    private deleteRawSelected(raw, nochanged?) {
+        if (!raw) return;
+        var start = raw.selectionStart;
+        var end = raw.selectionEnd;
+        //nothing selected
+        if (start === end) return;
+        raw.value = raw.value.substring(0, start) + raw.value.substring(end);
+        raw.selectionStart = start;
+        raw.selectionEnd = start;
+        if (!nochanged) {
+            this.changed = true;
+            raw.dataset.dirty = 'true';
+            raw.dataset.changed = 'true';
+        }
+    }
+
+    public get selected(): any {
+        switch (this.$view) {
+            case View.map:
+                return '';
+            case View.terrains:
+                return this.$terrainGrid.selected;
+            case View.items:
+                return this.$itemGrid.selected;
+            case View.exits:
+                return this.$exitGrid.selected;
+            case View.mapRaw:
+                return this.getRawSelected(this.$mapRaw);
+            case View.terrainsRaw:
+                return this.getRawSelected(this.$terrainRaw);
+            case View.descriptionsRaw:
+                return this.getRawSelected(this.$descriptionRaw);
+            case View.itemsRaw:
+                return this.getRawSelected(this.$itemRaw);
+            case View.stateRaw:
+                return this.getRawSelected(this.$stateRaw);
+            case View.exitsRaw:
+                return this.getRawSelected(this.$externalRaw);
+        }
+        return '';
+    }
+
+    public selectAll() {
+        switch (this.$view) {
+            case View.map:
+                break;
+            case View.terrains:
+                this.$terrainGrid.selectAll();
+                break;
+            case View.items:
+                this.$itemGrid.selectAll();
+                break;
+            case View.exits:
+                this.$exitGrid.selectAll();
+                break;
+            case View.mapRaw:
+                this.$mapRaw.select();
+                break;
+            case View.terrainsRaw:
+                this.$terrainRaw.select();
+                break;
+            case View.descriptionsRaw:
+                this.$descriptionRaw.select();
+                break;
+            case View.itemsRaw:
+                this.$itemRaw.select();
+                break;
+            case View.stateRaw:
+                this.$stateRaw.select();
+                break;
+            case View.exitsRaw:
+                this.$externalRaw.select();
+                break;
+        }
+    };
+
+    public cut() {
+        switch (this.$view) {
+            case View.map:
+                break;
+            case View.terrains:
+                this.$terrainGrid.cut();
+                break;
+            case View.items:
+                this.$itemGrid.cut();
+                break;
+            case View.exits:
+                this.$exitGrid.cut();
+                break;
+            case View.mapRaw:
+            case View.terrainsRaw:
+            case View.descriptionsRaw:
+            case View.itemsRaw:
+            case View.stateRaw:
+            case View.exitsRaw:
+                document.execCommand('cut');
+                break;
+        }
+    }
+    public copy() {
+        switch (this.$view) {
+            case View.map:
+                break;
+            case View.terrains:
+                this.$terrainGrid.copy();
+                break;
+            case View.items:
+                this.$itemGrid.copy();
+                break;
+            case View.exits:
+                this.$exitGrid.copy();
+                break;
+            case View.mapRaw:
+            case View.terrainsRaw:
+            case View.descriptionsRaw:
+            case View.itemsRaw:
+            case View.stateRaw:
+            case View.exitsRaw:
+                document.execCommand('copy');
+                break;
+        }
+    }
+    public paste() {
+        switch (this.$view) {
+            case View.map:
+                break;
+            case View.terrains:
+                this.$terrainGrid.paste();
+                break;
+            case View.items:
+                this.$itemGrid.paste();
+                break;
+            case View.exits:
+                this.$exitGrid.paste();
+                break;
+            case View.mapRaw:
+            case View.terrainsRaw:
+            case View.descriptionsRaw:
+            case View.itemsRaw:
+            case View.stateRaw:
+            case View.exitsRaw:
+                document.execCommand('paste');
+                break;
+        }
+    }
+    public delete() {
+        switch (this.$view) {
+            case View.map:
+                break;
+            case View.terrains:
+                this.$terrainGrid.delete();
+                break;
+            case View.items:
+                this.$itemGrid.delete();
+                break;
+            case View.exits:
+                this.$exitGrid.delete();
+                break;
+            case View.mapRaw:
+                this.deleteRawSelected(this.$mapRaw);
+                break;
+            case View.terrainsRaw:
+                this.deleteRawSelected(this.$terrainRaw);
+                break;
+            case View.descriptionsRaw:
+                this.deleteRawSelected(this.$descriptionRaw);
+                break;
+            case View.itemsRaw:
+                this.deleteRawSelected(this.$itemRaw);
+                break;
+            case View.stateRaw:
+                this.deleteRawSelected(this.$stateRaw);
+                break;
+            case View.exitsRaw:
+                this.deleteRawSelected(this.$externalRaw);
+                break;
+        }
+    }
+    public undo() {
+        switch (this.$view) {
+            case View.map:
+            case View.terrains:
+            case View.items:
+            case View.exits:
+                break;
+            case View.mapRaw:
+            case View.terrainsRaw:
+            case View.descriptionsRaw:
+            case View.itemsRaw:
+            case View.stateRaw:
+            case View.exitsRaw:
+                document.execCommand('undo');
+                break;
+        }
+    }
+    public redo() {
+        switch (this.$view) {
+            case View.map:
+            case View.terrains:
+            case View.items:
+            case View.exits:
+                break;
+            case View.mapRaw:
+            case View.terrainsRaw:
+            case View.descriptionsRaw:
+            case View.itemsRaw:
+            case View.stateRaw:
+            case View.exitsRaw:
+                document.execCommand('redo');
+                break;
+        }
+    }
     public close() {
         let root = path.dirname(this.file);
         this.emit('watch-stop', [root]);
@@ -2114,6 +2347,15 @@ export class VirtualEditor extends EditorBase {
             case 'buttons':
             case 'menu|view':
                 return true;
+            case 'cut':
+            case 'copy':
+            case 'paste':
+            case 'selectall':
+                return this.$view == View.exits || this.$view == View.items || this.$view == View.terrains || this.$view == View.mapRaw || this.$view == View.terrainsRaw || this.$view == View.descriptionsRaw || this.$view == View.itemsRaw || this.$view == View.stateRaw || this.$view == View.exitsRaw;
+            case 'undo':
+            case 'redo':
+                return this.$view == View.mapRaw || this.$view == View.terrainsRaw || this.$view == View.descriptionsRaw || this.$view == View.itemsRaw || this.$view == View.stateRaw || this.$view == View.exitsRaw;
+
         }
         return false;
     }
