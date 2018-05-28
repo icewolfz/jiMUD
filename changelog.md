@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.44
+## 0.4.44 2018-05-28
 
 - **New:**
   - Code editor:
@@ -25,7 +25,7 @@
   - Switch to es2017
   - Code editor:
     - Replaced ace editor with monaco editor which is faster and offers more features
-    - Moved folding from edit to view
+    - Moved folding from edit to view menu
     - Formatter: remove spaces after ( and before ) and after and before ::
   - When using portable version it now defaults to using current application directory as data folder, use `-no-pd` to restore previous usage
   - Mapper: all imported and exported data is normalized to try and ensure it is the correct data coming and going out
