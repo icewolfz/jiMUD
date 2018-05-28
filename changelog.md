@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.4.45
+## 0.4.45 2018-05-28
+
+- **Fixed:**
+  - Mapper: Fix walk/highlight path, broken in 0.4.44 when adding normalizing and fixing save bugs
 
 ## 0.4.44 2018-05-28
 

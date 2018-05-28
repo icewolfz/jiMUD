@@ -743,9 +743,8 @@ export class Mapper extends EventEmitter {
     }
 
     public processData(data) {
-        if(!this.ready)
-        {
-            setTimeout(()=>{
+        if (!this.ready) {
+            setTimeout(() => {
                 this.processData(data);
             }, 10);
             return;
@@ -1640,7 +1639,7 @@ export class Mapper extends EventEmitter {
         this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
             let room;
             let id;
-            const roomsC = [];
+            const roomsC: Room[][] = [];
             let ox = null;
             let oy = 0;
             let w = 0;
@@ -1655,22 +1654,22 @@ export class Mapper extends EventEmitter {
                 if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
                 if (ox == null) {
-                    ox = room.X;
-                    w = room.X + 1;
-                    oy = room.Y;
-                    h = room.Y + 1;
+                    ox = room.x;
+                    w = room.x + 1;
+                    oy = room.y;
+                    h = room.y + 1;
                     continue;
                 }
-                if (room.X < ox) ox = room.X; else if (room.X > w) w = room.X;
-                if (room.Y < oy) oy = room.Y; else if (room.Y > h) h = room.Y;
+                if (room.x < ox) ox = room.x; else if (room.x > w) w = room.x;
+                if (room.y < oy) oy = room.y; else if (room.y > h) h = room.y;
             }
 
             for (id in rooms) {
                 if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
                 if (room == null) continue;
-                if (!roomsC[room.Y - oy]) roomsC[room.Y - oy] = [];
-                roomsC[room.Y - oy][room.X - ox] = room;
+                if (!roomsC[room.y - oy]) roomsC[room.y - oy] = [];
+                roomsC[room.y - oy][room.x - ox] = room;
             }
 
             w = Math.sqrt(Math.pow(w - ox, 2)) + 1;
@@ -1687,8 +1686,8 @@ export class Mapper extends EventEmitter {
                 if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
                 room = rooms[id];
-                x = (room.X - ox);
-                y = (room.Y - oy);
+                x = (room.x - ox);
+                y = (room.y - oy);
                 if (room.exits.northwest)
                     matrix[y][x] |= 1;
                 if (room.exits.north)
@@ -1758,7 +1757,7 @@ export class Mapper extends EventEmitter {
         this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
             let room;
             let id;
-            const roomsC = [];
+            const roomsC: Room[][] = [];
             let ox = null;
             let oy = 0;
             let w = 0;
@@ -1775,22 +1774,22 @@ export class Mapper extends EventEmitter {
                 if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
                 if (ox == null) {
-                    ox = room.X;
-                    w = room.X + 1;
-                    oy = room.Y;
-                    h = room.Y + 1;
+                    ox = room.x;
+                    w = room.x + 1;
+                    oy = room.y;
+                    h = room.y + 1;
                     continue;
                 }
-                if (room.X < ox) ox = room.X; else if (room.X > w) w = room.X;
-                if (room.Y < oy) oy = room.Y; else if (room.Y > h) h = room.Y;
+                if (room.x < ox) ox = room.x; else if (room.x > w) w = room.x;
+                if (room.y < oy) oy = room.y; else if (room.y > h) h = room.y;
             }
 
             for (id in rooms) {
                 if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
                 if (room == null) continue;
-                if (!roomsC[room.Y - oy]) roomsC[room.Y - oy] = [];
-                roomsC[room.Y - oy][room.X - ox] = room;
+                if (!roomsC[room.y - oy]) roomsC[room.y - oy] = [];
+                roomsC[room.y - oy][room.y - ox] = room;
             }
 
             w = Math.sqrt(Math.pow(w - ox, 2)) + 1;
@@ -1806,8 +1805,8 @@ export class Mapper extends EventEmitter {
             for (id in rooms) {
                 if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
-                x = (room.X - ox);
-                y = (room.Y - oy);
+                x = (room.x - ox);
+                y = (room.y - oy);
                 if (room.exits.northwest)
                     matrix[y][x] |= 1;
                 if (room.exits.north)
@@ -2197,33 +2196,6 @@ export class Mapper extends EventEmitter {
                         this.ready = true;
                         if (callback) callback();
                     });
-
-                /*
-                this._db.run('ATTACH DATABASE \'' + this._mapFile + '\' as Disk', (err) => {
-                    if (err) this.emit('error', err);
-                });
-                this.createDatabase('Disk');
-                this._db.run('DELETE FROM Disk.Rooms', (err) => {
-                    if (err) this.emit('error', err);
-                });
-                this._db.run('DELETE FROM Disk.Exits', (err) => {
-                    if (err) this.emit('error', err);
-                });
-                this._db.run('INSERT INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Rooms', (err) => {
-                    if (err) this.emit('error', err);
-                });
-                this._db.run('INSERT INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Exits', (err) => {
-                    if (err) this.emit('error', err);
-                });
-                this._db.run('VACUUM Disk', (err) => {
-                    if (err) this.emit('error', err);
-                });
-                this._db.run('DETACH DATABASE Disk', (err) => {
-                    if (err) this.emit('error', err);
-                    this.ready = true;
-                    if (callback) callback();
-                });
-                */
             });
             this._db.serialize();
             this._changed = false;
