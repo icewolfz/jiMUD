@@ -25,6 +25,28 @@ Allows you to edit a virtual map easily with out having to know all file formats
 - View all external exits in a list editor to easily remove, add, or copy external exits
 - View all raw data files that exist and are related to the current map.
 
+### Room editor
+
+The room editor allows you to editor the currently selected room
+
+- `Description` the properties of a room related to description
+  - `Short` the room short
+  - `Long` the room long description
+  - `Items` the items that can be looked at in a room
+  - `Terrain` the terrain type for a room, can be anything or pick from a preselected dropdown
+  - `Light` how much light the room has
+  - `Smell` the default smell for the room
+  - `Sound` the default sound for the room
+- `Location` The coordinates of the room as read only values, will display z value if multi level map
+- `Misc` miscellaneous properties of selected room
+  - `Terrain Index` the terrain index to use from the database, when you edit Description properties it uses this to determine where to save the data, if item index matches terrain index, it will be changed to match when terrain index is changed
+  - `Item Index` the index of the items for the room from the item database, most of the time it should be the same as Terrain index
+  - `State` different states the room can apply
+  - `Exits` the exits the rooms has
+  - `Climbs` a read only options that displays if an external room has climbs
+  - `External Exits` exits that link to outside areas
+  - `External File` the name of the file if it is an external room with option to open it
+
 ## Know issues
 
 - `Slow performance` Make sure you are not using --disable-gpu, with out the gpu it can cause slow perfmance from maps taking 10 to 100 times longer to load
