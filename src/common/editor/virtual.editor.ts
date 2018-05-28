@@ -2720,7 +2720,7 @@ export class VirtualEditor extends EditorBase {
                             defaultId: 1
                         })
                         == 0) {
-                        //
+                        //dg.delete();
                     }
                     */
                 });
@@ -2787,7 +2787,7 @@ export class VirtualEditor extends EditorBase {
                             defaultId: 1
                         })
                         == 0) {
-                        //
+                        //dg.delete();
                     }
                     */
                 });
@@ -4780,6 +4780,9 @@ class ExternalExitValueEditor extends ValueEditor {
     private $value;
     private $edit;
     private $del;
+    private $copy;
+    private $cut;
+    private $paste;
 
     create() {
         this.$el = document.createElement('div');
@@ -4907,12 +4910,29 @@ class ExternalExitValueEditor extends ValueEditor {
                         this.$del.title = 'Delete exits';
                     else
                         this.$del.title = 'Delete exit';
+                    this.$cut.removeAttribute('disabled');
+                    this.$copy.removeAttribute('disabled');
                 }
                 else {
                     this.$edit.setAttribute('disabled', 'true');
                     this.$del.setAttribute('disabled', 'true');
                     this.$del.title = 'Delete exit(s)';
+                    this.$cut.setAttribute('disabled', 'true');
+                    this.$copy.setAttribute('disabled', 'true');
                 }
+            });
+            dg.on('delete', (e) => {
+                if (dialog.showMessageBox(
+                    remote.getCurrentWindow(),
+                    {
+                        type: 'warning',
+                        title: 'Delete',
+                        message: 'Delete selected exit' + (dg.selectedCount > 1 ? 's' : '') + '?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    })
+                    == 1)
+                    e.preventDefault = true;
             });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
@@ -4984,23 +5004,51 @@ class ExternalExitValueEditor extends ValueEditor {
             button.title = 'Delete exit(s)';
             button.classList.add('btn', 'btn-danger');
             button.addEventListener('click', () => {
-                if (dialog.showMessageBox(
-                    remote.getCurrentWindow(),
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete selected exit' + (dg.selectedCount > 1 ? 's' : '') + '?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    })
-                    == 0) {
-                    dg.removeRows(dg.selected.map(r => r.dataIndex));
-                }
+                dg.delete();
             });
             button.innerHTML = '<i class="fa fa-trash"></i>';
             this.$del = button;
             el.appendChild(button);
             header.appendChild(el);
+
+            //CUT COPY PASTE
+            el = document.createElement('div');
+            el.classList.add('btn-group');
+            el.style.cssFloat = 'left';
+            button = document.createElement('button');
+            button.type = 'button';
+            button.disabled = true;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.cut();
+            });
+            button.title = 'Cut';
+            button.innerHTML = '<i class="fa fa-cut"></i>';
+            this.$cut = button;
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.type = 'button';
+            button.disabled = true;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.copy()
+            });
+            button.title = 'Copy';
+            button.innerHTML = '<i class="fa fa-copy"></i>';
+            this.$copy = button;
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.type = 'button';
+            button.title = 'Paste';
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.paste();
+            });
+            button.innerHTML = '<i class="fa fa-paste"></i>';
+            this.$paste = button;
+            el.appendChild(button);
+            header.appendChild(el);
+
             document.body.appendChild(mDialog);
             mDialog.showModal();
         });
@@ -5047,6 +5095,9 @@ class ItemsValueEditor extends ValueEditor {
     private $value;
     private $edit;
     private $del;
+    private $copy;
+    private $cut;
+    private $paste;
 
     create() {
         this.$el = document.createElement('div');
@@ -5152,12 +5203,29 @@ class ItemsValueEditor extends ValueEditor {
                         this.$del.title = 'Delete items';
                     else
                         this.$del.title = 'Delete exit';
+                    this.$cut.removeAttribute('disabled');
+                    this.$copy.removeAttribute('disabled');
                 }
                 else {
                     this.$edit.setAttribute('disabled', 'true');
                     this.$del.setAttribute('disabled', 'true');
                     this.$del.title = 'Delete items(s)';
+                    this.$cut.setAttribute('disabled', 'true');
+                    this.$copy.setAttribute('disabled', 'true');
                 }
+            });
+            dg.on('delete', (e) => {
+                if (dialog.showMessageBox(
+                    remote.getCurrentWindow(),
+                    {
+                        type: 'warning',
+                        title: 'Delete',
+                        message: 'Delete selected item' + (dg.selectedCount > 1 ? 's' : '') + '?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    })
+                    == 1)
+                    e.preventDefault = true;
             });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
@@ -5222,23 +5290,52 @@ class ItemsValueEditor extends ValueEditor {
             button.title = 'Delete item(s)';
             button.classList.add('btn', 'btn-danger');
             button.addEventListener('click', () => {
-                if (dialog.showMessageBox(
-                    remote.getCurrentWindow(),
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete selected item' + (dg.selectedCount > 1 ? 's' : '') + '?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    })
-                    == 0) {
-                    dg.removeRows(dg.selected.map(r => r.dataIndex));
-                }
+                dg.delete();
             });
             button.innerHTML = '<i class="fa fa-trash"></i>';
             this.$del = button;
             el.appendChild(button);
             header.appendChild(el);
+
+            //CUT COPY PASTE
+            el = document.createElement('div');
+            el.classList.add('btn-group');
+            el.style.cssFloat = 'left';
+            button = document.createElement('button');
+            button.type = 'button';
+            button.disabled = true;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.cut();
+            });
+            button.title = 'Cut';
+            button.innerHTML = '<i class="fa fa-cut"></i>';
+            this.$cut = button;
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.type = 'button';
+            button.disabled = true;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.copy()
+            });
+            button.title = 'Copy';
+            button.innerHTML = '<i class="fa fa-copy"></i>';
+            this.$copy = button;
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.type = 'button';
+            button.title = 'Paste';
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.paste();
+            });
+            button.innerHTML = '<i class="fa fa-paste"></i>';
+            this.$paste = button;
+            el.appendChild(button);
+            header.appendChild(el);
+
+
             document.body.appendChild(mDialog);
             mDialog.showModal();
         });
