@@ -1243,8 +1243,8 @@
         menubar.updateItem('edit|cut', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('cut') : false });
         $("#btn-copy").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('copy') : true);
         menubar.updateItem('edit|copy', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('copy') : false });
-        $("#btn-editor").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('copy') : true);
-        menubar.updateItem('edit|paste to advanced editor', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('copy') : false });
+        $("#btn-editor").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('paste-advanced') : true);
+        menubar.updateItem('edit|paste to advanced editor', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('paste-advanced') : false });
         $("#btn-paste").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('paste') : true);
         menubar.updateItem('edit|paste', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('paste') : false });
         $("#btn-find").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('find') : true);
