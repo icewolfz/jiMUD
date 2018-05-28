@@ -691,7 +691,7 @@
     });
 
     window.addEventListener('contextmenu', (e) => {
-        if(!options.spellchecking || !spellchecker || !e.srcElement || !e.srcElement.spellcheck || (e.srcElement.tagName !== 'TEXTAREA' && e.srcElement.tagName !== 'INPUT'))
+        if (!options.spellchecking || !spellchecker || !e.srcElement || !e.srcElement.spellcheck || (e.srcElement.tagName !== 'TEXTAREA' && e.srcElement.tagName !== 'INPUT'))
             return;
         e.preventDefault();
         var inputMenu = Menu.buildFromTemplate([
@@ -745,7 +745,7 @@
                 }
             }
         }
-        inputMenu.popup(remote.getCurrentWindow());
+        inputMenu.popup({ window: remote.getCurrentWindow() });
 
     });
 
@@ -1149,7 +1149,7 @@
                 click: () => { manager.removeAllPanelsAfter(panel); }
             });
         let tabMenu = Menu.buildFromTemplate(temp);
-        tabMenu.popup(remote.getCurrentWindow());
+        tabMenu.popup({ window: remote.getCurrentWindow() });
     });
 
     function updatePanel(panel) {
@@ -1636,7 +1636,7 @@
                 label: 'Templates',
                 submenu: menuTemplates
             }));
-            addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+            addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
         });
 
         $("#btn-newarea-path").on('click', () => {
@@ -2553,7 +2553,7 @@
                     temp = temp.concat(p.editor.menu('context'));
                 }
                 let inputMenu = Menu.buildFromTemplate(temp);
-                inputMenu.popup(remote.getCurrentWindow());
+                inputMenu.popup({ window: remote.getCurrentWindow() });
             });
             p.editor.on('error', (e, type) => {
                 //logOutput(manager.active.editor.filename+': Indenting complete');

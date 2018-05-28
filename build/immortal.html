@@ -1670,7 +1670,7 @@
                         selection.addRange(range);
                     }
                 }));
-                c.popup(remote.getCurrentWindow(), { async: true });
+                c.popup({ window: remote.getCurrentWindow() });
             });
 
             localTable.on('select', function (e, dt, type, indexes) {
@@ -2559,7 +2559,7 @@
                         }));
                 }
             }
-            c.popup(remote.getCurrentWindow(), { async: true });
+            c.popup({ window: remote.getCurrentWindow() });
         }
 
         function showRemoteContextMenu() {
@@ -2663,7 +2663,7 @@
                     remoteTable.rows().select();
                 }
             }));
-            c.popup(remote.getCurrentWindow(), { async: true });
+            c.popup({ window: remote.getCurrentWindow() });
         }
 
         function showQueueContextMenu() {
@@ -2696,7 +2696,7 @@
                     _ied.reset();
                 }
             }));
-            c.popup(remote.getCurrentWindow(), { async: true });
+            c.popup({ window: remote.getCurrentWindow() });
         }
 
         function updateStatus() {

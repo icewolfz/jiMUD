@@ -500,7 +500,7 @@
         ]);
 
         var inputMenu = Menu.buildFromTemplate(menu);
-        inputMenu.popup(remote.getCurrentWindow());
+        inputMenu.popup({ window: remote.getCurrentWindow() });
       });
 
       mapper.on('error', (err) => {
@@ -575,7 +575,7 @@
         removeMenu.append(new MenuItem({
           label: 'Remove all', click: removeAll
         }));
-        removeMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+        removeMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
       });
 
       $("#export").click(function () {
@@ -605,7 +605,7 @@
           label: 'Import and replace', click: importReplace
         }));
 
-        exportMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+        exportMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
       });
 
       $("#select-area").change(() => {

@@ -1090,7 +1090,7 @@
                             }
                         }));
                 }
-                cMenu.popup(remote.getCurrentWindow());
+                cMenu.popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
         });

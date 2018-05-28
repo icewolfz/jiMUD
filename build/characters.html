@@ -87,7 +87,7 @@
                         }
                     }));
                 }
-                c.popup(remote.getCurrentWindow());
+                c.popup({ window: remote.getCurrentWindow() });
             });
             loadCharacters();
 
@@ -109,7 +109,7 @@
                         addEmpty();
                     }
                 }));
-                addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+                addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
             });
 
             $("#get-name-ok").click(function () {

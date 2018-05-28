@@ -283,7 +283,7 @@
           item.cmd = url[i] + extra;
           menu.append(item);
         }
-        menu.popup(remote.getCurrentWindow(), { x: e.pageX, y: e.pageY });
+        menu.popup({ window: remote.getCurrentWindow(), x: e.pageX, y: e.pageY });
       }
       else if (pmt) {
         url = url.replace("&text;", $(el).text()) + extra;
@@ -697,7 +697,7 @@
           }
         }
         if (c.items.length > 0)
-          c.popup(remote.getCurrentWindow());
+          c.popup({ window: remote.getCurrentWindow() });
       }, false);
 
       ['cut', 'copy'].forEach(function (event) {
@@ -1517,7 +1517,7 @@
             }
           }));
         }
-        c.popup(remote.getCurrentWindow());
+        c.popup({ window: remote.getCurrentWindow() });
       });
 
       $("#buttonbar").on('contextmenu', (e) => {
@@ -1630,7 +1630,7 @@
             }
           }));
         }
-        c.popup(remote.getCurrentWindow());
+        c.popup({ window: remote.getCurrentWindow() });
       });
 
       $("#commandinput").on('contextmenu', (e) => {
@@ -1684,7 +1684,7 @@
             }));
           }
         }
-        inputMenu.popup(remote.getCurrentWindow());
+        inputMenu.popup({ window: remote.getCurrentWindow() });
 
       });
 

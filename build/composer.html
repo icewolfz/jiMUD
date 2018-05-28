@@ -371,7 +371,7 @@
                                 color = nearestHex(rgb.toHex()).substr(1);
                             }
                             color = _colors[color];
-                            if(color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
                                 color = "mono11";
                             codes.push("%^" + color + "%^");
                             buffer.push("%^" + color + "%^");
@@ -381,7 +381,7 @@
                             if (!_colors[color])
                                 color = nearestHex("#" + color).substr(1);
                             color = _colors[color];
-                            if(color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
+                            if (color === 'BOLD BLACK' || color === 'BOLD%^%^BLACK')
                                 color = "mono11";
                             codes.push("%^" + color + "%^");
                             buffer.push("%^" + color + "%^");
@@ -1147,7 +1147,7 @@
                             }
                         }));
                 }
-                cMenu.popup(remote.getCurrentWindow());
+                cMenu.popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
         });
@@ -1319,7 +1319,7 @@
             options = {
                 'debug': false,
                 'logErrors': false,
-                'showErrorsExtended':false,
+                'showErrorsExtended': false,
                 'folderSize': 202,
                 'viewSize': 250,
                 'showHeaders': true,

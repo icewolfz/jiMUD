@@ -779,9 +779,9 @@ function addInputContext(window) {
   window.webContents.on('context-menu', (e, props) => {
     const { selectionText, isEditable } = props;
     if (isEditable) {
-      inputMenu.popup(window);
+      inputMenu.popup({ window: window });
     } else if (selectionText && selectionText.trim() !== '') {
-      selectionMenu.popup(window);
+      selectionMenu.popup({ window: window });
     }
   });
 }
@@ -1434,7 +1434,7 @@ function createWindow() {
 
   win.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
-    set.windows['main'] = getWindowState('main', win||e.sender);
+    set.windows['main'] = getWindowState('main', win || e.sender);
 
     if (winProfiles) {
       e.preventDefault();
@@ -2745,9 +2745,9 @@ function createEditor(show, loading) {
   winEditor.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.showEditor = false;
-    set.windows['editor'] = getWindowState('editor', winEditor||e.sender);
+    set.windows['editor'] = getWindowState('editor', winEditor || e.sender);
     set.save(global.settingsFile);
-    if(!winEditor)
+    if (!winEditor)
       e.sender.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
     else
       winEditor.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
@@ -2862,7 +2862,7 @@ function createChat(show, loading) {
   winChat.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.showChat = false;
-    set.windows['chat'] = getWindowState('chat', winChat||e.sender);
+    set.windows['chat'] = getWindowState('chat', winChat || e.sender);
     set.save(global.settingsFile);
     if (winChat && (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)) {
       e.preventDefault();
@@ -3018,7 +3018,7 @@ function createNewWindow(name, options) {
 
   windows[name].window.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
-    set.windows[name] = getWindowState(name, windows[name].window||e.sender);
+    set.windows[name] = getWindowState(name, windows[name].window || e.sender);
     windows[name].show = false;
     set.windows[name].options = copyWindowOptions(name);
     set.save(global.settingsFile);
@@ -3305,19 +3305,18 @@ function createCodeEditor(show, loading, loaded) {
       edset.state = getWindowState('code-editor', winCode);
     }
     else
-      edset.stateOnly = getWindowState('code-editor', winCode||e.sender);
+      edset.stateOnly = getWindowState('code-editor', winCode || e.sender);
     edset.save(parseTemplate(path.join('{data}', 'editor.json')));
     if (winCode && !global.editorOnly && edset.window.persistent) {
       e.preventDefault();
       winCode.hide();
     }
   });
-  
+
   winCode.webContents.on('new-window', (event, URL, frameName, disposition, options, additionalFeatures) => {
     event.preventDefault();
     var u = new url.URL(URL);
-    if(u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:')
-    {
+    if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
       shell.openExternal(URL);
       return;
     }

@@ -468,39 +468,39 @@ export class VirtualEditor extends EditorBase {
                 type: EditorType.dropdown,
                 options: {
                     data: [
-                        "beach",
-                        "dirtroad",
-                        "icesheet",
-                        "prairie",
-                        "stone",
-                        "bog",
-                        "farmland",
-                        "jungle",
-                        "river",
-                        "swamp",
-                        "city",
-                        "forest",
-                        "lake",
-                        "rockdesert",
-                        "tundra",
-                        "cliff",
-                        "grass",
-                        "mountain",
-                        "rocky",
-                        "underwater",
-                        "cobble",
-                        "grassland",
-                        "ocean",
-                        "sand",
                         "water",
-                        "desert",
-                        "highmountain",
-                        "pavedroad",
+                        "underwater",
+                        "tundra",
+                        "swamp",
+                        "stone",
+                        "savannah",
                         "sanddesert",
-                        "dirt",
-                        "hills",
+                        "sand",
+                        "rocky",
+                        "rockdesert",
+                        "river",
+                        "prairie",
                         "plains",
-                        "savannah"
+                        "pavedroad",
+                        "ocean",
+                        "mountain",
+                        "lake",
+                        "jungle",
+                        "icesheet",
+                        "hills",
+                        "highmountain",
+                        "grassland",
+                        "grass",
+                        "forest",
+                        "farmland",
+                        "dirtroad",
+                        "dirt",
+                        "desert",
+                        "cobble",
+                        "cliff",
+                        "city",
+                        "bog",
+                        "beach"
                     ]
                 }
             },
@@ -2223,7 +2223,7 @@ export class VirtualEditor extends EditorBase {
                 type: 'checkbox',
                 checked: this.$view === View.exitsRaw
             }));
-            addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+            addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
         }
         group.appendChild(el);
         frag.appendChild(group);

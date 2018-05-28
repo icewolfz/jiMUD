@@ -232,7 +232,7 @@ function addInputContext() {
             { type: 'separator' },
             { role: 'selectall' }
         ]);
-        inputMenu.popup(remote.getCurrentWindow());
+        inputMenu.popup({ window: remote.getCurrentWindow() });
     }, false);
 }
 
@@ -2365,7 +2365,7 @@ export function init() {
                 addItem('Context', 'contexts', new Context());
             }
         }));
-        addMenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+        addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
     });
 
     $('#macro-key').keydown((e) => {
@@ -2545,7 +2545,7 @@ export function init() {
         exportmenu.append(new MenuItem({ label: 'Export all...', click: exportAll }));
         exportmenu.append(new MenuItem({ type: 'separator' }));
         exportmenu.append(new MenuItem({ label: 'Import...', click: importProfiles }));
-        exportmenu.popup(remote.getCurrentWindow(), { x: x, y: y });
+        exportmenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
     });
     loadOptions();
     initEditor('trigger-value');
@@ -2878,7 +2878,7 @@ export function init() {
                     break;
             }
         }
-        c.popup(remote.getCurrentWindow());
+        c.popup({ window: remote.getCurrentWindow() });
     });
 }
 
