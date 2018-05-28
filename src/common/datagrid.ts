@@ -303,10 +303,6 @@ export class Datagrid extends EventEmitter {
                 case 46: //delete
                     this.delete();
                     break;
-            }
-        })
-        this.$parent.addEventListener('keyup', (e) => {
-            switch (e.which) {
                 case 67: //c copy
                     if (e.ctrlKey)
                         this.copy();
@@ -320,7 +316,8 @@ export class Datagrid extends EventEmitter {
                         this.paste();
                     break;
             }
-        });
+        })
+
         this.$header = document.createElement('table');
         this.$header.classList.add('datagrid-header');
         this.$parent.appendChild(this.$header);
