@@ -589,7 +589,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$terrainGrid.on('value-changed', (e) => {
+        this.$terrainGrid.on('cell-value-changed', (e) => {
         });
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
@@ -700,7 +700,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$itemGrid.on('value-changed', (e) => {
+        this.$itemGrid.on('cell-value-changed', (e) => {
         });
         this.$itemGrid.sort(0);
         el = document.createElement('div');
@@ -777,12 +777,19 @@ export class VirtualEditor extends EditorBase {
             //store mouse coords for performance
             var mx = this.$mouse.rx;
             var my = this.$mouse.ry;
+            var sr = false;
             while (dl--) {
                 this.removeRaw(this.$externalRaw, d[dl], 1);
                 if (!this.$exits[d[dl]].enabled) continue;
                 r = this.getRoom(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z);
                 r.ee &= ~RoomExits[this.$exits[d[dl]].exit];
                 this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+                if (this.$selectedRoom && this.$selectedRoom.at(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z))
+                    sr = true;
+            }
+            if (sr) {
+                this.UpdateEditor(this.$selectedRoom);
+                this.UpdatePreview(this.$selectedRoom);
             }
             resetCursor(this.$externalRaw);
         });
@@ -800,6 +807,7 @@ export class VirtualEditor extends EditorBase {
             //Remove old exits
             var r;
             var ex = 0, el = e.data.length;
+            var sr = false;
             for (; ex < el; ex++) {
                 //Add new exits
                 var exit = e.data[ex].data;
@@ -807,6 +815,12 @@ export class VirtualEditor extends EditorBase {
                 r = this.getRoom(exit.x, exit.y, exit.z);
                 r.ee |= RoomExits[exit.exit];
                 this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+                if (this.$selectedRoom && this.$selectedRoom.at(exit.x, exit.y, exit.z))
+                    sr = true;
+            }
+            if (sr) {
+                this.UpdateEditor(this.$selectedRoom);
+                this.UpdatePreview(this.$selectedRoom);
             }
         });
         this.$exitGrid.on('delete', (e) => {
@@ -829,6 +843,7 @@ export class VirtualEditor extends EditorBase {
                 });
                 var dl = d.length;
                 var r;
+                var sr = false;
                 //store mouse coords for performance
                 var mx = this.$mouse.rx;
                 var my = this.$mouse.ry;
@@ -838,6 +853,12 @@ export class VirtualEditor extends EditorBase {
                     r = this.getRoom(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z);
                     r.ee &= ~RoomExits[this.$exits[d[dl]].exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+                    if (this.$selectedRoom && this.$selectedRoom.at(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z))
+                        sr = true;
+                }
+                if (sr) {
+                    this.UpdateEditor(this.$selectedRoom);
+                    this.UpdatePreview(this.$selectedRoom);
                 }
                 resetCursor(this.$externalRaw);
             }
@@ -859,7 +880,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$exitGrid.on('value-changed', (e) => {
+        this.$exitGrid.on('cell-value-changed', (e) => {
             if (this.$mapSize.depth > 1)
                 this.updateRaw(this.$externalRaw, e.dataIndex, [(this.$exits[e.dataIndex].enabled ? '' : '#') + this.$exits[e.dataIndex].x + ',' + this.$exits[e.dataIndex].y + ',' + this.$exits[e.dataIndex].z + ':' + this.$exits[e.dataIndex].exit + ':' + this.$exits[e.dataIndex].dest]);
             else
@@ -890,14 +911,27 @@ export class VirtualEditor extends EditorBase {
             var r;
             if (oEnabled) {
                 r = this.getRoom(oX, oY, oZ);
-                r.ee &= ~RoomExits[oExit];
-                this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+                if (!r.ef) {
+                    r.ee &= ~RoomExits[oExit];
+                    this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+                    if (this.$selectedRoom && this.$selectedRoom.at(oX, oY, oZ)) {
+                        this.UpdateEditor(this.$selectedRoom);
+                        this.UpdatePreview(this.$selectedRoom);
+                    }
+                }
             }
             //Add new exits
-            if (!nEnabled) return;
-            r = this.getRoom(nX, nY, nZ);
-            r.ee |= RoomExits[nExit];
-            this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+            if (nEnabled) {
+                r = this.getRoom(nX, nY, nZ);
+                if (!r.ef) {
+                    r.ee |= RoomExits[nExit];
+                    this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+                    if (this.$selectedRoom && this.$selectedRoom.at(nX, nY, nZ)) {
+                        this.UpdateEditor(this.$selectedRoom);
+                        this.UpdatePreview(this.$selectedRoom);
+                    }
+                }
+            }
         });
         this.$exitGrid.sort(1);
         //#endregion
@@ -5713,7 +5747,7 @@ class ItemsValueEditor extends ValueEditor {
                     this.$paste.removeAttribute('disabled');
                 else
                     this.$paste.setAttribute('disabled', 'true');
-            });            
+            });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
             mDialog.appendChild(header);
