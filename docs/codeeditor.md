@@ -47,9 +47,25 @@ The room editor allows you to editor the currently selected room
   - `External Exits` exits that link to outside areas
   - `External File` the name of the file if it is an external room with option to open it
 
-## Know issues
+## External exit editor
 
-- `Slow performance` Make sure you are not using --disable-gpu, with out the gpu it can cause slow perfmance from maps taking 10 to 100 times longer to load
+Allows you to edit all external exits in one location
+
+- `Enabled` is exit enabled
+- `X`, `Y`, `Z` the coordinates of the room the exit will be added to, Z is only shown/required if using multi level area
+- `Exit` the exit used, can be anything or you can pick from a presuggested list
+- `Destination` the full remote path to destination file, include the .c
+
+## Raw data editors
+
+These all you to directly edit any raw files linked to the map, see /doc/build/virtual/generic_virtual on mud for formatting details for each file
+
+- `Map` the raw map file
+- `Terrain` the raw terrain map, this is to assign indexes too rooms, this is an optional file as terrain indexes can be stored in map raw as well, if not available terrain indexes are stored in main map data
+- `Descriptions` this is the raw descriptions file containing a list of all the room data
+- `Items` the items database
+- `State` state data map, optional, if not available states are stored in main map data
+- `Exits` the external exits list
 
 ## Preferences
 
@@ -117,6 +133,7 @@ Editor preferences are stored in their own file independent of client or charact
 - `Minimap location` where minimap is placed in editor
 - `Insert spaces`
 
-### Known issues
+## Known issues
 
-- Missing context menus, will be address in future releases
+- `Slow performance` Make sure you are not using --disable-gpu, with out the gpu it can cause slow perfmance from maps taking 10 to 100 times longer to load
+- Missing context menus, will be addressed in future releases
