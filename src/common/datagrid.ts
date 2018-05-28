@@ -377,6 +377,9 @@ export class Datagrid extends EventEmitter {
         var e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
         this.emit('cut', e);
         if (e.preventDefault) return;
+        this.$selected = [];
+        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+        this.emit('selection-changed');
         this.removeRows(e.data);
     }
 
@@ -424,6 +427,9 @@ export class Datagrid extends EventEmitter {
         var e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
         this.emit('delete', e);
         if (e.preventDefault) return;
+        this.$selected = [];
+        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+        this.emit('selection-changed');
         this.removeRows(e.data);
     }
 
