@@ -420,17 +420,17 @@ export class VirtualEditor extends EditorBase {
         this.$label = document.createElement('div');
         this.$label.classList.add('virtual-editor-label');
         frag.appendChild(this.$label);
-        this.$mapRaw = this.createRawControl();
+        this.$mapRaw = this.createRawControl(View.mapRaw);
         frag.appendChild(this.$mapRaw);
-        this.$terrainRaw = this.createRawControl();
+        this.$terrainRaw = this.createRawControl(View.terrainsRaw);
         frag.appendChild(this.$terrainRaw);
-        this.$stateRaw = this.createRawControl();
+        this.$stateRaw = this.createRawControl(View.stateRaw);
         frag.appendChild(this.$stateRaw);
-        this.$descriptionRaw = this.createRawControl();
+        this.$descriptionRaw = this.createRawControl(View.descriptionsRaw);
         frag.appendChild(this.$descriptionRaw);
-        this.$itemRaw = this.createRawControl();
+        this.$itemRaw = this.createRawControl(View.itemsRaw);
         frag.appendChild(this.$itemRaw);
-        this.$externalRaw = this.createRawControl();
+        this.$externalRaw = this.createRawControl(View.exitsRaw);
         frag.appendChild(this.$externalRaw);
         //#endregion
         //#region create datagrids
@@ -546,6 +546,21 @@ export class VirtualEditor extends EditorBase {
         }]);
         this.$terrainGrid.on('delete', (e) => {
             e.preventDefault = true;
+            /*
+            if (dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete terrain'+ (dg.selectedCount > 1 ? 's' : '') +'?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
+                == 0) {
+                
+            }
+            */
+
         });
         this.$terrainGrid.on('cut', (e) => {
             e.preventDefault = true;
@@ -557,6 +572,25 @@ export class VirtualEditor extends EditorBase {
             e.preventDefault = true;
         });
         this.$terrainGrid.sort(0);
+        this.$terrainGrid.on('selection-changed', () => {
+            if (this.$view !== View.terrains) return;
+            if (this.$terrainGrid.selectedCount) {
+                this.$label.children[0].children[1].removeAttribute('disabled');
+                this.$label.children[0].children[2].removeAttribute('disabled');
+                if (this.$terrainGrid.selectedCount > 1)
+                    (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete terrains';
+                else
+                    (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete terrain';
+            }
+            else {
+                this.$label.children[0].children[1].setAttribute('disabled', 'true');
+                this.$label.children[0].children[2].setAttribute('disabled', 'true');
+                (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete terrain(s)';
+            }
+            this.emit('selection-changed');
+        });
+        this.$terrainGrid.on('value-changed', (e) => {
+        });
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
         el.style.display = 'none';
@@ -623,6 +657,20 @@ export class VirtualEditor extends EditorBase {
         }]);
         this.$itemGrid.on('delete', (e) => {
             e.preventDefault = true;
+            /*
+            if (dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete terrain'+ (dg.selectedCount > 1 ? 's' : '') +'?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
+                == 0) {
+                
+            }
+            */
         });
         this.$itemGrid.on('cut', (e) => {
             e.preventDefault = true;
@@ -632,6 +680,27 @@ export class VirtualEditor extends EditorBase {
         });
         this.$itemGrid.on('paste', (e) => {
             e.preventDefault = true;
+        });
+        this.$itemGrid.on('selection-changed', () => {
+            if (this.$view !== View.items) return;
+            if (this.$itemGrid.selectedCount) {
+                this.$label.children[0].children[1].removeAttribute('disabled');
+                this.$label.children[0].children[2].removeAttribute('disabled');
+                this.$label.children[0].children[3].removeAttribute('disabled');
+                if (this.$itemGrid.selectedCount > 1)
+                    (<HTMLElement>this.$label.children[0].children[3]).title = 'Delete items';
+                else
+                    (<HTMLElement>this.$label.children[0].children[3]).title = 'Delete item';
+            }
+            else {
+                this.$label.children[0].children[1].setAttribute('disabled', 'true');
+                this.$label.children[0].children[2].setAttribute('disabled', 'true');
+                this.$label.children[0].children[3].setAttribute('disabled', 'true');
+                (<HTMLElement>this.$label.children[0].children[3]).title = 'Delete item(s)';
+            }
+            this.emit('selection-changed');
+        });
+        this.$itemGrid.on('value-changed', (e) => {
         });
         this.$itemGrid.sort(0);
         el = document.createElement('div');
@@ -697,6 +766,139 @@ export class VirtualEditor extends EditorBase {
                 }
             }
         ];
+        this.$exitGrid.on('cut', (e) => {
+            var d = e.data.sort((a, b) => {
+                if (a > b) return 1;
+                if (a < b) return -1;
+                return 0;
+            });
+            var dl = d.length;
+            var r;
+            //store mouse coords for performance
+            var mx = this.$mouse.rx;
+            var my = this.$mouse.ry;
+            while (dl--) {
+                this.removeRaw(this.$externalRaw, d[dl], 1);
+                if (!this.$exits[d[dl]].enabled) continue;
+                r = this.getRoom(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z);
+                r.ee &= ~RoomExits[this.$exits[d[dl]].exit];
+                this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+            }
+            resetCursor(this.$externalRaw);
+        });
+        this.$exitGrid.on('paste', (e) => {
+            var nExternal;
+            if (this.$mapSize.depth > 1)
+                nExternal = e.data.map(d => (d.data.enabled ? '' : '#') + d.data.x + ',' + d.data.y + ',' + d.data.z + ':' + d.data.exit + ':' + d.data.dest);
+            else
+                nExternal = e.data.map(d => (d.data.enabled ? '' : '#') + d.data.x + ',' + d.data.y + ':' + d.data.exit + ':' + d.data.dest);
+            this.updateRaw(this.$externalRaw, this.$exits.length, nExternal);
+            resetCursor(this.$externalRaw);
+            //store mouse coords for performance
+            var mx = this.$mouse.rx;
+            var my = this.$mouse.ry;
+            //Remove old exits
+            var r;
+            var ex = 0, el = e.data.length;
+            for (; ex < el; ex++) {
+                //Add new exits
+                var exit = e.data[ex].data;
+                if (!exit.enabled) continue;
+                r = this.getRoom(exit.x, exit.y, exit.z);
+                r.ee |= RoomExits[exit.exit];
+                this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+            }
+        });
+        this.$exitGrid.on('delete', (e) => {
+            if (dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected exit' + (this.$exitGrid.selectedCount > 1 ? 's' : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
+                === 1)
+                e.preventDefault = true;
+            else {
+                var d = e.data.sort((a, b) => {
+                    if (a > b) return 1;
+                    if (a < b) return -1;
+                    return 0;
+                });
+                var dl = d.length;
+                var r;
+                //store mouse coords for performance
+                var mx = this.$mouse.rx;
+                var my = this.$mouse.ry;
+                while (dl--) {
+                    this.removeRaw(this.$externalRaw, d[dl], 1);
+                    if (!this.$exits[d[dl]].enabled) continue;
+                    r = this.getRoom(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z);
+                    r.ee &= ~RoomExits[this.$exits[d[dl]].exit];
+                    this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+                }
+                resetCursor(this.$externalRaw);
+            }
+        });
+        this.$exitGrid.on('selection-changed', () => {
+            if (this.$view !== View.exits) return;
+            if (this.$exitGrid.selectedCount) {
+                this.$label.children[0].children[1].removeAttribute('disabled');
+                this.$label.children[0].children[2].removeAttribute('disabled');
+                if (this.$exitGrid.selectedCount > 1)
+                    (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete exits';
+                else
+                    (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete exit';
+            }
+            else {
+                this.$label.children[0].children[1].setAttribute('disabled', 'true');
+                this.$label.children[0].children[2].setAttribute('disabled', 'true');
+                (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete exit(s)';
+            }
+            this.emit('selection-changed');
+        });
+        this.$exitGrid.on('value-changed', (e) => {
+            if (this.$mapSize.depth > 1)
+                this.updateRaw(this.$externalRaw, e.dataIndex, [(this.$exits[e.dataIndex].enabled ? '' : '#') + this.$exits[e.dataIndex].x + ',' + this.$exits[e.dataIndex].y + ',' + this.$exits[e.dataIndex].z + ':' + this.$exits[e.dataIndex].exit + ':' + this.$exits[e.dataIndex].dest]);
+            else
+                this.updateRaw(this.$externalRaw, e.dataIndex, [(this.$exits[e.dataIndex].enabled ? '' : '#') + this.$exits[e.dataIndex].x + ',' + this.$exits[e.dataIndex].y + ':' + this.$exits[e.dataIndex].exit + ':' + this.$exits[e.dataIndex].dest]);
+            resetCursor(this.$externalRaw);
+            if (e.field != 'x' && e.field != 'y' && e.field != 'z' && e.field != 'enabled')
+                return;
+            var oX = this.$exits[e.dataIndex].x, oY = this.$exits[e.dataIndex].y, oZ = this.$exits[e.dataIndex].z;
+            var oExit = this.$exits[e.dataIndex].exit;
+            var oEnabled = this.$exits[e.dataIndex].enabled;
+            var nX = oX, nY = oY, nZ = oZ;
+            var nEnabled = oEnabled;
+            var nExit = oExit;
+            if (e.field === 'x')
+                oX = e.old;
+            else if (e.field === 'y')
+                oY = e.old;
+            else if (e.field === 'z')
+                oZ = e.old;
+            else if (e.field === 'enabled')
+                oEnabled = e.old;
+            else if (e.field === 'exit')
+                oExit = e.old;
+            //store mouse coords for performance
+            var mx = this.$mouse.rx;
+            var my = this.$mouse.ry;
+            //Remove old exits
+            var r;
+            if (oEnabled) {
+                r = this.getRoom(oX, oY, oZ);
+                r.ee &= ~RoomExits[oExit];
+                this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+            }
+            //Add new exits
+            if (!nEnabled) return;
+            r = this.getRoom(nX, nY, nZ);
+            r.ee |= RoomExits[nExit];
+            this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
+        });
         this.$exitGrid.sort(1);
         //#endregion
         this.parent.appendChild(frag);
@@ -1828,10 +2030,14 @@ export class VirtualEditor extends EditorBase {
         return object.x + ',' + object.y + '.c';
     }
 
-    private createRawControl() {
+    private createRawControl(view) {
         var el = document.createElement('textarea');
         el = document.createElement('textarea');
         el.classList.add('raw');
+        el.addEventListener('select', (e) => {
+            if (this.$view === view)
+                this.emit('selection-changed');
+        })
         el.addEventListener('change', (e) => {
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
@@ -2349,8 +2555,51 @@ export class VirtualEditor extends EditorBase {
                 return true;
             case 'cut':
             case 'copy':
+            case 'delete':
+                switch (this.$view) {
+                    case View.map:
+                        return false;
+                    case View.terrains:
+                        return this.$terrainGrid.selectedCount > 0;
+                    case View.items:
+                        return this.$itemGrid.selectedCount > 0;
+                    case View.exits:
+                        return this.$exitGrid.selectedCount > 0;
+                    case View.mapRaw:
+                        return this.$mapRaw.selectionStart !== this.$externalRaw.selectionEnd;
+                    case View.terrainsRaw:
+                        return this.$terrainRaw.selectionStart !== this.$externalRaw.selectionEnd;
+                    case View.descriptionsRaw:
+                        return this.$descriptionRaw.selectionStart !== this.$externalRaw.selectionEnd;
+                    case View.itemsRaw:
+                        return this.$itemRaw.selectionStart !== this.$externalRaw.selectionEnd;
+                    case View.stateRaw:
+                        return this.$stateRaw.selectionStart !== this.$externalRaw.selectionEnd;
+                    case View.exitsRaw:
+                        return this.$externalRaw.selectionStart !== this.$externalRaw.selectionEnd;
+                }
+                return false;
             case 'paste':
+                switch (this.$view) {
+                    case View.map:
+                        return false;
+                    case View.terrains:
+                        return this.$terrainGrid.canPaste;
+                    case View.items:
+                        return this.$itemGrid.canPaste;
+                    case View.exits:
+                        return this.$exitGrid.canPaste;
+                    case View.mapRaw:
+                    case View.terrainsRaw:
+                    case View.descriptionsRaw:
+                    case View.itemsRaw:
+                    case View.stateRaw:
+                    case View.exitsRaw:
+                        return true;
+                }
+                return false;
             case 'selectall':
+            case 'select-all':
                 return this.$view == View.exits || this.$view == View.items || this.$view == View.terrains || this.$view == View.mapRaw || this.$view == View.terrainsRaw || this.$view == View.descriptionsRaw || this.$view == View.itemsRaw || this.$view == View.stateRaw || this.$view == View.exitsRaw;
             case 'undo':
             case 'redo':
@@ -2848,7 +3097,7 @@ export class VirtualEditor extends EditorBase {
                 bGroup.appendChild(button);
                 button = document.createElement('button');
                 button.type = 'button';
-                button.disabled = true;
+                button.disabled = this.$terrainGrid.selectedCount === 0;
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
                     //dg.beginEdit(dg.selected[0].row);
@@ -2857,25 +3106,12 @@ export class VirtualEditor extends EditorBase {
                 button.innerHTML = '<i class="fa fa-edit"></i> Edit';
                 bGroup.appendChild(button);
                 button = document.createElement('button');
-                button.disabled = true;
+                button.disabled = this.$terrainGrid.selectedCount === 0;
                 button.type = 'button';
                 button.title = 'Delete terrain(s)';
                 button.classList.add('btn', 'btn-danger', 'btn-xs');
                 button.addEventListener('click', () => {
-                    /*
-                    if (dialog.showMessageBox(
-                        remote.getCurrentWindow(),
-                        {
-                            type: 'warning',
-                            title: 'Delete',
-                            message: 'Delete terrain exit'+ (dg.selectedCount > 1 ? 's' : '') +'?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        })
-                        == 0) {
-                        //
-                    }
-                    */
+                    this.$terrainGrid.delete();
                 });
                 button.innerHTML = '<i class="fa fa-trash"></i> Delete';
                 bGroup.appendChild(button);
@@ -2916,7 +3152,7 @@ export class VirtualEditor extends EditorBase {
 
                 button = document.createElement('button');
                 button.type = 'button';
-                button.disabled = true;
+                button.disabled = this.$itemGrid.selectedCount === 0;
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
                     /*
@@ -2937,7 +3173,7 @@ export class VirtualEditor extends EditorBase {
                 bGroup.appendChild(button);
                 button = document.createElement('button');
                 button.type = 'button';
-                button.disabled = true;
+                button.disabled = this.$itemGrid.selectedCount === 0;
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
                     //dg.beginEdit(dg.selected[0].row);
@@ -2946,25 +3182,12 @@ export class VirtualEditor extends EditorBase {
                 button.innerHTML = '<i class="fa fa-edit"></i> Edit';
                 bGroup.appendChild(button);
                 button = document.createElement('button');
-                button.disabled = true;
+                button.disabled = this.$itemGrid.selectedCount === 0;
                 button.type = 'button';
                 button.title = 'Delete item(s)';
                 button.classList.add('btn', 'btn-danger', 'btn-xs');
                 button.addEventListener('click', () => {
-                    /*
-                    if (dialog.showMessageBox(
-                        remote.getCurrentWindow(),
-                        {
-                            type: 'warning',
-                            title: 'Delete',
-                            message: 'Delete selected item'+ (dg.selectedCount > 1 ? 's' : '') +'?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        })
-                        == 0) {
-                        //dg.delete();
-                    }
-                    */
+                    this.$itemGrid.delete();
                 });
                 button.innerHTML = '<i class="fa fa-trash"></i> Delete';
                 bGroup.appendChild(button);
@@ -2986,52 +3209,42 @@ export class VirtualEditor extends EditorBase {
                 button.type = 'button';
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
-                    /*
-                    dg.addRow({
+                    this.$exitGrid.addRow({
                         enabled: true,
-                        x: this.data.x,
-                        y: this.data.y,
-                        z: this.data.z,
+                        x: 0,
+                        y: 0,
+                        z: 0,
                         exit: '',
                         dest: ''
                     });
-                    dg.focus();
-                    dg.beginEdit(dg.rows.length - 1);
-                    */
+                    if (this.$mapSize.depth > 1)
+                        this.updateRaw(this.$externalRaw, this.$exits.length - 1, ['0,0,0::']);
+                    else
+                        this.updateRaw(this.$externalRaw, this.$exits.length - 1, ['0,0::']);
+                    resetCursor(this.$externalRaw);
+                    this.$exitGrid.focus();
+                    this.$exitGrid.beginEdit(this.$exitGrid.rows.length - 1);
                 });
                 button.title = 'Add exit';
                 button.innerHTML = '<i class="fa fa-plus"></i> Add';
                 bGroup.appendChild(button);
                 button = document.createElement('button');
                 button.type = 'button';
-                button.disabled = true;
+                button.disabled = this.$exitGrid.selectedCount === 0;
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
-                    //dg.beginEdit(dg.selected[0].row);
+                    this.$exitGrid.beginEdit(this.$exitGrid.selected[0].row);
                 });
                 button.title = 'Edit exit';
                 button.innerHTML = '<i class="fa fa-edit"></i> Edit';
                 bGroup.appendChild(button);
                 button = document.createElement('button');
-                button.disabled = true;
+                button.disabled = this.$exitGrid.selectedCount === 0;
                 button.type = 'button';
                 button.title = 'Delete exit(s)';
                 button.classList.add('btn', 'btn-danger', 'btn-xs');
                 button.addEventListener('click', () => {
-                    /*
-                    if (dialog.showMessageBox(
-                        remote.getCurrentWindow(),
-                        {
-                            type: 'warning',
-                            title: 'Delete',
-                            message: 'Delete selected exit'+ (dg.selectedCount > 1 ? 's' : '') +'?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        })
-                        == 0) {
-                        //dg.delete();
-                    }
-                    */
+                    this.$exitGrid.delete();
                 });
                 button.innerHTML = '<i class="fa fa-trash"></i> Delete';
                 bGroup.appendChild(button);
@@ -4763,7 +4976,7 @@ export class VirtualEditor extends EditorBase {
         this.$itemGrid.rows = this.$items;
     }
 
-    private loadExits() {
+    private loadExits(noGrid?) {
         var tmp, row, c, dl, rows, tmp2;
         var data = this.$externalRaw.value.split("\n");
         dl = data.length;
@@ -4793,13 +5006,14 @@ export class VirtualEditor extends EditorBase {
             rows.push(row);
         }
         this.$exits = rows;
+        if (noGrid) return;
         this.$exitGrid.rows = this.$exits;
     }
 
-    private reloadExits() {
+    private reloadExits(noGrid?) {
         var r
         var od = this.$exits || [];
-        this.loadExits();
+        this.loadExits(noGrid);
         //store mouse coords for performance
         var mx = this.$mouse.rx;
         var my = this.$mouse.ry;
@@ -5176,6 +5390,18 @@ class ExternalExitValueEditor extends ValueEditor {
                     == 1)
                     e.preventDefault = true;
             });
+            dg.on('cut', () => {
+                if (dg.canPaste)
+                    this.$paste.removeAttribute('disabled');
+                else
+                    this.$paste.setAttribute('disabled', 'true');
+            });
+            dg.on('copy', () => {
+                if (dg.canPaste)
+                    this.$paste.removeAttribute('disabled');
+                else
+                    this.$paste.setAttribute('disabled', 'true');
+            });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
             mDialog.appendChild(header);
@@ -5282,6 +5508,7 @@ class ExternalExitValueEditor extends ValueEditor {
             button = document.createElement('button');
             button.type = 'button';
             button.title = 'Paste';
+            button.disabled = !dg.canPaste;
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
                 dg.paste();
@@ -5469,6 +5696,18 @@ class ItemsValueEditor extends ValueEditor {
                     == 1)
                     e.preventDefault = true;
             });
+            dg.on('cut', () => {
+                if (dg.canPaste)
+                    this.$paste.removeAttribute('disabled');
+                else
+                    this.$paste.setAttribute('disabled', 'true');
+            });
+            dg.on('copy', () => {
+                if (dg.canPaste)
+                    this.$paste.removeAttribute('disabled');
+                else
+                    this.$paste.setAttribute('disabled', 'true');
+            });            
             header = document.createElement('div');
             header.classList.add('dialog-footer');
             mDialog.appendChild(header);
@@ -5568,6 +5807,7 @@ class ItemsValueEditor extends ValueEditor {
             button = document.createElement('button');
             button.type = 'button';
             button.title = 'Paste';
+            button.disabled = !dg.canPaste;
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
                 dg.paste();
