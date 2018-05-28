@@ -2635,7 +2635,7 @@ export class VirtualEditor extends EditorBase {
                     }
                     */
                 });
-                button.innerHTML = '<i class="fa fa-times"></i> Delete';
+                button.innerHTML = '<i class="fa fa-trash"></i> Delete';
                 bGroup.appendChild(button);
                 this.$label.appendChild(bGroup);
                 this.$terrainGrid.parent.style.display = '';
@@ -2724,7 +2724,7 @@ export class VirtualEditor extends EditorBase {
                     }
                     */
                 });
-                button.innerHTML = '<i class="fa fa-times"></i> Delete';
+                button.innerHTML = '<i class="fa fa-trash"></i> Delete';
                 bGroup.appendChild(button);
                 this.$label.appendChild(bGroup);
                 this.$itemGrid.parent.style.display = '';
@@ -2791,7 +2791,7 @@ export class VirtualEditor extends EditorBase {
                     }
                     */
                 });
-                button.innerHTML = '<i class="fa fa-times"></i> Delete';
+                button.innerHTML = '<i class="fa fa-trash"></i> Delete';
                 bGroup.appendChild(button);
                 this.$label.appendChild(bGroup);
                 this.$exitGrid.parent.style.display = '';
@@ -4997,7 +4997,7 @@ class ExternalExitValueEditor extends ValueEditor {
                     dg.removeRows(dg.selected.map(r => r.dataIndex));
                 }
             });
-            button.innerHTML = '<i class="fa fa-times"></i>';
+            button.innerHTML = '<i class="fa fa-trash"></i>';
             this.$del = button;
             el.appendChild(button);
             header.appendChild(el);
@@ -5235,7 +5235,7 @@ class ItemsValueEditor extends ValueEditor {
                     dg.removeRows(dg.selected.map(r => r.dataIndex));
                 }
             });
-            button.innerHTML = '<i class="fa fa-times"></i>';
+            button.innerHTML = '<i class="fa fa-trash"></i>';
             this.$del = button;
             el.appendChild(button);
             header.appendChild(el);
