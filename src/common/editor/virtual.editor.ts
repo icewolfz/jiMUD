@@ -589,7 +589,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$terrainGrid.on('cell-value-changed', (e) => {
+        this.$terrainGrid.on('value-changed', (e) => {
         });
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
@@ -700,7 +700,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$itemGrid.on('cell-value-changed', (e) => {
+        this.$itemGrid.on('value-changed', (e) => {
         });
         this.$itemGrid.sort(0);
         el = document.createElement('div');
@@ -880,53 +880,35 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$exitGrid.on('cell-value-changed', (e) => {
+        this.$exitGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
             if (this.$mapSize.depth > 1)
-                this.updateRaw(this.$externalRaw, e.dataIndex, [(this.$exits[e.dataIndex].enabled ? '' : '#') + this.$exits[e.dataIndex].x + ',' + this.$exits[e.dataIndex].y + ',' + this.$exits[e.dataIndex].z + ':' + this.$exits[e.dataIndex].exit + ':' + this.$exits[e.dataIndex].dest]);
+                this.updateRaw(this.$externalRaw, dataIndex, [(newValue.enabled ? '' : '#') + newValue.x + ',' + newValue.y + ',' + newValue.z + ':' + newValue.exit + ':' + newValue.dest]);
             else
-                this.updateRaw(this.$externalRaw, e.dataIndex, [(this.$exits[e.dataIndex].enabled ? '' : '#') + this.$exits[e.dataIndex].x + ',' + this.$exits[e.dataIndex].y + ':' + this.$exits[e.dataIndex].exit + ':' + this.$exits[e.dataIndex].dest]);
+                this.updateRaw(this.$externalRaw, dataIndex, [(newValue.enabled ? '' : '#') + newValue.x + ',' + newValue.y + ':' + newValue.exit + ':' + newValue.dest]);
             resetCursor(this.$externalRaw);
-            if (e.field != 'x' && e.field != 'y' && e.field != 'z' && e.field != 'enabled')
-                return;
-            var oX = this.$exits[e.dataIndex].x, oY = this.$exits[e.dataIndex].y, oZ = this.$exits[e.dataIndex].z;
-            var oExit = this.$exits[e.dataIndex].exit;
-            var oEnabled = this.$exits[e.dataIndex].enabled;
-            var nX = oX, nY = oY, nZ = oZ;
-            var nEnabled = oEnabled;
-            var nExit = oExit;
-            if (e.field === 'x')
-                oX = e.old;
-            else if (e.field === 'y')
-                oY = e.old;
-            else if (e.field === 'z')
-                oZ = e.old;
-            else if (e.field === 'enabled')
-                oEnabled = e.old;
-            else if (e.field === 'exit')
-                oExit = e.old;
             //store mouse coords for performance
             var mx = this.$mouse.rx;
             var my = this.$mouse.ry;
             //Remove old exits
             var r;
-            if (oEnabled) {
-                r = this.getRoom(oX, oY, oZ);
+            if (oldValue.enabled) {
+                r = this.getRoom(oldValue.x, oldValue.y, oldValue.z);
                 if (!r.ef) {
-                    r.ee &= ~RoomExits[oExit];
+                    r.ee &= ~RoomExits[oldValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
-                    if (this.$selectedRoom && this.$selectedRoom.at(oX, oY, oZ)) {
+                    if (this.$selectedRoom && this.$selectedRoom.at(oldValue.x, oldValue.y, oldValue.z)) {
                         this.UpdateEditor(this.$selectedRoom);
                         this.UpdatePreview(this.$selectedRoom);
                     }
                 }
             }
             //Add new exits
-            if (nEnabled) {
-                r = this.getRoom(nX, nY, nZ);
+            if (newValue.enabled) {
+                r = this.getRoom(oldValue.x, oldValue.y, oldValue.z);
                 if (!r.ef) {
-                    r.ee |= RoomExits[nExit];
+                    r.ee |= RoomExits[newValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
-                    if (this.$selectedRoom && this.$selectedRoom.at(nX, nY, nZ)) {
+                    if (this.$selectedRoom && this.$selectedRoom.at(newValue.x, newValue.y, newValue.z)) {
                         this.UpdateEditor(this.$selectedRoom);
                         this.UpdatePreview(this.$selectedRoom);
                     }
