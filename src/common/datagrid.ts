@@ -398,7 +398,13 @@ export class Datagrid extends EventEmitter {
             format: this.columns.map(c => c.label).join(':'),
             data: e.data
         })));
+    }
 
+    get canPaste() {
+        if (!clipboard.has('jiMUD/Datagrid')) return false;
+        var data = JSON.parse(clipboard.readBuffer('jiMUD/Datagrid').toString());
+        var format = this.columns.map(c => c.label).join(':');
+        return format === data.format;
     }
 
     public paste() {
@@ -415,10 +421,10 @@ export class Datagrid extends EventEmitter {
 
     public delete() {
         if (this.$selected.length === 0) return;
-        var e = { data: this.selected, preventDefault: false };
+        var e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
         this.emit('delete', e);
         if (e.preventDefault) return;
-        this.removeRows(this.selected.map(r => r.dataIndex));
+        this.removeRows(e.data);
     }
 
     public selectAll() {
@@ -1448,7 +1454,17 @@ export class Datagrid extends EventEmitter {
             });
             //do last in case the event changes the property editor
             if (value !== oldValue) {
-                this.emit('value-changed', value, oldValue, dataIdx, child, eData);
+                this.emit('value-changed', {
+                    new: value,
+                    old: oldValue,
+                    column: col,
+                    dataIndex: dataIdx,
+                    field: field,
+                    parent: parent,
+                    child: child,
+                    index: idx,
+                    eData: eData
+                });
             }
         }
         this.$editor = null;
