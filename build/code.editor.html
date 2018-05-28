@@ -693,7 +693,7 @@
     });
 
     window.addEventListener('contextmenu', (e) => {
-        if (!options.spellchecking || !spellchecker || !e.srcElement || !e.srcElement.spellcheck || (e.srcElement.tagName !== 'TEXTAREA' && e.srcElement.tagName !== 'INPUT'))
+        if (!options || !options.spellchecking || !spellchecker || !e.srcElement || !e.srcElement.spellcheck || (e.srcElement.tagName !== 'TEXTAREA' && e.srcElement.tagName !== 'INPUT'))
             return;
         e.preventDefault();
         var inputMenu = Menu.buildFromTemplate([

@@ -526,19 +526,15 @@ export class Datagrid extends EventEmitter {
                     el: el,
                     parent: parent,
                     child: child,
-                    row: sl,
+                    row: this.$sortedRows[this.$selected[sl]],
                     index: this.$selected[sl],
                     dataIndex: dataIndex,
-                    beginEdit: () => {
-                        this.createEditor(el);
-                    },
-
                 });
             else
                 rows.unshift({
                     data: this.$rows[parent].children[child],
                     el: el,
-                    row: sl,
+                    row: this.$sortedRows[this.$selected[sl]],
                     parent: parent,
                     child: child,
                     index: this.$selected[sl],
