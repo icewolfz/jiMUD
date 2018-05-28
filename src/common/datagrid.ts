@@ -1,10 +1,9 @@
 //https://developers.google.com/web/updates/2016/10/resizeobserver
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
-import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
-import { runInThisContext } from 'vm';
 import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropdownEditValueEditor } from './value.editors';
 const ResizeObserver = require('resize-observer-polyfill');
+const { clipboard, remote } = require('electron');
 
 export interface DatagridOptions {
     container?: any;
@@ -302,12 +301,26 @@ export class Datagrid extends EventEmitter {
                     break;
                 case 110:
                 case 46: //delete
-                    //TODO get row data index, row and other data and send to event
-                    this.emit('delete-row');
+                    this.delete();
                     break;
             }
         })
-
+        this.$parent.addEventListener('keyup', (e) => {
+            switch (e.which) {
+                case 67: //c copy
+                    if (e.ctrlKey)
+                        this.copy();
+                    break;
+                case 88: //x cut
+                    if (e.ctrlKey)
+                        this.cut();
+                    break;
+                case 86: //v paste
+                    if (e.ctrlKey)
+                        this.paste();
+                    break;
+            }
+        });
         this.$header = document.createElement('table');
         this.$header.classList.add('datagrid-header');
         this.$parent.appendChild(this.$header);
@@ -316,8 +329,8 @@ export class Datagrid extends EventEmitter {
         el.classList.add('datagrid-body');
         el.addEventListener('scroll', (e) => {
             this.$header.style.transform = 'translate(-' + (<HTMLElement>e.currentTarget).scrollLeft + ',0)';
-            if(this.$editor && this.$editor.editors.length > 0)
-                this.$editor.editors.map(ed=>ed.editor.scroll());
+            if (this.$editor && this.$editor.editors.length > 0)
+                this.$editor.editors.map(ed => ed.editor.scroll());
         })
         this.$body = document.createElement('table');
         this.$body.classList.add('datagrid-body-data');
@@ -347,6 +360,65 @@ export class Datagrid extends EventEmitter {
             }
         });
         this.$observer.observe(this.$parent, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+    }
+
+    public cut() {
+        if (this.$selected.length === 0) return;
+        clipboard.writeBuffer('jiMUD/Datagrid', Buffer.from(JSON.stringify({
+            format: this.columns.map(c => c.label).join(':'),
+            data: this.selected.map(c => {
+                return {
+                    parent: c.parent,
+                    child: c.child,
+                    data: c.data
+                }
+            })
+        })));
+        var e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
+        this.emit('cut', e);
+        if (e.preventDefault) return;
+        this.removeRows(e.data);
+    }
+
+    public copy() {
+        if (this.$selected.length === 0) return;
+        var e = {
+            data: this.selected.map(c => {
+                return {
+                    parent: c.parent,
+                    child: c.child,
+                    data: c.data
+                }
+            }),
+            preventDefault: false
+        };
+        this.emit('copy', e);
+        if (e.preventDefault) return;
+        clipboard.writeBuffer('jiMUD/Datagrid', Buffer.from(JSON.stringify({
+            format: this.columns.map(c => c.label).join(':'),
+            data: e.data
+        })));
+
+    }
+
+    public paste() {
+        if (!clipboard.has('jiMUD/Datagrid')) return;
+        var data = JSON.parse(clipboard.readBuffer('jiMUD/Datagrid').toString());
+        var format = this.columns.map(c => c.label).join(':');
+        if (format === data.format) {
+            var e = { data: data.data, preventDefault: false };
+            this.emit('paste', e);
+            if (e.preventDefault) return;
+            this.addRows(e.data.map(r => r.data));
+        }
+    }
+
+    public delete() {
+        if (this.$selected.length === 0) return;
+        var e = { data: this.selected, preventDefault: false };
+        this.emit('delete', e);
+        if (e.preventDefault) return;
+        this.removeRows(this.selected.map(r => r.dataIndex));
     }
 
     public focus() {
@@ -477,11 +549,10 @@ export class Datagrid extends EventEmitter {
             row = this.$rows.indexOf(row);
         row = this.$sortedRows.indexOf(row);
         if (row === -1) return;
-        if(this.$selected.indexOf(row) === -1)
-        {
+        if (this.$selected.indexOf(row) === -1) {
             Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
             this.$selected = [row];
-            this.emit('selection-changed');            
+            this.emit('selection-changed');
         }
         this.$focused = row;
         var el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[row];
@@ -1199,23 +1270,22 @@ export class Datagrid extends EventEmitter {
     }
 
     private resizeHeight() {
-        if (this.$dataHeight === 0) 
-        {
+        if (this.$dataHeight === 0) {
             var springrow = <HTMLElement>this.$body.querySelector('.datagrid-row-spring');
             springrow.style.display = 'none';
-            springrow.style.height = '0px';   
+            springrow.style.height = '0px';
             helper = document.createElement('div');
             helper.style.height = '100%';
             helper.style.position = 'absolute';
             helper.style.top = '0';
             helper.style.left = '0';
-            helper.style.bottom = '0';             
+            helper.style.bottom = '0';
             this.$body.parentElement.appendChild(helper);
             h = helper.clientHeight;
-            this.$body.parentElement.removeChild(helper);   
+            this.$body.parentElement.removeChild(helper);
             springrow.style.display = '';
-            springrow.style.height = h + 'px';     
-            this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + ',0)';                
+            springrow.style.height = h + 'px';
+            this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + ',0)';
             return;
         }
         var helper, style, h;
@@ -1432,9 +1502,9 @@ export class Datagrid extends EventEmitter {
 
                 }
             }
-            if(!editorOptions)
+            if (!editorOptions)
                 editorOptions = { container: this.$body };
-            else if(!editorOptions.container)
+            else if (!editorOptions.container)
                 editorOptions.container = this.$body;
             editor.type = type;
             var values;
