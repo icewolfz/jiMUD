@@ -1406,6 +1406,8 @@ export class Datagrid extends EventEmitter {
             el: el,
             editors: []
         }
+        var oldObj = this.$rows.slice(this.$sortedRows[this.$editor.row], this.$sortedRows[this.$editor.row] + 1);
+        var changed = false;
         for (; e < el; e++) {
             var editor = this.$editor.editors[e];
             var value;
@@ -1420,6 +1422,8 @@ export class Datagrid extends EventEmitter {
             var dataIdx, field, parent, child, idx, data;
             if (value !== oldValue) {
                 editor.data[prop] = value;
+                oldObj[prop] = value;
+                changed = true;
                 var col = this.$cols[editor.column];
                 dataIdx = +editor.el.dataset.dataIndex;
                 field = editor.el.dataset.field;
@@ -1457,7 +1461,7 @@ export class Datagrid extends EventEmitter {
             });
             //do last in case the event changes the property editor
             if (value !== oldValue) {
-                this.emit('value-changed', {
+                this.emit('cell-value-changed', {
                     new: value,
                     old: oldValue,
                     column: col,
@@ -1470,6 +1474,8 @@ export class Datagrid extends EventEmitter {
                 });
             }
         }
+        if(changed)
+        this.emit('value-changed', editor.data, oldObj, this.$sortedRows[this.$editor.row]);
         this.$editor = null;
     }
 
