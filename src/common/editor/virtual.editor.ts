@@ -2629,12 +2629,15 @@ export class VirtualEditor extends EditorBase {
         group.appendChild(this.createButton('map', 'map-o', () => {
             this.switchView(View.map);
         }, this.$view === View.map));
+        //TODO readd once editors are fully working
+        /*
         group.appendChild(this.createButton('terrains', 'picture-o', () => {
             this.switchView(View.terrains);
         }, this.$view === View.terrains));
         group.appendChild(this.createButton('items', 'list', () => {
             this.switchView(View.items);
         }, this.$view === View.items));
+        */
         group.appendChild(this.createButton('external exits', 'sign-out', () => {
             this.switchView(View.exits);
         }, this.$view === View.exits));
@@ -2782,6 +2785,8 @@ export class VirtualEditor extends EditorBase {
                         this.switchView(View.map);
                     }
                 },
+                //TODO readd once editors are fully working
+                /*
                 {
                     label: 'Terrains',
                     type: 'checkbox',
@@ -2798,6 +2803,7 @@ export class VirtualEditor extends EditorBase {
                         this.switchView(View.items);
                     }
                 },
+                */
                 {
                     label: 'External exits',
                     type: 'checkbox',

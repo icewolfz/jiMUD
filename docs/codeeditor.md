@@ -94,3 +94,7 @@ Editor preferences are stored in their own file independent of client or charact
 - `Render the actual text on a line in minimap` show text or blocks in minimap
 - `Minimap location` where minimap is placed in editor
 - `Insert spaces`
+
+### Known issues
+
+- Missing context menus, will be address in future releases

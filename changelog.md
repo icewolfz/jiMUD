@@ -10,6 +10,7 @@
       - Preview selected room as if on mud, with item highlight
       - Generate exits by using numpad, and ctrl+numpad to remove exits
       - Edit raw files directly when needed
+      - Edit all external exits in a single list
     - Window can be persistent when not in editor only mode again
     - [Use native icons in tabs](docs/codeeditor.md) preference to allow control over icon display
     - When using editor only mode will maintain seperate window state systems
