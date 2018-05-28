@@ -1801,6 +1801,7 @@ export class VirtualEditor extends EditorBase {
                 property: 'z',
                 group: 'Location',
                 readonly: true,
+                visible: false
             },
             {
                 property: 'ee',
@@ -4843,12 +4844,24 @@ export class VirtualEditor extends EditorBase {
         if (this.$mapSize.depth < 2) {
             this.$depth = 0;
             cols[3].visible = false;
+            this.$roomEditor.setPropertyOptions({
+                property: 'z',
+                group: 'Location',
+                readonly: true,
+                visible: false
+            });
         }
         else {
             this.$depthToolbar.value = '' + this.$depth;
             this.$depthToolbar.max = '' + (this.$mapSize.depth - 1);
             this.$depthToolbar.min = '' + 0;
             cols[3].visible = true;
+            this.$roomEditor.setPropertyOptions({
+                property: 'z',
+                group: 'Location',
+                readonly: true,
+                visible: true
+            });
         }
         this.$exitGrid.columns = cols;
         this.emit('rebuild-buttons');
