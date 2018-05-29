@@ -1744,7 +1744,7 @@ ipcMain.on('load-char', (event, char) => {
     winChat = null;
   }
   if (winCode) {
-    winMap.webContents.executeJavaScript('closeWindow()');
+    winCode.webContents.executeJavaScript('closeWindow()');
     winCode = null;
   }
   if (win && win.webContents)
