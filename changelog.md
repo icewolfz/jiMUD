@@ -27,7 +27,7 @@
       - Edit all external exits in a single list
     - Window can be persistent when not in editor only mode again
     - [Use native icons in tabs](docs/codeeditor.md) preference to allow control over icon display
-    - When using editor only mode will maintain seperate window state systems
+    - When using editor only mode will maintain separate window state systems
   - Immortal tools:
     - Download and or upload files in compressed format for faster speeds
     - Added a max file check of 200,000 bytes and error if file is larger
