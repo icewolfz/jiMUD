@@ -2,6 +2,11 @@
 
 ## 0.4.46
 
+- **Fixed:**
+  - Mapper:
+    - When window hidden map was not flushed to disk correctly
+    - When switching characters was not correctly closing old windows
+
 ## 0.4.45 2018-05-28
 
 - **Changed:**

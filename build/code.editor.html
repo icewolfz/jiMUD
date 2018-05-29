@@ -649,7 +649,7 @@
     var _loading = 1;
     var _open;
     var newCounter = 1;
-    let closeWindow = false;
+    let $closeWindow = false;
     var watcher;
     var _watched = {};
     var outputDragging = false;
@@ -1726,8 +1726,12 @@
         _loading = 0;
     }
 
+    function closeWindow() {
+        remote.getCurrentWindow().close();
+    }
+
     window.onbeforeunload = function (evt) {
-        if (!closeWindow) {
+        if (!$closeWindow) {
             console.log(document.activeElement);
             if (document.activeElement)
                 document.activeElement.blur();
@@ -1778,14 +1782,14 @@
                     _editors[keys[p]].editor.close();
                 if (watcher)
                     watcher.close();
-                closeWindow = true;
+                $closeWindow = true;
                 remote.getCurrentWindow().close();
             });
             return 'no';
         }
         if (watcher)
             watcher.close();
-        closeWindow = true;
+        $closeWindow = true;
         remote.getCurrentWindow().close();
         return;
     };

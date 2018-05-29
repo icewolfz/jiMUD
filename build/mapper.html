@@ -198,22 +198,46 @@
       mapper.save(callback);
     }
 
-    let closeWindow = false;
+    let $closeWindow = false;
+
+    function closeHidden() {
+      if (mapper) save();
+      while (!mapper.ready) {
+        //force sync until mapper flushed
+      }
+    }
+
+    function closeWindow() {
+      if (mapper) save(() => {
+        if (!mapper.ready) {
+          setTimeout(() => closeWindow(), 10);
+          return;
+        }
+        remote.getCurrentWindow().close();
+      });
+    }
 
     window.onbeforeunload = function (evt) {
       ipcRenderer.send('log', 'Mapper ready: ' + mapper.ready);
-      if (!closeWindow || !mapper.ready) {
+      if (!mapper.ready) {
+        evt.returnValue = false;
+        setTimeout(() => {
+          remote.getCurrentWindow().close();
+        }, 10);
+        return 'no';
+      }
+      if (!$closeWindow) {
         evt.returnValue = false;
         setTimeout(() => {
           if (mapper) save(() => {
-            closeWindow = true;
+            $closeWindow = true;
             remote.getCurrentWindow().close();
           });
         });
         return 'no';
       }
       ipcRenderer.send('log', 'Mapper closed');
-      closeWindow = true;
+      $closeWindow = true;
       remote.getCurrentWindow().close();
       return;
     };
