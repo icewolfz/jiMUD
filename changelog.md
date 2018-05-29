@@ -2,6 +2,8 @@
 
 ## 0.4.46
 
+- **Changed:**
+  - Switch workers to es2017
 - **Fixed:**
   - Mapper:
     - When window hidden map was not flushed to disk correctly

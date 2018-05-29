@@ -1,7 +1,7 @@
 {
     "compileOnSave": true,
     "compilerOptions": {
-        "target": "es6",
+        "target": "es2017",
         "module": "none",
         "moduleResolution": "classic",
         "sourceMap": false,
@@ -16,7 +16,7 @@
         "checkJs": true,
         "lib": [
             "webworker",
-            "es6",
+            "es2017",
             "scripthost"
         ],
         "types": [
