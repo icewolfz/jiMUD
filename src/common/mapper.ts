@@ -242,7 +242,7 @@ export class Mapper extends EventEmitter {
             });
             this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)', (err) => {
                 if (err) this.emit('error', err);
-                if(callback)
+                if (callback)
                     callback();
             });
         });
@@ -260,22 +260,21 @@ export class Mapper extends EventEmitter {
             prefix = '';
         this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id on Rooms (ID);', (err) => {
             if (err) this.emit('error', err);
-        });
-        this._db.run(' CREATE INDEX IF NOT EXISTS ' + prefix + 'coords on Rooms (X,Y,Z);', (err) => {
-            if (err) this.emit('error', err);
-        });        
-        this._db.run(' CREATE INDEX IF NOT EXISTS ' + prefix + 'coords_zone on Rooms (X,Y,Z,Zone);', (err) => {
-            if (err) this.emit('error', err);
-        });
-        this._db.run('CREATE INDEX IF NOT EXISTS ' + prefix + 'coords_area on Rooms (X,Y,Z,Zone,Area);', (err) => {
-            if (err) this.emit('error', err);
-        });
-
-        this._db.run('CREATE INDEX IF NOT EXISTS ' + prefix + 'exits_id on Exits (ID);', (err) => {
-            if (err) this.emit('error', err);
-            if (callback)
-                callback();
-        });
+        })
+            .run(' CREATE INDEX IF NOT EXISTS ' + prefix + 'coords on Rooms (X,Y,Z);', (err) => {
+                if (err) this.emit('error', err);
+            })
+            .run(' CREATE INDEX IF NOT EXISTS ' + prefix + 'coords_zone on Rooms (X,Y,Z,Zone);', (err) => {
+                if (err) this.emit('error', err);
+            })
+            .run('CREATE INDEX IF NOT EXISTS ' + prefix + 'coords_area on Rooms (X,Y,Z,Zone,Area);', (err) => {
+                if (err) this.emit('error', err);
+            })
+            .run('CREATE INDEX IF NOT EXISTS ' + prefix + 'exits_id on Exits (ID);', (err) => {
+                if (err) this.emit('error', err);
+                if (callback)
+                    callback();
+            });
     }
 
     public initializeDatabase() {
@@ -302,20 +301,20 @@ export class Mapper extends EventEmitter {
                 if (err) this.emit('error', err);
             });
             this.createDatabase('Disk');
-            this._db.run('BEGIN TRANSACTION');
-            this._db.run('INSERT INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('INSERT INTO Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('COMMIT TRANSACTION');
-            this._db.run('DETACH DATABASE Disk', (err) => {
-                if (err) this.emit('error', err);
-                this.createIndexes(() => {
-                    this.ready = true;
+            this._db.run('BEGIN TRANSACTION')
+                .run('INSERT INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms', (err) => {
+                    if (err) this.emit('error', err);
+                })
+                .run('INSERT INTO Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits', (err) => {
+                    if (err) this.emit('error', err);
+                })
+                .run('COMMIT TRANSACTION')
+                .run('DETACH DATABASE Disk', (err) => {
+                    if (err) this.emit('error', err);
+                    this.createIndexes(() => {
+                        this.ready = true;
+                    });
                 });
-            });
         });
     }
 
