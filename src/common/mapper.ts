@@ -1896,7 +1896,89 @@ export class Mapper extends EventEmitter {
             let idx;
             let r;
             let rl;
+            let tl;
             this._db.serialize(() => {
+                this._db.run('BEGIN TRANSACTION;');
+                this.emit('import-progress', 0);
+                const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (err) => {
+                    if (err) this.emit('error', err);
+                });
+                if (!Array.isArray(data))
+                    data = Object.values(data);
+                rl = data.length;
+                tl = data.length;
+                idx = 1;
+                for (r = 0; r < rl; r++) {
+                    //if (!data.hasOwnProperty(r) || !data[r]) continue;
+                    if (this._cancelImport) {
+                        stmt2.finalize();
+                        this._changed = true;
+                        return;
+                    }
+                    tl += Object.keys(data[r].exits).length;
+                    if (this._cancelImport) {
+                        stmt2.finalize();
+                        return;
+                    }
+                    if (!data[r]) continue;
+                    data[r] = this.normalizeRoom(data[r]);
+                    stmt2.run([
+                        data[r].ID,
+                        data[r].area,
+                        data[r].details,
+                        data[r].name,
+                        data[r].env,
+                        data[r].x,
+                        data[r].y,
+                        data[r].z,
+                        data[r].zone,
+                        data[r].indoors,
+                        data[r].background
+                    ],
+                        (err) => {
+                            if (this._cancelImport) {
+                                this.refresh();
+                                this.focusActiveRoom();
+                                this._changed = true;
+                                return;
+                            }
+                            this.emit('import-progress', Math.floor(idx / tl * 100));
+                            idx++;
+                            if (idx >= rl) {
+                                this.refresh();
+                                this.focusActiveRoom();
+                            }
+                        });
+                    const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)', (err) => {
+                        if (err) this.emit('error', err);
+                    });
+                    let exit;
+                    for (exit in data[r].exits) {
+                        if (!data[r].exits.hasOwnProperty(exit)) continue;
+                        stmt.run([data[r].ID, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed],
+                            () => {
+                                if (this._cancelImport) {
+                                    this.refresh();
+                                    this.focusActiveRoom();
+                                    this._changed = true;
+                                    return;
+                                }
+                                this.emit('import-progress', Math.floor(idx / tl * 100));
+                                idx++;
+                                if (idx >= tl) {
+                                    this.refresh();
+                                    this.focusActiveRoom();
+                                }
+                            });
+                    }
+                    stmt.finalize();
+                }
+                stmt2.finalize();
+                this._db.run('COMMIT TRANSACTION;');
+                if (tl === 0)
+                    this.emit('import-progress', 100);
+                this._changed = true;
+                /*
                 if (Array.isArray(data)) {
                     rl = data.length;
                     this.emit('import-progress', 0);
@@ -2045,6 +2127,7 @@ export class Mapper extends EventEmitter {
                         this.emit('import-progress', 100);
                     this._changed = true;
                 }
+                */
             });
         }
     }
