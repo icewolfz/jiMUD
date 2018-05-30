@@ -8,6 +8,7 @@
   - Mapper:
     - When window hidden map was not flushed to disk correctly
     - When switching characters was not correctly closing old windows
+  - Child windows show state not being correctly saved
 
 ## 0.4.45 2018-05-28
 

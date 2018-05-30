@@ -2931,7 +2931,7 @@ function createNewWindow(name, options) {
   }));
 
   windows[name].window.on('closed', (e) => {
-    if(e.sender !== windows[name].window) return;
+    if(!windows || !windows[name] || e.sender !== windows[name].window) return;
     windows[name].window = null;
     windows[name].ready = false;
   });
@@ -3022,7 +3022,7 @@ function createNewWindow(name, options) {
   windows[name].window.on('close', (e) => {
     set = settings.Settings.load(global.settingsFile);
     set.windows[name] = getWindowState(name, e.sender);
-    if (windows[name] === e.sender)
+    if (windows[name].window === e.sender)
       windows[name].show = false;
     set.windows[name].options = copyWindowOptions(name);
     set.save(global.settingsFile);
