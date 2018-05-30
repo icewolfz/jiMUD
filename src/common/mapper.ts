@@ -242,18 +242,40 @@ export class Mapper extends EventEmitter {
             });
             this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER)', (err) => {
                 if (err) this.emit('error', err);
-            });
-            this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id on Rooms (ID);', (err) => {
-                if (err) this.emit('error', err);
-            });
-            this._db.run('CREATE INDEX IF NOT EXISTS ' + prefix + 'exits_id on Exits (ID);', (err) => {
-                if (err) this.emit('error', err);
-                if (callback)
+                if(callback)
                     callback();
             });
-            //this._db.run("CREATE TABLE IF NOT EXISTS Areas (ID INTEGER PRIMARY KEY AUTOINCREMENT, Area TEXT)");
         });
         this._db.serialize();
+    }
+
+    private createIndexes(prefix?, callback?) {
+        if (typeof prefix === 'function') {
+            callback = prefix;
+            prefix = '';
+        }
+        else if (prefix)
+            prefix += '.';
+        else
+            prefix = '';
+        this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id on Rooms (ID);', (err) => {
+            if (err) this.emit('error', err);
+        });
+        this._db.run(' CREATE INDEX IF NOT EXISTS ' + prefix + 'coords on Rooms (X,Y,Z);', (err) => {
+            if (err) this.emit('error', err);
+        });        
+        this._db.run(' CREATE INDEX IF NOT EXISTS ' + prefix + 'coords_zone on Rooms (X,Y,Z,Zone);', (err) => {
+            if (err) this.emit('error', err);
+        });
+        this._db.run('CREATE INDEX IF NOT EXISTS ' + prefix + 'coords_area on Rooms (X,Y,Z,Zone,Area);', (err) => {
+            if (err) this.emit('error', err);
+        });
+
+        this._db.run('CREATE INDEX IF NOT EXISTS ' + prefix + 'exits_id on Exits (ID);', (err) => {
+            if (err) this.emit('error', err);
+            if (callback)
+                callback();
+        });
     }
 
     public initializeDatabase() {
@@ -280,15 +302,19 @@ export class Mapper extends EventEmitter {
                 if (err) this.emit('error', err);
             });
             this.createDatabase('Disk');
+            this._db.run('BEGIN TRANSACTION');
             this._db.run('INSERT INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms', (err) => {
                 if (err) this.emit('error', err);
             });
             this._db.run('INSERT INTO Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits', (err) => {
                 if (err) this.emit('error', err);
             });
+            this._db.run('COMMIT TRANSACTION');
             this._db.run('DETACH DATABASE Disk', (err) => {
                 if (err) this.emit('error', err);
-                this.ready = true;
+                this.createIndexes(() => {
+                    this.ready = true;
+                });
             });
         });
     }
@@ -944,6 +970,7 @@ export class Mapper extends EventEmitter {
             return
         }
         room = this.normalizeRoom(room);
+        this._db.run('BEGIN TRANSACTION');
         this._db.run('Update Rooms SET Area = ?, Details = ?, Name = ?, Env = ?, X = ?, Y = ?, Z = ?, Zone = ?, Indoors = ? WHERE ID = ?',
             [
                 room.area,
@@ -973,6 +1000,7 @@ export class Mapper extends EventEmitter {
             stmt.run(room.ID, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
         stmt.finalize();
+        this._db.run('COMMIT TRANSACTION');
         this._changed = true;
     }
 
@@ -984,6 +1012,7 @@ export class Mapper extends EventEmitter {
             return
         }
         room = this.normalizeRoom(room);
+        this._db.run('BEGIN TRANSACTION');
         this._db.run('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ',
             [
                 room.ID,
@@ -1013,6 +1042,7 @@ export class Mapper extends EventEmitter {
             stmt.run(room.ID, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
         }
         stmt.finalize();
+        this._db.run('COMMIT TRANSACTION');
         this.refresh();
         this._changed = true;
     }
@@ -2108,16 +2138,19 @@ export class Mapper extends EventEmitter {
             ATTACH DATABASE '${this._mapFile}' as Disk;
             PRAGMA Disk.synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;
             PRAGMA Disk.journal_mode=OFF;
+            PRAGMA Main.journal_mode=OFF;
             CREATE TABLE IF NOT EXISTS Disk.Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT);
             CREATE TABLE IF NOT EXISTS Disk.Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER);
-            CREATE UNIQUE INDEX IF NOT EXISTS Disk.index_id on Rooms (ID);
-            CREATE INDEX IF NOT EXISTS Disk.exits_id on Exits (ID);
             BEGIN TRANSACTION;
             DELETE FROM Disk.Rooms;
             INSERT INTO Disk.Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Rooms;
             DELETE FROM Disk.Exits;
             INSERT INTO Disk.Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Exits;
             COMMIT TRANSACTION;
+            CREATE UNIQUE INDEX IF NOT EXISTS Disk.index_id on Rooms (ID);
+            CREATE INDEX IF NOT EXISTS Disk.coords_zone on Rooms (X,Y,Z,Zone);
+            CREATE INDEX IF NOT EXISTS Disk.coords_area on Rooms (X,Y,Z,Zone,Area);
+            CREATE INDEX IF NOT EXISTS Disk.exits_id on Exits (ID);            
             VACUUM Disk;
             DETACH DATABASE Disk            
             `, (err) => {

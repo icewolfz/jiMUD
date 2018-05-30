@@ -4,6 +4,9 @@
 
 - **Changed:**
   - Switch workers to es2017
+  - Mapper:
+    - New database index to try and improve performance
+    - Other adjustments and changes to database settings to try and improve performance
 - **Fixed:**
   - Mapper:
     - When window hidden for persistent/enabled data was not flushed to disk correctly when using in memory
