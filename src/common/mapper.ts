@@ -2262,6 +2262,7 @@ export class Mapper extends EventEmitter {
                 this._db.exec(`
             ATTACH DATABASE '${this._mapFile}' as Disk;
             PRAGMA Disk.synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;
+            PRAGMA Disk.journal_mode=OFF;
             CREATE TABLE IF NOT EXISTS Disk.Rooms (ID TEXT PRIMARY KEY ASC, Area TEXT, Details INTEGER, Name TEXT, Env TEXT, X INTEGER, Y INTEGER, Z INTEGER, Zone INTEGER, Indoors INTEGER, Background TEXT, Notes TEXT);
             CREATE TABLE IF NOT EXISTS Disk.Exits (ID TEXT, Exit TEXT, DestID TEXT, IsDoor INTEGER, IsClosed INTEGER);
             CREATE UNIQUE INDEX IF NOT EXISTS Disk.index_id on Rooms (ID);
