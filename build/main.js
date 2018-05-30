@@ -1447,7 +1447,7 @@ function createWindow() {
       return;
     }
     if(winMap && !winMap.isDestroyed() && !winMap.isVisible())
-      winMap.webContents.executeJavaScript('save()');
+      winMap.webContents.executeJavaScript('closeHidden()');
     set.save(global.settingsFile);
   });
 }
