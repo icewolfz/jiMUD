@@ -6,7 +6,7 @@
   - Switch workers to es2017
 - **Fixed:**
   - Mapper:
-    - When window hidden map was not flushed to disk correctly
+    - When window hidden map was not flushed to disk correctly when using in memory
     - When switching characters was not correctly closing old windows
   - Child windows show state not being correctly saved
 
