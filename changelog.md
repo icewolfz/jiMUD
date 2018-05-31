@@ -5,6 +5,7 @@
 - **Fixed:**
   - Code Editor:
     - Editor did not correctly resize when output window resized
+    - Formatting :: directly after a (: was incorrect
 
 ## 0.4.46 2018-05-30
 
