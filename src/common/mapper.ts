@@ -302,10 +302,10 @@ export class Mapper extends EventEmitter {
             });
             this.createDatabase('Disk');
             this._db.run('BEGIN TRANSACTION')
-                .run('INSERT INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms', (err) => {
+                .run('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes) SELECT ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background, Notes FROM Disk.Rooms', (err) => {
                     if (err) this.emit('error', err);
                 })
-                .run('INSERT INTO Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits', (err) => {
+                .run('INSERT OR REPLACE INTO Exits (ID, Exit, DestID, IsDoor, IsClosed) SELECT ID, Exit, DestID, IsDoor, IsClosed FROM Disk.Exits', (err) => {
                     if (err) this.emit('error', err);
                 })
                 .run('COMMIT TRANSACTION')
@@ -1932,71 +1932,67 @@ export class Mapper extends EventEmitter {
                 const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (err) => {
                     if (err) this.emit('error', err);
                 });
+                const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)', (err) => {
+                    if (err) this.emit('error', err);
+                });
                 if (!Array.isArray(data))
                     data = Object.values(data);
                 rl = data.length;
                 tl = data.length;
                 idx = 1;
+                let room;
                 for (r = 0; r < rl; r++) {
                     if (this._cancelImport) {
                         stmt2.finalize();
-                        this._changed = true;
+                        this.finishImport();
                         return;
                     }
-                    tl += Object.keys(data[r].exits).length;
-                    if (!data[r]) continue;
-                    data[r] = this.normalizeRoom(data[r]);
+                    if (!(room = data[r])) continue;
+                    tl += Object.keys(room.exits).length;                    
+                    room = this.normalizeRoom(room);
                     stmt2.run([
-                        data[r].ID,
-                        data[r].area,
-                        data[r].details,
-                        data[r].name,
-                        data[r].env,
-                        data[r].x,
-                        data[r].y,
-                        data[r].z,
-                        data[r].zone,
-                        data[r].indoors,
-                        data[r].background
+                        room.ID,
+                        room.area,
+                        room.details,
+                        room.name,
+                        room.env,
+                        room.x,
+                        room.y,
+                        room.z,
+                        room.zone,
+                        room.indoors,
+                        room.background
                     ],
                         (err) => {
                             if (this._cancelImport) {
-                                this.refresh();
-                                this.focusActiveRoom();
-                                this._changed = true;
+                                this.finishImport();
                                 return;
                             }
                             this.emit('import-progress', Math.floor(idx / tl * 100));
                             idx++;
                             if (idx >= rl) {
-                                this.refresh();
-                                this.focusActiveRoom();
+                                this.finishImport();
                             }
                         });
-                    const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)', (err) => {
-                        if (err) this.emit('error', err);
-                    });
-                    let exit;
-                    for (exit in data[r].exits) {
-                        if (!data[r].exits.hasOwnProperty(exit)) continue;
-                        stmt.run([data[r].ID, exit, data[r].exits[exit].num, data[r].exits[exit].isdoor, data[r].exits[exit].isclosed],
+                    let exit;                    
+                    let exits = room.exits;
+                    for (exit in exits) {
+                        if (!exits.hasOwnProperty(exit)) continue;
+                        stmt.run([room.ID, exit, exits[exit].num, exits[exit].isdoor, exits[exit].isclosed],
                             () => {
                                 if (this._cancelImport) {
-                                    this.refresh();
-                                    this.focusActiveRoom();
-                                    this._changed = true;
+                                    this.finishImport();
                                     return;
                                 }
                                 this.emit('import-progress', Math.floor(idx / tl * 100));
                                 idx++;
                                 if (idx >= tl) {
-                                    this.refresh();
-                                    this.focusActiveRoom();
+                                    this.finishImport();
                                 }
                             });
                     }
-                    stmt.finalize();
                 }
+                stmt.finalize();
                 stmt2.finalize();
                 this._db.run('COMMIT TRANSACTION;');
                 if (tl === 0)
@@ -2004,6 +2000,12 @@ export class Mapper extends EventEmitter {
                 this._changed = true;
             });
         }
+    }
+
+    private finishImport() {
+        this.refresh();
+        this.focusActiveRoom();
+        this._changed = true;
     }
 
     public exportArea(file: string) {
