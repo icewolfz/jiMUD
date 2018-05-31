@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.46
+## 0.4.46 2018-05-30
 
 - **Changed:**
   - Switch workers to es2017
