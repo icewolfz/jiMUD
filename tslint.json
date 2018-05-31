@@ -140,7 +140,7 @@
     "no-null-keyword": false,
     "no-octal-literal": true,
     "no-parameter-properties": false,
-    "no-reference": true,
+    "no-reference": false,
     "no-reference-import": true,
     "no-regex-spaces": true,
     "no-require-imports": false,
