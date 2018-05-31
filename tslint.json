@@ -1,6 +1,9 @@
 {
   "rules": {
-    "array-type": [true, "array"],
+    "array-type": [
+      true,
+      "array"
+    ],
     "arrow-return-shorthand": false,
     "await-promise": false,
     "adjacent-overload-signatures": false,
@@ -104,7 +107,11 @@
     "no-duplicate-parameter-names": true,
     "no-duplicate-super": true,
     "no-duplicate-variable": true,
-    "no-empty": true,
+    "no-empty": [
+      true,
+      "allow-empty-catch",
+      "allow-empty-functions"
+    ],
     "no-empty-interface": true,
     "no-empty-interfaces": true,
     "no-empty-line-after-opening-brace": false,
@@ -134,7 +141,9 @@
     "no-mergeable-namespace": false,
     "no-missing-visibility-modifiers": true,
     "no-misused-new": true,
-    "no-multiline-string": [ true ],
+    "no-multiline-string": [
+      true
+    ],
     "no-multiple-var-decl": true,
     "no-namespace": false,
     "no-null-keyword": false,
@@ -185,7 +194,11 @@
     "object-literal-shorthand": false,
     "object-literal-sort-keys": false,
     "one-variable-per-declaration": true,
-    "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
+    "only-arrow-functions": [
+      true,
+      "allow-declarations",
+      "allow-named-functions"
+    ],
     "ordered-imports": [
       false
     ],
