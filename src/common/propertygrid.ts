@@ -17,7 +17,7 @@ export class PropertyGrid extends EventEmitter {
     private $id;
     private $object;
     private $options = {};
-    private $state = {}
+    private $state = {};
     private $editor;
     private $prevEditor;
     private $editorClick;
@@ -45,7 +45,7 @@ export class PropertyGrid extends EventEmitter {
     set readonly(value) {
         if (value !== this.$readonly) {
             this.$readonly = value;
-            var eProp;
+            let eProp;
             if (this.$editorClick)
                 eProp = this.$editorClick.dataset.prop;
             this.buildProperties();
@@ -76,7 +76,7 @@ export class PropertyGrid extends EventEmitter {
     get object() { return this.$object; }
     set object(value) {
         if (value === this.$object) return;
-        var eProp;
+        let eProp;
         if (this.$editorClick)
             eProp = this.$editorClick.dataset.prop;
         this.clearEditor();
@@ -109,7 +109,7 @@ export class PropertyGrid extends EventEmitter {
 
     public setPropertyOptions(prop: any, ops?) {
         if (Array.isArray(prop)) {
-            var l = prop.length;
+            let l = prop.length;
             while (l--) {
                 this.$options[prop[l].property || prop[l].field] = prop[l];
             }
@@ -145,7 +145,7 @@ export class PropertyGrid extends EventEmitter {
         this.$el.addEventListener('scroll', (e) => {
             if (this.$editor && this.$editor.editor)
                 this.$editor.editor.scroll();
-        })
+        });
         this.$parent.appendChild(this.$el);
         window.addEventListener('beforeunload', () => {
             this.clearEditor();
@@ -179,12 +179,13 @@ export class PropertyGrid extends EventEmitter {
         while (this.$el.firstChild)
             this.$el.removeChild(this.$el.firstChild);
         if (!this.$object) return;
-        var layout = { 'Misc': [] };
-        var group;
-        var props = Object.keys(this.$object);
+        const layout = { Misc: [] };
+        let group;
+        const props = Object.keys(this.$object);
         props.splice(props.indexOf('$propertyGrid', 1));
         props.sort((a, b) => {
-            var sA = 0, sB = 0
+            let sA = 0;
+            let sB = 0;
             if (this.$options[a])
                 sA = this.$options[a].sort || 0;
             if (this.$options[b])
@@ -195,7 +196,7 @@ export class PropertyGrid extends EventEmitter {
                 return 1;
             return a.localeCompare(b) * -1;
         });
-        var pl = props.length;
+        let pl = props.length;
         while (pl--) {
             if (this.$options[props[pl]]) {
                 if (this.$options[props[pl]].hasOwnProperty('visible') && !this.$options[props[pl]].visible)
@@ -219,49 +220,49 @@ export class PropertyGrid extends EventEmitter {
                 });
             }
         }
-        var frag = document.createDocumentFragment();
-        var groups = Object.keys(layout).sort().reverse();
-        var g = groups.length;
+        const frag = document.createDocumentFragment();
+        const groups = Object.keys(layout).sort().reverse();
+        let g = groups.length;
         while (g--) {
             group = groups[g];
             if (!layout[group].length) continue;
-            var el = document.createElement('li');
+            let el = document.createElement('li');
             el.classList.add('property-grid-group');
-            var lbl = document.createElement('i')
+            let lbl = document.createElement('i');
             lbl.dataset.group = group;
             if (this.$state[group])
                 lbl.classList.add('property-grid-collapse', 'fa', 'fa-chevron-right');
             else
                 lbl.classList.add('property-grid-collapse', 'fa', 'fa-chevron-down');
             lbl.addEventListener('click', (e) => {
-                var el = (<HTMLElement>(<HTMLElement>e.currentTarget).parentElement.children[2]);
-                var c = (<HTMLElement>e.currentTarget);
-                if (el.style.display == 'none') {
-                    el.style.display = '';
+                const el2 = (<HTMLElement>(<HTMLElement>e.currentTarget).parentElement.children[2]);
+                const c = (<HTMLElement>e.currentTarget);
+                if (el2.style.display === 'none') {
+                    el2.style.display = '';
                     c.classList.remove('fa-chevron-right');
                     c.classList.add('fa-chevron-down');
                     this.$state[c.dataset.group] = false;
                 }
                 else {
-                    el.style.display = 'none';
+                    el2.style.display = 'none';
                     c.classList.add('fa-chevron-right');
                     c.classList.remove('fa-chevron-down');
                     this.$state[c.dataset.group] = true;
                 }
-            })
+            });
             el.appendChild(lbl);
             lbl = document.createElement('div');
-            lbl.classList.add('property-grid-group-label')
+            lbl.classList.add('property-grid-group-label');
             lbl.textContent = capitalize(group);
             el.appendChild(lbl);
-            let children = document.createElement('ul');
+            const children = document.createElement('ul');
             children.classList.add('property-grid-group-items');
             if (this.$state[group])
                 children.style.display = 'none';
             el.appendChild(children);
             frag.appendChild(el);
-            var c = 0;
-            var cl = layout[group].length;
+            let c = 0;
+            const cl = layout[group].length;
             for (; c < cl; c++) {
                 el = document.createElement('li');
                 el.classList.add('property-grid-item');
@@ -313,10 +314,10 @@ export class PropertyGrid extends EventEmitter {
 
     public clearEditor() {
         if (!this.$editor) return;
-        var value;
-        var oldValue;
-        var prop = this.$editor.property;
-        var eData;
+        let value;
+        let oldValue;
+        const prop = this.$editor.property;
+        let eData;
         if (this.$editor.editor) {
             value = this.$editor.editor.value;
             eData = this.$editor.editor.data;
@@ -332,7 +333,7 @@ export class PropertyGrid extends EventEmitter {
             el: this.$editor.el,
             property: this.$editor.property,
             type: this.$editor.type
-        }
+        };
         this.$editor = null;
         //do last in case the event changes the property editor
         if (value !== oldValue)
@@ -341,7 +342,7 @@ export class PropertyGrid extends EventEmitter {
 
     public createEditor(el: HTMLElement) {
         if (!el) return;
-        var prop = el.dataset.prop;
+        const prop = el.dataset.prop;
         if (!prop) return;
         if (this.$editor) {
             if (this.$editor.property === prop)
@@ -352,10 +353,10 @@ export class PropertyGrid extends EventEmitter {
             el: el,
             editor: null,
             property: prop,
-            type: EditorType.default,
-        }
-        var type = this.editorType(prop);
-        var editorOptions;
+            type: EditorType.default
+        };
+        const type = this.editorType(prop);
+        let editorOptions;
         if (this.$options[prop] && this.$options[prop].editor) {
             editorOptions = this.$options[prop].editor.options;
             if (this.$options[prop].editor.hasOwnProperty('show')) {
@@ -373,8 +374,6 @@ export class PropertyGrid extends EventEmitter {
             }
         }
         this.$editor.type = type;
-        var values;
-        var vl;
         switch (type) {
             case EditorType.flag:
                 this.$editor.editor = new FlagValueEditor(this, el, prop, editorOptions);
@@ -384,7 +383,7 @@ export class PropertyGrid extends EventEmitter {
                 break;
             case EditorType.dropdown:
                 this.$editor.editor = new DropdownEditValueEditor(this, el, prop, editorOptions);
-                break
+                break;
             case EditorType.select:
                 break;
             case EditorType.custom:

@@ -257,7 +257,7 @@ export class Splitter extends EventEmitter {
             this.$ghostbar = document.createElement('div');
             this.$ghostbar.id = this.id + '-ghost-bar';
             this.$ghostbar.classList.add('splitter-ghost-bar');
-            let bnd = this.$panel2.getBoundingClientRect();
+            const bnd = this.$panel2.getBoundingClientRect();
             if (this.$orientation === Orientation.horizontal) {
                 this.$ghostbar.style.left = '0';
                 this.$ghostbar.style.top = (bnd.top - this.$elBounds.top - this.$splitterWidth) + 'px';
@@ -276,10 +276,10 @@ export class Splitter extends EventEmitter {
                 this.$ghostbar.style.width = this.$splitterWidth + 'px';
                 this.$ghostbar.style.cursor = 'col-resize';
             }
-            (<any>this.$ghostbar).move = (e) => {
-                var l;
+            (<any>this.$ghostbar).move = (ge) => {
+                let l;
                 if (this.$orientation === Orientation.horizontal) {
-                    l = e.pageY - this.$elBounds.top;
+                    l = ge.pageY - this.$elBounds.top;
                     if (l < this.$panel1MinSize)
                         this.$ghostbar.style.top = this.$panel1MinSize + 'px';
                     else if (l > this.parent.clientHeight - this.$panel2MinSize)
@@ -296,7 +296,7 @@ export class Splitter extends EventEmitter {
                     }
                 }
                 else {
-                    l = e.pageX - this.$elBounds.left;
+                    l = ge.pageX - this.$elBounds.left;
                     if (l < this.$panel1MinSize)
                         this.$ghostbar.style.left = this.$panel1MinSize + 'px';
                     else if (l > this.parent.clientWidth - this.$panel2MinSize)
@@ -313,7 +313,7 @@ export class Splitter extends EventEmitter {
                     }
                 }
                 this.emit('splitter-moving', l);
-            }
+            };
             this.parent.appendChild(this.$ghostbar);
             document.addEventListener('mousemove', (<any>this.$ghostbar).move);
         });
@@ -340,7 +340,7 @@ export class Splitter extends EventEmitter {
             e.preventDefault();
             e.stopPropagation();
             e.cancelBubble = true;
-            var l;
+            let l;
             if (this.$orientation === Orientation.horizontal) {
                 l = e.pageY - this.$elBounds.top;
                 if (l < this.$panel1MinSize)

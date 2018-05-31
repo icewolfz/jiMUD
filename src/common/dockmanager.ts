@@ -118,7 +118,7 @@ export class DockManager extends EventEmitter {
         this.$scrollDropdown.classList.add('hidden');
         let tWidth = 100;
         let w = 100;
-        var m = this.$measure;
+        const m = this.$measure;
         for (let t = 0; t < tl; t++) {
             m.textContent = this.panels[t].title.textContent;
             //adjust for icon and close buttons
@@ -131,7 +131,6 @@ export class DockManager extends EventEmitter {
             this.panels[t].tab.style.width = `${w}px`;
             this.panels[t].title.style.maxWidth = `${w - 22}px`;
         }
-
 
         if (this.$tabstrip.scrollWidth > this.$parent.clientWidth)
             this.$tabstrip.classList.add('scroll');
@@ -279,8 +278,8 @@ export class DockManager extends EventEmitter {
             menu.empty();
             const tl = this.panels.length;
             for (let t = 0; t < tl; t++) {
-                var icon = ''
-                if(this.panels[t].iconSrc)
+                let icon = '';
+                if (this.panels[t].iconSrc)
                     icon = ` style="background-image: url(${this.panels[t].iconSrc})"`;
                 if (this.panels[t] === this.active)
                     menu.append(`<li><a href="#" class="active" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
@@ -471,14 +470,14 @@ export class DockManager extends EventEmitter {
 
     public addPanels(panels: Panel[]) {
         if (!panels || panels.length === 0) return;
-        var p = 0;
-        var pl = panels.length;
-        var ts = document.createDocumentFragment();
-        var tp = document.createDocumentFragment();
-        var cl = this.panels.length;
+        let p = 0;
+        const pl = panels.length;
+        const ts = document.createDocumentFragment();
+        const tp = document.createDocumentFragment();
+        let cl = this.panels.length;
         this.panels = this.panels.concat(panels);
         for (; p < pl; p++) {
-            var panel = panels[p];
+            const panel = panels[p];
             ts.appendChild(panel.tab);
             tp.appendChild(panel.pane);
             this.emit('add', { index: cl, id: panel.id, panel: panel });
@@ -802,10 +801,10 @@ export class DockManager extends EventEmitter {
 
     private batchAdd() {
         if (this.$addCache.length === 0) return;
-        var p = 0;
-        var pl = this.$addCache.length;
-        var ts = document.createDocumentFragment();
-        var tp = document.createDocumentFragment();
+        let p = 0;
+        const pl = this.$addCache.length;
+        const ts = document.createDocumentFragment();
+        const tp = document.createDocumentFragment();
         for (; p < pl; p++) {
             ts.appendChild(this.$addCache[p].tab);
             tp.appendChild(this.$addCache[p].pane);

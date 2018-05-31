@@ -39,7 +39,7 @@ export class Menubar {
             menu = menu.map(x => x.toLowerCase());
         items = this._menubar.items;
         tItems = this.menu;
-        let il = menu.length;
+        const il = menu.length;
         let f = 0;
         for (i = 0; i < il; i++) {
             if (!menu[i] || !items || items.length === 0) break;

@@ -1054,7 +1054,7 @@ export class Item {
                 this._zStream = new ZLIB.InflateStream();
             //Buffer.from(data, '')
             //data = nZLIB.inflateRawSync(data);
-            data = this._zStream.decompress(new Buffer(data, "binary"));
+            data = this._zStream.decompress(new Buffer(data, 'binary'));
             //var d = nZLIB.inflateRawSync(new Buffer(data, "binary"));
             fs.writeSync(this.stream, data);
         }

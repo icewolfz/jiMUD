@@ -27,7 +27,7 @@ export abstract class ValueEditor extends EventEmitter {
         this.parent = parent;
         this.options = options;
         this.control = control;
-        this.property = property
+        this.property = property;
     }
 
     set data(value) {
@@ -63,10 +63,10 @@ export abstract class ValueEditor extends EventEmitter {
 
     get parent(): HTMLElement { return this.$parent; }
 
-    abstract create(): void;
-    abstract focus(): void;
-    abstract destroy(): void;
-    abstract scroll(): void;
+    public abstract create(): void;
+    public abstract focus(): void;
+    public abstract destroy(): void;
+    public abstract scroll(): void;
 
     abstract get value(): any;
     abstract set value(value: any);
@@ -74,7 +74,7 @@ export abstract class ValueEditor extends EventEmitter {
     public get container() {
         if (this.$container)
             return this.$container;
-        var d = (this.control.parent || document.body);
+        const d = (this.control.parent || document.body);
         if (!this.options)
             return this.$container = d;
         if (typeof this.options.container === 'string') {
@@ -98,11 +98,11 @@ export class TextValueEditor extends ValueEditor {
     private $noEnter;
     private $wrap;
 
-    create() {
+    public create() {
         this.$el = document.createElement('div');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown-fill');
-        var el = document.createElement('div');
+        const el = document.createElement('div');
         el.classList.add('property-grid-editor-dropdown-fill-container');
         this.$el.appendChild(el);
         this.$editor = document.createElement('textarea');
@@ -111,11 +111,11 @@ export class TextValueEditor extends ValueEditor {
             this.$editor.style.whiteSpace = 'normal';
         this.$editor.addEventListener('paste', () => {
             if (!this.$noEnter) return;
-            var sel = {
+            const sel = {
                 start: this.$editor.selectionStart,
                 end: this.$editor.selectionEnd
-            }
-            var initialLength = this.$editor.value.length;
+            };
+            const initialLength = this.$editor.value.length;
             window.setTimeout(() => {
                 this.$editor.value = this.$editor.value.replace(/(?:\r\n|\r|\n)/g, '');
                 this.$editor.selectionStart = sel.start;
@@ -155,12 +155,12 @@ export class TextValueEditor extends ValueEditor {
         });
         el.appendChild(this.$editor);
 
-        var vl = document.createElement('button');
-        vl.title = 'Open editor...'
+        const vl = document.createElement('button');
+        vl.title = 'Open editor...';
         vl.innerHTML = '<span class="caret"></span>';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
-            if (this.$editor.dataset.aOpen == 'true') {
+            if (this.$editor.dataset.aOpen === 'true') {
                 this.$editor.dataset.aOpen = null;
                 this.$editor.focus();
                 resetCursor(this.$editor);
@@ -172,21 +172,21 @@ export class TextValueEditor extends ValueEditor {
             if (!this.$wrap)
                 this.$dropdown.style.whiteSpace = 'nowrap';
             this.$dropdown.value = this.value;
-            this.$dropdown.addEventListener('keydown', (e) => {
-                if (this.$noEnter && e.keyCode === 13) {
-                    e.preventDefault();
-                    e.cancelBubble = true;
-                    e.stopPropagation();
+            this.$dropdown.addEventListener('keydown', (e2) => {
+                if (this.$noEnter && e2.keyCode === 13) {
+                    e2.preventDefault();
+                    e2.cancelBubble = true;
+                    e2.stopPropagation();
                     return false;
                 }
             });
-            this.$dropdown.addEventListener('keyup', (e) => {
-                if (this.$noEnter && e.keyCode === 13) {
+            this.$dropdown.addEventListener('keyup', (e2) => {
+                if (this.$noEnter && e2.keyCode === 13) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
-                    e.preventDefault();
+                    e2.preventDefault();
                 }
-                else if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
+                else if (e2.keyCode === 27 || (e2.keyCode === 13 && e2.ctrlKey)) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                 }
@@ -196,19 +196,19 @@ export class TextValueEditor extends ValueEditor {
             this.$dropdown.style.height = '150px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
-            this.$dropdown.addEventListener('blur', (e) => {
-                var ec = this.editorClick;
+            this.$dropdown.addEventListener('blur', (e2) => {
+                const ec = this.editorClick;
                 this.value = this.$dropdown.value;
                 this.$editor.dataset.aOpen = 'true';
                 this.$dropdown.parentElement.removeChild(this.$dropdown);
                 this.$dropdown = null;
                 if (ec)
                     this.control.createEditor(ec);
-                else if (e && e.relatedTarget && (<any>e.relatedTarget).tagNAME === 'BUTTON' && e.relatedTarget !== e.currentTarget) {
-                    (<HTMLButtonElement>e.relatedTarget).click();
+                else if (e2 && e2.relatedTarget && (<any>e2.relatedTarget).tagNAME === 'BUTTON' && e2.relatedTarget !== e2.currentTarget) {
+                    (<HTMLButtonElement>e2.relatedTarget).click();
                     this.$editor.dataset.aOpen = null;
                 }
-                else if (e && e.relatedTarget && this.control.parent.contains(e.relatedTarget) && !this.$el.contains(<HTMLElement>e.relatedTarget)) {
+                else if (e2 && e.relatedTarget && this.control.parent.contains(e2.relatedTarget) && !this.$el.contains(<HTMLElement>e2.relatedTarget)) {
                     this.$editor.dataset.aOpen = null;
                 }
                 else {
@@ -217,20 +217,20 @@ export class TextValueEditor extends ValueEditor {
             }, { once: true });
             this.container.appendChild(this.$dropdown);
             if (this.$noEnter)
-                this.$dropdown.placeholder = 'Press enter to accept text.'
+                this.$dropdown.placeholder = 'Press enter to accept text.';
             else
-                this.$dropdown.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.'
+                this.$dropdown.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.';
             this.$dropdown.focus();
             resetCursor(this.$dropdown);
         });
         this.$el.appendChild(vl);
         this.parent.appendChild(this.$el);
     }
-    focus() {
+    public focus() {
         this.$editor.focus();
         resetCursor(this.$editor);
     }
-    destroy() {
+    public destroy() {
         if (this.$dropdown && this.$dropdown.parentElement)
             this.$dropdown.parentElement.removeChild(this.$dropdown);
         if (this.$el.parentElement)
@@ -243,11 +243,11 @@ export class TextValueEditor extends ValueEditor {
     }
 
     private positionDropdown() {
-        var b = this.parent.getBoundingClientRect();
-        var c = this.container.getBoundingClientRect();
-        var left = 0;
-        var width = 300;
-        var top = b.bottom - c.top;
+        const b = this.parent.getBoundingClientRect();
+        const c = this.container.getBoundingClientRect();
+        let left = 0;
+        let width = 300;
+        let top = b.bottom - c.top;
         if (b.width < 300) {
             left = (b.left - 300 + b.width - c.left);
         }
@@ -297,7 +297,7 @@ export class TextValueEditor extends ValueEditor {
 export class BooleanValueEditor extends ValueEditor {
     private $el: HTMLSelectElement;
 
-    create() {
+    public create() {
         this.$el = document.createElement('select');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor');
@@ -314,15 +314,15 @@ export class BooleanValueEditor extends ValueEditor {
         });
         this.parent.appendChild(this.$el);
     }
-    focus() {
+    public focus() {
         this.$el.focus();
     }
-    destroy() {
+    public destroy() {
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
     }
 
-    public scroll() { }
+    public scroll() { /**/ }
 
     get value() {
         return this.$el.value === 'true';
@@ -335,7 +335,7 @@ export class BooleanValueEditor extends ValueEditor {
 export class NumberValueEditor extends ValueEditor {
     private $el: HTMLInputElement;
 
-    create() {
+    public create() {
         this.$el = document.createElement('input');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor');
@@ -352,18 +352,18 @@ export class NumberValueEditor extends ValueEditor {
         });
         this.parent.appendChild(this.$el);
     }
-    focus() {
+    public focus() {
         this.$el.focus();
     }
-    destroy() {
+    public destroy() {
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
     }
 
-    public scroll() { }
+    public scroll() { /**/ }
 
     get value() {
-        var value = +this.$el.value;
+        let value = +this.$el.value;
         if (value < +this.$el.min)
             value = +this.$el.min;
         if (value > +this.$el.max)
@@ -381,7 +381,7 @@ export class FlagValueEditor extends ValueEditor {
     private $editor: HTMLInputElement;
     private $value;
 
-    create() {
+    public create() {
         this.$el = document.createElement('div');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-flag');
@@ -399,7 +399,7 @@ export class FlagValueEditor extends ValueEditor {
         });
         this.$editor.addEventListener('focus', () => {
             this.$editor.select();
-        })
+        });
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
         });
@@ -411,12 +411,12 @@ export class FlagValueEditor extends ValueEditor {
         });
         this.$el.appendChild(this.$editor);
 
-        var vl = document.createElement('button');
-        vl.title = 'Open editor...'
+        const vl = document.createElement('button');
+        vl.title = 'Open editor...';
         vl.innerHTML = '<span class="caret"></span>';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
-            if (this.$editor.dataset.aOpen == 'true') {
+            if (this.$editor.dataset.aOpen === 'true') {
                 this.$editor.dataset.aOpen = null;
                 this.$editor.focus();
                 resetCursor(this.$editor);
@@ -426,8 +426,8 @@ export class FlagValueEditor extends ValueEditor {
             (<any>this.$dropdown).editor = this.$editor;
             this.$dropdown.tabIndex = -1;
             this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
-            this.$dropdown.addEventListener('keyup', (e) => {
-                if (e.keyCode === 27) {
+            this.$dropdown.addEventListener('keyup', (e2) => {
+                if (e2.keyCode === 27) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                 }
@@ -436,24 +436,24 @@ export class FlagValueEditor extends ValueEditor {
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
-            var height = 154;
+            let height = 154;
             if (this.options && this.options.enum) {
-                var en = this.options.enum;
-                var values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
-                var vl = values.length;
-                var height = vl * 22;
-                while (vl--) {
-                    if (this.options.exclude && this.options.exclude.includes(values[vl]))
+                const en = this.options.enum;
+                const values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
+                let val = values.length;
+                height = val * 22;
+                while (val--) {
+                    if (this.options.exclude && this.options.exclude.includes(values[val]))
                         continue;
-                    var l = document.createElement('label');
-                    var i = document.createElement('input');
+                    const l = document.createElement('label');
+                    const i = document.createElement('input');
                     i.type = 'checkbox';
-                    i.value = en[values[vl]];
-                    i.addEventListener('change', (e) => {
-                        var children = Array.from(this.$dropdown.children, c => c.children[0]);
-                        var cl = children.length;
-                        var child;
-                        var value = 0;
+                    i.value = en[values[val]];
+                    i.addEventListener('change', (e2) => {
+                        const children = Array.from(this.$dropdown.children, c => c.children[0]);
+                        let cl = children.length;
+                        let child;
+                        let value = 0;
                         if ((<HTMLInputElement>e.currentTarget).value === '0') {
                             while (cl--) {
                                 child = children[cl];
@@ -463,7 +463,7 @@ export class FlagValueEditor extends ValueEditor {
                             child.checked = true;
                         }
                         else {
-                            var none;
+                            let none;
                             while (cl--) {
                                 child = children[cl];
                                 if (child.value === '0') {
@@ -480,11 +480,11 @@ export class FlagValueEditor extends ValueEditor {
                         this.$dropdown.focus();
                     });
                     l.appendChild(i);
-                    l.appendChild(document.createTextNode(values[vl]));
-                    if (this.$value !== 0 && en[values[vl]] === 0)
+                    l.appendChild(document.createTextNode(values[val]));
+                    if (this.$value !== 0 && en[values[val]] === 0)
                         i.checked = false;
                     else
-                        i.checked = (this.$value & en[values[vl]]) === en[values[vl]];
+                        i.checked = (this.$value & en[values[val]]) === en[values[val]];
                     this.$dropdown.appendChild(l);
                 }
             }
@@ -501,11 +501,11 @@ export class FlagValueEditor extends ValueEditor {
         this.$el.appendChild(vl);
         this.parent.appendChild(this.$el);
     }
-    focus() {
+    public focus() {
         this.$editor.focus();
         resetCursor(this.$editor);
     }
-    destroy() {
+    public destroy() {
         if (this.$dropdown && this.$dropdown.parentElement)
             this.$dropdown.parentElement.removeChild(this.$dropdown);
         if (this.$el.parentElement)
@@ -518,11 +518,11 @@ export class FlagValueEditor extends ValueEditor {
     }
 
     private positionDropdown() {
-        var b = this.parent.getBoundingClientRect();
-        var c = this.container.getBoundingClientRect();
-        var left = 0;
-        var width = 300;
-        var top = b.top + this.$editor.parentElement.offsetHeight - c.top;
+        const b = this.parent.getBoundingClientRect();
+        const c = this.container.getBoundingClientRect();
+        let left = 0;
+        let width = 300;
+        let top = b.top + this.$editor.parentElement.offsetHeight - c.top;
         if (b.width < 300) {
             left = (b.left - 300 + b.width - c.left);
         }
@@ -540,12 +540,12 @@ export class FlagValueEditor extends ValueEditor {
     }
 
     private $dropdownEvent = (e) => {
-        if (e.relatedTarget && (<HTMLElement>e.relatedTarget).parentElement && (<HTMLElement>e.relatedTarget).parentElement.parentElement == this.$dropdown) {
+        if (e.relatedTarget && (<HTMLElement>e.relatedTarget).parentElement && (<HTMLElement>e.relatedTarget).parentElement.parentElement === this.$dropdown) {
             e.preventDefault();
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
             return;
         }
-        var ec = this.editorClick;
+        const ec = this.editorClick;
         this.$editor.dataset.aOpen = 'true';
         this.$dropdown.parentElement.removeChild(this.$dropdown);
         this.$dropdown = null;
@@ -581,7 +581,7 @@ export class DropdownEditValueEditor extends ValueEditor {
     private $editor: HTMLInputElement;
     private $value;
 
-    create() {
+    public create() {
         this.$el = document.createElement('div');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-flag');
@@ -599,7 +599,7 @@ export class DropdownEditValueEditor extends ValueEditor {
         });
         this.$editor.addEventListener('focus', () => {
             this.$editor.select();
-        })
+        });
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
         });
@@ -611,12 +611,12 @@ export class DropdownEditValueEditor extends ValueEditor {
         });
         this.$el.appendChild(this.$editor);
 
-        var vl = document.createElement('button');
-        vl.title = 'Open editor...'
+        const vl = document.createElement('button');
+        vl.title = 'Open editor...';
         vl.innerHTML = '<span class="caret"></span>';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
-            if (this.$editor.dataset.aOpen == 'true') {
+            if (this.$editor.dataset.aOpen === 'true') {
                 this.$editor.dataset.aOpen = null;
                 this.$editor.focus();
                 resetCursor(this.$editor);
@@ -626,8 +626,8 @@ export class DropdownEditValueEditor extends ValueEditor {
             (<any>this.$dropdown).editor = this.$editor;
             this.$dropdown.tabIndex = -1;
             this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
-            this.$dropdown.addEventListener('keyup', (e) => {
-                if (e.keyCode === 27) {
+            this.$dropdown.addEventListener('keyup', (e2) => {
+                if (e2.keyCode === 27) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                 }
@@ -636,14 +636,14 @@ export class DropdownEditValueEditor extends ValueEditor {
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
-            var data = this.options ? this.options.data || [] : [];
-            var tl = data.length;
-            var height = tl * 20;
+            const data = this.options ? this.options.data || [] : [];
+            let tl = data.length;
+            const height = tl * 20;
             while (tl--) {
-                var el = document.createElement('div');
+                const el = document.createElement('div');
                 el.textContent = capitalize(data[tl]);
-                el.addEventListener('click', (e) => {
-                    this.value = (<HTMLElement>e.currentTarget).textContent.toLowerCase();
+                el.addEventListener('click', (e2) => {
+                    this.value = (<HTMLElement>e2.currentTarget).textContent.toLowerCase();
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                 });
@@ -662,11 +662,11 @@ export class DropdownEditValueEditor extends ValueEditor {
         this.$el.appendChild(vl);
         this.parent.appendChild(this.$el);
     }
-    focus() {
+    public focus() {
         this.$editor.focus();
         resetCursor(this.$editor);
     }
-    destroy() {
+    public destroy() {
         if (this.$dropdown && this.$dropdown.parentElement)
             this.$dropdown.parentElement.removeChild(this.$dropdown);
         if (this.$el.parentElement)
@@ -679,11 +679,11 @@ export class DropdownEditValueEditor extends ValueEditor {
     }
 
     private positionDropdown() {
-        var b = this.parent.getBoundingClientRect();
-        var c = this.container.getBoundingClientRect();
-        var left = 0;
-        var width = 150;
-        var top = b.top + this.$editor.parentElement.offsetHeight - c.top;
+        const b = this.parent.getBoundingClientRect();
+        const c = this.container.getBoundingClientRect();
+        let left = 0;
+        let width = 150;
+        let top = b.top + this.$editor.parentElement.offsetHeight - c.top;
         if (b.width < 150) {
             left = (b.left - 150 + b.width - c.left);
         }
@@ -701,12 +701,12 @@ export class DropdownEditValueEditor extends ValueEditor {
     }
 
     private $dropdownEvent = (e) => {
-        if (e.relatedTarget && (<HTMLElement>e.relatedTarget).parentElement == this.$dropdown) {
+        if (e.relatedTarget && (<HTMLElement>e.relatedTarget).parentElement === this.$dropdown) {
             e.preventDefault();
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
             return;
         }
-        var ec = this.editorClick;
+        const ec = this.editorClick;
         this.$editor.dataset.aOpen = 'true';
         this.$dropdown.parentElement.removeChild(this.$dropdown);
         this.$dropdown = null;

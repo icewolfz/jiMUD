@@ -615,15 +615,12 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
 
 if (!String.prototype.ltrim)
     String.prototype.ltrim = function () {
-        var trimmed = this.replace(/^\s+/g, '');
-        return trimmed;
+        return this.replace(/^\s+/g, '');
     };
 if (!String.prototype.rtrim)
     String.prototype.rtrim = function () {
-        var trimmed = this.replace(/\s+$/g, '');
-        return trimmed;
+        return this.replace(/\s+$/g, '');
     };
-
 
 export function getTimeSpan(i: number): string {
     let al;
@@ -877,20 +874,24 @@ export function decrypt(crypted, key, iv, algorithm, input_encoding, output_enco
 
 export function formatSize(size) {
     if (size >= 1073741824)
-        return Math.round(size / 1073741824).toLocaleString() + " GB";
+        return Math.round(size / 1073741824).toLocaleString() + ' GB';
     else if (size >= 1048576)
-        return Math.round(size / 1048576).toLocaleString() + " MB";
+        return Math.round(size / 1048576).toLocaleString() + ' MB';
     else if (size >= 1024)
-        return Math.round(size / 1024).toLocaleString() + " KB";
-    return size + " B";
+        return Math.round(size / 1024).toLocaleString() + ' KB';
+    return size + ' B';
 }
 
 export function capitalize(s) {
     if (!s) return '';
-    s = s.split(" ");
-    var c;
-    for (var i = 0, il = s.length; i < il; i++) {
-        for (var p = 0, pl = s[i].length; p < pl; p++) {
+    s = s.split(' ');
+    let c;
+    let i;
+    let p;
+    const il = s.length;
+    for (i = 0; i < il; i++) {
+        const pl = s[i].length;
+        for (p = 0; p < pl; p++) {
             c = s[i].charAt(p);
             if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                 s[i] = s[i].substr(0, p) + c.toUpperCase() + s[i].substr(p + 1).toLowerCase();
@@ -898,15 +899,19 @@ export function capitalize(s) {
             }
         }
     }
-    return s.join(" ");
+    return s.join(' ');
 }
 
 export function inverse(s) {
     if (!s) return '';
-    s = s.split(" ");
-    var c;
-    for (var i = 0, il = s.length; i < il; i++) {
-        for (var p = 0, pl = s[i].length; p < pl; p++) {
+    s = s.split(' ');
+    let c;
+    let i;
+    let p;
+    const il = s.length;
+    for (i = 0; i < il; i++) {
+        const pl = s[i].length;
+        for (p = 0; p < pl; p++) {
             c = s[i].charAt(p);
             if (c >= 'A' && c <= 'Z')
                 s[i] = s[i].substr(0, p) + c.toLowerCase() + s[i].substr(p + 1);
@@ -918,28 +923,31 @@ export function inverse(s) {
 }
 
 export function invert(obj) {
-    var new_obj = {};
-    for (var prop in obj) {
+    const new_obj = {};
+    let prop;
+    for (prop in obj) {
         if (obj.hasOwnProperty(prop)) {
             new_obj[obj[prop]] = prop;
         }
     }
     return new_obj;
-};
+}
 
 export function walkSync(dir, fileList?, dirList?, empty?) {
-    var path = path || require('path');
-    var fs = fs || require('fs'),
-        files = fs.readdirSync(dir);
+    // tslint:disable-next-line:no-use-before-declare, no-shadowed-variable
+    const p = path || require('path');
+    // tslint:disable-next-line:no-use-before-declare, no-shadowed-variable
+    const f = fs || require('fs');
+    const files = f.readdirSync(dir);
     fileList = fileList || [];
     dirList = dirList || [];
     empty = empty || [];
-    if (files.length == 0)
+    if (files.length === 0)
         empty.push(dir);
-    files.forEach(function (file) {
-        if (fs.statSync(path.join(dir, file)).isDirectory()) {
-            dirList.push(path.join(dir, file));
-            var t = walkSync(path.join(dir, file), fileList, dirList, empty);
+    files.forEach((file) => {
+        if (f.statSync(p.join(dir, file)).isDirectory()) {
+            dirList.push(p.join(dir, file));
+            const t = walkSync(p.join(dir, file), fileList, dirList, empty);
             fileList = t.files;
             dirList = t.dirs;
             empty = t.empty;
@@ -949,134 +957,139 @@ export function walkSync(dir, fileList?, dirList?, empty?) {
         }
     });
     return { files: fileList, dirs: dirList, empty: empty };
-};
+}
 
 export function walk(dir, callback) {
-    var path = path || require('path');
-    var fs = fs || require('fs');
-    fs.readdir(dir, (err, files) => {
-        var fileList = [];
-        var dirList = [];
-        var empty = [];
-        if (files.length == 0)
+    // tslint:disable-next-line:block-scoped, no-shadowed-variable
+    const p = path || require('path');
+    // tslint:disable-next-line:block-scoped, no-shadowed-variable
+    const f = fs || require('fs');
+    f.readdir(dir, (err, files) => {
+        let fileList = [];
+        let dirList = [];
+        let empty = [];
+        if (files.length === 0)
             empty.push(dir);
-        files.forEach(function (file) {
-            if (fs.statSync(path.join(dir, file)).isDirectory()) {
-                dirList.push(path.join(dir, file));
-                var t = walkSync(path.join(dir, file), fileList, dirList, empty);
+        files.forEach((file) => {
+            if (f.statSync(p.join(dir, file)).isDirectory()) {
+                dirList.push(p.join(dir, file));
+                const t = walkSync(p.join(dir, file), fileList, dirList, empty);
                 fileList = t.files;
                 dirList = t.dirs;
                 empty = t.empty;
             }
             else {
-                fileList.push(path.join(dir, file));
+                fileList.push(p.join(dir, file));
             }
         });
         if (callback)
             callback(fileList, dirList, empty);
 
     });
-};
+}
 
 export function Cardinal(x) {
-    var str;
-    if (x === 0) return "zero";
+    let str;
+    if (x === 0) return 'zero';
     if (x < 0) {
-        str = "negative ";
+        str = 'negative ';
         x = Math.abs(x);
     }
     else
-        str = "";
+        str = '';
     switch (x) {
         case 1:
-            return str + "one";
+            return str + 'one';
         case 2:
-            return str + "two";
+            return str + 'two';
         case 3:
-            return str + "three";
+            return str + 'three';
         case 4:
-            return str + "four";
+            return str + 'four';
         case 5:
-            return str + "five";
+            return str + 'five';
         case 6:
-            return str + "six";
+            return str + 'six';
         case 7:
-            return str + "seven";
+            return str + 'seven';
         case 8:
-            return str + "eight";
+            return str + 'eight';
         case 9:
-            return str + "nine";
+            return str + 'nine';
         case 10:
-            return str + "ten";
+            return str + 'ten';
         case 11:
-            return str + "eleven";
+            return str + 'eleven';
         case 12:
-            return str + "twelve";
+            return str + 'twelve';
         case 13:
-            return str + "thirteen";
+            return str + 'thirteen';
         case 14:
-            return str + "fourteen";
+            return str + 'fourteen';
         case 15:
-            return str + "fifteen";
+            return str + 'fifteen';
         case 16:
-            return str + "sixteen";
+            return str + 'sixteen';
         case 17:
-            return str + "seventeen";
+            return str + 'seventeen';
         case 18:
-            return str + "eighteen";
+            return str + 'eighteen';
         case 19:
-            return str + "nineteen";
+            return str + 'nineteen';
         case 20:
-            return str + "twenty";
+            return str + 'twenty';
         default:
             if (x > 1000000000)
-                return "over a billion";
+                return 'over a billion';
             else if (x / 1000000 > 0) {
                 if (x % 1000000 > 0)
-                    return +" million " + Cardinal(x % 1000000);
-                return Cardinal((x / 1000000) >> 0) + " million";
+                    return +' million ' + Cardinal(x % 1000000);
+                return Cardinal((x / 1000000) >> 0) + ' million';
             }
             else if (x / 1000 > 0) {
                 if (x % 1000 > 0)
-                    return Cardinal((x / 1000) >> 0) + " thousand " + Cardinal(x % 1000);
-                return Cardinal((x / 1000) >> 0) + " thousand";
+                    return Cardinal((x / 1000) >> 0) + ' thousand ' + Cardinal(x % 1000);
+                return Cardinal((x / 1000) >> 0) + ' thousand';
             }
             else if (x / 100 > 0) {
                 if (x % 100 > 0)
-                    return Cardinal((x / 100) >> 0) + " hundred" + Cardinal(x % 100);
-                return Cardinal((x / 100) >> 0) + " hundred";
+                    return Cardinal((x / 100) >> 0) + ' hundred' + Cardinal(x % 100);
+                return Cardinal((x / 100) >> 0) + ' hundred';
             }
             else {
                 if (x % 10 > 0)
-                    str = "-" + Cardinal(x % 10);
+                    str = '-' + Cardinal(x % 10);
                 else
-                    str = "";
+                    str = '';
                 switch (x / 10) {
                     case 2:
-                        return "twenty" + str;
+                        return 'twenty' + str;
                     case 3:
-                        return "thirty" + str;
+                        return 'thirty' + str;
                     case 4:
-                        return "forty" + str;
+                        return 'forty' + str;
                     case 5:
-                        return "fifty" + str;
+                        return 'fifty' + str;
                     case 6:
-                        return "sixty" + str;
+                        return 'sixty' + str;
                     case 7:
-                        return "seventy" + str;
+                        return 'seventy' + str;
                     case 8:
-                        return "eighty" + str;
+                        return 'eighty' + str;
                     case 9:
-                        return "ninety" + str;
+                        return 'ninety' + str;
                     default:
-                        return "error";
+                        return 'error';
                 }
             }
     }
 }
 
 export function wordwrap(str, maxWidth, newLineStr?) {
-    var done = false, res = '', found, i;
+    let done = false;
+    let res = '';
+    let found;
+    let i;
     newLineStr = newLineStr || '\n';
     do {
         found = false;
@@ -1107,53 +1120,54 @@ function testWhite(x) {
     return /^\s$/.test(x.charAt(0));
 }
 
-
 export function splitQuoted(str, sep, t, e) {
-    if (typeof (t) === "undefined") t = 1 | 2;
-    if (typeof (e) === "undefined") e = 0;
+    if (typeof (t) === 'undefined') t = 1 | 2;
+    if (typeof (e) === 'undefined') e = 0;
     if (!str || str.length === 0 || !sep || sep.length === 0)
         return [str];
-    sep = sep.split("");
-    var q = false, sq = false;
-    var strs = [];
-    var p = 0, ps = 0;
-    var s = 0;
-    var sl = str.length;
-    var c;
+    sep = sep.split('');
+    let q = false;
+    let sq = false;
+    const strs = [];
+    let ps = 0;
+    let s = 0;
+    const sl = str.length;
+    let c;
     for (; s < sl; s++) {
         c = str.charAt(s);
-        if (c === '"' && (t & 2) == 2) {
-            if ((e & 2) == 2 && s > 0) {
-                if (s - 1 > 0 && str.charAt(s - 1) != '\\')
+        if (c === '"' && (t & 2) === 2) {
+            if ((e & 2) === 2 && s > 0) {
+                if (s - 1 > 0 && str.charAt(s - 1) !== '\\')
                     q = !q;
             }
             else
                 q = !q;
         }
-        else if (c === '\'' && (t & 1) == 1) {
-            if ((e & 1) == 1 && s > 0) {
-                if (s - 1 > 0 && str.charAt(s - 1) != '\\')
+        else if (c === '\'' && (t & 1) === 1) {
+            if ((e & 1) === 1 && s > 0) {
+                if (s - 1 > 0 && str.charAt(s - 1) !== '\\')
                     sq = !sq;
             }
             else
                 sq = !sq;
         }
         else if (!sq && !q) {
-            for (var sp = 0, spl = sep.length; sp < spl; sp++) {
-                if (c == sep[sp]) {
+            const spl = sep.length;
+            for (let sp = 0; sp < spl; sp++) {
+                if (c === sep[sp]) {
                     if (s > ps || s === 0) {
                         strs.push(str.substring(ps, s));
                         ps = s + 1;
                         break;
                     }
                     else if (s === (sl - 1))
-                        strs.push("");
+                        strs.push('');
                 }
             }
         }
     }
     if (s === sl && s === ps && sep.indexOf(str.charAt(s - 1)) > -1) {
-        strs.push("");
+        strs.push('');
         ps = s + 1;
     }
     if (s > ps)
@@ -1162,8 +1176,8 @@ export function splitQuoted(str, sep, t, e) {
 }
 
 export function leadingZeros(num, totalChars: number, padWith: string, trim?: boolean) {
-    num = num + "";
-    padWith = (padWith) ? padWith : "0";
+    num = num + '';
+    padWith = (padWith) ? padWith : '0';
     if (num.length < totalChars) {
         while (num.length < totalChars) {
             num = padWith + num;
@@ -1187,7 +1201,7 @@ export function resetCursor(txtElement) {
         txtElement.setSelectionRange(0, 0);
         txtElement.focus();
     } else if (txtElement.createTextRange) {
-        var range = txtElement.createTextRange();
+        const range = txtElement.createTextRange();
         range.moveStart('character', 0);
         range.select();
     }
@@ -1195,46 +1209,44 @@ export function resetCursor(txtElement) {
 
 export function stringToEnum(str, en, ignoreCase?) {
     if (!str || !en) return 0;
-    if (ignoreCase) 
+    if (ignoreCase)
         str = str.toUpperCase();
     //split strip and trim spaces
-    str = str.split(',').map(v=>v.trim());
+    str = str.split(',').map(v => v.trim());
     //init value
-    var value = 0;
-    var sl = str.length;
+    let value = 0;
+    let sl = str.length;
     //get the enum keys
-    var values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
-    var test = values.slice(0);
+    const values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
+    let test = values.slice(0);
     //ignore case just make everything upper
     if (ignoreCase)
         test = test.map(v => v.toUpperCase());
     //loop the strings
-    while(sl--)
-    {
-        var vl = values.length;
+    while (sl--) {
+        let vl = values.length;
         //loop the enum to try and find the string value
         while (vl--) {
             //found value add it on
-            if (test[vl] === str[sl])
-            {
+            if (test[vl] === str[sl]) {
                 value |= en[values[vl]];
                 break;
             }
-        }        
+        }
     }
     //return final value
     return value;
 }
 
 export function enumToString(value, en) {
-    var state;
-    var states = Object.keys(en).filter(key => !isNaN(Number(en[key])));
+    let state;
+    const states = Object.keys(en).filter(key => !isNaN(Number(en[key])));
     if (value === 0)
         return en[0];
-    var f = [];
+    const f = [];
     state = states.length;
     while (state--) {
-        if(en[states[state]] === 0) continue;
+        if (en[states[state]] === 0) continue;
         if ((value & en[states[state]]) === en[states[state]])
             f.push(capitalize(states[state]));
     }

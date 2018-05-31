@@ -24,13 +24,13 @@ export class Column {
     public formatter = (data) => {
         if (!data) return '&nbsp;';
         switch (typeof (data.cell)) {
-            case "string":
+            case 'string':
                 if (data.cell.length === 0)
                     return '&nbsp;';
                 return data.cell;
-            case "number":
+            case 'number':
                 return data.cell;
-            case "boolean":
+            case 'boolean':
                 return capitalize('' + data.cell);
         }
         if (!data.cell)
@@ -45,7 +45,8 @@ export class Column {
 
     constructor(data) {
         if (data) {
-            for (var prop in data) {
+            let prop;
+            for (prop in data) {
                 if (!data.hasOwnProperty(prop)) continue;
                 this[prop] = data[prop];
             }
@@ -165,14 +166,17 @@ export class Datagrid extends EventEmitter {
         });
         this.$parent.addEventListener('focus', (e) => {
             this.$parent.classList.add('focused');
-        })
+        });
 
         this.$parent.addEventListener('keydown', (e) => {
             if (this.$editor) return;
-            var el, idx;
-            var start, end, cnt;
+            let el;
+            let idx;
+            let start;
+            let end;
+            let cnt;
             switch (e.which) {
-                case 32://space
+                case 32: //space
                     if (e.ctrlKey) {
                         if (this.$focused === -1) {
                             this.$focused = 0;
@@ -193,7 +197,7 @@ export class Datagrid extends EventEmitter {
                         this.emit('selection-changed');
                     }
                     break;
-                case 38://up
+                case 38: //up
                     Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
                     if (this.$focused < 1)
                         this.$focused = 0;
@@ -206,9 +210,8 @@ export class Datagrid extends EventEmitter {
                     }
                     else if (e.shiftKey) {
                         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
-                        var start, end;
                         if (this.$selected.length === 0)
-                            start = this.$focused != -1 ? this.$focused : 0;
+                            start = this.$focused !== -1 ? this.$focused : 0;
                         else if (this.$shiftStart !== -1)
                             start = this.$shiftStart;
                         else
@@ -250,7 +253,7 @@ export class Datagrid extends EventEmitter {
                     }
                     this.emit('selection-changed');
                     break;
-                case 40://down
+                case 40: //down
                     Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
                     if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length)
                         this.$focused++;
@@ -261,9 +264,8 @@ export class Datagrid extends EventEmitter {
                     }
                     else if (e.shiftKey) {
                         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
-                        var start, end;
                         if (this.$selected.length === 0)
-                            start = this.$focused != -1 ? this.$focused : 0;
+                            start = this.$focused !== -1 ? this.$focused : 0;
                         else
                             start = this.$selected[0];
                         el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
@@ -316,19 +318,19 @@ export class Datagrid extends EventEmitter {
                         this.paste();
                     break;
             }
-        })
+        });
 
         this.$header = document.createElement('table');
         this.$header.classList.add('datagrid-header');
         this.$parent.appendChild(this.$header);
 
-        var el = document.createElement('div');
+        const el = document.createElement('div');
         el.classList.add('datagrid-body');
         el.addEventListener('scroll', (e) => {
             this.$header.style.transform = 'translate(-' + (<HTMLElement>e.currentTarget).scrollLeft + ',0)';
             if (this.$editor && this.$editor.editors.length > 0)
                 this.$editor.editors.map(ed => ed.editor.scroll());
-        })
+        });
         this.$body = document.createElement('table');
         this.$body.classList.add('datagrid-body-data');
         this.$dataBody = document.createElement('tbody');
@@ -338,19 +340,20 @@ export class Datagrid extends EventEmitter {
             this.$selected = [];
             Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
             this.emit('selection-changed');
-        })
+        });
         el.appendChild(this.$body);
         this.$parent.appendChild(el);
         window.addEventListener('resize', () => {
             this.doUpdate(UpdateType.resize);
-        })
+        });
         this.$resizer = new ResizeObserver((entries, observer) => {
             this.doUpdate(UpdateType.resize);
-        })
+        });
         this.$resizer.observe(this.$parent);
         this.$observer = new MutationObserver((mutationsList) => {
-            for (var mutation of mutationsList) {
-                if (mutation.type == 'attributes' && mutation.attributeName === 'style') {
+            let mutation;
+            for (mutation of mutationsList) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                     if (mutation.oldValue === 'display: none;' && (this.$dataHeight === 0 || this.$dataWidth === 0 || this.$headerWidth === 0))
                         this.doUpdate(UpdateType.columns | UpdateType.rows | UpdateType.resize);
                 }
@@ -368,10 +371,10 @@ export class Datagrid extends EventEmitter {
                     parent: c.parent,
                     child: c.child,
                     data: c.data
-                }
+                };
             })
         })));
-        var e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
+        const e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
         this.emit('cut', e);
         if (e.preventDefault) return;
         this.$selected = [];
@@ -382,13 +385,13 @@ export class Datagrid extends EventEmitter {
 
     public copy() {
         if (this.$selected.length === 0) return;
-        var e = {
+        const e = {
             data: this.selected.map(c => {
                 return {
                     parent: c.parent,
                     child: c.child,
                     data: c.data
-                }
+                };
             }),
             preventDefault: false
         };
@@ -402,17 +405,17 @@ export class Datagrid extends EventEmitter {
 
     get canPaste() {
         if (!clipboard.has('jiMUD/Datagrid')) return false;
-        var data = JSON.parse(clipboard.readBuffer('jiMUD/Datagrid').toString());
-        var format = this.columns.map(c => c.label).join(':');
+        const data = JSON.parse(clipboard.readBuffer('jiMUD/Datagrid').toString());
+        const format = this.columns.map(c => c.label).join(':');
         return format === data.format;
     }
 
     public paste() {
         if (!clipboard.has('jiMUD/Datagrid')) return;
-        var data = JSON.parse(clipboard.readBuffer('jiMUD/Datagrid').toString());
-        var format = this.columns.map(c => c.label).join(':');
+        const data = JSON.parse(clipboard.readBuffer('jiMUD/Datagrid').toString());
+        const format = this.columns.map(c => c.label).join(':');
         if (format === data.format) {
-            var e = { data: data.data, preventDefault: false };
+            const e = { data: data.data, preventDefault: false };
             this.emit('paste', e);
             if (e.preventDefault) return;
             this.addRows(e.data.map(r => r.data));
@@ -421,7 +424,7 @@ export class Datagrid extends EventEmitter {
 
     public delete() {
         if (this.$selected.length === 0) return;
-        var e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
+        const e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
         this.emit('delete', e);
         if (e.preventDefault) return;
         this.$selected = [];
@@ -448,7 +451,9 @@ export class Datagrid extends EventEmitter {
 
     public addColumns(cols) {
         if (!cols) return;
-        for (var c = 0, cl = cols.length; c < cl; c++)
+        let c;
+        const cl = cols.length;
+        for (c = 0; c < cl; c++)
             this.$cols.push(new Column(cols[c]));
         this.doUpdate(UpdateType.columns | UpdateType.buildRows);
     }
@@ -480,11 +485,11 @@ export class Datagrid extends EventEmitter {
         //get index and filter out invalid index, sort smallest to largest index as you always want to remove largest ot smallest
         rows.map((row) => {
             if (typeof row !== 'number')
-                this.$rows.indexOf(row);
+                return this.$rows.indexOf(row);
             else
-                row
+                return row;
         }).filter((row) => row < 0 || row >= this.$rows.length).sort();
-        var row = rows.length;
+        let row = rows.length;
         while (row--) {
             this.$rows.splice(rows[row], 1);
         }
@@ -500,8 +505,9 @@ export class Datagrid extends EventEmitter {
     get columns() { return this.$cols.slice(0); }
     set columns(cols) {
         cols = cols || [];
-        var cw = 0;
-        for (var c = 0, cl = cols.length; c < cl; c++) {
+        let cw = 0;
+        const cl = cols.length;
+        for (let c = 0; c < cl; c++) {
             cols[c] = new Column(cols[c]);
             cw = cols[c].width;
         }
@@ -513,13 +519,17 @@ export class Datagrid extends EventEmitter {
     get selected() {
         if (this.$selected.length === 0)
             return [];
-        var rows = [];
-        var sl = this.$selected.length;
+        const rows = [];
+        let sl = this.$selected.length;
+        let el;
+        let dataIndex;
+        let parent;
+        let child;
         while (sl--) {
-            var el = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[this.$selected[sl]]);
-            var dataIndex = +el.dataset.dataIndex;
-            var parent = +el.dataset.parent;
-            var child = +el.dataset.child;
+            el = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[this.$selected[sl]]);
+            dataIndex = +el.dataset.dataIndex;
+            parent = +el.dataset.parent;
+            child = +el.dataset.child;
             if (parent === -1)
                 rows.unshift({
                     data: this.$rows[dataIndex],
@@ -528,7 +538,7 @@ export class Datagrid extends EventEmitter {
                     child: child,
                     row: this.$sortedRows[this.$selected[sl]],
                     index: this.$selected[sl],
-                    dataIndex: dataIndex,
+                    dataIndex: dataIndex
                 });
             else
                 rows.unshift({
@@ -538,7 +548,7 @@ export class Datagrid extends EventEmitter {
                     parent: parent,
                     child: child,
                     index: this.$selected[sl],
-                    dataIndex: dataIndex,
+                    dataIndex: dataIndex
                 });
         }
         return rows;
@@ -566,7 +576,7 @@ export class Datagrid extends EventEmitter {
             this.emit('selection-changed');
         }
         this.$focused = row;
-        var el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[row];
+        const el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[row];
         el.classList.add('selected', 'focused');
         this.createEditor(el, col);
     }
@@ -574,21 +584,22 @@ export class Datagrid extends EventEmitter {
     public sort(column?, order?: SortOrder) {
         if (typeof column === 'object') {
             order = column.order || 0;
-            column = column.column
+            column = column.column;
         }
-        var oldColumn = this.$sort.column, oldOrder = this.$sort.order;
+        const oldColumn = this.$sort.column;
+        const oldOrder = this.$sort.order;
         if (column !== undefined)
             this.$sort.column = column;
         if (order !== undefined)
             this.$sort.order = order;
         if (column !== undefined || order !== undefined) {
-            if (column != oldColumn && this.$header.children.length) {
+            if (column !== oldColumn && this.$header.children.length) {
                 Array.from(this.$header.querySelectorAll('.datagrid-column-sorted'), a => a.classList.remove('datagrid-column-sorted'));
                 Array.from(this.$body.querySelectorAll('.datagrid-cell-sorted'), a => a.classList.remove('datagrid-cell-sorted'));
                 this.$header.children[0].children[this.$sort.column].classList.add('datagrid-column-sorted');
                 Array.from(this.$body.querySelectorAll('.datagrid-row:nth-child(' + (column - this.$hiddenColumnCount) + ')'), a => a.classList.add('datagrid-cell-sorted'));
             }
-            if (order != oldOrder && this.$header.children.length) {
+            if (order !== oldOrder && this.$header.children.length) {
                 Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-desc'), a => a.parentElement.removeChild(a));
                 Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-asc'), a => a.parentElement.removeChild(a));
                 Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-nosort'), a => a.parentElement.removeChild(a));
@@ -599,9 +610,9 @@ export class Datagrid extends EventEmitter {
             }
             this.doUpdate(UpdateType.columns | UpdateType.buildRows);
         }
-        var rows = this.$rows;
+        const rows = this.$rows;
         //only copy if different lengths
-        if (this.$sortedRows.length != rows.length) {
+        if (this.$sortedRows.length !== rows.length) {
             this.$sortedRows = [...rows.keys()];
             this.$sortedChildren = [...rows.keys()];
         }
@@ -611,7 +622,7 @@ export class Datagrid extends EventEmitter {
         this.$selected = [];
         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
         this.emit('selection-changed');
-        var prop;
+        let prop;
         if (this.$cols[this.$sort.column].hasOwnProperty('index'))
             prop = this.$cols[this.$sort.column].index;
         else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
@@ -619,9 +630,10 @@ export class Datagrid extends EventEmitter {
         else
             prop = this.$sort.column;
 
-        var dir = (this.$sort.order === SortOrder.descending) ? -1 : 1;
+        const dir = (this.$sort.order === SortOrder.descending) ? -1 : 1;
         //sort children
-        for (var r = 0, rl = rows.length; r < rl; r++) {
+        const rl = rows.length;
+        for (let r = 0; r < rl; r++) {
             if (!rows[r].children)
                 this.$sortedChildren[r] = [];
             else
@@ -632,7 +644,7 @@ export class Datagrid extends EventEmitter {
                         return -1 * dir;
                     return 0;
                 });
-        };
+        }
         this.$sortedRows.sort((a, b) => {
             if (rows[a][prop] > rows[b][prop])
                 return 1 * dir;
@@ -645,8 +657,8 @@ export class Datagrid extends EventEmitter {
                     return -1 * dir;
                 if (rows[a].children && !rows[b].children)
                     return 1 * dir;
-                var ap = this.$sortedChildren[a].map(c => rows[a].children[c][prop]).join(':');
-                var bp = this.$sortedChildren[b].map(c => rows[b].children[c][prop]).join(':');
+                const ap = this.$sortedChildren[a].map(c => rows[a].children[c][prop]).join(':');
+                const bp = this.$sortedChildren[b].map(c => rows[b].children[c][prop]).join(':');
                 if (ap > bp)
                     return 1 * dir;
                 if (ap < bp)
@@ -657,7 +669,7 @@ export class Datagrid extends EventEmitter {
     }
 
     public get sortedRows() {
-        var rows = this.rows;
+        const rows = this.rows;
         if (!this.$children)
             return this.$sortedRows.map(i => {
                 return rows[i];
@@ -672,43 +684,31 @@ export class Datagrid extends EventEmitter {
     public sortedChildren(i) {
         if (i < 0 || i >= this.$rows.length)
             return [];
-        var rows = this.rows;
+        const rows = this.rows;
         if (!this.$sortedChildren || !Array.isArray(this.$sortedChildren[i]))
             return rows[i].children || [];
         return this.$sortedChildren[i].map(c => rows[i].children[c]);
     }
 
     private updateRows() {
-        /*
-        if (this.$springCols.length > 0) {
-            for (var s = 0, sl = this.$springCols.length; s < sl; s++) {
-                var children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
-                children.map(c => {
-                    c.style.width = this.$springCols[s].width + 'px';
-                    c.style.minWidth = this.$springCols[s].width + 'px';
-                    c.style.maxWidth = this.$springCols[s].width + 'px';
-                });
-            }
-        }
-        */
         while (this.$body.children[0].firstChild)
             this.$body.children[0].removeChild(this.$body.children[0].firstChild);
-        var cols = this.$cols;
-        var c, cl = cols.length;
-        var rows = this.$rows;
-        var sorted = this.$sortedRows;
-        var frag = document.createDocumentFragment();
-        var row, cell, data;
-        var child, childLen;
-        var cnt = 0;
-        for (var r = 0, l = sorted.length; r < l; r++) {
-            data = rows[sorted[r]]
+        const rows = this.$rows;
+        const sorted = this.$sortedRows;
+        const frag = document.createDocumentFragment();
+        let data;
+        let child;
+        let childLen;
+        let cnt = 0;
+        const l = sorted.length;
+        for (let r = 0; r < l; r++) {
+            data = rows[sorted[r]];
             frag.appendChild(this.generateRow(cnt, data, r, sorted[r]));
             cnt++;
-            if (this.$children && data.children && this.$viewState[this.$sortedRows[r]]) {
+            if (this.$children && data.children && this.$viewState[sorted[r]]) {
                 for (child = 0, childLen = data.children.length; child < childLen; child++) {
                     frag.appendChild(this.generateRow(cnt, data.children[child], r, sorted[r], r, child));
-                    cnt++
+                    cnt++;
                 }
             }
         }
@@ -723,19 +723,24 @@ export class Datagrid extends EventEmitter {
             this.$body.children[0].removeChild(this.$body.children[0].firstChild);
         while (this.$body.children[1].firstChild)
             this.$body.children[1].removeChild(this.$body.children[1].firstChild);
-        var cols = this.$cols;
-        var c, cl = cols.length;
-        var rows = this.$rows;
-        var sorted = this.$sortedRows;
-        var frag = document.createDocumentFragment();
-        var row, cell, data;
-        var child, childLen;
-        var cnt = 0;
-        for (var r = 0, l = sorted.length; r < l; r++) {
-            data = rows[sorted[r]]
+        const cols = this.$cols;
+        let c;
+        const cl = cols.length;
+        const rows = this.$rows;
+        const sorted = this.$sortedRows;
+        const frag = document.createDocumentFragment();
+        let row;
+        let cell;
+        let data;
+        let child;
+        let childLen;
+        let cnt = 0;
+        const l = sorted.length;
+        for (let r = 0; r < l; r++) {
+            data = rows[sorted[r]];
             frag.appendChild(this.generateRow(cnt, data, r, sorted[r]));
             cnt++;
-            if (this.$children && data.children && this.$viewState[this.$sortedRows[r]]) {
+            if (this.$children && data.children && this.$viewState[sorted[r]]) {
                 for (child = 0, childLen = data.children.length; child < childLen; child++) {
                     frag.appendChild(this.generateRow(cnt, data.children[child], r, sorted[r], r, child));
                     cnt++;
@@ -744,8 +749,8 @@ export class Datagrid extends EventEmitter {
         }
         this.$body.children[0].appendChild(frag);
         (row = document.createElement('tr')).classList.add('datagrid-row-spring');
-        var sCol = this.$sort.column;
-        var w;
+        const sCol = this.$sort.column;
+        let w;
         for (c = 0; c < cl; c++) {
             if (!cols[c].visible) continue;
             cell = document.createElement('td');
@@ -778,12 +783,13 @@ export class Datagrid extends EventEmitter {
     }
 
     private generateRow(cnt, data, r, dataIdx, parent = -1, child = -1) {
-        var cols = this.$cols;
-        var c, cl = cols.length;
-        var w;
-        var cell;
-        var sCol = this.$sort.column;
-        var row = document.createElement('tr');
+        const cols = this.$cols;
+        let c;
+        const cl = cols.length;
+        let w;
+        let cell;
+        const sCol = this.$sort.column;
+        const row = document.createElement('tr');
         row.classList.add('datagrid-row');
         if (r % 2 === 0)
             row.classList.add('datagrid-row-even');
@@ -799,61 +805,62 @@ export class Datagrid extends EventEmitter {
         row.addEventListener('click', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
                 return;
-            var row = <HTMLElement>e.currentTarget;
-            //var sIdx = +row.dataset.row;
-            var sIdx = [...row.parentElement.children].indexOf(row);
+            let eRow = <HTMLElement>e.currentTarget;
+            //var sIdx = +eRow.dataset.row;
+            let sIdx = [...eRow.parentElement.children].indexOf(eRow);
             //var rowIdx = +(<HTMLElement>e.currentTarget);
-            var r = this.$sortedRows[sIdx];
-            var el;
-            this.emit('row-click', e, { row: this.$rows[r], rowIndex: r });
+            const eR = this.$sortedRows[sIdx];
+            let el;
+            this.emit('row-click', e, { row: this.$rows[eR], rowIndex: eR });
             Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
             if (e.ctrlKey) {
                 this.$focused = sIdx;
-                if (row.classList.contains('selected')) {
-                    row.classList.remove('selected');
+                if (eRow.classList.contains('selected')) {
+                    eRow.classList.remove('selected');
                     sIdx = this.$selected.indexOf(sIdx);
                     this.$selected.splice(sIdx, 1);
                 }
                 else {
-                    row.classList.add('selected');
+                    eRow.classList.add('selected');
                     this.$selected.push(sIdx);
                 }
-                row.classList.add('focused');
+                eRow.classList.add('focused');
                 this.$shiftStart = this.$focused;
             }
             else if (e.shiftKey) {
-                var start, end;
+                let start;
+                let end;
                 if (this.$selected.length === 0)
-                    start = this.$focused != -1 ? this.$focused : 0;
-                else if (this.$shiftStart != -1)
+                    start = this.$focused !== -1 ? this.$focused : 0;
+                else if (this.$shiftStart !== -1)
                     start = this.$shiftStart;
                 else
                     start = this.$selected[0];
                 Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
                 this.$selected = [];
-                var cnt;
+                let eCnt;
                 if (start > sIdx) {
                     end = start;
                     start = sIdx;
                     this.$shiftStart = end;
-                    cnt = end - start + 1;
+                    eCnt = end - start + 1;
                     for (; end >= start; end--)
                         this.$selected.push(end);
 
-                    while (row && cnt--) {
-                        row.classList.add('selected');
-                        row = <HTMLElement>row.nextSibling;
+                    while (eRow && eCnt--) {
+                        eRow.classList.add('selected');
+                        eRow = <HTMLElement>eRow.nextSibling;
                     }
                 }
                 else {
                     end = sIdx;
-                    cnt = end - start + 1;
+                    eCnt = end - start + 1;
                     this.$shiftStart = start;
                     for (; start <= end; start++)
                         this.$selected.push(start);
-                    while (row && cnt--) {
-                        row.classList.add('selected');
-                        row = <HTMLElement>row.previousSibling;
+                    while (eRow && eCnt--) {
+                        eRow.classList.add('selected');
+                        eRow = <HTMLElement>eRow.previousSibling;
                     }
                 }
                 this.$focused = sIdx;
@@ -863,25 +870,21 @@ export class Datagrid extends EventEmitter {
             else {
                 Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
                 this.$selected = [sIdx];
-                row.classList.add('selected', 'focused');
+                eRow.classList.add('selected', 'focused');
                 this.$focused = sIdx;
                 this.$shiftStart = this.$focused;
             }
             this.emit('selection-changed');
-            if (this.$editor && this.$editor.el != row)
+            if (this.$editor && this.$editor.el !== eRow)
                 this.clearEditor();
         });
         row.addEventListener('dblclick', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
                 return;
-            var sIdx = +(<HTMLElement>e.currentTarget).dataset.dataInde;
-            var r = this.$sortedRows[sIdx];
-
-            var el = <HTMLElement>e.currentTarget;
-            var dataIdx = +el.dataset.dataIndex;
-            var parent = +el.dataset.parent;
-            var child = +el.dataset.child;
-            this.emit('row-dblclick', e, { row: this.$rows[r], rowIndex: r, parent: parent, child: child, dataIndex: dataIdx });
+            const sIdx = +(<HTMLElement>e.currentTarget).dataset.dataInde;
+            const eR = this.$sortedRows[sIdx];
+            const el = <HTMLElement>e.currentTarget;
+            this.emit('row-dblclick', e, { row: this.$rows[eR], rowIndex: eR, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: +el.dataset.dataIndex });
             if (e.defaultPrevented || e.cancelBubble)
                 return;
             Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
@@ -893,20 +896,20 @@ export class Datagrid extends EventEmitter {
         row.addEventListener('mousedown', (e) => {
             this.$editorClick = e.currentTarget;
             if (this.$editor && this.$editor.editors)
-                this.$editor.editors.map(e => e.editorClick = this.$editorClick);
+                this.$editor.editors.map(ed => ed.editorClick = this.$editorClick);
         });
         row.addEventListener('mouseup', (e) => {
             this.$editorClick = null;
             if (this.$editor && this.$editor.editors)
-                this.$editor.editors.map(e => e.editorClick = null);
+                this.$editor.editors.map(ed => ed.editorClick = null);
         });
         for (c = 0; c < cl; c++) {
             if (!cols[c].visible) continue;
             w = cols[c].width;
             if (this.$children && c === this.$firstColumn)
                 w += 40;
-            var field = null;
-            var idx = c;
+            let field = null;
+            let idx = c;
             if (cols[c].hasOwnProperty('index'))
                 idx = cols[c].index;
             else if (cols[c].hasOwnProperty('field'))
@@ -933,8 +936,8 @@ export class Datagrid extends EventEmitter {
             cell.dataset.index = '' + idx;
             cell.dataset.parent = '' + parent;
             cell.dataset.child = '' + child;
-            cell.dataset.dataIndex = '' + dataIdx
-            var value = null;
+            cell.dataset.dataIndex = '' + dataIdx;
+            let value = null;
             if (field)
                 value = data[field];
             else if (idx < data.length)
@@ -950,11 +953,11 @@ export class Datagrid extends EventEmitter {
                 cell.textContent = value;
             else
                 cell.innerHTML = '&nbsp;';
-            if (c === 0 && parent != -1)
+            if (c === 0 && parent !== -1)
                 cell.classList.add('datagrid-cell-child');
             else if (this.$children && c === this.$firstColumn && data.children && data.children.length > 0) {
                 cell.classList.add('datagrid-cell-parent');
-                var lbl = document.createElement('i')
+                const lbl = document.createElement('i');
                 lbl.dataset.parent = r;
                 if (this.$viewState[this.$sortedRows[r]])
                     lbl.classList.add('datagrid-collapse', 'fa', 'fa-chevron-down');
@@ -965,37 +968,38 @@ export class Datagrid extends EventEmitter {
                     e.preventDefault();
                     e.cancelBubble = true;
                     e.stopPropagation();
-                    var c = (<HTMLElement>e.currentTarget);
-                    var rowEl = c.parentElement.parentElement;
-                    var r: any = +c.dataset.parent;
-                    var sib = <HTMLElement>rowEl.nextElementSibling;
-                    if (this.$viewState[this.$sortedRows[r]]) {
-                        c.classList.remove('fa-chevron-down');
-                        c.classList.add('fa-chevron-right');
-                        this.$viewState[this.$sortedRows[r]] = false;
-                        r = '' + r;
-                        while (sib && sib.dataset.parent === r) {
+                    const eCurr = (<HTMLElement>e.currentTarget);
+                    const rowEl = c.parentElement.parentElement;
+                    let eR: any = +c.dataset.parent;
+                    let sib = <HTMLElement>rowEl.nextElementSibling;
+                    if (this.$viewState[this.$sortedRows[eR]]) {
+                        eCurr.classList.remove('fa-chevron-down');
+                        eCurr.classList.add('fa-chevron-right');
+                        this.$viewState[this.$sortedRows[eR]] = false;
+                        eR = '' + eR;
+                        while (sib && sib.dataset.parent === eR) {
                             sib.style.display = 'none';
                             sib = <HTMLElement>sib.nextElementSibling;
                         }
                     }
                     else {
-                        c.classList.add('fa-chevron-down');
-                        c.classList.remove('fa-chevron-right');
-                        this.$viewState[this.$sortedRows[r]] = true;
+                        eCurr.classList.add('fa-chevron-down');
+                        eCurr.classList.remove('fa-chevron-right');
+                        this.$viewState[this.$sortedRows[eR]] = true;
 
                         if (rowEl.dataset.children !== 'true') {
                             if (this.$children && data.children) {
-                                var frag = document.createDocumentFragment();
-                                for (var child = 0, childLen = data.children.length; child < childLen; child++)
-                                    frag.appendChild(this.generateRow(r + child, data.children[child], r, r, r, child));
+                                const frag = document.createDocumentFragment();
+                                const childLen = data.children.length;
+                                for (let eChild = 0; eChild < childLen; eChild++)
+                                    frag.appendChild(this.generateRow(eR + eChild, data.children[eChild], eR, eR, eR, eChild));
                                 rowEl.parentNode.insertBefore(frag, rowEl.nextSibling);
                             }
                             rowEl.dataset.children = 'true';
                         }
                         else {
-                            r = '' + r;
-                            while (sib && sib.dataset.parent === r) {
+                            eR = '' + eR;
+                            while (sib && sib.dataset.parent === eR) {
                                 sib.style.display = '';
                                 sib = <HTMLElement>sib.nextElementSibling;
                             }
@@ -1004,12 +1008,13 @@ export class Datagrid extends EventEmitter {
                     }
                     //this.updateRows();
                     if (this.$springCols.length > 0) {
-                        for (var s = 0, sl = this.$springCols.length; s < sl; s++) {
-                            var children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
-                            children.map(c => {
-                                c.style.width = this.$springCols[s].width + 'px';
-                                c.style.minWidth = this.$springCols[s].width + 'px';
-                                c.style.maxWidth = this.$springCols[s].width + 'px';
+                        const sl = this.$springCols.length;
+                        for (let s = 0; s < sl; s++) {
+                            const children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
+                            children.map(c2 => {
+                                c2.style.width = this.$springCols[s].width + 'px';
+                                c2.style.minWidth = this.$springCols[s].width + 'px';
+                                c2.style.maxWidth = this.$springCols[s].width + 'px';
                             });
                         }
                     }
@@ -1021,31 +1026,31 @@ export class Datagrid extends EventEmitter {
             cell.addEventListener('click', (e) => {
                 if (e.defaultPrevented || e.cancelBubble)
                     return;
-                var el = <HTMLElement>e.currentTarget;
-                var dataIdx = +el.dataset.dataIndex;
-                var field = el.dataset.field;
-                var parent = +el.dataset.parent;
-                var child = +el.dataset.child;
-                var idx = +el.dataset.idx;
-                var col = +el.dataset.column;
-                var data = { row: null, cell: null, index: idx, column: col, rowIndex: +el.dataset.row, field: field, parent: parent, child: child, dataIndex: dataIdx };
-                if (dataIdx >= 0 && dataIdx < this.$rows.length) {
-                    if (parent === -1) {
-                        data.row = this.$rows[dataIdx];
-                        if (field)
-                            data.cell = data.row[field]
-                        else if (idx >= 0 && idx <= data.row.length)
-                            data.cell = data.row[idx];
+                const el = <HTMLElement>e.currentTarget;
+                const eDataIdx = +el.dataset.dataIndex;
+                const eField = el.dataset.field;
+                const eParent = +el.dataset.parent;
+                const eChild = +el.dataset.child;
+                const eIdx = +el.dataset.idx;
+                const col = +el.dataset.column;
+                const eData = { row: null, cell: null, index: eIdx, column: col, rowIndex: +el.dataset.row, field: eField, parent: eParent, child: eChild, dataIndex: eDataIdx };
+                if (eDataIdx >= 0 && eDataIdx < this.$rows.length) {
+                    if (eParent === -1) {
+                        eData.row = this.$rows[eDataIdx];
+                        if (eField)
+                            eData.cell = eData.row[eField];
+                        else if (eIdx >= 0 && eIdx <= eData.row.length)
+                            eData.cell = eData.row[eIdx];
                     }
-                    else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
-                        data.row = this.$rows[parent].children[child];
-                        if (field)
-                            data.cell = data.row[field]
-                        else if (idx >= 0 && idx <= data.row.length)
-                            data.cell = data.row[idx];
+                    else if (eParent >= 0 && eParent < this.$rows.length && eChild >= 0 && eChild < this.$rows[eParent].children.length) {
+                        eData.row = this.$rows[eParent].children[eChild];
+                        if (eField)
+                            eData.cell = eData.row[eField];
+                        else if (eIdx >= 0 && eIdx <= eData.row.length)
+                            eData.cell = eData.row[eIdx];
                     }
                 }
-                this.emit('cell-click', e, data);
+                this.emit('cell-click', e, eData);
                 if (e.defaultPrevented || e.cancelBubble || this.$cols[col].readonly)
                     return;
                 if (e.ctrlKey || e.shiftKey) {
@@ -1061,28 +1066,28 @@ export class Datagrid extends EventEmitter {
             cell.addEventListener('dblclick', (e) => {
                 if (e.defaultPrevented || e.cancelBubble)
                     return;
-                var el = <HTMLElement>e.currentTarget;
-                var dataIdx = +el.dataset.dataIndex;
-                var field = el.dataset.field;
-                var parent = +el.dataset.parent;
-                var child = +el.dataset.child;
-                var idx = +el.dataset.idx;
-                var col = +el.dataset.column;
-                var data = { row: null, cell: null, index: idx, column: col, rowIndex: +el.dataset.row, field: field, parent: parent, child: child, dataIndex: dataIdx };
-                if (dataIdx >= 0 && dataIdx < this.$rows.length) {
-                    if (parent === -1) {
-                        data.row = this.$rows[dataIdx];
-                        if (field)
-                            data.cell = data.row[field]
-                        else if (idx >= 0 && idx <= data.row.length)
-                            data.cell = data.row[idx];
+                const el = <HTMLElement>e.currentTarget;
+                const eDataIdx = +el.dataset.dataIndex;
+                const eField = el.dataset.field;
+                const eParent = +el.dataset.parent;
+                const eChild = +el.dataset.child;
+                const eIdx = +el.dataset.idx;
+                const col = +el.dataset.column;
+                const eData = { row: null, cell: null, index: idx, column: col, rowIndex: +el.dataset.row, field: field, parent: parent, child: child, dataIndex: dataIdx };
+                if (eDataIdx >= 0 && eDataIdx < this.$rows.length) {
+                    if (eParent === -1) {
+                        eData.row = this.$rows[eDataIdx];
+                        if (eField)
+                            eData.cell = eData.row[eField];
+                        else if (eIdx >= 0 && eIdx <= eData.row.length)
+                            eData.cell = eData.row[eIdx];
                     }
-                    else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
-                        data.row = this.$rows[parent].children[child];
-                        if (field)
-                            data.cell = data.row[field]
-                        else if (idx >= 0 && idx <= data.row.length)
-                            data.cell = data.row[idx];
+                    else if (eParent >= 0 && eParent < this.$rows.length && eChild >= 0 && eChild < this.$rows[eParent].children.length) {
+                        eData.row = this.$rows[eParent].children[eChild];
+                        if (eField)
+                            eData.cell = eData.row[eField];
+                        else if (eIdx >= 0 && eIdx <= eData.row.length)
+                            eData.cell = eData.row[eIdx];
                     }
                 }
                 this.emit('cell-dblclick', e, data);
@@ -1110,23 +1115,24 @@ export class Datagrid extends EventEmitter {
         while (this.$header.firstChild)
             this.$header.removeChild(this.$header.firstChild);
         this.$springCols = [];
-        var cols = this.$cols;
-        var row = document.createElement('tr');
+        const cols = this.$cols;
+        const row = document.createElement('tr');
         row.classList.add('datagrid-column-row');
-        var cell: HTMLElement;
-        var sCol = this.$sort.column;
-        var sOrder = this.$sort.order;
-        for (var c = 0, cl = cols.length; c < cl; c++) {
+        let cell: HTMLElement;
+        const sCol = this.$sort.column;
+        const sOrder = this.$sort.order;
+        const cl = cols.length;
+        for (let c = 0; c < cl; c++) {
             if (!cols[c].visible) continue;
             this.$firstColumn = c;
             break;
         }
         this.$hiddenColumnCount = cols.filter(c => !c.visible).length;
-        for (var c = 0, cl = cols.length; c < cl; c++) {
+        for (let c = 0; c < cl; c++) {
             if (!cols[c].visible) continue;
             cell = document.createElement('td');
             cell.classList.add('datagrid-column');
-            var w = cols[c].width;
+            let w = cols[c].width;
             if (this.$children && c === this.$firstColumn) {
                 cell.classList.add('datagrid-column-tree');
                 w += 40;
@@ -1139,7 +1145,7 @@ export class Datagrid extends EventEmitter {
                     Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-desc'), a => a.parentElement.removeChild(a));
                     Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-asc'), a => a.parentElement.removeChild(a));
                     Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-nosort'), a => a.parentElement.removeChild(a));
-                    var idx = +(<HTMLElement>e.currentTarget).dataset.index;
+                    const idx = +(<HTMLElement>e.currentTarget).dataset.index;
                     if (this.$sort.column === idx) {
                         if (this.$sort.order)
                             this.$sort.order = 0;
@@ -1196,15 +1202,15 @@ export class Datagrid extends EventEmitter {
     }
 
     private resize() {
-        var style = window.getComputedStyle(this.$parent, null);
-        var h = parseInt(style.getPropertyValue("height"), 10);
-        var w = parseInt(style.getPropertyValue("width"), 10);
+        const style = window.getComputedStyle(this.$parent, null);
+        let h = parseInt(style.getPropertyValue('height'), 10);
+        let w = parseInt(style.getPropertyValue('width'), 10);
         h -= this.$header.offsetHeight;
         if (w < this.$colWidth)
             w = this.$colWidth;
         this.$body.parentElement.style.height = h + 'px';
         if (this.$headerWidth !== 0) {
-            var spacer = <HTMLElement>this.$header.querySelector('.datagrid-column-spacer');
+            const spacer = <HTMLElement>this.$header.querySelector('.datagrid-column-spacer');
             if (this.$springCols.length > 1 || w < this.$headerWidth) {
                 spacer.style.width = '24px';
                 spacer.style.minWidth = '24px';
@@ -1221,9 +1227,10 @@ export class Datagrid extends EventEmitter {
 
     private resizeWidth() {
         if (this.$dataWidth === 0) return;
-        var helper, style;
+        let helper;
+        let style;
 
-        var spring: HTMLElement[] = Array.from(this.$header.querySelectorAll('.datagrid-cell-spring'));
+        const spring: HTMLElement[] = Array.from(this.$header.querySelectorAll('.datagrid-cell-spring'));
         spring.map(s => {
             s.style.width = '0px';
             s.style.minWidth = '0px';
@@ -1231,15 +1238,15 @@ export class Datagrid extends EventEmitter {
         helper = document.createElement('div');
         this.$body.parentElement.appendChild(helper);
         style = window.getComputedStyle(helper, null);
-        var hWidth = parseInt(style.getPropertyValue("width"), 10);
+        const hWidth = parseInt(style.getPropertyValue('width'), 10);
         if (this.$springCols.length > 0) {
-            var cols = this.$header.querySelectorAll('.datagrid-column-spring');
-            var sl = this.$springCols.length;
-            var sw = (helper.clientWidth - this.$dataWidth) / sl;
-            var r = sw % 1;
+            const cols = this.$header.querySelectorAll('.datagrid-column-spring');
+            const sl = this.$springCols.length;
+            let sw = (helper.clientWidth - this.$dataWidth) / sl;
+            const r = sw % 1;
             sw = ~~sw;
-            for (var s = 0; s < sl; s++) {
-                var children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
+            for (let s = 0; s < sl; s++) {
+                const children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
                 if (hWidth < this.$dataWidth) {
                     (<HTMLElement>cols[s]).style.width = this.$springCols[s].width + 'px';
                     (<HTMLElement>cols[s]).style.minWidth = this.$springCols[s].width + 'px';
@@ -1281,8 +1288,10 @@ export class Datagrid extends EventEmitter {
     }
 
     private resizeHeight() {
+        let helper;
+        let h;
+        const springrow = <HTMLElement>this.$body.querySelector('.datagrid-row-spring');
         if (this.$dataHeight === 0) {
-            var springrow = <HTMLElement>this.$body.querySelector('.datagrid-row-spring');
             springrow.style.display = 'none';
             springrow.style.height = '0px';
             helper = document.createElement('div');
@@ -1299,8 +1308,7 @@ export class Datagrid extends EventEmitter {
             this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + ',0)';
             return;
         }
-        var helper, style, h;
-        var springrow = <HTMLElement>this.$body.querySelector('.datagrid-row-spring');
+        let style;
         springrow.style.display = 'none';
         springrow.style.height = '0px';
         helper = document.createElement('div');
@@ -1312,10 +1320,10 @@ export class Datagrid extends EventEmitter {
         this.$body.parentElement.appendChild(helper);
         h = helper.clientHeight;
         this.$body.parentElement.removeChild(helper);
-        var dh;
+        let dh;
         if (this.$rows.length > 0 && springrow.offsetTop === 0) {
             style = window.getComputedStyle(this.$body, null);
-            dh = parseInt(style.getPropertyValue("height"), 10);
+            dh = parseInt(style.getPropertyValue('height'), 10);
         }
         else
             dh = springrow.offsetTop;
@@ -1370,10 +1378,10 @@ export class Datagrid extends EventEmitter {
     public scrollToRow(row) {
         if (typeof row === 'number')
             row = this.$body.firstElementChild.children[row];
-        var top = row.offsetTop;
-        var height = row.offsetHeight;
-        var sTop = this.$body.parentElement.scrollTop;
-        var sHeight = this.$body.parentElement.clientHeight;
+        const top = row.offsetTop;
+        const height = row.offsetHeight;
+        const sTop = this.$body.parentElement.scrollTop;
+        const sHeight = this.$body.parentElement.clientHeight;
         if (top + height >= sTop + sHeight)
             this.$body.parentElement.scrollTop = top - sHeight + height;
         else if (top < sTop)
@@ -1383,7 +1391,7 @@ export class Datagrid extends EventEmitter {
     public getPropertyOptions(prop, ops?) {
         if (!prop || !this.$cols)
             return null;
-        var col = this.$cols.filter(s => s.field === prop);
+        let col = this.$cols.filter(s => s.field === prop);
         if (col.length === 0) return;
         col = col[0];
         if (ops) {
@@ -1397,30 +1405,38 @@ export class Datagrid extends EventEmitter {
         if (evt && evt.relatedTarget && (this.$editor.el.contains(evt.relatedTarget) || this.$editor.el.contains(evt.relatedTarget.editor)))
             return;
 
-        var e = 0, el = this.$editor.editors.length;
+        let e = 0;
+        const el = this.$editor.editors.length;
         this.$prevEditor = {
             el: el,
             editors: []
-        }
-        var oldObj = this.$rows.slice(this.$sortedRows[this.$editor.row], this.$sortedRows[this.$editor.row] + 1);
-        var changed = false;
+        };
+        const oldObj = this.$rows.slice(this.$sortedRows[this.$editor.row], this.$sortedRows[this.$editor.row] + 1);
+        let changed = false;
+        let dataIdx;
+        let field;
+        let parent;
+        let child;
+        let idx;
+        let data;
+        let col;
+        let editor;
         for (; e < el; e++) {
-            var editor = this.$editor.editors[e];
-            var value;
-            var oldValue;
-            var prop = editor.property;
-            var eData;
+            editor = this.$editor.editors[e];
+            let value;
+            let oldValue;
+            const prop = editor.property;
+            let eData;
             if (editor.editor) {
                 value = editor.editor.value;
                 eData = editor.editor.data;
             }
             oldValue = editor.data[editor.property];
-            var dataIdx, field, parent, child, idx, data;
             if (value !== oldValue) {
                 editor.data[prop] = value;
                 oldObj[prop] = value;
                 changed = true;
-                var col = this.$cols[editor.column];
+                col = this.$cols[editor.column];
                 dataIdx = +editor.el.dataset.dataIndex;
                 field = editor.el.dataset.field;
                 parent = +editor.el.dataset.parent;
@@ -1431,14 +1447,14 @@ export class Datagrid extends EventEmitter {
                     if (parent === -1) {
                         data.row = this.$rows[dataIdx];
                         if (field)
-                            data.cell = data.row[field]
+                            data.cell = data.row[field];
                         else if (idx >= 0 && idx <= data.row.length)
                             data.cell = data.row[idx];
                     }
                     else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
                         data.row = this.$rows[parent].children[child];
                         if (field)
-                            data.cell = data.row[field]
+                            data.cell = data.row[field];
                         else if (idx >= 0 && idx <= data.row.length)
                             data.cell = data.row[idx];
                     }
@@ -1470,49 +1486,53 @@ export class Datagrid extends EventEmitter {
                 });
             }
         }
-        if(changed)
-        this.emit('value-changed', editor.data, oldObj, this.$sortedRows[this.$editor.row]);
+        if (changed)
+            this.emit('value-changed', editor.data, oldObj, this.$sortedRows[this.$editor.row]);
         this.$editor = null;
     }
 
     public createEditor(el: HTMLElement, fCol: any = 0) {
         if (!el) return;
-        var row = [...el.parentElement.children].indexOf(el);
+        const row = [...el.parentElement.children].indexOf(el);
         if (fCol)
             fCol = [...fCol.parentElement.children].indexOf(fCol);
-        var cols = this.$cols;
+        const cols = this.$cols;
         if (this.$editor) {
             if (this.$editor && this.$editor.row === row)
                 return;
             this.clearEditor();
         }
-        var c;
-        var cl = el.children.length;
+        let c;
+        const cl = el.children.length;
         this.$editor = {
             el: el,
             editors: [],
             row: row
-        }
+        };
+        let cell;
+        let prop;
+        let col;
+        let type;
         for (c = 0; c < cl; c++) {
-            var cell = <HTMLElement>el.children[c];
-            var prop = cell.dataset.field;
-            var col = +cell.dataset.column;
+            cell = <HTMLElement>el.children[c];
+            prop = cell.dataset.field;
+            col = +cell.dataset.column;
             if (cols[c].readonly) {
                 fCol--;
                 continue;
             }
             if (!prop) return;
-            var editor = {
+            let editor = {
                 el: cell,
                 editor: null,
                 property: prop,
                 type: EditorType.default,
                 column: col,
                 row: row,
-                data
+                data: null
             };
-            var type = this.editorType(col);
-            var editorOptions;
+            type = this.editorType(col);
+            let editorOptions;
             if (this.$cols[col] && this.$cols[col].editor) {
                 editorOptions = this.$cols[col].editor.options;
                 if (this.$cols[col].editor.hasOwnProperty('show')) {
@@ -1534,12 +1554,10 @@ export class Datagrid extends EventEmitter {
             else if (!editorOptions.container)
                 editorOptions.container = this.$body;
             editor.type = type;
-            var values;
-            var vl;
-            var dataIdx = +editor.el.dataset.dataIndex;
-            var parent = +editor.el.dataset.parent;
-            var child = +editor.el.dataset.child;
-            var data;
+            const dataIdx = +editor.el.dataset.dataIndex;
+            const parent = +editor.el.dataset.parent;
+            const child = +editor.el.dataset.child;
+            let data;
             if (dataIdx >= 0 && dataIdx < this.$rows.length) {
                 if (parent === -1)
                     data = this.$rows[dataIdx];
@@ -1557,7 +1575,7 @@ export class Datagrid extends EventEmitter {
                     break;
                 case EditorType.dropdown:
                     editor.editor = new DropdownEditValueEditor(this, cell, prop, editorOptions);
-                    break
+                    break;
                 case EditorType.select:
                     break;
                 case EditorType.custom:

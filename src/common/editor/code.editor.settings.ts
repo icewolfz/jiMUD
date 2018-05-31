@@ -22,8 +22,8 @@ export class EditorSettings {
     public modelOptions = {
         tabSize: 3,
         insertSpaces: true,
-        trimAutoWhitespace: true,
-    }
+        trimAutoWhitespace: true
+    };
 
     public editorOptions = {
         acceptSuggestionOnEnter: 'on',
@@ -37,7 +37,7 @@ export class EditorSettings {
         },
         folding: true,
         fontSize: 14,
-        fontFamily: "Consolas, 'Courier New', monospace",
+        fontFamily: 'Consolas, \'Courier New\', monospace',
         fontWeight: 'normal',
         lineNumbers: 'on',
         links: true,
@@ -64,10 +64,10 @@ export class EditorSettings {
         showColors: false,
         showTerrain: false,
         rawFontSize: 16,
-        rawFontFamily: "Consolas, 'Courier New', monospace",
+        rawFontFamily: 'Consolas, \'Courier New\', monospace',
         rawFontWeight: 'normal',
         previewFontSize: 15,
-        previewFontFamily: "Consolas, 'Courier New', monospace",
+        previewFontFamily: 'Consolas, \'Courier New\', monospace',
         editorWidth: 200,
         previewHeight: 200,
         live: true,

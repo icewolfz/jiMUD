@@ -33,7 +33,7 @@ export abstract class EditorBase extends EventEmitter {
         return this.$file;
     }
     set file(value: string) {
-        if (this.$file != value) {
+        if (this.$file !== value) {
             if (this.$file && this.$file.length > 0 && !this.new)
                 this.emit('watch-stop', [this.$file]);
             this.$file = value;
@@ -52,7 +52,7 @@ export abstract class EditorBase extends EventEmitter {
         return this.$remote;
     }
     set remote(value: string) {
-        if (this.$remote != value) {
+        if (this.$remote !== value) {
             this.$remote = value;
         }
     }
@@ -100,7 +100,7 @@ export abstract class EditorBase extends EventEmitter {
 
     get parent(): HTMLElement { return this.$parent; }
 
-    abstract createControl();
+    public abstract createControl();
 
     public read(file?: string): string {
         if (!file || file.length === 0)
@@ -119,24 +119,24 @@ export abstract class EditorBase extends EventEmitter {
         fs.writeFileSync(file, data);
     }
 
-    abstract revert(): void;
+    public abstract revert(): void;
 
-    abstract open(): void;
+    public abstract open(): void;
 
-    abstract save(): void;
-    abstract canSaveAs(): boolean;
+    public abstract save(): void;
+    public abstract canSaveAs(): boolean;
 
-    abstract close(); void;
-    abstract watch(action: string, file: string, details?): void;
+    public abstract close(): void;
+    public abstract watch(action: string, file: string, details?): void;
 
     abstract get selected(): string;
-    abstract focus(): void;
-    abstract resize(): void;
-    abstract supports(what): boolean;
+    public abstract focus(): void;
+    public abstract resize(): void;
+    public abstract supports(what): boolean;
 
     abstract set spellcheck(value: boolean);
 
-    abstract deleted(keep): void;
+    public abstract deleted(keep): void;
 
     set changed(value: boolean) {
         if (value)
@@ -162,7 +162,7 @@ export abstract class EditorBase extends EventEmitter {
     abstract set options(value);
     abstract get options();
     abstract get type();
-    abstract insert(text);
+    public abstract insert(text);
     abstract get location();
     abstract get length();
 }
@@ -175,10 +175,11 @@ export class DebugTimer {
     }
     public end(lbl) {
         if (this.$s.length === 0) return;
-        var e = new Date().getTime();
-        var t = e - this.$s.pop();
+        const e = new Date().getTime();
+        const t = e - this.$s.pop();
         if (!lbl)
             lbl = 'Execution time';
+        // tslint:disable-next-line:no-console
         console.log(lbl + ': ' + t);
     }
 }

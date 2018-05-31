@@ -1,6 +1,6 @@
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import { EditorBase, EditorOptions, FileState } from './editor.base';
-import { conf, language, loadCompletion, lpcIndenter, lpcFormatter } from './lpc';
+import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
 import { existsSync, formatSize, capitalize, inverse } from './../library';
 const { clipboard, ipcRenderer } = require('electron');
 const fs = require('fs-extra');
@@ -12,7 +12,7 @@ interface loadMonacoOptions {
 
 declare global {
     interface Window {
-        $editor: monaco.editor.IStandaloneCodeEditor
+        $editor: monaco.editor.IStandaloneCodeEditor;
     }
 }
 
@@ -77,11 +77,11 @@ export function SetupEditor() {
             });
             monaco.languages.registerDocumentFormattingEditProvider('lpc', {
                 provideDocumentFormattingEdits(model, options, token): Promise<monaco.languages.TextEdit[]> {
-                    var $indenter = new lpcIndenter();
+                    var $indenter = new LPCIndenter();
                     $indenter.on('error', (e) => {
                         reject(e);
                     });
-                    var $formatter = new lpcFormatter();
+                    var $formatter = new LPCFormatter();
                     var code = $formatter.format(model.getValue());
                     return new Promise<monaco.languages.TextEdit[]>((resolve, reject) => {
                         $indenter.on('complete', (lines) => {
@@ -244,7 +244,7 @@ export class MonacoCodeEditor extends EditorBase {
     public canSaveAs() { return true; }
 
     public deleted(keep) {
-        if(keep)
+        if (keep)
             this.changed = keep;
     }
 
@@ -327,7 +327,7 @@ export class MonacoCodeEditor extends EditorBase {
             case 'copy':
             case 'delete':
             case 'pasteadvanced':
-            case 'pasted-advanced':            
+            case 'pasted-advanced':
                 return this.selected.length > 0;
             case 'undo':
             case 'redo':

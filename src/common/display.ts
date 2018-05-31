@@ -305,7 +305,7 @@ export class Display extends EventEmitter {
             throw new Error('Display must be an id, element or jquery object');
 
         this._elJ = $(this._el);
-        let fragment = document.createDocumentFragment();
+        const fragment = document.createDocumentFragment();
         this._background = document.createElement('div');
         this._background.id = this._el.id + '-background';
         fragment.appendChild(this._background);

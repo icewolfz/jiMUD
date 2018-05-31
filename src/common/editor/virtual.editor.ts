@@ -60,7 +60,7 @@ enum RoomStates {
     None = 0
 }
 
-var RoomExits = {
+const RoomExits = {
     out: 4096,
     enter: 2048,
     unknown: 1024,
@@ -75,14 +75,14 @@ var RoomExits = {
     west: 2,
     northwest: 1,
     none: 0
-}
+};
 
 export class Room {
     public exits = 0;
     public x = 0;
     public y = 0;
     public z = 0;
-    public terrain = 0
+    public terrain = 0;
     public item = 0;
     public ee = 0;
     public state = 0;
@@ -107,7 +107,7 @@ export class Room {
     }
 
     public clone() {
-        var r = new Room(this.x, this.y, this.z, this.exits, this.terrain, this.item, this.state);
+        const r = new Room(this.x, this.y, this.z, this.exits, this.terrain, this.item, this.state);
         r.climbs = this.climbs;
         r.ef = this.ef;
         r.ee = this.ee;
@@ -140,11 +140,11 @@ export class Room {
     }
 
     public at(x, y, z?) {
-        if (this.x != x) return false;
-        if (this.y != y) return false;
+        if (this.x !== x) return false;
+        if (this.y !== y) return false;
         if (z === undefined)
             return true;
-        if (this.z != z) return false;
+        if (this.z !== z) return false;
         return true;
     }
 }
@@ -170,7 +170,7 @@ interface MousePosition {
     button: number;
 }
 
-var Timer = new DebugTimer();
+const Timer = new DebugTimer();
 
 export class VirtualEditor extends EditorBase {
     private $files;
@@ -217,21 +217,21 @@ export class VirtualEditor extends EditorBase {
         rx: 0,
         ry: 0,
         button: 0
-    }
+    };
     private $mouse: MousePosition = {
         x: 0,
         y: 0,
         rx: 0,
         ry: 0,
         button: 0
-    }
+    };
     private $mouseDown: MousePosition = {
         x: 0,
         y: 0,
         rx: 0,
         ry: 0,
         button: 0
-    }
+    };
     private $mapDown = false;
     private $colorCache;
     private $measure;
@@ -255,7 +255,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     public set ShowTerrain(value) {
-        if (value == this.$showTerrain) return;
+        if (value === this.$showTerrain) return;
         this.$showTerrain = value;
         this.emit('menu-update', 'view|show terrain', { checked: value });
         if (document.getElementById('btn-terrain')) {
@@ -273,7 +273,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     public set ShowColors(value) {
-        if (value == this.$showColors) return;
+        if (value === this.$showColors) return;
         this.$showColors = value;
         this.emit('menu-update', 'view|show colors', { checked: value });
         if (document.getElementById('btn-colors')) {
@@ -304,10 +304,10 @@ export class VirtualEditor extends EditorBase {
                 showColors: false,
                 showTerrain: false,
                 rawFontSize: 16,
-                rawFontFamily: "Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace",
+                rawFontFamily: 'Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace',
                 rawFontWeight: 'normal',
                 previewFontSize: 16,
-                previewFontFamily: "Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace",
+                previewFontFamily: 'Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace',
                 editorWidth: 200,
                 previewHeight: 200,
                 live: true,
@@ -355,7 +355,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     set changed(value: boolean) {
-        if (value != super.changed) {
+        if (value !== super.changed) {
             super.changed = value;
             this.emit('changed', value);
         }
@@ -414,7 +414,7 @@ export class VirtualEditor extends EditorBase {
                 window.$roomImgLoaded = true;
             });
         }
-        let frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
         let el: HTMLElement;
         //#region Create raw editors
         this.$label = document.createElement('div');
@@ -468,42 +468,42 @@ export class VirtualEditor extends EditorBase {
                 type: EditorType.dropdown,
                 options: {
                     data: [
-                        "water",
-                        "underwater",
-                        "tundra",
-                        "swamp",
-                        "stone",
-                        "savannah",
-                        "sanddesert",
-                        "sand",
-                        "rocky",
-                        "rockdesert",
-                        "river",
-                        "prairie",
-                        "plains",
-                        "pavedroad",
-                        "ocean",
-                        "mountain",
-                        "lake",
-                        "jungle",
-                        "icesheet",
-                        "hills",
-                        "highmountain",
-                        "grassland",
-                        "grass",
-                        "forest",
-                        "farmland",
-                        "dirtroad",
-                        "dirt",
-                        "desert",
-                        "cobble",
-                        "cliff",
-                        "city",
-                        "bog",
-                        "beach"
+                        'water',
+                        'underwater',
+                        'tundra',
+                        'swamp',
+                        'stone',
+                        'savannah',
+                        'sanddesert',
+                        'sand',
+                        'rocky',
+                        'rockdesert',
+                        'river',
+                        'prairie',
+                        'plains',
+                        'pavedroad',
+                        'ocean',
+                        'mountain',
+                        'lake',
+                        'jungle',
+                        'icesheet',
+                        'hills',
+                        'highmountain',
+                        'grassland',
+                        'grass',
+                        'forest',
+                        'farmland',
+                        'dirtroad',
+                        'dirt',
+                        'desert',
+                        'cobble',
+                        'cliff',
+                        'city',
+                        'bog',
+                        'beach'
                     ]
                 }
-            },
+            }
         },
         {
             label: 'Long',
@@ -557,7 +557,6 @@ export class VirtualEditor extends EditorBase {
                     defaultId: 1
                 })
                 == 0) {
-                
             }
             */
 
@@ -589,8 +588,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$terrainGrid.on('value-changed', (e) => {
-        });
+        this.$terrainGrid.on('value-changed', (e) => { /**/ });
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
         el.style.display = 'none';
@@ -600,7 +598,7 @@ export class VirtualEditor extends EditorBase {
         this.$itemGrid.on('row-dblclick', (e, data) => {
             if (!data || data.parent === -1)
                 e.preventDefault();
-        })
+        });
         this.$itemGrid.addColumns([{
             label: 'Index',
             field: 'idx',
@@ -668,7 +666,6 @@ export class VirtualEditor extends EditorBase {
                     defaultId: 1
                 })
                 == 0) {
-                
             }
             */
         });
@@ -700,7 +697,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$itemGrid.on('value-changed', (e) => {
+        this.$itemGrid.on('value-changed', (e) => { /**/
         });
         this.$itemGrid.sort(0);
         el = document.createElement('div');
@@ -734,25 +731,25 @@ export class VirtualEditor extends EditorBase {
                     type: EditorType.dropdown,
                     options: {
                         data: [
-                            "surface",
-                            "dive",
-                            "swim",
-                            "portal",
-                            "down",
-                            "up",
-                            "enter",
-                            "out",
-                            "northwest",
-                            "west",
-                            "southwest",
-                            "south",
-                            "southeast",
-                            "east",
-                            "northeast",
-                            "north"
+                            'surface',
+                            'dive',
+                            'swim',
+                            'portal',
+                            'down',
+                            'up',
+                            'enter',
+                            'out',
+                            'northwest',
+                            'west',
+                            'southwest',
+                            'south',
+                            'southeast',
+                            'east',
+                            'northeast',
+                            'north'
                         ]
                     }
-                },
+                }
             },
             {
                 label: 'Destination',
@@ -767,17 +764,17 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$exitGrid.on('cut', (e) => {
-            var d = e.data.sort((a, b) => {
+            const d = e.data.sort((a, b) => {
                 if (a > b) return 1;
                 if (a < b) return -1;
                 return 0;
             });
-            var dl = d.length;
-            var r;
+            let dl = d.length;
+            let r;
             //store mouse coords for performance
-            var mx = this.$mouse.rx;
-            var my = this.$mouse.ry;
-            var sr = false;
+            const mx = this.$mouse.rx;
+            const my = this.$mouse.ry;
+            let sr = false;
             while (dl--) {
                 this.removeRaw(this.$externalRaw, d[dl], 1);
                 if (!this.$exits[d[dl]].enabled) continue;
@@ -794,7 +791,7 @@ export class VirtualEditor extends EditorBase {
             resetCursor(this.$externalRaw);
         });
         this.$exitGrid.on('paste', (e) => {
-            var nExternal;
+            let nExternal;
             if (this.$mapSize.depth > 1)
                 nExternal = e.data.map(d => (d.data.enabled ? '' : '#') + d.data.x + ',' + d.data.y + ',' + d.data.z + ':' + d.data.exit + ':' + d.data.dest);
             else
@@ -802,15 +799,16 @@ export class VirtualEditor extends EditorBase {
             this.updateRaw(this.$externalRaw, this.$exits.length, nExternal);
             resetCursor(this.$externalRaw);
             //store mouse coords for performance
-            var mx = this.$mouse.rx;
-            var my = this.$mouse.ry;
+            const mx = this.$mouse.rx;
+            const my = this.$mouse.ry;
             //Remove old exits
-            var r;
-            var ex = 0, el = e.data.length;
-            var sr = false;
-            for (; ex < el; ex++) {
+            let r;
+            let ex = 0;
+            const elen = e.data.length;
+            let sr = false;
+            for (; ex < elen; ex++) {
                 //Add new exits
-                var exit = e.data[ex].data;
+                const exit = e.data[ex].data;
                 if (!exit.enabled) continue;
                 r = this.getRoom(exit.x, exit.y, exit.z);
                 r.ee |= RoomExits[exit.exit];
@@ -836,17 +834,17 @@ export class VirtualEditor extends EditorBase {
                 === 1)
                 e.preventDefault = true;
             else {
-                var d = e.data.sort((a, b) => {
+                const d = e.data.sort((a, b) => {
                     if (a > b) return 1;
                     if (a < b) return -1;
                     return 0;
                 });
-                var dl = d.length;
-                var r;
-                var sr = false;
+                let dl = d.length;
+                let r;
+                let sr = false;
                 //store mouse coords for performance
-                var mx = this.$mouse.rx;
-                var my = this.$mouse.ry;
+                const mx = this.$mouse.rx;
+                const my = this.$mouse.ry;
                 while (dl--) {
                     this.removeRaw(this.$externalRaw, d[dl], 1);
                     if (!this.$exits[d[dl]].enabled) continue;
@@ -887,10 +885,10 @@ export class VirtualEditor extends EditorBase {
                 this.updateRaw(this.$externalRaw, dataIndex, [(newValue.enabled ? '' : '#') + newValue.x + ',' + newValue.y + ':' + newValue.exit + ':' + newValue.dest]);
             resetCursor(this.$externalRaw);
             //store mouse coords for performance
-            var mx = this.$mouse.rx;
-            var my = this.$mouse.ry;
+            const mx = this.$mouse.rx;
+            const my = this.$mouse.ry;
             //Remove old exits
-            var r;
+            let r;
             if (oldValue.enabled) {
                 r = this.getRoom(oldValue.x, oldValue.y, oldValue.z);
                 if (!r.ef) {
@@ -929,7 +927,7 @@ export class VirtualEditor extends EditorBase {
             this.emit('option-changed', 'showRoomEditor', panel !== 2);
             this.emit('menu-update', 'view|room editor', { checked: panel !== 2 });
             this.setButtonState('room editor', panel !== 2);
-        })
+        });
         this.$splitterPreview = new Splitter({ parent: this.$splitterEditor.panel1 });
         this.$splitterPreview.on('splitter-moved', (e) => {
             this.emit('preview-splitter-moved', e);
@@ -972,13 +970,13 @@ export class VirtualEditor extends EditorBase {
         this.$mapContainer.addEventListener('scroll', () => {
             this.$xAxis.style.left = (32 - this.$mapContainer.scrollLeft) + 'px';
             this.$yAxis.style.top = (32 - this.$mapContainer.scrollTop) + 'px';
-        })
+        });
         this.$mapContainer.addEventListener('click', (e) => {
             this.$map.focus();
             e.preventDefault();
             e.cancelBubble = true;
             e.stopPropagation();
-        })
+        });
         this.$xAxisHighlight = document.createElement('div');
         this.$xAxisHighlight.id = this.parent.id + '-x-axis-highlight';
         this.$xAxisHighlight.classList.add('x-axis-highlight');
@@ -996,9 +994,9 @@ export class VirtualEditor extends EditorBase {
         this.$map.addEventListener('mousemove', (e: MouseEvent) => {
             this.$mousePrevious = this.$mouse;
             this.$mouse = this.getMousePos(e);
-            var r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
-            var p = this.getRoom(this.$mousePrevious.rx, this.$mousePrevious.ry);
-            if (r != p) {
+            const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+            const p = this.getRoom(this.$mousePrevious.rx, this.$mousePrevious.ry);
+            if (r !== p) {
                 if (p) this.DrawRoom(this.$mapContext, p, true, false);
                 if (r) this.DrawRoom(this.$mapContext, r, true, true);
             }
@@ -1014,11 +1012,11 @@ export class VirtualEditor extends EditorBase {
         this.$map.addEventListener('mouseup', (e) => {
             this.$mouse = this.getMousePos(e);
             if (this.$mouse.button === 0 && this.$mouse.rx === this.$mouseDown.rx && this.$mouse.ry === this.$mouseDown.ry) {
-                var r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
-                var p = this.$selectedRoom;
+                const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+                const p = this.$selectedRoom;
                 if (r !== this.$selectedRoom)
                     this.ChangeSelection(r);
-                if (p && r != p) this.DrawRoom(this.$mapContext, p, true, false);
+                if (p && r !== p) this.DrawRoom(this.$mapContext, p, true, false);
                 if (r) this.DrawRoom(this.$mapContext, r, true, true);
             }
 
@@ -1027,7 +1025,7 @@ export class VirtualEditor extends EditorBase {
         this.$map.addEventListener('mouseenter', (e) => {
             this.$mouse = this.getMousePos(e);
             this.ClearPrevMouse();
-            var p = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+            const p = this.getRoom(this.$mouse.rx, this.$mouse.ry);
             if (p) this.DrawRoom(this.$mapContext, p, true, true);
             this.emit('location-changed', this.$mouse.rx, this.$mouse.ry);
         });
@@ -1036,7 +1034,7 @@ export class VirtualEditor extends EditorBase {
             this.$mousePrevious = this.$mouse;
             this.ClearPrevMouse();
             this.$mouse = this.getMousePos(event);
-            var p = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+            const p = this.getRoom(this.$mouse.rx, this.$mouse.ry);
             if (p) this.DrawRoom(this.$mapContext, p, true, false);
             this.$mouse.x = -1;
             this.$mouse.y = -1;
@@ -1045,11 +1043,11 @@ export class VirtualEditor extends EditorBase {
             this.emit('location-changed', -1, -1);
         });
         this.$map.addEventListener('contextmenu', (e) => {
-            var m = this.getMousePos(e);
+            const m = this.getMousePos(e);
             this.emit('map-context-menu', this.getRoom(m.rx, m.ry).clone());
         });
         this.$map.addEventListener('dblclick', (e) => {
-            let m = this.getMousePos(e);
+            const m = this.getMousePos(e);
             this.emit('room-dblclick', this.getRoom(m.rx, m.ry).clone());
             e.preventDefault();
         });
@@ -1088,14 +1086,17 @@ export class VirtualEditor extends EditorBase {
 
         this.$map.addEventListener('keydown', (e) => {
             if (!this.$focused) return;
-            var x = 0;
-            var y = 0;
-            var px = 0;
-            var py = 0;
-            var l, r, b, t, po;
-            var p = this.$selectedRoom;
-            var o = 0;
-            var or;
+            let x = 0;
+            let y = 0;
+            let l;
+            let r;
+            let b;
+            let t;
+            let po;
+            let p = this.$selectedRoom;
+            let o = 0;
+            let or;
+            let s;
             if (this.$selectedRoom)
                 or = this.$selectedRoom.clone();
             if (!this.$selectedRoom) {
@@ -1117,7 +1118,7 @@ export class VirtualEditor extends EditorBase {
                         if (this.$selectedRoom)
                             this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        var s = 32 + (y - 2) * 32;
+                        s = 32 + (y - 2) * 32;
                         if (s < this.$mapContainer.scrollTop)
                             this.$mapContainer.scrollTop = 32 + (y - 2) * 32;
                         this.$map.focus();
@@ -1149,7 +1150,7 @@ export class VirtualEditor extends EditorBase {
                         this.ChangeSelection(this.getRoom(x, y));
                         if (this.$selectedRoom) this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        var s = 32 + (x - 1) * 32;
+                        s = 32 + (x - 1) * 32;
                         if (s < this.$mapContainer.scrollLeft)
                             this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
                         this.$map.focus();
@@ -1177,8 +1178,8 @@ export class VirtualEditor extends EditorBase {
                 case 46: //delete
                     if (!this.$selectedRoom)
                         return;
-                    var nx = x;
-                    var ny = y;
+                    let nx = x;
+                    let ny = y;
                     if (e.ctrlKey) {
                         if (y > 0) {
                             this.$selectedRoom.exits |= RoomExit.North;
@@ -1369,7 +1370,7 @@ export class VirtualEditor extends EditorBase {
                         if (this.$selectedRoom.y >= b)
                             this.$mapContainer.scrollTop = this.$mapContainer.scrollTop + 32;
 
-                        var s = 32 + (x - 1) * 32;
+                        s = 32 + (x - 1) * 32;
                         if (s < this.$mapContainer.scrollLeft)
                             this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
 
@@ -1464,12 +1465,12 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        var s = 32 + (x - 1) * 32;
+                        s = 32 + (x - 1) * 32;
                         if (s < this.$mapContainer.scrollLeft)
                             this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
                         this.$map.focus();
                     }
-                    break
+                    break;
                 case 101: //num5
                     break;
                 case 102: //num6
@@ -1529,7 +1530,7 @@ export class VirtualEditor extends EditorBase {
                         r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
                         if (this.$selectedRoom.x >= r)
                             this.$mapContainer.scrollLeft = this.$mapContainer.scrollLeft + 32;
-                        var s = 32 + (x - 1) * 32;
+                        s = 32 + (x - 1) * 32;
                         if (s < this.$mapContainer.scrollLeft)
                             this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
                         this.$map.focus();
@@ -1558,7 +1559,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        var s = 32 + (y - 2) * 32;
+                        s = 32 + (y - 2) * 32;
                         if (s < this.$mapContainer.scrollTop)
                             this.$mapContainer.scrollTop = 32 + (y - 2) * 32;
                         this.$map.focus();
@@ -1600,7 +1601,7 @@ export class VirtualEditor extends EditorBase {
                     }
                     event.preventDefault();
                     break;
-                case 107: //+				
+                case 107: //+
                     if (!this.$selectedRoom)
                         return;
                     or = this.$selectedRoom.clone();
@@ -1610,7 +1611,7 @@ export class VirtualEditor extends EditorBase {
                     this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
                     this.RoomChanged(this.$selectedRoom, or);
                     break;
-                case 109: //-					
+                case 109: //-
                     if (!this.$selectedRoom)
                         return;
                     or = this.$selectedRoom.clone();
@@ -1676,8 +1677,6 @@ export class VirtualEditor extends EditorBase {
                     event.preventDefault();
                     break;
             }
-
-
         });
         this.$map.addEventListener('focus', (e) => {
             this.setFocus(true);
@@ -1692,9 +1691,9 @@ export class VirtualEditor extends EditorBase {
             if (prop === 'ef')
                 return true;
             return false;
-        }
+        };
         this.$roomEditor.on('open-file', (property) => {
-            var f;
+            let f;
             if (this.$mapSize.depth > 1)
                 f = this.$selectedRoom.x + ',' + this.$selectedRoom.y + ',' + this.$selectedRoom.z + '.c';
             else
@@ -1702,11 +1701,11 @@ export class VirtualEditor extends EditorBase {
             this.emit('open-file', path.join(path.dirname(this.file), f));
         });
         this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
-            var old = this.$selectedRoom.clone();
-            var data;
+            const old = this.$selectedRoom.clone();
+            let data;
             switch (prop) {
                 case 'external':
-                    var nExternal = this.$exits.filter(e => e.x !== old.x || e.y !== old.y || e.z !== old.z);
+                    let nExternal = this.$exits.filter(e => e.x !== old.x || e.y !== old.y || e.z !== old.z);
                     this.$selectedRoom.ee = newValue.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
                     nExternal = nExternal.concat(newValue);
                     this.$exits = nExternal;
@@ -1728,21 +1727,23 @@ export class VirtualEditor extends EditorBase {
                     this.$itemGrid.rows = this.$items;
                     this.updateRaw(this.$itemRaw, this.$selectedRoom.item * 2, [
                         newValue.map(i => i.item).join(':'),
-                        newValue.map(i => i.description).join(':'),
+                        newValue.map(i => i.description).join(':')
                     ]);
                     resetCursor(this.$itemRaw);
                     break;
                 case 'terrainType':
-                    prop = 'terrain';
                 case 'short':
                 case 'long':
                 case 'light':
                 case 'sound':
                 case 'smell':
+                    if (prop === 'terrainType')
+                        prop = 'terrain';
                     //invalide index
                     if (this.$selectedRoom.terrain < 0) return;
                     //get current data and if none set defaults and assign to the index
-                    if (!(data = this.$descriptions[this.$selectedRoom.terrain])) {
+                    data = this.$descriptions[this.$selectedRoom.terrain];
+                    if (!data) {
                         data = {
                             idx: this.$selectedRoom.terrain,
                             short: '',
@@ -1751,16 +1752,16 @@ export class VirtualEditor extends EditorBase {
                             long: '',
                             sound: '',
                             smell: ''
-                        }
+                        };
                     }
-                    data[prop] = newValue
+                    data[prop] = newValue;
                     //update the object data
                     this.$descriptions[this.$selectedRoom.terrain] = data;
                     //update the file data
                     this.updateRaw(this.$descriptionRaw, data.idx * 3, [
-                        data.short + ":" + data.light + ":" + data.terrain,
+                        data.short + ':' + data.light + ':' + data.terrain,
                         data.long,
-                        (data.smell.length > 0 ? data.smell : "0") + ":" + (data.sound.length > 0 ? data.sound : "0")
+                        (data.smell.length > 0 ? data.smell : '0') + ':' + (data.sound.length > 0 ? data.sound : '0')
                     ]);
                     resetCursor(this.$descriptionRaw);
                     break;
@@ -1790,12 +1791,12 @@ export class VirtualEditor extends EditorBase {
             {
                 property: 'x',
                 group: 'Location',
-                readonly: true,
+                readonly: true
             },
             {
                 property: 'y',
                 group: 'Location',
-                readonly: true,
+                readonly: true
             },
             {
                 property: 'z',
@@ -1814,8 +1815,8 @@ export class VirtualEditor extends EditorBase {
                 sort: 5,
                 editor: {
                     type: EditorType.custom,
-                    editor: ExternalExitValueEditor,
-                },
+                    editor: ExternalExitValueEditor
+                }
             },
             {
                 property: 'ef',
@@ -1828,14 +1829,14 @@ export class VirtualEditor extends EditorBase {
                     show: (prop, value, object) => {
                         return value;
                     }
-                },
+                }
             },
             {
                 property: 'terrain',
                 label: 'Terrain index',
                 editor: {
                     options: {
-                        min: 0,
+                        min: 0
                     }
                 },
                 sort: 0
@@ -1845,7 +1846,7 @@ export class VirtualEditor extends EditorBase {
                 label: 'Item index',
                 editor: {
                     options: {
-                        min: 0,
+                        min: 0
                     }
                 },
                 sort: 1
@@ -1885,7 +1886,7 @@ export class VirtualEditor extends EditorBase {
                 formatter: this.formatItems,
                 editor: {
                     type: EditorType.custom,
-                    editor: ItemsValueEditor,
+                    editor: ItemsValueEditor
                 },
                 sort: 2
             },
@@ -1924,39 +1925,39 @@ export class VirtualEditor extends EditorBase {
                     type: EditorType.dropdown,
                     options: {
                         data: [
-                            "beach",
-                            "dirtroad",
-                            "icesheet",
-                            "prairie",
-                            "stone",
-                            "bog",
-                            "farmland",
-                            "jungle",
-                            "river",
-                            "swamp",
-                            "city",
-                            "forest",
-                            "lake",
-                            "rockdesert",
-                            "tundra",
-                            "cliff",
-                            "grass",
-                            "mountain",
-                            "rocky",
-                            "underwater",
-                            "cobble",
-                            "grassland",
-                            "ocean",
-                            "sand",
-                            "water",
-                            "desert",
-                            "highmountain",
-                            "pavedroad",
-                            "sanddesert",
-                            "dirt",
-                            "hills",
-                            "plains",
-                            "savannah"
+                            'beach',
+                            'dirtroad',
+                            'icesheet',
+                            'prairie',
+                            'stone',
+                            'bog',
+                            'farmland',
+                            'jungle',
+                            'river',
+                            'swamp',
+                            'city',
+                            'forest',
+                            'lake',
+                            'rockdesert',
+                            'tundra',
+                            'cliff',
+                            'grass',
+                            'mountain',
+                            'rocky',
+                            'underwater',
+                            'cobble',
+                            'grassland',
+                            'ocean',
+                            'sand',
+                            'water',
+                            'desert',
+                            'highmountain',
+                            'pavedroad',
+                            'sanddesert',
+                            'dirt',
+                            'hills',
+                            'plains',
+                            'savannah'
                         ],
                         container: document.body
                     }
@@ -1984,7 +1985,7 @@ export class VirtualEditor extends EditorBase {
                         container: document.body
                     }
                 }
-            },
+            }
         ]);
 
         //#endregion
@@ -1998,10 +1999,9 @@ export class VirtualEditor extends EditorBase {
     private formatState(prop, value) {
         if (value === 0)
             return 'None';
-        var state;
-        var states = Object.keys(RoomStates).filter(key => !isNaN(Number(RoomStates[key])));
-        var f = [];
-        state = states.length;
+        const states = Object.keys(RoomStates).filter(key => !isNaN(Number(RoomStates[key])));
+        const f = [];
+        let state = states.length;
         while (state--) {
             if (states[state] === 'None') continue;
             if ((value & RoomStates[states[state]]) === RoomStates[states[state]])
@@ -2013,10 +2013,9 @@ export class VirtualEditor extends EditorBase {
     private formatExits(prop, value) {
         if (value === 0)
             return 'None';
-        var state;
-        var states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomExit[key])));
-        var f = [];
-        state = states.length;
+        const states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomExit[key])));
+        const f = [];
+        let state = states.length;
         while (state--) {
             if (states[state] === 'None') continue;
             if ((value & RoomExit[states[state]]) === RoomExit[states[state]])
@@ -2028,10 +2027,9 @@ export class VirtualEditor extends EditorBase {
     private formatExternal(prop, value, data) {
         if (data.ee === 0)
             return 'None';
-        var state;
-        var states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomExit[key])));
-        var f = [];
-        state = states.length;
+        const states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomExit[key])));
+        const f = [];
+        let state = states.length;
         while (state--) {
             if (states[state] === 'None') continue;
             if ((data.ee & RoomExit[states[state]]) === RoomExit[states[state]])
@@ -2048,13 +2046,12 @@ export class VirtualEditor extends EditorBase {
     }
 
     private createRawControl(view) {
-        var el = document.createElement('textarea');
-        el = document.createElement('textarea');
+        const el = document.createElement('textarea');
         el.classList.add('raw');
         el.addEventListener('select', (e) => {
             if (this.$view === view)
                 this.emit('selection-changed');
-        })
+        });
         el.addEventListener('change', (e) => {
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
@@ -2093,14 +2090,14 @@ export class VirtualEditor extends EditorBase {
     }
 
     private openRaw(file, raw, noRebuild?) {
-        var base = path.basename(file);
+        const base = path.basename(file);
         this.$files[base] = existsSync(file);
         if (this.$files[base])
             raw.value = this.read(file);
         else
             raw.value = this.$startValues[base] || '';
         raw.dataset.changed = null;
-        this.changed = this.$mapRaw.dataset.changed == 'true' ||
+        this.changed = this.$mapRaw.dataset.changed === 'true' ||
             this.$terrainRaw.dataset.changed === 'true' ||
             this.$terrainRaw.dataset.changed === 'true' ||
             this.$stateRaw.dataset.changed === 'true' ||
@@ -2114,7 +2111,7 @@ export class VirtualEditor extends EditorBase {
     public open(file?) {
         if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
             return;
-        let root = path.dirname(this.file);
+        const root = path.dirname(this.file);
         if (file) {
             switch (path.basename(file)) {
                 case 'virtual.terrain':
@@ -2183,7 +2180,7 @@ export class VirtualEditor extends EditorBase {
     public save() {
         this.$saving[this.filename] = true;
         this.write(this.$mapRaw.value);
-        let root = path.dirname(this.file);
+        const root = path.dirname(this.file);
 
         if (this.$files['virtual.terrain'] && this.$terrainRaw.dataset.changed === 'true') {
             this.$saving['virtual.terrain'] = true;
@@ -2212,9 +2209,8 @@ export class VirtualEditor extends EditorBase {
     }
 
     public canSaveAs() {
-        var choice;
-        var files = Object.keys(this.$files).sort().reverse();
-        var fl = files.length;
+        const files = Object.keys(this.$files).sort().reverse();
+        let fl = files.length;
         while (fl--) {
             if (this.confirmRaw(files[fl]) === 1)
                 return false;
@@ -2283,8 +2279,8 @@ export class VirtualEditor extends EditorBase {
 
     private deleteRawSelected(raw, nochanged?) {
         if (!raw) return;
-        var start = raw.selectionStart;
-        var end = raw.selectionEnd;
+        const start = raw.selectionStart;
+        const end = raw.selectionEnd;
         //nothing selected
         if (start === end) return;
         raw.value = raw.value.substring(0, start) + raw.value.substring(end);
@@ -2355,7 +2351,7 @@ export class VirtualEditor extends EditorBase {
                 this.$externalRaw.select();
                 break;
         }
-    };
+    }
 
     public cut() {
         switch (this.$view) {
@@ -2494,11 +2490,11 @@ export class VirtualEditor extends EditorBase {
         }
     }
     public close() {
-        let root = path.dirname(this.file);
+        const root = path.dirname(this.file);
         this.emit('watch-stop', [root]);
     }
     public deleted(keep, file?) {
-        var base = path.basename(file);
+        const base = path.basename(file);
         if (file === this.file) {
             if (!keep) return;
             this.$mapRaw.dataset.changed = 'true';
@@ -2529,7 +2525,7 @@ export class VirtualEditor extends EditorBase {
     public watch(action: string, file: string, details?) {
         if (this.new)
             return;
-        var base = path.basename(file);
+        const base = path.basename(file);
         if (file === this.file || this.$files[base]) {
             switch (action) {
                 case 'add':
@@ -2543,8 +2539,8 @@ export class VirtualEditor extends EditorBase {
             }
         }
         if ((/^\d+,\d+(,\d+)?\.c$/).test(base)) {
-            var c = base.substring(0, base.length - 2).split(',');
-            var r;
+            const c = base.substring(0, base.length - 2).split(',');
+            let r;
             if (c.length === 3)
                 r = this.getRoom(c[0], c[1], c[2]);
             else
@@ -2560,13 +2556,13 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
-    public set spellcheck(value: boolean) { };
-    public find() { }
-    public replace() { }
+    public set spellcheck(value: boolean) { /**/ }
+    public find() { /**/ }
+    public replace() { /**/ }
     public supports(what) {
         switch (what) {
             case 'refresh':
-                return this.$view == View.map || this.$view == View.terrains || this.$view == View.items || this.$view == View.exits;
+                return this.$view === View.map || this.$view === View.terrains || this.$view === View.items || this.$view === View.exits;
             case 'buttons':
             case 'menu|view':
                 return true;
@@ -2617,19 +2613,18 @@ export class VirtualEditor extends EditorBase {
                 return false;
             case 'selectall':
             case 'select-all':
-                return this.$view == View.exits || this.$view == View.items || this.$view == View.terrains || this.$view == View.mapRaw || this.$view == View.terrainsRaw || this.$view == View.descriptionsRaw || this.$view == View.itemsRaw || this.$view == View.stateRaw || this.$view == View.exitsRaw;
+                return this.$view === View.exits || this.$view === View.items || this.$view === View.terrains || this.$view === View.mapRaw || this.$view === View.terrainsRaw || this.$view === View.descriptionsRaw || this.$view === View.itemsRaw || this.$view === View.stateRaw || this.$view === View.exitsRaw;
             case 'undo':
             case 'redo':
-                return this.$view == View.mapRaw || this.$view == View.terrainsRaw || this.$view == View.descriptionsRaw || this.$view == View.itemsRaw || this.$view == View.stateRaw || this.$view == View.exitsRaw;
+                return this.$view === View.mapRaw || this.$view === View.terrainsRaw || this.$view === View.descriptionsRaw || this.$view === View.itemsRaw || this.$view === View.stateRaw || this.$view === View.exitsRaw;
 
         }
         return false;
     }
     public get buttons() {
-        var frag = document.createDocumentFragment();
-        var group;
+        const frag = document.createDocumentFragment();
+        let group;
         let el;
-        let icon;
         group = document.createElement('div');
         group.classList.add('btn-group');
         group.setAttribute('role', 'group');
@@ -2662,10 +2657,10 @@ export class VirtualEditor extends EditorBase {
         el.id = 'btn-raw';
         el.type = 'button';
         el.classList.add('btn', 'btn-default', 'btn-xs', 'btn-caret');
-        el.title = 'Show raw'
+        el.title = 'Show raw';
         el.innerHTML = '<span class="caret"></span>';
         el.onclick = (e) => {
-            var button = $(e.currentTarget);
+            const button = $(e.currentTarget);
             button.addClass('open');
             const pos = button.offset();
             const x = Math.floor(pos.left);
@@ -2735,7 +2730,7 @@ export class VirtualEditor extends EditorBase {
                 checked: this.$view === View.exitsRaw
             }));
             addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
-        }
+        };
         group.appendChild(el);
         frag.appendChild(group);
         group = document.createElement('div');
@@ -2760,7 +2755,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     private createButton(id, icon, fun, active) {
-        let el = document.createElement('button');
+        const el = document.createElement('button');
         el.id = 'btn-' + id.replace(/\s+/g, '-');
         el.type = 'button';
         el.classList.add('btn', 'btn-default', 'btn-xs');
@@ -2773,7 +2768,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     private setButtonState(id, state) {
-        var button = document.getElementById('btn-' + id.replace(/\s+/g, '-'));
+        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-'));
         if (!button) return;
         if (state)
             button.classList.add('active');
@@ -2782,7 +2777,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     private setButtonDisabled(id, state) {
-        var button = document.getElementById('btn-' + id.replace(/\s+/g, '-'));
+        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-'));
         if (!button) return;
         if (state)
             button.setAttribute('disabled', 'true');
@@ -2791,8 +2786,8 @@ export class VirtualEditor extends EditorBase {
     }
 
     public menu(menu) {
-        var m;
-        if (menu == 'view') {
+        let m;
+        if (menu === 'view') {
             m = [
                 {
                     label: 'Map',
@@ -2837,7 +2832,7 @@ export class VirtualEditor extends EditorBase {
                     click: () => {
                         this.switchView(View.mapRaw);
                     }
-                },
+                }
             ];
             if (this.$files['virtual.terrain'])
                 m.push({
@@ -2958,7 +2953,7 @@ export class VirtualEditor extends EditorBase {
                 break;
         }
     }
-    public resize() { }
+    public resize() { /**/ }
     public set options(value: any) {
         if (!value) return;
         this.ShowColors = value.showColors;
@@ -3008,26 +3003,23 @@ export class VirtualEditor extends EditorBase {
             showTerrain: this.$showTerrain,
             live: this.$splitterEditor.live,
             showRoomEditor: !this.$splitterEditor.panel2Collapsed,
-            showRoomPreview: !this.$splitterPreview.panel2Collapsed,
-        }
+            showRoomPreview: !this.$splitterPreview.panel2Collapsed
+        };
     }
     public get type() {
         return 2;
     }
-    public insert(text) { }
+    public insert(text) { /**/ }
     public get location() { return [-1, -1]; }
     public get length() { return 0; }
 
-    public activate() {
-
-    }
-    public deactivate() {
-
-    }
+    public activate() { /**/ }
+    public deactivate() { /**/ }
 
     public switchView(view: View, force?) {
         if (!force && this.$view === view) return;
-        var bGroup, button;
+        let bGroup;
+        let button;
         this.$label.style.display = '';
         switch (this.$view) {
             case View.map:
@@ -3300,28 +3292,28 @@ export class VirtualEditor extends EditorBase {
                 this.$externalRaw.style.display = 'block';
                 break;
         }
-        this.emit('menu-update', 'view|map', { checked: view == View.map });
-        this.emit('menu-update', 'view|Terrains', { checked: view == View.terrains });
-        this.emit('menu-update', 'view|Items', { checked: view == View.items });
-        this.emit('menu-update', 'view|External exits', { checked: view == View.exits });
-        this.emit('menu-update', 'view|Map raw', { checked: view == View.mapRaw });
-        this.emit('menu-update', 'view|Terrain raw', { checked: view == View.terrainsRaw });
-        this.emit('menu-update', 'view|Description raw', { checked: view == View.descriptionsRaw });
-        this.emit('menu-update', 'view|Items raw', { checked: view == View.itemsRaw });
-        this.emit('menu-update', 'view|State raw', { checked: view == View.stateRaw });
-        this.emit('menu-update', 'view|External exits raw', { checked: view == View.exitsRaw });
-        this.emit('menu-update', 'view|room editor', { enabled: view == View.map });
-        this.emit('menu-update', 'view|room preview', { enabled: view == View.map });
-        this.emit('menu-update', 'view|show terrain', { enabled: view == View.map });
-        this.emit('menu-update', 'view|show colors', { enabled: view == View.map });
-        this.setButtonDisabled('room editor', view != View.map);
-        this.setButtonDisabled('room preview', view != View.map);
-        this.setButtonDisabled('terrain', view != View.map);
-        this.setButtonDisabled('colors', view != View.map);
-        this.setButtonState('map', view == View.map);
-        this.setButtonState('terrains', view == View.terrains);
-        this.setButtonState('items', view == View.items);
-        this.setButtonState('external exits', view == View.exits);
+        this.emit('menu-update', 'view|map', { checked: view === View.map });
+        this.emit('menu-update', 'view|Terrains', { checked: view === View.terrains });
+        this.emit('menu-update', 'view|Items', { checked: view === View.items });
+        this.emit('menu-update', 'view|External exits', { checked: view === View.exits });
+        this.emit('menu-update', 'view|Map raw', { checked: view === View.mapRaw });
+        this.emit('menu-update', 'view|Terrain raw', { checked: view === View.terrainsRaw });
+        this.emit('menu-update', 'view|Description raw', { checked: view === View.descriptionsRaw });
+        this.emit('menu-update', 'view|Items raw', { checked: view === View.itemsRaw });
+        this.emit('menu-update', 'view|State raw', { checked: view === View.stateRaw });
+        this.emit('menu-update', 'view|External exits raw', { checked: view === View.exitsRaw });
+        this.emit('menu-update', 'view|room editor', { enabled: view === View.map });
+        this.emit('menu-update', 'view|room preview', { enabled: view === View.map });
+        this.emit('menu-update', 'view|show terrain', { enabled: view === View.map });
+        this.emit('menu-update', 'view|show colors', { enabled: view === View.map });
+        this.setButtonDisabled('room editor', view !== View.map);
+        this.setButtonDisabled('room preview', view !== View.map);
+        this.setButtonDisabled('terrain', view !== View.map);
+        this.setButtonDisabled('colors', view !== View.map);
+        this.setButtonState('map', view === View.map);
+        this.setButtonState('terrains', view === View.terrains);
+        this.setButtonState('items', view === View.items);
+        this.setButtonState('external exits', view === View.exits);
         this.emit('supports-changed');
         this.focus();
     }
@@ -3341,7 +3333,7 @@ export class VirtualEditor extends EditorBase {
         if (this.$selectedRoom)
             this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
         if (this.$mouse.rx >= 0 && this.$mouse.ry > 0) {
-            var r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+            const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
             if (r) this.DrawRoom(this.$mapContext, r, true, true);
         }
         if (this.$focused)
@@ -3355,20 +3347,18 @@ export class VirtualEditor extends EditorBase {
     }
 
     private getMousePos(evt): MousePosition {
-        evt = evt || window.event
-        var x = evt.offsetX;
-        var y = evt.offsetY;//this.$mapContainer.scrollTop;
+        evt = evt || window.event;
         return {
-            x: x,
-            y: y,
-            rx: (x / 32) >> 0,
-            ry: (y / 32) >> 0,
+            x: evt.offsetX,
+            y: evt.offsetY,
+            rx: (evt.offsetX / 32) >> 0,
+            ry: (evt.offsetY / 32) >> 0,
             button: evt.button
         };
     }
 
     private getRoom(x, y, z?): Room {
-        if (typeof (z) === "undefined")
+        if (typeof (z) === 'undefined')
             z = this.$depth || 0;
         if (x < 0 || y < 0 || !this.$rooms)
             return null;
@@ -3403,27 +3393,26 @@ export class VirtualEditor extends EditorBase {
 
     private DrawRoom(ctx, room, c, h?) {
         //var clr = "black";
-        var x = room.x * 32;
-        var y = room.y * 32;
-        var ex = room.exits | room.ee | room.climbs;
-        var exs = ex;
+        const x = room.x * 32;
+        const y = room.y * 32;
+        const ex = room.exits | room.ee | room.climbs;
+        let exs = ex;
         //if(ex === RoomExit.None) clr = "#E6E6E6";
         ctx.save();
         if (c) {
-            ctx.fillStyle = "white";
+            ctx.fillStyle = 'white';
             ctx.fillRect(x, y, 32, 32);
         }
-
 
         ///ctx.translate(0.5,0.5);
         if (this.$selectedRoom === room) {
             if (this.$focused) {
-                ctx.fillStyle = "rgba(135, 206, 250, 0.50)";
-                ctx.strokeStyle = "rgba(135, 206, 250, 0.50)";
+                ctx.fillStyle = 'rgba(135, 206, 250, 0.50)';
+                ctx.strokeStyle = 'rgba(135, 206, 250, 0.50)';
             }
             else {
-                ctx.fillStyle = "rgba(142, 142, 142, 0.50)";
-                ctx.strokeStyle = "rgba(142, 142, 142, 0.50)";
+                ctx.fillStyle = 'rgba(142, 142, 142, 0.50)';
+                ctx.strokeStyle = 'rgba(142, 142, 142, 0.50)';
             }
             ctx.fillRoundedRect(1 + x, 1 + y, 30, 30, 8);
             ctx.strokeRoundedRect(1 + x, 1 + y, 30, 30, 8);
@@ -3434,7 +3423,7 @@ export class VirtualEditor extends EditorBase {
         if ((exs & RoomExit.Out) === RoomExit.Out) exs &= ~RoomExit.Out;
         if ((exs & RoomExit.Enter) === RoomExit.Enter) exs &= ~RoomExit.Enter;
         if (exs === RoomExit.None && ex !== RoomExit.None) {
-            ctx.strokeStyle = "black";
+            ctx.strokeStyle = 'black';
             ctx.strokeRect(0.5 + x + 7, 0.5 + y + 7, 17, 17);
         }
         else
@@ -3448,7 +3437,7 @@ export class VirtualEditor extends EditorBase {
             );
 
         if (room.ee) {
-            ctx.strokeStyle = "red";
+            ctx.strokeStyle = 'red';
             ctx.beginPath();
             if ((room.ee & RoomExit.East) === RoomExit.East) {
                 ctx.moveTo(x + 23.5, y + 15.5);
@@ -3484,15 +3473,15 @@ export class VirtualEditor extends EditorBase {
             }
             ctx.closePath();
             ctx.stroke();
-            ctx.strokeStyle = "black";
+            ctx.strokeStyle = 'black';
         }
 
         if (room.ef) {
-            ctx.fillStyle = "#FFE4E1";
+            ctx.fillStyle = '#FFE4E1';
             ctx.fillRect(x + 8, y + 8, 16, 16);
-            ctx.fillStyle = "black";
-            if (ex != RoomExit.None) {
-                ctx.strokeStyle = "black";
+            ctx.fillStyle = 'black';
+            if (ex !== RoomExit.None) {
+                ctx.strokeStyle = 'black';
                 ctx.strokeRect(0.5 + x + 7, 0.5 + y + 7, 17, 17);
             }
         }
@@ -3503,12 +3492,12 @@ export class VirtualEditor extends EditorBase {
 
         if (this.$showTerrain) {
             if (exs === RoomExit.None && ex === RoomExit.None)
-                ctx.fillStyle = "rgb(234, 233, 233)";
+                ctx.fillStyle = 'rgb(234, 233, 233)';
             else if (this.$showColors)
                 ctx.fillStyle = this.ContrastColor(ctx.fillStyle);
             else
-                ctx.fillStyle = "black";
-            var m;
+                ctx.fillStyle = 'black';
+            let m;
             if (this.$measure && this.$measure[room.terrain])
                 m = this.$measure[room.terrain];
             else {
@@ -3517,7 +3506,7 @@ export class VirtualEditor extends EditorBase {
             }
             ctx.fillText(room.terrain, x + 16 - m, y + 19);
         }
-        ctx.fillStyle = "black";
+        ctx.fillStyle = 'black';
         if (ex !== RoomExit.None) {
             if ((ex & RoomExit.Up) === RoomExit.Up) {
                 if ((room.ee & RoomExit.Up) === RoomExit.Up)
@@ -3571,12 +3560,12 @@ export class VirtualEditor extends EditorBase {
         }
         if (h) {
             if (this.$focused) {
-                ctx.fillStyle = "rgba(135, 206, 250, 0.5)";
-                ctx.strokeStyle = "rgba(135, 206, 250, 0.5)";
+                ctx.fillStyle = 'rgba(135, 206, 250, 0.5)';
+                ctx.strokeStyle = 'rgba(135, 206, 250, 0.5)';
             }
             else {
-                ctx.fillStyle = "rgba(221, 221, 221, 0.75)";
-                ctx.strokeStyle = "rgba(142, 142, 142, 0.75)";
+                ctx.fillStyle = 'rgba(221, 221, 221, 0.75)';
+                ctx.strokeStyle = 'rgba(142, 142, 142, 0.75)';
             }
             ctx.fillRoundedRect(1 + x, 1 + y, 30, 30, 8);
             ctx.strokeRoundedRect(1 + x, 1 + y, 30, 30, 8);
@@ -3585,14 +3574,15 @@ export class VirtualEditor extends EditorBase {
     }
 
     private DrawMap() {
-        var x = 0,
-            y = 0,
-            z = 0,
-            r, xl, yl;
+        let x = 0;
+        let y = 0;
+        let r;
+        let xl;
+        let yl;
         if (!this.$mapContext) return;
         this.$mapContext.save();
-        this.$mapContext.fillStyle = "white";
-        this.$mapContext.fillRect(0, 0, this.$mapSize.right, this.$mapSize.bottom)
+        this.$mapContext.fillStyle = 'white';
+        this.$mapContext.fillRect(0, 0, this.$mapSize.right, this.$mapSize.bottom);
         this.$mapContext.lineWidth = 0.6;
         if (!this.$rooms) {
             this.$mapContext.restore();
@@ -3605,29 +3595,31 @@ export class VirtualEditor extends EditorBase {
         yl = this.$mapSize.height;
         xl = this.$mapSize.width;
         Timer.start();
-        this.$mapContext.strokeStyle = "black";
+        this.$mapContext.strokeStyle = 'black';
         for (y = 0; y < yl; y++) {
             r = this.$rooms[this.$depth][y];
             for (x = 0; x < xl; x++)
                 this.DrawRoom(this.$mapContext, r[x], false);
         }
-        this.$mapContext.strokeStyle = "black";
+        this.$mapContext.strokeStyle = 'black';
         Timer.end('Draw time');
         this.$mapContext.restore();
     }
 
     private GetColorFromColorScale(val, min, max, colors) {
-        if (!colors || colors.length < 2) return "white";
+        if (!colors || colors.length < 2) return 'white';
         if (max === min) return colors[0];
         if (val > max) val = max;
         if (val < min) val = min;
 
-        var cl = colors.length;
-        var nspan = (max - min) / cl;
-        var curr = min;
-        var start, end;
+        const cl = colors.length;
+        const nspan = (max - min) / cl;
+        let curr = min;
+        let start;
+        let end;
+        let c;
 
-        for (var c = 0; c < cl; c++) {
+        for (c = 0; c < cl; c++) {
             if (val >= curr && val < curr + nspan)
                 break;
             curr += nspan;
@@ -3641,8 +3633,10 @@ export class VirtualEditor extends EditorBase {
             end = new RGBColor(colors[c + 1]);
         }
 
-        var r, g, b, vp;
-        vp = (val - curr) / nspan;
+        let r;
+        let g;
+        let b;
+        const vp = (val - curr) / nspan;
         r = start.r + ((end.r - start.r) * vp);
         g = start.g + ((end.g - start.g) * vp);
         b = start.b + ((end.b - start.b) * vp);
@@ -3652,7 +3646,7 @@ export class VirtualEditor extends EditorBase {
         if (g > 255) g = 255;
         if (b < 0) b = 0;
         if (b > 255) b = 255;
-        return "rgb(" + (r >> 0) + ", " + (g >> 0) + ", " + (b >> 0) + ")";
+        return 'rgb(' + (r >> 0) + ', ' + (g >> 0) + ', ' + (b >> 0) + ')';
     }
 
     private ContrastColor(color) {
@@ -3661,25 +3655,25 @@ export class VirtualEditor extends EditorBase {
         if (!this.$colorCache)
             this.$colorCache = {};
         color = new RGBColor(color);
-        var d = 0;
+        let d = 0;
         // Counting the perceptive luminance - human eye favors green color...
-        var a = 1 - (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
+        const a = 1 - (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
         if (a < 0.5)
             d = 0; // bright colors - black font
         else
             d = 255; // dark colors - white font
 
-        return this.$colorCache[color] = "rgb(" + d + ", " + d + ", " + d + ")";
+        return this.$colorCache[color] = 'rgb(' + d + ', ' + d + ', ' + d + ')';
     }
 
     private getColor(t) {
-        if (!t || this.$maxTerrain === 0 || t < 1 || t > this.$maxTerrain) return "white";
+        if (!t || this.$maxTerrain === 0 || t < 1 || t > this.$maxTerrain) return 'white';
         //return "white";
         if (this.$colorCache && this.$colorCache[t])
             return this.$colorCache[t];
         if (!this.$colorCache)
             this.$colorCache = {};
-        return this.$colorCache[t] = this.GetColorFromColorScale(t, 1, this.$maxTerrain, ["#008000", "#FFFF00", "#FF0000", "#0000FF"]);
+        return this.$colorCache[t] = this.GetColorFromColorScale(t, 1, this.$maxTerrain, ['#008000', '#FFFF00', '#FF0000', '#0000FF']);
     }
 
     private doUpdate(type?: UpdateType) {
@@ -3711,7 +3705,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     private ClearPrevMouse() {
-        var p = this.getRoom(this.$mousePrevious.rx, this.$mousePrevious.ry);
+        const p = this.getRoom(this.$mousePrevious.rx, this.$mousePrevious.ry);
         if (p) this.DrawRoom(this.$mapContext, p, true, false);
     }
 
@@ -3719,61 +3713,62 @@ export class VirtualEditor extends EditorBase {
         if (!r.ef) return;
         let f;
         if (this.$mapSize.depth > 1)
-            f = r.x + "," + r.y + "," + r.z + ".c";
+            f = r.x + ',' + r.y + ',' + r.z + '.c';
         else
-            f = r.x + "," + r.y + ".c";
+            f = r.x + ',' + r.y + '.c';
         this.setRoom(this.parseRoomCode(r, this.read(path.join(path.dirname(this.file), f))));
     }
 
     private parseRoomCode(r, code) {
-        if (typeof (r) === "undefined")
+        if (typeof (r) === 'undefined')
             r = new Room(-1, -1, -1, 0, 0, 0);
         if (!code || code.length === 0)
             return r;
-        var idx = 0,
-            idx2;
-        var len = code.length;
-        var state = 0;
-        var start = 1;
-        var ident = "";
-        var c, i;
-        var b = 0;
-        var val = "";
-        var quote = false;
-        var block;
-        r.smell = "";
-        r.sound = "";
-        r.long = "";
+        let idx = 0;
+        let idx2;
+        const len = code.length;
+        let state = 0;
+        let start = 1;
+        let ident = '';
+        let c;
+        let i;
+        let b = 0;
+        let b2;
+        let quote = false;
+        let block;
+        r.smell = '';
+        r.sound = '';
+        r.long = '';
         r.exits = 0;
-        r.terrain = "";
+        r.terrain = '';
         r.item = -1;
         r.ee = 0;
         r.state = 0;
-        var exit;
+        let exit;
         for (; idx < len; idx++) {
-            var c = code.charAt(idx);
-            var i = code.charCodeAt(idx);
+            c = code.charAt(idx);
+            i = code.charCodeAt(idx);
             switch (state) {
                 case 1:
                     if (b === 1 && c === '}') {
                         state = 0;
                         b = 0;
-                        ident = "";
+                        ident = '';
                     }
                     else if (c === '}') {
                         b--;
-                        ident = "";
+                        ident = '';
                     }
                     else if (c === '{') {
                         b++;
-                        ident = "";
+                        ident = '';
                     }
                     else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c === '_') {
                         ident += c;
                     }
                     else if (ident.length > 0) {
                         switch (ident) {
-                            case "set_short":
+                            case 'set_short':
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
                                 if (code.charAt(idx) === '(')
@@ -3794,7 +3789,7 @@ export class VirtualEditor extends EditorBase {
                                     r.short = this.parseString(code.substring(idx, idx2).trim());
                                 idx = idx2;
                                 break;
-                            case "set_long":
+                            case 'set_long':
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
                                 if (code.charAt(idx) === '(')
@@ -3815,7 +3810,7 @@ export class VirtualEditor extends EditorBase {
                                     r.long = this.parseString(code.substring(idx, idx2).trim());
                                 idx = idx2;
                                 break;
-                            case "add_exit":
+                            case 'add_exit':
                                 idx++;
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
@@ -3829,43 +3824,43 @@ export class VirtualEditor extends EditorBase {
                                     if (!quote && c === ';')
                                         break;
                                 }
-                                exit = code.substring(idx, idx2 - 1).trim().splitQuote(",", 3, 3);
+                                exit = code.substring(idx, idx2 - 1).trim().splitQuote(',', 3, 3);
                                 if (exit.length > 0) {
                                     switch (this.parseString(exit[0])) {
-                                        case "north":
+                                        case 'north':
                                             r.exits |= RoomExit.North;
                                             break;
-                                        case "northeast":
+                                        case 'northeast':
                                             r.exits |= RoomExit.NorthEast;
                                             break;
-                                        case "east":
+                                        case 'east':
                                             r.exits |= RoomExit.East;
                                             break;
-                                        case "southeast":
+                                        case 'southeast':
                                             r.exits |= RoomExit.SouthEast;
                                             break;
-                                        case "south":
+                                        case 'south':
                                             r.exits |= RoomExit.South;
                                             break;
-                                        case "southwest":
+                                        case 'southwest':
                                             r.exits |= RoomExit.SouthWest;
                                             break;
-                                        case "west":
+                                        case 'west':
                                             r.exits |= RoomExit.West;
                                             break;
-                                        case "northwest":
+                                        case 'northwest':
                                             r.exits |= RoomExit.NorthWest;
                                             break;
-                                        case "up":
+                                        case 'up':
                                             r.exits |= RoomExit.Up;
                                             break;
-                                        case "down":
+                                        case 'down':
                                             r.exits |= RoomExit.Down;
                                             break;
-                                        case "out":
+                                        case 'out':
                                             r.exits |= RoomExit.Out;
                                             break;
-                                        case "enter":
+                                        case 'enter':
                                             r.exits |= RoomExit.Enter;
                                             break;
                                         default:
@@ -3875,7 +3870,7 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 idx = idx2;
                                 break;
-                            case "set_exits":
+                            case 'set_exits':
                                 idx++;
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
@@ -3889,44 +3884,44 @@ export class VirtualEditor extends EditorBase {
                                     if (!quote && c === ';')
                                         break;
                                 }
-                                var exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
+                                let exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
                                 for (exit in exits) {
                                     if (!exits.hasOwnProperty(exit)) continue;
                                     switch (exit) {
-                                        case "north":
+                                        case 'north':
                                             r.exits |= RoomExit.North;
                                             break;
-                                        case "northeast":
+                                        case 'northeast':
                                             r.exits |= RoomExit.NorthEast;
                                             break;
-                                        case "east":
+                                        case 'east':
                                             r.exits |= RoomExit.East;
                                             break;
-                                        case "southeast":
+                                        case 'southeast':
                                             r.exits |= RoomExit.SouthEast;
                                             break;
-                                        case "south":
+                                        case 'south':
                                             r.exits |= RoomExit.South;
                                             break;
-                                        case "southwest":
+                                        case 'southwest':
                                             r.exits |= RoomExit.SouthWest;
                                             break;
-                                        case "west":
+                                        case 'west':
                                             r.exits |= RoomExit.West;
                                             break;
-                                        case "northwest":
+                                        case 'northwest':
                                             r.exits |= RoomExit.NorthWest;
                                             break;
-                                        case "up":
+                                        case 'up':
                                             r.exits |= RoomExit.Up;
                                             break;
-                                        case "down":
+                                        case 'down':
                                             r.exits |= RoomExit.Down;
                                             break;
-                                        case "out":
+                                        case 'out':
                                             r.exits |= RoomExit.Out;
                                             break;
-                                        case "enter":
+                                        case 'enter':
                                             r.exits |= RoomExit.Enter;
                                             break;
                                         default:
@@ -3936,7 +3931,7 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 idx = idx2;
                                 break;
-                            case "add_climb":
+                            case 'add_climb':
                                 idx++;
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
@@ -3956,10 +3951,10 @@ export class VirtualEditor extends EditorBase {
                                     block = this.parseString(code.substring(idx, idx2));
                                     idx = idx2 + 1;
                                     switch (block) {
-                                        case "up":
+                                        case 'up':
                                             r.climbs |= RoomExit.Up;
                                             break;
-                                        case "down":
+                                        case 'down':
                                             r.climbs |= RoomExit.Down;
                                             break;
                                     }
@@ -3976,7 +3971,7 @@ export class VirtualEditor extends EditorBase {
                                     idx = idx2;
                                 }
                                 break;
-                            case "set_terrain":
+                            case 'set_terrain':
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
                                 if (code.charAt(idx) === '(')
@@ -3994,11 +3989,11 @@ export class VirtualEditor extends EditorBase {
                                 r.terrain = this.parseString(code.substring(idx, idx2 - 1).trim());
                                 idx = idx2;
                                 break;
-                            case "set_listen":
+                            case 'set_listen':
                                 idx++;
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
-                                var b2 = 0;
+                                b2 = 0;
                                 for (idx2 = idx; idx2 < len; idx2++) {
                                     c = code.charAt(idx2);
                                     if (c === '"') {
@@ -4020,26 +4015,27 @@ export class VirtualEditor extends EditorBase {
                                     for (idx2 = idx; idx2 < len; idx2++) {
                                         c = code.charAt(idx2);
                                         if (c === '"') {
-                                            if (idx2 > 0 && code.charAt(idx2 - 1) == '\\')
+                                            if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
                                                 continue;
                                             quote = !quote;
                                         }
                                         if (!quote && c === ';')
                                             break;
                                     }
-                                    if (block == "default")
+                                    if (block === 'default')
                                         r.sound = this.parseString(code.substring(idx, idx2 - 1).trim());
                                 }
                                 else {
                                     if (block.startsWith('"'))
                                         r.sound = this.parseString(block);
                                     else if (block.startsWith('(:'))
-                                        r.sound = "Function: " + block.slice(0, -1);
+                                        r.sound = 'Function: ' + block.slice(0, -1);
                                     else if (block.startsWith('([')) {
-                                        var sounds = this.parseMapping(block);
-                                        for (var sound in sounds) {
+                                        const sounds = this.parseMapping(block);
+                                        let sound;
+                                        for (sound in sounds) {
                                             if (!sounds.hasOwnProperty(sound)) continue;
-                                            if (sound === "default") {
+                                            if (sound === 'default') {
                                                 r.sound = sound;
                                                 break;
                                             }
@@ -4048,11 +4044,11 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 idx = idx2;
                                 break;
-                            case "set_smell":
+                            case 'set_smell':
                                 idx++;
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
-                                var b2 = 0;
+                                b2 = 0;
                                 for (idx2 = idx; idx2 < len; idx2++) {
                                     c = code.charAt(idx2);
                                     if (c === '"') {
@@ -4074,14 +4070,14 @@ export class VirtualEditor extends EditorBase {
                                     for (idx2 = idx; idx2 < len; idx2++) {
                                         c = code.charAt(idx2);
                                         if (c === '"') {
-                                            if (idx2 > 0 && code.charAt(idx2 - 1) == '\\')
+                                            if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
                                                 continue;
                                             quote = !quote;
                                         }
                                         if (!quote && c === ';')
                                             break;
                                     }
-                                    if (block == "default")
+                                    if (block === 'default')
                                         r.smell = this.parseString(code.substring(idx, idx2 - 1).trim());
                                     idx = idx2;
                                 }
@@ -4089,12 +4085,13 @@ export class VirtualEditor extends EditorBase {
                                     if (block.startsWith('"'))
                                         r.smell = this.parseString(block);
                                     else if (block.startsWith('(:'))
-                                        r.smell = "Function: " + block.slice(0, -1);
+                                        r.smell = 'Function: ' + block.slice(0, -1);
                                     else if (block.startsWith('([')) {
-                                        var smells = this.parseMapping(block);
-                                        for (var smell in smells) {
+                                        const smells = this.parseMapping(block);
+                                        let smell;
+                                        for (smell in smells) {
                                             if (!smells.hasOwnProperty(smell)) continue;
-                                            if (smell === "default") {
+                                            if (smell === 'default') {
                                                 r.smell = smell;
                                                 break;
                                             }
@@ -4103,8 +4100,8 @@ export class VirtualEditor extends EditorBase {
                                     idx = idx2;
                                 }
                                 break;
-                            case "add_items":
-                            case "set_items":
+                            case 'add_items':
+                            case 'set_items':
                                 idx++;
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
@@ -4119,13 +4116,16 @@ export class VirtualEditor extends EditorBase {
                                         break;
                                 }
                                 block = code.substring(idx, idx2 - 1).trim();
-                                var items = this.parseMapping(block);
+                                const items = this.parseMapping(block);
                                 if (!r.items) r.items = [];
-                                for (var item in items) {
+                                let item;
+                                for (item in items) {
                                     if (!items.hasOwnProperty(item)) continue;
-                                    if (item.startsWith("({") && item.endsWith("})")) {
-                                        var k = item.slice(2, -2).splitQuote(",", 3, 3);
-                                        for (var s = 0, sl = k.length; s < sl; s++)
+                                    if (item.startsWith('({') && item.endsWith('})')) {
+                                        const k = item.slice(2, -2).splitQuote(',', 3, 3);
+                                        let s;
+                                        const sl = k.length;
+                                        for (s = 0; s < sl; s++)
                                             r.item.push({
                                                 item: this.parseString(k[s].trim()),
                                                 description: this.parseString(items[item].trim())
@@ -4138,7 +4138,7 @@ export class VirtualEditor extends EditorBase {
                                         });
                                 }
                                 break;
-                            case "set_property":
+                            case 'set_property':
                                 idx++;
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
@@ -4152,7 +4152,7 @@ export class VirtualEditor extends EditorBase {
                                     if (!quote && c === ';')
                                         break;
                                 }
-                                exit = code.substring(idx, idx2 - 1).trim().splitQuote(",", 3, 3);
+                                exit = code.substring(idx, idx2 - 1).trim().splitQuote(',', 3, 3);
                                 if (this.parseString(exit[0]) === 'light')
                                     r.light = + +this.parseString(exit[1]);
                                 idx = idx2;
@@ -4171,7 +4171,7 @@ export class VirtualEditor extends EditorBase {
                                     if (!quote && c === ';')
                                         break;
                                 }
-                                var exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
+                                exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
                                 for (exit in exits) {
                                     if (!exits.hasOwnProperty(exit)) continue;
                                     if (exit === 'light') {
@@ -4182,27 +4182,27 @@ export class VirtualEditor extends EditorBase {
                                 idx = idx2;
                                 break;
                         }
-                        ident = "";
+                        ident = '';
                     }
                     else
-                        ident = "";
+                        ident = '';
                     break;
                 default:
                     switch (c) {
                         case '\n':
                             start = 1;
-                            ident = "";
+                            ident = '';
                             break;
                         default:
                             if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c === '_' || c === ' ')
                                 ident += c;
-                            else if (start && (ident === "void create" || ident === "varargs void create")) {
+                            else if (start && (ident === 'void create' || ident === 'varargs void create')) {
                                 state = 1;
-                                ident = "";
+                                ident = '';
                             }
                             else {
                                 start = 0;
-                                ident = "";
+                                ident = '';
                             }
                             break;
                     }
@@ -4215,17 +4215,17 @@ export class VirtualEditor extends EditorBase {
     private parseString(str) {
         if (!str || str.length === 0)
             return str;
-        var end = str.length;
-        if (str.startsWith("(:"))
-            return "Function: " + str;
-        if (str.startsWith("(["))
-            return "Mapping: " + str;
-        if (str.startsWith("({"))
-            return "Array: " + str;
-        var sb = [];
-        var save = true;
-        var c;
-        for (var idx = 0; idx < end; idx++) {
+        const end = str.length;
+        if (str.startsWith('(:'))
+            return 'Function: ' + str;
+        if (str.startsWith('(['))
+            return 'Mapping: ' + str;
+        if (str.startsWith('({'))
+            return 'Array: ' + str;
+        const sb = [];
+        let save = true;
+        let c;
+        for (let idx = 0; idx < end; idx++) {
             c = str.charAt(idx);
             switch (c) {
                 case '\\': //escaped;
@@ -4248,22 +4248,25 @@ export class VirtualEditor extends EditorBase {
             }
         }
 
-        return sb.join("");
+        return sb.join('');
     }
 
     private parseMapping(str) {
         if (!str || str.length === 0)
             return {};
-        if (!str.startsWith("(["))
+        if (!str.startsWith('(['))
             return {};
-        if (!str.endsWith("])"))
+        if (!str.endsWith('])'))
             return {};
 
         str = str.slice(2, -2).trim();
-        var idx = 0, pIdx = 0, end = str.length;
-        var m = {};
-        var array = 0;
-        var pair, c;
+        let idx = 0;
+        let pIdx = 0;
+        const end = str.length;
+        const m = {};
+        let array = 0;
+        let pair;
+        let c;
         for (; idx < end; idx++) {
             c = str.charAt(idx);
             switch (c) {
@@ -4305,10 +4308,12 @@ export class VirtualEditor extends EditorBase {
 
     private parseKeyPair(str) {
         if (!str || str.length === 0)
-            return ["", ""];
-        var pair = ["", ""], c;
-        var idx = 0, end = str.length - 2;
-        var array;
+            return ['', ''];
+        const pair = ['', ''];
+        let c;
+        let idx = 0;
+        const end = str.length - 2;
+        let array;
         for (; idx < end; idx++) {
             c = str.charAt(idx);
             switch (c) {
@@ -4344,90 +4349,90 @@ export class VirtualEditor extends EditorBase {
     }
 
     private RoomChanged(room, old) {
-        var c = 0,
-            s = 0;
-        var nl = "";
+        let c = 0;
+        let s = 0;
+        let nl = '';
         if (room.state === old.state && room.exits === old.exits && room.terrain === old.terrain && room.item === old.item)
             return;
         if (old.exits) this.$rcount--;
         if (room.exits) this.$rcount++;
         this.updateStatus();
-        var y = room.y + 1 + room.z * (this.$mapSize.height + 1);
-        var x = room.x;
-        var line;
-        var lines;
+        const y = room.y + 1 + room.z * (this.$mapSize.height + 1);
+        const x = room.x;
+        let line;
+        let lines;
         //dimensions + ((height + space) * depth)
-        var maxLines = 1 + (this.$mapSize.height + 1) * this.$mapSize.depth;
+        const maxLines = 1 + (this.$mapSize.height + 1) * this.$mapSize.depth;
         if (this.$files['virtual.state']) {
-            if (room.state != old.state) {
-                lines = this.$stateRaw.value.split("\n");
+            if (room.state !== old.state) {
+                lines = this.$stateRaw.value.split('\n');
                 while (lines.length < maxLines)
                     lines.push('');
                 if (y < 1 || y >= lines.length) return;
-                line = lines[y].split(" ");
+                line = lines[y].split(' ');
                 while (line.length < this.$mapSize.width)
                     lines.push('');
                 if (x < 0 || x >= line.length) return;
-                line[x] = leadingZeros(room.terrain, 3, "0");
-                lines[y] = line.join(" ");
-                this.$stateRaw.value = lines.join("\n");
+                line[x] = leadingZeros(room.terrain, 3, '0');
+                lines[y] = line.join(' ');
+                this.$stateRaw.value = lines.join('\n');
                 c++;
             }
         }
         else {
             if (room.state > 0)
-                nl = ":" + leadingZeros(room.state, 3, "0");
-            if (room.state != old.state)
+                nl = ':' + leadingZeros(room.state, 3, '0');
+            if (room.state !== old.state)
                 s = 1;
         }
 
         if (this.$files['virtual.terrain']) {
-            if (room.terrain != old.terrain || room.item != old.item || s || nl.length > 0) {
-                lines = this.$terrainRaw.value.split("\n");
+            if (room.terrain !== old.terrain || room.item !== old.item || s || nl.length > 0) {
+                lines = this.$terrainRaw.value.split('\n');
                 while (lines.length < maxLines)
                     lines.push('');
                 if (y < 1 || y >= lines.length) return;
-                line = lines[y].split(" ");
+                line = lines[y].split(' ');
                 while (line.length < this.$mapSize.width)
                     lines.push('');
                 if (x < 0 || x >= line.length) return;
-                line[x] = leadingZeros(room.terrain, 2, "0");
+                line[x] = leadingZeros(room.terrain, 2, '0');
                 if (s || nl.length > 0) {
-                    line[x] += ":" + leadingZeros(room.item, 2, "0");
+                    line[x] += ':' + leadingZeros(room.item, 2, '0');
                     line[x] += nl;
-                    nl = "";
+                    nl = '';
                     s = 0;
                 }
-                else if (room.terrain != room.item)
-                    line[x] += ":" + leadingZeros(room.item, 2, "0");
-                lines[y] = line.join(" ");
-                this.$terrainRaw.value = lines.join("\n");
+                else if (room.terrain !== room.item)
+                    line[x] += ':' + leadingZeros(room.item, 2, '0');
+                lines[y] = line.join(' ');
+                this.$terrainRaw.value = lines.join('\n');
                 c++;
             }
         }
         else {
-            if (room.terrain != old.terrain || room.item != old.item)
+            if (room.terrain !== old.terrain || room.item !== old.item)
                 c++;
-            nl = ":" + leadingZeros(room.item, 3, "0") + nl;
-            nl = ":" + leadingZeros(room.terrain, 3, "0") + nl;
+            nl = ':' + leadingZeros(room.item, 3, '0') + nl;
+            nl = ':' + leadingZeros(room.terrain, 3, '0') + nl;
         }
 
-        if (room.exits != old.exits || s || nl.length > 0) {
-            lines = this.$mapRaw.value.split("\n");
+        if (room.exits !== old.exits || s || nl.length > 0) {
+            lines = this.$mapRaw.value.split('\n');
             while (lines.length < maxLines)
                 lines.push('');
             if (y < 1 || y >= lines.length) return;
-            line = lines[y].split(" ");
+            line = lines[y].split(' ');
             while (line.length < this.$mapSize.width)
                 lines.push('');
             if (x < 0 || x >= line.length) return;
-            line[x] = leadingZeros(room.exits, 3, "0");
+            line[x] = leadingZeros(room.exits, 3, '0');
             if (s || nl.length > 0)
                 line[x] += nl;
-            if (line[x] === "000:000" || line[x] === "000:000:000" || line[x] === "000:000:000:000")
-                line[x] = "000";
-            lines[y] = line.join(" ");
-            this.$mapRaw.value = lines.join("\n");
+            if (line[x] === '000:000' || line[x] === '000:000:000' || line[x] === '000:000:000:000')
+                line[x] = '000';
+            lines[y] = line.join(' ');
+            this.$mapRaw.value = lines.join('\n');
             c++;
         }
 
@@ -4446,7 +4451,7 @@ export class VirtualEditor extends EditorBase {
             this.emit('room-selected', this.$selectedRoom);
             this.$depthToolbar.value = '' + this.$selectedRoom.z;
         }
-        var o = room.clone();
+        const o = room.clone();
         if (o.ef) {
             if (room.items)
                 o.items = room.items.slice(0);
@@ -4481,13 +4486,20 @@ export class VirtualEditor extends EditorBase {
                 o.sound = '';
                 o.smell = '';
             }
-            o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z)
+            o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z);
         }
         this.$roomEditor.object = o;
     }
 
     private UpdatePreview(room) {
-        var ex, e, item;
+        let ex;
+        let e;
+        let item;
+        let items;
+        let str;
+        let c;
+        let cl;
+        let exit;
         if (!room) {
             this.$roomPreview.short.textContent = '';
             this.$roomPreview.long.textContent = '';
@@ -4501,15 +4513,16 @@ export class VirtualEditor extends EditorBase {
                 this.$roomPreview.long.textContent = room.long;
                 str = this.$roomPreview.long.innerHTML;
                 if (room.items && room.items.length > 0) {
-                    items = room.items.slice().sort(function (a, b) { return b.item.length - a.item.length; });
-                    for (var c = 0, cl = items.length; c < cl; c++)
-                        str = str.replace(new RegExp("\\b(" + items[c].item + ")\\b", "g"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
+                    items = room.items.slice().sort((a, b) => { return b.item.length - a.item.length; });
+                    cl = items.length;
+                    for (c = 0; c < cl; c++)
+                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'g'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
                 }
                 e = room.climbs;
                 if (e !== RoomExit.None) {
                     ex = [];
-                    str += "<br>You can climb ";
-                    for (var exit in RoomExits) {
+                    str += '<br>You can climb ';
+                    for (exit in RoomExits) {
                         if (!RoomExits.hasOwnProperty(exit)) continue;
                         if (!RoomExits[exit]) continue;
                         if ((e & RoomExits[exit]) === RoomExits[exit])
@@ -4518,21 +4531,21 @@ export class VirtualEditor extends EditorBase {
                     if (ex.length === 1)
                         str += ex[0];
                     else {
-                        str += ex.slice(0, -1).join(", ");
-                        str += " or " + ex.pop();
+                        str += ex.slice(0, -1).join(', ');
+                        str += ' or ' + ex.pop();
                     }
-                    str += " from here.";
+                    str += ' from here.';
                 }
                 str += '<br><br>';
                 this.$roomPreview.long.innerHTML = str;
                 if (items && items.length > 0) {
-                    for (var c = 0, cl = items.length; c < cl; c++) {
+                    for (c = 0, cl = items.length; c < cl; c++) {
                         item = document.getElementById(this.parent.id + '-room-preview' + c);
                         if (item)
                             item.title = items[c].description;
                     }
                 }
-                if (room.smell.length > 0 && room.smell != "0" && room.sound.length > 0 && room.sound != "0") {
+                if (room.smell.length > 0 && room.smell !== '0' && room.sound.length > 0 && room.sound !== '0') {
                     this.$roomPreview.sound.style.display = 'block';
                     this.$roomPreview.smell.style.display = 'block';
                     this.$roomPreview.smell.textContent = room.smell;
@@ -4540,7 +4553,7 @@ export class VirtualEditor extends EditorBase {
                     this.$roomPreview.sound.appendChild(document.createElement('br'));
                     this.$roomPreview.sound.appendChild(document.createElement('br'));
                 }
-                else if (room.smell.length > 0 && room.smell != "0") {
+                else if (room.smell.length > 0 && room.smell !== '0') {
                     this.$roomPreview.sound.style.display = 'none';
                     this.$roomPreview.smell.style.display = 'block';
                     this.$roomPreview.smell.textContent = room.smell;
@@ -4548,7 +4561,7 @@ export class VirtualEditor extends EditorBase {
                     this.$roomPreview.smell.appendChild(document.createElement('br'));
                     this.$roomPreview.smell.appendChild(document.createElement('br'));
                 }
-                else if (room.sound.length > 0 && room.sound != "0") {
+                else if (room.sound.length > 0 && room.sound !== '0') {
                     this.$roomPreview.smell.style.display = 'none';
                     this.$roomPreview.sound.style.display = 'block';
                     this.$roomPreview.sound.textContent = room.sound;
@@ -4561,21 +4574,21 @@ export class VirtualEditor extends EditorBase {
                 }
                 e = room.exits | room.ee;
                 if (e === RoomExit.None)
-                    this.$roomPreview.exits.textContent = "There are no obvious exits.";
+                    this.$roomPreview.exits.textContent = 'There are no obvious exits.';
                 else {
-                    ex = []
-                    for (var exit in RoomExits) {
+                    ex = [];
+                    for (exit in RoomExits) {
                         if (!RoomExits.hasOwnProperty(exit)) continue;
                         if (!RoomExits[exit]) continue;
                         if ((e & RoomExits[exit]) === RoomExits[exit])
                             ex.push(exit);
                     }
                     if (ex.length === 1)
-                        this.$roomPreview.exits.textContent = "There is one obvious exit: " + ex[0];
+                        this.$roomPreview.exits.textContent = 'There is one obvious exit: ' + ex[0];
                     else {
-                        var str = "There are " + Cardinal(ex.length) + " obvious exits: ";
-                        str += ex.slice(0, -1).join(", ");
-                        str += " and " + ex.pop();
+                        str = 'There are ' + Cardinal(ex.length) + ' obvious exits: ';
+                        str += ex.slice(0, -1).join(', ');
+                        str += ' and ' + ex.pop();
                         this.$roomPreview.exits.textContent = str;
                     }
                 }
@@ -4589,7 +4602,7 @@ export class VirtualEditor extends EditorBase {
             }
         }
         else {
-            var data = this.$descriptions;
+            let data = this.$descriptions;
             if (data.length === 0 || room.terrain < 0 || room.terrain >= data.length || !data[room.terrain]) {
                 this.$roomPreview.short.textContent = '';
                 this.$roomPreview.long.textContent = 'Nothing to preview';
@@ -4599,28 +4612,28 @@ export class VirtualEditor extends EditorBase {
             }
             else {
                 data = data[room.terrain];
-                var items = this.$items;
+                items = this.$items;
                 this.$roomPreview.short.textContent = data.short;
                 this.$roomPreview.long.textContent = data.long;
                 str = this.$roomPreview.long.innerHTML;
 
                 if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children.length > 0) {
-                    items = items[room.item].children.slice().sort(function (a, b) { return b.item.length - a.item.length; });
-                    for (var c = 0, cl = items.length; c < cl; c++)
-                        str = str.replace(new RegExp("\\b(" + items[c].item + ")\\b"), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
+                    items = items[room.item].children.slice().sort((a, b) => { return b.item.length - a.item.length; });
+                    for (c = 0, cl = items.length; c < cl; c++)
+                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
                 }
                 else
                     items = null;
                 str += '<br><br>';
                 this.$roomPreview.long.innerHTML = str;
                 if (items && items.length > 0) {
-                    for (var c = 0, cl = items.length; c < cl; c++) {
+                    for (c = 0, cl = items.length; c < cl; c++) {
                         item = document.getElementById(this.parent.id + '-room-preview' + c);
                         if (item)
                             item.title = items[c].description;
                     }
                 }
-                if (data.smell.length > 0 && data.smell != "0" && data.sound.length > 0 && data.sound != "0") {
+                if (data.smell.length > 0 && data.smell !== '0' && data.sound.length > 0 && data.sound !== '0') {
                     this.$roomPreview.sound.style.display = 'block';
                     this.$roomPreview.smell.style.display = 'block';
                     this.$roomPreview.smell.textContent = data.smell;
@@ -4628,7 +4641,7 @@ export class VirtualEditor extends EditorBase {
                     this.$roomPreview.sound.appendChild(document.createElement('br'));
                     this.$roomPreview.sound.appendChild(document.createElement('br'));
                 }
-                else if (data.smell.length > 0 && data.smell != "0") {
+                else if (data.smell.length > 0 && data.smell !== '0') {
                     this.$roomPreview.sound.style.display = 'none';
                     this.$roomPreview.smell.style.display = 'block';
                     this.$roomPreview.smell.textContent = data.smell;
@@ -4636,7 +4649,7 @@ export class VirtualEditor extends EditorBase {
                     this.$roomPreview.smell.appendChild(document.createElement('br'));
                     this.$roomPreview.smell.appendChild(document.createElement('br'));
                 }
-                else if (data.sound.length > 0 && data.sound != "0") {
+                else if (data.sound.length > 0 && data.sound !== '0') {
                     this.$roomPreview.smell.style.display = 'none';
                     this.$roomPreview.sound.style.display = 'block';
                     this.$roomPreview.sound.textContent = data.sound;
@@ -4649,21 +4662,21 @@ export class VirtualEditor extends EditorBase {
                 }
                 e = room.exits | room.ee;
                 if (e === RoomExit.None)
-                    this.$roomPreview.exits.textContent = "There are no obvious exits.";
+                    this.$roomPreview.exits.textContent = 'There are no obvious exits.';
                 else {
-                    ex = []
-                    for (var exit in RoomExits) {
+                    ex = [];
+                    for (exit in RoomExits) {
                         if (!RoomExits.hasOwnProperty(exit)) continue;
                         if (!RoomExits[exit]) continue;
                         if ((e & RoomExits[exit]) === RoomExits[exit])
                             ex.push(exit);
                     }
                     if (ex.length === 1)
-                        this.$roomPreview.exits.textContent = "There is one obvious exit: " + ex[0];
+                        this.$roomPreview.exits.textContent = 'There is one obvious exit: ' + ex[0];
                     else {
-                        var str = "There are " + Cardinal(ex.length) + " obvious exits: ";
-                        str += ex.slice(0, -1).join(", ");
-                        str += " and " + ex.pop();
+                        str = 'There are ' + Cardinal(ex.length) + ' obvious exits: ';
+                        str += ex.slice(0, -1).join(', ');
+                        str += ' and ' + ex.pop();
                         this.$roomPreview.exits.textContent = str;
                     }
                 }
@@ -4672,11 +4685,11 @@ export class VirtualEditor extends EditorBase {
     }
 
     private removeRaw(raw, line, count, nochanged?) {
-        if (typeof (count) === "undefined") count = 1;
-        var lines = raw.value.split("\n");
+        if (typeof (count) === 'undefined') count = 1;
+        const lines = raw.value.split('\n');
         if (line < 0 || line >= lines.length) return;
         lines.splice(line, count);
-        raw.value = lines.join("\n");
+        raw.value = lines.join('\n');
         if (!nochanged) {
             this.changed = true;
             raw.dataset.dirty = 'true';
@@ -4685,11 +4698,13 @@ export class VirtualEditor extends EditorBase {
     }
 
     private updateRaw(raw, line, str, nochanged?) {
-        var lines = raw.value.split("\n");
+        const lines = raw.value.split('\n');
         if (line < 0) return;
-        for (var s = 0, sl = str.length; s < sl; s++)
+        let s;
+        const sl = str.length;
+        for (s = 0; s < sl; s++)
             lines[line + s] = str[s];
-        raw.value = lines.join("\n");
+        raw.value = lines.join('\n');
         if (!nochanged) {
             this.changed = true;
             raw.dataset.dirty = 'true';
@@ -4699,23 +4714,35 @@ export class VirtualEditor extends EditorBase {
 
     private BuildRooms() {
         Timer.start();
-        var yl, xl, x = 0,
-            y = 0,
-            z = 0,
-            zl, line, tline, sline;
-        var dl, r, ry, s, sl, tl, rd, rt;
-        var data = this.$mapRaw.value.split("\n");
-        var tdata = this.$terrainRaw.value.split("\n");
-        var sdata = this.$stateRaw.value.split("\n");
-        var edata = this.$externalRaw.value.split("\n");
-        var root = path.dirname(this.file);
-        var ee = {};
+        let yl;
+        let xl;
+        let x = 0;
+        let y = 0;
+        let z = 0;
+        let zl;
+        let line;
+        let tline;
+        let sline;
+        let dl;
+        let r;
+        let ry;
+        let s;
+        let sl;
+        let tl;
+        let rd;
+        let rt;
+        const data = this.$mapRaw.value.split('\n');
+        const tdata = this.$terrainRaw.value.split('\n');
+        const sdata = this.$stateRaw.value.split('\n');
+        const edata = this.$externalRaw.value.split('\n');
+        const root = path.dirname(this.file);
+        const ee = {};
         this.$rcount = 0;
         this.$maxTerrain = 0;
         this.$colorCache = 0;
         if (edata.length > 0) {
             for (x = 0, xl = edata.length; x < xl; x++) {
-                line = edata[x].split(":");
+                line = edata[x].split(':');
                 if (line.length > 2)
                     ee[line[0]] = line[1];
             }
@@ -4723,9 +4750,9 @@ export class VirtualEditor extends EditorBase {
 
         this.$rooms = [];
         if (data.length > 0) {
-            line = data.shift().split(" ");
-            tline = tdata.shift().split(" ");
-            sline = sdata.shift().split(" ");
+            line = data.shift().split(' ');
+            tline = tdata.shift().split(' ');
+            sline = sdata.shift().split(' ');
             dl = data.length;
             sl = sdata.length;
             tl = tdata.length;
@@ -4748,12 +4775,14 @@ export class VirtualEditor extends EditorBase {
             this.$mapSize.depth = zl;
             this.$mapSize.right = this.$mapSize.width * 32;
             this.$mapSize.bottom = this.$mapSize.height * 32;
-            var e, t, i;
+            let e;
+            let t;
+            let i;
             if (xl > 0 && yl > 0 && zl > 0) {
-                var rooms = this.$rooms;
-                var rcount = 0;
-                var maxTerrain = 0;
-                var cname;
+                const rooms = this.$rooms;
+                let rcount = 0;
+                let maxTerrain = 0;
+                let cname;
                 for (; z < zl; z++) {
                     if (!rooms[z]) rooms[z] = [];
                     for (y = 0; y < yl; y++) {
@@ -4761,17 +4790,17 @@ export class VirtualEditor extends EditorBase {
                             rooms[z][y] = [];
                         ry = rooms[z][y];
                         if (y + z * (yl + 1) < dl && data[y + z * (yl + 1)].length > 0)
-                            line = data[y + z * (yl + 1)].split(" ");
+                            line = data[y + z * (yl + 1)].split(' ');
                         else
                             line = [];
 
                         if (y + z * (yl + 1) < tl && tdata[y + z * (yl + 1)].length > 0)
-                            tline = tdata[y + z * (yl + 1)].split(" ");
+                            tline = tdata[y + z * (yl + 1)].split(' ');
                         else
                             tline = [];
 
                         if (y + z * (yl + 1) < sl && sdata[y + z * (yl + 1)].length > 0)
-                            sline = sdata[y + z * (yl + 1)].split(" ");
+                            sline = sdata[y + z * (yl + 1)].split(' ');
                         else
                             sline = [];
 
@@ -4779,13 +4808,13 @@ export class VirtualEditor extends EditorBase {
                             if (x >= line.length)
                                 r = new Room(x, y, z, e, 0, 0, 0);
                             else {
-                                rd = line[x].split(":");
+                                rd = line[x].split(':');
                                 e = rd.length > 0 ? +rd[0] : 0;
                                 t = rd.length > 1 ? +rd[1] : 0;
                                 i = rd.length > 2 ? +rd[2] : t;
                                 s = rd.length > 3 ? +rd[3] : 0;
                                 if (x < tline.length) {
-                                    rt = tline[x].split(":");
+                                    rt = tline[x].split(':');
                                     t = rt.length > 0 ? +rt[0] : 0;
                                     i = rt.length > 1 ? +rt[1] : t;
                                     s = rt.length > 2 ? +rt[2] : 0;
@@ -4798,12 +4827,12 @@ export class VirtualEditor extends EditorBase {
                             }
                             if (this.$selectedRoom && this.$selectedRoom.at(r.x, r.y, r.z))
                                 this.ChangeSelection(r);
-                            cname = x + "," + y;
+                            cname = x + ',' + y;
                             if (zl > 1)
-                                cname += "," + z;
+                                cname += ',' + z;
                             if (ee[cname])
                                 r.ee |= RoomExits[ee[cname]];
-                            r.ef = existsSync(path.join(root, cname + ".c"));
+                            r.ef = existsSync(path.join(root, cname + '.c'));
                             this.loadRoom(r);
                             ry.push(r);
                             if (r.exits) rcount++;
@@ -4831,7 +4860,7 @@ export class VirtualEditor extends EditorBase {
         Timer.start();
         if (this.$depth >= this.$mapSize.depth)
             this.$depth = this.$mapSize.depth - 1;
-        if (this.$mapSize.right != this.$map.width || this.$map.height != this.$mapSize.bottom) {
+        if (this.$mapSize.right !== this.$map.width || this.$map.height !== this.$mapSize.bottom) {
             this.$map.width = this.$mapSize.right;
             this.$map.height = this.$mapSize.bottom;
             this.BuildAxises();
@@ -4840,7 +4869,7 @@ export class VirtualEditor extends EditorBase {
                 this.DrawMap();
             }, 500);
         }
-        var cols = this.$exitGrid.columns;
+        const cols = this.$exitGrid.columns;
         if (this.$mapSize.depth < 2) {
             this.$depth = 0;
             cols[3].visible = false;
@@ -4873,11 +4902,13 @@ export class VirtualEditor extends EditorBase {
             this.$xAxis.removeChild(this.$xAxis.firstChild);
         while (this.$yAxis.firstChild)
             this.$yAxis.removeChild(this.$xAxis.firstChild);
-        var frag = document.createDocumentFragment();
-        var el: HTMLElement;
+        let frag = document.createDocumentFragment();
+        let el: HTMLElement;
         this.$xAxisHighlight.style.height = '100%';
         this.$yAxisHighlight.style.width = '100%';
-        for (var x = 0, xl = this.$mapSize.width; x < xl; x++) {
+        let x;
+        const xl = this.$mapSize.widh;
+        for (x = 0; x < xl; x++) {
             el = document.createElement('div');
             el.dataset.x = '' + x;
             el.textContent = '' + x;
@@ -4888,7 +4919,7 @@ export class VirtualEditor extends EditorBase {
                     this.$xAxisHighlight.style.backgroundColor = 'rgba(221, 221, 221, 0.25)';
                 this.$xAxisHighlight.style.display = 'block';
                 this.$xAxisHighlight.style.left = ((+(<HTMLElement>e.currentTarget).dataset.x) * 32) + 'px';
-            })
+            });
             el.addEventListener('mouseout', (e) => {
                 this.$xAxisHighlight.style.display = '';
             });
@@ -4896,8 +4927,9 @@ export class VirtualEditor extends EditorBase {
         }
         this.$xAxis.appendChild(frag);
         frag = document.createDocumentFragment();
-
-        for (var y = 0, yl = this.$mapSize.height; y < yl; y++) {
+        let y;
+        const yl = this.$mapSize.height;
+        for (y = 0; y < yl; y++) {
             el = document.createElement('div');
             el.dataset.y = '' + y;
             el.textContent = '' + y;
@@ -4908,7 +4940,7 @@ export class VirtualEditor extends EditorBase {
                     this.$yAxisHighlight.style.backgroundColor = 'rgba(221, 221, 221, 0.25)';
                 this.$yAxisHighlight.style.display = 'block';
                 this.$yAxisHighlight.style.top = ((+(<HTMLElement>e.currentTarget).dataset.y) * 32) + 'px';
-            })
+            });
             el.addEventListener('mouseout', (e) => {
                 this.$yAxisHighlight.style.display = '';
             });
@@ -4918,8 +4950,15 @@ export class VirtualEditor extends EditorBase {
     }
 
     private loadDescriptions() {
-        var tmp, idx, row, c, len, i, dl, rows;
-        var data = this.$descriptionRaw.value.split("\n");
+        let tmp;
+        let idx;
+        let row;
+        let c;
+        let len;
+        let i;
+        let dl;
+        let rows;
+        const data = this.$descriptionRaw.value.split('\n');
         dl = data.length;
         if (dl === 0) return;
         len = (dl / 3) >> 0;
@@ -4936,7 +4975,7 @@ export class VirtualEditor extends EditorBase {
                 smell: ''
             };
             idx = c * 3;
-            tmp = data[idx].split(":");
+            tmp = data[idx].split(':');
             row.short = tmp[0];
             if (tmp.length > 1) {
                 i = +tmp[1];
@@ -4961,8 +5000,17 @@ export class VirtualEditor extends EditorBase {
     }
 
     private loadItems() {
-        var tmp, idx, row, c, len, tmp2, dl, i, il, rows;
-        var data = this.$itemRaw.value.split("\n");
+        let tmp;
+        let idx;
+        let row;
+        let c;
+        let len;
+        let tmp2;
+        let dl;
+        let i;
+        let il;
+        let rows;
+        const data = this.$itemRaw.value.split('\n');
         dl = data.length;
 
         if (dl === 0) return;
@@ -4980,8 +5028,8 @@ export class VirtualEditor extends EditorBase {
             row.items = data[idx];
             if (idx + 1 < dl)
                 row.description = data[idx + 1];
-            tmp = row.items.split(":");
-            tmp2 = row.description.split(":");
+            tmp = row.items.split(':');
+            tmp2 = row.description.split(':');
             if (tmp.length > 0) {
                 row.children = [];
                 for (i = 0, il = tmp.length; i < il; i++) {
@@ -4991,7 +5039,7 @@ export class VirtualEditor extends EditorBase {
                                 idx: '',
                                 item: tmp[i],
                                 description: tmp2[i],
-                                tag: (c + 1) + "-" + i,
+                                tag: (c + 1) + '-' + i,
                                 parentId: c + 1
                             });
                     else
@@ -5000,7 +5048,7 @@ export class VirtualEditor extends EditorBase {
                                 idx: '',
                                 item: tmp[i],
                                 description: '',
-                                tag: (c + 1) + "-" + i,
+                                tag: (c + 1) + '-' + i,
                                 parentId: c + 1
                             });
                 }
@@ -5012,8 +5060,13 @@ export class VirtualEditor extends EditorBase {
     }
 
     private loadExits(noGrid?) {
-        var tmp, row, c, dl, rows, tmp2;
-        var data = this.$externalRaw.value.split("\n");
+        let tmp;
+        let row;
+        let c;
+        let dl;
+        let rows;
+        let tmp2;
+        const data = this.$externalRaw.value.split('\n');
         dl = data.length;
         if (dl === 0) return;
         rows = [];
@@ -5031,8 +5084,8 @@ export class VirtualEditor extends EditorBase {
                 row.enabled = false;
                 data[c] = data[c].substr(1);
             }
-            tmp = data[c].split(":");
-            tmp2 = tmp[0].split(",");
+            tmp = data[c].split(':');
+            tmp2 = tmp[0].split(',');
             row.x = +tmp2[0];
             if (tmp2.length > 1) row.y = +tmp2[1];
             if (tmp2.length > 2) row.z = +tmp2[2];
@@ -5046,21 +5099,23 @@ export class VirtualEditor extends EditorBase {
     }
 
     private reloadExits(noGrid?) {
-        var r
-        var od = this.$exits || [];
+        let r;
+        const od = this.$exits || [];
         this.loadExits(noGrid);
         //store mouse coords for performance
-        var mx = this.$mouse.rx;
-        var my = this.$mouse.ry;
+        const mx = this.$mouse.rx;
+        const my = this.$mouse.ry;
+        let d;
+        let dl;
         //Remove old exits
-        for (var d = 0, dl = od.length; d < dl; d++) {
+        for (d = 0, dl = od.length; d < dl; d++) {
             if (!od[d].enabled) continue;
             r = this.getRoom(od[d].x, od[d].y, od[d].z);
             r.ee &= ~RoomExits[od[d].exit];
             this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
         }
         //Add new exits
-        for (var d = 0, dl = this.$exits.length; d < dl; d++) {
+        for (d = 0, dl = this.$exits.length; d < dl; d++) {
             if (!this.$exits[d].enabled) continue;
             r = this.getRoom(this.$exits[d].x, this.$exits[d].y, this.$exits[d].z);
             r.ee |= RoomExits[this.$exits[d].exit];
@@ -5084,100 +5139,104 @@ export class VirtualEditor extends EditorBase {
         //no room return empty string
         if (!r)
             return '';
-        var t, c, cl, t2;
-        var d;
+        let t;
+        let c;
+        let cl;
+        let t2;
+        let d;
         if (this.$mapSize.depth > 1)
-            d = "/**\n * External virtual room " + r.x + ", " + r.y + ", " + r.z + "\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */";
+            d = '/**\n * External virtual room ' + r.x + ', ' + r.y + ', ' + r.z + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */';
         else
-            d = "/**\n * External virtual room " + r.x + ", " + r.y + "\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */";
-        d += "#include <std.h>\n#include \"../area.h\"\n\ninherit BASEROOM;\n\n/**\n * Create\n *\n * Create the base virtual room, passing correct parameters to baseroom\n */\nvoid create() {\n   ::create(" + r.x + ", " + r.y + ", " + r.z + ", " + r.terrain + ", " + r.item + ", " + r.exits + ");\n";
-        var data;
+            d = '/**\n * External virtual room ' + r.x + ', ' + r.y + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */';
+        d += '#include <std.h>\n#include "../area.h"\n\ninherit BASEROOM;\n\n/**\n * Create\n *\n * Create the base virtual room, passing correct parameters to baseroom\n */\nvoid create() {\n   ::create(' + r.x + ', ' + r.y + ', ' + r.z + ', ' + r.terrain + ', ' + r.item + ', ' + r.exits + ');\n';
+        let data;
         if (this.$descriptions.length > 0 && r.terrain >= 0 && r.terrain < this.$descriptions.length && this.$descriptions[r.terrain]) {
             data = this.$descriptions[r.terrain];
             if (data.light !== 0) {
-                d += "   set_properties( ([\n      \"light\":" + data.light + "\n   ]) );\n";
+                d += '   set_properties( ([\n      "light":' + data.light + '\n   ]) );\n';
             }
-            d += "   set_short(\"" + data.short + "\");\n";
-            d += "   set_long(\"";
+            d += '   set_short("' + data.short + '");\n';
+            d += '   set_long("';
             if (data.long.length > 68) {
-                t = wordwrap(data.long, 68).trim().split("\n");
+                t = wordwrap(data.long, 68).trim().split('\n');
                 for (c = 0, cl = t.length; c < cl; c++) {
                     if (c === 0)
-                        d += t[c] + "\"\n";
+                        d += t[c] + '"\n';
                     else if (c === cl - 1)
-                        d += "            \"" + t[c] + "\");\n";
+                        d += '            "' + t[c] + '");\n';
                     else
-                        d += "            \"" + t[c] + "\"\n";
+                        d += '            "' + t[c] + '"\n';
                 }
             }
             else
-                d += data.long + "\");\n";
-            if (data.terrain.length > 0 && data.terrain != "0")
-                d += "   set_terrain(\"" + data.terrain + "\");\n";
+                d += data.long + '");\n';
+            if (data.terrain.length > 0 && data.terrain !== '0')
+                d += '   set_terrain("' + data.terrain + '");\n';
 
             if (this.$items.length > 0 && r.item >= 0 && r.item < this.$items.length && this.$items[r.item] && this.$items[r.item].children.length > 0) {
-                d += "   set_items( ([\n";
-                var items = this.$items[r.item].children;
+                d += '   set_items( ([\n';
+                const items = this.$items[r.item].children;
                 for (c = 0, cl = items.length; c < cl; c++) {
-                    t2 = "      \"" + items[c].items + "\":\"";
+                    t2 = '      "' + items[c].items + '":"';
                     if (t2.length + items[c].description.length + 1 > 85) {
-                        t = wordwrap(items[c].description, 80 - t2.length).trim().split("\n");
+                        t = wordwrap(items[c].description, 80 - t2.length).trim().split('\n');
                         for (c = 0, cl = t.length; c < cl; c++) {
                             if (c === 0)
-                                d += t[c] + "\"\n";
+                                d += t[c] + '"\n';
                             else if (c === cl - 1)
-                                d += ("\"" + t[c] + "\",\n").padStart(t2.length - 1);
+                                d += ('"' + t[c] + '",\n').padStart(t2.length - 1);
                             else
-                                d += ("\"" + t[c] + "\"\n").padStart(t2.length - 1);
+                                d += ('"' + t[c] + '"\n').padStart(t2.length - 1);
                         }
                     }
                     else {
-                        d += t2 + items[c].description + "\",\n";
+                        d += t2 + items[c].description + '",\n';
                     }
                 }
-                d += "   ]) );\n";
+                d += '   ]) );\n';
             }
-            if (data.smell.length > 0 && data.smell != "0")
-                d += "   set_smell(\"" + data.smell + "\");\n";
-            if (data.sound.length > 0 && data.sound != "0")
-                d += "   set_listen(\"" + data.sound + "\");\n";
+            if (data.smell.length > 0 && data.smell !== '0')
+                d += '   set_smell("' + data.smell + '");\n';
+            if (data.sound.length > 0 && data.sound !== '0')
+                d += '   set_listen("' + data.sound + '");\n';
         }
         if (RoomExit.None !== r.exits) {
-            d += "   set_exits( ([\n";
+            d += '   set_exits( ([\n';
             if (this.$mapSize.depth > 1) {
                 if ((r.exits & RoomExit.Up) === RoomExit.Up)
-                    d += "      \"up\":VIR+\"" + (r.x) + "," + (r.y) + "," + (r.z + 1) + ".c\",\n";
+                    d += '      "up":VIR+"' + (r.x) + ',' + (r.y) + ',' + (r.z + 1) + '.c",\n';
                 if ((r.exits & RoomExit.Down) === RoomExit.Down)
-                    d += "      \"down\":VIR+\"" + (r.x) + "," + (r.y) + "," + (r.z - 1) + ".c\",\n";
-                t = "," + r.z;
+                    d += '      "down":VIR+"' + (r.x) + ',' + (r.y) + ',' + (r.z - 1) + '.c",\n';
+                t = ',' + r.z;
             }
             else
-                t = ""
+                t = '';
             if ((r.exits & RoomExit.North) === RoomExit.North)
-                d += "      \"north\":VIR+\"" + (r.x) + "," + (r.y - 1) + t + ".c\",\n";
+                d += '      "north":VIR+"' + (r.x) + ',' + (r.y - 1) + t + '.c",\n';
             if ((r.exits & RoomExit.NorthWest) === RoomExit.NorthWest)
-                d += "      \"northwest\":VIR+\"" + (r.x - 1) + "," + (r.y - 1) + t + ".c\",\n";
+                d += '      "northwest":VIR+"' + (r.x - 1) + ',' + (r.y - 1) + t + '.c",\n';
             if ((r.exits & RoomExit.NorthEast) === RoomExit.NorthEast)
-                d += "      \"northeast\":VIR+\"" + (r.x + 1) + "," + (r.y - 1) + t + ".c\",\n";
+                d += '      "northeast":VIR+"' + (r.x + 1) + ',' + (r.y - 1) + t + '.c",\n';
             if ((r.exits & RoomExit.East) === RoomExit.East)
-                d += "      \"east\":VIR+\"" + (r.x + 1) + "," + (r.y) + t + ".c\",\n";
+                d += '      "east":VIR+"' + (r.x + 1) + ',' + (r.y) + t + '.c",\n';
             if ((r.exits & RoomExit.West) === RoomExit.West)
-                d += "      \"west\":VIR+\"" + (r.x - 1) + "," + (r.y) + t + ".c\",\n";
+                d += '      "west":VIR+"' + (r.x - 1) + ',' + (r.y) + t + '.c",\n';
             if ((r.exits & RoomExit.South) === RoomExit.South)
-                d += "      \"south\":VIR+\"" + (r.x) + "," + (r.y + 1) + t + ".c\",\n";
+                d += '      "south":VIR+"' + (r.x) + ',' + (r.y + 1) + t + '.c",\n';
             if ((r.exits & RoomExit.SouthEast) === RoomExit.SouthEast)
-                d += "      \"southeast\":VIR+\"" + (r.x + 1) + "," + (r.y + 1) + t + ".c\",\n";
+                d += '      "southeast":VIR+"' + (r.x + 1) + ',' + (r.y + 1) + t + '.c",\n';
             if ((r.exits & RoomExit.SouthWest) === RoomExit.SouthWest)
-                d += "      \"southwest\":VIR+\"" + (r.x - 1) + "," + (r.y + 1) + t + ".c\",\n";
-
-            for (var ri = 0, rl = this.$exits.length; ri < rl; ri++) {
+                d += '      "southwest":VIR+"' + (r.x - 1) + ',' + (r.y + 1) + t + '.c",\n';
+            let ri;
+            const rl = this.$exits.length;
+            for (ri = 0; ri < rl; ri++) {
                 if (!this.$exits[ri].enabled || +this.$exits[ri].x !== r.x || +this.$exits[ri].y !== r.y || +this.$exits[ri].z !== r.z)
                     continue;
-                d += "      \"" + this.$exits[ri].exit + "\":\"" + this.$exits[ri].dest + "\",\n";
+                d += '      "' + this.$exits[ri].exit + '":"' + this.$exits[ri].dest + '",\n';
             }
-            d += "   ]) );\n"
+            d += '   ]) );\n';
         }
-        d += "}";
+        d += '}';
         return d;
     }
 
@@ -5196,7 +5255,7 @@ class FileOpenValueEditor extends ValueEditor {
     private $editor: HTMLInputElement;
     private $value;
 
-    create() {
+    public create() {
         this.$el = document.createElement('div');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown');
@@ -5221,8 +5280,8 @@ class FileOpenValueEditor extends ValueEditor {
         });
         this.$el.appendChild(this.$editor);
 
-        var vl = document.createElement('button');
-        vl.title = 'Open file...'
+        const vl = document.createElement('button');
+        vl.title = 'Open file...';
         vl.innerHTML = '&hellip;';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
@@ -5231,21 +5290,21 @@ class FileOpenValueEditor extends ValueEditor {
         this.$el.appendChild(vl);
         this.parent.appendChild(this.$el);
     }
-    focus() {
+    public focus() {
         this.$editor.focus();
     }
-    destroy() {
+    public destroy() {
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
     }
 
-    public scroll() { }
+    public scroll() { /**/ }
 
     private formatValue(value?) {
         if (!value) value = this.$value;
         if (!value)
             return 'None';
-        var ops = this.control.getPropertyOptions(this.property);
+        const ops = this.control.getPropertyOptions(this.property);
         if (ops && ops.formatter)
             return ops.formatter(this.property, value, this.data);
         if (this.options && this.options.enum)
@@ -5275,7 +5334,7 @@ class ExternalExitValueEditor extends ValueEditor {
     private $cut;
     private $paste;
 
-    create() {
+    public create() {
         this.$el = document.createElement('div');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown');
@@ -5300,12 +5359,12 @@ class ExternalExitValueEditor extends ValueEditor {
         });
         this.$el.appendChild(this.$editor);
 
-        var vl = document.createElement('button');
-        vl.title = 'Edit external exits...'
+        const vl = document.createElement('button');
+        vl.title = 'Edit external exits...';
         vl.innerHTML = '&hellip;';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
-            var mDialog = <HTMLDialogElement>document.createElement('dialog');
+            const mDialog = <HTMLDialogElement>document.createElement('dialog');
             mDialog.style.width = '500px';
             mDialog.style.height = '300px';
             mDialog.style.padding = '5px';
@@ -5314,10 +5373,10 @@ class ExternalExitValueEditor extends ValueEditor {
                     mDialog.parentElement.removeChild(mDialog);
                 this.focus();
             });
-            var header = document.createElement('div');
+            let header = document.createElement('div');
             header.classList.add('dialog-header');
             header.style.fontWeight = 'bold';
-            var button = document.createElement('button');
+            let button = document.createElement('button');
             button.classList.add('close');
             button.type = 'button';
             button.dataset.dismiss = 'modal';
@@ -5326,10 +5385,10 @@ class ExternalExitValueEditor extends ValueEditor {
                 if (mDialog.parentElement)
                     mDialog.parentElement.removeChild(mDialog);
                 this.focus();
-            })
+            });
             button.innerHTML = '&times;';
             header.appendChild(button);
-            var el = document.createElement('div');
+            let el = document.createElement('div');
             el.style.paddingTop = '2px';
             el.innerHTML = capitalize(this.control.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
             header.appendChild(el);
@@ -5347,7 +5406,7 @@ class ExternalExitValueEditor extends ValueEditor {
             el.style.bottom = '60px';
             el.style.top = '38px';
             header.appendChild(el);
-            var dg = new Datagrid(el);
+            const dg = new Datagrid(el);
             dg.addColumns([
                 {
                     label: 'Enabled',
@@ -5361,22 +5420,22 @@ class ExternalExitValueEditor extends ValueEditor {
                         options: {
                             container: mDialog,
                             data: [
-                                "surface",
-                                "dive",
-                                "swim",
-                                "portal",
-                                "down",
-                                "up",
-                                "enter",
-                                "out",
-                                "northwest",
-                                "west",
-                                "southwest",
-                                "south",
-                                "southeast",
-                                "east",
-                                "northeast",
-                                "north"
+                                'surface',
+                                'dive',
+                                'swim',
+                                'portal',
+                                'down',
+                                'up',
+                                'enter',
+                                'out',
+                                'northwest',
+                                'west',
+                                'southwest',
+                                'south',
+                                'southeast',
+                                'east',
+                                'northeast',
+                                'north'
                             ]
                         }
                     }
@@ -5412,7 +5471,7 @@ class ExternalExitValueEditor extends ValueEditor {
                     this.$copy.setAttribute('disabled', 'true');
                 }
             });
-            dg.on('delete', (e) => {
+            dg.on('delete', (e2) => {
                 if (dialog.showMessageBox(
                     remote.getCurrentWindow(),
                     {
@@ -5422,8 +5481,8 @@ class ExternalExitValueEditor extends ValueEditor {
                         buttons: ['Yes', 'No'],
                         defaultId: 1
                     })
-                    == 1)
-                    e.preventDefault = true;
+                    === 1)
+                    e2.preventDefault = true;
             });
             dg.on('cut', () => {
                 if (dg.canPaste)
@@ -5458,7 +5517,7 @@ class ExternalExitValueEditor extends ValueEditor {
             button.classList.add('btn', 'btn-primary');
             button.addEventListener('click', () => {
                 if (this.$value.length > 0)
-                    this.data.ee = this.$value.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
+                    this.data.ee = this.$value.map(e2 => e2.enabled ? RoomExits[e2.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
                 else
                     this.data.ee = 0;
                 this.value = dg.rows;
@@ -5534,7 +5593,7 @@ class ExternalExitValueEditor extends ValueEditor {
             button.disabled = true;
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-                dg.copy()
+                dg.copy();
             });
             button.title = 'Copy';
             button.innerHTML = '<i class="fa fa-copy"></i>';
@@ -5559,21 +5618,21 @@ class ExternalExitValueEditor extends ValueEditor {
         this.$el.appendChild(vl);
         this.parent.appendChild(this.$el);
     }
-    focus() {
+    public focus() {
         this.$editor.focus();
     }
-    destroy() {
+    public destroy() {
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
     }
 
-    public scroll() { }
+    public scroll() { /**/ }
 
     private formatValue(value?) {
         if (!value) value = this.$value;
         if (!value)
             return 'None';
-        var ops = this.control.getPropertyOptions(this.property, 'formatter');
+        const ops = this.control.getPropertyOptions(this.property, 'formatter');
         if (ops)
             return ops(this.property, value, this.data);
         if (this.options && this.options.enum)
@@ -5603,7 +5662,7 @@ class ItemsValueEditor extends ValueEditor {
     private $cut;
     private $paste;
 
-    create() {
+    public create() {
         this.$el = document.createElement('div');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown');
@@ -5628,12 +5687,12 @@ class ItemsValueEditor extends ValueEditor {
         });
         this.$el.appendChild(this.$editor);
 
-        var vl = document.createElement('button');
-        vl.title = 'Edit items...'
+        const vl = document.createElement('button');
+        vl.title = 'Edit items...';
         vl.innerHTML = '&hellip;';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
-            var mDialog = <HTMLDialogElement>document.createElement('dialog');
+            const mDialog = <HTMLDialogElement>document.createElement('dialog');
             mDialog.style.width = '500px';
             mDialog.style.height = '300px';
             mDialog.style.padding = '5px';
@@ -5642,10 +5701,10 @@ class ItemsValueEditor extends ValueEditor {
                     mDialog.parentElement.removeChild(mDialog);
                 this.focus();
             });
-            var header = document.createElement('div');
+            let header = document.createElement('div');
             header.classList.add('dialog-header');
             header.style.fontWeight = 'bold';
-            var button = document.createElement('button');
+            let button = document.createElement('button');
             button.classList.add('close');
             button.type = 'button';
             button.dataset.dismiss = 'modal';
@@ -5654,10 +5713,10 @@ class ItemsValueEditor extends ValueEditor {
                 if (mDialog.parentElement)
                     mDialog.parentElement.removeChild(mDialog);
                 this.focus();
-            })
+            });
             button.innerHTML = '&times;';
             header.appendChild(button);
-            var el = document.createElement('div');
+            let el = document.createElement('div');
             el.style.paddingTop = '2px';
             el.innerHTML = capitalize(this.control.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
             header.appendChild(el);
@@ -5675,7 +5734,7 @@ class ItemsValueEditor extends ValueEditor {
             el.style.bottom = '60px';
             el.style.top = '38px';
             header.appendChild(el);
-            var dg = new Datagrid(el);
+            const dg = new Datagrid(el);
             dg.addColumns([{
                 label: 'Item',
                 field: 'item',
@@ -5685,7 +5744,7 @@ class ItemsValueEditor extends ValueEditor {
                         container: mDialog,
                         singleLine: true
                     }
-                },
+                }
             },
             {
                 label: 'Description',
@@ -5718,7 +5777,7 @@ class ItemsValueEditor extends ValueEditor {
                     this.$copy.setAttribute('disabled', 'true');
                 }
             });
-            dg.on('delete', (e) => {
+            dg.on('delete', (e2) => {
                 if (dialog.showMessageBox(
                     remote.getCurrentWindow(),
                     {
@@ -5728,8 +5787,8 @@ class ItemsValueEditor extends ValueEditor {
                         buttons: ['Yes', 'No'],
                         defaultId: 1
                     })
-                    == 1)
-                    e.preventDefault = true;
+                    === 1)
+                    e2.preventDefault = true;
             });
             dg.on('cut', () => {
                 if (dg.canPaste)
@@ -5833,7 +5892,7 @@ class ItemsValueEditor extends ValueEditor {
             button.disabled = true;
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-                dg.copy()
+                dg.copy();
             });
             button.title = 'Copy';
             button.innerHTML = '<i class="fa fa-copy"></i>';
@@ -5851,29 +5910,27 @@ class ItemsValueEditor extends ValueEditor {
             this.$paste = button;
             el.appendChild(button);
             header.appendChild(el);
-
-
             document.body.appendChild(mDialog);
             mDialog.showModal();
         });
         this.$el.appendChild(vl);
         this.parent.appendChild(this.$el);
     }
-    focus() {
+    public focus() {
         this.$editor.focus();
     }
-    destroy() {
+    public destroy() {
         if (this.$el.parentElement)
             this.$el.parentElement.removeChild(this.$el);
     }
 
-    public scroll() { }
+    public scroll() { /**/ }
 
     private formatValue(value?) {
         if (!value) value = this.$value;
         if (!value)
             return 'None';
-        var ops = this.control.getPropertyOptions(this.property, 'formatter');
+        const ops = this.control.getPropertyOptions(this.property, 'formatter');
         if (ops)
             return ops(this.property, value, this.data);
         if (this.options && this.options.enum)

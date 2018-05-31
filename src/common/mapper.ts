@@ -493,7 +493,7 @@ export class Mapper extends EventEmitter {
 
     public draw(canvas?, context?, ex?: boolean, callback?) {
         if (!this.ready) {
-            setTimeout(() => { this.doUpdate(UpdateType.draw) }, 10);
+            setTimeout(() => { this.doUpdate(UpdateType.draw); }, 10);
             return;
         }
         if (!canvas)
@@ -683,7 +683,7 @@ export class Mapper extends EventEmitter {
             this._db.get('SELECT * from Rooms WHERE Area = ? ORDER BY X, Y, Z', [area], (err, row) => {
                 if (err) this.emit('error', err);
                 if (row) {
-                    this.active = this.normalizeRoom(row)
+                    this.active = this.normalizeRoom(row);
                     this.setActive(this.active);
                     this.focusActiveRoom();
                     this.emit('setting-changed', 'active', this.active);
@@ -711,8 +711,8 @@ export class Mapper extends EventEmitter {
     public removeRoom(room) {
         this._db.run('DELETE FROM Rooms WHERE ID = ?', [room.ID], (err) => {
             if (err) this.emit('error', err);
-            this._db.run('Delete From Exits WHERE ID = ?', [room.ID], (err) => {
-                if (err) this.emit('error', err);
+            this._db.run('Delete From Exits WHERE ID = ?', [room.ID], (err2) => {
+                if (err2) this.emit('error', err2);
                 this.emit('remove-done', room);
                 if (room.ID === this.current.ID) {
                     this.current = new Room();
@@ -743,8 +743,8 @@ export class Mapper extends EventEmitter {
     public clearArea() {
         this._db.run('DELETE FROM Exits WHERE ID in (Select ID from Rooms WHERE Area = ?)', [this.active.area], (err) => {
             if (err) this.emit('error', err);
-            this._db.run('DELETE FROM Rooms WHERE Area = ?', [this.active.area], (err) => {
-                if (err) this.emit('error', err);
+            this._db.run('DELETE FROM Rooms WHERE Area = ?', [this.active.area], (err2) => {
+                if (err2) this.emit('error', err2);
                 this.emit('clear-area-done', this.active.area);
                 this.reset();
                 this.refresh();
@@ -756,8 +756,8 @@ export class Mapper extends EventEmitter {
     public clearAll() {
         this._db.run('DELETE FROM Exits', (err) => {
             if (err) this.emit('error', err);
-            this._db.run('DELETE FROM Rooms', (err) => {
-                if (err) this.emit('error', err);
+            this._db.run('DELETE FROM Rooms', (err2) => {
+                if (err2) this.emit('error', err2);
                 this.emit('clear-done');
                 this.reset();
                 this.refresh();
@@ -966,7 +966,7 @@ export class Mapper extends EventEmitter {
             setTimeout(() => {
                 this.updateRoom(room);
             }, 10);
-            return
+            return;
         }
         room = this.normalizeRoom(room);
         this._db.run('BEGIN TRANSACTION');
@@ -1008,7 +1008,7 @@ export class Mapper extends EventEmitter {
             setTimeout(() => {
                 this.addOrUpdateRoom(room);
             }, 10);
-            return
+            return;
         }
         room = this.normalizeRoom(room);
         this._db.run('BEGIN TRANSACTION');
@@ -1549,7 +1549,7 @@ export class Mapper extends EventEmitter {
             setTimeout(() => {
                 this.getRoom(id, callback);
             }, 10);
-            return
+            return;
         }
         this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Rooms.ID = $id', {
             $id: id
@@ -1586,7 +1586,7 @@ export class Mapper extends EventEmitter {
             setTimeout(() => {
                 this.getRooms(area, level, zone, callback);
             }, 10);
-            return
+            return;
         }
         if (this._splitArea) {
             this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone', {
@@ -1911,8 +1911,8 @@ export class Mapper extends EventEmitter {
         if (type === ImportType.Replace) {
             this._db.run('DELETE FROM Exits', (err) => {
                 if (err) this.emit('error', err);
-                this._db.run('DELETE FROM Rooms', (err) => {
-                    if (err) this.emit('error', err);
+                this._db.run('DELETE FROM Rooms', (err2) => {
+                    if (err2) this.emit('error', err2);
                     this.emit('clear-done');
                     this.reset();
                     this.import(data, ImportType.Merge);
@@ -1947,8 +1947,9 @@ export class Mapper extends EventEmitter {
                         this.finishImport();
                         return;
                     }
-                    if (!(room = data[r])) continue;
-                    tl += Object.keys(room.exits).length;                    
+                    room = data[r];
+                    if (!room) continue;
+                    tl += Object.keys(room.exits).length;
                     room = this.normalizeRoom(room);
                     stmt2.run([
                         room.ID,
@@ -1974,8 +1975,8 @@ export class Mapper extends EventEmitter {
                                 this.finishImport();
                             }
                         });
-                    let exit;                    
-                    let exits = room.exits;
+                    let exit;
+                    const exits = room.exits;
                     for (exit in exits) {
                         if (!exits.hasOwnProperty(exit)) continue;
                         stmt.run([room.ID, exit, exits[exit].num, exits[exit].isdoor, exits[exit].isclosed],
@@ -2151,9 +2152,9 @@ export class Mapper extends EventEmitter {
             CREATE UNIQUE INDEX IF NOT EXISTS Disk.index_id on Rooms (ID);
             CREATE INDEX IF NOT EXISTS Disk.coords_zone on Rooms (X,Y,Z,Zone);
             CREATE INDEX IF NOT EXISTS Disk.coords_area on Rooms (X,Y,Z,Zone,Area);
-            CREATE INDEX IF NOT EXISTS Disk.exits_id on Exits (ID);            
+            CREATE INDEX IF NOT EXISTS Disk.exits_id on Exits (ID);
             VACUUM Disk;
-            DETACH DATABASE Disk            
+            DETACH DATABASE Disk
             `, (err) => {
                         if (err) this.emit('error', err);
                         this.ready = true;
@@ -2182,8 +2183,8 @@ export class Mapper extends EventEmitter {
     }
 
     private normalizeRoom(r) {
-        let id = r.ID || r.num;
-        var room = {
+        const id = r.ID || r.num;
+        const room = {
             area: r.Area || r.area || '',
             details: r.Details || r.details || RoomDetails.None,
             name: r.Name || r.name || '',
@@ -2197,11 +2198,13 @@ export class Mapper extends EventEmitter {
             notes: r.Notes || r.notes || '',
             ID: id ? '' + id : null,
             exits: r.exits || {}
-        }
+        };
         if (room.exits) {
-            for (var exit in room.exits) {
+            let exit;
+            let dest;
+            for (exit in room.exits) {
                 if (!room.exits.hasOwnProperty(exit)) continue;
-                var dest = room.exits[exit].DestID || room.exits[exit].num || null;
+                dest = room.exits[exit].DestID || room.exits[exit].num || null;
                 room.exits[exit] = {
                     num: dest ? '' + dest : null,
                     isdoor: +room.exits[exit].IsDoor || +room.exits[exit].isdoor || null,

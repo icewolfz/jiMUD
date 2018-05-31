@@ -1534,7 +1534,7 @@ export class Telnet extends EventEmitter {
         if (processed.length > 0)
             this.firstReceived = false;
         this._splitBuffer = _sb;
-        if(returnRaw)
+        if (returnRaw)
             return processed;
         processed = Buffer.from(processed);
         //force UTF8 or if charset is enabled and type is UTF8 process data as UTF8 data
