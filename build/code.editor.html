@@ -1547,6 +1547,8 @@
                     ghostBar.css("top", document.body.clientHeight - 170);
                 else
                     ghostBar.css("top", e.pageY);
+                //if (window.$editor)
+                    //window.$editor.layout();
             });
         });
 
@@ -1589,6 +1591,8 @@
                 $('#btm-ghost-bar').remove();
                 $(document).unbind('mousemove');
                 if (manager.active && manager.active.editor) manager.active.editor.focus();
+                if (window.$editor)
+                    window.$editor.layout();                
                 outputDragging = false;
             }
         });

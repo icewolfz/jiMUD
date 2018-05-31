@@ -2,6 +2,10 @@
 
 ## 0.4.47
 
+- **Fixed:**
+  - Code Editor:
+    - Editor did not correctly resize when output window resized
+
 ## 0.4.46 2018-05-30
 
 - **Changed:**
