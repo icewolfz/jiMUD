@@ -2,6 +2,9 @@
 
 ## 0.4.47
 
+- **New:**
+  - Code Editor:
+    - Code complete for ShadowMUD inheritable files, simple begin to type inherit and it will suggest a list of predefined inherits
 - **Fixed:**
   - Code Editor:
     - Editor did not correctly resize when output window resized

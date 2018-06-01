@@ -781,18 +781,38 @@ export function loadCompletion(): monaco.languages.CompletionItem[] {
     list = list.concat(getCompletionFromPath(path.join(p, 'constants'), monaco.languages.CompletionItemKind.Variable));
     list = list.concat(getCompletionFromPath(path.join(p, 'efuns'), monaco.languages.CompletionItemKind.Function));
     list = list.concat(getCompletionFromPath(path.join(p, 'sefuns'), monaco.languages.CompletionItemKind.Class));
+    list = list.concat(getCompletionFromFile(path.join(p, 'inherits.txt'), monaco.languages.CompletionItemKind.Module));
     return list;
 }
 
-function getCompletionFromPath(p, kind?: monaco.languages.CompletionItemKind): monaco.languages.CompletionItem[] {
+function getCompletionFromPath(p, kind?: monaco.languages.CompletionItemKind, prefix?): monaco.languages.CompletionItem[] {
     const list = [];
     const files = walkSync(p);
     const l = files.files.length;
     let f = 0;
+    if (!prefix) prefix = '';
     for (; f < l; f++) {
         list.push(
             {
-                label: path.basename(files.files[f], path.extname(files.files[f])),
+                label: prefix + path.basename(files.files[f], path.extname(files.files[f])),
+                kind: kind
+            }
+        );
+    }
+    return list;
+}
+
+function getCompletionFromFile(p, kind?: monaco.languages.CompletionItemKind, prefix?): monaco.languages.CompletionItem[] {
+    const list = [];
+    const lines = fs.readFileSync(p, 'utf8').split('\n');
+    const l = lines.length;
+    let f = 0;
+    if (!prefix) prefix = '';
+    for (; f < l; f++) {
+        if (lines[f].length === 0) continue;
+        list.push(
+            {
+                label: prefix + lines[f],
                 kind: kind
             }
         );
