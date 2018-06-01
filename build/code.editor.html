@@ -1312,7 +1312,7 @@
             watcher.close();
     }
 
-    function loadOptions(data) {
+    function loadOptions() {
         options = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
         if (!options.outputSize || options.outputSize < 170)
             options.outputSize = 170;
@@ -1337,7 +1337,7 @@
             output.css('display', 'none');
         }
         menubar.updateItem('view|output', { checked: options.output });
-        buildRecent();
+        doUpdate(4);
     }
 
     function saveOptions() {
@@ -1548,7 +1548,7 @@
                 else
                     ghostBar.css("top", e.pageY);
                 //if (window.$editor)
-                    //window.$editor.layout();
+                //window.$editor.layout();
             });
         });
 
@@ -1592,7 +1592,7 @@
                 $(document).unbind('mousemove');
                 if (manager.active && manager.active.editor) manager.active.editor.focus();
                 if (window.$editor)
-                    window.$editor.layout();                
+                    window.$editor.layout();
                 outputDragging = false;
             }
         });
@@ -1728,6 +1728,49 @@
         $("#splashLayout").css('display', 'none');
         remote.getCurrentWindow().setEnabled(true);
         _loading = 0;
+    }
+
+    function closeHidden() {
+        var elems = document.body.getElementsByTagName("dialog");
+        var e = 0, el = elems.length;
+        for (; e < el; e++) {
+            if (elems[e].open) {
+                if (dialog.showMessageBox(
+                    remote.getCurrentWindow(),
+                    {
+                        type: 'question',
+                        title: 'Open dialog',
+                        message: (elems[e].dataset.title || 'Dialog') + ' is open, exit?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    }) === 1)
+                    return;
+            }
+        }
+        var opened = [];
+        var keys = Object.keys(_editors);
+        var k = keys.length;
+        var p;
+        while (k--) {
+            p = keys[k];
+            if (!_editors[p]) continue;
+            if (!_editors[p].editor.new)
+                opened.unshift({
+                    file: _editors[p].editor.file,
+                    remote: _editors[p].remote
+                });
+            if (!_editors[p].editor.new && !_editors[p].editor.changed)
+                continue;
+            if (!confirmSave(_editors[p]))
+                return;
+        }
+        if (!options) loadOptions();
+        if (options.reopen)
+            options.opened = opened;
+        else
+            options.opened = [];
+        saveOptions();
+        remote.getCurrentWindow().hide();
     }
 
     function closeWindow() {

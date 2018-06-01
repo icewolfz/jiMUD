@@ -696,12 +696,12 @@
                                     found = true;
                                     if (pt === 0)
                                         paths.push({ drive: true, path: c, name: sd[pt], count: pt, open: parts.length === 1 });
-                                    else if(sd[pt].length > 0)
+                                    else if (sd[pt].length > 0)
                                         paths.push({ path: c, name: sd[pt], count: pt, open: parts.length === 1 });
                                 }
                                 else if (pt === 0)
                                     paths.push({ drive: true, path: c, name: sd[pt], count: pt });
-                                else if(sd[pt].length > 0)
+                                else if (sd[pt].length > 0)
                                     paths.push({ path: c, name: sd[pt], count: pt });
                             }
                         }
@@ -2469,10 +2469,10 @@
             $(window).trigger('resize');
 
             window.onbeforeunload = function () {
-                if (watcher)
-                    watcher.close();
+                clearWatcher();
             };
         });
+
 
         function showLocalContextMenu() {
             var selected = localTable.rows({ selected: true }).data().pluck('size');
@@ -2899,13 +2899,20 @@
         }
 
         function closing() {
+            clearWatcher();
+        }
+
+        function closeHidden() {
+            remote.getCurrentWindow().hide();
+        }
+
+        function clearWatcher() {
             if (watcher)
                 watcher.close();
         }
 
         function createWatcher() {
-            if (watcher)
-                watcher.close();
+            clearWatcher();
             watcher = chokidar.watch(options.local, {
                 persistent: true,
                 depth: 0,

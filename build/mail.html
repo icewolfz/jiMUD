@@ -999,6 +999,10 @@
         window.onbeforeunload = function (evt) {
             if (mail) mail.close();
         };
+
+        function closeHidden() {
+            remote.getCurrentWindow().hide();
+        }        
     </script>
 </head>
 

@@ -1278,7 +1278,7 @@ function createWindow() {
             edset.state = getWindowState('code-editor', winCode);
           }
           edset.save(parseTemplate(path.join('{data}', 'editor.json')));
-          winMap.webContents.executeJavaScript('closeWindow()');
+          winCode.webContents.executeJavaScript('closeWindow()');
           winCode = null;
         }
         closeWindows(false, true);
@@ -1446,7 +1446,7 @@ function createWindow() {
       set.save(global.settingsFile);
       return;
     }
-    if(winMap && !winMap.isDestroyed() && !winMap.isVisible())
+    if (winMap && !winMap.isDestroyed() && !winMap.isVisible())
       winMap.webContents.executeJavaScript('closeHidden()');
     set.save(global.settingsFile);
   });
@@ -2518,9 +2518,8 @@ function createMapper(show, loading, loaded) {
   });
 
   winMap.on('closed', (e) => {
-    if(e.sender === winMap)
-    {
-      if(!winMap.isDestroyed() && !winMap.isVisible())
+    if (e.sender === winMap) {
+      if (!winMap.isDestroyed() && !winMap.isVisible())
         winMap.webContents.executeJavaScript('closeHidden()');
       winMap = null;
     }
@@ -2708,7 +2707,7 @@ function createEditor(show, loading) {
   }));
 
   winEditor.on('closed', (e) => {
-    if(e.sender !== winEditor) return;    
+    if (e.sender !== winEditor) return;
     winEditor = null;
     editorReady = false;
   });
@@ -2761,6 +2760,7 @@ function createEditor(show, loading) {
     e.sender.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
     if (winEditor === e.sender && winEditor && (set.editorPersistent && !global.editorOnly)) {
       e.preventDefault();
+      winEditor.webContents.executeJavaScript('closeHidden()');
       winEditor.hide();
     }
   });
@@ -2819,7 +2819,7 @@ function createChat(show, loading) {
   }));
 
   winChat.on('closed', (e) => {
-    if(e.sender !== winChat) return;
+    if (e.sender !== winChat) return;
     winChat = null;
     chatReady = false;
   });
@@ -2872,6 +2872,7 @@ function createChat(show, loading) {
     set.save(global.settingsFile);
     if (winChat === e.sender && winChat && (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)) {
       e.preventDefault();
+      winChat.webContents.executeJavaScript('closeHidden()');
       winChat.hide();
     }
   });
@@ -2931,7 +2932,7 @@ function createNewWindow(name, options) {
   }));
 
   windows[name].window.on('closed', (e) => {
-    if(!windows || !windows[name] || e.sender !== windows[name].window) return;
+    if (!windows || !windows[name] || e.sender !== windows[name].window) return;
     windows[name].window = null;
     windows[name].ready = false;
   });
@@ -3028,7 +3029,7 @@ function createNewWindow(name, options) {
     set.save(global.settingsFile);
     if (windows[name].window === e.sender && windows[name].window && windows[name].persistent) {
       e.preventDefault();
-      windows[name].window.hide();
+      windows[name].window.webContents.executeJavaScript('closeHidden()');
     }
   });
 }
@@ -3190,7 +3191,7 @@ function closeWindows(save, clear, force) {
     set.windows[name].options = copyWindowOptions(name);
     cWin = windows[name].window;
     windows[name].window = null;
-    cWin.close();    
+    cWin.close();
   }
   if (clear)
     windows = {};
@@ -3251,7 +3252,7 @@ function createCodeEditor(show, loading, loaded) {
   });
 
   winCode.on('closed', (e) => {
-    if(e.sender !== winCode) return;
+    if (e.sender !== winCode) return;
     winCode = null;
     codeReady = false;
   });
@@ -3316,7 +3317,7 @@ function createCodeEditor(show, loading, loaded) {
     edset.save(parseTemplate(path.join('{data}', 'editor.json')));
     if (winCode === e.sender && winCode && !global.editorOnly && edset.window.persistent) {
       e.preventDefault();
-      winCode.hide();
+      winCode.webContents.executeJavaScript('closeHidden()');
     }
   });
 
