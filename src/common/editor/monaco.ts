@@ -6,8 +6,8 @@ const { clipboard, ipcRenderer } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
 
-interface loadMonacoOptions {
-    baseUrl?: string
+interface LoadMonacoOptions {
+    baseUrl?: string;
 }
 
 declare global {
@@ -17,7 +17,7 @@ declare global {
 }
 
 //based on monaco-loader(https://github.com/felixrieseberg/monaco-loader), inlined to reduce load times
-export function loadMonaco(options: loadMonacoOptions = {}) {
+export function loadMonaco(options: LoadMonacoOptions = {}) {
     return new Promise((resolve, reject) => {
         const monacoDir = path.join(__dirname, '..', '..', '..', 'node_modules', 'monaco-editor');
         const loader: any = require(path.join(monacoDir, '/min/vs/loader.js'));
@@ -31,11 +31,11 @@ export function loadMonaco(options: loadMonacoOptions = {}) {
         (<any>self).process.browser = true;
         loader.require(['vs/editor/editor.main'], () => {
             if (monaco) {
-                resolve(monaco)
+                resolve(monaco);
             } else {
-                reject('Monaco loaded, but could not find global "monaco"')
+                reject('Monaco loaded, but could not find global "monaco"');
             }
-        })
+        });
     });
 }
 
@@ -51,7 +51,7 @@ export function SetupEditor() {
                 monaco.languages.setMonarchTokensProvider('lpc', language);
                 monaco.languages.setLanguageConfiguration('lpc', conf);
                 monaco.languages.registerCompletionItemProvider('lpc', {
-                    provideCompletionItems: function (model, position) {
+                    provideCompletionItems: (model, position) => {
                         return loadCompletion();
                     }
                 });
@@ -69,7 +69,7 @@ export function SetupEditor() {
                     { token: 'abbr', foreground: '008000', fontStyle: 'bold' },
                     { token: 'datatype', foreground: 'ff0000' },
                     { token: 'constant', foreground: 'ff0000', fontStyle: 'bold' },
-                    { token: 'applies', foreground: 'C45AEC', fontStyle: 'bold' },
+                    { token: 'applies', foreground: 'C45AEC', fontStyle: 'bold' }
                 ],
                 colors: {
                     'editorGutter.background': '#f5f5f5'
@@ -77,15 +77,15 @@ export function SetupEditor() {
             });
             monaco.languages.registerDocumentFormattingEditProvider('lpc', {
                 provideDocumentFormattingEdits(model, options, token): Promise<monaco.languages.TextEdit[]> {
-                    var $indenter = new LPCIndenter();
+                    const $indenter = new LPCIndenter();
                     $indenter.on('error', (e) => {
                         reject(e);
                     });
-                    var $formatter = new LPCFormatter();
-                    var code = $formatter.format(model.getValue());
-                    return new Promise<monaco.languages.TextEdit[]>((resolve, reject) => {
+                    const $formatter = new LPCFormatter();
+                    const code = $formatter.format(model.getValue());
+                    return new Promise<monaco.languages.TextEdit[]>((resolve2, reject2) => {
                         $indenter.on('complete', (lines) => {
-                            resolve([{
+                            resolve2([{
                                 range: {
                                     startLineNumber: 1,
                                     startColumn: 1,
@@ -148,8 +148,8 @@ export class ReplaceCommand implements monaco.editor.ICommand {
     }
 
     public computeCursorState(model: monaco.editor.ITextModel, helper: monaco.editor.ICursorStateComputerData): monaco.Selection {
-        let inverseEditOperations = helper.getInverseEditOperations();
-        let srcRange = inverseEditOperations[0].range;
+        const inverseEditOperations = helper.getInverseEditOperations();
+        const srcRange = inverseEditOperations[0].range;
         return new monaco.Selection(
             srcRange.endLineNumber,
             srcRange.endColumn,
@@ -186,7 +186,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public createControl() {
         //TODO tooltip show folded code
-        this.$model = monaco.editor.createModel('', 'lpc')
+        this.$model = monaco.editor.createModel('', 'lpc');
         this.$model.onDidChangeContent((e) => {
             this.changed = true;
             this.emit('changed', this.$model.getValueLength());
@@ -202,16 +202,16 @@ export class MonacoCodeEditor extends EditorBase {
         return super.file;
     }
     set file(value: string) {
-        if (this.file != value) {
+        if (this.file !== value) {
             super.file = value;
-            var ext = path.extname(this.file);
+            const ext = path.extname(this.file);
             switch (ext) {
                 case '.c':
                 case '.h':
                     //monaco.editor.setModelLanguage(this.$model, 'lpc');
                     break;
                 default:
-                    var found = monaco.languages.getLanguages().filter(l => { return l.extensions.indexOf(ext) !== -1 });
+                    const found = monaco.languages.getLanguages().filter(l => { return l.extensions.indexOf(ext) !== -1; });
                     if (found.length > 0)
                         monaco.editor.setModelLanguage(this.$model, found.slice(-1)[0].id);
                     else
@@ -260,7 +260,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public get selected() {
         if (!this.$editor) return '';
-        var s = this.$editor.getSelection();
+        const s = this.$editor.getSelection();
         if (!s) return '';
         return this.$model.getValueInRange(s) || '';
     }
@@ -272,7 +272,7 @@ export class MonacoCodeEditor extends EditorBase {
             endColumn: this.$model.getLineMaxColumn(this.$model.getLineCount()),
             endLineNumber: this.$model.getLineCount()
         });
-    };
+    }
     public cut() {
         if (!this.$editor) return;
         this.$editor.getAction('editor.action.clipboardCutAction').run();
@@ -285,7 +285,7 @@ export class MonacoCodeEditor extends EditorBase {
         if (!this.$editor) return;
         this.$editor.getAction('editor.action.clipboardPasteAction').run();
     }
-    public delete() { }
+    public delete() { /**/ }
     public undo() {
         if (!this.$editor) return;
         this.$editor.trigger('', 'undo', null);
@@ -299,7 +299,7 @@ export class MonacoCodeEditor extends EditorBase {
             this.emit('watch-stop', [this.file]);
     }
     public watch(action: string, file: string, details?) {
-        if (file != this.file || this.new)
+        if (file !== this.file || this.new)
             return;
         switch (action) {
             case 'add':
@@ -312,7 +312,7 @@ export class MonacoCodeEditor extends EditorBase {
                 break;
         }
     }
-    public set spellcheck(value: boolean) { };
+    public set spellcheck(value: boolean) { /**/ }
     public find() {
         if (!this.$editor) return;
         this.$editor.getAction('actions.find').run();
@@ -368,7 +368,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public menu(menu) {
         if (menu === 'edit') {
-            var selected = this.selected.length > 0;
+            const selected = this.selected.length > 0;
             return [
                 {
                     label: 'Formatting',
@@ -377,12 +377,12 @@ export class MonacoCodeEditor extends EditorBase {
                             label: 'Insert Color...',
                             click: () => {
                                 ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                var setcolor = (event, type, color, code, window) => {
+                                const setcolor = (event, type, color, code, window) => {
                                     if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
                                         return;
                                     this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
                                     ipcRenderer.removeListener('set-color', setcolor);
-                                }
+                                };
                                 ipcRenderer.on('set-color', setcolor);
                             }
                         },
@@ -437,13 +437,13 @@ export class MonacoCodeEditor extends EditorBase {
                             click: () => {
                                 this.$editor.getAction('editor.action.formatDocument').run();
                             }
-                        },
+                        }
                     ]
                 }
-            ]
+            ];
         }
         else if (menu === 'context') {
-            var selected = this.selected.length > 0;
+            const selected = this.selected.length > 0;
             return [
                 {
                     label: 'Formatting',
@@ -452,12 +452,12 @@ export class MonacoCodeEditor extends EditorBase {
                             label: 'Insert Color...',
                             click: () => {
                                 ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                var setcolor = (event, type, color, code, window) => {
+                                const setcolor = (event, type, color, code, window) => {
                                     if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
                                         return;
                                     this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
                                     ipcRenderer.removeListener('set-color', setcolor);
-                                }
+                                };
                                 ipcRenderer.on('set-color', setcolor);
                             }
                         },
@@ -512,7 +512,7 @@ export class MonacoCodeEditor extends EditorBase {
                             click: () => {
                                 this.$editor.getAction('editor.action.formatDocument').run();
                             }
-                        },
+                        }
                     ]
                 },
                 {
@@ -520,21 +520,21 @@ export class MonacoCodeEditor extends EditorBase {
                     submenu: [
                         {
                             label: 'Expand All',
-                            accelerator: "CmdOrCtrl+>",
+                            accelerator: 'CmdOrCtrl+>',
                             click: () => {
                                 this.$editor.getAction('editor.unfoldAll').run();
                             }
                         },
                         {
                             label: 'Collapse All',
-                            accelerator: "CmdOrCtrl+<",
+                            accelerator: 'CmdOrCtrl+<',
                             click: () => {
                                 this.$editor.getAction('editor.foldAll').run();
                             }
                         }
                     ]
                 }
-            ]
+            ];
         }
         else if (menu === 'view')
             return [
@@ -543,7 +543,7 @@ export class MonacoCodeEditor extends EditorBase {
                     accelerator: 'Alt+Z',
                     click: () => {
                         this.$editor.updateOptions({ wordWrap: (this.$editor.getConfiguration().wrappingInfo.isViewportWrapping ? 'off' : 'on') });
-                    },
+                    }
                 },
                 { type: 'separator' },
                 {
@@ -551,30 +551,31 @@ export class MonacoCodeEditor extends EditorBase {
                     submenu: [
                         {
                             label: 'Expand All',
-                            accelerator: "CmdOrCtrl+>",
+                            accelerator: 'CmdOrCtrl+>',
                             click: () => {
                                 this.$editor.getAction('editor.unfoldAll').run();
                             }
                         },
                         {
                             label: 'Collapse All',
-                            accelerator: "CmdOrCtrl+<",
+                            accelerator: 'CmdOrCtrl+<',
                             click: () => {
                                 this.$editor.getAction('editor.foldAll').run();
                             }
                         }
                     ]
                 }
-            ]
+            ];
     }
 
     public insert(text) {
-        let selections = this.$editor.getSelections();
-        let commands: monaco.editor.ICommand[] = [];
-        for (let i = 0, len = selections.length; i < len; i++) {
-            let selection = selections[i];
+        const selections = this.$editor.getSelections();
+        const commands: monaco.editor.ICommand[] = [];
+        const len = selections.length;
+        for (let i = 0; i < len; i++) {
+            const selection = selections[i];
             if (selection.isEmpty()) {
-                let cursor = selection.getStartPosition();
+                const cursor = selection.getStartPosition();
                 commands.push(new ReplaceCommand(new monaco.Range(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column), text));
             } else {
                 commands.push(new ReplaceCommand(selection, text));
@@ -593,7 +594,7 @@ export class MonacoCodeEditor extends EditorBase {
     public get length() { return this.$model.getValueLength(); }
     public selectionChanged(e) {
         this.emit('selection-changed');
-        let selected = this.selected.length > 0;
+        const selected = this.selected.length > 0;
         this.emit('menu-update', 'edit|formatting|to upper case', { enabled: selected });
         this.emit('menu-update', 'edit|formatting|to lower case', { enabled: selected });
         this.emit('menu-update', 'edit|formatting|capitalize', { enabled: selected });
@@ -604,7 +605,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public activate(editor) {
         this.$editor = editor;
-        editor.setModel(this.$model)
+        editor.setModel(this.$model);
         editor.restoreViewState(this.$state);
     }
     public deactivate(editor) {
