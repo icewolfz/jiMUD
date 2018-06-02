@@ -236,18 +236,18 @@ export class PropertyGrid extends EventEmitter {
                 lbl.classList.add('property-grid-collapse', 'fa', 'fa-chevron-down');
             lbl.addEventListener('click', (e) => {
                 const el2 = (<HTMLElement>(<HTMLElement>e.currentTarget).parentElement.children[2]);
-                const c = (<HTMLElement>e.currentTarget);
+                const c2 = (<HTMLElement>e.currentTarget);
                 if (el2.style.display === 'none') {
                     el2.style.display = '';
-                    c.classList.remove('fa-chevron-right');
-                    c.classList.add('fa-chevron-down');
-                    this.$state[c.dataset.group] = false;
+                    c2.classList.remove('fa-chevron-right');
+                    c2.classList.add('fa-chevron-down');
+                    this.$state[c2.dataset.group] = false;
                 }
                 else {
                     el2.style.display = 'none';
-                    c.classList.add('fa-chevron-right');
-                    c.classList.remove('fa-chevron-down');
-                    this.$state[c.dataset.group] = true;
+                    c2.classList.add('fa-chevron-right');
+                    c2.classList.remove('fa-chevron-down');
+                    this.$state[c2.dataset.group] = true;
                 }
             });
             el.appendChild(lbl);

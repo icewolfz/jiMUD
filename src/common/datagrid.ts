@@ -170,6 +170,7 @@ export class Datagrid extends EventEmitter {
 
         this.$parent.addEventListener('keydown', (e) => {
             if (this.$editor) return;
+            // tslint:disable-next-line:no-shadowed-variable
             let el;
             let idx;
             let start;
@@ -489,9 +490,9 @@ export class Datagrid extends EventEmitter {
             else
                 return row;
         }).filter((row) => row < 0 || row >= this.$rows.length).sort();
-        let row = rows.length;
-        while (row--) {
-            this.$rows.splice(rows[row], 1);
+        let idx = rows.length;
+        while (idx--) {
+            this.$rows.splice(rows[idx], 1);
         }
         this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
