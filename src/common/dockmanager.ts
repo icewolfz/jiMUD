@@ -26,6 +26,7 @@ export interface Panel {
     iconCls: string;
     iconSrc?;
     isPanel: boolean;
+    dragOutline?: HTMLElement;
 }
 
 export class DockManager extends EventEmitter {
@@ -46,6 +47,7 @@ export class DockManager extends EventEmitter {
     private _scrollTimer: NodeJS.Timer;
     private $addCache = [];
     private $measure: HTMLElement;
+    private $dragPanel;
 
     public get hideTabstrip(): boolean {
         return this._hideTabstrip;
@@ -364,8 +366,7 @@ export class DockManager extends EventEmitter {
         this.doUpdate(UpdateType.scroll);
     }
 
-    public addPanel(title?: string, icon?: string, tooltip?: string) {
-        $('.dropdown.open').removeClass('open');
+    private newPanel(title?: string, icon?: string, tooltip?: string) {
         const panel: Panel = {
             tab: document.createElement('li'),
             pane: document.createElement('div'),
@@ -373,13 +374,16 @@ export class DockManager extends EventEmitter {
             title: document.createElement('div'),
             icon: document.createElement('div'),
             iconCls: icon || 'disconnected-icon',
-            isPanel: true
+            isPanel: true,
+            dragOutline: null
         };
 
         panel.tab.id = 'cm-tab' + panel.id;
         panel.tab.tabIndex = 0;
         panel.tab.classList.add('cm-tab');
         panel.tab.draggable = true;
+        panel.icon.draggable = false;
+        panel.title.draggable = false;
         panel.tab.appendChild(panel.icon);
         panel.tab.appendChild(panel.title);
         panel.tab.onclick = () => {
@@ -396,9 +400,59 @@ export class DockManager extends EventEmitter {
         panel.tab.ondblclick = (e) => {
             this.emit('tab-dblclick', panel.id, panel);
         };
+        panel.tab.ondragstart = (e) => {
+            const eDrag = { id: panel.id, panel: panel, preventDefault: false };
+            this.emit('tab-drag', eDrag);
+            if (eDrag.preventDefault) return;
+            if (this.active !== panel)
+                this.switchToPanel(panel.id);
+            this.$dragPanel = panel;
+            e.stopPropagation();
+        };
+        panel.tab.ondragover = (e) => {
+            if (this.$dragPanel === panel) return;
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        panel.tab.ondragend = (e) => {
+            if (this.$dragPanel === panel) return;
+            e.preventDefault();
+            e.stopPropagation();
+            panel.tab.classList.remove('drop');
+        };
+        panel.tab.ondragenter = (e) => {
+            if (this.$dragPanel === panel) return;
+            e.preventDefault();
+            e.stopPropagation();
+            panel.tab.classList.add('drop');
+        };
+        panel.tab.ondragleave = (e) => {
+            if (this.$dragPanel === panel) return;
+            e.preventDefault();
+            e.stopPropagation();
+            panel.tab.classList.remove('drop');
+            e.dataTransfer.dropEffect = 'move';
+        };
+        panel.tab.ondrop = (e) => {
+            if (this.$dragPanel === panel) return;
+            panel.tab.classList.remove('drop');
+            e.dataTransfer.dropEffect = 'move';
+            e.preventDefault();
+            e.stopPropagation();
+            const idx = this.panels.indexOf(this.$dragPanel);
+            const idxTo = this.panels.indexOf(panel);
+            this.panels.splice(idx, 1);
+            this.panels.splice(idxTo, 0, this.$dragPanel);
+            if (idxTo > idx)
+                panel.tab.parentNode.insertBefore(this.$dragPanel.tab, panel.tab.nextElementSibling);
+            else
+                panel.tab.parentNode.insertBefore(this.$dragPanel.tab, panel.tab);
+            this.emit('tab-moved', { oldIndex: idx, index: idxTo, id: this.$dragPanel.id, panel: this.$dragPanel });
+        };
 
         const close = document.createElement('i');
         close.classList.add('close', 'fa', 'fa-times');
+        close.draggable = false;
         close.onclick = () => {
             this.removePanel(panel.id);
         };
@@ -408,12 +462,18 @@ export class DockManager extends EventEmitter {
         panel.pane.classList.add('cm-tabpane');
         panel.title.classList.add('title');
         panel.icon.classList.add('icon');
-        this.$addCache.push(panel);
-        this.panels.push(panel);
-        this.switchToPanelByIndex(this.panels.length - 1);
+        return panel;
+    }
+
+    public addPanel(title?: string, icon?: string, tooltip?: string) {
+        $('.dropdown.open').removeClass('open');
+        const panel = this.newPanel(title, icon, tooltip);
         this.setPanelTitle(title || '');
         this.setPanelIconClass(panel.iconCls);
         this.setPanelTooltip(tooltip || '');
+        this.$addCache.push(panel);
+        this.panels.push(panel);
+        this.switchToPanelByIndex(this.panels.length - 1);
         this.emit('add', { index: this.panels.length - 1, id: panel.id, panel: panel });
         this.doUpdate(UpdateType.resize | UpdateType.stripState | UpdateType.batchAdd);
         return panel;
@@ -421,47 +481,7 @@ export class DockManager extends EventEmitter {
 
     public createPanel(title?: string, icon?: string, tooltip?: string) {
         $('.dropdown.open').removeClass('open');
-        const panel: Panel = {
-            tab: document.createElement('li'),
-            pane: document.createElement('div'),
-            id: --this._id,
-            title: document.createElement('div'),
-            icon: document.createElement('div'),
-            iconCls: icon || 'disconnected-icon',
-            isPanel: true
-        };
-
-        panel.tab.id = 'cm-tab' + panel.id;
-        panel.tab.tabIndex = 0;
-        panel.tab.classList.add('cm-tab');
-        panel.tab.draggable = true;
-        panel.tab.appendChild(panel.icon);
-        panel.tab.appendChild(panel.title);
-        panel.tab.onclick = () => {
-            const e = { id: panel.id, panel: panel, preventDefault: false };
-            this.emit('tab-click', e);
-            if (e.preventDefault || this.active === panel) return;
-            this.switchToPanel(panel.id);
-        };
-        panel.tab.oncontextmenu = (e) => {
-            this.emit('tab-contextmenu', panel.id, panel, e);
-            e.preventDefault();
-            e.stopPropagation();
-        };
-        panel.tab.ondblclick = (e) => {
-            this.emit('tab-dblclick', panel.id, panel);
-        };
-
-        const close = document.createElement('i');
-        close.classList.add('close', 'fa', 'fa-times');
-        close.onclick = () => {
-            this.removePanel(panel.id);
-        };
-        panel.tab.appendChild(close);
-        panel.pane.id = 'cm-tabpane' + panel.id;
-        panel.pane.classList.add('cm-tabpane');
-        panel.title.classList.add('title');
-        panel.icon.classList.add('icon');
+        const panel = this.newPanel(title, icon, tooltip);
         this.setPanelTitle(title || '', panel, true);
         this.setPanelIconClass(panel.iconCls, panel, true);
         this.setPanelTooltip(tooltip || '', panel);

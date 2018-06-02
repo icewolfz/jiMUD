@@ -28,120 +28,136 @@
             window.$editor = monaco.editor.create(el, {
                 language: 'lpc',
                 autoIndent: true,
-                scrollBeyondLastLine: false,
                 rulers: [80],
                 contextmenu: false,
                 theme: 'lpcTheme',
                 model: null
             });
+            window.$editors = [window.$editor];
+            el = document.createElement('div');
+            el.classList.add('editor-container');
+            pane.appendChild(el);
+            window.$editors.push(
+                monaco.editor.create(el, {
+                    language: 'lpc',
+                    autoIndent: true,
+                    rulers: [80],
+                    contextmenu: false,
+                    theme: 'lpcTheme',
+                    model: null
+                })
+            );
+            var l = window.$editors.length;
+            for (var e = 0; e < l; e++) {
+                window.$editors[e].addAction({
+                    id: 'jimud.action.transformToInverse',
+                    label: 'Transform to Inverse',
+                    run: function (editor) {
+                        let selections = editor.getSelections();
+                        let model = editor.getModel();
+                        let commands = [];
 
-            window.$editor.addAction({
-                id: 'jimud.action.transformToInverse',
-                label: 'Transform to Inverse',
-                run: function (editor) {
-                    let selections = editor.getSelections();
-                    let model = editor.getModel();
-                    let commands = [];
+                        for (let i = 0, len = selections.length; i < len; i++) {
+                            let selection = selections[i];
+                            if (selection.isEmpty()) {
+                                let cursor = selection.getStartPosition();
+                                let word = model.getWordAtPosition(cursor);
+                                if (!word) {
+                                    continue;
+                                }
 
-                    for (let i = 0, len = selections.length; i < len; i++) {
-                        let selection = selections[i];
-                        if (selection.isEmpty()) {
-                            let cursor = selection.getStartPosition();
-                            let word = model.getWordAtPosition(cursor);
-                            if (!word) {
-                                continue;
+                                let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                                let text = model.getValueInRange(wordRange);
+                                commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                            } else {
+                                let text = model.getValueInRange(selection);
+                                commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
                             }
-
-                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                            let text = model.getValueInRange(wordRange);
-                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                        } else {
-                            let text = model.getValueInRange(selection);
-                            commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
                         }
+                        editor.pushUndoStop();
+                        editor.executeCommands(this.id, commands);
+                        editor.pushUndoStop();
                     }
-                    editor.pushUndoStop();
-                    editor.executeCommands(this.id, commands);
-                    editor.pushUndoStop();
-                }
-            });
+                });
 
-            window.$editor.addAction({
-                id: 'jimud.action.transformToCapitalize',
-                label: 'Transform to Capitalize',
-                run: function (editor) {
-                    let selections = editor.getSelections();
-                    let model = editor.getModel();
-                    let commands = [];
+                window.$editors[e].addAction({
+                    id: 'jimud.action.transformToCapitalize',
+                    label: 'Transform to Capitalize',
+                    run: function (editor) {
+                        let selections = editor.getSelections();
+                        let model = editor.getModel();
+                        let commands = [];
 
-                    for (let i = 0, len = selections.length; i < len; i++) {
-                        let selection = selections[i];
-                        if (selection.isEmpty()) {
-                            let cursor = selection.getStartPosition();
-                            let word = model.getWordAtPosition(cursor);
-                            if (!word) {
-                                continue;
+                        for (let i = 0, len = selections.length; i < len; i++) {
+                            let selection = selections[i];
+                            if (selection.isEmpty()) {
+                                let cursor = selection.getStartPosition();
+                                let word = model.getWordAtPosition(cursor);
+                                if (!word) {
+                                    continue;
+                                }
+
+                                let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                                let text = model.getValueInRange(wordRange);
+                                commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                            } else {
+                                let text = model.getValueInRange(selection);
+                                commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
                             }
-
-                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                            let text = model.getValueInRange(wordRange);
-                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                        } else {
-                            let text = model.getValueInRange(selection);
-                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
                         }
+                        editor.pushUndoStop();
+                        editor.executeCommands(this.id, commands);
+                        editor.pushUndoStop();
                     }
-                    editor.pushUndoStop();
-                    editor.executeCommands(this.id, commands);
-                    editor.pushUndoStop();
-                }
-            });
+                });
 
-            window.$editor.addAction({
-                id: 'jimud.action.insertColor',
-                label: 'Transform to Capitalize',
-                run: function (editor) {
-                    let selections = editor.getSelections();
-                    let model = editor.getModel();
-                    let commands = [];
+                window.$editors[e].addAction({
+                    id: 'jimud.action.insertColor',
+                    label: 'Transform to Capitalize',
+                    run: function (editor) {
+                        let selections = editor.getSelections();
+                        let model = editor.getModel();
+                        let commands = [];
 
-                    for (let i = 0, len = selections.length; i < len; i++) {
-                        let selection = selections[i];
-                        if (selection.isEmpty()) {
-                            let cursor = selection.getStartPosition();
-                            let word = model.getWordAtPosition(cursor);
-                            if (!word) {
-                                continue;
+                        for (let i = 0, len = selections.length; i < len; i++) {
+                            let selection = selections[i];
+                            if (selection.isEmpty()) {
+                                let cursor = selection.getStartPosition();
+                                let word = model.getWordAtPosition(cursor);
+                                if (!word) {
+                                    continue;
+                                }
+
+                                let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                                let text = model.getValueInRange(wordRange);
+                                commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                            } else {
+                                let text = model.getValueInRange(selection);
+                                commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
                             }
-
-                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                            let text = model.getValueInRange(wordRange);
-                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                        } else {
-                            let text = model.getValueInRange(selection);
-                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
                         }
+                        editor.pushUndoStop();
+                        editor.executeCommands(this.id, commands);
+                        editor.pushUndoStop();
                     }
-                    editor.pushUndoStop();
-                    editor.executeCommands(this.id, commands);
-                    editor.pushUndoStop();
-                }
-            });
+                });
 
-            window.$editor.onContextMenu((e) => {
-                manager.active.editor.emit('contextmenu', e);
-            });
-            window.$editor.onDidChangeCursorSelection((e) => {
-                manager.active.editor.selectionChanged(e);
-            });
-            window.$editor.onDidChangeCursorPosition((e) => {
-                manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
-            });
-            if (options && options.editorOptions)
-                window.$editor.updateOptions(options.editorOptions);
+                window.$editors[e].onContextMenu((e) => {
+                    manager.active.editor.emit('contextmenu', e);
+                });
+                window.$editors[e].onDidChangeCursorSelection((e) => {
+                    manager.active.editor.selectionChanged(e);
+                });
+                window.$editors[e].onDidChangeCursorPosition((e) => {
+                    manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
+                });
+
+                if (options && options.editorOptions)
+                    window.$editors[e].updateOptions(options.editorOptions);
+            }
             _ready = true;
         });        
     </script>
@@ -981,6 +997,10 @@
     manager.hideTabstrip = false;
     manager.on('add', (e) => {
     });
+    manager.on('tab-moved', (e) => {
+        if (e.panel && e.panel.editor)
+            e.panel.editor.focus();
+    });
     manager.on('remove', (e) => {
         if (e.panel.editor.changed || e.panel.editor.new) {
             e.cancel = !confirmSave(e.panel);
@@ -1730,6 +1750,31 @@
         _loading = 0;
     }
 
+    function savedOpened() {
+        var opened = [];
+        var panels = manager.panels;
+        var k = panels.length;
+        var p;
+        while (k--) {
+            p = panels[k];
+            if (!p.editor.new)
+                opened.unshift({
+                    file: p.editor.file,
+                    remote: p.editor.remote
+                });
+            if (!p.editor.new && !p.editor.changed)
+                continue;
+            if (!confirmSave(p))
+                return;
+        }
+        if (!options) loadOptions();
+        if (options.reopen)
+            options.opened = opened;
+        else
+            options.opened = [];
+        saveOptions();
+    }
+
     function closeHidden() {
         var elems = document.body.getElementsByTagName("dialog");
         var e = 0, el = elems.length;
@@ -1747,29 +1792,7 @@
                     return;
             }
         }
-        var opened = [];
-        var keys = Object.keys(_editors);
-        var k = keys.length;
-        var p;
-        while (k--) {
-            p = keys[k];
-            if (!_editors[p]) continue;
-            if (!_editors[p].editor.new)
-                opened.unshift({
-                    file: _editors[p].editor.file,
-                    remote: _editors[p].remote
-                });
-            if (!_editors[p].editor.new && !_editors[p].editor.changed)
-                continue;
-            if (!confirmSave(_editors[p]))
-                return;
-        }
-        if (!options) loadOptions();
-        if (options.reopen)
-            options.opened = opened;
-        else
-            options.opened = [];
-        saveOptions();
+        savedOpened();
         remote.getCurrentWindow().hide();
     }
 
@@ -1800,31 +1823,10 @@
                             return 'no';
                     }
                 }
-                var opened = [];
-                var keys = Object.keys(_editors);
-                var k = keys.length;
-                var p;
-                while (k--) {
-                    p = keys[k];
-                    if (!_editors[p]) continue;
-                    if (!_editors[p].editor.new)
-                        opened.unshift({
-                            file: _editors[p].editor.file,
-                            remote: _editors[p].remote
-                        });
-                    if (!_editors[p].editor.new && !_editors[p].editor.changed)
-                        continue;
-                    if (!confirmSave(_editors[p]))
-                        return 'no';
-                }
-                if (!options) loadOptions();
-                if (options.reopen)
-                    options.opened = opened;
-                else
-                    options.opened = [];
-                saveOptions();
+                savedOpened();
                 //clean up
-                p = keys.length;
+                var keys = Object.keys(_editors);
+                var p = keys.length;
                 while (p--)
                     _editors[keys[p]].editor.close();
                 if (watcher)
