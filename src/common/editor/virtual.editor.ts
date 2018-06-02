@@ -2916,7 +2916,8 @@ export class VirtualEditor extends EditorBase {
     }
 
     public focus(): void {
-
+        if (this.parent.contains(document.activeElement))
+            return;
         switch (this.$view) {
             case View.map:
                 setTimeout(() => {
