@@ -1490,6 +1490,7 @@ export class Datagrid extends EventEmitter {
         if (changed)
             this.emit('value-changed', editor.data, oldObj, this.$sortedRows[this.$editor.row]);
         this.$editor = null;
+        this.focus();
     }
 
     public createEditor(el: HTMLElement, fCol: any = 0) {
