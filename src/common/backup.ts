@@ -206,12 +206,18 @@ export class Backup extends EventEmitter {
             else
                 this.client.debug('No mapper data to save.');
             data.map = rooms;
-            if ((this.saveSelection & BackupSelection.Map) !== BackupSelection.Map)
+            if ((this.saveSelection & BackupSelection.Map) !== BackupSelection.Map) {
                 delete data.map;
-            if ((this.saveSelection & BackupSelection.Profiles) !== BackupSelection.Profiles)
+                this.client.debug('Setting for no mapper data enabled.');
+            }
+            if ((this.saveSelection & BackupSelection.Profiles) !== BackupSelection.Profiles) {
                 delete data.profiles;
-            if ((this.saveSelection & BackupSelection.Settings) !== BackupSelection.Settings)
+                this.client.debug('Setting for no profiles enabled.');
+            }
+            if ((this.saveSelection & BackupSelection.Settings) !== BackupSelection.Settings) {
                 delete data.settings;
+                this.client.debug('Setting for no settings data enabled.');
+            }
             let jData = JSON.stringify(data);
             jData = LZString.compressToEncodedURIComponent(jData);
             this._save = [jData.match(/((\S|\s|.){1,20000})/g), 0, 0];
