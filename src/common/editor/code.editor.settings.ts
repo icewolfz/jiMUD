@@ -5,6 +5,7 @@ const path = require('path');
 export class EditorSettings {
     public recent = [];
     public opened = [];
+    public layout = [1];
     public maxRecent = 15;
     public reopen = true;
     public outputSize = 170;

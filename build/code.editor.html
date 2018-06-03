@@ -16,7 +16,7 @@
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <script>
-        /* global manager, inverse, capitalize, options */
+        /* global manager, inverse, capitalize, options, monaco, ReplaceCommandThatPreservesSelection */
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
@@ -34,130 +34,120 @@
                 model: null
             });
             window.$editors = [window.$editor];
-            el = document.createElement('div');
-            el.classList.add('editor-container');
-            pane.appendChild(el);
-            window.$editors.push(
-                monaco.editor.create(el, {
-                    language: 'lpc',
-                    autoIndent: true,
-                    rulers: [80],
-                    contextmenu: false,
-                    theme: 'lpcTheme',
-                    model: null
-                })
-            );
-            var l = window.$editors.length;
-            for (var e = 0; e < l; e++) {
-                window.$editors[e].addAction({
-                    id: 'jimud.action.transformToInverse',
-                    label: 'Transform to Inverse',
-                    run: function (editor) {
-                        let selections = editor.getSelections();
-                        let model = editor.getModel();
-                        let commands = [];
+            window.$editor.addAction({
+                id: 'jimud.action.transformToInverse',
+                label: 'Transform to Inverse',
+                run: function (editor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands = [];
 
-                        for (let i = 0, len = selections.length; i < len; i++) {
-                            let selection = selections[i];
-                            if (selection.isEmpty()) {
-                                let cursor = selection.getStartPosition();
-                                let word = model.getWordAtPosition(cursor);
-                                if (!word) {
-                                    continue;
-                                }
-
-                                let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                                let text = model.getValueInRange(wordRange);
-                                commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                            } else {
-                                let text = model.getValueInRange(selection);
-                                commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
                             }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
                         }
-                        editor.pushUndoStop();
-                        editor.executeCommands(this.id, commands);
-                        editor.pushUndoStop();
                     }
-                });
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
 
-                window.$editors[e].addAction({
-                    id: 'jimud.action.transformToCapitalize',
-                    label: 'Transform to Capitalize',
-                    run: function (editor) {
-                        let selections = editor.getSelections();
-                        let model = editor.getModel();
-                        let commands = [];
+            window.$editor.addAction({
+                id: 'jimud.action.transformToCapitalize',
+                label: 'Transform to Capitalize',
+                run: function (editor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands = [];
 
-                        for (let i = 0, len = selections.length; i < len; i++) {
-                            let selection = selections[i];
-                            if (selection.isEmpty()) {
-                                let cursor = selection.getStartPosition();
-                                let word = model.getWordAtPosition(cursor);
-                                if (!word) {
-                                    continue;
-                                }
-
-                                let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                                let text = model.getValueInRange(wordRange);
-                                commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                            } else {
-                                let text = model.getValueInRange(selection);
-                                commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
                             }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
                         }
-                        editor.pushUndoStop();
-                        editor.executeCommands(this.id, commands);
-                        editor.pushUndoStop();
                     }
-                });
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
 
-                window.$editors[e].addAction({
-                    id: 'jimud.action.insertColor',
-                    label: 'Transform to Capitalize',
-                    run: function (editor) {
-                        let selections = editor.getSelections();
-                        let model = editor.getModel();
-                        let commands = [];
+            window.$editor.addAction({
+                id: 'jimud.action.insertColor',
+                label: 'Transform to Capitalize',
+                run: function (editor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands = [];
 
-                        for (let i = 0, len = selections.length; i < len; i++) {
-                            let selection = selections[i];
-                            if (selection.isEmpty()) {
-                                let cursor = selection.getStartPosition();
-                                let word = model.getWordAtPosition(cursor);
-                                if (!word) {
-                                    continue;
-                                }
-
-                                let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                                let text = model.getValueInRange(wordRange);
-                                commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                            } else {
-                                let text = model.getValueInRange(selection);
-                                commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
                             }
-                        }
-                        editor.pushUndoStop();
-                        editor.executeCommands(this.id, commands);
-                        editor.pushUndoStop();
-                    }
-                });
 
-                window.$editors[e].onContextMenu((e) => {
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                        }
+                    }
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
+
+            window.$editor.onContextMenu((e) => {
+                let idx = window.$editors.indexOf(window.$editor);
+                if (manager.activePane === manager.panes[idx])
                     manager.active.editor.emit('contextmenu', e);
-                });
-                window.$editors[e].onDidChangeCursorSelection((e) => {
+            });
+            window.$editor.onDidChangeCursorSelection((e) => {
+                let idx = window.$editors.indexOf(window.$editor);
+                if (manager.activePane === manager.panes[idx])
                     manager.active.editor.selectionChanged(e);
-                });
-                window.$editors[e].onDidChangeCursorPosition((e) => {
+            });
+            window.$editor.onDidChangeCursorPosition((e) => {
+                let idx = window.$editors.indexOf(window.$editor);
+                if (manager.activePane === manager.panes[idx])
                     manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
-                });
+            });
 
-                if (options && options.editorOptions)
-                    window.$editors[e].updateOptions(options.editorOptions);
-            }
+            if (options && options.editorOptions)
+                window.$editor.updateOptions(options.editorOptions);
             _ready = true;
         });        
     </script>
@@ -997,6 +987,139 @@
     manager.hideTabstrip = false;
     manager.on('add', (e) => {
     });
+    manager.on('add-pane', (idx, pane) => {
+        var el = document.createElement('div');
+        el.classList.add('editor-container');
+        pane.pane.appendChild(el);
+        var editor = monaco.editor.create(el, {
+            language: 'lpc',
+            autoIndent: true,
+            rulers: [80],
+            contextmenu: false,
+            theme: 'lpcTheme',
+            model: null
+        });
+
+        editor.addAction({
+            id: 'jimud.action.transformToInverse',
+            label: 'Transform to Inverse',
+            run: function (editor) {
+                let selections = editor.getSelections();
+                let model = editor.getModel();
+                let commands = [];
+
+                for (let i = 0, len = selections.length; i < len; i++) {
+                    let selection = selections[i];
+                    if (selection.isEmpty()) {
+                        let cursor = selection.getStartPosition();
+                        let word = model.getWordAtPosition(cursor);
+                        if (!word) {
+                            continue;
+                        }
+
+                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                        let text = model.getValueInRange(wordRange);
+                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                    } else {
+                        let text = model.getValueInRange(selection);
+                        commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
+                    }
+                }
+                editor.pushUndoStop();
+                editor.executeCommands(this.id, commands);
+                editor.pushUndoStop();
+            }
+        });
+
+        editor.addAction({
+            id: 'jimud.action.transformToCapitalize',
+            label: 'Transform to Capitalize',
+            run: function (editor) {
+                let selections = editor.getSelections();
+                let model = editor.getModel();
+                let commands = [];
+
+                for (let i = 0, len = selections.length; i < len; i++) {
+                    let selection = selections[i];
+                    if (selection.isEmpty()) {
+                        let cursor = selection.getStartPosition();
+                        let word = model.getWordAtPosition(cursor);
+                        if (!word) {
+                            continue;
+                        }
+
+                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                        let text = model.getValueInRange(wordRange);
+                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                    } else {
+                        let text = model.getValueInRange(selection);
+                        commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                    }
+                }
+                editor.pushUndoStop();
+                editor.executeCommands(this.id, commands);
+                editor.pushUndoStop();
+            }
+        });
+
+        editor.addAction({
+            id: 'jimud.action.insertColor',
+            label: 'Transform to Capitalize',
+            run: function (editor) {
+                let selections = editor.getSelections();
+                let model = editor.getModel();
+                let commands = [];
+
+                for (let i = 0, len = selections.length; i < len; i++) {
+                    let selection = selections[i];
+                    if (selection.isEmpty()) {
+                        let cursor = selection.getStartPosition();
+                        let word = model.getWordAtPosition(cursor);
+                        if (!word) {
+                            continue;
+                        }
+
+                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                        let text = model.getValueInRange(wordRange);
+                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                    } else {
+                        let text = model.getValueInRange(selection);
+                        commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                    }
+                }
+                editor.pushUndoStop();
+                editor.executeCommands(this.id, commands);
+                editor.pushUndoStop();
+            }
+        });
+
+        editor.onContextMenu((e) => {
+            let idx = window.$editors.indexOf(editor);
+            if (manager.activePane === manager.panes[idx])
+                manager.active.editor.emit('contextmenu', e);
+        });
+        editor.onDidChangeCursorSelection((e) => {
+            let idx = window.$editors.indexOf(editor);
+            if (manager.activePane === manager.panes[idx])
+                manager.active.editor.selectionChanged(e);
+        });
+        editor.onDidChangeCursorPosition((e) => {
+            let idx = window.$editors.indexOf(editor);
+            if (manager.activePane === manager.panes[idx])
+                manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
+        });
+
+        if (options && options.editorOptions)
+            editor.updateOptions(options.editorOptions);
+        window.$editors.splice(idx, 0, editor);
+    });
+    manager.on('destroy-pane', (idx, pane) => {
+        window.$editors[idx].dispose();
+        window.$editors.splice(idx, 1);
+    });
     manager.on('tab-moved', (e) => {
         if (e.panel && e.panel.editor)
             e.panel.editor.focus();
@@ -1006,33 +1129,39 @@
             e.cancel = !confirmSave(e.panel);
         }
     });
-    manager.on('removed', (e) => {
+    manager.on('removed', (e, pane) => {
         e.panel.editor.close();
         delete _editors[e.panel.editor.file];
         if (manager.panels.length === 0)
-            window.$editor.domElement.style.display = 'none';
+            window.$editors[pane].domElement.style.display = 'none';
         doUpdate(1);
     });
-    manager.on('activated', (e) => {
+    manager.on('resize', (e) => {
+        if (!window.$editors) return;
+        var ed = window.$editors.length;
+        while (ed--)
+            window.$editors[ed].layout();
+    });
+    manager.on('activated', (e, pane) => {
         if (e.panel.editor) {
             if (e.panel.editor.type === 1) {
-                window.$editor.domElement.style.display = '';
-                e.panel.editor.activate(window.$editor);
-                window.$editor.layout();
+                window.$editors[pane].domElement.style.display = '';
+                e.panel.editor.activate(window.$editors[pane]);
+                window.$editors[pane].layout();
             }
             else {
-                window.$editor.domElement.style.display = 'none';
+                window.$editors[pane].domElement.style.display = 'none';
                 e.panel.editor.activate();
             }
             setTimeout(() => { e.panel.editor.focus(); }, 50);
         }
         else
-            window.$editor.domElement.style.display = 'none';
+            window.$editors[pane].domElement.style.display = 'none';
         doUpdate(1);
     });
-    manager.on('deactivated', (e) => {
+    manager.on('deactivated', (e, pane) => {
         if (e.panel.editor.type === 1)
-            e.panel.editor.deactivate(window.$editor);
+            e.panel.editor.deactivate(window.$editors[pane]);
         else
             e.panel.editor.deactivate();
     });
@@ -1106,6 +1235,8 @@
             event.stopPropagation();
             openFiles(files);
         }
+        //else
+        //manager.active.editor.focus();
     });
     manager.on('tab-contextmenu', (panelId, panel) => {
         var temp = [];
@@ -1345,8 +1476,11 @@
         catch (ex) {
             ipcRenderer.send('error', ex);
         }
-        if (_ready)
-            window.$editor.updateOptions(options.editorOptions);
+        if (_ready) {
+            var e = window.$editors.length;
+            while (e--)
+                window.$editors[e].updateOptions(options.editorOptions);
+        }
         output.css('height', options.outputSize + 'px');
         if (options.output) {
             dock.css('bottom', options.outputSize + 'px');
@@ -1739,8 +1873,22 @@
         var o, ol;
         //var start = new Date().getTime();
         if (_open) {
-            openFiles(options.opened.concat(_open.map((l) => { return { file: l[0], remote: [1] }; })));
+            if (options.opened.length && Array.isArray(options.opened[0])) {
+                manager.layout = options.layout;
+                options.opened[0] = options.opened[0].concat(_open.map((l) => { return { file: l[0], remote: [1] }; }));
+                let l = options.opened.length;
+                while (l--)
+                    openFiles(options.opened[l], false, manager.panes[l]);
+            }
+            else
+                openFiles(options.opened.concat(_open.map((l) => { return { file: l[0], remote: [1] }; })));
             _open = 0;
+        }
+        else if (options.opened.length && Array.isArray(options.opened[0])) {
+            manager.layout = options.layout;
+            let l = options.opened.length;
+            while (l--)
+                openFiles(options.opened[l], false, manager.panes[l]);
         }
         else
             openFiles(options.opened);
@@ -1752,26 +1900,33 @@
 
     function savedOpened() {
         var opened = [];
-        var panels = manager.panels;
-        var k = panels.length;
-        var p;
-        while (k--) {
-            p = panels[k];
-            if (!p.editor.new)
-                opened.unshift({
-                    file: p.editor.file,
-                    remote: p.editor.remote
-                });
-            if (!p.editor.new && !p.editor.changed)
-                continue;
-            if (!confirmSave(p))
-                return;
+
+        var panes = manager.panes;
+        var s = panes.length;
+        while (s--) {
+            var panels = manager.panes[s].panels;
+            var k = panels.length;
+            var p;
+            opened[s] = [];
+            while (k--) {
+                p = panels[k];
+                if (!p.editor.new)
+                    opened[s].unshift({
+                        file: p.editor.file,
+                        remote: p.editor.remote
+                    });
+                if (!p.editor.new && !p.editor.changed)
+                    continue;
+                if (!confirmSave(p))
+                    return;
+            }
         }
         if (!options) loadOptions();
         if (options.reopen)
             options.opened = opened;
         else
             options.opened = [];
+        options.layout = manager.layout;
         saveOptions();
     }
 
@@ -2060,7 +2215,7 @@
         newFromFile(parseTemplate(path.join('{assets}', 'templates', 'monsters', 'base.c')), 'monster');
     }
 
-    function openFile(file, remoteFile) {
+    function openFile(file, remoteFile, dock) {
         if (!file || file.length === 0) {
             dialog.showOpenDialog(remote.getCurrentWindow(),
                 {
@@ -2079,17 +2234,17 @@
                     if (fileNames === undefined) {
                         return;
                     }
-                    openFiles(fileNames.map((l) => { return { file: l }; }), true);
+                    openFiles(fileNames.map((l) => { return { file: l }; }), true, dock);
                 });
         }
         else {
             _recent.unshift({ file: file, remote: remoteFile });
-            createEditor({ file: file, open: true, remote: remoteFile }, true);
+            createEditor({ file: file, open: true, remote: remoteFile }, true, dock);
             doUpdate(25);
         }
     }
 
-    function openFiles(files, exists) {
+    function openFiles(files, exists, dock) {
         if (files.length === 0) return;
         var panels = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
@@ -2106,7 +2261,7 @@
             if (p)
                 panels.push(p);
         }
-        manager.addPanels(panels);
+        manager.addPanels(panels, dock);
         doUpdate(25);
     }
 
@@ -2390,7 +2545,7 @@
         return _editors[file];
     }
 
-    function createEditor(data, add) {//file, open, remoteFile, _new, value) {
+    function createEditor(data, add, dock) {//file, open, remoteFile, _new, value) {
         var p = findEditor(data.file);
         if (p) {
             p.editor.remote = data.remote;
@@ -2498,25 +2653,31 @@
                 }
             });
             p.editor.on('supports-changed', () => {
+                if (p !== manager.active) return;
                 doUpdate(2);
             });
             p.editor.on('changed', (length) => {
-                doUpdate(2);
                 updatePanel(p);
+                if (p !== manager.active) return;
+                doUpdate(2);
                 sbSize.textContent = 'Length: ' + length.toLocaleString();
             });
             p.editor.on('saved', () => {
+                if (p !== manager.active) return;
                 doUpdate(2);
                 updatePanel(p);
             });
             p.editor.on('reverted', () => {
+                if (p !== manager.active) return;
                 doUpdate(2);
                 updatePanel(p);
             });
             p.editor.on('selection-changed', () => {
+                if (p !== manager.active) return;
                 doUpdate(2);
             });
             p.editor.on('menu-update', (menu, options) => {
+                if (p !== manager.active) return;
                 menubar.updateItem(menu, options);
             });
             p.editor.on('rebuild-buttons', () => {
@@ -2631,6 +2792,7 @@
                 logOutput(msg, true);
             });
             p.editor.on('location-changed', (x, y) => {
+                if (p !== manager.active) return;
                 if (p.editor.type == 1)
                     sbLocation.textContent = `Ln ${y}, Col ${x}`;
                 else if (y != -1 && x != -1)
@@ -2639,6 +2801,7 @@
                     sbLocation.textContent = '';
             });
             p.editor.on('status-message', (msg) => {
+                if (p !== manager.active) return;
                 sbMessage.textContent = msg;
             });
             p.editor.on('option-changed', (option, value) => {
@@ -2660,7 +2823,7 @@
             _loading--;
         }
         if (add) {
-            manager.addPanels([p]);
+            manager.addPanels([p], dock);
             doUpdate(1);
             p.editor.focus();
         }
