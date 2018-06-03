@@ -983,7 +983,7 @@
     ]);
 
     var manager = new DockManager();
-    var dock = $("#cm");
+    var dock = $(".dock-manager");
     manager.hideTabstrip = false;
     manager.on('add', (e) => {
     });
@@ -1132,8 +1132,13 @@
     manager.on('removed', (e, pane) => {
         e.panel.editor.close();
         delete _editors[e.panel.editor.file];
-        if (manager.panels.length === 0)
+        if (manager.panes[pane].panels.length === 0)
             window.$editors[pane].domElement.style.display = 'none';
+        doUpdate(1);
+    });
+    manager.on('dock-changed', (e, pane, oPane) => {
+        if (manager.panes[oPane].panels.length === 0)
+            window.$editors[oPane].domElement.style.display = 'none';
         doUpdate(1);
     });
     manager.on('resize', (e) => {

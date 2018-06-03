@@ -481,8 +481,11 @@ export class DockManager extends EventEmitter {
 
     public dock(panel, dock, active?) {
         const oDock = panel.dock;
-        oDock.removePanel(panel);
+        const oIndex = oDock.panels.indexOf(panel);
+        oDock.removePanel(panel, true);
         dock.addPanels([panel]);
+        const nIndex = dock.panels.indexOf(panel);
+        this.emit('dock-changed', { panel: panel, oldDock: oDock, dock: dock, oldIndex: oDock, index: nIndex }, this.panes.indexOf(dock), this.panes.indexOf(oDock));
         if (active && dock !== this.$activePane) {
             this.$activePane.focused = false;
             this.$activePane = dock;
@@ -1163,7 +1166,7 @@ export class DockPane extends EventEmitter {
         this.doUpdate(UpdateType.resize | UpdateType.stripState);
     }
 
-    public removePanel(panel?) {
+    public removePanel(panel?, silent?) {
         if (panel === undefined)
             panel = this.active;
         else
@@ -1172,7 +1175,8 @@ export class DockPane extends EventEmitter {
         let idx = this.getPanelIndex(panel);
         if (idx === -1) return;
         const e = { index: idx, id: panel.id, panel: panel, cancel: false };
-        this.emit('remove', e);
+        if (!silent)
+            this.emit('remove', e);
         if (e.cancel)
             return;
         $('.dropdown.open').removeClass('open');
@@ -1186,7 +1190,8 @@ export class DockPane extends EventEmitter {
                 idx--;
             this.switchToPanelByIndex(idx);
         }
-        this.emit('removed', { index: idx, id: panel.id, panel: panel });
+        if (!silent)
+            this.emit('removed', { index: idx, id: panel.id, panel: panel });
         this.doUpdate(UpdateType.resize | UpdateType.stripState);
     }
 
