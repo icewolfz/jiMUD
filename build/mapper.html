@@ -332,7 +332,7 @@
       });
 
       mapper.on('active-room-changed', (room) => {
-        if (!($('#select-area option[value=\'' + room.area + '\']').length > 0)) {
+        if (!($('#select-area option[value="' + room.area + '"]').length > 0)) {
           $("#select-area").append($('<option></option>').val(room.area).html(room.area));
           $("#reArea").append($('<option></option>').val(room.area).html(room.area));
         }

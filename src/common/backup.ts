@@ -74,8 +74,10 @@ export class Backup extends EventEmitter {
     }
 
     public save(version?: number) {
+        this.client.debug('Map file: ' + this.mapFile);
         const _db = new sqlite3.Database(this.mapFile);
-        _db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID', (err, rows) => {
+        _db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID', (err, rows) => {
+
             const data = {
                 version: version,
                 profiles: {},
@@ -190,14 +192,19 @@ export class Backup extends EventEmitter {
                             rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
                         }
                         rooms[rows[r].ID].exits = {};
-                        rooms[rows[r].ID].exits[rows[r].Exit] = {
-                            num: parseInt(rows[r].DestID, 10),
-                            isdoor: rows[r].IsDoor,
-                            isclosed: rows[r].IsClosed
-                        };
+                        if (rows[r].Exit) {
+                            rooms[rows[r].ID].exits[rows[r].Exit] = {
+                                num: parseInt(rows[r].DestID, 10),
+                                isdoor: rows[r].IsDoor,
+                                isclosed: rows[r].IsClosed
+                            };
+                        }
                     }
                 }
+                this.client.debug('Total mapper room/exits: ' + rows.length);
             }
+            else
+                this.client.debug('No mapper data to save.');
             data.map = rooms;
             if ((this.saveSelection & BackupSelection.Map) !== BackupSelection.Map)
                 delete data.map;
@@ -222,10 +229,10 @@ export class Backup extends EventEmitter {
             type: 'POST',
             url: this.URL,
             data:
-            {
-                user: this._user,
-                a: 'abort'
-            }
+                {
+                    user: this._user,
+                    a: 'abort'
+                }
         });
     }
 
@@ -237,10 +244,10 @@ export class Backup extends EventEmitter {
             type: 'POST',
             url: this.URL,
             data:
-            {
-                user: this._user,
-                a: 'done'
-            }
+                {
+                    user: this._user,
+                    a: 'done'
+                }
         });
     }
 
@@ -250,11 +257,11 @@ export class Backup extends EventEmitter {
                 type: 'POST',
                 url: this.URL,
                 data:
-                {
-                    user: this._user,
-                    a: 'get',
-                    c: ++this._save[1]
-                },
+                    {
+                        user: this._user,
+                        a: 'get',
+                        c: ++this._save[1]
+                    },
                 dataType: 'json',
                 success: (data) => {
                     if (this._abort) return;
@@ -284,12 +291,12 @@ export class Backup extends EventEmitter {
                 type: 'POST',
                 url: this.URL,
                 data:
-                {
-                    user: this._user,
-                    a: 'save',
-                    data: this._save[0].shift(),
-                    append: (this._save[1] > 0 ? 1 : 0)
-                },
+                    {
+                        user: this._user,
+                        a: 'save',
+                        data: this._save[0].shift(),
+                        append: (this._save[1] > 0 ? 1 : 0)
+                    },
                 dataType: 'json',
                 success: (data) => {
                     if (!data)

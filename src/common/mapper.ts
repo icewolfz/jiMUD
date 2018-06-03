@@ -458,7 +458,7 @@ export class Mapper extends EventEmitter {
         x = Math.floor(x);
         y = Math.floor(y);
         if (this._splitArea)
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area AND Zone = $zone AND X = $x AND Y = $y AND Z = $z', {
+            this._db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Area = $area AND Zone = $zone AND X = $x AND Y = $y AND Z = $z', {
                 $area: area,
                 $zone: zone,
                 $x: x,
@@ -474,7 +474,7 @@ export class Mapper extends EventEmitter {
                 }
             });
         else
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Zone = $zone AND X = $x AND Y = $y AND Z = $z', {
+            this._db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Zone = $zone AND X = $x AND Y = $y AND Z = $z', {
                 $zone: zone,
                 $x: x,
                 $y: y,
@@ -524,7 +524,7 @@ export class Mapper extends EventEmitter {
         context.font = '8pt Arial';
         //this._db.serialize(() => {
         if (this._splitArea) {
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
+            this._db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
                 $area: area,
                 $zone: zone,
                 $x: x,
@@ -548,6 +548,7 @@ export class Mapper extends EventEmitter {
                     const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
+                            if (!rows[r].Exit) continue;
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
@@ -557,6 +558,7 @@ export class Mapper extends EventEmitter {
                         else {
                             rooms[rows[r].ID] = clone(rows[r]);
                             rooms[rows[r].ID].exits = {};
+                            if (!rows[r].Exit) continue;
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
@@ -577,7 +579,7 @@ export class Mapper extends EventEmitter {
             });
         }
         else {
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
+            this._db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
                 $zone: zone,
                 $x: x,
                 $y: y,
@@ -600,6 +602,7 @@ export class Mapper extends EventEmitter {
                     const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
+                            if (!rows[r].Exit) continue;
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
@@ -609,6 +612,7 @@ export class Mapper extends EventEmitter {
                         else {
                             rooms[rows[r].ID] = clone(rows[r]);
                             rooms[rows[r].ID].exits = {};
+                            if (!rows[r].Exit) continue;
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
@@ -1556,7 +1560,7 @@ export class Mapper extends EventEmitter {
             }, 10);
             return;
         }
-        this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Rooms.ID = $id', {
+        this._db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Rooms.ID = $id', {
             $id: id
         }, (err, rows) => {
             if (err) this.emit('error', err);
@@ -1565,6 +1569,7 @@ export class Mapper extends EventEmitter {
                 const rl = rows.length;
                 for (let r = 0; r < rl; r++) {
                     if (rooms[rows[r].ID]) {
+                        if (!rows[r].Exit) continue;
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
@@ -1574,6 +1579,7 @@ export class Mapper extends EventEmitter {
                     else {
                         rooms[rows[r].ID] = clone(rows[r]);
                         rooms[rows[r].ID].exits = {};
+                        if (!rows[r].Exit) continue;
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: rows[r].DestID,
                             isdoor: rows[r].IsDoor,
@@ -1594,7 +1600,7 @@ export class Mapper extends EventEmitter {
             return;
         }
         if (this._splitArea) {
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone', {
+            this._db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone', {
                 $area: area,
                 $zone: zone,
                 $z: level
@@ -1605,6 +1611,7 @@ export class Mapper extends EventEmitter {
                     const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
+                            if (!rows[r].Exit) continue;
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
@@ -1614,6 +1621,7 @@ export class Mapper extends EventEmitter {
                         else {
                             rooms[rows[r].ID] = this.normalizeRoom(clone(rows[r]));
                             rooms[rows[r].ID].exits = {};
+                            if (!rows[r].Exit) continue;
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
@@ -1626,7 +1634,7 @@ export class Mapper extends EventEmitter {
             });
         }
         else {
-            this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone', {
+            this._db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone', {
                 $zone: zone,
                 $z: level
             }, (err, rows) => {
@@ -1636,6 +1644,7 @@ export class Mapper extends EventEmitter {
                     const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
                         if (rooms[rows[r].ID]) {
+                            if (!rows[r].Exit) continue;
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
@@ -1645,6 +1654,7 @@ export class Mapper extends EventEmitter {
                         else {
                             rooms[rows[r].ID] = this.normalizeRoom(clone(rows[r]));
                             rooms[rows[r].ID].exits = {};
+                            if (!rows[r].Exit) continue;
                             rooms[rows[r].ID].exits[rows[r].Exit] = {
                                 num: rows[r].DestID,
                                 isdoor: rows[r].IsDoor,
@@ -2015,7 +2025,7 @@ export class Mapper extends EventEmitter {
     }
 
     public exportArea(file: string) {
-        this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID WHERE Area = $area', {
+        this._db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Area = $area', {
             $area: this.active.area || ''
         }, (err, rows) => {
             if (err) this.emit('error', err);
@@ -2026,6 +2036,7 @@ export class Mapper extends EventEmitter {
                 for (let r = 0; r < rl; r++) {
                     rows[r].ID = parseInt(rows[r].ID, 10);
                     if (rooms[rows[r].ID]) {
+                        if (!rows[r].Exit) continue;
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: parseInt(rows[r].DestID, 10),
                             isdoor: rows[r].IsDoor,
@@ -2044,6 +2055,7 @@ export class Mapper extends EventEmitter {
                             rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
                         }
                         rooms[rows[r].ID].exits = {};
+                        if (!rows[r].Exit) continue;
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: parseInt(rows[r].DestID, 10),
                             isdoor: rows[r].IsDoor,
@@ -2058,7 +2070,7 @@ export class Mapper extends EventEmitter {
     }
 
     public exportAll(file: string) {
-        this._db.all('Select * FROM Rooms inner join exits on Exits.ID = Rooms.ID', (err, rows) => {
+        this._db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID', (err, rows) => {
             if (err) this.emit('error', err);
             const rooms = {};
             if (rows) {
@@ -2067,6 +2079,7 @@ export class Mapper extends EventEmitter {
                 for (let r = 0; r < rl; r++) {
                     rows[r].ID = parseInt(rows[r].ID, 10);
                     if (rooms[rows[r].ID]) {
+                        if (!rows[r].Exit) continue;
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: parseInt(rows[r].DestID, 10),
                             isdoor: rows[r].IsDoor,
@@ -2085,6 +2098,7 @@ export class Mapper extends EventEmitter {
                             rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
                         }
                         rooms[rows[r].ID].exits = {};
+                        if (!rows[r].Exit) continue;
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: parseInt(rows[r].DestID, 10),
                             isdoor: rows[r].IsDoor,

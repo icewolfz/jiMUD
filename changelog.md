@@ -11,8 +11,9 @@
     - Editor did not correctly resize when output window resized
     - Formatting :: directly after a (: was incorrect
   - Mapper:
-    - Adding new rooms was broken when normilzing was added by mistake in v0.4.44
+    - Adding new rooms was broken when normalizing was added by mistake in v0.4.44
     - Fixed issues with area names with single quotes (')
+    - Fixed issues with rooms with no exits being ignored
 
 ## 0.4.46 2018-05-30
 
