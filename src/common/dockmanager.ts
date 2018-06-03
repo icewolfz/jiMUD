@@ -222,13 +222,8 @@ export class DockManager extends EventEmitter {
                     rw = true;
                 }
             }
-            if (rw) {
-                this.$widths = [];
-                let l = this.panes.length;
-                const w = 1.0 / this.panes.length;
-                while (l--)
-                    this.$widths[l] = w;
-            }
+            if (rw)
+                this.resizeWidths();
             this.resize();
             this.freePanes();
             e.preventDefault();
@@ -281,6 +276,14 @@ export class DockManager extends EventEmitter {
             this.emit('activated', e, this.panes.indexOf(pane));
         });
         return pane;
+    }
+
+    private resizeWidths() {
+        this.$widths = [];
+        let l = this.panes.length;
+        const w = 1.0 / this.panes.length;
+        while (l--)
+            this.$widths[l] = w;
     }
 
     public focusPane(pane) {
@@ -443,6 +446,35 @@ export class DockManager extends EventEmitter {
             this.panes.splice(this.panes.length, 1);
             p.destroy();
         }
+        this.doUpdate(UpdateType.resize);
+        setTimeout(() => this.validateLayout(), 0);
+    }
+
+    private validateLayout() {
+        let p = this.panes.length;
+        while (p--) {
+            if (this.panes.length === 1) break;
+            if (this.panes[p].panels.length !== 0) continue;
+            this.emit('destroy-pane', p, this.panes[p]);
+            const pane = this.panes[p];
+            this.panes.splice(p, 1);
+            this.$bars[0].remove();
+            this.$bars.splice(0, 1);
+            pane.destroy();
+            const w = this.$widths[p];
+            this.$widths.splice(p, 1);
+            if (p === 0)
+                this.$widths[0] += w;
+            else if (p >= this.panes.length)
+                this.$widths[this.panes.length - 1] += w;
+            else {
+                this.$widths[p - 1] += w / 2;
+                this.$widths[p] += w / 2;
+            }
+        }
+        const t = this.$widths.reduce((acc, val) => { return acc + val; });
+        if (t < 1.0 || t > 1.0)
+            this.resizeWidths();
         this.doUpdate(UpdateType.resize);
     }
 
