@@ -872,6 +872,11 @@ export class Mapper extends EventEmitter {
     }
 
     private updateCurrent(room, data) {
+        room.ID = data.num;
+        room.area = data.area;
+        room.name = data.name;
+        room.env = data.environment;
+        room.indoors = data.indoors;        
         room = this.normalizeRoom(room);
         let exit;
         for (exit in data.exits)

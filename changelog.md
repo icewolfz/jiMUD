@@ -10,6 +10,8 @@
   - Code Editor:
     - Editor did not correctly resize when output window resized
     - Formatting :: directly after a (: was incorrect
+  - Mapper:
+    - Adding new rooms was broken when normilzing was added by mistake in v0.4.44
 
 ## 0.4.46 2018-05-30
 
