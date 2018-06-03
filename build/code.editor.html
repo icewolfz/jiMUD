@@ -1923,7 +1923,7 @@
                 if (!p.editor.new && !p.editor.changed)
                     continue;
                 if (!confirmSave(p))
-                    return;
+                    return false;
             }
         }
         if (!options) loadOptions();
@@ -1933,6 +1933,7 @@
             options.opened = [];
         options.layout = manager.layout;
         saveOptions();
+        return true;
     }
 
     function closeHidden() {
@@ -1952,7 +1953,8 @@
                     return;
             }
         }
-        savedOpened();
+        if (!savedOpened())
+            return;
         remote.getCurrentWindow().hide();
     }
 
@@ -1983,7 +1985,8 @@
                             return 'no';
                     }
                 }
-                savedOpened();
+                if (!savedOpened())
+                    return 'no';
                 //clean up
                 var keys = Object.keys(_editors);
                 var p = keys.length;

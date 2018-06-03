@@ -6,6 +6,7 @@
   - Code Editor:
     - Fix output window display
     - Fix dock change asking to save new files
+    - Fix file save cancel
 
 ## 0.4.47 2018-06-03
 
