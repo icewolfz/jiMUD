@@ -6,6 +6,7 @@
   - Code Editor:
     - Code complete for ShadowMUD inheritable files, simple begin to type inherit and it will suggest a list of predefined inherits
     - Drag and drop reorder opened files
+    - Drag and drop side by side viewing for up to 3 files at once with ability to resize each splitter area.
   - Backup: add debug output when doing client save
 - **Fixed:**
   - Code Editor:
