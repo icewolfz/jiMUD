@@ -876,7 +876,7 @@ export class Mapper extends EventEmitter {
         room.area = data.area;
         room.name = data.name;
         room.env = data.environment;
-        room.indoors = data.indoors;        
+        room.indoors = data.indoors;
         room = this.normalizeRoom(room);
         let exit;
         for (exit in data.exits)
