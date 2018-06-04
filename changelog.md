@@ -8,6 +8,7 @@
     - Fix dock change asking to save new files
     - Fix file save cancel
     - Validate split layout better to ensure it is restored to a usable state
+    - Properly update tabstate for save all/ revert all
 
 ## 0.4.47 2018-06-03
 

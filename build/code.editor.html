@@ -2671,14 +2671,14 @@
                 sbSize.textContent = 'Length: ' + length.toLocaleString();
             });
             p.editor.on('saved', () => {
-                if (p !== manager.active) return;
-                doUpdate(2);
                 updatePanel(p);
+                if (p !== manager.active) return;
+                doUpdate(2);                
             });
             p.editor.on('reverted', () => {
-                if (p !== manager.active) return;
-                doUpdate(2);
                 updatePanel(p);
+                if (p !== manager.active) return;
+                doUpdate(2);                
             });
             p.editor.on('selection-changed', () => {
                 if (p !== manager.active) return;
