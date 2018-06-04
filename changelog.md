@@ -5,6 +5,8 @@
 - **New:**
   - Add a limit to how many times to try to auto login in a row
   - Do not attempt to login using character name if ShadowMUD says it does not exist
+  - Code Editor:
+    - Diff file with original if changed or local file
 - **Fixed:**
   - Code Editor:
     - Fix output window display

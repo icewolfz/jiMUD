@@ -226,12 +226,14 @@ export class MonacoCodeEditor extends EditorBase {
 
     set diff(value) {
         if (!this.$diffModel && value) {
-            this.$diffModel = monaco.editor.createModel('', 'lpc');
+            if (!this.$diffModel)
+                this.$diffModel = monaco.editor.createModel('', 'lpc');
             this.$diffModel.setValue(value);
         }
-        else {
+        else if (this.$diffModel) {
             this.$diffModel.setValue('');
             this.$diffModel = null;
+            this.$diffState = null;
         }
     }
     get diff() { return this.$diffModel ? 'true' : null; }
@@ -354,6 +356,7 @@ export class MonacoCodeEditor extends EditorBase {
             case 'menu|edit':
             case 'menu|context':
             case 'menu|view':
+            case 'diff':
                 return true;
         }
         return false;

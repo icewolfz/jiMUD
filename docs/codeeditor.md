@@ -9,6 +9,7 @@ The code editor allows immortals or those wanting to code lpc files using a grap
 - Templates to quickly create basic objects, rooms, monsters, weapons and armors
 - Formatting and indention system for making code easier and more standard
 - Side by side file views for up to 3 files, just drag and drop to layout how how you want to view files, with restore state on reopen if `Remember open files on reload` turned on
+- Diff file with original file if changed or local file
 
 ## Virtual map editor
 
