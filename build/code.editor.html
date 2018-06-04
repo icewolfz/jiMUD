@@ -1164,6 +1164,9 @@
             window.$editors[pane].domElement.style.display = 'none';
         doUpdate(1);
     });
+    manager.on('pane-activated', (e, pane) => {
+        doUpdate(1);
+    });
     manager.on('deactivated', (e, pane) => {
         if (e.panel.editor.type === 1)
             e.panel.editor.deactivate(window.$editors[pane]);
@@ -1243,14 +1246,14 @@
         //else
         //manager.active.editor.focus();
     });
-    manager.on('tab-contextmenu', (panelId, panel) => {
+    manager.on('tab-contextmenu', (e, pane) => {
         var temp = [];
-        if (panel.editor.supports('refresh')) {
+        if (e.panel.editor.supports('refresh')) {
             temp.push({
                 label: 'Refresh',
                 click: () => {
-                    panel.editor.refresh();
-                    panel.editor.focus();
+                    e.panel.editor.refresh();
+                    e.panel.editor.focus();
                 },
                 accelerator: "F5"
             });
@@ -1260,51 +1263,51 @@
         temp.push({
             label: '&Copy path',
             click: () => {
-                clipboard.writeText(panel.editor.file || '');
-                clipboard.writeText(panel.editor.file || '', 'selection');
+                clipboard.writeText(e.panel.editor.file || '');
+                clipboard.writeText(e.panel.editor.file || '', 'selection');
             }
         });
         temp.push({ type: 'separator' });
-        if (panel.editor.changed) {
+        if (e.panel.editor.changed) {
             temp.push({
                 label: '&Save',
                 accelerator: "CmdOrCtrl+S",
-                click: () => { saveFile(panel); }
+                click: () => { saveFile(e.panel); }
             });
         }
         temp.push({
             label: 'Save &As',
             accelerator: "CmdOrCtrl+Shift+S",
-            click: () => { saveFileAs(panel); },
+            click: () => { saveFileAs(e.panel); },
         });
-        if (panel.editor.changed) {
+        if (e.panel.editor.changed) {
             if (temp.length)
                 temp.push({ type: 'separator' });
             temp.push({
                 label: 'Revert',
-                click: () => { revertFile(panel); }
+                click: () => { revertFile(e.panel); }
             });
         }
-        if (panel.editor.supports('menu|tab-context')) {
+        if (e.panel.editor.supports('menu|tab-context')) {
             temp.push({ type: 'separator' });
-            temp = temp.concat(panel.editor.menu('tab-context'));
+            temp = temp.concat(e.panel.editor.menu('tab-context'));
         }
         if (temp.length)
             temp.push({ type: 'separator' });
         temp.push({
             label: '&Close',
-            click: () => { closeFile(panel); },
+            click: () => { closeFile(e.panel); },
             accelerator: "CmdOrCtrl+F4"
         });
         if (manager.panels.length > 1)
             temp.push({
                 label: '&Close Others',
-                click: () => { manager.removeAllPanels(panel); }
+                click: () => { manager.removeAllPanels(e.panel); }
             });
-        if (manager.panels.length - 1 > manager.getPanelIndex(panel))
+        if (manager.panels.length - 1 > manager.getPanelIndex(e.panel))
             temp.push({
                 label: '&Close to the Right',
-                click: () => { manager.removeAllPanelsAfter(panel); }
+                click: () => { manager.removeAllPanelsAfter(e.panel); }
             });
         let tabMenu = Menu.buildFromTemplate(temp);
         tabMenu.popup({ window: remote.getCurrentWindow() });
@@ -2673,12 +2676,12 @@
             p.editor.on('saved', () => {
                 updatePanel(p);
                 if (p !== manager.active) return;
-                doUpdate(2);                
+                doUpdate(2);
             });
             p.editor.on('reverted', () => {
                 updatePanel(p);
                 if (p !== manager.active) return;
-                doUpdate(2);                
+                doUpdate(2);
             });
             p.editor.on('selection-changed', () => {
                 if (p !== manager.active) return;

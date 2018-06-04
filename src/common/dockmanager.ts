@@ -96,10 +96,7 @@ export class DockManager extends EventEmitter {
         pane.hideTabstrip = this._hideTabs;
         pane.manager = this;
         pane.on('mousedown', (e) => {
-            if (pane === this.$activePane) return;
-            this.emit('deactivated', { index: this.$activePane.panels.indexOf(this.active), id: this.active.id, panel: this.active }, this.panes.indexOf(pane));
             this.focusPane(pane);
-            this.emit('activated', { index: this.$activePane.panels.indexOf(this.active), id: this.active.id, panel: this.active }, this.panes.indexOf(pane));
         });
         pane.on('keyup', e => this.emit('keyup', e, this.panes.indexOf(pane)));
         pane.on('keydown', e => this.emit('keydown', e, this.panes.indexOf(pane)));
@@ -234,7 +231,11 @@ export class DockManager extends EventEmitter {
             this.focusPane(pane);
             this.emit('tab-click', e, this.panes.indexOf(pane));
         });
-        pane.on('tab-contextmenu', e => this.emit('tab-contextmenu', e, this.panes.indexOf(pane)));
+        pane.on('tab-contextmenu', (data, e) => {
+            data = data || {};
+            data.pane = this.panes.indexOf(pane);
+            this.emit('tab-contextmenu', data, e);
+        });
         pane.on('tab-dblclick', e => this.emit('tab-dblclick', e, this.panes.indexOf(pane)));
         pane.on('tab-drag', e => this.emit('tab-drag', e, this.panes.indexOf(pane)));
         pane.on('tab-moved', e => this.emit('tab-moved', e, this.panes.indexOf(pane)));
@@ -287,10 +288,14 @@ export class DockManager extends EventEmitter {
     }
 
     public focusPane(pane) {
-        if (this.$activePane)
+        if (this.$activePane === pane) return;
+        if (this.$activePane) {
+            this.emit('pane-deactivated', this.panes.indexOf(this.$activePane));
             this.$activePane.focused = false;
+        }
         this.$activePane = pane;
         this.$activePane.focused = true;
+        this.emit('pane-activated', this.panes.indexOf(pane));
     }
 
     public freePanes() {
@@ -1070,15 +1075,15 @@ export class DockPane extends EventEmitter {
             const e = { id: panel.id, panel: panel, preventDefault: false };
             panel.dock.emit('tab-click', e);
             if (e.preventDefault || panel.dock.active === panel) return;
-            this.switchToPanel(panel.id);
+            panel.dock.switchToPanel(panel.id);
         };
         panel.tab.oncontextmenu = (e) => {
-            panel.dock.emit('tab-contextmenu', panel.id, panel, e);
+            panel.dock.emit('tab-contextmenu', { id: panel.id, panel: panel }, e);
             e.preventDefault();
             e.stopPropagation();
         };
         panel.tab.ondblclick = (e) => {
-            panel.dock.emit('tab-dblclick', panel.id, panel);
+            panel.dock.emit('tab-dblclick', { id: panel.id, panel: panel });
         };
         panel.tab.ondragstart = (e) => {
             const eDrag = { id: panel.id, panel: panel, preventDefault: false };
@@ -1089,7 +1094,7 @@ export class DockPane extends EventEmitter {
             panel.dock.$dragPanel = panel;
             panel.dock.manager.dragPanel = panel.dock.$dragPanel;
             e.stopPropagation();
-            this.manager.freezePanes();
+            panel.dock.manager.freezePanes();
         };
         panel.tab.ondragover = (e) => {
             if (panel.dock.$dragPanel === panel) return;
@@ -1100,7 +1105,7 @@ export class DockPane extends EventEmitter {
             panel.tab.classList.remove('drop');
             panel.dock.$dragPanel = null;
             panel.dock.manager.dragPanel = null;
-            this.manager.freePanes();
+            panel.dock.manager.freePanes();
         };
         panel.tab.ondragenter = (e) => {
             if (panel.dock.$dragPanel === panel) return;
@@ -1132,7 +1137,7 @@ export class DockPane extends EventEmitter {
             else
                 panel.tab.parentNode.insertBefore(panel.dock.$dragPanel.tab, panel.tab);
             panel.dock.emit('tab-moved', { oldIndex: idx, index: idxTo, id: panel.dock.$dragPanel.id, panel: panel.dock.$dragPanel });
-            this.manager.freePanes();
+            panel.dock.manager.freePanes();
         };
 
         const close = document.createElement('i');

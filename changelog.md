@@ -12,6 +12,8 @@
     - Fix file save cancel
     - Validate split layout better to ensure it is restored to a usable state
     - Properly update tabstate for save all/ revert all
+    - Tabs resetting editors every time they are clicked
+    - Fix tab context menu
 
 ## 0.4.47 2018-06-03
 
