@@ -482,7 +482,7 @@
             <div id="monwiz1" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
                 <label style="width:100%">
                     <div style="width: 70px;display:inline-block">Type:</div>
-                    <select id="monwizType" class="easyui-combobox" data-options="editable:false,onSelect:doMonType" style="width: 130px">
+                    <select id="monwizType" data-options="editable:false,onSelect:doMonType" style="width: 130px">
                         <option>Standard</option>
                         <option>Armor Repair</option>
                         <option>Barkeep</option>
@@ -504,10 +504,10 @@
                     </select>
                 </label>
                 <label>Level:
-                    <input id="monwizLevel" class="easyui-numberspinner" data-options="min:1,max:500" style="width: 50px" value="1">
+                    <input id="monwizLevel" style="width: 50px" value="1">
                 </label>
                 <label>Alignment:
-                    <select id="monwizAlignment" class="easyui-combobox" style="width: 90px">
+                    <select id="monwizAlignment" style="width: 90px">
                         <option>demonic</option>
                         <option>evil</option>
                         <option>bad</option>
@@ -523,15 +523,15 @@
                 </label>
                 <label style="width:100%;display:block">
                     <div style="width: 70px;display:inline-block">Race:</div>
-                    <select style="width:400px" id="monwizRace" class="easyui-combobox" data-options="url:'/auth/dev?a=monraces',valueField:'value',textField:'value',method:'get'"></select>
+                    <select style="width:400px" id="monwizRace"></select>
                 </label>
                 <label style="width:100%;display:block;">
                     <div style="width: 70px;display:inline-block">Class:</div>
-                    <select style="width:400px" id="monwizClass" class="easyui-combobox" data-options="url:'/auth/dev?a=classes',valueField:'value',textField:'value',method:'get',formatter:classFormatter"></select>
+                    <select style="width:400px" id="monwizClass"></select>
                 </label>
                 <label style="width:100%;display:block;">
                     <div style="width: 70px;display:inline-block">Language:</div>
-                    <select style="width:400px" id="monwizLang" class="easyui-combobox" data-options="url:'/auth/dev?a=languages',valueField:'value',textField:'value',method:'get',prompt:'Defaults based on race'"></select>
+                    <select style="width:400px" id="monwizLang"></select>
                 </label>
                 <label>
                     <div style="width: 70px;display:inline-block">Ridable:</div>
