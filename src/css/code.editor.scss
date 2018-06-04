@@ -437,7 +437,7 @@ dialog .close {
     background-color: rgba(0, 0, 0, 0.071);
 }
 
-.editor-container {
+.editor-container, .diff-container {
     position: absolute;
     left: 0;
     right: 0;

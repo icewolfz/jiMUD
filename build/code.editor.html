@@ -16,25 +16,14 @@
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <script>
-        /* global manager, inverse, capitalize, options, monaco, ReplaceCommandThatPreservesSelection */
+        /* global manager, inverse, capitalize, options, monaco, ReplaceCommandThatPreservesSelection, initEditor */
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
-        SetupEditor().then((monaco) => {
-            var pane = document.getElementById('cm-tabpane');
-            var el = document.createElement('div');
-            el.classList.add('editor-container');
-            pane.appendChild(el);
-            window.$editor = monaco.editor.create(el, {
-                language: 'lpc',
-                autoIndent: true,
-                rulers: [80],
-                contextmenu: false,
-                theme: 'lpcTheme',
-                model: null
-            });
-            window.$editors = [window.$editor];
-            window.$editor.addAction({
+
+        function initEditor(editor) {
+
+            editor.addAction({
                 id: 'jimud.action.transformToInverse',
                 label: 'Transform to Inverse',
                 run: function (editor) {
@@ -66,7 +55,7 @@
                 }
             });
 
-            window.$editor.addAction({
+            editor.addAction({
                 id: 'jimud.action.transformToCapitalize',
                 label: 'Transform to Capitalize',
                 run: function (editor) {
@@ -98,7 +87,7 @@
                 }
             });
 
-            window.$editor.addAction({
+            editor.addAction({
                 id: 'jimud.action.insertColor',
                 label: 'Transform to Capitalize',
                 run: function (editor) {
@@ -130,24 +119,72 @@
                 }
             });
 
-            window.$editor.onContextMenu((e) => {
-                let idx = window.$editors.indexOf(window.$editor);
-                if (manager.activePane === manager.panes[idx])
-                    manager.active.editor.emit('contextmenu', e);
-            });
-            window.$editor.onDidChangeCursorSelection((e) => {
-                let idx = window.$editors.indexOf(window.$editor);
-                if (manager.activePane === manager.panes[idx])
-                    manager.active.editor.selectionChanged(e);
-            });
-            window.$editor.onDidChangeCursorPosition((e) => {
-                let idx = window.$editors.indexOf(window.$editor);
-                if (manager.activePane === manager.panes[idx])
-                    manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
-            });
+            if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
+                editor.onContextMenu((e) => {
+                    let idx = window.$editors.indexOf(editor);
+                    if (manager.activePane === manager.panes[idx])
+                        manager.active.editor.emit('contextmenu', e);
+                });
+                editor.onDidChangeCursorSelection((e) => {
+                    let idx = window.$editors.indexOf(editor);
+                    if (manager.activePane === manager.panes[idx])
+                        manager.active.editor.selectionChanged(e);
+                });
+                editor.onDidChangeCursorPosition((e) => {
+                    let idx = window.$editors.indexOf(editor);
+                    if (manager.activePane === manager.panes[idx])
+                        manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
+                });
+            }
+            else {
+                editor.getModifiedEditor().onContextMenu((e) => {
+                    let idx = window.$dEditors.indexOf(editor);
+                    if (manager.activePane === manager.panes[idx])
+                        manager.active.editor.emit('contextmenu', e);
+                });
+                editor.getModifiedEditor().onDidChangeCursorSelection((e) => {
+                    let idx = window.$dEditors.indexOf(editor);
+                    if (manager.activePane === manager.panes[idx])
+                        manager.active.editor.selectionChanged(e);
+                });
+                editor.getModifiedEditor().onDidChangeCursorPosition((e) => {
+                    let idx = window.$dEditors.indexOf(editor);
+                    if (manager.activePane === manager.panes[idx])
+                        manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
+                });
+            }
 
             if (options && options.editorOptions)
-                window.$editor.updateOptions(options.editorOptions);
+                editor.updateOptions(options.editorOptions);
+        }
+
+        SetupEditor().then((monaco) => {
+            var pane = document.getElementById('cm-tabpane');
+            var el = document.createElement('div');
+            el.classList.add('editor-container');
+            pane.appendChild(el);
+            window.$editor = monaco.editor.create(el, {
+                language: 'lpc',
+                autoIndent: true,
+                rulers: [80],
+                contextmenu: false,
+                theme: 'lpcTheme',
+                model: null
+            });
+            window.$editors = [window.$editor];
+            initEditor(window.$editor);
+            el = document.createElement('div');
+            el.classList.add('diff-container');
+            pane.appendChild(el);
+            window.$dEditors = [monaco.editor.createDiffEditor(el, {
+                language: 'lpc',
+                autoIndent: true,
+                rulers: [80],
+                contextmenu: false,
+                theme: 'lpcTheme',
+                model: null
+            })];
+            initEditor(window.$dEditors[0]);
             _ready = true;
         });        
     </script>
@@ -999,126 +1036,27 @@
             theme: 'lpcTheme',
             model: null
         });
-
-        editor.addAction({
-            id: 'jimud.action.transformToInverse',
-            label: 'Transform to Inverse',
-            run: function (editor) {
-                let selections = editor.getSelections();
-                let model = editor.getModel();
-                let commands = [];
-
-                for (let i = 0, len = selections.length; i < len; i++) {
-                    let selection = selections[i];
-                    if (selection.isEmpty()) {
-                        let cursor = selection.getStartPosition();
-                        let word = model.getWordAtPosition(cursor);
-                        if (!word) {
-                            continue;
-                        }
-
-                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                        let text = model.getValueInRange(wordRange);
-                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                    } else {
-                        let text = model.getValueInRange(selection);
-                        commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
-                    }
-                }
-                editor.pushUndoStop();
-                editor.executeCommands(this.id, commands);
-                editor.pushUndoStop();
-            }
-        });
-
-        editor.addAction({
-            id: 'jimud.action.transformToCapitalize',
-            label: 'Transform to Capitalize',
-            run: function (editor) {
-                let selections = editor.getSelections();
-                let model = editor.getModel();
-                let commands = [];
-
-                for (let i = 0, len = selections.length; i < len; i++) {
-                    let selection = selections[i];
-                    if (selection.isEmpty()) {
-                        let cursor = selection.getStartPosition();
-                        let word = model.getWordAtPosition(cursor);
-                        if (!word) {
-                            continue;
-                        }
-
-                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                        let text = model.getValueInRange(wordRange);
-                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                    } else {
-                        let text = model.getValueInRange(selection);
-                        commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
-                    }
-                }
-                editor.pushUndoStop();
-                editor.executeCommands(this.id, commands);
-                editor.pushUndoStop();
-            }
-        });
-
-        editor.addAction({
-            id: 'jimud.action.insertColor',
-            label: 'Transform to Capitalize',
-            run: function (editor) {
-                let selections = editor.getSelections();
-                let model = editor.getModel();
-                let commands = [];
-
-                for (let i = 0, len = selections.length; i < len; i++) {
-                    let selection = selections[i];
-                    if (selection.isEmpty()) {
-                        let cursor = selection.getStartPosition();
-                        let word = model.getWordAtPosition(cursor);
-                        if (!word) {
-                            continue;
-                        }
-
-                        let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                        let text = model.getValueInRange(wordRange);
-                        commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                    } else {
-                        let text = model.getValueInRange(selection);
-                        commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
-                    }
-                }
-                editor.pushUndoStop();
-                editor.executeCommands(this.id, commands);
-                editor.pushUndoStop();
-            }
-        });
-
-        editor.onContextMenu((e) => {
-            let idx = window.$editors.indexOf(editor);
-            if (manager.activePane === manager.panes[idx])
-                manager.active.editor.emit('contextmenu', e);
-        });
-        editor.onDidChangeCursorSelection((e) => {
-            let idx = window.$editors.indexOf(editor);
-            if (manager.activePane === manager.panes[idx])
-                manager.active.editor.selectionChanged(e);
-        });
-        editor.onDidChangeCursorPosition((e) => {
-            let idx = window.$editors.indexOf(editor);
-            if (manager.activePane === manager.panes[idx])
-                manager.active.editor.emit('location-changed', e.position.column, e.position.lineNumber);
-        });
-
-        if (options && options.editorOptions)
-            editor.updateOptions(options.editorOptions);
+        initEditor(editor);
         window.$editors.splice(idx, 0, editor);
+        el = document.createElement('div');
+        el.classList.add('diff-container');
+        pane.pane.appendChild(el);
+        editor = monaco.editor.createDiffEditor(el, {
+            language: 'lpc',
+            autoIndent: true,
+            rulers: [80],
+            contextmenu: false,
+            theme: 'lpcTheme',
+            model: null
+        });
+        initEditor(editor);
+        window.$dEditors.splice(idx, 0, editor);
     });
     manager.on('destroy-pane', (idx, pane) => {
         window.$editors[idx].dispose();
         window.$editors.splice(idx, 1);
+        window.$dEditors[idx].dispose();
+        window.$dEditors.splice(idx, 1);
     });
     manager.on('tab-moved', (e) => {
         if (e.panel && e.panel.editor)
@@ -1132,44 +1070,66 @@
     manager.on('removed', (e, pane) => {
         e.panel.editor.close();
         delete _editors[e.panel.editor.file];
-        if (manager.panes[pane].panels.length === 0)
+        if (manager.panes[pane].panels.length === 0) {
+            window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'none';
             window.$editors[pane].domElement.style.display = 'none';
+        }
         doUpdate(1);
     });
     manager.on('dock-changed', (e, pane, oPane) => {
-        if (manager.panes[oPane].panels.length === 0)
+        if (manager.panes[oPane].panels.length === 0) {
             window.$editors[oPane].domElement.style.display = 'none';
+            window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'none';
+        }
         doUpdate(1);
     });
     manager.on('resize', (e) => {
         if (!window.$editors) return;
         var ed = window.$editors.length;
-        while (ed--)
+        while (ed--) {
             window.$editors[ed].layout();
+            window.$dEditors[ed].layout();
+        }
     });
     manager.on('activated', (e, pane) => {
         if (e.panel.editor) {
             if (e.panel.editor.type === 1) {
-                window.$editors[pane].domElement.style.display = '';
-                e.panel.editor.activate(window.$editors[pane]);
-                window.$editors[pane].layout();
+                if (e.panel.editor.diff) {
+                    window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+                    window.$editors[pane].domElement.style.display = 'none';
+                    e.panel.editor.activate(window.$dEditors[pane]);
+                    window.$dEditors[pane].layout();
+                }
+                else {
+                    window.$editors[pane].domElement.style.display = '';
+                    window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'none';
+                    e.panel.editor.activate(window.$editors[pane]);
+                    window.$editors[pane].layout();
+                }
             }
             else {
                 window.$editors[pane].domElement.style.display = 'none';
+                window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'none';
                 e.panel.editor.activate();
             }
             setTimeout(() => { e.panel.editor.focus(); }, 50);
         }
-        else
+        else {
             window.$editors[pane].domElement.style.display = 'none';
+            window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'none';
+        }
         doUpdate(1);
     });
     manager.on('pane-activated', (e, pane) => {
         doUpdate(1);
     });
     manager.on('deactivated', (e, pane) => {
-        if (e.panel.editor.type === 1)
-            e.panel.editor.deactivate(window.$editors[pane]);
+        if (e.panel.editor.type === 1) {
+            if (e.panel.editor.diff)
+                e.panel.editor.deactivate(window.$dEditors[pane]);
+            else
+                e.panel.editor.deactivate(window.$editors[pane]);
+        }
         else
             e.panel.editor.deactivate();
     });
@@ -1486,8 +1446,10 @@
         }
         if (_ready) {
             var e = window.$editors.length;
-            while (e--)
+            while (e--) {
                 window.$editors[e].updateOptions(options.editorOptions);
+                window.$dEditors[e].updateOptions(options.editorOptions);
+            }
         }
         output.css('height', options.outputSize + 'px');
         if (options.output) {
@@ -1735,8 +1697,11 @@
                 _editors[p].editor.resize();
             }
             if (manager.active && manager.active.editor) manager.active.editor.focus();
-            if (window.$editor)
-                window.$editor.layout();
+            var e = window.$editors.length;
+            while (e--) {
+                window.$editors[e].layout();
+                window.$dEditors[e].layout();
+            }
         });
 
         $(document).mouseup(function (e) {
@@ -1753,8 +1718,11 @@
                 $('#btm-ghost-bar').remove();
                 $(document).unbind('mousemove');
                 if (manager.active && manager.active.editor) manager.active.editor.focus();
-                if (window.$editor)
-                    window.$editor.layout();
+                var ed = window.$editors.length;
+                while (ed--) {
+                    window.$editors[ed].layout();
+                    window.$dEditors[ed].layout();
+                }
                 outputDragging = false;
             }
         });

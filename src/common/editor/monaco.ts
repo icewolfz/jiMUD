@@ -165,7 +165,9 @@ export class MonacoCodeEditor extends EditorBase {
     private $model: monaco.editor.ITextModel;
     private $saving = false;
     private $state;
+    private $diffState;
     private $startValue = '';
+    private $diffModel: monaco.editor.ITextModel;
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -221,6 +223,18 @@ export class MonacoCodeEditor extends EditorBase {
 
         }
     }
+
+    set diff(value) {
+        if (!this.$diffModel && value) {
+            this.$diffModel = monaco.editor.createModel('', 'lpc');
+            this.$diffModel.setValue(value);
+        }
+        else {
+            this.$diffModel.setValue('');
+            this.$diffModel = null;
+        }
+    }
+    get diff() { return this.$diffModel ? 'true' : null; }
 
     public refresh() { this.emit('refreshed'); }
 
@@ -604,13 +618,33 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public activate(editor) {
-        this.$editor = editor;
-        editor.setModel(this.$model);
-        editor.restoreViewState(this.$state);
+        if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
+            this.$editor = editor;
+            editor.setModel(this.$model);
+            editor.restoreViewState(this.$state);
+        }
+        else {
+            this.$editor = editor.getModifiedEditor();
+            editor.setModel({
+                original: this.$diffModel || this.$model,
+                modified: this.$model
+            });
+            editor.restoreViewState({
+                modified: this.$state,
+                original: this.$diffState || this.$state
+            });
+        }
     }
     public deactivate(editor) {
+        if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
+            this.$state = editor.saveViewState();
+            editor.setModel(null);
+        }
+        else {
+            this.$state = editor.saveViewState().modified;
+            this.$diffState = editor.saveViewState().original;
+            editor.setModel(null);
+        }
         this.$editor = null;
-        this.$state = editor.saveViewState();
-        editor.setModel(null);
     }
 }
