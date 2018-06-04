@@ -2,6 +2,9 @@
 
 ## 0.4.48
 
+- **New:**
+  - Add a limit to how many times to try to auto login in a row
+  - Do not attempt to login using character name if ShadowMUD says it does not exist
 - **Fixed:**
   - Code Editor:
     - Fix output window display

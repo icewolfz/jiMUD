@@ -162,6 +162,7 @@
 
     var spellchecker;
     var autoConnectID;
+    var autoLoginCounter = 0;
     var lastMouse;
     var set = Settings.load(remote.getGlobal('settingsFile'));
     if (set.spellchecking)
@@ -747,9 +748,14 @@
       });
       client.on('add-line', (data) => {
         var res, re, c, cl;
-        if (client.options.autoLogin && remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
+        //no more then 3 tries
+        if (autoLoginCounter < 3 && client.options.autoLogin && remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
+          //testchar doesn't exist here. To create a new character, please type <new> at the name prompt.
+          if (data.line === remote.getGlobal('character') + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
+            autoLoginCounter = 4;
           if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
             client.sendCommand(remote.getGlobal('characterLogin'));
+            autoLoginCounter++;
           }
           else if (data.fragment && data.line === 'Password: ') {
             var pass = remote.getGlobal('characterPass');
@@ -1006,6 +1012,7 @@
           $("#connect").css("display", '');
           $("#disconnect").css("display", "none");
         }
+        autoLoginCounter = 0;
         ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
         ipcRenderer.send('set-overlay', 0);
