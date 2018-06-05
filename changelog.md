@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.48
+## 0.4.48 2018-06-05
 
 - **New:**
   - Add a limit to how many times to try to auto login in a row
