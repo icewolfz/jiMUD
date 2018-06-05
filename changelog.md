@@ -8,6 +8,7 @@
   - Code Editor:
     - Diff file with original if changed or local file
 - **Fixed:**
+  - Backup: map file was not correctly updating when new character was loaded when connected to mud
   - Code Editor:
     - Fix output window display
     - Fix dock change asking to save new files
@@ -18,7 +19,7 @@
     - Fix tab context menu
     - Formatting :: operator when following keywords and constants stripping spaces
     - Do not add a space between -- or ++ and text
-    - Remove all spaces after * when in a variable declaration statement
+    - Remove all spaces after * when in a variable declaration statement  
 
 ## 0.4.47 2018-06-03
 

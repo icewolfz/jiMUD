@@ -1942,8 +1942,8 @@
       if (!client.connected) {
         _logger.postMessage({ action: 'name', args: char });
         $("#character-name").text(char);
-        _backup.mapFile = remote.getGlobal('mapFile');
       }
+      _backup.mapFile = remote.getGlobal('mapFile');
       client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
     });
 
@@ -1951,8 +1951,8 @@
       if (!client.connected) {
         _logger.postMessage({ action: 'name', args: '' });
         $("#character-name").text("&nbsp;");
-        _backup.mapFile = remote.getGlobal('mapFile');
       }
+      _backup.mapFile = remote.getGlobal('mapFile');
     });
 
     ipcRenderer.on('change-options', (event, file) => {
