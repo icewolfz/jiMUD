@@ -173,6 +173,7 @@ export class Backup extends EventEmitter {
             if (rows) {
                 const rl = rows.length;
                 for (let r = 0; r < rl; r++) {
+                    if (!rows[r].ID || rows[r].ID.length === 0) continue;
                     rows[r].ID = parseInt(rows[r].ID, 10);
                     if (rooms[rows[r].ID]) {
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
