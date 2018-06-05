@@ -7,6 +7,9 @@
   - Do not attempt to login using character name if ShadowMUD says it does not exist
   - Code Editor:
     - Diff file with original if changed or local file
+  - Immortal tools:
+    - Compressed dir systems to allow receiving of compressed dir file list to send data for larger folders faster
+    - Dir performance tweaks to improve loading and changing directory speeds
 - **Fixed:**
   - Backup: map file was not correctly updating when new character was loaded when connected to mud
   - Code Editor:

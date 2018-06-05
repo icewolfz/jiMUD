@@ -635,6 +635,7 @@
                 _ied.useTemp = options.tempFile;
                 _ied.compressUpload = options.compress;
                 _ied.compressDownload = options.compress;
+                _ied.compressDir = options.compress;
             }
             ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: options });
         }
@@ -738,8 +739,7 @@
                         $("#local-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
                 }
             });
-            localTable.rows().remove();
-            localTable.rows.add(all);
+            localTable.clear().rows.add(all);
             $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
             $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
             doUpdate(275);
@@ -759,14 +759,15 @@
             var file;
             var paths = [];
             var c = [], d, dl, cl;
+            var pre = (p === "/" ? '' : p) + "/";
             for (d = 0, dl = dir.length; d < dl; d++) {
                 file = {
-                    name: path.basename(dir[d].file),
-                    path: (p === "/" ? '' : p) + "/" + dir[d].file,
+                    name: dir[d].file,
+                    path: pre + dir[d].file,
                     size: dir[d].size,
                     type: path.extname(dir[d].file),
                     date: dir[d].date * 1000,
-                    hidden: IED.isHidden((p === "/" ? '' : p) + "/" + dir[d].file, true),
+                    hidden: dir[d].file[0] === '.',
                     type2: 0
                 };
                 if (file.hidden && !options.showhidden)
@@ -784,37 +785,41 @@
                 _remote[file.name] = file;
             }
             $("#remote-path").val(p);
-            for (var pt = 0, pl = parts.length; pt < pl; pt++) {
-                c.push(parts[pt]);
-                if (pt === 0)
-                    paths.push({ path: "/", name: "/", count: pt, open: pt === pl - 1 });
-                else
-                    paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
-            }
-            for (d = 0, dl = dirs.length; d < dl; d++) {
-                paths.push({ path: dirs[d].path, name: dirs[d].name, count: pt });
-            }
 
-            paths.sort(function compare(a, b) {
-                if (a.path.toUpperCase() < b.path.toUpperCase())
-                    return -1;
-                if (a.path.toUpperCase() > b.path.toUpperCase())
-                    return 1;
-                return 0;
+            setTimeout(() => {
+                for (var pt = 0, pl = parts.length; pt < pl; pt++) {
+                    c.push(parts[pt]);
+                    if (pt === 0)
+                        paths.push({ path: "/", name: "/", count: pt, open: pt === pl - 1 });
+                    else
+                        paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
+                }
+                for (d = 0, dl = dirs.length; d < dl; d++) {
+                    paths.push({ path: dirs[d].path, name: dirs[d].name, count: pt });
+                }
+
+                paths.sort(function compare(a, b) {
+                    if (a.path.toUpperCase() < b.path.toUpperCase())
+                        return -1;
+                    if (a.path.toUpperCase() > b.path.toUpperCase())
+                        return 1;
+                    return 0;
+                });
+                $("#remote-navigate").empty();
+                var str = '';
+                for (c = 0, cl = paths.length; c < cl; c++) {
+                    if (paths[c].drive && paths[c].open)
+                        str += `<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`;
+                    else if (paths[c].drive)
+                        str += `<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`;
+                    else if (paths[c].open)
+                        str += `<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a></li>`;
+                    else
+                        str += `<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`;
+                }
+                $("#remote-navigate").append(str);
             });
-            $("#remote-navigate").empty();
-            for (c = 0, cl = paths.length; c < cl; c++) {
-                if (paths[c].drive && paths[c].open)
-                    $("#remote-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
-                else if (paths[c].drive)
-                    $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
-                else if (paths[c].open)
-                    $("#remote-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a></li>`);
-                else
-                    $("#remote-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
-            }
-            remoteTable.rows().remove();
-            remoteTable.rows.add(all);
+            remoteTable.clear().rows.add(all);
             doUpdate(277);
             $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
             $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
@@ -1238,6 +1243,7 @@
             _ied.useTemp = options.tempFile;
             _ied.compressUpload = options.compress;
             _ied.compressDownload = options.compress;
+            _ied.compressDir = options.compress;
             if (options.openEditor)
                 $('#btn-editor-remote').addClass('active');
             else
@@ -3392,6 +3398,7 @@
                     _ied.useTemp = options.tempFile;
                     _ied.compressUpload = options.compress;
                     _ied.compressDownload = options.compress;
+                    _ied.compressDir = options.compress;
                 }
             }
         });

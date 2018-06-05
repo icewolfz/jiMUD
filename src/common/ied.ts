@@ -46,6 +46,7 @@ export class IED extends EventEmitter {
     public bufferSize: number = 0;
     public compressUpload: boolean;
     public compressDownload: boolean;
+    public compressDir: boolean;
 
     get useTemp(): TempType { return this._temp; }
     set useTemp(value: TempType) {
@@ -70,6 +71,13 @@ export class IED extends EventEmitter {
         }
         this._worker = new Worker('./js/ied.background.js');
         this._worker.onmessage = (e) => {
+            if (e.data.event === 'decoded-dir') {
+                const z = new ZLIB.InflateStream();
+                let files = Buffer.from(z.decompress(new Buffer(e.data.data, 'binary'))).toString();
+                files = JSON.parse(files);
+                this.emit('dir', e.data.path, files, e.data.tag || 'dir', e.data.local);
+                return;
+            }
             if (!this.active) return;
             switch (e.data.event) {
                 case 'decoded':
@@ -299,20 +307,30 @@ export class IED extends EventEmitter {
                     this.nextGMCP();
                     return;
                 }
-                else if (!obj.files) {
+                else if (!obj.files && !obj.data) {
                     this.emit('error', { path: obj.path, tag: obj.tag, msg: 'Getting Directory: no files found' });
                     this.nextGMCP();
                     return;
                 }
-                const files = this._data[obj.tag || 'dir'] || [];
-                files.push.apply(files, obj.files || []);
-                if (!obj.last) {
-                    this._data[obj.tag || 'dir'] = files;
-                    ipcRenderer.send('send-gmcp', 'IED.dir.more ' + JSON.stringify({ path: obj.path, tag: obj.tag || 'dir' }));
+                let files;
+                if (obj.compressed) {
+                    files = this._data[obj.tag || 'dir'] || '';
+                    files += obj.data;
                 }
                 else {
+                    files = this._data[obj.tag || 'dir'] || [];
+                    files.push.apply(files, obj.files || []);
+                }
+                if (!obj.last) {
+                    this._data[obj.tag || 'dir'] = files;
+                    ipcRenderer.send('send-gmcp', 'IED.dir.more ' + JSON.stringify({ path: obj.path, tag: obj.tag || 'dir', compress: this.compressDir ? 1 : 0 }));
+                }
+                else {
+                    if (obj.compressed)
+                        this._worker.postMessage({ action: 'decode-dir', path: obj.path, data: files, tag: obj.tag, local: this._paths[obj.tag] });
+                    else
+                        this.emit('dir', obj.path, files, obj.tag || 'dir', this._paths[obj.tag]);
                     delete this._data[obj.tag || 'dir'];
-                    this.emit('dir', obj.path, files, obj.tag || 'dir', this._paths[obj.tag]);
                     delete this._paths[obj.tag];
                 }
                 break;
@@ -389,7 +407,7 @@ export class IED extends EventEmitter {
         if (local)
             this._paths['dir:' + (tag || 'browse')] = local;
         if (noResolve) {
-            ipcRenderer.send('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: 'dir:' + (tag || 'browse') }));
+            ipcRenderer.send('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: 'dir:' + (tag || 'browse'), compress: this.compressDir ? 1 : 0 }));
             this.emit('message', 'Getting Directory: ' + dir);
         }
         else {

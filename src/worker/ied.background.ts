@@ -7,6 +7,9 @@
 self.addEventListener('message', (e: MessageEvent) => {
     if (!e.data) return;
     switch (e.data.action) {
+        case 'decode-dir':
+            postMessage({ event: 'decoded-dir', path: e.data.path, data: decode(e.data.data), tag: e.data.tag, local: e.data.local });
+            break;
         case 'decode':
             postMessage({ event: 'decoded', file: e.data.file, data: decode(e.data.data), last: e.data.last, download: e.data.download });
             break;
