@@ -16,6 +16,9 @@
     - Properly update tabstate for save all/ revert all
     - Tabs resetting editors every time they are clicked
     - Fix tab context menu
+    - Formatting :: operator when following keywords and constants stripping spaces
+    - Do not add a space netween -- or ++ and text
+    - Remove all spaces after * when in a variable declaration statement
 
 ## 0.4.47 2018-06-03
 

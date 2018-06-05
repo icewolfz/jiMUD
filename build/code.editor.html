@@ -1773,6 +1773,7 @@
                 _editors[p].editor.resize();
             }
             if (manager.active && manager.active.editor) manager.active.editor.focus();
+            if (!window.$editors) return;
             var e = window.$editors.length;
             while (e--) {
                 window.$editors[e].layout();

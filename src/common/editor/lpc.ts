@@ -1515,7 +1515,7 @@ export class LPCFormatter extends EventEmitter {
                                 if (t3 <= 0)
                                     break;
                             }
-                            if (this.tokens[tp][t3].type === FormatTokenType.parenLclosure || this.tokens[tp][t3].type === FormatTokenType.parenRclosure || this.tokens[tp][t3].type === FormatTokenType.parenLmapping || this.tokens[tp][t3].type === FormatTokenType.parenRmapping || this.tokens[tp][t3].type === FormatTokenType.parenRarray || this.tokens[tp][t3].type === FormatTokenType.parenLarray) {
+                            if (this.tokens[tp][t3].type !== FormatTokenType.text || this.tokens[tp][t3].type === FormatTokenType.parenLclosure || this.tokens[tp][t3].type === FormatTokenType.parenRclosure || this.tokens[tp][t3].type === FormatTokenType.parenLmapping || this.tokens[tp][t3].type === FormatTokenType.parenRmapping || this.tokens[tp][t3].type === FormatTokenType.parenRarray || this.tokens[tp][t3].type === FormatTokenType.parenLarray) {
                                 op = op.rtrim();
                                 op += ' ';
                             }
@@ -1538,6 +1538,8 @@ export class LPCFormatter extends EventEmitter {
                                     else if (t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.parenLparen)
                                         op.rtrim();
                                 }
+                                else if (this.tokens[tp][t].value === '--' || this.tokens[tp][t].value === '++')
+                                    op = op.rtrim();
                                 else {
                                     op = op.rtrim();
                                     op += ' ';
@@ -1612,11 +1614,13 @@ export class LPCFormatter extends EventEmitter {
                                     } //datatype + * is an array no space after
                                     else if (this.tokens[tp][t1].value === '*') {
                                         //previous is text so should add a space
-                                        if (t3 < 0 || (t3 >= 0 && this.tokens[tp][t3].type !== FormatTokenType.datatype)) {
+                                        if (t3 < 0 || (t3 >= 0 && this.tokens[tp][t3].type !== FormatTokenType.datatype && this.tokens[tp][t3].type !== FormatTokenType.comma)) {
                                             op = op.rtrim();
                                             op += ' ';
                                         }
                                     }
+                                    else if (this.tokens[tp][t].value === '--' || this.tokens[tp][t].value === '++')
+                                        op = op.rtrim();
                                     else {
                                         op = op.rtrim();
                                         op += ' ';
