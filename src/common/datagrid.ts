@@ -658,7 +658,7 @@ export class Datagrid extends EventEmitter {
             else
                 this.$sortedChildren[r] = [...rows[r].children.keys()].sort((a, b) => {
                     if (sortFn)
-                        return sortFn(a, b, dir, prop, rows[r].children[a], rows[r].children[b]);
+                        return sortFn(a, b, dir, prop, rows[r].children[a], rows[r].children[b], rows[r].children);
                     if (rows[r].children[a][prop] > rows[r].children[b][prop])
                         return 1 * dir;
                     if (rows[r].children[a][prop] < rows[r].children[b][prop])
