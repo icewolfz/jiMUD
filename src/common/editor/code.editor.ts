@@ -1,3 +1,3 @@
 export { SetupEditor, MonacoCodeEditor } from './monaco';
 export { VirtualEditor } from './virtual.editor';
-export { DebugTimer } from './editor.base';
+export { DebugTimer, Source, FileState } from './editor.base';

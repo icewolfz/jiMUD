@@ -22,12 +22,18 @@ export enum FileState {
     new = 4
 }
 
+export enum Source {
+    local = 0,
+    remote = 1
+}
+
 export abstract class EditorBase extends EventEmitter {
 
     private $parent: HTMLElement;
     private $file;
     private $remote;
     public state: FileState = FileState.closed;
+    public source: Source = Source.local;
 
     get file(): string {
         return this.$file;
