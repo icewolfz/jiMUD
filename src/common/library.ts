@@ -879,7 +879,7 @@ export function formatSize(size) {
         return Math.round(size / 1048576).toLocaleString() + ' MB';
     else if (size >= 1024)
         return Math.round(size / 1024).toLocaleString() + ' KB';
-    return size + ' B';
+    return size.toLocaleString() + ' B';
 }
 
 export function capitalize(s) {
