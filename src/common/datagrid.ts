@@ -276,7 +276,7 @@ export class Datagrid extends EventEmitter {
                     break;
                 case 40: //down
                     Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
-                    if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length)
+                    if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length - 1)
                         this.$focused++;
                     if (e.ctrlKey) {
                         el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
