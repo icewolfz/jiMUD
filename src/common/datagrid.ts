@@ -13,7 +13,7 @@ export interface DatagridOptions {
     rows?: any[];
 }
 
-export enum UpdateType { none = 0, columns = 1, rows = 2, resize = 4, sort = 8, resizeHeight = 16, resizeWidth = 32, buildRows = 64, buildColumns }
+export enum UpdateType { none = 0, columns = 1, rows = 2, resize = 4, sort = 8, resizeHeight = 16, resizeWidth = 32, buildRows = 64, buildColumns = 128, headerWidth = 256 }
 
 export class Column {
     public label = '';
@@ -234,8 +234,13 @@ export class Datagrid extends EventEmitter {
                         else
                             start = this.$selected[0];
                         el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        el.classList.add('focused');
                         this.$selected = [];
-                        if (start > this.$focused) {
+                        if (!this.$allowMultiSelection) {
+                            this.$selected = [this.$focused];
+                            el.classList.add('selected');
+                        }
+                        else if (start > this.$focused) {
                             end = start;
                             start = this.$focused;
                             this.$shiftStart = end;
@@ -258,8 +263,6 @@ export class Datagrid extends EventEmitter {
                                 el = <HTMLElement>el.previousSibling;
                             }
                         }
-                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
-                        el.classList.add('focused');
                     }
                     else {
                         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
@@ -286,7 +289,12 @@ export class Datagrid extends EventEmitter {
                         else
                             start = this.$selected[0];
                         el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
-                        if (start > this.$focused) {
+                        el.classList.add('focused');
+                        if (!this.$allowMultiSelection) {
+                            this.$selected = [this.$focused];
+                            el.classList.add('selected');
+                        }
+                        else if (start > this.$focused) {
                             end = start;
                             start = this.$focused;
                             cnt = end - start + 1;
@@ -307,8 +315,6 @@ export class Datagrid extends EventEmitter {
                                 el = <HTMLElement>el.previousSibling;
                             }
                         }
-                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
-                        el.classList.add('focused');
                     }
                     else {
                         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
@@ -451,6 +457,7 @@ export class Datagrid extends EventEmitter {
     }
 
     public selectAll() {
+        if (!this.$allowMultiSelection) return;
         Array.from(this.$body.querySelectorAll('.datagrid-row'), a => a.classList.add('selected'));
         this.$selected = [...this.$sortedRows.keys()];
         this.emit('selection-changed');
@@ -840,8 +847,19 @@ export class Datagrid extends EventEmitter {
                 this.$focused = sIdx;
                 if (eRow.classList.contains('selected')) {
                     eRow.classList.remove('selected');
-                    sIdx = this.$selected.indexOf(sIdx);
-                    this.$selected.splice(sIdx, 1);
+                    if (this.$allowMultiSelection) {
+                        sIdx = this.$selected.indexOf(sIdx);
+                        this.$selected.splice(sIdx, 1);
+                    }
+                    else {
+                        this.$selected = [];
+                        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+                    }
+                }
+                else if (this.$allowMultiSelection) {
+                    Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+                    eRow.classList.add('selected');
+                    this.$selected = [sIdx];
                 }
                 else {
                     eRow.classList.add('selected');
@@ -862,7 +880,11 @@ export class Datagrid extends EventEmitter {
                 Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
                 this.$selected = [];
                 let eCnt;
-                if (start > sIdx) {
+                if (!this.$allowMultiSelection) {
+                    this.$selected = [sIdx];
+                    eRow.classList.add('selected');
+                }
+                else if (start > sIdx) {
                     end = start;
                     start = sIdx;
                     this.$shiftStart = end;
@@ -1220,8 +1242,7 @@ export class Datagrid extends EventEmitter {
         cell.classList.add('datagrid-column-spacer');
         row.appendChild(cell);
         this.$header.appendChild(row);
-        this.$headerWidth = this.$header.clientWidth;
-        this.doUpdate(UpdateType.resize);
+        this.doUpdate(UpdateType.resize | UpdateType.headerWidth);
     }
 
     private resize() {
@@ -1232,15 +1253,15 @@ export class Datagrid extends EventEmitter {
         if (w < this.$colWidth)
             w = this.$colWidth;
         this.$body.parentElement.style.height = h + 'px';
-        if (this.$headerWidth !== 0) {
+        if (this.$header.clientWidth !== 0) {
             const spacer = <HTMLElement>this.$header.querySelector('.datagrid-column-spacer');
-            if (this.$springCols.length > 1 || w < this.$headerWidth) {
+            if (this.$springCols.length > 1 || w < this.$header.clientWidth) {
                 spacer.style.width = '24px';
                 spacer.style.minWidth = '24px';
             }
             else {
-                spacer.style.width = (w - this.$headerWidth) + 24 + 'px';
-                spacer.style.minWidth = (w - this.$headerWidth) + 24 + 'px';
+                spacer.style.width = (w - this.$header.clientWidth) + 24 + 'px';
+                spacer.style.minWidth = (w - this.$header.clientWidth) + 24 + 'px';
             }
 
         }
@@ -1364,6 +1385,10 @@ export class Datagrid extends EventEmitter {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
+            if ((this._updating & UpdateType.headerWidth) === UpdateType.headerWidth) {
+                this.$headerWidth = this.$header.clientWidth;
+                this._updating &= ~UpdateType.headerWidth;
+            }
             if ((this._updating & UpdateType.sort) === UpdateType.sort) {
                 this.sort();
                 this._updating &= ~UpdateType.sort;

@@ -196,12 +196,12 @@
 
 .datagrid.focused .datagrid-row.selected {
     background-color: rgba(49, 106, 197, 0.75); /*#316ac5;*/
-    color: white;
+    color: white !important;
 }
 
 .datagrid-row.selected {
     background-color: rgba(221, 221, 221, 0.75); /*#316ac5;*/
-    color: black;
+    color: black !important;
 }
 
 .datagrid.focused .datagrid-row:hover {
@@ -222,12 +222,12 @@
 
 .datagrid.focused .datagrid-row.selected:hover {
     background-color: rgba(49, 106, 197, 1); /*#316ac5;*/
-    color: white;
+    color: white !important;
 }
 
 .datagrid-row.selected:hover {
     background-color: rgba(221, 221, 221, 1); /*#316ac5;*/
-    color: black;
+    color: black !important;
 }
 
 .datagrid-row:hover .datagrid-cell-sorted {
@@ -255,7 +255,7 @@
 }
 
 .datagrid-cell-sorted {
-    background-color: #ececec;
+    background-color: rgba(236, 236, 236, 0.5);;
 }
 
 .datagrid-row.selected .datagrid-cell-sorted {
