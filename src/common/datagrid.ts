@@ -329,6 +329,10 @@ export class Datagrid extends EventEmitter {
                 case 46: //delete
                     this.delete();
                     break;
+                case 65:
+                    if (e.ctrlKey)
+                        this.selectAll();
+                    break;
                 case 67: //c copy
                     if (e.ctrlKey)
                         this.copy();
