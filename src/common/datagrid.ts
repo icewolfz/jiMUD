@@ -624,6 +624,10 @@ export class Datagrid extends EventEmitter {
         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
         this.emit('selection-changed');
         let prop;
+        let sortFn;
+        if (this.$cols[this.$sort.column].sort)
+            sortFn = (sProp, sColumn) => this.$cols[this.$sort.column].sort;
+
         if (this.$cols[this.$sort.column].hasOwnProperty('index'))
             prop = this.$cols[this.$sort.column].index;
         else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
@@ -637,6 +641,8 @@ export class Datagrid extends EventEmitter {
         for (let r = 0; r < rl; r++) {
             if (!rows[r].children)
                 this.$sortedChildren[r] = [];
+            else if (sortFn)
+                this.$sortedChildren[r] = [...rows[r].children.keys()].sort(sortFn(prop, this.$cols[this.$sort.column]));
             else
                 this.$sortedChildren[r] = [...rows[r].children.keys()].sort((a, b) => {
                     if (rows[r].children[a][prop] > rows[r].children[b][prop])
@@ -646,27 +652,30 @@ export class Datagrid extends EventEmitter {
                     return 0;
                 });
         }
-        this.$sortedRows.sort((a, b) => {
-            if (rows[a][prop] > rows[b][prop])
-                return 1 * dir;
-            if (rows[a][prop] < rows[b][prop])
-                return -1 * dir;
-            if (this.$children) {
-                if (!rows[a].children && !rows[b].children)
-                    return 0;
-                if (!rows[a].children && rows[b].children)
-                    return -1 * dir;
-                if (rows[a].children && !rows[b].children)
+        if (sortFn)
+            this.$sortedRows.sort(sortFn(prop, this.$cols[this.$sort.column]));
+        else
+            this.$sortedRows.sort((a, b) => {
+                if (rows[a][prop] > rows[b][prop])
                     return 1 * dir;
-                const ap = this.$sortedChildren[a].map(c => rows[a].children[c][prop]).join(':');
-                const bp = this.$sortedChildren[b].map(c => rows[b].children[c][prop]).join(':');
-                if (ap > bp)
-                    return 1 * dir;
-                if (ap < bp)
+                if (rows[a][prop] < rows[b][prop])
                     return -1 * dir;
-            }
-            return 0;
-        });
+                if (this.$children) {
+                    if (!rows[a].children && !rows[b].children)
+                        return 0;
+                    if (!rows[a].children && rows[b].children)
+                        return -1 * dir;
+                    if (rows[a].children && !rows[b].children)
+                        return 1 * dir;
+                    const ap = this.$sortedChildren[a].map(c => rows[a].children[c][prop]).join(':');
+                    const bp = this.$sortedChildren[b].map(c => rows[b].children[c][prop]).join(':');
+                    if (ap > bp)
+                        return 1 * dir;
+                    if (ap < bp)
+                        return -1 * dir;
+                }
+                return 0;
+            });
     }
 
     public get sortedRows() {
