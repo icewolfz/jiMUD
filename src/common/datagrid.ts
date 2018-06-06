@@ -138,6 +138,7 @@ export class Datagrid extends EventEmitter {
             (<HTMLElement>this.$body.firstChild).children[this.$selected[0]].classList.add('selected');
         }
     }
+    get allowMultipleSelection() { return this.$allowMultiSelection; }
 
     set parent(parent) {
         if (typeof parent === 'string') {
@@ -856,7 +857,7 @@ export class Datagrid extends EventEmitter {
                         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
                     }
                 }
-                else if (this.$allowMultiSelection) {
+                else if (!this.$allowMultiSelection) {
                     Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
                     eRow.classList.add('selected');
                     this.$selected = [sIdx];
