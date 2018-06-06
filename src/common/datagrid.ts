@@ -328,7 +328,7 @@ export class Datagrid extends EventEmitter {
         const el = document.createElement('div');
         el.classList.add('datagrid-body');
         el.addEventListener('scroll', (e) => {
-            this.$header.style.transform = 'translate(-' + (<HTMLElement>e.currentTarget).scrollLeft + ',0)';
+            this.$header.style.transform = 'translate(-' + (<HTMLElement>e.currentTarget).scrollLeft + 'px,0)';
             if (this.$editor && this.$editor.editors.length > 0)
                 this.$editor.editors.map(ed => ed.editor.scroll());
         });
@@ -1306,7 +1306,7 @@ export class Datagrid extends EventEmitter {
             this.$body.parentElement.removeChild(helper);
             springrow.style.display = '';
             springrow.style.height = h + 'px';
-            this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + ',0)';
+            this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + 'px,0)';
             return;
         }
         let style;
@@ -1333,7 +1333,7 @@ export class Datagrid extends EventEmitter {
             springrow.style.display = '';
             springrow.style.height = (h - dh) + 'px';
         }
-        this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + ',0)';
+        this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + 'px,0)';
     }
 
     private doUpdate(type?: UpdateType) {
