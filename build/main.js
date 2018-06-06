@@ -1872,6 +1872,8 @@ ipcMain.on('closed', (event) => {
     winEditor.webContents.send('closed');
   if (winMap)
     winMap.webContents.send('closed');
+  if (winCode)
+    winCode.webContents.send('closed');
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -1888,6 +1890,8 @@ ipcMain.on('connected', (event) => {
     winEditor.webContents.send('connected');
   if (winMap)
     winMap.webContents.send('connected');
+  if (winCode)
+    winCode.webContents.send('connected');
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -2106,6 +2110,8 @@ ipcMain.on('editor-settings-saved', (event) => {
 ipcMain.on('GMCP-received', (event, data) => {
   if (winMap)
     winMap.webContents.send('GMCP-received', data);
+  if (winCode)
+    winCode.webContents.send('GMCP-received', data);
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
