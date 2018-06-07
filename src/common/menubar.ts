@@ -13,6 +13,7 @@ export class Menubar {
     private _menubar;
     private $cache = {};
     private $updating;
+    private $enabled = true;
 
     constructor(menu: any[], window?: Electron.BrowserWindow) {
         if (!window)
@@ -113,7 +114,10 @@ export class Menubar {
 
         if (tItem.root && !tItem.enabled) {
             tItem.submenu.map(f => {
-                f.rootEnabled = f.enabled;
+                if (!f.hasOwnProperty('enabled'))
+                    f.rootEnabled = true;
+                else
+                    f.rootEnabled = f.enabled;
                 f.enabled = false;
                 return f;
             });
@@ -131,6 +135,18 @@ export class Menubar {
             tItem.submenu = options.submenu;
             this.doUpdate(1);
         }
+    }
+
+    public get enabled() {
+        return this.$enabled;
+    }
+
+    public set enabled(value) {
+        if (value === this.$enabled) return;
+        this.$enabled = value;
+        this.menu.map(i => {
+            this.updateItem(i.label.replace(/&/g, ''), { enabled: value });
+        });
     }
 
     public rebuild() {
