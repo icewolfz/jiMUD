@@ -2,7 +2,6 @@ import { EditorBase, EditorOptions, FileState } from './editor.base';
 import { LPCIndenter, LPCFormatter } from './lpc';
 import { existsSync, formatSize, capitalize, inverse } from './../library';
 const { clipboard, ipcRenderer } = require('electron');
-const fs = require('fs-extra');
 const path = require('path');
 
 declare let ace;

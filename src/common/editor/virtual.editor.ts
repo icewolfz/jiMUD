@@ -3,10 +3,9 @@ import { Splitter, Orientation } from './../splitter';
 import { PropertyGrid } from './../propertygrid';
 import { EditorType, ValueEditor } from './../value.editors';
 import { Datagrid } from './../datagrid';
-import { existsSync, capitalize, wordwrap, splitQuoted, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
-const { clipboard, ipcRenderer, remote } = require('electron');
+import { existsSync, capitalize, wordwrap, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
+const { remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
-const fs = require('fs-extra');
 const path = require('path');
 
 interface VirtualEditorOptions extends EditorOptions {

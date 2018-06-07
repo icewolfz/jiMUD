@@ -1,8 +1,8 @@
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import { EditorBase, EditorOptions, FileState } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
-import { existsSync, formatSize, capitalize, inverse } from './../library';
-const { clipboard, ipcRenderer } = require('electron');
+import { existsSync } from './../library';
+const { ipcRenderer } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
 
@@ -39,6 +39,8 @@ export function loadMonaco(options: LoadMonacoOptions = {}) {
     });
 }
 
+let $lpcCompletionCache;
+
 export function SetupEditor() {
     return new Promise((resolve, reject) => {
         loadMonaco().then(() => {
@@ -52,7 +54,8 @@ export function SetupEditor() {
                 monaco.languages.setLanguageConfiguration('lpc', conf);
                 monaco.languages.registerCompletionItemProvider('lpc', {
                     provideCompletionItems: (model, position) => {
-                        return loadCompletion();
+                        if ($lpcCompletionCache) return $lpcCompletionCache;
+                        return ($lpcCompletionCache = loadCompletion());
                     }
                 });
             });
@@ -168,6 +171,7 @@ export class MonacoCodeEditor extends EditorBase {
     private $diffState;
     private $startValue = '';
     private $diffModel: monaco.editor.ITextModel;
+    private $pSelectedLength;
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -280,6 +284,7 @@ export class MonacoCodeEditor extends EditorBase {
         if (!s) return '';
         return this.$model.getValueInRange(s) || '';
     }
+
     public selectAll() {
         if (!this.$editor) return;
         this.$editor.setSelection({
@@ -612,6 +617,9 @@ export class MonacoCodeEditor extends EditorBase {
     public selectionChanged(e) {
         this.emit('selection-changed');
         const selected = this.selected.length > 0;
+        //dont update if nothing changed
+        if (this.$pSelectedLength === selected) return;
+        this.$pSelectedLength = selected;
         this.emit('menu-update', 'edit|formatting|to upper case', { enabled: selected });
         this.emit('menu-update', 'edit|formatting|to lower case', { enabled: selected });
         this.emit('menu-update', 'edit|formatting|capitalize', { enabled: selected });

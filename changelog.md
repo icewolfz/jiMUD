@@ -5,10 +5,12 @@
 - **New:**
   - Code Editor:
     - Add a remote caching system to save remote paths and data for local files, allowing diff remote/debug systems to work with out having to ask for remote path every time
-  - Character manager: Allow more then # and letters for name, strip them and set them as login
+    - Performance tweaks and fixes
+  - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
 - **Fixed:**
   - Code Editor:
     - Fixed empty editor on first load if no files opened
+    - New area dialog now properly disables menubar when open
   - Character manager:
     - Prevent running ok event multiple times after adding/renaming/copying more then one or canceling
     - Renaming lost login, password, and development setting

@@ -1,17 +1,18 @@
 
 const fs = require('fs-extra');
-const path = require('path');
 
 export class EditorSettings {
     public recent = [];
     public opened = [];
     public layout = [1];
+    public cacheRemote = true;
     public maxRecent = 15;
     public reopen = true;
     public outputSize = 170;
     public output = false;
     public nativeIcons: boolean = false;
     public spellchecking: true;
+    public remote = '.';
 
     public window = {
         persistent: false,
