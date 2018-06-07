@@ -19,7 +19,10 @@ export class Menubar {
             this.window = remote.getCurrentWindow();
         else
             this.window = window;
-        this.menu = menu;
+        this.menu = (menu || []).map(i => {
+            i.root = true;
+            return i;
+        });
         this.doUpdate(1);
     }
 
@@ -29,7 +32,7 @@ export class Menubar {
         let items;
         let tItem;
         let tItems;
-        if (!menu) return null;
+        if (!menu || !this._menubar) return null;
         if (!Array.isArray(menu)) {
             if (this.$cache[menu.toLowerCase()] && type === ItemType.both)
                 return this.$cache[menu.toLowerCase()];
@@ -84,8 +87,12 @@ export class Menubar {
         item = items[0];
         tItem = items[1];
 
-        if (options.enabled != null)
-            item.enabled = options.enabled ? true : false;
+        if (options.enabled != null) {
+            if (tItem.hasOwnProperty('rootEnabled'))
+                tItem.rootEnabled = options.enabled ? true : false;
+            else
+                item.enabled = options.enabled ? true : false;
+        }
         if (options.checked != null)
             item.checked = options.checked ? true : false;
         if (options.icon != null)
@@ -95,12 +102,31 @@ export class Menubar {
         if (options.position != null)
             item.position = options.position;
 
-        tItem.enabled = item.enabled;
+        if (tItem.hasOwnProperty('rootEnabled'))
+            tItem.rootEnabled = item.enabled;
+        else
+            tItem.enabled = item.enabled;
         tItem.checked = item.checked;
         tItem.icon = item.icon;
         tItem.visible = item.visible;
         tItem.position = item.position;
 
+        if (tItem.root && !tItem.enabled) {
+            tItem.submenu.map(f => {
+                f.rootEnabled = f.enabled;
+                f.enabled = false;
+                return f;
+            });
+            this.doUpdate(1);
+        }
+        else if (tItem.root && tItem.enabled) {
+            tItem.submenu.map(f => {
+                f.enabled = f.rootEnabled;
+                delete f.rootEnabled;
+                return f;
+            });
+            this.doUpdate(1);
+        }
         if (options.submenu != null) {
             tItem.submenu = options.submenu;
             this.doUpdate(1);
