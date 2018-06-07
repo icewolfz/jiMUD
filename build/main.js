@@ -114,7 +114,7 @@ function loadCharacter(char) {
   global.character = char;
   global.settingsFile = parseTemplate(characters.characters[char].settings);
   global.mapFile = parseTemplate(characters.characters[char].map);
-  global.characterLogin = characters.characters[char].name || char;
+  global.characterLogin = characters.characters[char].name || (char || '').replace(/[^a-zA-Z0-9]+/g, '');
   global.dev = characters.characters[char].dev;
   global.characterPass = characters.characters[char].password || '';
   global.title = char;

@@ -25,7 +25,7 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script>
         //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { parseTemplate, templatePath, isFileSync, decrypt, encrypt } = require('./js/library');
+        const { parseTemplate, templatePath, isFileSync, decrypt, encrypt, clone } = require('./js/library');
         const Settings = require('./js/settings').Settings;
         const { shell, remote, ipcRenderer } = require('electron');
         const { dialog, Menu, MenuItem } = remote;
@@ -114,10 +114,10 @@
 
             $("#get-name-ok").click(function () {
                 var p = $("#get-name-value").parent();
-                if (!validName($('#get-name-value').val())) {
+                if (invalidFile($('#get-name-value').val())) {
                     p.addClass("has-error");
                     p.addClass("has-feedback");
-                    p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid, can only contain letters and numbers</small>");
+                    p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid name</small>");
                     $('#get-name-value').focus();
                     return;
                 }
@@ -146,6 +146,12 @@
                     $("#get-name-ok").click();
             });
         });
+
+        function invalidFile(file) {
+            if (process.platform.indexOf('win') === 0)
+                return file.match(/[^0-9a-zA-Z^&'@{}[\],$=!#()%.+~_\s.-]/g) ? true : false;
+            return file.match(/[/\0]/g) ? true : false;
+        }
 
         function updateCurrent() {
             if (!current) return;
@@ -263,7 +269,7 @@
         function createItem(name, list) {
             if (!list) list = $("#characters-list");
             var item = $('<li></li>', {
-                id: 'character-' + name,
+                id: 'character-' + sanitizeID(name),
                 class: 'list-group-item'
             }).text(name);
             item.data('name', name);
@@ -331,6 +337,10 @@
             return true;
         }
 
+        function sanitizeID(id) {
+            return id.replace(/\s/g, '_');
+        }
+
         function sortList() {
             var $list = $('#characters-list'),
                 $listli = $list.children('li');
@@ -371,7 +381,7 @@
 
         function add() {
             showGetName(function (event, name) {
-                characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response, d;
                 if (isFileSync(sf)) {
@@ -420,7 +430,7 @@
 
         function addEmpty() {
             showGetName(function (event, name) {
-                characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response, d;
                 if (isFileSync(sf)) {
@@ -466,7 +476,9 @@
             if (name === undefined)
                 name = current;
             showGetName(name, 0, 1, function (event, name, oldName) {
-                characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                characters.characters[name] = clone(characters.characters[oldName]);
+                characters.characters[name].settings = path.join("{characters}", name + ".json");
+                characters.characters[name].map = path.join("{characters}", name + ".map");
                 var f = parseTemplate(characters.characters[oldName].settings);
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response;
@@ -501,11 +513,11 @@
                     fs.renameSync(f, sf);
                 changed++;
                 delete characters.characters[oldName];
-                $('#character-' + oldName).remove();
+                $('#character-' + sanitizeID(oldName)).remove();
                 createItem(name);
                 if (current === oldName) {
                     clearEditor();
-                    $('#character-' + name).click();
+                    $('#character-' + sanitizeID(name)).click();
                 }
                 saveCharacters();
                 sortList();
@@ -528,7 +540,9 @@
             if (name === undefined)
                 name = current;
             showGetName(name, copyName(name), function (event, name, oldName) {
-                characters.characters[name] = { settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                characters.characters[name] = clone(characters.characters[oldName]);
+                characters.characters[name].settings = path.join("{characters}", name + ".json");
+                characters.characters[name].map = path.join("{characters}", name + ".map");
                 var f = parseTemplate(characters.characters[oldName].settings);
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response;
@@ -594,13 +608,12 @@
                 if (characters.load === name)
                     characters.load = 0;
                 delete characters.characters[name];
-                $('#character-' + name).remove();
+                $('#character-' + sanitizeID(name)).remove();
                 if (current === name)
                     clearEditor();
                 changed++;
                 saveCharacters();
             }
-
         }
 
         function load(name) {
@@ -654,6 +667,7 @@
             p.removeClass("has-feedback");
 
             $("#get-name")[0].showModal();
+            $("#get-name").off('get-name-ok');
             if (callback)
                 $("#get-name").on('get-name-ok', callback);
             $('#get-name-value').val(val || '');
