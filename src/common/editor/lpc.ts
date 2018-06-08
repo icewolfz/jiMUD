@@ -5,6 +5,13 @@ const path = require('path');
 
 import IRichLanguageConfiguration = monaco.languages.LanguageConfiguration;
 import ILanguage = monaco.languages.IMonarchLanguage;
+import { DebugTimer } from './editor.base';
+
+declare global {
+    interface String {
+        trimRight;
+    }
+}
 
 export const conf: IRichLanguageConfiguration = {
     comments: {
@@ -1412,7 +1419,7 @@ interface FormatToken {
 export class LPCFormatter extends EventEmitter {
     private $src = '';
     private $position = 0;
-    private tokens = [];
+    //private tokens = [];
     private block = [];
     private b = [];
 
@@ -1426,11 +1433,10 @@ export class LPCFormatter extends EventEmitter {
         this.b = [];
         this.$src = source;
         this.$position = 0;
-        this.tokens = [];
-        this.tokenize();
+        const tokens = this.tokenize();
         this.emit('start');
         let tp = 0;
-        const tl = this.tokens.length;
+        const tl = tokens.length;
         let op = '';
         let s;
         let e;
@@ -1447,36 +1453,38 @@ export class LPCFormatter extends EventEmitter {
         let p = 0;
         let mblock = 0;
         let leading;
+        let tokenLine;
         for (; tp < tl; tp++) {
             leading = '';
-            for (t = 0, tll = this.tokens[tp].length; t < tll; t++) {
-                if (this.tokens[tp][t].type !== FormatTokenType.whitespace)
+            tokenLine = tokens[tp];
+            for (t = 0, tll = tokenLine.length; t < tll; t++) {
+                if (tokenLine[t].type !== FormatTokenType.whitespace)
                     break;
-                op += this.tokens[tp][t].value;
-                leading += this.tokens[tp][t].value;
+                op += tokenLine[t].value;
+                leading += tokenLine[t].value;
             }
             s = t;
-            pc = this.tokens[tp][t].type === FormatTokenType.precompiler ? 1 : 0;
+            pc = tokenLine[t].type === FormatTokenType.precompiler ? 1 : 0;
             incase = 0;
             if (incomment === 1) incomment = 0;
             while (t < tll) {
-                if (incomment === 0 && this.tokens[tp][t].type === FormatTokenType.stringblock && t + 1 < tll)
-                    mblock = this.tokens[tp][t + 1].value;
+                if (incomment === 0 && tokenLine[t].type === FormatTokenType.stringblock && t + 1 < tll)
+                    mblock = tokenLine[t + 1].value;
                 if (!mblock) {
-                    if (incomment === 0 && inif && this.tokens[tp][t].type === FormatTokenType.parenLparen)
+                    if (incomment === 0 && inif && tokenLine[t].type === FormatTokenType.parenLparen)
                         p++;
-                    else if (this.tokens[tp][t].type === FormatTokenType.parenLclosure)
+                    else if (tokenLine[t].type === FormatTokenType.parenLclosure)
                         inclosure++;
-                    else if (this.tokens[tp][t].type === FormatTokenType.parenRclosure)
+                    else if (tokenLine[t].type === FormatTokenType.parenRclosure)
                         inclosure--;
-                    else if (incomment === 0 && this.tokens[tp][t].type === FormatTokenType.commentInline)
+                    else if (incomment === 0 && tokenLine[t].type === FormatTokenType.commentInline)
                         incomment = 1;
-                    else if (incomment === 0 && this.tokens[tp][t].type === FormatTokenType.commentLeft)
+                    else if (incomment === 0 && tokenLine[t].type === FormatTokenType.commentLeft)
                         incomment = 2;
-                    else if (this.tokens[tp][t].type === FormatTokenType.commentRight)
+                    else if (tokenLine[t].type === FormatTokenType.commentRight)
                         incomment = 0;
-                    else if (!pc && incomment === 0 && inclosure === 0 && s !== t && this.tokens[tp][t].type === FormatTokenType.keyword) {
-                        switch (this.tokens[tp][t].value) {
+                    else if (!pc && incomment === 0 && inclosure === 0 && s !== t && tokenLine[t].type === FormatTokenType.keyword) {
+                        switch (tokenLine[t].value) {
                             case 'break':
                             case 'case':
                             case 'continue':
@@ -1493,169 +1501,169 @@ export class LPCFormatter extends EventEmitter {
                             case 'try':
                             case 'throw':
                             case 'using':
-                                if (!op.rtrim().endsWith('\n'))
+                                if (!op.trimRight().endsWith('\n'))
                                     op += '\n' + leading + '   ';
                                 break;
                             case 'if':
-                                if (!op.endsWith('else ') && !op.rtrim().endsWith('\n'))
+                                if (!op.endsWith('else ') && !op.trimRight().endsWith('\n'))
                                     op += '\n' + leading + '   ';
                                 break;
                         }
                     }
                 }
-                incase = (incase || this.tokens[tp][t].value === 'case' || this.tokens[tp][t].value === 'default') ? 1 : 0;
+                incase = (incase || tokenLine[t].value === 'case' || tokenLine[t].value === 'default') ? 1 : 0;
                 if (!mblock && incomment === 0) {
                     if (s !== t) {
-                        if (this.tokens[tp][t].type === FormatTokenType.comma || this.tokens[tp][t].type === FormatTokenType.semicolon)
-                            op = op.rtrim();
-                        else if (this.tokens[tp][t].type === FormatTokenType.operatorBase) {
+                        if (tokenLine[t].type === FormatTokenType.comma || tokenLine[t].type === FormatTokenType.semicolon)
+                            op = op.trimRight();
+                        else if (tokenLine[t].type === FormatTokenType.operatorBase) {
                             t3 = t - 1;
-                            while (t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.whitespace) {
+                            while (t3 >= 0 && tokenLine[t3].type === FormatTokenType.whitespace) {
                                 t3--;
                                 if (t3 <= 0)
                                     break;
                             }
-                            if (this.tokens[tp][t3].type !== FormatTokenType.text || this.tokens[tp][t3].type === FormatTokenType.parenLclosure || this.tokens[tp][t3].type === FormatTokenType.parenRclosure || this.tokens[tp][t3].type === FormatTokenType.parenLmapping || this.tokens[tp][t3].type === FormatTokenType.parenRmapping || this.tokens[tp][t3].type === FormatTokenType.parenRarray || this.tokens[tp][t3].type === FormatTokenType.parenLarray) {
-                                op = op.rtrim();
+                            if (tokenLine[t3].type !== FormatTokenType.text || tokenLine[t3].type === FormatTokenType.parenLclosure || tokenLine[t3].type === FormatTokenType.parenRclosure || tokenLine[t3].type === FormatTokenType.parenLmapping || tokenLine[t3].type === FormatTokenType.parenRmapping || tokenLine[t3].type === FormatTokenType.parenRarray || tokenLine[t3].type === FormatTokenType.parenLarray) {
+                                op = op.trimRight();
                                 op += ' ';
                             }
                             else
-                                op = op.rtrim();
+                                op = op.trimRight();
                         }
-                        else if (!pc && this.tokens[tp][t].type === FormatTokenType.operator) {
-                            if (!incase || (incase && this.tokens[tp][t].value !== ':')) {
-                                if (this.tokens[tp][t].value === '-') {
+                        else if (!pc && tokenLine[t].type === FormatTokenType.operator) {
+                            if (!incase || (incase && tokenLine[t].value !== ':')) {
+                                if (tokenLine[t].value === '-') {
                                     t3 = t - 1;
-                                    while (t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.whitespace) {
+                                    while (t3 >= 0 && tokenLine[t3].type === FormatTokenType.whitespace) {
                                         t3--;
                                         if (t3 <= 0)
                                             break;
                                     }
-                                    if (t3 < 0 || (this.tokens[tp][t3].type !== FormatTokenType.operatorNot && this.tokens[tp][t3].type !== FormatTokenType.parenLparen)) {
-                                        op = op.rtrim();
+                                    if (t3 < 0 || (tokenLine[t3].type !== FormatTokenType.operatorNot && tokenLine[t3].type !== FormatTokenType.parenLparen)) {
+                                        op = op.trimRight();
                                         op += ' ';
                                     }
-                                    else if (t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.parenLparen)
-                                        op.rtrim();
+                                    else if (t3 >= 0 && tokenLine[t3].type === FormatTokenType.parenLparen)
+                                        op.trimRight();
                                 }
-                                else if (this.tokens[tp][t].value === '--' || this.tokens[tp][t].value === '++')
-                                    op = op.rtrim();
+                                else if (tokenLine[t].value === '--' || tokenLine[t].value === '++')
+                                    op = op.trimRight();
                                 else {
-                                    op = op.rtrim();
+                                    op = op.trimRight();
                                     op += ' ';
                                 }
                             }
                         }
-                        else if (this.tokens[tp][t].type === FormatTokenType.parenLclosure || this.tokens[tp][t].type === FormatTokenType.parenRclosure || this.tokens[tp][t].type === FormatTokenType.parenLmapping || this.tokens[tp][t].type === FormatTokenType.parenRmapping || this.tokens[tp][t].type === FormatTokenType.parenRarray || this.tokens[tp][t].type === FormatTokenType.parenLarray) {
-                            op = op.rtrim();
+                        else if (tokenLine[t].type === FormatTokenType.parenLclosure || tokenLine[t].type === FormatTokenType.parenRclosure || tokenLine[t].type === FormatTokenType.parenLmapping || tokenLine[t].type === FormatTokenType.parenRmapping || tokenLine[t].type === FormatTokenType.parenRarray || tokenLine[t].type === FormatTokenType.parenLarray) {
+                            op = op.trimRight();
                             op += ' ';
                         }
-                        else if (this.tokens[tp][t].type === FormatTokenType.parenRparen)
-                            op = op.rtrim();
+                        else if (tokenLine[t].type === FormatTokenType.parenRparen)
+                            op = op.trimRight();
                     }
-                    if (this.tokens[tp][t].type === FormatTokenType.parenRbrace && s !== t && !op.rtrim().endsWith('\n'))
+                    if (tokenLine[t].type === FormatTokenType.parenRbrace && s !== t && !op.trimRight().endsWith('\n'))
                         op += '\n' + leading;
-                    else if (this.tokens[tp][t].type === FormatTokenType.parenLbrace) {
-                        if (!this.bracketsOnNewline && (op.rtrim().endsWith(')') || op.rtrim().endsWith(' else') || op.rtrim().endsWith('\nelse'))) {
-                            op = op.rtrim();
+                    else if (tokenLine[t].type === FormatTokenType.parenLbrace) {
+                        if (!this.bracketsOnNewline && (op.trimRight().endsWith(')') || op.trimRight().endsWith(' else') || op.trimRight().endsWith('\nelse'))) {
+                            op = op.trimRight();
                             op += ' ';
                         }
-                        else if (s !== t && !op.rtrim().endsWith('\n'))
+                        else if (s !== t && !op.trimRight().endsWith('\n'))
                             op += '\n' + leading;
                     }
                 }
-                op += this.tokens[tp][t].value;
+                op += tokenLine[t].value;
                 e = t;
                 if (!mblock && incomment === 0) {
                     if (t + 1 < tll) {
-                        if (this.tokens[tp][t].type === FormatTokenType.parenLbrace || this.tokens[tp][t].type === FormatTokenType.parenRbrace) {
+                        if (tokenLine[t].type === FormatTokenType.parenLbrace || tokenLine[t].type === FormatTokenType.parenRbrace) {
                             t++;
                             for (; t < tll; t++) {
-                                if (this.tokens[tp][t].type === FormatTokenType.whitespace) {
-                                    op += this.tokens[tp][t].value;
+                                if (tokenLine[t].type === FormatTokenType.whitespace) {
+                                    op += tokenLine[t].value;
                                     continue;
                                 }
                                 break;
                             }
-                            if (this.tokens[tp][t].type !== FormatTokenType.newline && !op.rtrim().endsWith('\n'))
+                            if (tokenLine[t].type !== FormatTokenType.newline && !op.trimRight().endsWith('\n'))
                                 op += '\n' + leading;
                         }
-                        else if (!pc && this.tokens[tp][t].type === FormatTokenType.operator || this.tokens[tp][t].type === FormatTokenType.comma || this.tokens[tp][t].type === FormatTokenType.semicolon) {
+                        else if (!pc && tokenLine[t].type === FormatTokenType.operator || tokenLine[t].type === FormatTokenType.comma || tokenLine[t].type === FormatTokenType.semicolon) {
                             t2 = t + 1;
                             t3 = t - 1;
                             t1 = t;
-                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
-                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                            if (tokenLine[t2].type !== FormatTokenType.newline) {
+                                while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
                                     t2++;
                                     if (t2 >= tll)
                                         break;
                                 }
-                                while (t3 >= 0 && this.tokens[tp][t3].type === FormatTokenType.whitespace) {
+                                while (t3 >= 0 && tokenLine[t3].type === FormatTokenType.whitespace) {
                                     t3--;
                                     if (t3 <= 0)
                                         break;
                                 }
                                 if (t2 < tll) {
                                     //only - matters as only operator that can standalone for signage
-                                    if (this.tokens[tp][t1].value === '-') {
+                                    if (tokenLine[t1].value === '-') {
                                         //previous is text so should add a space
-                                        if (t3 >= 0 && (this.tokens[tp][t3].type === FormatTokenType.text ||
-                                            this.tokens[tp][t3].type === FormatTokenType.parenRparen ||
-                                            this.tokens[tp][t3].type === FormatTokenType.parenRbracket ||
-                                            this.tokens[tp][t3].type === FormatTokenType.parenRmapping ||
-                                            this.tokens[tp][t3].type === FormatTokenType.parenRclosure ||
-                                            this.tokens[tp][t3].type === FormatTokenType.parenRarray
+                                        if (t3 >= 0 && (tokenLine[t3].type === FormatTokenType.text ||
+                                            tokenLine[t3].type === FormatTokenType.parenRparen ||
+                                            tokenLine[t3].type === FormatTokenType.parenRbracket ||
+                                            tokenLine[t3].type === FormatTokenType.parenRmapping ||
+                                            tokenLine[t3].type === FormatTokenType.parenRclosure ||
+                                            tokenLine[t3].type === FormatTokenType.parenRarray
                                         )) {
-                                            op = op.rtrim();
+                                            op = op.trimRight();
                                             op += ' ';
                                         }
                                     } //datatype + * is an array no space after
-                                    else if (this.tokens[tp][t1].value === '*') {
+                                    else if (tokenLine[t1].value === '*') {
                                         //previous is text so should add a space
-                                        if (t3 < 0 || (t3 >= 0 && this.tokens[tp][t3].type !== FormatTokenType.datatype && this.tokens[tp][t3].type !== FormatTokenType.comma)) {
-                                            op = op.rtrim();
+                                        if (t3 < 0 || (t3 >= 0 && tokenLine[t3].type !== FormatTokenType.datatype && tokenLine[t3].type !== FormatTokenType.comma)) {
+                                            op = op.trimRight();
                                             op += ' ';
                                         }
                                     }
-                                    else if (this.tokens[tp][t].value === '--' || this.tokens[tp][t].value === '++')
-                                        op = op.rtrim();
+                                    else if (tokenLine[t].value === '--' || tokenLine[t].value === '++')
+                                        op = op.trimRight();
                                     else {
-                                        op = op.rtrim();
+                                        op = op.trimRight();
                                         op += ' ';
                                     }
                                 }
                             }
                         }
-                        else if (!pc && this.tokens[tp][t].type === FormatTokenType.operatorNot && this.tokens[tp][t].value === '!') {
+                        else if (!pc && tokenLine[t].type === FormatTokenType.operatorNot && tokenLine[t].value === '!') {
                             t2 = t + 1;
-                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
-                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                            if (tokenLine[t2].type !== FormatTokenType.newline) {
+                                while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t2++;
                                     if (t2 >= tll)
                                         break;
                                 }
                                 if (t2 < tll) {
-                                    if (this.tokens[tp][t2].type === FormatTokenType.text) {
+                                    if (tokenLine[t2].type === FormatTokenType.text) {
                                         e = t2 - 1;
                                         t = t2 - 1;
                                     }
-                                    else if (this.tokens[tp][t2].type === FormatTokenType.operator && this.tokens[tp][t2].value === '-') {
+                                    else if (tokenLine[t2].type === FormatTokenType.operator && tokenLine[t2].value === '-') {
                                         e = t2 - 1;
                                         t = t2 - 1;
                                     }
-                                    else if (this.tokens[tp][t2].type === FormatTokenType.operatorNot && this.tokens[tp][t2].value === '!') {
+                                    else if (tokenLine[t2].type === FormatTokenType.operatorNot && tokenLine[t2].value === '!') {
                                         e = t2 - 1;
                                         t = t2 - 1;
                                     }
                                 }
                             }
                         }
-                        else if ((this.tokens[tp][t].type === FormatTokenType.parenLclosure || this.tokens[tp][t].type === FormatTokenType.parenRclosure || this.tokens[tp][t].type === FormatTokenType.parenLmapping || this.tokens[tp][t].type === FormatTokenType.parenRmapping || this.tokens[tp][t].type === FormatTokenType.parenRarray || this.tokens[tp][t].type === FormatTokenType.parenLarray)) {
+                        else if ((tokenLine[t].type === FormatTokenType.parenLclosure || tokenLine[t].type === FormatTokenType.parenRclosure || tokenLine[t].type === FormatTokenType.parenLmapping || tokenLine[t].type === FormatTokenType.parenRmapping || tokenLine[t].type === FormatTokenType.parenRarray || tokenLine[t].type === FormatTokenType.parenLarray)) {
                             t2 = t + 1;
-                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
-                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                            if (tokenLine[t2].type !== FormatTokenType.newline) {
+                                while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
                                     t2++;
@@ -1663,15 +1671,15 @@ export class LPCFormatter extends EventEmitter {
                                         break;
                                 }
                                 if (t2 < tll) {
-                                    op = op.rtrim();
+                                    op = op.trimRight();
                                     op += ' ';
                                 }
                             }
                         }
-                        else if ((this.tokens[tp][t].type === FormatTokenType.parenLparen)) {
+                        else if ((tokenLine[t].type === FormatTokenType.parenLparen)) {
                             t2 = t + 1;
-                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
-                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                            if (tokenLine[t2].type !== FormatTokenType.newline) {
+                                while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
                                     t2++;
@@ -1679,15 +1687,15 @@ export class LPCFormatter extends EventEmitter {
                                         break;
                                 }
                                 if (t2 < tll) {
-                                    op = op.rtrim();
+                                    op = op.trimRight();
                                     //op += " ";
                                 }
                             }
                         }
-                        else if ((this.tokens[tp][t].type === FormatTokenType.operatorBase)) {
+                        else if ((tokenLine[t].type === FormatTokenType.operatorBase)) {
                             t2 = t + 1;
-                            if (this.tokens[tp][t2].type !== FormatTokenType.newline) {
-                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                            if (tokenLine[t2].type !== FormatTokenType.newline) {
+                                while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
                                     t2++;
@@ -1695,28 +1703,28 @@ export class LPCFormatter extends EventEmitter {
                                         break;
                                 }
                                 if (t2 < tll) {
-                                    op = op.rtrim();
+                                    op = op.trimRight();
                                 }
                             }
                         }
-                        else if (!pc && inclosure === 0 && this.tokens[tp][t].type === FormatTokenType.keyword) {
+                        else if (!pc && inclosure === 0 && tokenLine[t].type === FormatTokenType.keyword) {
                             t2 = t + 1;
-                            switch (this.tokens[tp][t].value) {
+                            switch (tokenLine[t].value) {
                                 case 'return':
-                                    while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                    while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                         t++;
                                         e++;
                                         t2++;
                                         if (t2 >= tll)
                                             break;
                                     }
-                                    if (this.tokens[tp][t2].type !== FormatTokenType.semicolon)
+                                    if (tokenLine[t2].type !== FormatTokenType.semicolon)
                                         op += ' ';
                                     break;
                                 case 'break':
                                 case 'continue':
                                 case 'default':
-                                    while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                    while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                         t++;
                                         e++;
                                         t2++;
@@ -1738,7 +1746,7 @@ export class LPCFormatter extends EventEmitter {
                                 case 'using':
                                     break;
                                 case 'if':
-                                    while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                                    while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                         t++;
                                         e++;
                                         t2++;
@@ -1750,20 +1758,20 @@ export class LPCFormatter extends EventEmitter {
                             }
                         }
                     }
-                    if (inif && this.tokens[tp][t].type === FormatTokenType.parenRparen) {
+                    if (inif && tokenLine[t].type === FormatTokenType.parenRparen) {
                         p--;
                         if (p === 0) {
                             t2 = t + 1;
-                            if (t2 < tll && this.tokens[tp][t2].type !== FormatTokenType.newline && this.tokens[tp][t].type !== FormatTokenType.parenLbrace && this.tokens[tp][t].type !== FormatTokenType.keyword) {
-                                while (this.tokens[tp][t2].type === FormatTokenType.whitespace) {
+                            if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t].type !== FormatTokenType.parenLbrace && tokenLine[t].type !== FormatTokenType.keyword) {
+                                while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
                                     t2++;
                                     if (t2 >= tll)
                                         break;
                                 }
-                                if (t2 < tll && this.tokens[tp][t2].type !== FormatTokenType.newline && this.tokens[tp][t2].type !== FormatTokenType.parenLbrace && this.tokens[tp][t2].type !== FormatTokenType.keyword) {
-                                    op = op.rtrim();
+                                if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t2].type !== FormatTokenType.parenLbrace && tokenLine[t2].type !== FormatTokenType.keyword) {
+                                    op = op.trimRight();
                                     op += '\n' + leading;
                                 }
                             }
@@ -1771,7 +1779,7 @@ export class LPCFormatter extends EventEmitter {
                         }
                     }
                 }
-                if (mblock === this.tokens[tp][t].value)
+                if (mblock === tokenLine[t].value)
                     mblock = 0;
                 t = e;
                 t++;
@@ -2259,16 +2267,18 @@ export class LPCFormatter extends EventEmitter {
 
     private tokenize() {
         let token: FormatToken = this.getToken();
+        const tokens = [];
         let t = [];
         while (token) {
             t.push(token);
             if (token.type === FormatTokenType.newline) {
-                this.tokens.push(t);
+                tokens.push(t);
                 t = [];
             }
             token = this.getToken();
         }
         if (t.length)
-            this.tokens.push(t);
+            tokens.push(t);
+        return tokens;
     }
 }

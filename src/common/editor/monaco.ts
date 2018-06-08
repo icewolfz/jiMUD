@@ -40,6 +40,8 @@ export function loadMonaco(options: LoadMonacoOptions = {}) {
 }
 
 let $lpcCompletionCache;
+let $lpcIndenter;
+let $lpcFormatter;
 
 export function SetupEditor() {
     return new Promise((resolve, reject) => {
@@ -80,13 +82,13 @@ export function SetupEditor() {
             });
             monaco.languages.registerDocumentFormattingEditProvider('lpc', {
                 provideDocumentFormattingEdits(model, options, token): Promise<monaco.languages.TextEdit[]> {
-                    const $indenter = new LPCIndenter();
-                    $indenter.on('error', (e) => {
-                        reject(e);
-                    });
-                    const $formatter = new LPCFormatter();
-                    const code = $formatter.format(model.getValue());
                     return new Promise<monaco.languages.TextEdit[]>((resolve2, reject2) => {
+                        const $formatter = $lpcFormatter || ($lpcFormatter = new LPCFormatter());
+                        const code = $formatter.format(model.getValue());
+                        const $indenter = $lpcIndenter || ($lpcIndenter = new LPCIndenter());
+                        $indenter.on('error', (e) => {
+                            reject2(null);
+                        });
                         $indenter.on('complete', (lines) => {
                             resolve2([{
                                 range: {
@@ -362,6 +364,7 @@ export class MonacoCodeEditor extends EditorBase {
             case 'menu|context':
             case 'menu|view':
             case 'diff':
+            case 'buttons':
                 return true;
         }
         return false;
@@ -588,6 +591,23 @@ export class MonacoCodeEditor extends EditorBase {
                     ]
                 }
             ];
+    }
+
+    public get buttons() {
+        if (path.extname(this.file) !== '.c')
+            return [];
+        const el = document.createElement('button');
+        el.id = 'btn-debug';
+        el.type = 'button';
+        el.classList.add('btn', 'btn-default', 'btn-xs');
+        //if (active)
+        //el.classList.add('active');
+        el.title = 'Debug';
+        el.addEventListener('click', () => {
+            this.emit('debug', this.file);
+        });
+        el.innerHTML = '<i class="fa fa-bug"></i>';
+        return [el];
     }
 
     public insert(text) {
