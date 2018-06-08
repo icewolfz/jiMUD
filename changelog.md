@@ -8,6 +8,8 @@
     - Performance tweaks and fixes
     - Formatting will now auto strip trailing whitespace
   - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
+- **Changed:**
+  - Code Editor: Changed formatting rule for semicolon (;), no long can be on a line alone, mostly happened when folloing a catch or time_expression block
 - **Fixed:**
   - Code Editor:
     - Fixed empty editor on first load if no files opened

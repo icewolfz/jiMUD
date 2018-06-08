@@ -1507,7 +1507,9 @@ export class LPCFormatter extends EventEmitter {
                 }
                 incase = (incase || tokenLine[t].value === 'case' || tokenLine[t].value === 'default') ? 1 : 0;
                 if (!mblock && incomment === 0) {
-                    if (s !== t) {
+                    if (tokenLine[t].type === FormatTokenType.semicolon)
+                        op = op.trimRight();
+                    else if (s !== t) {
                         if (tokenLine[t].type === FormatTokenType.comma || tokenLine[t].type === FormatTokenType.semicolon)
                             op = op.rtrim();
                         else if (tokenLine[t].type === FormatTokenType.operatorBase) {
