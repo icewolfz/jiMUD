@@ -5,6 +5,14 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { app } = require('electron').remote;
 
+declare global {
+    interface String {
+        trimLeft(): string;
+        trimRight(): string;
+        rtrim(): string;
+    }
+}
+
 export function SortArrayByPriority(a, b) {
     if (a.priority > b.priority)
         return -1;
@@ -527,26 +535,55 @@ return ({}).toString.call(obj).match(/\s([a-z|A-Z]+)/)[1].toLowerCase();
 };
 */
 
-String.prototype.splice = function (this: string, idx: number, s: string, rem?: number) {
-    if (typeof rem === 'undefined') rem = 0;
-    return (this.slice(0, idx) + s + this.slice(idx + Math.abs(rem)));
-};
+if (typeof String.prototype.splice !== 'function') {
+    String.prototype.splice = function (this: string, idx: number, s: string, rem?: number) {
+        if (typeof rem === 'undefined') rem = 0;
+        return (this.slice(0, idx) + s + this.slice(idx + Math.abs(rem)));
+    };
+}
 
-String.prototype.paddingLeft = function (this: string, paddingValue: (string | number)) {
-    if (typeof paddingValue === 'number')
-        paddingValue = ' '.repeat(paddingValue);
-    return String(paddingValue + this).slice(-paddingValue.length);
-};
+if (typeof String.prototype.paddingLeft !== 'function') {
+    String.prototype.paddingLeft = function (this: string, paddingValue: (string | number)) {
+        if (typeof paddingValue === 'number')
+            paddingValue = ' '.repeat(paddingValue);
+        return String(paddingValue + this).slice(-paddingValue.length);
+    };
+}
 
-String.prototype.paddingRight = function (this: string, paddingValue: (string | number)) {
-    if (typeof paddingValue === 'number') {
-        if (paddingValue <= this.length) return this;
-        paddingValue = ' '.repeat(paddingValue - this.length);
-        return this + paddingValue;
+if (typeof String.prototype.paddingRight !== 'function') {
+    String.prototype.paddingRight = function (this: string, paddingValue: (string | number)) {
+        if (typeof paddingValue === 'number') {
+            if (paddingValue <= this.length) return this;
+            paddingValue = ' '.repeat(paddingValue - this.length);
+            return this + paddingValue;
+        }
+        if (paddingValue.length <= this.length) return this;
+        return this + paddingValue.slice(-this.length);
+    };
+}
+
+String.prototype.rtrim = function (this: string) {
+    let e = this.length;
+    while (e--) {
+        if (this.charAt(e) !== ' ' && this.charAt(e) !== '\t')
+            break;
     }
-    if (paddingValue.length <= this.length) return this;
-    return this + paddingValue.slice(-this.length);
+    return this.slice(0, e + 1);
 };
+
+/*
+if (typeof String.prototype.trimEnd !== 'function') {
+    String.prototype.trimEnd = function (this: string) {
+        return this.trimRight();
+    };
+}
+
+if (typeof String.prototype.trimStart !== 'function') {
+    String.prototype.trimStart = function (this: string) {
+        return this.trimLeft();
+    };
+}
+*/
 
 String.prototype.splitQuote = function (this: string, sep: string, type?, escape?) {
     if (this.length === 0)
