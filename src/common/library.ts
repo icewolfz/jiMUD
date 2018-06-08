@@ -5,13 +5,6 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { app } = require('electron').remote;
 
-declare global {
-    interface String {
-        ltrim(): string;
-        rtrim(): string;
-    }
-}
-
 export function SortArrayByPriority(a, b) {
     if (a.priority > b.priority)
         return -1;
@@ -612,15 +605,6 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
         str.push(this.substr(pS, s - pS));
     return str;
 };
-
-if (!String.prototype.ltrim)
-    String.prototype.ltrim = function () {
-        return this.replace(/^\s+/g, '');
-    };
-if (!String.prototype.rtrim)
-    String.prototype.rtrim = function () {
-        return this.replace(/\s+$/g, '');
-    };
 
 export function getTimeSpan(i: number): string {
     let al;
