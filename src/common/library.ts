@@ -10,6 +10,7 @@ declare global {
         trimLeft(): string;
         trimRight(): string;
         rtrim(): string;
+        ltrim(): string;
     }
 }
 
@@ -569,6 +570,10 @@ String.prototype.rtrim = function (this: string) {
             break;
     }
     return this.slice(0, e + 1);
+};
+
+String.prototype.ltrim = function (this: string) {
+    return this.replace(/^\h\h*/, '');
 };
 
 /*
