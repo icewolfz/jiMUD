@@ -80,6 +80,25 @@ export function SetupEditor() {
                     'editorGutter.background': '#f5f5f5'
                 }
             });
+            monaco.editor.defineTheme('lpcThemeDark', <monaco.editor.IStandaloneThemeData>{
+                base: 'vs-dark',
+                inherit: true,
+                rules: [
+                    { token: 'keyword.directive.include', foreground: '608b4e', fontStyle: 'bold' },
+                    { token: 'keyword.directive', foreground: '608b4e', fontStyle: 'bold' },
+                    { token: 'parent', foreground: 'c3a624', fontStyle: 'bold' },
+                    { token: 'parent.function', foreground: 'c3a624', fontStyle: '' },
+                    { token: 'sefuns', foreground: '008080', fontStyle: 'bold' },
+                    { token: 'efuns', foreground: '008080' },
+                    { token: 'abbr', foreground: '608b4e', fontStyle: 'bold' },
+                    { token: 'datatype', foreground: 'bb0000' },
+                    { token: 'constant', foreground: 'bb0000', fontStyle: 'bold' },
+                    { token: 'applies', foreground: '9655af', fontStyle: 'bold' }
+                ],
+                colors: {
+                    'editorGutter.background': '#000'
+                }
+            });
             monaco.languages.registerDocumentFormattingEditProvider('lpc', {
                 provideDocumentFormattingEdits(model, options, token): Promise<monaco.languages.TextEdit[]> {
                     return new Promise<monaco.languages.TextEdit[]>((resolve2, reject2) => {
