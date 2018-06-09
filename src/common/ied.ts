@@ -39,6 +39,7 @@ export class IED extends EventEmitter {
     private _activeIdx: number = -1;
     private _begin = null;
 
+    public prefix = '';
     public local;
     public remote;
     public queue: Item[] = [];
@@ -247,53 +248,53 @@ export class IED extends EventEmitter {
             case 'resolved':
                 this.emit('resolved', obj.path, obj.tag || '');
                 switch (obj.tag || '') {
-                    case 'dir:browse':
+                    case this.prefix + 'dir:browse':
                         this.getDir(obj.path, true);
                         break;
-                    case 'deleteDir':
+                    case this.prefix + 'deleteDir':
                         this.deleteDirectory(obj.path, false);
                         break;
-                    case 'deleteDirFiles':
+                    case this.prefix + 'deleteDirFiles':
                         this.deleteDirectory(obj.path, false, true);
                         break;
-                    case 'delete':
+                    case this.prefix + 'delete':
                         this.deleteFile(obj.path + '/' + obj.file);
                         break;
-                    case 'rename':
-                        ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(this._data['rename']), file: path.basename(this._data['rename']), tag: 'rename2' }));
+                    case this.prefix + 'rename':
+                        ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(this._data['rename']), file: path.basename(this._data['rename']), tag: this.prefix + 'rename2' }));
                         this.emit('message', 'Resolving: ' + this._data['rename']);
                         this._data['rename'] = obj.path + '/' + obj.file;
                         break;
-                    case 'rename2':
+                    case this.prefix + 'rename2':
                         this.rename(this._data['rename'], obj.path + '/' + obj.file);
                         break;
                     default:
                         if (obj.tag) {
-                            if (obj.tag.startsWith('download:'))
+                            if (obj.tag.startsWith(this.prefix + 'download:'))
                                 this.download(obj.path + '/' + obj.file, false, obj.tag);
-                            else if (obj.tag.startsWith('downloadTo:'))
+                            else if (obj.tag.startsWith(this.prefix + 'downloadTo:'))
                                 this.download(obj.path + '/' + obj.file, false, obj.tag);
-                            else if (obj.tag.startsWith('downloadMkdir:'))
+                            else if (obj.tag.startsWith(this.prefix + 'downloadMkdir:'))
                                 this.download(obj.path + '/' + obj.file, false, obj.tag, true);
-                            else if (obj.tag.startsWith('downloadToMkdir:'))
+                            else if (obj.tag.startsWith(this.prefix + 'downloadToMkdir:'))
                                 this.download(obj.path + '/' + obj.file, false, obj.tag, true);
-                            else if (obj.tag.startsWith('upload:'))
+                            else if (obj.tag.startsWith(this.prefix + 'upload:'))
                                 this.upload(obj.path + '/' + obj.file, false, obj.tag);
-                            else if (obj.tag.startsWith('uploadTo:'))
+                            else if (obj.tag.startsWith(this.prefix + 'uploadTo:'))
                                 this.upload(obj.path + '/' + obj.file, false, obj.tag);
-                            else if (obj.tag.startsWith('uploadMkdir:'))
+                            else if (obj.tag.startsWith(this.prefix + 'uploadMkdir:'))
                                 this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
-                            else if (obj.tag.startsWith('uploadToMkdir:'))
+                            else if (obj.tag.startsWith(this.prefix + 'uploadToMkdir:'))
                                 this.upload(obj.path + '/' + obj.file, false, obj.tag, true);
-                            else if (obj.tag.startsWith('mkdir:'))
+                            else if (obj.tag.startsWith(this.prefix + 'mkdir:'))
                                 this.makeDirectory(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
-                            else if (obj.tag.startsWith('mkdirIgnore:'))
+                            else if (obj.tag.startsWith(this.prefix + 'mkdirIgnore:'))
                                 this.makeDirectory(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
-                            else if (obj.tag.startsWith('mkdirP:'))
+                            else if (obj.tag.startsWith(this.prefix + 'mkdirP:'))
                                 this.makeDirectoryParent(obj.path + '/' + obj.file, false, false, this._callbacks[obj.tag]);
-                            else if (obj.tag.startsWith('mkdirPIgnore:'))
+                            else if (obj.tag.startsWith(this.prefix + 'mkdirPIgnore:'))
                                 this.makeDirectoryParent(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
-                            else if (obj.tag.startsWith('dir:')) {
+                            else if (obj.tag.startsWith(this.prefix + 'dir:')) {
                                 delete this._paths[obj.tag];
                                 this.getDir(obj.path, true, obj.tag.substr(4), this._paths[obj.tag]);
                             }
@@ -314,22 +315,22 @@ export class IED extends EventEmitter {
                 }
                 let files;
                 if (obj.compressed) {
-                    files = this._data[obj.tag || 'dir'] || '';
+                    files = this._data[obj.tag || (this.prefix + 'dir')] || '';
                     files += obj.data;
                 }
                 else {
-                    files = this._data[obj.tag || 'dir'] || [];
+                    files = this._data[obj.tag || (this.prefix + 'dir')] || [];
                     files.push.apply(files, obj.files || []);
                 }
                 if (!obj.last) {
                     this._data[obj.tag || 'dir'] = files;
-                    ipcRenderer.send('send-gmcp', 'IED.dir.more ' + JSON.stringify({ path: obj.path, tag: obj.tag || 'dir', compress: this.compressDir ? 1 : 0 }));
+                    ipcRenderer.send('send-gmcp', 'IED.dir.more ' + JSON.stringify({ path: obj.path, tag: obj.tag || (this.prefix + 'dir'), compress: this.compressDir ? 1 : 0 }));
                 }
                 else {
                     if (obj.compressed)
                         this._worker.postMessage({ action: 'decode-dir', path: obj.path, data: files, tag: obj.tag, local: this._paths[obj.tag] });
                     else
-                        this.emit('dir', obj.path, files, obj.tag || 'dir', this._paths[obj.tag]);
+                        this.emit('dir', obj.path, files, obj.tag || (this.prefix + 'dir'), this._paths[obj.tag]);
                     delete this._data[obj.tag || 'dir'];
                     delete this._paths[obj.tag];
                 }
@@ -405,14 +406,14 @@ export class IED extends EventEmitter {
 
     public getDir(dir: string, noResolve?: boolean, tag?, local?: string) {
         if (local)
-            this._paths['dir:' + (tag || 'browse')] = local;
+            this._paths[this.prefix + 'dir:' + (tag || 'browse')] = local;
         if (noResolve) {
-            ipcRenderer.send('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: 'dir:' + (tag || 'browse'), compress: this.compressDir ? 1 : 0 }));
+            ipcRenderer.send('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: this.prefix + 'dir:' + (tag || 'browse'), compress: this.compressDir ? 1 : 0 }));
             this.emit('message', 'Getting Directory: ' + dir);
         }
         else {
             delete this._data['browse'];
-            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: dir, file: '', tag: 'dir:' + (tag || 'browse') }));
+            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: dir, file: '', tag: this.prefix + 'dir:' + (tag || 'browse') }));
             this.emit('message', 'Resolving: ' + dir);
         }
     }
@@ -423,7 +424,7 @@ export class IED extends EventEmitter {
             if (tag)
                 item = new Item(tag);
             else {
-                item = new Item('download:' + this._id);
+                item = new Item(this.prefix + 'download:' + this._id);
                 this._id++;
             }
             item.compress = this.compressDownload;
@@ -442,11 +443,11 @@ export class IED extends EventEmitter {
         else {
             if (mkdir) {
                 this._paths['downloadMkdir:' + this._id] = this.local;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'downloadMkdir:' + this._id }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'downloadMkdir:' + this._id }));
             }
             else {
                 this._paths['download:' + this._id] = this.local;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'download:' + this._id }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'download:' + this._id }));
             }
             this._id++;
             this.emit('message', 'Resolving: ' + file);
@@ -459,7 +460,7 @@ export class IED extends EventEmitter {
             if (tag)
                 item = new Item(tag);
             else {
-                item = new Item('download:' + this._id);
+                item = new Item(this.prefix + 'download:' + this._id);
                 this._id++;
             }
             item.tmp = this._temp;
@@ -478,11 +479,11 @@ export class IED extends EventEmitter {
         else {
             if (mkdir) {
                 this._paths['downloadMkdir:' + this._id] = local;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'downloadMkdirTo:' + this._id }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'downloadMkdirTo:' + this._id }));
             }
             else {
                 this._paths['download:' + this._id] = local;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'downloadTo:' + this._id }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'downloadTo:' + this._id }));
             }
             this._id++;
             this.emit('message', 'Resolving: ' + file);
@@ -495,7 +496,7 @@ export class IED extends EventEmitter {
             if (tag)
                 item = new Item(tag);
             else {
-                item = new Item('upload:' + this._id);
+                item = new Item(this.prefix + 'upload:' + this._id);
                 this._id++;
             }
             item.mkdir = mkdir;
@@ -521,11 +522,11 @@ export class IED extends EventEmitter {
         else {
             if (mkdir) {
                 this._paths['uploadMkdir:' + this._id] = file;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: this.remote, file: path.basename(file), tag: 'uploadMkdir:' + this._id }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: this.remote, file: path.basename(file), tag: this.prefix + 'uploadMkdir:' + this._id }));
             }
             else {
                 this._paths['upload:' + this._id] = file;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: this.remote, file: path.basename(file), tag: 'upload:' + this._id }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: this.remote, file: path.basename(file), tag: this.prefix + 'upload:' + this._id }));
             }
             this._id++;
             this.emit('message', 'Resolving: ' + file);
@@ -538,7 +539,7 @@ export class IED extends EventEmitter {
             if (tag)
                 item = new Item(tag);
             else {
-                item = new Item('upload:' + this._id);
+                item = new Item(this.prefix + 'upload:' + this._id);
                 this._id++;
             }
             item.mkdir = mkdir;
@@ -564,11 +565,11 @@ export class IED extends EventEmitter {
         else {
             if (mkdir) {
                 this._paths['uploadToMkdir:' + this._id] = file;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: remote, file: path.basename(remote), tag: 'uploadToMkdir:' + this._id }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: remote, file: path.basename(remote), tag: this.prefix + 'uploadToMkdir:' + this._id }));
             }
             else {
                 this._paths['uploadTo:' + this._id] = file;
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: remote, file: path.basename(remote), tag: 'uploadTo:' + this._id }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: remote, file: path.basename(remote), tag: this.prefix + 'uploadTo:' + this._id }));
             }
             this._id++;
             this.emit('message', 'Resolving: ' + file);
@@ -577,11 +578,11 @@ export class IED extends EventEmitter {
 
     public deleteFile(file, resolve?: boolean) {
         if (resolve) {
-            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'delete' }));
+            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'delete' }));
             this.emit('message', 'Resolving: ' + file);
         }
         else {
-            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'rm', path: path.dirname(file), file: path.basename(file), tag: 'delete' }));
+            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'rm', path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'delete' }));
             this.emit('message', 'Deleting: ' + file);
         }
     }
@@ -589,16 +590,16 @@ export class IED extends EventEmitter {
     public deleteDirectory(file, resolve?: boolean, files?: boolean) {
         if (resolve) {
             if (files)
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: file, tag: 'deleteDirFiles' }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: file, tag: this.prefix + 'deleteDirFiles' }));
             else
-                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: file, tag: 'deleteDir' }));
+                ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: file, tag: this.prefix + 'deleteDir' }));
             this.emit('message', 'Resolving: ' + file);
         }
         else if (files) {
             this.getDir(file, !resolve, 'delete');
         }
         else {
-            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'rmdir', path: file, tag: 'deleteDir' }));
+            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'rmdir', path: file, tag: this.prefix + 'deleteDir' }));
             this.emit('message', 'Deleting: ' + file);
         }
     }
@@ -606,24 +607,24 @@ export class IED extends EventEmitter {
     public rename(file, file2, resolve?: boolean) {
         if (resolve) {
             this._data['rename'] = file2;
-            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: 'rename' }));
+            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'rename' }));
             this.emit('message', 'Resolving: ' + file);
         }
         else {
-            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mv', path: path.dirname(file), file: path.basename(file), path2: path.dirname(file2), file2: path.basename(file2), tag: 'rename' }));
+            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mv', path: path.dirname(file), file: path.basename(file), path2: path.dirname(file2), file2: path.basename(file2), tag: this.prefix + 'rename' }));
             this.emit('message', 'Renaming: ' + file + ' to ' + file2);
         }
     }
 
     public makeDirectory(file, resolve?: boolean, ignore?: boolean, callback?) {
         if (callback)
-            this._callbacks[(ignore ? 'mkdirIgnore' : 'mkdir') + this._id] = callback;
+            this._callbacks[this.prefix + (ignore ? 'mkdirIgnore' : 'mkdir') + this._id] = callback;
         if (resolve) {
-            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: (ignore ? 'mkdirIgnore' : 'mkdir') + this._id }));
+            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + (ignore ? 'mkdirIgnore' : 'mkdir') + this._id }));
             this.emit('message', 'Resolving: ' + file);
         }
         else {
-            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mkdir', path: file, tag: (ignore ? 'mkdirIgnore' : 'mkdir') + this._id }));
+            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mkdir', path: file, tag: this.prefix + (ignore ? 'mkdirIgnore' : 'mkdir') + this._id }));
             this.emit('message', 'Creating directory: ' + file);
         }
         this._id++;
@@ -631,13 +632,13 @@ export class IED extends EventEmitter {
 
     public makeDirectoryParent(file, resolve?: boolean, ignore?: boolean, callback?) {
         if (callback)
-            this._callbacks[(ignore ? 'mkdirPIgnore' : 'mkdirP') + this._id] = callback;
+            this._callbacks[this.prefix + (ignore ? 'mkdirPIgnore' : 'mkdirP') + this._id] = callback;
         if (resolve) {
-            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: (ignore ? 'mkdirPIgnore' : 'mkdirP') + this._id }));
+            ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + (ignore ? 'mkdirPIgnore' : 'mkdirP') + this._id }));
             this.emit('message', 'Resolving: ' + file);
         }
         else {
-            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mkdirP', args: '-p', path: file, tag: (ignore ? 'mkdirPIgnore' : 'mkdirP') + this._id }));
+            ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'mkdirP', args: '-p', path: file, tag: this.prefix + (ignore ? 'mkdirPIgnore' : 'mkdirP') + this._id }));
             this.emit('message', 'Creating directory: ' + file);
         }
         this._id++;
