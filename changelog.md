@@ -9,11 +9,15 @@
     - Formatting will now auto strip trailing whitespace
   - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
 - **Changed:**
-  - Code Editor: Changed formatting rule for semicolon (;), no long can be on a line alone, mostly happened when folloing a catch or time_expression block
+  - Code Editor:
+    - Changed formatting rule for semicolon (;), no long can be on a line alone, mostly happened when following a catch or time_expression block
+    - Change how catch is formated, before it used to be put on its own line, it is now treated more like a function, as catch acts more as a function then a keyword
+    - Changed how {} are formated after catch, leave { on the same line as catch as catch is treated more like a function
 - **Fixed:**
   - Code Editor:
     - Fixed empty editor on first load if no files opened
     - New area dialog now properly disables menubar when open
+    - Fix formatting of 'char' blocks, most noticeable when '' wrapped a none alpha numeric character
   - Character manager:
     - Prevent running ok event multiple times after adding/renaming/copying more then one or canceling
     - Renaming lost login, password, and development setting

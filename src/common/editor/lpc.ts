@@ -1492,7 +1492,7 @@ export class LPCFormatter extends EventEmitter {
                             case 'return':
                             case 'switch':
                             case 'while':
-                            case 'catch':
+                            //case 'catch':
                             case 'try':
                             case 'throw':
                             case 'using':
@@ -1566,8 +1566,12 @@ export class LPCFormatter extends EventEmitter {
                     if (tokenLine[t].type === FormatTokenType.parenRbrace && s !== t && !op.rtrim().endsWith('\n'))
                         op += '\n' + leading;
                     else if (tokenLine[t].type === FormatTokenType.parenLbrace) {
-                        if (!this.bracketsOnNewline && (op.rtrim().endsWith(')') || op.rtrim().endsWith(' else') || op.rtrim().endsWith('\nelse'))) {
-                            op = op.rtrim();
+                        if (op.trimRight().endsWith(' catch') || op.trimRight().endsWith('\ncatch') || op.trimRight() === 'catch') {
+                            op = op.trimRight();
+                            op += ' ';
+                        }
+                        else if (!this.bracketsOnNewline && (op.trimRight().endsWith(')') || op.trimRight().endsWith(' else') || op.trimRight().endsWith('\nelse'))) {
+                            op = op.trimRight();
                             op += ' ';
                         }
                         else if (s !== t && !op.rtrim().endsWith('\n'))
