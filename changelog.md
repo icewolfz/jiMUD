@@ -22,6 +22,7 @@
     - Prevent running ok event multiple times after adding/renaming/copying more then one or canceling
     - Renaming lost login, password, and development setting
     - Copying did not copy login, password, and development setting
+  - Attempt to refocus on command input after disconnect, paste special, and progress dialogs are closed
 
 ## 0.4.48 2018-06-05
 

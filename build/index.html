@@ -1179,6 +1179,7 @@
           title: 'Import error',
           message: err || 'Error importing or exporting data.'
         });
+        $("#commandinput").focus();
       });
 
       _backup.on('abort', (err) => {
@@ -1189,10 +1190,12 @@
           title: 'Aborted',
           message: err || 'Aborted importing or exporting data.'
         });
+        $("#commandinput").focus();
       });
 
       _backup.on('close', () => {
         $("#Progress")[0].close();
+        $("#commandinput").focus();
         ipcRenderer.send('set-progress', { value: -1 });
       });
 
@@ -2146,6 +2149,7 @@
 
         client.saveOptions();
         $('#pasteSpecial')[0].close();
+        $("#commandinput").focus();
       }
       var post = client.options.pasteSpecialPostfixEnabled ? client.options.pasteSpecialPostfix : 0;
       var pre = client.options.pasteSpecialPrefixEnabled ? client.options.pasteSpecialPrefix : 0;
@@ -2205,6 +2209,7 @@
         _disconnectCounter = 0;
       }
       $('#disconnectDialog')[0].close();
+      $("#commandinput").focus();
     }
   </script>
 </head>
@@ -2414,7 +2419,7 @@
     </div>
     <div class="dialog-footer">
       <button style="float: left" type="button" class="btn btn-default" onclick="$('#pasteSpecial-replace').prop('disabled', false);$('#pasteSpecial-replace-enable').prop('checked', true);$('#pasteSpecial-replace').val('');$('#pasteSpecial-prefix').prop('disabled', false);$('#pasteSpecial-postfix').prop('disabled', false);$('#pasteSpecial-prefix').val('');$('#pasteSpecial-postfix').val('');$('#pasteSpecial-prefix-enable').prop('checked', true);$('#pasteSpecial-postfix-enable').prop('checked', true);">Reset</button>
-      <button style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();">Cancel</button>
+      <button style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">Cancel</button>
       <button style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
     </div>
   </dialog>
