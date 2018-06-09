@@ -79,6 +79,7 @@ Editor preferences are stored in their own file independent of client or charact
 - `Remember open files on reload` remember open files when editor reopened
 - `Use native icons in tabs` use the native icon associated with file type set in OS
 - `Enable spellchecking when possible` detect spelling errors when possible
+- `Enable remote caching` cache remote file names linked to local files in {data}/editor/ folder, each local file will have a file linked to it to store remote data associated with local file
 
 ### Editor
 

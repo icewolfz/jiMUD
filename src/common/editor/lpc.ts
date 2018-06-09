@@ -1389,6 +1389,7 @@ enum FormatTokenType {
     parenRclosure,
     parenRparen,
     string,
+    char,
     whitespace,
     newline,
     operator,
@@ -2078,6 +2079,35 @@ export class LPCFormatter extends EventEmitter {
                             return { value: val, type: FormatTokenType.unknown };
                     }
                     break;
+                case 15:
+                    if (c === '\\') {
+                        val += c;
+                        state = 15;
+                    }
+                    else if (c === '\'') {
+                        val += c;
+                        this.$position = idx + 1;
+                        state = 0;
+                        return { value: val, type: FormatTokenType.char };
+                    }
+                    else if (val.length > 1 && val[0] !== '\\') {
+                        this.$position = idx - val.length + 1;
+                        return { value: '\'', type: FormatTokenType.text };
+                    }
+                    else if (val.length > 2) {
+                        this.$position = idx - val.length + 1;
+                        return { value: '\'', type: FormatTokenType.text };
+                    }
+                    else {
+                        val += c;
+                        this.$position = idx + 1;
+                    }
+                    break;
+                case 16:
+                    val += c;
+                    this.$position = idx + 1;
+                    state = 15;
+                    break;
                 default:
                     switch (c) {
                         case '(':
@@ -2149,6 +2179,15 @@ export class LPCFormatter extends EventEmitter {
                             if (idx + 1 >= len) {
                                 this.$position = idx + 1;
                                 return { value: '"', type: FormatTokenType.text };
+                            }
+                            break;
+                        case '\'':
+                            if (val.length > 0) return this.typetoken(val);
+                            state = 15;
+                            val = '\'';
+                            if (idx + 1 >= len) {
+                                this.$position = idx + 1;
+                                return { value: '\'', type: FormatTokenType.text };
                             }
                             break;
                         case '\r':
