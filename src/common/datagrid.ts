@@ -177,6 +177,7 @@ export class Datagrid extends EventEmitter {
         });
         this.$parent.addEventListener('focus', (e) => {
             this.$parent.classList.add('focused');
+            this.emit('focus', e);
         });
 
         this.$parent.addEventListener('keydown', (e) => {
@@ -931,8 +932,8 @@ export class Datagrid extends EventEmitter {
         row.addEventListener('dblclick', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
                 return;
-            const sIdx = +(<HTMLElement>e.currentTarget).dataset.dataIndex;
-            const eR = this.$sortedRows[sIdx];
+            const sIdx = +(<HTMLElement>e.currentTarget).dataset.row;
+            const eR = +(<HTMLElement>e.currentTarget).dataset.dataIndex;
             const el = <HTMLElement>e.currentTarget;
             this.emit('row-dblclick', e, { row: this.$rows[eR], rowIndex: eR, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: +el.dataset.dataIndex });
             if (e.defaultPrevented || e.cancelBubble)
@@ -1429,6 +1430,12 @@ export class Datagrid extends EventEmitter {
     }
 
     public scrollToRow(row) {
+        if ((this._updating & UpdateType.rows) === UpdateType.rows) {
+            setTimeout(() => {
+                this.scrollToRow(row);
+            }, 10);
+            return;
+        }
         if (typeof row === 'number')
             row = this.$body.firstElementChild.children[row];
         const top = row.offsetTop;
@@ -1439,6 +1446,10 @@ export class Datagrid extends EventEmitter {
             this.$body.parentElement.scrollTop = top - sHeight + height;
         else if (top < sTop)
             this.$body.parentElement.scrollTop = top;
+    }
+
+    public scrollToTop() {
+        this.$body.parentElement.scrollTop = 0;
     }
 
     public getPropertyOptions(prop, ops?) {
