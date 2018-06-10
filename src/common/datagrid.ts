@@ -931,7 +931,7 @@ export class Datagrid extends EventEmitter {
         row.addEventListener('dblclick', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
                 return;
-            const sIdx = +(<HTMLElement>e.currentTarget).dataset.dataInde;
+            const sIdx = +(<HTMLElement>e.currentTarget).dataset.dataIndex;
             const eR = this.$sortedRows[sIdx];
             const el = <HTMLElement>e.currentTarget;
             this.emit('row-dblclick', e, { row: this.$rows[eR], rowIndex: eR, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: +el.dataset.dataIndex });
