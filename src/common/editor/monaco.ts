@@ -285,8 +285,12 @@ export class MonacoCodeEditor extends EditorBase {
     public canSaveAs() { return true; }
 
     public deleted(keep) {
-        if (keep)
+        if (keep) {
+            const old = this.changed;
             this.changed = keep;
+            if (keep && !old)
+                this.emit('changed', this.$model.getValueLength());
+        }
     }
 
     public revert() {
