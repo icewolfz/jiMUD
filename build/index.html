@@ -1017,6 +1017,7 @@
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
         ipcRenderer.send('set-overlay', 0);
         ipcRenderer.send('closed');
+        localStorage.setItem('connected', false);
         _logger.postMessage({ action: 'connected', args: client.connected });
         _logger.postMessage({ action: 'stop' });
         switch (client.options.onDisconnect) {
@@ -1059,6 +1060,7 @@
 
       client.on('connected', () => {
         ipcRenderer.send('connected');
+        localStorage.setItem('connected', true);
         if (_disconnectTimerID) {
           clearTimeout(_disconnectTimerID);
           _disconnectTimerID = null;
