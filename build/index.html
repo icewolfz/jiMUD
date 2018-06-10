@@ -710,7 +710,7 @@
           }
         });
       });
-
+      localStorage.setItem('connected', false);
       window.client = client;
       window.OoMUD = client;
       window.readClipboard = () => { return clipboard.readText('selection') || clipboard.readText() || ''; };
