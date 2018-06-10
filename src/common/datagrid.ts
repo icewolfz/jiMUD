@@ -92,6 +92,12 @@ export class Datagrid extends EventEmitter {
     private $allowMultiSelection = true;
     private $children = false;
 
+    private $key = '';
+    private $pKey;
+    private $keyClearID;
+
+    public selectionSearchField;
+
     get showChildren() {
         return this.$children;
     }
@@ -349,6 +355,60 @@ export class Datagrid extends EventEmitter {
             }
         });
 
+        this.$parent.addEventListener('keypress', (e) => {
+            if (!this.selectionSearchField || this.selectionSearchField.length === 0) return;
+
+            this.$key += e.key.toLowerCase();
+            const selected = this.$selected.slice();
+            const field = this.selectionSearchField;
+            let f = -1;
+            let lSelected = -1;
+            const rows = this.sortedRows;
+            if (selected.length > 0)
+                lSelected = selected[selected.length - 1];
+            let row = rows.filter((r, i) => {
+                if (lSelected !== -1) {
+                    if (lSelected === i)
+                        f = lSelected;
+                    else if (f >= 0)
+                        return r[field].toLowerCase().startsWith(this.$key);
+                }
+                else
+                    return r[field].toLowerCase().startsWith(this.$key);
+            });
+            if (selected.length && row.length === 0) {
+                this.clearSelection();
+                row = rows.filter((r, i) => {
+                    if (lSelected !== -1) {
+                        if (lSelected === i)
+                            f = lSelected;
+                        else if (f >= 0)
+                            return r[field].toLowerCase().startsWith(this.$key);
+                    }
+                    else
+                        return r[field].toLowerCase().startsWith(this.$key);
+                });
+            }
+            if (!row || row.length === 0) {
+                this.$keyClearID = setTimeout(() => {
+                    this.$pKey = this.$key;
+                    this.$key = '';
+                }, 300);
+                return;
+            }
+            row = row[0];
+            this.clearSelection();
+            const idx = this.$rows.indexOf(row);
+            const sIdx = this.$sortedRows.indexOf(idx);
+            this.select(sIdx);
+            this.scrollToRow(sIdx);
+            clearTimeout(this.$keyClearID);
+            this.$keyClearID = setTimeout(() => {
+                this.$pKey = this.$key;
+                this.$key = '';
+            }, 300);
+
+        });
         this.$header = document.createElement('table');
         this.$header.classList.add('datagrid-header');
         this.$parent.appendChild(this.$header);
@@ -366,9 +426,7 @@ export class Datagrid extends EventEmitter {
         this.$body.appendChild(this.$dataBody);
         this.$body.appendChild(document.createElement('tfoot'));
         this.$body.children[1].addEventListener('click', (e) => {
-            this.$selected = [];
-            Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
-            this.emit('selection-changed');
+            this.clearSelection();
         });
         el.appendChild(this.$body);
         this.$parent.appendChild(el);
@@ -406,9 +464,7 @@ export class Datagrid extends EventEmitter {
         const e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
         this.emit('cut', e);
         if (e.preventDefault) return;
-        this.$selected = [];
-        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
-        this.emit('selection-changed');
+        this.clearSelection();
         this.removeRows(e.data);
     }
 
@@ -456,9 +512,7 @@ export class Datagrid extends EventEmitter {
         const e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
         this.emit('delete', e);
         if (e.preventDefault) return;
-        this.$selected = [];
-        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
-        this.emit('selection-changed');
+        this.clearSelection();
         this.removeRows(e.data);
     }
 
@@ -466,6 +520,25 @@ export class Datagrid extends EventEmitter {
         if (!this.$allowMultiSelection) return;
         Array.from(this.$body.querySelectorAll('.datagrid-row'), a => a.classList.add('selected'));
         this.$selected = [...this.$sortedRows.keys()];
+        this.emit('selection-changed');
+    }
+
+    public select(rows) {
+        if (!Array.isArray(rows))
+            rows = [rows];
+        else if (!this.$allowMultiSelection)
+            rows = [rows[0]];
+        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+        this.$selected = rows;
+        this.$selected.map(r => {
+            const el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[r];
+            el.classList.add('selected');
+        });
+    }
+
+    public clearSelection() {
+        this.$selected = [];
+        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
         this.emit('selection-changed');
     }
 
@@ -649,9 +722,7 @@ export class Datagrid extends EventEmitter {
 
         if (this.$sort.column < 0 || this.$sort.column >= this.$cols.length)
             return;
-        this.$selected = [];
-        Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
-        this.emit('selection-changed');
+        this.clearSelection();
         let prop;
         const sortFn = this.$cols[this.$sort.column].sort;
 
