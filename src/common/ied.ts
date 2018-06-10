@@ -296,7 +296,7 @@ export class IED extends EventEmitter {
                                 this.makeDirectoryParent(obj.path + '/' + obj.file, false, true, this._callbacks[obj.tag]);
                             else if (obj.tag.startsWith(this.prefix + 'dir:')) {
                                 delete this._paths[obj.tag];
-                                this.getDir(obj.path, true, obj.tag.substr(4), this._paths[obj.tag]);
+                                this.getDir(obj.path, true, obj.tag.substr(4 + this.prefix.length), this._paths[obj.tag]);
                             }
                         }
                         break;
@@ -412,13 +412,13 @@ export class IED extends EventEmitter {
             this.emit('message', 'Getting Directory: ' + dir);
         }
         else {
-            delete this._data['browse'];
+            delete this._data[this.prefix + 'dir:' + (tag || 'browse')];
             ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: dir, file: '', tag: this.prefix + 'dir:' + (tag || 'browse') }));
             this.emit('message', 'Resolving: ' + dir);
         }
     }
 
-    public download(file, resolve?: boolean, tag?: string, mkdir?: boolean) {
+    public download(file, resolve?: boolean, tag?: string, mkdir?: boolean, local?: string) {
         if (!resolve) {
             let item;
             if (tag)
@@ -436,17 +436,19 @@ export class IED extends EventEmitter {
                 item.local = path.join(this._paths[tag], path.basename(file));
                 delete this._paths[tag];
             }
+            else if (local && local.length > 0)
+                item.local = local;
             else
                 item.local = path.join(this.local, path.basename(file));
             this.addItem(item);
         }
         else {
             if (mkdir) {
-                this._paths['downloadMkdir:' + this._id] = this.local;
+                this._paths['downloadMkdir:' + this._id] = local || this.local;
                 ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'downloadMkdir:' + this._id }));
             }
             else {
-                this._paths['download:' + this._id] = this.local;
+                this._paths['download:' + this._id] = local || this.local;
                 ipcRenderer.send('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'download:' + this._id }));
             }
             this._id++;
