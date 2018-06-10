@@ -615,6 +615,15 @@ export class DockManager extends EventEmitter {
     public getPanelIndex(tab, dock?) {
         return this.$activePane.getPanelIndex(tab);
     }
+    public findPanel(id) {
+        let p = this.panes.length;
+        let panel;
+        while (p--) {
+            panel = this.panes[p].getPanel(id);
+            if (panel) return panel;
+        }
+        return null;
+    }
 
     private doUpdate(type?: UpdateType) {
         if (!type) return;
