@@ -534,6 +534,7 @@ export class Datagrid extends EventEmitter {
             const el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[r];
             el.classList.add('selected');
         });
+        this.emit('selection-changed');
     }
 
     public clearSelection() {
