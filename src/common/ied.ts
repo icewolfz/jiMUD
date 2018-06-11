@@ -312,8 +312,10 @@ export class IED extends EventEmitter {
                     this.nextGMCP();
                     return;
                 }
-                else if (!obj.tag.startsWith(this.prefix + 'dir'))
+                else if (!obj.tag.startsWith(this.prefix + 'dir')) {
+                    this.nextGMCP();
                     return;
+                }
                 else if (!obj.files && !obj.data) {
                     this.emit('error', { path: obj.path, tag: obj.tag, msg: 'Getting Directory: no files found' });
                     this.nextGMCP();
@@ -345,7 +347,10 @@ export class IED extends EventEmitter {
                 if (mods.length > 2) {
                     switch (mods[2]) {
                         case 'init':
-                            if (!obj.tag.startsWith(this.prefix + 'download')) return;
+                            if (!obj.tag.startsWith(this.prefix + 'download')) {
+                                this.nextGMCP();
+                                return;
+                            }
                             this.emit('message', 'Download initialize: ' + obj.path + '/' + obj.file);
                             if (!this.active) {
                                 this.emit('error', 'Download initialize error');
@@ -358,7 +363,10 @@ export class IED extends EventEmitter {
                                 this.removeActive();
                             break;
                         case 'chunk':
-                            if (!obj.tag.startsWith(this.prefix + 'download')) return;
+                            if (!obj.tag.startsWith(this.prefix + 'download')) {
+                                this.nextGMCP();
+                                return;
+                            }
                             if (!this.active) {
                                 this.emit('error', 'Download chunk error');
                                 this.nextGMCP();
@@ -378,7 +386,10 @@ export class IED extends EventEmitter {
                 if (mods.length > 2) {
                     switch (mods[2]) {
                         case 'request':
-                            if (!obj.tag.startsWith(this.prefix + 'upload')) return;
+                            if (!obj.tag.startsWith(this.prefix + 'upload')) {
+                                this.nextGMCP();
+                                return;
+                            }
                             this.uploadChunk(obj);
                             break;
                     }
