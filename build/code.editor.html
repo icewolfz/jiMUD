@@ -768,6 +768,15 @@
     var $dialog;
     var $tmp;
 
+    var $fileFilters = [
+        { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
+        { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
+        { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
+        { name: 'Text files (*.txt)', extensions: ['txt'] },
+        { name: 'Map files (*.map)', extensions: ['map'] },
+        { name: 'All files (*.*)', extensions: ['*'] },
+    ];
+
     outputDisplay.on('keydown', (e) => {
         if (event.ctrlKey) {
             // allow Ctrl-A, Ctrl-(any arrow key) combinations
@@ -1081,14 +1090,7 @@
                     click: () => {
                         dialog.showOpenDialog(remote.getCurrentWindow(),
                             {
-                                filters: [
-                                    { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
-                                    { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
-                                    { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
-                                    { name: 'Text files (*.txt)', extensions: ['txt'] },
-                                    { name: 'Map files (*.map)', extensions: ['map'] },
-                                    { name: 'All files (*.*)', extensions: ['*'] },
-                                ],
+                                filters: $fileFilters,
                                 properties: ['openFile'],
                                 defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
                             },
@@ -1116,7 +1118,11 @@
                 {
                     label: 'Diff re&mote...',
                     click: () => {
-                        showBrowseDialog({ defaultFile: manager.active.remote, properties: ['openFile'] }, (files) => {
+                        showBrowseDialog({
+                            defaultFile: manager.active.remote,
+                            properties: ['openFile'],
+                            filters: $fileFilters,
+                        }, (files) => {
                             if (!files || files.length === 0) return;
                             $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
                             //TODO generate a temp file, either in global temp or create a temp folder under jiMUD appdata
@@ -1850,6 +1856,23 @@
         outputDisplay[0].scrollTop = outputDisplay[0].scrollHeight;
     }
 
+    function filterBrowseDialog() {
+        if ($dialog.options.filters && $dialog.currentFilter > -1 && $dialog.currentFilter < $dialog.options.filters.length) {
+            let filters = $dialog.options.filters[$dialog.currentFilter];
+            $dialog.datagrid.rows = $dialog.files.filter(f => {
+                if (f.size === -2)
+                    return true;
+                var e = path.extname(f.file).substr(1);
+                if (!filters.extensions || filters.extensions.length === 0 || filters.extensions.indexOf('*') !== -1)
+                    return true;
+                return filters.extensions.indexOf(e) !== -1;
+            });
+        }
+        else
+            $dialog.datagrid.rows = $dialog.files;
+
+    }
+
     //https://github.com/electron/electron/blob/master/docs/api/dialog.md
     function showBrowseDialog(ops, callback) {
         if (typeof ops === 'function') {
@@ -2126,6 +2149,10 @@
             $dialog.el.addEventListener('cancel', () => {
                 menubar.enabled = true;
             });
+            $dialog.filter.addEventListener('change', () => {
+                $dialog.currentFilter = $dialog.filter.selectedIndex;
+                filterBrowseDialog();
+            });
         }
         else {
             $dialog.options = ops;
@@ -2172,8 +2199,6 @@
             }
             $($dialog.filter).selectpicker('refresh');
             $dialog.currentFilter = 0;
-            //TODO if folder browsing, hide selection filter
-            //TODO make filter work
         }
         else {
             $dialog.currentFilter = -1;
@@ -2197,7 +2222,7 @@
     }
 
     function showProgressDialog(title, callback) {
-        if(typeof title === 'function') {
+        if (typeof title === 'function') {
             callback = title;
             title = null;
         }
@@ -2282,7 +2307,7 @@
                         f.type = path.extname(f.file);
                     return f;
                 });
-                $dialog.datagrid.rows = $dialog.files;
+                filterBrowseDialog();
                 $dialog.datagrid.scrollToTop();
                 if (dir !== '/')
                     $dialog.up.removeAttribute('disabled');
@@ -2939,14 +2964,7 @@
         if (!file || file.length === 0) {
             dialog.showOpenDialog(remote.getCurrentWindow(),
                 {
-                    filters: [
-                        { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
-                        { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
-                        { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
-                        { name: 'Text files (*.txt)', extensions: ['txt'] },
-                        { name: 'Map files (*.map)', extensions: ['map'] },
-                        { name: 'All files (*.*)', extensions: ['*'] },
-                    ],
+                    filters: $fileFilters,
                     properties: ['multiSelections', 'openFile'],
                     defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
                 },
@@ -3116,14 +3134,7 @@
         var file = dialog.showSaveDialog(remote.getCurrentWindow(), {
             title: 'Save as...',
             defaultPath: panel.editor.file,
-            filters: [
-                { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
-                { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
-                { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
-                { name: 'Text files (*.txt)', extensions: ['txt'] },
-                { name: 'Map files (*.map)', extensions: ['map'] },
-                { name: 'All files (*.*)', extensions: ['*'] },
-            ]
+            filters: $fileFilters
         });
         if (file === undefined)
             return false;
