@@ -2638,6 +2638,17 @@
                     $("#newarea-path").val(fileNames[0]);
                 });
         });
+
+        $('#btn-newarea-remote-path').on('click', () => {
+            showBrowseDialog({
+                defaultFile: manager.active.remote,
+                title: 'Select remote folder',
+                properties: ['openDirectory']
+            }, (files) => {
+                if (!files || files.length === 0) return;
+                document.getElementById('newarea-remote-path').value = files[0];
+            });
+        });
         $("#btn-newvirtualarea-path").on('click', () => {
             dialog.showOpenDialog(remote.getCurrentWindow(), {
                 defaultPath: $("#newvirtualarea-path").val(),
@@ -2938,8 +2949,7 @@
 
     function newArea() {
         $('#newArea *').attr('disabled', false);
-        //$('#btn-newarea-remote-path').attr('disabled', !connected);
-        $('#btn-newarea-remote-path').attr('disabled', true);
+        $('#btn-newarea-remote-path').attr('disabled', !connected);
         var p = $("#newarea-path").parent().parent();
         p.removeClass("has-error");
         p.removeClass("has-feedback");
@@ -3114,7 +3124,7 @@
 
     function setRemoteCache(file, remoteFile) {
         if (!options.cacheRemote || !remoteFile || remoteFile.length === 0) return;
-        if(typeof remoteFile !== 'string') return;
+        if (typeof remoteFile !== 'string') return;
         let p = path.join(parseTemplate('{data}'), 'editor');
         if (!existsSync(p))
             fs.mkdirSync(p);
@@ -3505,7 +3515,7 @@
                         if (!files || files.length === 0) return;
                         p.editor.remote = files[0];
                         setRemoteCache(file, p.editor.remote);
-                        _ied.uploadTo(file,  path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
+                        _ied.uploadTo(file, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
                         showProgressDialog('Uploading&hellip;', () => {
                             _ied.removeActive();
                         });
