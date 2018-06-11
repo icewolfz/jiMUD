@@ -344,6 +344,10 @@
             ipcRenderer.send('editor-setting-changed', _settings.window);
             window.close();
         }
+
+        function clearCache() {
+
+        }
     </script>
 </head>
 
@@ -792,6 +796,7 @@
         </div>
         <div class="dialog-footer">
             <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
+            <button style="float: left" type="button" class="btn btn-danger" onclick="clearCache()">Clear remote cache</button>
             <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
             <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
         </div>

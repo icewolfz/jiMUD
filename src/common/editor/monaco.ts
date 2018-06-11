@@ -487,6 +487,18 @@ export class MonacoCodeEditor extends EditorBase {
                             }
                         }
                     ]
+                },
+                {
+                    label: 'Test',
+                    click: () => {
+                        this.emit('debug', this.file);
+                    }
+                },
+                {
+                    label: 'Test clear',
+                    click: () => {
+                        monaco.editor.setModelMarkers(this.$model, '', []);
+                    }
                 }
             ];
         }
@@ -619,18 +631,31 @@ export class MonacoCodeEditor extends EditorBase {
     public get buttons() {
         if (path.extname(this.file) !== '.c')
             return [];
-        const el = document.createElement('button');
+        const group = document.createElement('div');
+        group.classList.add('btn-group');
+        group.setAttribute('role', 'group');
+
+        let el = document.createElement('button');
         el.id = 'btn-debug';
         el.type = 'button';
         el.classList.add('btn', 'btn-default', 'btn-xs');
-        //if (active)
-        //el.classList.add('active');
-        el.title = 'Debug';
+        el.title = 'Test';
         el.addEventListener('click', () => {
             this.emit('debug', this.file);
         });
         el.innerHTML = '<i class="fa fa-bug"></i>';
-        return [el];
+        group.appendChild(el);
+        el = document.createElement('button');
+        el.id = 'btn-debug';
+        el.type = 'button';
+        el.classList.add('btn', 'btn-default', 'btn-xs');
+        el.title = 'Test clear';
+        el.addEventListener('click', () => {
+            monaco.editor.setModelMarkers(this.$model, '', []);
+        });
+        el.innerHTML = '<i class="fa fa-times"></i>';
+        group.appendChild(el);
+        return [group];
     }
 
     public insert(text) {
