@@ -10,6 +10,10 @@ The code editor allows immortals or those wanting to code lpc files using a grap
 - Formatting and indention system for making code easier and more standard
 - Side by side file views for up to 3 files, just drag and drop to layout how how you want to view files, with restore state on reopen if `Remember open files on reload` turned on
 - Diff file with original file if changed or local file
+- Diff file with remote file, does not cache to allow you to test againest any file as needed
+- Remote testing, allows you to test a local file in its remote location, if no remote data it will allow you to browse to the remote file location
+- Remote caching, will cache remote file data in %appdata%\jiMUD\editor to allow local files to be linked to remote files
+- Clear remote data in code preference dialog or deleting the files in %appdata%\jiMUD\editor
 
 ## Virtual map editor
 
