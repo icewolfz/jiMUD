@@ -5,6 +5,7 @@
 - **New:**
   - Code Editor:
     - Add a remote caching system to save remote paths and data for local files, allowing diff remote/debug systems to work with out having to ask for remote path every time
+      - Clear remote caching from preferences dialog or remove all files from %appdata%\jiMUD\editor
     - Performance tweaks and fixes
     - Formatting will now auto strip trailing whitespace
     - Remote diff - browse and select a file from the mud if connected and compare it to open file

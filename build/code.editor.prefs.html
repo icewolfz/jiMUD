@@ -80,11 +80,11 @@
     <script>
         /* global ace */
         //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { TempType } = require('./js/types');
-        const { parseTemplate } = require("./js/library.js");
-        const { remote, ipcRenderer } = require('electron');
+        const { parseTemplate, isDirSync } = require("./js/library.js");
+        const { remote, ipcRenderer, shell } = require('electron');
         const { dialog } = remote;
         const path = require('path');
+        const fs = require('fs');
         const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
         var fontManager;
         try {
@@ -231,7 +231,7 @@
             });
             $('input[type="number"]').on('input', function () {
                 setValue($(this).attr('id'), $(this).val());
-            });            
+            });
             $('.selectpicker').change(function () {
                 setValue($(this).attr('id'), $(this).val());
             });
@@ -346,7 +346,26 @@
         }
 
         function clearCache() {
-
+            var choice = dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete all cached remote data?',
+                    buttons: ['Yes', 'No', 'Permanently'],
+                    defaultId: 1
+                });
+            if (choice === 1) return;
+            let p = path.join(parseTemplate('{data}'), 'editor');
+            if (isDirSync(p)) {
+                var files = fs.readdirSync(p);
+                for (var i = 0; i < files.length; i++) {
+                    if(choice === 2)
+                        fs.unlinkSync(path.join(p, files[i]));
+                    else
+                        shell.moveItemToTrash(path.join(p, files[i]));
+                }
+            }
         }
     </script>
 </head>
@@ -398,9 +417,9 @@
                 </div>
                 <div class="col-sm-6 form-group">
                     <label class="control-label">
-                        <input type="checkbox" id="remoteCache" /> Enable remote caching
+                        <input type="checkbox" id="cacheRemote" /> Enable remote caching
                     </label>
-                </div> 
+                </div>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editor">
                 <div class="col-sm-6 form-group">
@@ -450,7 +469,7 @@
                     <label class="control-label">
                         <input type="checkbox" id="editorOptions-scrollBeyondLastLine" /> Scroll beyond last line
                     </label>
-                </div>                
+                </div>
                 <div class="col-sm-12">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">Line numbers
@@ -643,7 +662,7 @@
                         <input type="checkbox" id="virtualOptions-rawSpellcheck" /> Enable or disable spellcheck on raw text editors
                         <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">When enabled it could cause performance issues due to the large amount of text</span>
                     </label>
-                </div>                
+                </div>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="window">
                 <div class="col-xs-12">
