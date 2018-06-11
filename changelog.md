@@ -10,6 +10,7 @@
     - Formatting will now auto strip trailing whitespace
     - Remote diff - browse and select a file from the mud if connected and compare it to open file
     - Remote test - allows you to select a remote location to test your local file by uploading it to a temporary name in the same folder as the real remote file.
+    - New area dialog now allows you to browse and select remote destination if connected to the mud
   - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
 - **Changed:**
   - Code Editor:
