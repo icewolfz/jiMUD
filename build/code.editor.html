@@ -16,7 +16,9 @@
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <script>
-        /* global doUpdate, manager, inverse, capitalize, options, monaco, ReplaceCommandThatPreservesSelection, initEditor */
+        // eslint-disable-next-line no-unused-vars
+        /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor */
+        // eslint-disable-next-line no-unused-vars
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
@@ -125,10 +127,10 @@
                     if (manager.activePane === manager.panes[idx])
                         manager.active.editor.emit('contextmenu', e);
                 });
-                editor.onDidChangeCursorSelection((e) => {
+                editor.onDidChangeCursorSelection(() => {
                     doUpdate(32);
                 });
-                editor.onDidChangeCursorPosition((e) => {
+                editor.onDidChangeCursorPosition(() => {
                     doUpdate(64);
                 });
             }
@@ -138,10 +140,10 @@
                     if (manager.activePane === manager.panes[idx])
                         manager.active.editor.emit('contextmenu', e);
                 });
-                editor.getModifiedEditor().onDidChangeCursorSelection((e) => {
+                editor.getModifiedEditor().onDidChangeCursorSelection(() => {
                     doUpdate(32);
                 });
-                editor.getModifiedEditor().onDidChangeCursorPosition((e) => {
+                editor.getModifiedEditor().onDidChangeCursorPosition(() => {
                     doUpdate(64);
                 });
             }
@@ -178,7 +180,7 @@
             })];
             initEditor(window.$dEditors[0]);
             _ready = true;
-        });        
+        });
     </script>
 </head>
 
@@ -729,13 +731,14 @@
     const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
     const { Datagrid } = require('./js/datagrid');
-    const { DebugTimer, MonacoCodeEditor, VirtualEditor, Source } = require('./js/editor/code.editor');
+    const { MonacoCodeEditor, VirtualEditor, Source } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
     const { dialog, Menu, MenuItem, app } = remote;
     const { Menubar } = require('./js/menubar');
+    // eslint-disable-next-line no-unused-vars
     const { inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize } = require('./js/library');
-    const { IED, ItemState } = require('./js/ied');
+    const { IED } = require('./js/ied');
 
     const moment = require('moment');
     const chokidar = require('chokidar');
@@ -778,7 +781,7 @@
         { name: 'All files (*.*)', extensions: ['*'] },
     ];
 
-    outputDisplay.on('keydown', (e) => {
+    outputDisplay.on('keydown', () => {
         if (event.ctrlKey) {
             // allow Ctrl-A, Ctrl-(any arrow key) combinations
             return true;
@@ -1184,7 +1187,7 @@
     var manager = new DockManager();
     var dock = $(".dock-manager");
     manager.hideTabstrip = false;
-    manager.on('add', (e) => {
+    manager.on('add', () => {
     });
     manager.on('add-pane', (idx, pane) => {
         var el = document.createElement('div');
@@ -1214,7 +1217,7 @@
         initEditor(editor);
         window.$dEditors.splice(idx, 0, editor);
     });
-    manager.on('destroy-pane', (idx, pane) => {
+    manager.on('destroy-pane', (idx) => {
         window.$editors[idx].dispose();
         window.$editors.splice(idx, 1);
         window.$dEditors[idx].dispose();
@@ -1247,7 +1250,7 @@
         }
         doUpdate(1);
     });
-    manager.on('resize', (e) => {
+    manager.on('resize', () => {
         if (!window.$editors) return;
         var ed = window.$editors.length;
         while (ed--) {
@@ -1284,7 +1287,7 @@
         }
         doUpdate(1);
     });
-    manager.on('pane-activated', (e, pane) => {
+    manager.on('pane-activated', () => {
         doUpdate(1);
     });
     manager.on('deactivated', (e, pane) => {
@@ -1370,7 +1373,7 @@
         //else
         //manager.active.editor.focus();
     });
-    manager.on('tab-contextmenu', (e, pane) => {
+    manager.on('tab-contextmenu', (e) => {
         var temp = [];
         if (e.panel.editor.supports('refresh')) {
             temp.push({
@@ -1638,6 +1641,7 @@
         }
     }
 
+    // eslint-disable-next-line no-unused-vars
     function closing() {
         if (watcher)
             watcher.close();
@@ -1754,6 +1758,7 @@
         return 'fa fa-file-o';
     }
 
+    // eslint-disable-next-line no-unused-vars
     function childClosed(url, name) {
     }
 
@@ -1835,11 +1840,13 @@
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
+    // eslint-disable-next-line no-unused-vars
     function doClearOutput() {
         outputDisplay.empty();
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
+    // eslint-disable-next-line no-unused-vars
     function closeOutput() {
         options.output = false;
         menubar.updateItem('view|output', { checked: options.output });
@@ -1959,7 +1966,7 @@
                     field: 'file',
                     spring: true,
                     width: 200,
-                    sort: (a, b, dir, prop, dataA, dataB, rows) => {
+                    sort: (a, b, dir, prop, dataA, dataB) => {
                         if (dataA.size === -2 && dataB.size !== -2)
                             return -1 * dir;
                         if (dataA.size !== -2 && dataB.size === -2)
@@ -2058,7 +2065,7 @@
                 {
                     label: 'Type',
                     field: 'type',
-                    sort: (a, b, dir, prop, dataA, dataB, rows) => {
+                    sort: (a, b, dir, prop, dataA, dataB) => {
                         if (dataA.size === -2 && dataB.size !== -2)
                             return -1 * dir;
                         if (dataA.size !== -2 && dataB.size === -2)
@@ -2074,7 +2081,7 @@
                     label: 'Date Modified',
                     field: 'date',
                     width: 300,
-                    sort: (a, b, dir, prop, dataA, dataB, rows) => {
+                    sort: (a, b, dir, prop, dataA, dataB) => {
                         if (dataA.size === -2 && dataB.size !== -2)
                             return -1 * dir;
                         if (dataA.size !== -2 && dataB.size === -2)
@@ -2294,6 +2301,7 @@
         document.getElementById('progress-dialog-progressbar').removeAttribute('value');
     }
 
+    // eslint-disable-next-line no-unused-vars
     function gotoLine(id, line) {
         if (!id) return;
         var panel = manager.findPanel(id);
@@ -2304,8 +2312,6 @@
         window.$editors[dock].setPosition({ column: 1, lineNumber: line });
         window.$dEditors[dock].setPosition({ column: 1, lineNumber: line });
     }
-
-    var timer = new DebugTimer();
 
     $(document).ready(() => {
         loadOptions();
@@ -2334,7 +2340,7 @@
             logOutput(msg);
         });
         _ied.on('reset', () => { });
-        _ied.on('dir', (dir, files, tag, local) => {
+        _ied.on('dir', (dir, files, tag) => {
             if (tag.startsWith('editor-dir:remoteBrowse')) {
                 $dialog.files = files;
                 $dialog.path.value = dir;
@@ -2366,7 +2372,7 @@
                         dir += '/';
                     var c = [];
                     var dirs = files.filter(f => f.size === -2);
-                    var l = parts.length;
+
                     for (var pt = 0, pl = parts.length; pt < pl; pt++) {
                         c.push(parts[pt]);
                         if (pt === 0)
@@ -2410,9 +2416,9 @@
         _ied.on('message', (msg) => {
             logOutput(msg);
         });
-        _ied.on('add', (item) => {
+        _ied.on('add', () => {
         });
-        _ied.on('remove', (item) => {
+        _ied.on('remove', () => {
         });
         _ied.on('update', (item) => {
             setProgressDialogValue(Math.ceil(item.percent * 100));
@@ -2496,11 +2502,11 @@
             if (!item) return;
             var id;
             var panel;
-            var dock;
+            //var dock;
             if (item.ID.startsWith('editor-upload:debug:')) {
                 id = parseInt(item.ID.substr(20));
                 panel = manager.findPanel(id);
-                dock = manager.panes.indexOf(panel.dock);
+                //dock = manager.panes.indexOf(panel.dock);
                 setProgressDialogValue(-1);
                 document.getElementById('progress-dialog-progressbar').removeAttribute('value');
                 document.getElementById('progress-dialog-title').innerHTML = 'Getting debug data&hellip;';
@@ -2682,7 +2688,7 @@
             $('.btn-group input:checked').parent().addClass('active');
         });
 
-        $('#newvirtualarea-default-exits input[id^="de"]').on('change', function (e) {
+        $('#newvirtualarea-default-exits input[id^="de"]').on('change', function () {
             $('#eNone').prop('checked', false);
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
@@ -2701,7 +2707,7 @@
             $('.btn-group input:checked').parent().addClass('active');
         });
 
-        $('#newvirtualarea-default-states input[id^="ds"]').on('change', function (e) {
+        $('#newvirtualarea-default-states input[id^="ds"]').on('change', function () {
             $('#sNone').prop('checked', false);
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
@@ -2715,8 +2721,6 @@
             setTimeout(postEditorLoad, 10);
             return;
         }
-        var o, ol;
-        //var start = new Date().getTime();
         if (_open) {
             if (options.opened.length && Array.isArray(options.opened[0])) {
                 manager.layout = options.layout;
@@ -2777,6 +2781,7 @@
         return true;
     }
 
+    // eslint-disable-next-line no-unused-vars
     function closeHidden() {
         var elems = document.body.getElementsByTagName("dialog");
         var e = 0, el = elems.length;
@@ -2799,6 +2804,7 @@
         remote.getCurrentWindow().hide();
     }
 
+    // eslint-disable-next-line no-unused-vars
     function closeWindow() {
         remote.getCurrentWindow().close();
     }
@@ -2872,16 +2878,16 @@
             _ied.processGMCP(data.mod, data.obj);
     });
 
-    ipcRenderer.on('connected', (event) => {
+    ipcRenderer.on('connected', () => {
         connected = true;
         menubar.updateItem('file|diff remote...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('diff') });
     });
-    ipcRenderer.on('closed', (event) => {
+    ipcRenderer.on('closed', () => {
         connected = false;
         menubar.updateItem('file|diff remote...', { enabled: false });
     });
 
-    ipcRenderer.on('editor-setting-changed', (event, data) => {
+    ipcRenderer.on('editor-setting-changed', () => {
         loadOptions();
         var keys = Object.keys(_editors);
         var k = keys.length;
@@ -2904,7 +2910,7 @@
     });
 
     function newFile(file) {
-        createEditor({ file: 'new_' + newCounter + '.c', new: true }, true);
+        createEditor({ file: file || 'new_' + newCounter + '.c', new: true }, true);
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
@@ -2970,6 +2976,7 @@
         document.getElementById('newArea').showModal();
     }
 
+    // eslint-disable-next-line no-unused-vars
     function createArea() {
         var p;
         p = $("#newarea-path").parent().parent();
@@ -3061,6 +3068,7 @@
         return true;
     }
 
+    // eslint-disable-next-line no-unused-vars
     function newVirtualArea() {
         $('#newvirtualarea-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
         $('#newvirtualarea-area').val('');
@@ -3606,7 +3614,7 @@
                 if (p.editor.supports('buttons'))
                     buttons.append(...p.editor.buttons);
             });
-            p.editor.on('contextmenu', (e, token) => {
+            p.editor.on('contextmenu', () => {
                 var temp = [];
                 if (p.editor.supports('refresh')) {
                     temp.push({
@@ -3689,7 +3697,7 @@
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup({ window: remote.getCurrentWindow() });
             });
-            p.editor.on('error', (e, type) => {
+            p.editor.on('error', () => {
                 //logOutput(manager.active.editor.filename+': Indenting complete');
             });
             p.editor.on('progress-start', (type) => {
@@ -3822,7 +3830,7 @@ monaco.editor.setModelMarkers(editor.getModel(), '', [
         message: 'Invalid',
         severity: 8,
     }
-])    
+])
     */
 </script>
 
