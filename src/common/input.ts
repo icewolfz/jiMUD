@@ -284,11 +284,11 @@ export class Input extends EventEmitter {
         });
 
         const controllers = navigator.getGamepads();
-        let c = 0;
+        let ct = 0;
         const cl = controllers.length;
-        for (; c < cl; c++) {
-            if (!controllers[c]) continue;
-            this._controllers[controllers[c].index] = { pad: controllers[c], axes: clone(controllers[c].axes), state: { axes: [], buttons: [] }, pstate: { axes: [], buttons: [] } };
+        for (; ct < cl; ct++) {
+            if (!controllers[ct]) continue;
+            this._controllers[controllers[ct].index] = { pad: controllers[ct], axes: clone(controllers[ct].axes), state: { axes: [], buttons: [] }, pstate: { axes: [], buttons: [] } };
             this._controllersCount++;
         }
         this.updatePads();
