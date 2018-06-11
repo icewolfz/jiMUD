@@ -7,6 +7,7 @@
     - Add a remote caching system to save remote paths and data for local files, allowing diff remote/debug systems to work with out having to ask for remote path every time
     - Performance tweaks and fixes
     - Formatting will now auto strip trailing whitespace
+    - Remote diff - browse and select a file from the mud if connected and compare it to open file
   - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
 - **Changed:**
   - Code Editor:
@@ -18,6 +19,9 @@
     - Fixed empty editor on first load if no files opened
     - New area dialog now properly disables menubar when open
     - Fix formatting of 'char' blocks, most noticeable when '' wrapped a none alpha numeric character
+    - After saving new files it should now mark the tab as no longer new
+    - Running diff local again on a different file cleared the diff instead
+    - Recent list was cleared when trying to open a file that has been moved, deleted or renamed
   - Character manager:
     - Prevent running ok event multiple times after adding/renaming/copying more then one or canceling
     - Renaming lost login, password, and development setting

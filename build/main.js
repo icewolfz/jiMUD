@@ -2150,6 +2150,10 @@ ipcMain.on('set-progress-window', (event, window, args) => {
     if (winMap)
       winMap.setProgressBar(args.value, args.options);
   }
+  else if (window === 'code-editor') {
+    if (winCode)
+      winCode.setProgressBar(args.value, args.options);
+  }
   else if (windows[window] && windows[window].window)
     windows[window].window.setProgressBar(args.value, args.options);
 });

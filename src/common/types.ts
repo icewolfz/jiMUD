@@ -218,7 +218,8 @@ export enum IEDError {
   UL_INPROGRESS = 37,
   CMD_FILE = 38,
   UL_DENIED = 39,
-  UL_FILE = 40
+  UL_FILE = 40,
+  USER_DENIED = 42
 }
 
 export enum IEDCmdStatus {
