@@ -742,6 +742,7 @@
     const path = require('path');
     const fs = require('fs');
     const tmp = require('tmp');
+    tmp.setGracefulCleanup();
 
     remote.getCurrentWindow().setEnabled(false);
 
@@ -1127,9 +1128,12 @@
                             $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
                             _ied.downloadToFile(files[0], $tmp.name.substr(0, $tmp.name.length - 4), false, 'editor-download:diffRemote:' + manager.active.id, false);
                             showProgressDialog('Downloading&hellip;', () => {
+                                var t = $tmp.name;
                                 _ied.removeActive();
                                 $tmp.removeCallback();
                                 $tmp = null;
+                                if (existsSync(t))
+                                    fs.unlinkSync(t);
                             });
                         });
                     },
@@ -2479,8 +2483,11 @@
                 manager.active.editor.activate(window.$dEditors[dock]);
                 window.$dEditors[dock].layout();
                 document.getElementById('progress-dialog').callback = null;
+                var t = $tmp.name;
                 $tmp.removeCallback();
                 $tmp = null;
+                if (existsSync(t))
+                    fs.unlinkSync(t);
                 closeProgressDialog();
                 doUpdate(2);
             }

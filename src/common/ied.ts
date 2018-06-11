@@ -6,8 +6,7 @@
  */
 //cSpell:words fswin, chunksize
 import EventEmitter = require('events');
-import { Client } from './client';
-import { parseTemplate, isDirSync } from './library';
+import { isDirSync, existsSync } from './library';
 import { FileInfo, IEDError, IEDCmdStatus, TempType } from './types';
 const fs = require('fs');
 const path = require('path');
@@ -17,6 +16,8 @@ const { ipcRenderer } = require('electron');
 const ZLIB: any = require('./../../lib/inflate_stream.min.js').Zlib;
 const dZLIB: any = require('./../../lib/zlib/deflate.min.js').Zlib;
 //const nZLIB = require("zlib");
+
+tmp.setGracefulCleanup();
 
 let fswin;
 if (process.platform.indexOf('win') === 0) {
@@ -1050,8 +1051,11 @@ export class Item {
     set tmp(value: TempType) {
         if (value !== this._tmp) {
             if (this._tmp === TempType.file && this._tmpObj) {
+                const t = this._tmpObj.name;
                 this._tmpObj.removeCallback();
                 this._tmpObj = null;
+                if (existsSync(t))
+                    fs.unlinkSync(t);
             }
             this._tmp = value;
             if (value === TempType.file)
