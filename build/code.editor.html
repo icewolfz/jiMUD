@@ -11,7 +11,6 @@
     <link href="../lib/bootstrap-treeview.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
-    <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
@@ -282,9 +281,9 @@
         <span id="statusbar-location" class="right"></span>
         <span id="statusbar-size" class="right"></span>
     </div>
-    <dialog id="newArea" data-title="Create new area" style="width:400px;height:348px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
+    <dialog id="new-area" data-title="Create new area" style="width:400px;height:348px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
         <div class="dialog-header" style="font-weight: bold">
-            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('newArea').close();">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('new-area').close();">&times;</button>
             <div style="padding-top: 2px;">Create new area...</div>
         </div>
         <div class="dialog-body" style="padding-top:40px">
@@ -292,9 +291,9 @@
                 <label class="control-label" style="width:100%">
                     Save path
                     <div class="input-group">
-                        <input type="text" id="newarea-path" style="width:100%" class="input-sm form-control" />
+                        <input type="text" id="new-area-path" style="width:100%" class="input-sm form-control" />
                         <span class="input-group-btn">
-                            <button class="btn btn-default btn-sm" type="button" id="btn-newarea-path">
+                            <button class="btn btn-default btn-sm" type="button" id="btn-new-area-path">
                                 &hellip;
                             </button>
                         </span>
@@ -306,9 +305,9 @@
             <div class="form-group">
                 <label class="control-label" style="width: 100%">Remote path
                     <div class="input-group">
-                        <input type="text" id="newarea-remote-path" style="width:100%" class="input-sm form-control" />
+                        <input type="text" id="new-area-remote-path" style="width:100%" class="input-sm form-control" />
                         <span class="input-group-btn">
-                            <button class="btn btn-default btn-sm" type="button" id="btn-newarea-remote-path" disabled="disabled">
+                            <button class="btn btn-default btn-sm" type="button" id="btn-new-area-remote-path" disabled="disabled">
                                 &hellip;
                             </button>
                         </span>
@@ -319,7 +318,7 @@
             <div class="form-group">
                 <label class="control-label" style="width:100%">
                     Name
-                    <input class="form-control" style="width:100%" type="text" id="newarea-name" style="width:100%">
+                    <input class="form-control" style="width:100%" type="text" id="new-area-name" style="width:100%">
                     <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Area name, used as folder name</span>
                     <div class="form-error"></div>
@@ -327,14 +326,14 @@
             </div>
         </div>
         <div class="dialog-footer">
-            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('newArea').close();">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('new-area').close();">Cancel</button>
             <button style="float: right" type="button" class="btn btn-primary" onclick="createArea()">Ok</button>
         </div>
     </dialog>
 
-    <dialog id="newVirtualArea" data-title="Create new virtual area" style="width:400px;height:450px;padding:0px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
+    <dialog id="new-virtual-area" data-title="Create new virtual area" style="width:400px;height:450px;padding:0px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
         <div class="dialog-header" style="font-weight: bold">
-            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('newVirtualArea').close();">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('new-virtual-area').close();">&times;</button>
             <div style="padding-top: 2px;">Create new virtual area...</div>
         </div>
         <div class="dialog-body" style="padding-top:33px">
@@ -352,9 +351,9 @@
                         <label class="control-label" style="width:100%">
                             Save path
                             <div class="input-group">
-                                <input type="text" id="newvirtualarea-path" style="width:100%" class="input-sm form-control" />
+                                <input type="text" id="new-virtual-area-path" style="width:100%" class="input-sm form-control" />
                                 <span class="input-group-btn">
-                                    <button class="btn btn-default btn-sm" type="button" id="btn-newvirtualarea-path">
+                                    <button class="btn btn-default btn-sm" type="button" id="btn-new-virtual-area-path">
                                         &hellip;
                                     </button>
                                 </span>
@@ -365,7 +364,7 @@
                     </div>
                     <div class="form-group">
                         <label class="control-label" style="width: 100%">Remote path
-                            <input class="form-control" style="width:100%" type="text" id="newvirtualarea-remote-path">
+                            <input class="form-control" style="width:100%" type="text" id="new-virtual-area-remote-path">
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Remote path for area, if blank will default to /realms/character/area</span>
                         </label>
                     </div>
@@ -373,10 +372,10 @@
                         <label class="control-label" style="width:100%">
                             Area
                             <div class="input-group" style="width:100%">
-                                <input type="text" id="newvirtualarea-area" disabled="disabled" class="input-sm form-control" style="width:100%" />
+                                <input type="text" id="new-virtual-area-area" disabled="disabled" class="input-sm form-control" style="width:100%" />
                                 <div class="input-group-addon">
                                     <label>
-                                        <input type="checkbox" id="newvirtualarea-area-enabled" onchange="$('#newvirtualarea-area').attr('disabled', !this.checked);" /> Create
+                                        <input type="checkbox" id="new-virtual-area-area-enabled" onchange="$('#new-virtual-area-area').attr('disabled', !this.checked);" /> Create
                                     </label>
                                 </div>
                             </div>
@@ -387,37 +386,37 @@
                     <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Width
-                            <input type="number" id="newvirtualarea-width" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                            <input type="number" id="new-virtual-area-width" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
                         </label>
                     </div>
                     <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Height
-                            <input type="number" id="newvirtualarea-height" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                            <input type="number" id="new-virtual-area-height" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
                         </label>
                     </div>
                     <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Depth
-                            <input type="number" id="newvirtualarea-depth" class="input-sm form-control" value="1" min="2" max="100" style="width: 100%" />
+                            <input type="number" id="new-virtual-area-depth" class="input-sm form-control" value="1" min="2" max="100" style="width: 100%" />
                         </label>
                     </div>
                 </div>
                 <div role="tabpanel" class="container tab-pane fade" id="advanced" style="width: auto;overflow:auto">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="newvirtualarea-coordinates" /> Coordinates
+                            <input type="checkbox" id="new-virtual-area-coordinates" /> Coordinates
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             Room cache
-                            <input type="number" id="newvirtualarea-cache" class="input-sm form-control" value="200" min="1" max="500" style="width: 100%" />
+                            <input type="number" id="new-virtual-area-cache" class="input-sm form-control" value="200" min="1" max="500" style="width: 100%" />
                         </label>
                     </div>
                     <div class="col-sm-12 form-group">
                         <label class="control-label">Default Exits</label>
-                        <div id="newvirtualarea-default-exits">
+                        <div id="new-virtual-area-default-exits">
                             <div class="btn-group" data-toggle="buttons">
                                 <label class="btn btn-default btn-xs">
                                     <input type="checkbox" value="512" id="deUp">Up
@@ -459,7 +458,7 @@
                     </div>
                     <div class="col-sm-12 form-group">
                         <label class="control-label">Default States</label>
-                        <div id="newvirtualarea-default-states">
+                        <div id="new-virtual-area-default-states">
                             <div class="btn-group" data-toggle="buttons">
                                 <label class="btn btn-default btn-xs">
                                     <input type="checkbox" value="512" id="dsNoAttack">No Attack
@@ -503,7 +502,7 @@
             </div>
         </div>
         <div class="dialog-footer">
-            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('newVirtualArea').close();">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('new-virtual-area').close();">Cancel</button>
             <button style="float: right" type="button" class="btn btn-primary" onclick="createVirtualArea()">Ok</button>
         </div>
     </dialog>
@@ -514,14 +513,14 @@
             <div style="padding-top: 2px;">Create new monster...</div>
         </div>
         <div class="dialog-body" style="padding-top:30px">
-            <div id="monwiz0" style="height:100%;width:100%;text-align:center;font-size:12pt;">
+            <div id="mon-wiz-0" style="height:100%;width:100%;text-align:center;font-size:12pt;">
                 <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left">
                 <br> Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.
             </div>
-            <div id="monwiz1" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+            <div id="mon-wiz-1" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
                 <label style="width:100%">
                     <div style="width: 70px;display:inline-block">Type:</div>
-                    <select id="monwizType" data-options="editable:false,onSelect:doMonType" style="width: 130px">
+                    <select id="mon-wiz-Type" data-options="editable:false,onSelect:doMonType" style="width: 130px">
                         <option>Standard</option>
                         <option>Armor Repair</option>
                         <option>Barkeep</option>
@@ -529,7 +528,7 @@
                         <option>Command Trainer</option>
                         <option>Healer</option>
                         <option>Jeweler</option>
-                        <option>Lockpick Repair</option>
+                        <option>Lock pick Repair</option>
                         <option>Mage Trainer</option>
                         <option>Edible Monster</option>
                         <option>Getable Monster</option>
@@ -543,10 +542,10 @@
                     </select>
                 </label>
                 <label>Level:
-                    <input id="monwizLevel" style="width: 50px" value="1">
+                    <input id="mon-wiz-Level" style="width: 50px" value="1">
                 </label>
                 <label>Alignment:
-                    <select id="monwizAlignment" style="width: 90px">
+                    <select id="mon-wiz-Alignment" style="width: 90px">
                         <option>demonic</option>
                         <option>evil</option>
                         <option>bad</option>
@@ -562,88 +561,88 @@
                 </label>
                 <label style="width:100%;display:block">
                     <div style="width: 70px;display:inline-block">Race:</div>
-                    <select style="width:400px" id="monwizRace"></select>
+                    <select style="width:400px" id="mon-wiz-Race"></select>
                 </label>
                 <label style="width:100%;display:block;">
                     <div style="width: 70px;display:inline-block">Class:</div>
-                    <select style="width:400px" id="monwizClass"></select>
+                    <select style="width:400px" id="mon-wiz-Class"></select>
                 </label>
                 <label style="width:100%;display:block;">
                     <div style="width: 70px;display:inline-block">Language:</div>
-                    <select style="width:400px" id="monwizLang"></select>
+                    <select style="width:400px" id="mon-wiz-lang"></select>
                 </label>
                 <label>
                     <div style="width: 70px;display:inline-block">Ridable:</div>
-                    <input type="checkbox" id="monwizRide">
+                    <input type="checkbox" id="mon-wiz-ride">
                 </label>
-                <label>Flys:
-                    <input type="checkbox" id="monwizFly">
+                <label>Flyer:
+                    <input type="checkbox" id="mon-wiz-fly">
                 </label>
             </div>
-            <div id="monwiz2" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+            <div id="mon-wiz-2" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
                 <label style="width:100%;display:block">
                     <div style="width: 50px;display:inline-block">Name:</div>
-                    <input id="monwizName" style="width:420px" class="easyui-textbox">
+                    <input id="mon-wiz-Name" style="width:420px">
                 </label>
                 <label style="width:100%;display:block">
                     <div style="width: 50px;display:inline-block">Short:</div>
-                    <input id="monwizShort" style="width:420px" class="easyui-textbox">
+                    <input id="mon-wiz-Short" style="width:420px">
                 </label>
                 <label style="width:100%;display:block;margin-top:2px;">
                     <div style="width: 50px;display:inline-block;">Long:</div>
                     <span style="float:right;padding-right:2px;">
-                        <textarea id="monwizLong" style="width:420px;height:75px;resize: none;" wrap="off" class="easyui-textbox" data-options="multiline:true"></textarea>
+                        <textarea id="mon-wiz-Long" style="width:420px;height:75px;resize: none;" wrap="off" data-options="multiline:true"></textarea>
                     </span>
                 </label>
             </div>
-            <div id="monwizDesc2" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+            <div id="mon-wiz-Desc2" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
                 <label style="width:100%;display:block;">
                     <div style="width: 80px;display:inline-block;">Nouns:</div>
                     <span style="padding-right:2px;">
-                        <textarea id="monwizNouns" style="width:388px;height:60px;resize: none;" wrap="off" class="easyui-textbox" data-options="multiline:true,prompt:'A comma delimited list of words'"></textarea>
+                        <textarea id="mon-wiz-Nouns" style="width:388px;height:60px;resize: none;" wrap="off" data-options="multiline:true,prompt:'A comma delimited list of words'"></textarea>
                     </span>
                     <label style="width:100%;display:block;margin-top:2px;">
                         <div style="width: 80px;display:inline-block;">Adjectives:</div>
                         <span style="padding-right:2px;">
-                            <textarea id="monwizAdjs" style="width:388px;height:60px;resize: none;" wrap="off" class="easyui-textbox" data-options="multiline:true,prompt:'A comma delimited list of words'"></textarea>
+                            <textarea id="mon-wiz-adjs" style="width:388px;height:60px;resize: none;" wrap="off" data-options="multiline:true,prompt:'A comma delimited list of words'"></textarea>
                         </span>
                     </label>
             </div>
-            <div id="monwiz3" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+            <div id="mon-wiz-3" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
                 <label style="width:100%;display:block">
                     <div style="width: 75px;display:inline-block">Mass:</div>
-                    <input id="monwizMass" class="easyui-numberspinner" data-options="min:0" style="width: 100px" value="0"> A mass of 0 will use default mass</label>
+                    <input id="mon-wiz-mass" type="number" min="0" style="width: 100px" value="0"> A mass of 0 will use default mass</label>
                 <label style="width:100%;display:block">
                     <div style="width: 75px;display:inline-block">Height:</div>
-                    <input id="monwizHeight" class="easyui-numberspinner" data-options="min:1" style="width: 100px" value="1"> inches</label>
+                    <input id="mon-wiz-height" type="number" min="1" style="width: 100px" value="1"> inches</label>
                 <label style="width:100%;display:block">
                     <div style="width: 75px;display:inline-block">Eye color:</div>
-                    <select style="width:395px" id="monwizEyes" class="easyui-combobox" data-options="url:'/auth/dev?a=colors',valueField:'color',textField:'color',method:'get'"></select>
+                    <select style="width:395px" id="mon-wiz-eyes" data-options="url:'/auth/dev?a=colors',valueField:'color',textField:'color',method:'get'"></select>
                 </label>
                 <label style="width:100%;display:block">
                     <div style="width: 75px;display:inline-block">Hair color:</div>
-                    <select style="width:395px" id="monwizHair" class="easyui-combobox" data-options="url:'/auth/dev?a=colors',valueField:'color',textField:'color',method:'get'"></select>
+                    <select style="width:395px" id="mon-wiz-hHair" data-options="url:'/auth/dev?a=colors',valueField:'color',textField:'color',method:'get'"></select>
                 </label>
                 <label style="width:100%;display:block">
                     <div style="width: 75px;display:inline-block">Body type:</div>
-                    <select style="width:395px" id="monwizBodytype" class="easyui-combobox" data-options="url:'/auth/dev?a=monraces',valueField:'value',textField:'value',method:'get',prompt:'Defaults based on race'"></select>
+                    <select style="width:395px" id="mon-wiz-body-type" data-options="url:'/auth/dev?a=monraces',valueField:'value',textField:'value',method:'get',prompt:'Defaults based on race'"></select>
                 </label>
             </div>
-            <div id="monwiz4" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+            <div id="mon-wiz-4" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
                 change based on monster type, may not even always need this panel
             </div>
-            <div id="monwizBarkeep" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+            <div id="mon-wiz-Barkeep" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
                 barkeeper
             </div>
-            <div id="monwiz5" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
+            <div id="mon-wiz-5" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
                 <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left"> To finish your monster simply click finished
                 <div style="height:100px;width:345px;overflow:auto;border:1px groove">
-                    <span id="monwizSummary"></span>
+                    <span id="mon-wiz-Summary"></span>
                 </div>
             </div>
         </div>
         <div class="dialog-footer">
-            <select id="monwizJump" style="float: left" class="form-control selectpicker" onchange="doWizard(this.selectedIndex, 'monwiz', 'goto');" data-width="200px">
+            <select id="mon-wiz-Jump" style="float: left" class="form-control selectpicker" onchange="doWizard(this.selectedIndex, 'mon-wiz-', 'goto');" data-width="200px">
                 <option>Welcome</option>
                 <option>General Properties</option>
                 <option>Description</option>
@@ -652,11 +651,11 @@
                 <option>Finish</option>
             </select>
             <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('monsterWizard').close();">Cancel</button>
-            <button style="float: right" type="button" class="btn btn-primary" onclick="doWizard('last', 'monwiz');">Finish</button>
-            <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(1, 'monwiz');">
+            <button style="float: right" type="button" class="btn btn-primary" onclick="doWizard('last', 'mon-wiz-');">Finish</button>
+            <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(1, 'mon-wiz-');">
                 <i class="fa fa-chevron-right" aria-hidden="true"></i>
             </button>
-            <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(-1, 'monwiz');">
+            <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(-1, 'mon-wiz-');">
                 <i class="fa fa-chevron-left" aria-hidden="true"></i>
             </button>
         </div>
@@ -723,14 +722,12 @@
 <script src="../lib/jquery.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
-<script src="../lib/datatables.min.js" type="text/javascript"></script>
-<script src="../lib/datatables.scrollresize.js" type="text/javascript"></script>
 <script src="../lib/bootstrap-treeview.min.js"></script>
 <script>
     /*global _ready:true*/
     const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
-    const { Datagrid } = require('./js/datagrid');
+    const { DataGrid } = require('./js/datagrid');
     const { MonacoCodeEditor, VirtualEditor, Source } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
@@ -1123,7 +1120,7 @@
                     label: 'Diff re&mote...',
                     click: () => {
                         showBrowseDialog({
-                            defaultFile: manager.active.remote,
+                            defaultFile: manager.active.editor.remote,
                             properties: ['openFile'],
                             filters: $fileFilters,
                         }, (files) => {
@@ -1907,7 +1904,7 @@
         if (!$dialog) {
             $dialog = {
                 el: document.getElementById('remoteBrowse'),
-                datagrid: new Datagrid(document.getElementById('remoteBrowseList')),
+                datagrid: new DataGrid(document.getElementById('remoteBrowseList')),
                 ok: document.getElementById('remoteBrowseOk'),
                 options: ops,
                 title: document.getElementById('remoteBrowseTitle'),
@@ -2216,11 +2213,8 @@
             document.getElementById('remoteBrowseFile-label').textContent = 'File name:';
         }
         if (ops.defaultFile)
-            $dialog.path.value = path.basename(ops.defaultFile || '');
-        else if (ops.defaultPath && ops.properties.indexOf('openDirectory') !== -1)
-            $dialog.path.value = path.basename(ops.defaultPath || '');
-        else
-            $dialog.path.value;
+            document.getElementById('remoteBrowseFile').value = path.basename(ops.defaultFile || '');
+        $dialog.path.value = options.remote;
         if (ops.filters && ops.filters.length > 0 && ops.properties.indexOf('openFile') !== -1) {
             document.getElementById('remoteBrowseFooter').children[0].style.right = '160px';
             document.getElementById('remoteBrowseFooter').children[1].style.display = '';
@@ -2639,44 +2633,44 @@
             addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
         });
 
-        $("#btn-newarea-path").on('click', () => {
+        $("#btn-new-area-path").on('click', () => {
             dialog.showOpenDialog(remote.getCurrentWindow(), {
-                defaultPath: $("#newarea-path").val(),
+                defaultPath: $("#new-area-path").val(),
                 properties: ['openDirectory', 'createDirectory']
             },
                 function (fileNames) {
                     if (fileNames === undefined) {
                         return;
                     }
-                    $("#newarea-path").val(fileNames[0]);
+                    $("#new-area-path").val(fileNames[0]);
                 });
         });
 
-        $('#btn-newarea-remote-path').on('click', () => {
+        $('#btn-new-area-remote-path').on('click', () => {
             showBrowseDialog({
-                defaultFile: manager.active.remote,
+                defaultFile: manager.active.editor.remote,
                 title: 'Select remote folder',
                 properties: ['openDirectory']
             }, (files) => {
                 if (!files || files.length === 0) return;
-                document.getElementById('newarea-remote-path').value = files[0];
+                document.getElementById('new-area-remote-path').value = files[0];
             });
         });
-        $("#btn-newvirtualarea-path").on('click', () => {
+        $("#btn-new-virtual-area-path").on('click', () => {
             dialog.showOpenDialog(remote.getCurrentWindow(), {
-                defaultPath: $("#newvirtualarea-path").val(),
+                defaultPath: $("#new-virtual-area-path").val(),
                 properties: ['openDirectory', 'createDirectory']
             },
                 function (fileNames) {
                     if (fileNames === undefined) {
                         return;
                     }
-                    $("#newvirtualarea-path").val(fileNames[0]);
+                    $("#new-virtual-area-path").val(fileNames[0]);
                 });
         });
 
         $('#eNone').on('change', function (e) {
-            $('#newvirtualarea-default-exits input[id^="de"]').prop('checked', false);
+            $('#new-virtual-area-default-exits input[id^="de"]').prop('checked', false);
             if (!this.checked) {
                 e.preventDefault();
                 $('#eNone').prop('checked', true);
@@ -2688,14 +2682,14 @@
             $('.btn-group input:checked').parent().addClass('active');
         });
 
-        $('#newvirtualarea-default-exits input[id^="de"]').on('change', function () {
+        $('#new-virtual-area-default-exits input[id^="de"]').on('change', function () {
             $('#eNone').prop('checked', false);
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
         });
 
         $('#sNone').on('change', function (e) {
-            $('#newvirtualarea-default-states input[id^="ds"]').prop('checked', false);
+            $('#new-virtual-area-default-states input[id^="ds"]').prop('checked', false);
             if (!this.checked) {
                 e.preventDefault();
                 $('#sNone').prop('checked', true);
@@ -2707,7 +2701,7 @@
             $('.btn-group input:checked').parent().addClass('active');
         });
 
-        $('#newvirtualarea-default-states input[id^="ds"]').on('change', function () {
+        $('#new-virtual-area-default-states input[id^="ds"]').on('change', function () {
             $('#sNone').prop('checked', false);
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
@@ -2783,16 +2777,16 @@
 
     // eslint-disable-next-line no-unused-vars
     function closeHidden() {
-        var elems = document.body.getElementsByTagName("dialog");
-        var e = 0, el = elems.length;
+        var dialogs = document.body.getElementsByTagName("dialog");
+        var e = 0, el = dialogs.length;
         for (; e < el; e++) {
-            if (elems[e].open) {
+            if (dialogs[e].open) {
                 if (dialog.showMessageBox(
                     remote.getCurrentWindow(),
                     {
                         type: 'question',
                         title: 'Open dialog',
-                        message: (elems[e].dataset.title || 'Dialog') + ' is open, exit?',
+                        message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1
                     }) === 1)
@@ -2815,16 +2809,16 @@
                 document.activeElement.blur();
             evt.returnValue = false;
             setTimeout(() => {
-                var elems = document.body.getElementsByTagName("dialog");
-                var e = 0, el = elems.length;
+                var dialogs = document.body.getElementsByTagName("dialog");
+                var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
-                    if (elems[e].open) {
+                    if (dialogs[e].open) {
                         if (dialog.showMessageBox(
                             remote.getCurrentWindow(),
                             {
                                 type: 'question',
                                 title: 'Open dialog',
-                                message: (elems[e].dataset.title || 'Dialog') + ' is open, exit?',
+                                message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
                                 buttons: ['Yes', 'No'],
                                 defaultId: 1
                             }) === 1)
@@ -2961,70 +2955,70 @@
     }
 
     function newArea() {
-        $('#newArea *').attr('disabled', false);
-        $('#btn-newarea-remote-path').attr('disabled', !connected);
-        var p = $("#newarea-path").parent().parent();
+        $('#new-area *').attr('disabled', false);
+        $('#btn-new-area-remote-path').attr('disabled', !connected);
+        var p = $("#new-area-path").parent().parent();
         p.removeClass("has-error");
         p.removeClass("has-feedback");
         $("button", p).removeClass('btn-danger');
-        p = $("#newarea-name").parent();
+        p = $("#new-area-name").parent();
         p.removeClass("has-error");
         p.removeClass("has-feedback");
-        $('#newarea-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
-        $('#newarea-name').val('');
+        $('#new-area-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
+        $('#new-area-name').val('');
         menubar.enabled = false;
-        document.getElementById('newArea').showModal();
+        document.getElementById('new-area').showModal();
     }
 
     // eslint-disable-next-line no-unused-vars
     function createArea() {
         var p;
-        p = $("#newarea-path").parent().parent();
+        p = $("#new-area-path").parent().parent();
         p.removeClass("has-error");
         p.removeClass("has-feedback");
         $("button", p).removeClass('btn-danger');
-        p = $("#newarea-name").parent();
+        p = $("#new-area-name").parent();
         p.removeClass("has-error");
         p.removeClass("has-feedback");
-        if (!existsSync($('#newarea-path').val())) {
-            p = $("#newarea-path").parent().parent();
+        if (!existsSync($('#new-area-path').val())) {
+            p = $("#new-area-path").parent().parent();
             p.addClass("has-error");
             p.addClass("has-feedback");
             $("button", p).addClass('btn-danger');
             p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Path does not exist</small>");
-            $('#newarea-path').focus();
+            $('#new-area-path').focus();
             return;
         }
-        if (!isDirSync($('#newarea-path').val())) {
-            p = $("#newarea-path").parent();
+        if (!isDirSync($('#new-area-path').val())) {
+            p = $("#new-area-path").parent();
             p.addClass("has-error");
             p.addClass("has-feedback");
             $("button", p).addClass('btn-danger');
             p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid path</small>");
-            $('#newarea-path').focus();
+            $('#new-area-path').focus();
             return;
         }
-        if (!validName($('#newarea-name').val())) {
-            p = $("#newarea-name").parent();
+        if (!validName($('#new-area-name').val())) {
+            p = $("#new-area-name").parent();
             p.addClass("has-error");
             p.addClass("has-feedback");
             p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid, can only contain letters, numbers, and _</small>");
-            $('#newarea-name').focus();
+            $('#new-area-name').focus();
             return;
         }
-        var aPath = path.join($('#newarea-path').val(), $('#newarea-name').val());
+        var aPath = path.join($('#new-area-path').val(), $('#new-area-name').val());
         if (existsSync(aPath)) {
-            p = $("#newarea-path").parent().parent();
+            p = $("#new-area-path").parent().parent();
             p.addClass("has-error");
             p.addClass("has-feedback");
             $("button", p).addClass('btn-danger');
             p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Directory with area name already exist</small>");
-            $('#newarea-path').focus();
+            $('#new-area-path').focus();
             return;
         }
-        options.browse = $('#newarea-path').val();
+        options.browse = $('#new-area-path').val();
         doUpdate(16);
-        $('#newArea *').attr('disabled', true);
+        $('#new-area *').attr('disabled', true);
         var templatePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'area'));
         var template = walkSync(templatePath);
         var templateRegex = new RegExp('^' + templatePath.replace(/\\/g, '\\\\'));
@@ -3036,8 +3030,8 @@
         c = 0;
         cl = template.files.length;
         var data = baseParseData();
-        data.area = $('#newarea-name').val();
-        data.path = $('#newarea-remote-path').val() || '/realms/' + data.name.toLowerCase() + '/' + $('#newarea-name').val().toLowerCase();
+        data.area = $('#new-area-name').val();
+        data.path = $('#new-area-remote-path').val() || '/realms/' + data.name.toLowerCase() + '/' + $('#new-area-name').val().toLowerCase();
         if (data.path.endsWith('/'))
             data.path = data.path.substr(0, data.path.length - 1);
         if (!data.path.startsWith('/'))
@@ -3056,7 +3050,7 @@
             });
         }
         openFiles(files);
-        document.getElementById('newArea').close();
+        document.getElementById('new-area').close();
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -3070,12 +3064,12 @@
 
     // eslint-disable-next-line no-unused-vars
     function newVirtualArea() {
-        $('#newvirtualarea-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
-        $('#newvirtualarea-area').val('');
+        $('#new-virtual-area-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
+        $('#new-virtual-area-area').val('');
         $('.btn-group input').parent().removeClass('active');
         $('.btn-group input:checked').parent().addClass('active');
         menubar.enabled = false;
-        document.getElementById('newVirtualArea').showModal();
+        document.getElementById('new-virtual-area').showModal();
     }
 
     function roomWizard() {
@@ -3524,7 +3518,7 @@
                 }
                 if (!p.editor.remote)
                     showBrowseDialog({
-                        defaultFile: manager.active.remote,
+                        defaultFile: p.editor.remote,
                         filters: $fileFilters,
                     }, (files) => {
                         if (!files || files.length === 0) return;
@@ -3635,7 +3629,7 @@
                         click: doRedo,
                         accelerator: "CmdOrCtrl+Y"
                     });
-                if (p.editor.supports('undo') || p.editor.supports('redp'))
+                if (p.editor.supports('undo') || p.editor.supports('redo'))
                     temp.push({ type: 'separator' });
                 if (p.editor.supports('cut'))
                     temp.push({

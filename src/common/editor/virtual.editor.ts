@@ -2,7 +2,7 @@ import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base'
 import { Splitter, Orientation } from './../splitter';
 import { PropertyGrid } from './../propertygrid';
 import { EditorType, ValueEditor } from './../value.editors';
-import { Datagrid } from './../datagrid';
+import { DataGrid } from './../datagrid';
 import { existsSync, capitalize, wordwrap, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
 const { remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -185,9 +185,9 @@ export class VirtualEditor extends EditorBase {
     private $externalRaw: HTMLTextAreaElement;
     private $splitterPreview: Splitter;
     private $splitterEditor: Splitter;
-    private $terrainGrid: Datagrid;
-    private $itemGrid: Datagrid;
-    private $exitGrid: Datagrid;
+    private $terrainGrid: DataGrid;
+    private $itemGrid: DataGrid;
+    private $exitGrid: DataGrid;
 
     private $startValues: any = {};
 
@@ -437,7 +437,7 @@ export class VirtualEditor extends EditorBase {
         el.classList.add('datagrid-standard');
         el.style.display = 'none';
         frag.appendChild(el);
-        this.$terrainGrid = new Datagrid(el);
+        this.$terrainGrid = new DataGrid(el);
         this.$terrainGrid.addColumns([{
             label: 'Index',
             field: 'idx',
@@ -592,7 +592,7 @@ export class VirtualEditor extends EditorBase {
         el.classList.add('datagrid-standard');
         el.style.display = 'none';
         frag.appendChild(el);
-        this.$itemGrid = new Datagrid(el);
+        this.$itemGrid = new DataGrid(el);
         this.$itemGrid.showChildren = true;
         this.$itemGrid.on('row-dblclick', (e, data) => {
             if (!data || data.parent === -1)
@@ -703,7 +703,7 @@ export class VirtualEditor extends EditorBase {
         el.classList.add('datagrid-standard');
         el.style.display = 'none';
         frag.appendChild(el);
-        this.$exitGrid = new Datagrid(el);
+        this.$exitGrid = new DataGrid(el);
         this.$exitGrid.columns = [
             {
                 label: 'Enabled',
@@ -5406,7 +5406,7 @@ class ExternalExitValueEditor extends ValueEditor {
             el.style.bottom = '60px';
             el.style.top = '38px';
             header.appendChild(el);
-            const dg = new Datagrid(el);
+            const dg = new DataGrid(el);
             dg.addColumns([
                 {
                     label: 'Enabled',
@@ -5734,7 +5734,7 @@ class ItemsValueEditor extends ValueEditor {
             el.style.bottom = '60px';
             el.style.top = '38px';
             header.appendChild(el);
-            const dg = new Datagrid(el);
+            const dg = new DataGrid(el);
             dg.addColumns([{
                 label: 'Item',
                 field: 'item',
