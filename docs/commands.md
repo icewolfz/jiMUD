@@ -54,10 +54,10 @@
 - `#gag number` or `#ga` gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
   - `number` if >= 0 it will gag current line and that number of incoming lines, if negative it will gag the # of lines before current line
 - `#ungag` or `#ung` clear previous #gag command settings
-- `#alarm name {timepattern} {commands} profile`, `#ala name {timepattern} {commands} profile`, `#alarm {timepattern} {commands} profile`, or `#ala {timepattern} {commands} profile` create an alarm trigger
+- `#alarm name {time pattern} {commands} profile`, `#ala name {time pattern} {commands} profile`, `#alarm {time pattern} {commands} profile`, or `#ala {time pattern} {commands} profile` create an alarm trigger
   - `name` is an optional and when used will update the first matching timer found with name or create a new one
   time
-  - `{timepattern}` the time pattern to match
+  - `{time pattern}` the time pattern to match
     ```
     When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.
 
@@ -65,7 +65,7 @@
 
     Hours are defined in 24 hour format of 0 to 23, minutes and seconds are 0 to 59.
     If seconds are > 59 and the only pattern it will be considered the same as adding a wildcard (*) in front of the number.
-    
+
     Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
     ```
   - `{commands}` the commands to be executed for alarm
@@ -75,7 +75,7 @@
 - `#resume id`, `#resume`, `#resu id`, `#resu` enable a trigger
   - `id` the id or pattern of the trigger to disable, if omitted it will attempt to resume the last suspended
 - `#untrigger {id|pattern} profile` or `#unt {id|pattern} profile` remove a trigger
-  -  `id|pattern` the id or pattern of the trigger to be removed
+  - `id|pattern` the id or pattern of the trigger to be removed
   - `profile` is optional and when set will create alarm in that profile, if profile not found fails to create, if omitted it will only search enabled profiles
 
 ## Test commands

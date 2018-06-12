@@ -22,7 +22,7 @@
     <script>
         //cSpell:words tinymce
         //cSpell:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
-        //cSpell:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime, 
+        //cSpell:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
         const { remote, ipcRenderer, webFrame } = require('electron');
         const { nativeImage, dialog, Menu, MenuItem } = remote;
@@ -62,7 +62,7 @@
 
         function clearReverse(els, c) {
             els.each(
-                function (idx) {
+                function () {
                     if (!$(this).data('reverse'))
                         return;
                     if (c && $(this).hasClass('reverse'))
@@ -90,7 +90,7 @@
 
         function addReverse(els, c) {
             els.each(
-                function (idx) {
+                function () {
                     if (c && $(this).hasClass('reverse'))
                         return;
                     var back, fore;
@@ -131,7 +131,7 @@
             });
         }
 
-        function createIcon(txt, name, fore, back, border, save) {
+        function createIcon(txt, name, fore, back, border) {
             if (!name) name = "image";
             var canvas = document.createElement('canvas');
             canvas.width = 16;
@@ -672,7 +672,7 @@
         }
 
         function initShadowMUD() {
-            tinymce.PluginManager.add('shadowmud', function (editor, url) {
+            tinymce.PluginManager.add('shadowmud', function (editor) {
 
                 this.applyFormat = function (format, value) {
                     editor.undoManager.transact(function () {
@@ -829,7 +829,7 @@
                     fmi.push({
                         label: 'More...',
                         icon: path.join(__dirname, '../assets/icons/png/color.png'),
-                        click: function (evt) {
+                        click: function () {
                             ipcRenderer.send('show-window', 'color', { type: 'forecolor', color: '', window: 'composer' });
                         }
                     });
@@ -837,7 +837,7 @@
                     bmi.push({
                         label: 'More...',
                         icon: path.join(__dirname, '../assets/icons/png/color.png'),
-                        click: function (evt) {
+                        click: function () {
                             ipcRenderer.send('show-window', 'color', { type: 'hilitecolor', color: '', window: 'composer' });
                         }
                     });
@@ -897,7 +897,7 @@
                     onpostrender: buttonPostRender
                 });
 
-                editor.on('Change', function (e) {
+                editor.on('Change', function () {
                     addReverse($(".reverse", $(editor.getDoc()).contents()));
                 });
                 editor.addShortcut('ctrl+s', 'Strikethrough', function () {
@@ -1018,7 +1018,7 @@
                 ipcRenderer.send('set-progress-window', 'composer', { value: -1 });
                 window.close();
             });
-            mail.on('error', (err, to) => {
+            mail.on('error', (err) => {
                 switch (err) {
                     case MailStatus.NO_RECIPIENTS:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -1101,7 +1101,7 @@
                         if (options.enableDebug)
                             ipcRenderer.send('debug', 'Advanced After Editor PastePreProcess: ' + e.content);
                     });
-                    editor.on('PastePreProcess', function (e) {
+                    editor.on('PastePreProcess', function () {
                         addReverse($(".reverse", $(editor.getDoc()).contents()));
                     });
                 },
@@ -1294,7 +1294,7 @@
             loadColors();
         }
 
-        ipcRenderer.on('reload-options', (event) => {
+        ipcRenderer.on('reload-options', () => {
             loadOptions();
         });
 
@@ -1409,6 +1409,7 @@
             remote.getCurrentWindow().close();
         };
 
+        // eslint-disable-next-line no-unused-vars
         function closeHidden() {
             remote.getCurrentWindow().hide();
         }

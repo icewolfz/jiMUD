@@ -244,6 +244,7 @@
         shell.openExternal(url);
     }
 
+    // eslint-disable-next-line no-unused-vars
     function doMXPLink(el, url) {
       if (url.startsWith("OoMUD://") || url.startsWith("jiMUD://") || url.startsWith("client://"))
         doMXPSend(0, el, url.substring(8));
@@ -304,17 +305,15 @@
         client.send(cmd, true);
     }
 
-
+    // eslint-disable-next-line no-unused-vars
     function doMXPTooltip(el) {
       el = $(el);
       el.prop("title", el.prop("title").replace("&text;", el.text()));
     }
 
-
     function selectAll() {
       client.display.selectAll();
     }
-
 
     function toggleView(view) {
       switch (view) {
@@ -540,7 +539,7 @@
             menu = {};
             menu.label = context[x].caption;
             menu.item = context[x];
-            menu.click = (item, win) => {
+            menu.click = (item) => {
               executeContext(item.item);
             };
             var sub = buildMenu(context[x].name || x, context);
@@ -1210,16 +1209,16 @@
         ipcRenderer.send('import-map', data);
       });
 
-      _backup.on('imported-profiles', (data) => {
+      _backup.on('imported-profiles', () => {
         ipcRenderer.send('reload-profiles');
       });
 
-      _backup.on('imported-settings', (data) => {
+      _backup.on('imported-settings', () => {
         updateInterface();
         buildCaptures();
       });
 
-      _backup.on('finish-load', (data) => {
+      _backup.on('finish-load', () => {
 
       });
       _status = new Status(client);
@@ -1514,7 +1513,7 @@
           }
         }));
         c.append(new MenuItem({
-          label: '&Lagmeter',
+          label: '&Lag meter',
           type: 'checkbox',
           checked: client.options.lagMeter,
           click: () => {
@@ -1785,6 +1784,7 @@
       return true;
     }
 
+    // eslint-disable-next-line no-unused-vars
     function executeButton(idx) {
       var button;
       if (idx < 0 || idx >= client.buttons.length) return false;
@@ -1952,7 +1952,7 @@
       client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
     });
 
-    ipcRenderer.on('load-default', (event) => {
+    ipcRenderer.on('load-default', () => {
       if (!client.connected) {
         _logger.postMessage({ action: 'name', args: '' });
         $("#character-name").text("&nbsp;");
@@ -1960,7 +1960,7 @@
       _backup.mapFile = remote.getGlobal('mapFile');
     });
 
-    ipcRenderer.on('change-options', (event, file) => {
+    ipcRenderer.on('change-options', () => {
       client.settingsFile = remote.getGlobal('settingsFile');
       autoConnect();
     });
@@ -2016,12 +2016,12 @@
       client.send(raw, echo);
     });
 
-    ipcRenderer.on('menu-reload', (event) => {
+    ipcRenderer.on('menu-reload', () => {
       if (!client) return;
       updateMenu();
     });
 
-    ipcRenderer.on('reload-profiles', (event) => {
+    ipcRenderer.on('reload-profiles', () => {
       //client.loadProfiles();
       client.loadOptions();
       _logger.postMessage({
@@ -2041,7 +2041,7 @@
       updateMenu();
     });
 
-    ipcRenderer.on('reload-options', (event) => {
+    ipcRenderer.on('reload-options', () => {
       client.loadOptions();
       _logger.postMessage({
         action: 'options', args: {
@@ -2069,6 +2069,7 @@
       client.error(err);
     });
 
+    // eslint-disable-next-line no-unused-vars
     function childClosed(url, name) {
       if (path.basename(url) === 'characters.html')
         _cLoading = false;
@@ -2080,6 +2081,7 @@
       window.open('characters.html', 'modal', 'backgroundColor=#fff,height=480,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
     }
 
+    // eslint-disable-next-line no-unused-vars
     function showImmortalTools() {
       if (client.options.windows['immortal'] && client.options.windows['immortal'].options) {
         client.options.windows['immortal'].options.show = true;
@@ -2089,10 +2091,12 @@
         ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
     }
 
+    // eslint-disable-next-line no-unused-vars
     function showCodeEditor() {
       ipcRenderer.send('show-window', 'code-editor');
     }
 
+    // eslint-disable-next-line no-unused-vars
     function showMail() {
       if (client.options.windows['mail'] && client.options.windows['mail'].options) {
         client.options.windows['mail'].options.show = true;
@@ -2102,6 +2106,7 @@
         ipcRenderer.send('show-window', 'mail', { show: true, file: 'mail.html', icon: 'mail', alwaysOnTopClient: true });
     }
 
+    // eslint-disable-next-line no-unused-vars
     function showComposer() {
       if (client.options.windows['composer'] && client.options.windows['composer'].options) {
         client.options.windows['composer'].options.show = true;
@@ -2114,6 +2119,7 @@
 
     $(document).ready(init);
 
+    // eslint-disable-next-line no-unused-vars
     function toggleLogging() {
       _logger.postMessage({ action: 'toggle' });
     }

@@ -93,7 +93,6 @@ export class DataGrid extends EventEmitter {
     private $children = false;
 
     private $key = '';
-    private $pKey;
     private $keyClearID;
 
     public selectionSearchField;
@@ -391,7 +390,6 @@ export class DataGrid extends EventEmitter {
             }
             if (!row || row.length === 0) {
                 this.$keyClearID = setTimeout(() => {
-                    this.$pKey = this.$key;
                     this.$key = '';
                 }, 300);
                 return;
@@ -404,7 +402,6 @@ export class DataGrid extends EventEmitter {
             this.scrollToRow(sIdx);
             clearTimeout(this.$keyClearID);
             this.$keyClearID = setTimeout(() => {
-                this.$pKey = this.$key;
                 this.$key = '';
             }, 300);
 

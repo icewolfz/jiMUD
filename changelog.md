@@ -12,14 +12,14 @@
     - Remote test - allows you to select a remote location to test your local file by uploading it to a temporary name in the same folder as the real remote file.
     - New area dialog now allows you to browse and select remote destination if connected to the mud
   - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
-  - Immortal tools: Error dialogs should appear for immortal errors
+  - Immortal tools: Error dialogs should appear for all non upload and download errors, as upload and download errors will appear in the queue list next to the item that caused the error
 - **Changed:**
   - Code Editor:
     - Changed formatting rule for semicolon (;), no long can be on a line alone, mostly happened when following a catch or time_expression block
     - Change how catch is formated, before it used to be put on its own line, it is now treated more like a function, as catch acts more as a function then a keyword
     - Changed how {} are formated after catch, leave { on the same line as catch as catch is treated more like a function
     - Moved diff clear, diff local, and diff original into a new submenu folder to help cleanup file menu
-  - Immortal tools: prefix all immortal tool remote commands with a unquie prefix to allow it to know what commands it has sent compared to other window operations
+  - Immortal tools: prefix all immortal tool remote commands with a unique prefix to allow it to know what commands it has sent compared to other window operations
 - **Fixed:**
   - Code Editor:
     - Fixed empty editor on first load if no files opened
@@ -129,7 +129,7 @@
   - Code editor:
     - Fixed reopen order when restoring files
     - Fix insert color dialog
-    - Editor only losing taskbar icon when preference changed
+    - Editor only losing task bar icon when preference changed
     - Fixed state loading
     - Fix file watching to ask if reload or keep open
     - No longer loaded always after editor only mode used
@@ -171,7 +171,7 @@
 - **Fixed:**
   - Immortal tools:
     - Buffer size was not correctly being stored as a number when changed from default in preferences
-    - When saving preferences was not correctly updating temp and buffersize options
+    - When saving preferences was not correctly updating temp and buffer size options
   - Telnet:
     - MCCP was not correctly being processed.
     - Split buffer was not always correctly cleared
@@ -361,7 +361,7 @@
   - Expand error catching to try and get more information
   - Change how active profile is found, active profile now should be highest priority profile or default
   - [#alarm](docs/commands.md) when just passing a single # now allows more then 59 seconds, to create second only timers, if over 59 it assumes wildcard
-  - [#alarm](docs/commands.md), [#suspend](docs/commands.md), [#resume](docs/commands.md) now parse id, timepattern, and profile arguments so functions and variables can be used
+  - [#alarm](docs/commands.md), [#suspend](docs/commands.md), [#resume](docs/commands.md) now parse id, time pattern, and profile arguments so functions and variables can be used
 - **Fixed:**
   - Fixed loading profiles not clearing internal caches
   - Fix suspend/resume to correctly time suspended alarms when resumed
@@ -972,7 +972,7 @@
     - Default - the default theme
     - Clean - a version of the Default theme with more simple borders and no images.
     - Dark - a dark theme with dark grays and blacks with silver highlights
-    - Lightgray - a light gray theme
+    - Light gray - a light gray theme
   - About dialog now includes memory information.
   - Preferences
     - Mapper: default import type, allows you to determine how map data will be imported when using default import systems
@@ -1017,7 +1017,7 @@
   - Mapper: Added context menu, if over a room you can mark as current, remove, highlight path to room, walk to room if not over room can clear path, refresh, or compact
 - **Changed:**
   - Advanced Editor
-    - Tooltips/color menus now display color code and display name based on XTerm 256 color names and ShadowMUD color database
+    - Tooltip/color menus now display color code and display name based on XTerm 256 color names and ShadowMUD color database
     - Color selection has been trimmed to the basic 16 colors + no color, with an option to open a more advanced color selection dialog, this should reduce load times.
   - Profile manager
     - Moved import button to a export/import drop down
@@ -1101,9 +1101,9 @@
   - Copying from main client should be smarter, if selected text and command input is focused it will copy display, if command focused and has selected text will copy that text
   - Profile manager can now be opened using Ctrl+P
   - Profile manager now supports undo/redo systems only limited by your system's memory and cpu
-  - Added some [docs](docs/README.md) to the GIT repo
+  - Added some [docs](docs/README.md) to the GIT repository
   - Mapper can now be set to always be on top of client, all windows, or independent
-  - Mapper import, profile import, and backup load now set windows taskbar progress bar
+  - Mapper import, profile import, and backup load now set windows task bar progress bar
 - **Changed:**
   - Advanced editor now uses monospaced font
   - Removed insert date/time from advanced editor context

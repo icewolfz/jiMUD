@@ -42,7 +42,7 @@
         var _ied, options;
         var _local = {}, _remote = {}, _downloads = {};
         var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0, active: 0 };
-        var localTable, remoteTable, queueTable, key = '', pKey, keyClearID;
+        var localTable, remoteTable, queueTable, key = '', keyClearID;
         var logView;
         var watcher;
         var dragging = false, btmDragging = false;
@@ -950,7 +950,7 @@
             }, 0);
         }
 
-        function renderFile(data, type, full, meta) {
+        function renderFile(data, type, full) {
             if (type === "sort" || type === 'type')
                 return data;
             if (full.size === -2) {
@@ -1055,7 +1055,7 @@
                         render: renderFile
                     },
                     {
-                        render: function (data, type, full, meta) {
+                        render: function (data) {
                             if (data === -2)
                                 return '';
                             return formatSize(data);
@@ -1114,7 +1114,7 @@
                         render: renderFile,
                     },
                     {
-                        render: function (data, type, full, meta) {
+                        render: function (data) {
                             if (data === -2)
                                 return '';
                             return formatSize(data);
@@ -1167,7 +1167,7 @@
                     {
                         type: 'file',
                         targets: 0,
-                        render: function (data, type, full, meta) {
+                        render: function (data, type, full) {
                             if (type === "sort" || type === 'type')
                                 return data;
                             var file = data;
@@ -1188,7 +1188,7 @@
                     },
                     {
                         targets: 2,
-                        render: function (data, type, full, meta) {
+                        render: function (data, type) {
                             if (type === "sort" || type === 'type')
                                 return data;
                             var file = data;
@@ -1200,7 +1200,7 @@
                         }
                     },
                     {
-                        render: function (data, type, full, meta) {
+                        render: function (data, type) {
                             if (type === "sort" || type === 'type')
                                 return data;
                             return `<div class="progressbar"><div class="progressbar-text">${Math.round(100 * data)}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`;
@@ -1210,7 +1210,7 @@
                     },
                     {
                         targets: 4,
-                        render: function (data, type, full, meta) {
+                        render: function (data, type, full) {
                             if (type === "sort" || type === 'type')
                                 return data;
                             switch (full.state) {
@@ -1315,7 +1315,7 @@
                         });
                         break;
                 }
-            }                
+            }
                 var msg;
                 if (error.stack)
                     msg = error.stack;
@@ -1505,7 +1505,7 @@
                         logMessage(`Deleted: ${obj.path}/${obj.file}`);
                         if (obj.path != options.remote)
                             return;
-                        row = remoteTable.row(function (idx, data, node) {
+                        row = remoteTable.row(function (idx, data) {
                             return data.name === obj.file ?
                                 true : false;
                         });
@@ -1531,7 +1531,7 @@
                         logMessage(`Renamed ${obj.path}/${obj.file} to ${obj.path2}/${obj.file2}`);
                         if (obj.path != options.remote)
                             return;
-                        row = remoteTable.row(function (idx, data, node) {
+                        row = remoteTable.row(function (idx, data) {
                             return data.name === obj.file ?
                                 true : false;
                         });
@@ -1568,7 +1568,7 @@
                         if (path.dirname(obj.path) != options.remote)
                             return;
                         name = path.basename(obj.path);
-                        row = remoteTable.row(function (idx, data, node) {
+                        row = remoteTable.row(function (idx, data) {
                             return data.name === name ?
                                 true : false;
                         });
@@ -1607,7 +1607,7 @@
                         if (path.dirname(obj.path) != options.remote)
                             return;
                         name = path.basename(obj.path);
-                        row = remoteTable.row(function (idx, data, node) {
+                        row = remoteTable.row(function (idx, data) {
                             return data.name === name ?
                                 true : false;
                         });
@@ -1635,25 +1635,25 @@
             queueTable = $('#queue-list').DataTable();
             logView = $("#log-view");
 
-            localTable.on('user-select', function (e, dt, type, cell, originalEvent) {
+            localTable.on('user-select', function (e, dt, type, cell) {
                 if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length === 1) {
                     e.preventDefault();
                 }
             });
 
-            remoteTable.on('user-select', function (e, dt, type, cell, originalEvent) {
+            remoteTable.on('user-select', function (e, dt, type, cell) {
                 if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length === 1) {
                     e.preventDefault();
                 }
             });
 
-            queueTable.on('user-select', function (e, dt, type, cell, originalEvent) {
+            queueTable.on('user-select', function (e, dt, type, cell) {
                 if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length === 1) {
                     e.preventDefault();
                 }
             });
 
-            $('#local-list tbody').on('contextmenu', 'tr', function (e) {
+            $('#local-list tbody').on('contextmenu', 'tr', function () {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1665,14 +1665,14 @@
                 showLocalContextMenu();
             });
 
-            $('#local-list-container').on('contextmenu', function (e) {
+            $('#local-list-container').on('contextmenu', function () {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 showLocalContextMenu();
             });
 
-            $('#remote-list tbody').on('contextmenu', 'tr', function (e) {
+            $('#remote-list tbody').on('contextmenu', 'tr', function () {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1684,14 +1684,14 @@
                 showRemoteContextMenu();
             });
 
-            $('#remote-list-container').on('contextmenu', function (e) {
+            $('#remote-list-container').on('contextmenu', function () {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 showRemoteContextMenu();
             });
 
-            $('#queue-list tbody').on('contextmenu', 'tr', function (e) {
+            $('#queue-list tbody').on('contextmenu', 'tr', function () {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1703,14 +1703,14 @@
                 showQueueContextMenu();
             });
 
-            $('#queue-list-container').on('contextmenu', function (e) {
+            $('#queue-list-container').on('contextmenu', function () {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 showQueueContextMenu();
             });
 
-            logView.on('contextmenu', function (e) {
+            logView.on('contextmenu', function () {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1739,32 +1739,32 @@
                 c.popup({ window: remote.getCurrentWindow() });
             });
 
-            localTable.on('select', function (e, dt, type, indexes) {
+            localTable.on('select', function (e, dt, type) {
                 if (type === 'row')
                     doUpdate(16);
             });
 
-            localTable.on('deselect', function (e, dt, type, indexes) {
+            localTable.on('deselect', function (e, dt, type) {
                 if (type === 'row')
                     doUpdate(16);
             });
 
-            remoteTable.on('select', function (e, dt, type, indexes) {
+            remoteTable.on('select', function (e, dt, type) {
                 if (type === 'row')
                     doUpdate(16);
             });
 
-            remoteTable.on('deselect', function (e, dt, type, indexes) {
+            remoteTable.on('deselect', function (e, dt, type) {
                 if (type === 'row')
                     doUpdate(16);
             });
 
-            queueTable.on('select', function (e, dt, type, indexes) {
+            queueTable.on('select', function (e, dt, type) {
                 if (type === 'row')
                     doUpdate(16);
             });
 
-            queueTable.on('deselect', function (e, dt, type, indexes) {
+            queueTable.on('deselect', function (e, dt, type) {
                 if (type === 'row')
                     doUpdate(16);
             });
@@ -1773,7 +1773,7 @@
                 key += e.key.toLowerCase();
                 var selected = localTable.rows({ selected: true });
                 var f = -1;
-                var row = localTable.row(function (idx, data, node) {
+                var row = localTable.row(function (idx, data) {
                     if (selected.length > 0) {
                         if (selected[selected.length - 1][0] == idx)
                             f = idx;
@@ -1785,7 +1785,7 @@
                 }, { order: 'applied' });
                 if (selected.length && row.length == 0) {
                     localTable.rows().deselect();
-                    row = localTable.row(function (idx, data, node) {
+                    row = localTable.row(function (idx, data) {
                         if (selected.length > 0) {
                             if (selected[selected.length - 1][0] == idx)
                                 f = idx;
@@ -1800,7 +1800,6 @@
                 if (!row || row.length === 0) {
                     clearTimeout(keyClearID);
                     keyClearID = setTimeout(() => {
-                        pKey = key;
                         key = '';
                     }, 300);
                     return;
@@ -1819,7 +1818,6 @@
                 localTable.context[0]._select_lastCell.row = row.index();
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
-                    pKey = key;
                     key = '';
                 }, 300);
             });
@@ -1827,7 +1825,7 @@
                 key += e.key.toLowerCase();
                 var selected = remoteTable.rows({ selected: true });
                 var f = -1;
-                var row = remoteTable.row(function (idx, data, node) {
+                var row = remoteTable.row(function (idx, data) {
                     if (selected.length > 0) {
                         if (selected[selected.length - 1][0] == idx)
                             f = idx;
@@ -1839,7 +1837,7 @@
                 }, { order: 'applied' });
                 if (selected.length && row.length == 0) {
                     remoteTable.rows().deselect();
-                    row = remoteTable.row(function (idx, data, node) {
+                    row = remoteTable.row(function (idx, data) {
                         if (selected.length > 0) {
                             if (selected[selected.length - 1][0] == idx)
                                 f = idx;
@@ -1852,7 +1850,6 @@
                 }
                 if (!row || row.length === 0) {
                     keyClearID = setTimeout(() => {
-                        pKey = key;
                         key = '';
                     }, 300);
                     return;
@@ -1870,7 +1867,6 @@
                 remoteTable.context[0]._select_lastCell.row = row.index();
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
-                    pKey = key;
                     key = '';
                 }, 300);
             });
@@ -2207,7 +2203,7 @@
                 return false;
             };
 
-            window.onmouseout = (event) => {
+            window.onmouseout = () => {
                 _localDrag = 0;
                 _remoteDrag = 0;
             };
@@ -2937,6 +2933,7 @@
             setTimeout(upNext, 0);
         }
 
+        // eslint-disable-next-line no-unused-vars
         function progressCancel() {
             _progressCancel = true;
             pTotal = 0;
@@ -2966,10 +2963,12 @@
             setTimeout(() => { _ied.downloadTo(file, local, false, 0, true); }, 0);
         }
 
+        // eslint-disable-next-line no-unused-vars
         function closing() {
             clearWatcher();
         }
 
+        // eslint-disable-next-line no-unused-vars
         function closeHidden() {
             remote.getCurrentWindow().hide();
         }
@@ -3001,7 +3000,7 @@
                         log('Initial scan complete. Ready for changes');
                     ready = true;
                 })
-                .on('addDir', (path, stats) => {
+                .on('addDir', (path) => {
                     if (options.debug)
                         log(`Directory ${path} has been added`);
                     if (ready && path != options.local)
@@ -3012,13 +3011,13 @@
                         log(`Directory ${p} has been removed`);
                     if (ready) removeLocalFile(p);
                 })
-                .on('add', (path, stats) => {
+                .on('add', (path) => {
                     if (options.debug)
                         log(`File ${path} has been added`);
                     if (ready && path != options.local)
                         addLocalFile(path);
                 })
-                .on('change', (path, stats) => {
+                .on('change', (path) => {
                     if (options.debug)
                         log(`File ${path} has been changed`);
                     updateLocalFile(path);
@@ -3052,7 +3051,7 @@
                 return;
             }
 
-            var row = localTable.row(function (idx, data, node) {
+            var row = localTable.row(function (idx, data) {
                 return data.name === path.basename(p) ?
                     true : false;
             });
@@ -3061,7 +3060,7 @@
                 row.data(_local[file.name]);
             else {
                 localTable.row.add(_local[file.name]);
-                row = localTable.row(function (idx, data, node) {
+                row = localTable.row(function (idx, data) {
                     return data.name === path.basename(p) ?
                         true : false;
                 });
@@ -3085,7 +3084,7 @@
         }
 
         function removeLocalFile(p) {
-            var row = localTable.row(function (idx, data, node) {
+            var row = localTable.row(function (idx, data) {
                 return data.name === path.basename(p) ?
                     true : false;
             });
@@ -3194,6 +3193,7 @@
             $("#newFolder")[0].showModal();
         }
 
+        // eslint-disable-next-line no-unused-vars
         function newFolderOk() {
             var n = $("#newFolder-name").val();
             if (!n || n.length === 0) {
@@ -3297,7 +3297,7 @@
                 editor = null;
             };
             editor.on('blur', editor.close);
-            editor.on('click', function (e) {
+            editor.on('click', function () {
                 event.cancelable = true;
                 event.stopPropagation();
             });
@@ -3417,6 +3417,7 @@
                 body.scrollTop = top;
         }
 
+        // eslint-disable-next-line no-unused-vars
         function childClosed(url, name) {
         }
 
@@ -3424,7 +3425,7 @@
             var file = path.join(options.local, getNewName("newfile", _local));
             fs.closeSync(fs.openSync(file, 'w'));
             setTimeout(() => {
-                var row = localTable.row(function (idx, data, node) {
+                var row = localTable.row(function (idx, data) {
                     return data.name === path.basename(file) ?
                         true : false;
                 });
@@ -3446,7 +3447,7 @@
                 _ied.processGMCP(data.mod, data.obj);
         });
 
-        ipcRenderer.on('reload-options', (event) => {
+        ipcRenderer.on('reload-options', () => {
             loadOptions();
         });
 
@@ -3473,7 +3474,7 @@
             var ids = _remove.map(function callback(val) {
                 return val.ID;
             });
-            queueTable.rows(function (idx, data, node) {
+            queueTable.rows(function (idx, data) {
                 return ids.indexOf(data.id) !== -1;
             }).remove();
             var rc = _remove.length;
@@ -3497,7 +3498,7 @@
                 }
                 //only update if current remote is the same path as file
                 else if (item.state === ItemState.done && path.dirname(item.remote) === options.remote) {
-                    var row = remoteTable.row(function (idx, data, node) {
+                    var row = remoteTable.row(function (idx, data) {
                         return data.name === path.basename(item.remote) ?
                             true : false;
                     });
@@ -3519,7 +3520,7 @@
                     else {
                         info.remoteFiles++;
                         remoteTable.row.add(_remote[path.basename(item.remote)]);
-                        row = remoteTable.row(function (idx, data, node) {
+                        row = remoteTable.row(function (idx, data) {
                             return data.name === path.basename(item.remote) ?
                                 true : false;
                         });
@@ -3588,7 +3589,7 @@
             var uc = _qUpdate.length;
             for (var u = 0; u < uc; u++) {
                 var item = _qUpdate[u];
-                var row = queueTable.row(function (idx, data, node) {
+                var row = queueTable.row(function (idx, data) {
                     return data.id === item.ID ?
                         true : false;
                 });
@@ -3683,6 +3684,7 @@
             });
         }
 
+        // eslint-disable-next-line no-unused-vars
         function toggleEditor() {
             options.openEditor = !options.openEditor;
             if (options.openEditor)

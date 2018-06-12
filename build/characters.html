@@ -24,7 +24,7 @@
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
     <script>
-        //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel lagmeter hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { parseTemplate, templatePath, isFileSync, decrypt, encrypt, clone } = require('./js/library');
         const Settings = require('./js/settings').Settings;
         const { shell, remote, ipcRenderer } = require('electron');
@@ -221,6 +221,7 @@
             ipcRenderer.send('reload-characters');
         }
 
+        // eslint-disable-next-line no-unused-vars
         function refresh() {
             if (changed > 0) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -329,6 +330,7 @@
             $("#title").text('');
         }
 
+        /*
         function validName(name) {
             if (!name || name.length === 0)
                 return false;
@@ -336,6 +338,7 @@
                 return false;
             return true;
         }
+        */
 
         function sanitizeID(id) {
             return id.replace(/\s/g, '_');
@@ -343,9 +346,9 @@
 
         function sortList() {
             var $list = $('#characters-list'),
-                $listli = $list.children('li');
+                $listLI = $list.children('li');
 
-            $listli.sort(function (a, b) {
+            $listLI.sort(function (a, b) {
                 var an = a.textContent,
                     bn = b.textContent;
 
@@ -358,9 +361,10 @@
                 return 0;
             });
 
-            $listli.detach().appendTo($list);
+            $listLI.detach().appendTo($list);
         }
 
+        // eslint-disable-next-line no-unused-vars
         function openFile(field, ext, callback) {
             dialog.showOpenDialog(remote.getCurrentWindow(), {
                 defaultPath: path.dirname(parseTemplate($(field).val())),
@@ -633,6 +637,7 @@
             return response;
         }
 
+        // eslint-disable-next-line no-unused-vars
         function loadDefault() {
             var response = dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'warning',

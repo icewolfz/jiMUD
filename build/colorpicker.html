@@ -39,6 +39,7 @@
             const rgbcolor = require("rgbcolor");
 
             var type = 'forecolor';
+            // eslint-disable-next-line no-unused-vars
             var color = '';
             var _window;
             var options;
@@ -302,8 +303,11 @@
                 "mono23": "Grey 93"
             };
 
+            // eslint-disable-next-line no-unused-vars
             function setType(t) { type = t; }
+            // eslint-disable-next-line no-unused-vars
             function setColor(c) { color = c; }
+            // eslint-disable-next-line no-unused-vars
             function setWindow(w) { _window = w; }
 
             $(window).keydown((event) => {
@@ -315,7 +319,7 @@
                 options = Settings.load(remote.getGlobal('settingsFile'));
                 loadColors();
             });
-            ipcRenderer.on('reload-options', (event) => {
+            ipcRenderer.on('reload-options', () => {
                 options = Settings.load(remote.getGlobal('settingsFile'));
                 loadColors();
             });

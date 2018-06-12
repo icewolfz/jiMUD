@@ -123,7 +123,7 @@
             loadOptions();
 
             ['copy'].forEach(function (event) {
-                document.addEventListener(event, function (e) {
+                document.addEventListener(event, function () {
                     if (display.hasSelection) {
                         clipboard.writeText(display.selection, 'selection');
                         clipboard.writeText(display.selection);
@@ -132,6 +132,7 @@
             });
         });
 
+        // eslint-disable-next-line no-unused-vars
         function doCopy() {
             if (display.hasSelection) {
                 clipboard.writeText(display.selection, 'selection');
@@ -139,6 +140,7 @@
             }
         }
 
+        // eslint-disable-next-line no-unused-vars
         function doFind() {
             display.showFind();
         }
@@ -166,28 +168,31 @@
             _logger.postMessage({ action: 'name', args: char });
         });
 
-        ipcRenderer.on('load-default', (event) => {
+        ipcRenderer.on('load-default', () => {
             _logger.postMessage({ action: 'name', args: '' });
         });
 
-        ipcRenderer.on('reload-options', (event) => {
+        ipcRenderer.on('reload-options', () => {
             loadOptions();
         });
 
-        ipcRenderer.on('connected', (event) => {
+        ipcRenderer.on('connected', () => {
             if (!options)
                 loadOptions();
             _logger.postMessage({ action: 'connected', args: true });
         });
 
+        // eslint-disable-next-line no-unused-vars
         function toggle() {
             _logger.postMessage({ action: 'toggle' });
         }
 
+        // eslint-disable-next-line no-unused-vars
         function clearDisplaySelection() {
             display.clear();
         }
 
+        // eslint-disable-next-line no-unused-vars
         function updateZoom(z) {
             if (z < 0.5)
                 z = 0.5;

@@ -10,7 +10,7 @@ If you are getting garbled or missing text try disabling MCCP, MXP, or UTF-8 in 
 
 This means there is an error, most of the time the error is from a broken profile item with bad or invalid javascript.
 
-## If your question is not listed:
+## If your question is not listed
 
 Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using the jiMUD or the [ShadowMUD web client](http://www,shadowmud.com/mud.php)
 

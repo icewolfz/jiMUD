@@ -1,4 +1,4 @@
-//cSpell:words submenu, pasteandmatchstyle, statusvisible, lagmeter, taskbar, 
+//cSpell:words submenu, pasteandmatchstyle, statusvisible, taskbar 
 //cSpell:ignore prefs, partyhealth, combathealth
 const { app, BrowserWindow, shell } = require('electron');
 const { Tray, dialog, Menu } = require('electron');
@@ -388,7 +388,7 @@ var menuTemp = [
             }
           },
           {
-            label: '&Lagmeter',
+            label: '&Lag meter',
             id: "lagmeter",
             type: 'checkbox',
             checked: true,

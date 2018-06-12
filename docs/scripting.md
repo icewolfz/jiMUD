@@ -65,7 +65,7 @@ web client we also support OoMUD and this for non ES6 arrow function formats.
 
 ```javascript
 /*
-Styax to use: <alarm [message] [seconds]>
+Syntax to use: <alarm [message] [seconds]>
 */
 //store message in local variable so it can be passed to timer
 var message = arguments[1];

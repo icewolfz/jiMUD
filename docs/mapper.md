@@ -105,4 +105,3 @@ The x, y, z, zone are generated when a room is first added to the map based on t
   - `%APPDATA%\jiMUD\map.sqlite` on Windows
   - `$XDG_CONFIG_HOME/jiMUD/map.sqlite` or `~/.config/jiMUD/map.sqlite` on Linux
   - `~/Library/Application Support/jiMUD/map.sqlite` on macOS
-

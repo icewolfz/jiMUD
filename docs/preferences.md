@@ -14,7 +14,7 @@ Reset - Resetting will revert all settings back to default values
 - `Theme` the theme for the main client window
 - `On disconnect do` What to do when disconnected from the mud
   - `Nothing` do nothing
-  - `Reconnect` reconnect using autoconnect options
+  - `Reconnect` reconnect using auto connect options
   - `Reconnect dialog` show the reconnect dialog with options and delayed reconnect timer
   - `Character manager` show character manager
   - `Close` close the client
@@ -120,7 +120,7 @@ Controls what is captured into the chat window
 
 ## Status
 
-- `Show Lagmeter` Whether to enable the lagmeter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
+- `Show Lagmeter` Whether to enable the lag meter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Show Experience Needed as Progressbar` display the experience needed value as a progress bar
 
 ## Scripting
@@ -153,7 +153,7 @@ Controls what is captured into the chat window
 
 - `Connect to development` Connect to the development mud.
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
-- `Enable GMCP Ping for lagmeter` When text received from mud send back a GMCP ping if enabled to get a better time for the lagmeter.
+- `Enable GMCP Ping for lag meter` When text received from mud send back a GMCP ping if enabled to get a better time for the lag meter.
 - `Enable debug` Will display debug data to the dev tool console
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Show extended error messages` Display extended stack information for errors

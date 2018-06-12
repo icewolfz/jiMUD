@@ -1,6 +1,6 @@
 # Assets
 
-A list of profiled images and image spites that can be accessed using 
+A list of profiled images and image spites that can be accessed using
 `{asset}/section/name.ext`, most monster/action sprites are from [http://www.opengameart.org](https://www.opengameart.org/)
 
 - `border.png` Main client border sprite
@@ -21,7 +21,7 @@ Action icons for buttons and context menus
 
 Application icons for buttons and context menus
 
-- `png\colors\COLORCODE.png` -the color code icons for advanced editor context menus, there is one foreach color code of RGB###, mono##, and the basic 8 and 8 bold as BOLD-COLOR 
+- `png\colors\COLORCODE.png` -the color code icons for advanced editor context menus, there is one foreach color code of RGB###, mono##, and the basic 8 and 8 bold as BOLD-COLOR
 
 [github repository/icons](https://github.com/icewolfz/jiMUD/tree/master/assets/icons)
 

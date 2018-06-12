@@ -200,6 +200,7 @@
 
     let $closeWindow = false;
 
+    // eslint-disable-next-line no-unused-vars
     function closeHidden() {
       if (mapper) {
         save();
@@ -212,6 +213,7 @@
       }
     }
 
+    // eslint-disable-next-line no-unused-vars
     function closeWindow() {
       if (mapper) save(() => {
         if (!mapper.ready) {
@@ -458,7 +460,7 @@
         ipcRenderer.send('setting-changed', { type: 'mapper', name: setting, value: value });
       });
 
-      mapper.on('remove-done', (room) => {
+      mapper.on('remove-done', () => {
         updateAreas();
       });
 
@@ -508,7 +510,7 @@
         }
         if (!$("#btn-clear").prop('disabled'))
           menu.push({
-            label: 'Clear path', Room: room, click: (item) => {
+            label: 'Clear path', Room: room, click: () => {
               mapper.clearPath();
             }
           });
@@ -516,13 +518,13 @@
           menu.push({ type: 'separator' });
         menu = menu.concat([
           {
-            label: 'Refresh', Room: room, click: (item) => {
+            label: 'Refresh', Room: room, click: () => {
               saveRoom();
               mapper.refresh();
             }
           },
           {
-            label: 'Compact', Room: room, click: (item) => {
+            label: 'Compact', Room: room, click: () => {
               compact();
             }
           }
@@ -672,7 +674,7 @@
       mapper.mapFile = remote.getGlobal('mapFile');
     });
 
-    ipcRenderer.on('reload-options', (event) => {
+    ipcRenderer.on('reload-options', () => {
       save(function () {
         remote.getCurrentWindow().reload();
       });

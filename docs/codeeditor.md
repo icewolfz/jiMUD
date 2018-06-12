@@ -10,7 +10,7 @@ The code editor allows immortals or those wanting to code lpc files using a grap
 - Formatting and indention system for making code easier and more standard
 - Side by side file views for up to 3 files, just drag and drop to layout how how you want to view files, with restore state on reopen if `Remember open files on reload` turned on
 - Diff file with original file if changed or local file
-- Diff file with remote file, does not cache to allow you to test againest any file as needed
+- Diff file with remote file, does not cache to allow you to test against any file as needed
 - Remote testing, allows you to test a local file in its remote location, if no remote data it will allow you to browse to the remote file location
 - Remote caching, will cache remote file data in %appdata%\jiMUD\editor to allow local files to be linked to remote files
 - Clear remote data in code preference dialog or deleting the files in %appdata%\jiMUD\editor
@@ -59,7 +59,7 @@ Allows you to edit all external exits in one location
 
 - `Enabled` is exit enabled
 - `X`, `Y`, `Z` the coordinates of the room the exit will be added to, Z is only shown/required if using multi level area
-- `Exit` the exit used, can be anything or you can pick from a presuggested list
+- `Exit` the exit used, can be anything or you can pick from a pre suggested list
 - `Destination` the full remote path to destination file, include the .c
 
 ## Raw data editors
@@ -142,5 +142,5 @@ Editor preferences are stored in their own file independent of client or charact
 
 ## Known issues
 
-- `Slow performance` Make sure you are not using --disable-gpu, with out the gpu it can cause slow perfmance from maps taking 10 to 100 times longer to load
+- `Slow performance` Make sure you are not using --disable-gpu, with out the gpu it can cause slow performance from maps taking 10 to 100 times longer to load
 - Missing context menus, will be addressed in future releases

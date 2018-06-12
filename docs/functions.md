@@ -4,7 +4,7 @@ Functions and variables allow a user to manipulate text and data with out having
 
 All functions and variables use the ${function/variable} or %{function/variable} syntax for easy embedding into other text for example, `Rolled: ${dice(2d5)}` would roll 2 five sided dice and return Rolled: #. You may also nest functions and variables inside of each other: `${dice(${i}d6)}` would roll the # of i dice
 
-There is a special format for argument variables for aliases and triggers. 
+There is a special format for argument variables for aliases and triggers.
 
 - `%#`, `%{#}`, or `${#}` allows you to access arguments for alias and triggers, where # is the argument you want, while 0 is the full text
 - `%*`, `%{*}`, or `${*}` returns the full text minus alias name or matched text for triggers
