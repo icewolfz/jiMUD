@@ -5,7 +5,7 @@ import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, Fla
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 
-export interface DatagridOptions {
+export interface DataGridOptions {
     container?: any;
     parent?: any;
     object?: any;
@@ -56,7 +56,7 @@ export class Column {
 
 enum SortOrder { ascending, descending }
 
-export class Datagrid extends EventEmitter {
+export class DataGrid extends EventEmitter {
     private $parent: HTMLElement;
     private $rows = [];
     private $sortedRows = [];
@@ -451,7 +451,7 @@ export class Datagrid extends EventEmitter {
 
     public cut() {
         if (this.$selected.length === 0) return;
-        clipboard.writeBuffer('jiMUD/Datagrid', Buffer.from(JSON.stringify({
+        clipboard.writeBuffer('jiMUD/DataGrid', Buffer.from(JSON.stringify({
             format: this.columns.map(c => c.label).join(':'),
             data: this.selected.map(c => {
                 return {
@@ -482,22 +482,22 @@ export class Datagrid extends EventEmitter {
         };
         this.emit('copy', e);
         if (e.preventDefault) return;
-        clipboard.writeBuffer('jiMUD/Datagrid', Buffer.from(JSON.stringify({
+        clipboard.writeBuffer('jiMUD/DataGrid', Buffer.from(JSON.stringify({
             format: this.columns.map(c => c.label).join(':'),
             data: e.data
         })));
     }
 
     get canPaste() {
-        if (!clipboard.has('jiMUD/Datagrid')) return false;
-        const data = JSON.parse(clipboard.readBuffer('jiMUD/Datagrid').toString());
+        if (!clipboard.has('jiMUD/DataGrid')) return false;
+        const data = JSON.parse(clipboard.readBuffer('jiMUD/DataGrid').toString());
         const format = this.columns.map(c => c.label).join(':');
         return format === data.format;
     }
 
     public paste() {
-        if (!clipboard.has('jiMUD/Datagrid')) return;
-        const data = JSON.parse(clipboard.readBuffer('jiMUD/Datagrid').toString());
+        if (!clipboard.has('jiMUD/DataGrid')) return;
+        const data = JSON.parse(clipboard.readBuffer('jiMUD/DataGrid').toString());
         const format = this.columns.map(c => c.label).join(':');
         if (format === data.format) {
             const e = { data: data.data, preventDefault: false };
