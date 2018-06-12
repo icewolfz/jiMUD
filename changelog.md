@@ -12,12 +12,14 @@
     - Remote test - allows you to select a remote location to test your local file by uploading it to a temporary name in the same folder as the real remote file.
     - New area dialog now allows you to browse and select remote destination if connected to the mud
   - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
+  - Immortal tools: Error dialogs should appear for immortal errors
 - **Changed:**
   - Code Editor:
     - Changed formatting rule for semicolon (;), no long can be on a line alone, mostly happened when following a catch or time_expression block
     - Change how catch is formated, before it used to be put on its own line, it is now treated more like a function, as catch acts more as a function then a keyword
     - Changed how {} are formated after catch, leave { on the same line as catch as catch is treated more like a function
     - Moved diff clear, diff local, and diff original into a new submenu folder to help cleanup file menu
+  - Immortal tools: prefix all immortal tool remote commands with a unquie prefix to allow it to know what commands it has sent compared to other window operations
 - **Fixed:**
   - Code Editor:
     - Fixed empty editor on first load if no files opened

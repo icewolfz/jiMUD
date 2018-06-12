@@ -144,6 +144,8 @@ export class IED extends EventEmitter {
                 this.emit('init');
                 break;
             case 'error':
+                if (obj.tag && this.prefix && !obj.tag.startsWith(this.prefix))
+                    return;
                 switch (obj.code) {
                     case IEDError.DL_NOTSTART:
                     case IEDError.DL_TOOMANY:

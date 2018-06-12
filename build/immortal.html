@@ -25,7 +25,7 @@
         //cSpell:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //cSpell:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
         const { IED, ItemState } = require('./js/ied');
-        const { TempType, IEDCmdStatus } = require('./js/types');
+        const { TempType, IEDCmdStatus, IEDError } = require('./js/types');
         const { remote, ipcRenderer, shell, clipboard } = require('electron');
         const { app, dialog, Menu, MenuItem } = remote;
         const { parseTemplate, existsSync, formatSize, walk } = require('./js/library');
@@ -1237,6 +1237,7 @@
             });
             loadOptions();
             _ied = new IED(options.local, options.remote);
+            _ied.prefix = 'manager-';
             _ied.local = options.local;
             _ied.remote = options.remote;
             _ied.bufferSize = options.bufferSize;
@@ -1255,6 +1256,66 @@
                     _ied.getDir(options.remote);
             });
             _ied.on('error', (error) => {
+                if (error && error.code) {
+                switch (error.code) {
+                    case IEDError.USER_DENIED:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Permission denied',
+                            message: 'Permission denied'
+                        });
+                        break;
+                    case IEDError.RESET:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Reset',
+                            message: 'Server reset: ' + error.msg
+                        });
+                        break;
+                    case IEDError.USERRESET:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Reset',
+                            message: error.msg
+                        });
+                        break;
+                    case IEDError.CMD_EXIST:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Already exist',
+                            message: `File or directory already exist: '${error.path}/${error.file}`
+                        });
+                        break;
+                    case IEDError.CMD_DIRECTORY:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Is a directory',
+                            message: `File is a directory: '${error.path}/${error.file}`
+                        });
+                        break;
+                    case IEDError.CMD_NOEXIST:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Does not exist',
+                            message: `File or directory does not exist: '${error.path}/${error.file}`
+                        });
+                        break;
+                    case IEDError.CMD_FILE:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Not a directory',
+                            message: `File not a directory: '${error.path}/${error.file}`
+                        });
+                        break;
+                    case IEDError.DIR_CANTREAD:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Can not read',
+                            message: 'Can not read or permission denied'
+                        });
+                        break;
+                }
+            }                
                 var msg;
                 if (error.stack)
                     msg = error.stack;
@@ -1282,9 +1343,9 @@
             });
             _ied.on('dir', (dir, files, tag, local) => {
                 var f, fl, file;
-                if (tag.startsWith('dir:browse'))
+                if (tag.startsWith('manager-dir:browse'))
                     updateRemote(dir, files);
-                else if (tag.startsWith('dir:download')) {
+                else if (tag.startsWith('manager-dir:download')) {
                     if (_progressCancel) {
                         if (options.debug)
                             console.log("Download files canceled");
@@ -1331,7 +1392,7 @@
                         return;
                     }
                 }
-                else if (tag.startsWith('dir:delete')) {
+                else if (tag.startsWith('manager-dir:delete')) {
                     if (_progressCancel) {
                         pTotal = 0;
                         pFiles = 0;
@@ -1358,7 +1419,8 @@
                 }
             });
             _ied.on('resolved', (dir, tag) => {
-                logMessage("Resolved: " + dir);
+                if(tag && tag.startsWith('manager-'))
+                    logMessage("Resolved: " + dir);
             });
             _ied.on('message', (msg) => {
                 logMessage(msg);
