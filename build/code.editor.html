@@ -767,6 +767,7 @@
     var connected = localStorage.getItem('connected') === 'true';
     var _ied;
     var $dialog;
+    var $dialogs = {};
     var $tmp;
 
     var $fileFilters = [
@@ -2633,79 +2634,6 @@
             addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
         });
 
-        $("#btn-new-area-path").on('click', () => {
-            dialog.showOpenDialog(remote.getCurrentWindow(), {
-                defaultPath: $("#new-area-path").val(),
-                properties: ['openDirectory', 'createDirectory']
-            },
-                function (fileNames) {
-                    if (fileNames === undefined) {
-                        return;
-                    }
-                    $("#new-area-path").val(fileNames[0]);
-                });
-        });
-
-        $('#btn-new-area-remote-path').on('click', () => {
-            showBrowseDialog({
-                defaultFile: manager.active.editor.remote,
-                title: 'Select remote folder',
-                properties: ['openDirectory']
-            }, (files) => {
-                if (!files || files.length === 0) return;
-                document.getElementById('new-area-remote-path').value = files[0];
-            });
-        });
-        $("#btn-new-virtual-area-path").on('click', () => {
-            dialog.showOpenDialog(remote.getCurrentWindow(), {
-                defaultPath: $("#new-virtual-area-path").val(),
-                properties: ['openDirectory', 'createDirectory']
-            },
-                function (fileNames) {
-                    if (fileNames === undefined) {
-                        return;
-                    }
-                    $("#new-virtual-area-path").val(fileNames[0]);
-                });
-        });
-
-        $('#eNone').on('change', function (e) {
-            $('#new-virtual-area-default-exits input[id^="de"]').prop('checked', false);
-            if (!this.checked) {
-                e.preventDefault();
-                $('#eNone').prop('checked', true);
-                $('.btn-group input').parent().removeClass('active');
-                $('.btn-group input:checked').parent().addClass('active');
-                return false;
-            }
-            $('.btn-group input').parent().removeClass('active');
-            $('.btn-group input:checked').parent().addClass('active');
-        });
-
-        $('#new-virtual-area-default-exits input[id^="de"]').on('change', function () {
-            $('#eNone').prop('checked', false);
-            $('.btn-group input').parent().removeClass('active');
-            $('.btn-group input:checked').parent().addClass('active');
-        });
-
-        $('#sNone').on('change', function (e) {
-            $('#new-virtual-area-default-states input[id^="ds"]').prop('checked', false);
-            if (!this.checked) {
-                e.preventDefault();
-                $('#sNone').prop('checked', true);
-                $('.btn-group input').parent().removeClass('active');
-                $('.btn-group input:checked').parent().addClass('active');
-                return false;
-            }
-            $('.btn-group input').parent().removeClass('active');
-            $('.btn-group input:checked').parent().addClass('active');
-        });
-
-        $('#new-virtual-area-default-states input[id^="ds"]').on('change', function () {
-            $('#sNone').prop('checked', false);
-            $('.btn-group input').parent().removeClass('active');
-            $('.btn-group input:checked').parent().addClass('active');
-        });
         createWatcher();
         postEditorLoad();
     });
@@ -2955,6 +2883,34 @@
     }
 
     function newArea() {
+        if ($dialogs.area) {
+            $dialog.area = {
+                dialog: document.getElementById('new-area'),
+                path: document.getElementById('new-area-path')
+            };
+            $("#btn-new-area-path").on('click', () => {
+                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                    defaultPath: $dialog.area.path.val(),
+                    properties: ['openDirectory', 'createDirectory']
+                },
+                    function (fileNames) {
+                        if (fileNames === undefined) {
+                            return;
+                        }
+                        $dialog.area.path.val(fileNames[0]);
+                    });
+            });
+            $('#btn-new-area-remote-path').on('click', () => {
+                showBrowseDialog({
+                    defaultFile: manager.active.editor.remote,
+                    title: 'Select remote folder',
+                    properties: ['openDirectory']
+                }, (files) => {
+                    if (!files || files.length === 0) return;
+                    document.getElementById('new-area-remote-path').value = files[0];
+                });
+            });
+        }
         $('#new-area *').attr('disabled', false);
         $('#btn-new-area-remote-path').attr('disabled', !connected);
         var p = $("#new-area-path").parent().parent();
@@ -3064,6 +3020,62 @@
 
     // eslint-disable-next-line no-unused-vars
     function newVirtualArea() {
+        if (!$dialogs.virtualArea) {
+            $dialogs.virtualArea = {
+                dialog: document.getElementById('new-virtual-area')
+            };
+            $("#btn-new-virtual-area-path").on('click', () => {
+                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                    defaultPath: $("#new-virtual-area-path").val(),
+                    properties: ['openDirectory', 'createDirectory']
+                },
+                    function (fileNames) {
+                        if (fileNames === undefined) {
+                            return;
+                        }
+                        $("#new-virtual-area-path").val(fileNames[0]);
+                    });
+            });
+
+            $('#eNone').on('change', function (e) {
+                $('#new-virtual-area-default-exits input[id^="de"]').prop('checked', false);
+                if (!this.checked) {
+                    e.preventDefault();
+                    $('#eNone').prop('checked', true);
+                    $('.btn-group input').parent().removeClass('active');
+                    $('.btn-group input:checked').parent().addClass('active');
+                    return false;
+                }
+                $('.btn-group input').parent().removeClass('active');
+                $('.btn-group input:checked').parent().addClass('active');
+            });
+
+            $('#new-virtual-area-default-exits input[id^="de"]').on('change', function () {
+                $('#eNone').prop('checked', false);
+                $('.btn-group input').parent().removeClass('active');
+                $('.btn-group input:checked').parent().addClass('active');
+            });
+
+            $('#sNone').on('change', function (e) {
+                $('#new-virtual-area-default-states input[id^="ds"]').prop('checked', false);
+                if (!this.checked) {
+                    e.preventDefault();
+                    $('#sNone').prop('checked', true);
+                    $('.btn-group input').parent().removeClass('active');
+                    $('.btn-group input:checked').parent().addClass('active');
+                    return false;
+                }
+                $('.btn-group input').parent().removeClass('active');
+                $('.btn-group input:checked').parent().addClass('active');
+            });
+
+            $('#new-virtual-area-default-states input[id^="ds"]').on('change', function () {
+                $('#sNone').prop('checked', false);
+                $('.btn-group input').parent().removeClass('active');
+                $('.btn-group input:checked').parent().addClass('active');
+            });
+        }
+
         $('#new-virtual-area-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
         $('#new-virtual-area-area').val('');
         $('.btn-group input').parent().removeClass('active');
