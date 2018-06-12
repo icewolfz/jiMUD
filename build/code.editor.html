@@ -2327,7 +2327,7 @@
 
         });
         _ied.on('error', (error) => {
-            if (error && error.code && (($dialog && $dialog.el.open) || document.getElementById('progress-dialog').open)) {
+            if (error && error.code) {
                 switch (error.code) {
                     case IEDError.USER_DENIED:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2335,6 +2335,7 @@
                             title: 'Permission denied',
                             message: 'Permission denied'
                         });
+                        closeProgressDialog();
                         break;
                     case IEDError.DL_NOTSTART:
                     case IEDError.DL_TOOMANY:
@@ -2344,6 +2345,7 @@
                             title: 'Download error',
                             message: `Download error for '${error.path}/${error.file}': ${error.msg}`
                         });
+                        closeProgressDialog();
                         break;
                     case IEDError.DL_INVALIDFMT:
                     case IEDError.DL_UNKNOWN:
@@ -2355,6 +2357,7 @@
                             title: 'Download aborted',
                             message: `Download aborted for '${error.path}/${error.file}': ${error.msg}`
                         });
+                        closeProgressDialog();
                         break;
                     case IEDError.RESET:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2362,6 +2365,7 @@
                             title: 'Reset',
                             message: 'Server reset: ' + error.msg
                         });
+                        closeProgressDialog();
                         break;
                     case IEDError.USERRESET:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2377,6 +2381,7 @@
                             title: 'Upload error',
                             message: `Upload error for '${error.path}/${error.file}': ${error.msg}`
                         });
+                        closeProgressDialog();
                         break;
                     case IEDError.UL_INVALIDFMT:
                     case IEDError.UL_USERABORT:
@@ -2393,6 +2398,7 @@
                             title: 'Upload aborted',
                             message: `Upload aborted for '${error.path}/${error.file}': ${error.msg}`
                         });
+                        closeProgressDialog();
                         break;
                     case IEDError.CMD_EXIST:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2400,6 +2406,7 @@
                             title: 'Already exist',
                             message: `File or directory already exist: '${error.path}/${error.file}`
                         });
+                        closeProgressDialog();
                         break;
                     case IEDError.CMD_DIRECTORY:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2407,7 +2414,7 @@
                             title: 'Is a directory',
                             message: `File is a directory: '${error.path}/${error.file}`
                         });
-
+                        closeProgressDialog();
                         break;
                     case IEDError.CMD_NOEXIST:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2415,6 +2422,7 @@
                             title: 'Does not exist',
                             message: `File or directory does not exist: '${error.path}/${error.file}`
                         });
+                        closeProgressDialog();
                         break;
                     case IEDError.CMD_FILE:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2422,13 +2430,19 @@
                             title: 'Not a directory',
                             message: `File not a directory: '${error.path}/${error.file}`
                         });
+                        closeProgressDialog();
                         break;
                     case IEDError.DIR_CANTREAD:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                            type: 'error',
-                            title: 'Can not read',
-                            message: 'Can not read or permission denied'
-                        });
+                        if (error.tag && error.tag === 'editor-dir:remoteBrowse')
+                            _ied.getDir('.', false, 'remoteBrowse');
+                        else {
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'error',
+                                title: 'Can not read',
+                                message: 'Can not read or permission denied'
+                            });
+                            closeProgressDialog();
+                        }
                         break;
                 }
             }
