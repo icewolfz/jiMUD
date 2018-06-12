@@ -1055,92 +1055,98 @@
                 },
                 { type: 'separator' },
                 {
-                    label: 'Diff &clear',
-                    click: () => {
-                        var pane = manager.panes.indexOf(manager.activePane);
-                        if (manager.active.editor.diff)
-                            manager.active.editor.deactivate(window.$dEditors[pane]);
-                        manager.active.editor.diff = null;
-                        if (manager.active.diffFile)
-                            stopWatchFile(manager.active.diffFile);
-                        manager.active.diffFile = null;
-                        window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
-                        window.$editors[pane].domElement.style.display = 'block';
-                        manager.active.editor.activate(window.$editors[pane]);
-                        window.$editors[pane].layout();
-                        doUpdate(2);
-                    },
-                    enabled: false
-                },
-                {
-                    label: '&Diff original',
-                    click: () => {
-                        var pane = manager.panes.indexOf(manager.activePane);
-                        if (!manager.active.editor.diff)
-                            manager.active.editor.deactivate(window.$editors[pane]);
-                        manager.active.editor.diff = manager.active.editor.read();
-                        manager.active.diffFile = manager.active.editor.file;
-                        watchFile(manager.active.diffFile);
-                        window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
-                        window.$editors[pane].domElement.style.display = '';
-                        manager.active.editor.activate(window.$dEditors[pane]);
-                        window.$dEditors[pane].layout();
-                        doUpdate(2);
-                    },
-                    enabled: false
-                },
-                {
-                    label: 'Diff &local...',
-                    click: () => {
-                        dialog.showOpenDialog(remote.getCurrentWindow(),
-                            {
-                                filters: $fileFilters,
-                                properties: ['openFile'],
-                                defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
+                    label: '&Diff',
+                    submenu: [
+                        {
+                            label: '&Clear',
+                            click: () => {
+                                var pane = manager.panes.indexOf(manager.activePane);
+                                if (manager.active.editor.diff)
+                                    manager.active.editor.deactivate(window.$dEditors[pane]);
+                                manager.active.editor.diff = null;
+                                if (manager.active.diffFile)
+                                    stopWatchFile(manager.active.diffFile);
+                                manager.active.diffFile = null;
+                                window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+                                window.$editors[pane].domElement.style.display = 'block';
+                                manager.active.editor.activate(window.$editors[pane]);
+                                window.$editors[pane].layout();
+                                doUpdate(2);
                             },
-                            function (fileNames) {
-                                if (fileNames === undefined) {
-                                    return;
-                                }
+                            enabled: false
+                        },
+                        {
+                            label: '&Original',
+                            click: () => {
                                 var pane = manager.panes.indexOf(manager.activePane);
                                 if (!manager.active.editor.diff)
                                     manager.active.editor.deactivate(window.$editors[pane]);
-                                if (manager.active.diffFile)
-                                    stopWatchFile(manager.active.diffFile);
-                                manager.active.editor.diff = manager.active.editor.read(fileNames[0]);
-                                manager.active.diffFile = fileNames[0];
+                                manager.active.editor.diff = manager.active.editor.read();
+                                manager.active.diffFile = manager.active.editor.file;
                                 watchFile(manager.active.diffFile);
                                 window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
                                 window.$editors[pane].domElement.style.display = '';
                                 manager.active.editor.activate(window.$dEditors[pane]);
                                 window.$dEditors[pane].layout();
                                 doUpdate(2);
-                            });
-                    },
-                    enabled: false
-                },
-                {
-                    label: 'Diff re&mote...',
-                    click: () => {
-                        showBrowseDialog({
-                            defaultFile: manager.active.editor.remote,
-                            properties: ['openFile'],
-                            filters: $fileFilters,
-                        }, (files) => {
-                            if (!files || files.length === 0) return;
-                            $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
-                            _ied.downloadToFile(files[0], $tmp.name.substr(0, $tmp.name.length - 4), false, 'editor-download:diffRemote:' + manager.active.id, false);
-                            showProgressDialog('Downloading&hellip;', () => {
-                                var t = $tmp.name;
-                                _ied.removeActive();
-                                $tmp.removeCallback();
-                                $tmp = null;
-                                if (existsSync(t))
-                                    fs.unlinkSync(t);
-                            });
-                        });
-                    },
-                    enabled: false
+                            },
+                            enabled: false
+                        },
+                        {
+                            label: '&Local...',
+                            click: () => {
+                                dialog.showOpenDialog(remote.getCurrentWindow(),
+                                    {
+                                        filters: $fileFilters,
+                                        properties: ['openFile'],
+                                        defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
+                                    },
+                                    function (fileNames) {
+                                        if (fileNames === undefined) {
+                                            return;
+                                        }
+                                        var pane = manager.panes.indexOf(manager.activePane);
+                                        if (!manager.active.editor.diff)
+                                            manager.active.editor.deactivate(window.$editors[pane]);
+                                        if (manager.active.diffFile)
+                                            stopWatchFile(manager.active.diffFile);
+                                        manager.active.editor.diff = manager.active.editor.read(fileNames[0]);
+                                        manager.active.diffFile = fileNames[0];
+                                        watchFile(manager.active.diffFile);
+                                        window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
+                                        window.$editors[pane].domElement.style.display = '';
+                                        manager.active.editor.activate(window.$dEditors[pane]);
+                                        window.$dEditors[pane].layout();
+                                        doUpdate(2);
+                                    });
+                            },
+                            enabled: false
+                        },
+                        {
+                            label: '&Remote...',
+                            click: () => {
+                                showBrowseDialog({
+                                    defaultFile: manager.active.editor.remote,
+                                    properties: ['openFile'],
+                                    filters: $fileFilters,
+                                }, (files) => {
+                                    if (!files || files.length === 0) return;
+                                    $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
+                                    _ied.downloadToFile(files[0], $tmp.name.substr(0, $tmp.name.length - 4), false, 'editor-download:diffRemote:' + manager.active.id, false);
+                                    showProgressDialog('Downloading&hellip;', () => {
+                                        var t = $tmp.name;
+                                        _ied.removeActive();
+                                        $tmp.removeCallback();
+                                        $tmp = null;
+                                        if (existsSync(t))
+                                            fs.unlinkSync(t);
+                                    });
+                                });
+                            },
+                            enabled: false
+                        },
+
+                    ]
                 },
                 { type: 'separator' },
                 {
@@ -1460,8 +1466,8 @@
         menubar.updateItem('File|Close', { enabled: enabled });
         menubar.updateItem('File|Close all', { enabled: enabled });
         menubar.updateItem('File|save as', { enabled: enabled });
-        menubar.updateItem('file|diff local...', { enabled: enabled && manager.active.editor.supports('diff') });
-        menubar.updateItem('file|diff remote...', { enabled: connected && enabled && manager.active.editor.supports('diff') });
+        menubar.updateItem('file|diff|local...', { enabled: enabled && manager.active.editor.supports('diff') });
+        menubar.updateItem('file|diff|remote...', { enabled: connected && enabled && manager.active.editor.supports('diff') });
         var buttons = document.getElementById("editor-buttons");
         while (buttons.firstChild) {
             buttons.removeChild(buttons.firstChild);
@@ -1518,8 +1524,8 @@
         menubar.updateItem('file|save', { enabled: changed });
         $("#btn-save-all").prop('disabled', !changedAll);
         menubar.updateItem('file|save all', { enabled: changedAll });
-        menubar.updateItem('file|diff clear', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.diff !== null && manager.active.editor.supports('diff')) : false });
-        menubar.updateItem('file|diff original', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.diff === null && !manager.active.editor.new && manager.active.editor.changed && manager.active.editor.supports('diff')) : false });
+        menubar.updateItem('file|diff|clear', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.diff !== null && manager.active.editor.supports('diff')) : false });
+        menubar.updateItem('file|diff|original', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.diff === null && !manager.active.editor.new && manager.active.editor.changed && manager.active.editor.supports('diff')) : false });
 
         menubar.updateItem('file|revert', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.changed) : false });
         menubar.updateItem('file|revert all', { enabled: revertAll });
@@ -2909,11 +2915,11 @@
 
     ipcRenderer.on('connected', () => {
         connected = true;
-        menubar.updateItem('file|diff remote...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('diff') });
+        menubar.updateItem('file|diff|remote...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('diff') });
     });
     ipcRenderer.on('closed', () => {
         connected = false;
-        menubar.updateItem('file|diff remote...', { enabled: false });
+        menubar.updateItem('file|diff|remote...', { enabled: false });
     });
 
     ipcRenderer.on('editor-setting-changed', () => {

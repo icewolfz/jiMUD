@@ -17,6 +17,7 @@
     - Changed formatting rule for semicolon (;), no long can be on a line alone, mostly happened when following a catch or time_expression block
     - Change how catch is formated, before it used to be put on its own line, it is now treated more like a function, as catch acts more as a function then a keyword
     - Changed how {} are formated after catch, leave { on the same line as catch as catch is treated more like a function
+    - Moved diff clear, diff local, and diff original into a new submenu folder to help cleanup file menu
 - **Fixed:**
   - Code Editor:
     - Fixed empty editor on first load if no files opened
