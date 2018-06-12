@@ -735,6 +735,8 @@
     const { Menubar } = require('./js/menubar');
     // eslint-disable-next-line no-unused-vars
     const { inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize } = require('./js/library');
+    const { IEDError, IEDCmdStatus } = require('./js/types');
+
     const { IED } = require('./js/ied');
 
     const moment = require('moment');
@@ -2319,6 +2321,111 @@
 
         });
         _ied.on('error', (error) => {
+            if (error && error.code && (($dialog && $dialog.el.open) || document.getElementById('progress-dialog').open)) {
+                switch (error.code) {
+                    case IEDError.USER_DENIED:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Permission denied',
+                            message: 'Permission denied'
+                        });
+                        break;
+                    case IEDError.DL_NOTSTART:
+                    case IEDError.DL_TOOMANY:
+                    case IEDError.DL_INPROGRESS:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Download error',
+                            message: `Download error for '${error.path}/${error.file}': ${error.msg}`
+                        });
+                        break;
+                    case IEDError.DL_INVALIDFMT:
+                    case IEDError.DL_UNKNOWN:
+                    case IEDError.DL_USERABORT:
+                    case IEDError.DL_INVALIDFILE:
+                    case IEDError.DL_INVALIDPATH:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Download aborted',
+                            message: `Download aborted for '${error.path}/${error.file}': ${error.msg}`
+                        });
+                        break;
+                    case IEDError.RESET:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Reset',
+                            message: 'Server reset: ' + error.msg
+                        });
+                        break;
+                    case IEDError.USERRESET:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Reset',
+                            message: error.msg
+                        });
+                        break;
+                    case IEDError.UL_TOOMANY:
+                    case IEDError.UL_INPROGRESS:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Upload error',
+                            message: `Upload error for '${error.path}/${error.file}': ${error.msg}`
+                        });
+                        break;
+                    case IEDError.UL_INVALIDFMT:
+                    case IEDError.UL_USERABORT:
+                    case IEDError.UL_BADENCODE:
+                    case IEDError.UL_TOOLARGE:
+                    case IEDError.UL_FAILWRITE:
+                    case IEDError.UL_UNKNOWN:
+                    case IEDError.UL_INVALIDFILE:
+                    case IEDError.UL_INVALIDPATH:
+                    case IEDError.UL_DENIED:
+                    case IEDError.UL_FILE:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Upload aborted',
+                            message: `Upload aborted for '${error.path}/${error.file}': ${error.msg}`
+                        });
+                        break;
+                    case IEDError.CMD_EXIST:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Already exist',
+                            message: `File or directory already exist: '${error.path}/${error.file}`
+                        });
+                        break;
+                    case IEDError.CMD_DIRECTORY:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Is a directory',
+                            message: `File is a directory: '${error.path}/${error.file}`
+                        });
+
+                        break;
+                    case IEDError.CMD_NOEXIST:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Does not exist',
+                            message: `File or directory does not exist: '${error.path}/${error.file}`
+                        });
+                        break;
+                    case IEDError.CMD_FILE:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Not a directory',
+                            message: `File not a directory: '${error.path}/${error.file}`
+                        });
+                        break;
+                    case IEDError.DIR_CANTREAD:
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Can not read',
+                            message: 'Can not read or permission denied'
+                        });
+                        break;
+                }
+            }
             var msg;
             if (error.stack)
                 msg = error.stack;
