@@ -1,8 +1,5 @@
 
 import EventEmitter = require('events');
-import { remote } from 'electron';
-const { Menu, MenuItem } = remote;
-const { URL } = require('url');
 
 export enum UpdateType {
     none = 0,

@@ -3,7 +3,6 @@ import { EditorBase, EditorOptions, FileState } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
 import { existsSync } from './../library';
 const { ipcRenderer } = require('electron');
-const fs = require('fs-extra');
 const path = require('path');
 
 interface LoadMonacoOptions {

@@ -575,7 +575,7 @@ export class FlagValueEditor extends ValueEditor {
     }
 }
 
-export class DropdownEditValueEditor extends ValueEditor {
+export class DropDownEditValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $dropdown: HTMLElement;
     private $editor: HTMLInputElement;

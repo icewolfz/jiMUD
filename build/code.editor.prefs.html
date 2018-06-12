@@ -84,7 +84,7 @@
         const { remote, ipcRenderer, shell } = require('electron');
         const { dialog } = remote;
         const path = require('path');
-        const fs = require('fs');
+        const fs = require('fs-extra');
         const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
         var fontManager;
         try {
@@ -358,12 +358,13 @@
             if (choice === 1) return;
             let p = path.join(parseTemplate('{data}'), 'editor');
             if (isDirSync(p)) {
-                var files = fs.readdirSync(p);
-                for (var i = 0; i < files.length; i++) {
-                    if(choice === 2)
-                        fs.unlinkSync(path.join(p, files[i]));
-                    else
+                if (choice === 2)
+                    fs.emptyDirSync(p);
+                else {
+                    var files = fs.readdirSync(p);
+                    for (var i = 0; i < files.length; i++) {
                         shell.moveItemToTrash(path.join(p, files[i]));
+                    }
                 }
             }
         }

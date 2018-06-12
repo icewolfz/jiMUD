@@ -3,7 +3,7 @@ import EventEmitter = require('events');
 import { Client } from './client';
 import { parseTemplate, existsSync } from './library';
 import { BackupSelection, Log } from './types';
-import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, MacroDisplay, MacroModifiers, ItemStyle, Context } from './profile';
+import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context } from './profile';
 const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3');

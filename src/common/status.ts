@@ -4,7 +4,6 @@
 // cSpell:word
 import EventEmitter = require('events');
 import { Client } from './client';
-import { naturalCompare } from './library';
 
 export class Status extends EventEmitter {
     private info = [];

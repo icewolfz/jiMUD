@@ -3,9 +3,9 @@
 
 import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
-import { ParserLine, Size, OnDisconnect } from './types';
+import { ParserLine } from './types';
 import { AnsiColorCode } from './ansi';
-import { stripHTML, parseTemplate, getScrollBarHeight, SortArrayByPriority, SortItemArrayByPriority, existsSync } from './library';
+import { parseTemplate, SortItemArrayByPriority, existsSync } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
 import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType } from './profile';

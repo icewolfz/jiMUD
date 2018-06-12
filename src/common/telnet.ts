@@ -1,7 +1,6 @@
 // cSpell:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR
 import EventEmitter = require('events');
 import net = require('net');
-import util = require('util');
 
 const ZLIB: any = require('./../../lib/inflate_stream.min.js').Zlib;
 

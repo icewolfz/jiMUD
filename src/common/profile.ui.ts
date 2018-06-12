@@ -1,7 +1,7 @@
 //cSpell:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt, exportmenu
 import { shell, remote, ipcRenderer } from 'electron';
 const { dialog, Menu, MenuItem, nativeImage } = remote;
-import { FilterArrayByKeyValue, parseTemplate, keyCharToCode, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode } from './library';
+import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode } from './library';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroDisplay, MacroModifiers, ItemStyle } from './profile';
 import { Settings } from './settings';
 import { Menubar } from './menubar';

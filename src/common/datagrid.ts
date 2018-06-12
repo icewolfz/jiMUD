@@ -1,7 +1,7 @@
 //https://developers.google.com/web/updates/2016/10/resizeobserver
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
-import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropdownEditValueEditor } from './value.editors';
+import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor } from './value.editors';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 
@@ -1412,10 +1412,10 @@ export class DataGrid extends EventEmitter {
     private resizeHeight() {
         let helper;
         let h;
-        const springrow = <HTMLElement>this.$body.querySelector('.datagrid-row-spring');
+        const springRow = <HTMLElement>this.$body.querySelector('.datagrid-row-spring');
         if (this.$dataHeight === 0) {
-            springrow.style.display = 'none';
-            springrow.style.height = '0px';
+            springRow.style.display = 'none';
+            springRow.style.height = '0px';
             helper = document.createElement('div');
             helper.style.height = '100%';
             helper.style.position = 'absolute';
@@ -1425,14 +1425,14 @@ export class DataGrid extends EventEmitter {
             this.$body.parentElement.appendChild(helper);
             h = helper.clientHeight;
             this.$body.parentElement.removeChild(helper);
-            springrow.style.display = '';
-            springrow.style.height = h + 'px';
+            springRow.style.display = '';
+            springRow.style.height = h + 'px';
             this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + 'px,0)';
             return;
         }
         let style;
-        springrow.style.display = 'none';
-        springrow.style.height = '0px';
+        springRow.style.display = 'none';
+        springRow.style.height = '0px';
         helper = document.createElement('div');
         helper.style.height = '100%';
         helper.style.position = 'absolute';
@@ -1443,16 +1443,16 @@ export class DataGrid extends EventEmitter {
         h = helper.clientHeight;
         this.$body.parentElement.removeChild(helper);
         let dh;
-        if (this.$rows.length > 0 && springrow.offsetTop === 0) {
+        if (this.$rows.length > 0 && springRow.offsetTop === 0) {
             style = window.getComputedStyle(this.$body, null);
             dh = parseInt(style.getPropertyValue('height'), 10);
         }
         else
-            dh = springrow.offsetTop;
+            dh = springRow.offsetTop;
 
         if (h >= this.$dataHeight) {
-            springrow.style.display = '';
-            springrow.style.height = (h - dh) + 'px';
+            springRow.style.display = '';
+            springRow.style.height = (h - dh) + 'px';
         }
         this.$header.style.transform = 'translate(-' + this.$body.parentElement.scrollLeft + 'px,0)';
     }
@@ -1711,7 +1711,7 @@ export class DataGrid extends EventEmitter {
                     editor.editor = new NumberValueEditor(this, cell, prop, editorOptions);
                     break;
                 case EditorType.dropdown:
-                    editor.editor = new DropdownEditValueEditor(this, cell, prop, editorOptions);
+                    editor.editor = new DropDownEditValueEditor(this, cell, prop, editorOptions);
                     break;
                 case EditorType.select:
                     break;

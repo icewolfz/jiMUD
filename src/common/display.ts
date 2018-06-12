@@ -6,11 +6,11 @@
  * @arthur Icewolfz
  * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support
  */
-import { Size, Point, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from './types';
+import { Size, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from './types';
 import EventEmitter = require('events');
 import { Parser } from './parser';
 import { AnsiColorCode } from './ansi';
-import { clone, stripHTML, getScrollBarSize, htmlEncode } from './library';
+import { htmlEncode } from './library';
 import { Finder } from './finder.js';
 import { DisplayOptions, OverlayRange } from './types.js';
 

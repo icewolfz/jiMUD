@@ -1,5 +1,5 @@
 import { remote } from 'electron';
-const { Menu, MenuItem, BrowserWindow } = remote;
+const { Menu } = remote;
 
 export enum ItemType {
     menu = 0,
