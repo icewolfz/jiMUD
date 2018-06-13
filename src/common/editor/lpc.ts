@@ -1523,7 +1523,9 @@ export class LPCFormatter extends EventEmitter {
                                 if (t3 <= 0)
                                     break;
                             }
-                            if (tokenLine[t3].type !== FormatTokenType.text || tokenLine[t3].type === FormatTokenType.parenLclosure || tokenLine[t3].type === FormatTokenType.parenRclosure || tokenLine[t3].type === FormatTokenType.parenLmapping || tokenLine[t3].type === FormatTokenType.parenRmapping || tokenLine[t3].type === FormatTokenType.parenRarray || tokenLine[t3].type === FormatTokenType.parenLarray) {
+                            if (tokenLine[t3].type === FormatTokenType.operatorNot && tokenLine[t3].value === '!')
+                                op = op.rtrim();
+                            else if (tokenLine[t3].type !== FormatTokenType.text || tokenLine[t3].type === FormatTokenType.parenLclosure || tokenLine[t3].type === FormatTokenType.parenRclosure || tokenLine[t3].type === FormatTokenType.parenLmapping || tokenLine[t3].type === FormatTokenType.parenRmapping || tokenLine[t3].type === FormatTokenType.parenRarray || tokenLine[t3].type === FormatTokenType.parenLarray) {
                                 op = op.rtrim();
                                 op += ' ';
                             }
