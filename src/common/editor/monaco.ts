@@ -261,11 +261,13 @@ export class MonacoCodeEditor extends EditorBase {
     set diff(value) {
         if (value) {
             if (!this.$diffModel)
-                this.$diffModel = monaco.editor.createModel('', 'lpc');
-            this.$diffModel.setValue(value);
+                this.$diffModel = monaco.editor.createModel(value, 'lpc');
+            else
+                this.$diffModel.setValue(value);
         }
         else if (this.$diffModel) {
             this.$diffModel.setValue('');
+            this.$diffModel.dispose();
             this.$diffModel = null;
             this.$diffState = null;
         }

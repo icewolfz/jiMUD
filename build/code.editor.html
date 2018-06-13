@@ -134,6 +134,13 @@
                 });
             }
             else {
+                let m = monaco.editor.createModel('', 'lpc');
+                editor.setModel({
+                    original: m,
+                    modified: m
+                });
+                editor.setModel(null);
+                m.dispose();
                 editor.getModifiedEditor().onContextMenu((e) => {
                     let idx = window.$dEditors.indexOf(editor);
                     if (manager.activePane === manager.panes[idx])
@@ -156,16 +163,15 @@
             var el = document.createElement('div');
             el.classList.add('editor-container');
             pane.appendChild(el);
-            window.$editor = monaco.editor.create(el, {
+            window.$editors = [monaco.editor.create(el, {
                 language: 'lpc',
                 autoIndent: true,
                 rulers: [80],
                 contextmenu: false,
                 theme: 'lpcTheme',
                 model: null
-            });
-            window.$editors = [window.$editor];
-            initEditor(window.$editor);
+            })];
+            initEditor(window.$editors[0]);
             el = document.createElement('div');
             el.classList.add('diff-container');
             pane.appendChild(el);
@@ -1228,6 +1234,8 @@
         window.$editors.splice(idx, 1);
         window.$dEditors[idx].dispose();
         window.$dEditors.splice(idx, 1);
+        if (idx === 0)
+            window.$editor = window.$editors[0];
     });
     manager.on('tab-moved', (e) => {
         if (e.panel && e.panel.editor)
