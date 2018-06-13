@@ -105,7 +105,17 @@ export function SetupEditor() {
                         const code = $formatter.format(model.getValue());
                         const $indenter = $lpcIndenter || ($lpcIndenter = new LPCIndenter());
                         $indenter.on('error', (e) => {
-                            reject2(null);
+                            //reject2(e);
+                            monaco.editor.setModelMarkers(model, '', [
+                                {
+                                    startColumn: e.col + 1,
+                                    startLineNumber: e.line + 1,
+                                    endColumn: e.col,
+                                    endLineNumber: e.line + 1,
+                                    message: e.message + 1,
+                                    severity: 8
+                                }
+                            ]);
                         });
                         $indenter.on('complete', (lines) => {
                             resolve2([{
@@ -482,6 +492,7 @@ export class MonacoCodeEditor extends EditorBase {
                             label: 'Format Document',
                             accelerator: 'Alt+Shift+F',
                             click: () => {
+                                monaco.editor.setModelMarkers(this.$model, '', []);
                                 this.$editor.getAction('editor.action.formatDocument').run();
                             }
                         }
@@ -569,6 +580,7 @@ export class MonacoCodeEditor extends EditorBase {
                             label: 'Format Document',
                             accelerator: 'Alt+Shift+F',
                             click: () => {
+                                monaco.editor.setModelMarkers(this.$model, '', []);
                                 this.$editor.getAction('editor.action.formatDocument').run();
                             }
                         }

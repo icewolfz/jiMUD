@@ -29,6 +29,7 @@
     - Running diff local again on a different file cleared the diff instead
     - Recent list was cleared when trying to open a file that has been moved, deleted or renamed
     - Remove spaces between ! and :: when formatting
+    - Display errors found when formatting
   - Character manager:
     - Prevent running ok event multiple times after adding/renaming/copying more then one or canceling
     - Renaming lost login, password, and development setting
