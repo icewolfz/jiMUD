@@ -1510,21 +1510,71 @@ export class DataGrid extends EventEmitter {
         });
     }
 
-    public toggleRows(row) {
+    public toggleRows(rows) {
         if ((this._updating & UpdateType.rows) === UpdateType.rows) {
             setTimeout(() => {
-                this.toggleRows(row);
+                this.toggleRows(rows);
             }, 10);
             return;
         }
-        if (!Array.isArray(row))
-            row = [row];
-        row.map(r => {
+        if (!Array.isArray(rows))
+            rows = [rows];
+        rows.map(r => {
             if (typeof r !== 'number')
-                return this.$sortedRows.indexOf(this.$rows.indexOf(row));
+                return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
             return r;
         });
-        row.map(r => {
+        rows.map(r => {
+            const e = this.$body.firstElementChild.querySelector('[data-row="' + r + '"][data-parent="-1"]');
+            if (!e) return;
+            const nl = e.children[0].getElementsByClassName('datagrid-collapse');
+            if (nl.length > 0)
+                (<HTMLElement>nl[0]).click();
+        });
+    }
+
+    public expandRows(rows) {
+        if ((this._updating & UpdateType.rows) === UpdateType.rows) {
+            setTimeout(() => {
+                this.toggleRows(rows);
+            }, 10);
+            return;
+        }
+        if (!Array.isArray(rows))
+            rows = [rows];
+        rows.map(r => {
+            if (typeof r !== 'number')
+                return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
+            return r;
+        });
+        rows.map(r => {
+            if (this.$viewState[this.$sortedRows[r]])
+                return;
+            const e = this.$body.firstElementChild.querySelector('[data-row="' + r + '"][data-parent="-1"]');
+            if (!e) return;
+            const nl = e.children[0].getElementsByClassName('datagrid-collapse');
+            if (nl.length > 0)
+                (<HTMLElement>nl[0]).click();
+        });
+    }
+
+    public collapseRows(rows) {
+        if ((this._updating & UpdateType.rows) === UpdateType.rows) {
+            setTimeout(() => {
+                this.toggleRows(rows);
+            }, 10);
+            return;
+        }
+        if (!Array.isArray(rows))
+            rows = [rows];
+        rows.map(r => {
+            if (typeof r !== 'number')
+                return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
+            return r;
+        });
+        rows.map(r => {
+            if (!this.$viewState[this.$sortedRows[r]])
+                return;
             const e = this.$body.firstElementChild.querySelector('[data-row="' + r + '"][data-parent="-1"]');
             if (!e) return;
             const nl = e.children[0].getElementsByClassName('datagrid-collapse');
