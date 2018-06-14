@@ -1016,7 +1016,7 @@ export class DataGrid extends EventEmitter {
             const sIdx = +(<HTMLElement>e.currentTarget).dataset.row;
             const eR = +(<HTMLElement>e.currentTarget).dataset.dataIndex;
             const el = <HTMLElement>e.currentTarget;
-            this.emit('row-dblclick', e, { row: this.$rows[eR], rowIndex: eR, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: +el.dataset.dataIndex });
+            this.emit('row-dblclick', e, { row: this.$rows[eR], rowIndex: sIdx, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: eR });
             if (e.defaultPrevented || e.cancelBubble)
                 return;
             Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
@@ -1507,6 +1507,27 @@ export class DataGrid extends EventEmitter {
                 }
             }
             this.doUpdate(this._updating);
+        });
+    }
+
+    public toggleRows(row) {
+        if ((this._updating & UpdateType.rows) === UpdateType.rows) {
+            setTimeout(() => {
+                this.toggleRow(row);
+            }, 10);
+            return;
+        }
+        if (!Array.isArray(row))
+            row = [row];
+        row.map(r => {
+            if (typeof r !== 'number')
+                return this.$sortedRows.indexOf(this.$rows.indexOf(row));
+            return r;
+        });
+        row.map(r => {
+            const nl = this.$body.firstElementChild.children[r].getElementsByClassName('datagrid-collapse');
+            if (nl.length > 0)
+                (<HTMLElement>nl[0]).click();
         });
     }
 
