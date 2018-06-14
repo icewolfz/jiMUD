@@ -1513,7 +1513,7 @@ export class DataGrid extends EventEmitter {
     public toggleRows(row) {
         if ((this._updating & UpdateType.rows) === UpdateType.rows) {
             setTimeout(() => {
-                this.toggleRow(row);
+                this.toggleRows(row);
             }, 10);
             return;
         }
