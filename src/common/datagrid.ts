@@ -1101,8 +1101,8 @@ export class DataGrid extends EventEmitter {
                     e.cancelBubble = true;
                     e.stopPropagation();
                     const eCurr = (<HTMLElement>e.currentTarget);
-                    const rowEl = c.parentElement.parentElement;
-                    let eR: any = +c.dataset.parent;
+                    const rowEl = eCurr.parentElement.parentElement;
+                    let eR: any = +eCurr.dataset.parent;
                     let sib = <HTMLElement>rowEl.nextElementSibling;
                     if (this.$viewState[this.$sortedRows[eR]]) {
                         eCurr.classList.remove('fa-chevron-down');
