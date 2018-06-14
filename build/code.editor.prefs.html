@@ -297,16 +297,10 @@
             $('#virtualOptions-previewFontSize').val(_settings.virtualOptions.previewFontSize);
             $('#virtualOptions-previewFontSize').change();
             $('#virtualOptions-previewFontSize').trigger('input');
-
+            
             $('#editorOptions-acceptSuggestionOnEnter-0').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'on');
             $('#editorOptions-acceptSuggestionOnEnter-1').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'smart');
             $('#editorOptions-acceptSuggestionOnEnter-2').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'off');
-
-            $('#editorOptions-cursorBlinking-0').prop('checked', _settings.editorOptions.cursorBlinking === 'blink');
-            $('#editorOptions-cursorBlinking-1').prop('checked', _settings.editorOptions.cursorBlinking === 'smooth');
-            $('#editorOptions-cursorBlinking-2').prop('checked', _settings.editorOptions.cursorBlinking === 'phase');
-            $('#editorOptions-cursorBlinking-3').prop('checked', _settings.editorOptions.cursorBlinking === 'expand');
-            $('#editorOptions-cursorBlinking-4').prop('checked', _settings.editorOptions.cursorBlinking === 'solid');
 
             $('#editorOptions-cursorStyle-0').prop('checked', _settings.editorOptions.cursorStyle === 'block');
             $('#editorOptions-cursorStyle-1').prop('checked', _settings.editorOptions.cursorStyle === 'line');
@@ -319,6 +313,9 @@
             $('#editorOptions-showFoldingControls').selectpicker('render');
             $('#editorOptions-snippetSuggestions').val(_settings.editorOptions.snippetSuggestions);
             $('#editorOptions-snippetSuggestions').selectpicker('render');
+
+            $('#virtualOptions-descriptionOnDelete').val(_settings.virtualOptions.descriptionOnDelete);
+            $('#virtualOptions-descriptionOnDelete').selectpicker('render');
 
             $('#editorOptions-minimap-showSlider').val(_settings.editorOptions.minimap.showSlider);
             $('#editorOptions-minimap-showSlider').selectpicker('render');
@@ -664,6 +661,17 @@
                         <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">When enabled it could cause performance issues due to the large amount of text</span>
                     </label>
                 </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Room terrain index on delete
+                        <br>
+                        <select id="virtualOptions-descriptionOnDelete" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="0">Leave</option>
+                            <option value="1">End</option>
+                            <option value="2">End + 1</option>
+                            <option value="3">Start</option>
+                        </select>
+                    </label>
+                </div>                
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="window">
                 <div class="col-xs-12">

@@ -448,19 +448,23 @@ export class DataGrid extends EventEmitter {
 
     public cut() {
         if (this.$selected.length === 0) return;
-        clipboard.writeBuffer('jiMUD/DataGrid', Buffer.from(JSON.stringify({
-            format: this.columns.map(c => c.label).join(':'),
-            data: this.selected.map(c => {
-                return {
-                    parent: c.parent,
-                    child: c.child,
-                    data: c.data
-                };
-            })
-        })));
-        const e = { data: this.selected.map(r => r.dataIndex), preventDefault: false };
+        const e = {
+            dataIndexes: this.selected.map(r => r.dataIndex),
+            preventDefault: false,
+            data: {
+                format: this.columns.map(c => c.label).join(':'),
+                data: this.selected.map(c => {
+                    return {
+                        parent: c.parent,
+                        child: c.child,
+                        data: c.data
+                    };
+                })
+            }
+        };
         this.emit('cut', e);
         if (e.preventDefault) return;
+        clipboard.writeBuffer('jiMUD/DataGrid', Buffer.from(JSON.stringify(e.data)));
         this.clearSelection();
         this.removeRows(e.data);
         this.emit('cut-done', e);
@@ -469,6 +473,7 @@ export class DataGrid extends EventEmitter {
     public copy() {
         if (this.$selected.length === 0) return;
         const e = {
+            dataIndexes: this.selected.map(r => r.dataIndex),
             data: this.selected.map(c => {
                 return {
                     parent: c.parent,

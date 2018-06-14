@@ -53,7 +53,21 @@ The room editor allows you to editor the currently selected room
   - `External Exits` exits that link to outside areas
   - `External File` the name of the file if it is an external room with option to open it
 
-## External exit editor
+### Description editor
+
+Allows you to edit, add or delete terrain descriptions
+
+- `Index` read-only index of the description, used to tie terrains to rooms
+- `Short` The rooms short description which is a single line of text
+- `Light` The amount of light for a room
+- `Terrain` The terrain for the room, 0 or empty value is considered no terrain set
+- `Long` The long detailed room description
+- `Sound` The default sound for the room
+- `Smell` The default smell for the room
+
+**Notes** When cutting or deleting the associated items from the item database are removed as well, When copying, associated items will be copied along with terrain, when pasting associated items will be pasted but will ask if you want to replace any existing ones
+
+### External exit editor
 
 Allows you to edit all external exits in one location
 
@@ -62,7 +76,7 @@ Allows you to edit all external exits in one location
 - `Exit` the exit used, can be anything or you can pick from a pre suggested list
 - `Destination` the full remote path to destination file, include the .c
 
-## Raw data editors
+### Raw data editors
 
 These all you to directly edit any raw files linked to the map, see /doc/build/virtual/generic_virtual on mud for formatting details for each file
 
@@ -112,6 +126,11 @@ Editor preferences are stored in their own file independent of client or charact
 - `Raw Font weight` font weight for raw editors
 - `Raw Font size` font size for raw editors
 - `Enable or disable spellcheck on raw text editors` Enable or disable spellchecking on raw editors **Note:** When enabled it could cause performance issues due to the large amount of text
+- `Room terrain index on delete` Select what to do when a room has a matching index to a deleted or cut description
+  - `Leave` Leave it as is
+  - `End` Set it to last description
+  - `End + 1` Set it to last description + 1
+  - `Start` Set to first description
 - `Preview Font` font for room preview
 - `Preview Font size` font size for room preview
 

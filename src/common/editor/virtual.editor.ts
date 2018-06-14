@@ -28,6 +28,8 @@ declare global {
 
 export enum UpdateType { none = 0, drawMap = 1, buildRooms = 2, buildMap = 4 }
 
+export enum DescriptionOnDelete { leave, end, endPlusOne, start }
+
 enum RoomExit {
     Out = 4096,
     Enter = 2048,
@@ -249,6 +251,8 @@ export class VirtualEditor extends EditorBase {
     private $roomPreview;
     private $roomEditor;
 
+    public descriptionOnDelete: DescriptionOnDelete = DescriptionOnDelete.endPlusOne;
+
     public get ShowTerrain(): boolean {
         return this.$showTerrain;
     }
@@ -312,7 +316,8 @@ export class VirtualEditor extends EditorBase {
                 live: true,
                 showRoomEditor: true,
                 showRoomPreview: true,
-                rawSpellcheck: false
+                rawSpellcheck: false,
+                descriptionOnDelete: DescriptionOnDelete.endPlusOne
             };
         if (options && options.new) {
             this.$startValues.map = options.value || '';
@@ -544,30 +549,160 @@ export class VirtualEditor extends EditorBase {
             }
         }]);
         this.$terrainGrid.on('delete', (e) => {
-            e.preventDefault = true;
-            /*
             if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
                     title: 'Delete',
-                    message: 'Delete terrain'+ (dg.selectedCount > 1 ? 's' : '') +'?',
+                    message: 'Delete terrain' + (this.$terrainGrid.selectedCount > 1 ? 's' : '') + '?',
                     buttons: ['Yes', 'No'],
                     defaultId: 1
                 })
-                == 0) {
+                === 1)
+                e.preventDefault = true;
+            else {
+                const l = e.data.length;
+                for (let d = 0; d < l; d++) {
+                    const idx = this.$descriptions[e.data[d]].idx;
+                    const eIdx = this.$descriptions.length - 1;
+                    //update the raw data
+                    this.removeRaw(this.$terrainRaw, idx * 3, 3, false, true);
+                    this.removeRaw(this.$itemRaw, idx * 2, 2, false, true);
+                    this.$items.splice(idx, 1);
+                    this.reduceIdx(this.$descriptions, idx);
+                    this.reduceIdx(this.$items, idx);
+                    //store room lengths
+                    const zl = this.$mapSize.depth;
+                    const xl = this.$mapSize.width;
+                    const yl = this.$mapSize.width;
+                    //update rooms terrain/item indexes
+                    this.$maxTerrain = 0;
+                    for (let z = 0; z < zl; z++) {
+                        for (let y = 0; y < yl; y++) {
+                            for (let x = 0; x < xl; x++) {
+                                const r = this.$rooms[z][y][x];
+                                if (r.terrain === idx) {
+                                    switch (this.descriptionOnDelete) {
+                                        case DescriptionOnDelete.end:
+                                            if (r.terrain === r.item)
+                                                r.item = eIdx;
+                                            r.terrain = eIdx;
+                                            break;
+                                        case DescriptionOnDelete.endPlusOne:
+                                            if (r.terrain === r.item)
+                                                r.item = eIdx + 1;
+                                            r.terrain = eIdx + 1;
+                                            break;
+                                        case DescriptionOnDelete.start:
+                                            if (r.terrain === r.item)
+                                                r.item = 0;
+                                            r.terrain = 0;
+                                            break;
+                                    }
+                                }
+                                else if (r.terrain && r.terrain > idx) {
+                                    if (r.terrain === r.item)
+                                        r.item--;
+                                    r.terrain--;
+                                }
+                                if (r.terrain > this.$maxTerrain)
+                                    this.$maxTerrain = r.terrain;
+                            }
+                        }
+                    }
+                }
+                //redraw map to update terrain changes
+                this.doUpdate(UpdateType.drawMap);
+                this.$itemGrid.refresh();
             }
-            */
-
         });
+
         this.$terrainGrid.on('cut', (e) => {
-            e.preventDefault = true;
+            const l = e.data.length;
+            for (let d = 0; d < l; d++) {
+                const idx = this.$descriptions[e.data[d]].idx;
+                //update the raw data
+                this.removeRaw(this.$terrainRaw, idx * 3, 3, false, true);
+                this.removeRaw(this.$itemRaw, idx * 2, 2, false, true);
+                //add items to cut data so items travel
+                e.data[d].items = this.$items[idx];
+                this.$items.splice(idx, 1);
+                this.reduceIdx(this.$descriptions, idx);
+                this.reduceIdx(this.$items, idx);
+                //store room lengths
+                const zl = this.$mapSize.depth;
+                const xl = this.$mapSize.width;
+                const yl = this.$mapSize.width;
+                //store mouse coords for performance
+                const mx = this.$mouse.rx;
+                const my = this.$mouse.ry;
+                //update rooms terrain/item indexes
+                this.$maxTerrain = 0;
+                for (let z = 0; z < zl; z++) {
+                    for (let y = 0; y < yl; y++) {
+                        for (let x = 0; x < xl; x++) {
+                            const r = this.$rooms[z][y][x];
+                            if (r.terrain && r.terrain >= idx) {
+                                if (r.terrain === r.item)
+                                    r.item--;
+                                r.terrain--;
+                            }
+                            if (r.terrain > this.$maxTerrain)
+                                this.$maxTerrain = r.terrain;
+                        }
+                    }
+                }
+            }
+            //redraw map to update terrain changes
+            this.doUpdate(UpdateType.drawMap);
+            this.$itemGrid.refresh();
         });
         this.$terrainGrid.on('copy', (e) => {
-            e.preventDefault = true;
+            const l = e.data.length;
+            for (let d = 0; d < l; d++) {
+                const idx = this.$descriptions[e.data[d]].idx;
+                //add item data as items go with terrain
+                e.data[d].items = this.$items[idx];
+            }
         });
         this.$terrainGrid.on('paste', (e) => {
             e.preventDefault = true;
+            let idx = this.$descriptions.length;
+            let all = false;
+            let choice;
+            const l = e.data.length;
+            for (let d = 0; d < l; d++) {
+                e.data[d].data.idx = idx;
+                e.data[d].items.idx = idx;
+                if (!all && idx < this.$items.length) {
+                    choice = dialog.showMessageBox(
+                        remote.getCurrentWindow(),
+                        {
+                            type: 'warning',
+                            title: 'Replace items',
+                            message: 'Replace old items with new?',
+                            buttons: ['Yes', 'No', 'All'],
+                            defaultId: 1
+                        });
+                    if (choice === 2)
+                        all = true;
+                    if (choice !== 1) {
+                        this.$items[idx] = e.data[d].items;
+                        this.updateRaw(this.$itemRaw, idx * 2, [
+                            this.$items[idx].children.map(i => i.item).join(':'),
+                            this.$items[idx].children.map(i => i.description).join(':')
+                        ], false, true);
+                    }
+                }
+                else {
+                    this.$items[idx] = e.data[d].items;
+                    this.updateRaw(this.$itemRaw, idx * 2, [
+                        this.$items[idx].children.map(i => i.item).join(':'),
+                        this.$items[idx].children.map(i => i.description).join(':')
+                    ], false, true);
+                }
+                idx++;
+            }
         });
         this.$terrainGrid.sort(0);
         this.$terrainGrid.on('selection-changed', () => {
@@ -587,7 +722,14 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$terrainGrid.on('value-changed', (e) => { /**/ });
+        this.$terrainGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+            //newValue.idx
+            this.updateRaw(this.$descriptionRaw, newValue.idx * 3, [
+                newValue.short + ':' + newValue.light + ':' + newValue.terrain,
+                newValue.long,
+                (newValue.smell.length > 0 ? newValue.smell : '0') + ':' + (newValue.sound.length > 0 ? newValue.sound : '0')
+            ]);
+        });
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
         el.style.display = 'none';
@@ -696,7 +838,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$itemGrid.on('value-changed', (e) => { /**/
+        this.$itemGrid.on('value-changed', (newValue, oldValue, dataIndex) => { /**/
         });
         this.$itemGrid.sort(0);
         el = document.createElement('div');
@@ -763,7 +905,7 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$exitGrid.on('cut', (e) => {
-            const d = e.data.sort((a, b) => {
+            const d = e.dataIndexes.sort((a, b) => {
                 if (a > b) return 1;
                 if (a < b) return -1;
                 return 0;
@@ -2276,7 +2418,7 @@ export class VirtualEditor extends EditorBase {
         return raw.value.substring(raw.selectionStart, raw.selectionEnd);
     }
 
-    private deleteRawSelected(raw, nochanged?) {
+    private deleteRawSelected(raw, noChanged?, noDirty?) {
         if (!raw) return;
         const start = raw.selectionStart;
         const end = raw.selectionEnd;
@@ -2285,9 +2427,9 @@ export class VirtualEditor extends EditorBase {
         raw.value = raw.value.substring(0, start) + raw.value.substring(end);
         raw.selectionStart = start;
         raw.selectionEnd = start;
-        if (!nochanged) {
+        if (!noChanged) {
             this.changed = true;
-            raw.dataset.dirty = 'true';
+            raw.dataset.dirty = !noDirty ? 'true' : null;
             raw.dataset.changed = 'true';
         }
     }
@@ -2640,11 +2782,11 @@ export class VirtualEditor extends EditorBase {
         group.appendChild(this.createButton('map', 'map-o', () => {
             this.switchView(View.map);
         }, this.$view === View.map));
-        //TODO readd once editors are fully working
-        /*
         group.appendChild(this.createButton('terrains', 'picture-o', () => {
             this.switchView(View.terrains);
         }, this.$view === View.terrains));
+        //TODO readd once editors are fully working
+        /*
         group.appendChild(this.createButton('items', 'list', () => {
             this.switchView(View.items);
         }, this.$view === View.items));
@@ -2796,8 +2938,6 @@ export class VirtualEditor extends EditorBase {
                         this.switchView(View.map);
                     }
                 },
-                //TODO readd once editors are fully working
-                /*
                 {
                     label: 'Terrains',
                     type: 'checkbox',
@@ -2806,6 +2946,8 @@ export class VirtualEditor extends EditorBase {
                         this.switchView(View.terrains);
                     }
                 },
+                //TODO readd once editors are fully working
+                /*
                 {
                     label: 'Items',
                     type: 'checkbox',
@@ -2996,6 +3138,7 @@ export class VirtualEditor extends EditorBase {
         this.$splitterPreview.live = value.live;
         this.$splitterEditor.panel2Collapsed = !value.showRoomEditor;
         this.$splitterPreview.panel2Collapsed = !value.showRoomPreview;
+        this.descriptionOnDelete = value.descriptionOnDelete;
     }
     public get options() {
         return {
@@ -3003,7 +3146,8 @@ export class VirtualEditor extends EditorBase {
             showTerrain: this.$showTerrain,
             live: this.$splitterEditor.live,
             showRoomEditor: !this.$splitterEditor.panel2Collapsed,
-            showRoomPreview: !this.$splitterPreview.panel2Collapsed
+            showRoomPreview: !this.$splitterPreview.panel2Collapsed,
+            descriptionOnDelete: this.descriptionOnDelete
         };
     }
     public get type() {
@@ -3094,18 +3238,37 @@ export class VirtualEditor extends EditorBase {
                 button.type = 'button';
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
-                    /*
-                    dg.addRow({
-                        enabled: true,
-                        x: this.data.x,
-                        y: this.data.y,
-                        z: this.data.z,
-                        exit: '',
-                        dest: ''
+                    const idx = this.$descriptions.length;
+                    this.$terrainGrid.addRow({
+                        idx: idx,
+                        short: '',
+                        light: 0,
+                        terrain: '',
+                        long: '',
+                        sound: '',
+                        smell: ''
                     });
-                    dg.focus();
-                    dg.beginEdit(dg.rows.length - 1);
-                    */
+                    this.updateRaw(this.$descriptionRaw, idx * 3, [':0:', '', '0:0'], false, true);
+                    if (idx >= this.$items.length) {
+                        let c = 0;
+                        while (idx >= this.$items.length) {
+                            this.$items.push(
+                                {
+                                    idx: idx + c,
+                                    items: '',
+                                    description: '',
+                                    tag: idx + c + 1,
+                                    children: []
+                                }
+                            );
+                            this.updateRaw(this.$itemRaw, idx * 2, ['', ''], false, true);
+                            c++;
+                        }
+                    }
+                    this.$itemGrid.refresh();
+                    resetCursor(this.$terrainRaw);
+                    this.$terrainGrid.focus();
+                    this.$terrainGrid.beginEdit(this.$terrainGrid.rows.length - 1);
                 });
                 button.title = 'Add terrain';
                 button.innerHTML = '<i class="fa fa-plus"></i> Add';
@@ -3115,7 +3278,7 @@ export class VirtualEditor extends EditorBase {
                 button.disabled = this.$terrainGrid.selectedCount === 0;
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
-                    //dg.beginEdit(dg.selected[0].row);
+                    this.$terrainGrid.beginEdit(this.$terrainGrid.selected[0].row);
                 });
                 button.title = 'Edit terrain';
                 button.innerHTML = '<i class="fa fa-edit"></i> Edit';
@@ -4684,20 +4847,20 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
-    private removeRaw(raw, line, count, nochanged?) {
+    private removeRaw(raw, line, count, noChanged?, noDirty?) {
         if (typeof (count) === 'undefined') count = 1;
         const lines = raw.value.split('\n');
         if (line < 0 || line >= lines.length) return;
         lines.splice(line, count);
         raw.value = lines.join('\n');
-        if (!nochanged) {
+        if (!noChanged) {
             this.changed = true;
-            raw.dataset.dirty = 'true';
+            raw.dataset.dirty = !noDirty ? 'true' : null;
             raw.dataset.changed = 'true';
         }
     }
 
-    private updateRaw(raw, line, str, nochanged?) {
+    private updateRaw(raw, line, str, noChanged?, noDirty?) {
         const lines = raw.value.split('\n');
         if (line < 0) return;
         let s;
@@ -4705,10 +4868,21 @@ export class VirtualEditor extends EditorBase {
         for (s = 0; s < sl; s++)
             lines[line + s] = str[s];
         raw.value = lines.join('\n');
-        if (!nochanged) {
+        if (!noChanged) {
             this.changed = true;
-            raw.dataset.dirty = 'true';
+            raw.dataset.dirty = !noDirty ? 'true' : null;
             raw.dataset.changed = 'true';
+        }
+    }
+
+    private reduceIdx(arr, idx) {
+        const dl = arr.length;
+        for (let d2 = 0; d2 < dl; d2++) {
+            if (arr[d2].idx >= idx) {
+                arr[d2].idx--;
+                if (arr[d2].hasOwnProperty('tag'))
+                    arr[d2].tag--;
+            }
         }
     }
 
