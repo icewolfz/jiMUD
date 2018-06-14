@@ -1525,7 +1525,9 @@ export class DataGrid extends EventEmitter {
             return r;
         });
         row.map(r => {
-            const nl = this.$body.firstElementChild.children[r].getElementsByClassName('datagrid-collapse');
+            const e = this.$body.firstElementChild.querySelector('[data-row="' + r + '"][data-parent="-1"]');
+            if (!e) return;
+            const nl = e.children[0].getElementsByClassName('datagrid-collapse');
             if (nl.length > 0)
                 (<HTMLElement>nl[0]).click();
         });
