@@ -463,6 +463,7 @@ export class DataGrid extends EventEmitter {
         if (e.preventDefault) return;
         this.clearSelection();
         this.removeRows(e.data);
+        this.emit('cut-done', e);
     }
 
     public copy() {
@@ -501,6 +502,7 @@ export class DataGrid extends EventEmitter {
             this.emit('paste', e);
             if (e.preventDefault) return;
             this.addRows(e.data.map(r => r.data));
+            this.emit('paste-done', e);
         }
     }
 
@@ -511,6 +513,7 @@ export class DataGrid extends EventEmitter {
         if (e.preventDefault) return;
         this.clearSelection();
         this.removeRows(e.data);
+        this.emit('delete-done', e);
     }
 
     public selectAll() {
@@ -615,6 +618,10 @@ export class DataGrid extends EventEmitter {
         this.$colWidth = cw;
         this.$cols = cols;
         this.doUpdate(UpdateType.columns | UpdateType.buildRows);
+    }
+
+    public refresh() {
+        this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
 
     get selected() {
