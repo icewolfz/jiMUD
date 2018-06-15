@@ -822,14 +822,27 @@ export class VirtualEditor extends EditorBase {
             else {
                 const rows = e.data.filter(r => r.parent === -1).map(r => this.$items.indexOf(r.data));
                 rows.sort();
+                const children = e.data.filter(r => r.parent !== -1 && rows.indexOf(r.parent) === -1)
+                    .map(r => r.parent)
+                    .filter((value, index, self) => self.indexOf(value) === index);
+                //do children first
+                if (children.length > 0) {
+                    let cl = children.length;
+                    while (cl--) {
+                        this.updateRaw(this.$itemRaw, children[cl] * 2, [
+                            this.$items[children[cl]].children.map(i => i.item).join(':'),
+                            this.$items[children[cl]].children.map(i => i.description).join(':')
+                        ], false, true);
+                    }
+                }
                 let rl = rows.length;
                 while (rl--) {
                     if (this.itemOnDelete === ItemOnDelete.end) {
-/*
-- `Room terrain description on item delete` When an item group is deleted what should happen to the related terrain description
-  - `Leave` Leave it as it is
-  - `End` Shift the terrain description to the end of the descriptions
-*/
+                        /*
+                        - `Room terrain description on item delete` When an item group is deleted what should happen to the related terrain description
+                          - `Leave` Leave it as it is
+                          - `End` Shift the terrain description to the end of the descriptions
+                        */
                     }
                     this.reduceIdx(this.$items, rows[rl]);
                     this.removeRaw(this.$itemRaw, rows[rl] * 2, 2, false, true);
@@ -893,7 +906,12 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$itemGrid.on('value-changed', (newValue, oldValue, dataIndex) => { /**/
+        this.$itemGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+            const item = this.$items[newValue.parentId];
+            this.updateRaw(this.$itemRaw, item.idx * 2, [
+                item.children.map(i => i.item).join(':'),
+                item.children.map(i => i.description).join(':')
+            ], false, true);
         });
         this.$itemGrid.sort(0);
         el = document.createElement('div');
@@ -1310,6 +1328,18 @@ export class VirtualEditor extends EditorBase {
                 o = this.$selectedRoom.exits;
             }
             switch (e.which) {
+                case 67: //c copy
+                    if (e.ctrlKey)
+                        this.copy();
+                    break;
+                case 88: //x cut
+                    if (e.ctrlKey)
+                        this.cut();
+                    break;
+                case 86: //v paste
+                    if (e.ctrlKey)
+                        this.paste();
+                    break;
                 case 38: //up
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
@@ -2494,6 +2524,246 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
+    private deleteRoom(room) {
+        const o = room.exits;
+        let nx;
+        let ny;
+        let p;
+        let po;
+        if (room.y > 0 && (o & RoomExit.North) === RoomExit.North) {
+            nx = room.x;
+            ny = room.y - 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.South;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+        }
+        if (room.y > 0 && room.x > 0 && (o & RoomExit.NorthWest) === RoomExit.NorthWest) {
+            nx = room.x - 1;
+            ny = room.y - 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.SouthEast;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+        }
+        if (room.y > 0 && room.x < this.$mapSize.width - 1 && (o & RoomExit.NorthEast) === RoomExit.NorthEast) {
+            nx = room.x + 1;
+            ny = room.y - 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.SouthWest;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+        }
+        if (room.x < this.$mapSize.width - 1 && (o & RoomExit.East) === RoomExit.East) {
+            nx = room.x + 1;
+            ny = room.y;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.West;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+        }
+        if (room.x > 0 && (o & RoomExit.West) === RoomExit.West) {
+            nx = room.x - 1;
+            ny = room.y;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.East;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+        }
+        if (room.y < this.$mapSize.height - 1 && (o & RoomExit.South) === RoomExit.South) {
+            nx = room.x;
+            ny = room.y + 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.North;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+        }
+        if (room.y < this.$mapSize.height - 1 && room.x < this.$mapSize.height - 1 && (o & RoomExit.SouthEast) === RoomExit.SouthEast) {
+            nx = room.x + 1;
+            ny = room.y + 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.NorthWest;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+        }
+        if (room.x > 0 && room.y < this.$mapSize.height - 1 && (o & RoomExit.SouthWest) === RoomExit.SouthWest) {
+            nx = room.x - 1;
+            ny = room.y + 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.NorthEast;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+        }
+        if (this.$depth + 1 < this.$mapSize.depth && (o & RoomExit.Up) === RoomExit.Up) {
+            p = this.getRoom(room.x, room.y, this.$depth + 1);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.Down;
+                this.RoomChanged(p, po);
+            }
+        }
+        if (this.$depth - 1 >= 0 && (o & RoomExit.Down) === RoomExit.Down) {
+            p = this.getRoom(room.x, room.y, this.$depth - 1);
+            if (p) {
+                po = p.clone();
+                p.exits &= ~RoomExit.Up;
+                this.RoomChanged(p, po);
+            }
+        }
+    }
+
+    private addRoom(room) {
+        this.setRoom(room);
+        const o = room.exits;
+        let nx;
+        let ny;
+        let p;
+        let po;
+        if (room.y > 0 && (o & RoomExit.North) === RoomExit.North) {
+            nx = room.x;
+            ny = room.y - 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.South;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+            else
+                room.exits &= ~RoomExit.North;
+        }
+        if (room.y > 0 && room.x > 0 && (o & RoomExit.NorthWest) === RoomExit.NorthWest) {
+            nx = room.x - 1;
+            ny = room.y - 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.SouthEast;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            } else
+                room.exits &= ~RoomExit.NorthWest;
+        }
+        if (room.y > 0 && room.x < this.$mapSize.width - 1 && (o & RoomExit.NorthEast) === RoomExit.NorthEast) {
+            nx = room.x + 1;
+            ny = room.y - 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.SouthWest;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            } else
+                room.exits &= ~RoomExit.NorthEast;
+        }
+        if (room.x < this.$mapSize.width - 1 && (o & RoomExit.East) === RoomExit.East) {
+            nx = room.x + 1;
+            ny = room.y;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.West;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            } else
+                room.exits &= ~RoomExit.East;
+        }
+        if (room.x > 0 && (o & RoomExit.West) === RoomExit.West) {
+            nx = room.x - 1;
+            ny = room.y;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.East;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            } else
+                room.exits &= ~RoomExit.West;
+        }
+        if (room.y < this.$mapSize.height - 1 && (o & RoomExit.South) === RoomExit.South) {
+            nx = room.x;
+            ny = room.y + 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.North;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            } else
+                room.exits &= ~RoomExit.South;
+        }
+        if (room.y < this.$mapSize.height - 1 && room.x < this.$mapSize.height - 1 && (o & RoomExit.SouthEast) === RoomExit.SouthEast) {
+            nx = room.x + 1;
+            ny = room.y + 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.NorthWest;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+            else
+                room.exits &= ~RoomExit.SouthEast;
+        }
+        if (room.x > 0 && room.y < this.$mapSize.height - 1 && (o & RoomExit.SouthWest) === RoomExit.SouthWest) {
+            nx = room.x - 1;
+            ny = room.y + 1;
+            p = this.getRoom(nx, ny);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.NorthEast;
+                this.DrawRoom(this.$mapContext, p, true, false);
+                this.RoomChanged(p, po);
+            }
+            else
+                room.exits &= ~RoomExit.SouthWest;
+        }
+        if (this.$depth + 1 < this.$mapSize.depth && (o & RoomExit.Up) === RoomExit.Up) {
+            p = this.getRoom(room.x, room.y, this.$depth + 1);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.Down;
+                this.RoomChanged(p, po);
+            }
+            else
+                room.exits &= ~RoomExit.Up;
+        }
+        if (this.$depth - 1 >= 0 && (o & RoomExit.Down) === RoomExit.Down) {
+            p = this.getRoom(room.x, room.y, this.$depth - 1);
+            if (p) {
+                po = p.clone();
+                p.exits |= RoomExit.Up;
+                this.RoomChanged(p, po);
+            }
+            else
+                room.exits &= ~RoomExit.Down;
+        }
+    }
+
     public get selected(): any {
         switch (this.$view) {
             case View.map:
@@ -2557,8 +2827,15 @@ export class VirtualEditor extends EditorBase {
     public cut() {
         switch (this.$view) {
             case View.map:
-                clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify(this.$selectedRoom.clone())));
-                //TODO reset selected room
+                if (this.$selectedRoom.ef) return;
+                const or = this.$selectedRoom.clone();
+                clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify(or)));
+                this.$selectedRoom = new Room(this.$selectedRoom.x, this.$selectedRoom.y, this.$selectedRoom.z, 0, 0, 0);
+                this.setRoom(this.$selectedRoom);
+                this.RoomChanged(this.$selectedRoom, or);
+                this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                this.deleteRoom(or);
+                this.emit('supports-changed');
                 break;
             case View.terrains:
                 this.$terrainGrid.cut();
@@ -2582,7 +2859,9 @@ export class VirtualEditor extends EditorBase {
     public copy() {
         switch (this.$view) {
             case View.map:
+                if (this.$selectedRoom.ef) return;
                 clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify(this.$selectedRoom.clone())));
+                this.emit('supports-changed');
                 break;
             case View.terrains:
                 this.$terrainGrid.copy();
@@ -2606,6 +2885,17 @@ export class VirtualEditor extends EditorBase {
     public paste() {
         switch (this.$view) {
             case View.map:
+                if (!clipboard.has('jiMUD/VirtualArea')) return;
+                const or = this.$selectedRoom.clone();
+                const data = JSON.parse(clipboard.readBuffer('jiMUD/VirtualArea').toString());
+                this.$selectedRoom = new Room(or.x, or.y, or.z, data.exits, data.terrain, data.item, data.state);
+                this.$selectedRoom.climbs = data.climbs;
+                this.$selectedRoom.ef = data.ef;
+                this.$selectedRoom.ee = data.ee;
+                this.deleteRoom(or);
+                this.addRoom(this.$selectedRoom);
+                this.RoomChanged(this.$selectedRoom, or);
+                this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
                 break;
             case View.terrains:
                 this.$terrainGrid.paste();
@@ -3465,7 +3755,7 @@ export class VirtualEditor extends EditorBase {
                         item: '',
                         description: '',
                         tag: (parent.idx + 1) + '-' + parent.children.length,
-                        parentId: parent.idx + 1
+                        parentId: parent.idx
                     });
                     this.$itemGrid.refresh();
                     this.$itemGrid.expandRows(selected[0].index).then(() => {
@@ -5384,7 +5674,7 @@ export class VirtualEditor extends EditorBase {
                                 item: tmp[i],
                                 description: tmp2[i],
                                 tag: (c + 1) + '-' + i,
-                                parentId: c + 1
+                                parentId: c
                             });
                     else
                         row.children.push(
@@ -5393,7 +5683,7 @@ export class VirtualEditor extends EditorBase {
                                 item: tmp[i],
                                 description: '',
                                 tag: (c + 1) + '-' + i,
-                                parentId: c + 1
+                                parentId: c
                             });
                 }
             }
