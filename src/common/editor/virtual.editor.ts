@@ -2643,6 +2643,28 @@ export class VirtualEditor extends EditorBase {
         let ny;
         let p;
         let po;
+        if (room.y === 0) {
+            room.exits &= ~RoomExit.North;
+            room.exits &= ~RoomExit.NorthEast;
+            room.exits &= ~RoomExit.NorthWest;
+        }
+        if (room.y === this.$mapSize.height - 1) {
+            room.exits &= ~RoomExit.South;
+            room.exits &= ~RoomExit.SouthEast;
+            room.exits &= ~RoomExit.SouthWest;
+        }
+
+        if (room.x === 0) {
+            room.exits &= ~RoomExit.West;
+            room.exits &= ~RoomExit.NorthWest;
+            room.exits &= ~RoomExit.SouthWest;
+        }
+        if (room.x === this.$mapSize.width - 1) {
+            room.exits &= ~RoomExit.East;
+            room.exits &= ~RoomExit.NorthEast;
+            room.exits &= ~RoomExit.SouthEast;
+        }
+
         if (room.y > 0 && (o & RoomExit.North) === RoomExit.North) {
             nx = room.x;
             ny = room.y - 1;
