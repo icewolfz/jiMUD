@@ -439,7 +439,7 @@ export class DataGrid extends EventEmitter {
             for (mutation of mutationsList) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                     if (mutation.oldValue === 'display: none;' && (this.$dataHeight === 0 || this.$dataWidth === 0 || this.$headerWidth === 0))
-                        this.doUpdate(UpdateType.columns | UpdateType.rows | UpdateType.resize);
+                        this.doUpdate(UpdateType.columns | UpdateType.buildRows | UpdateType.resize);
                 }
             }
         });
@@ -1295,8 +1295,8 @@ export class DataGrid extends EventEmitter {
                             });
                         }
                     }
-                    this.$dataWidth = this.$body.clientWidth;
-                    this.$dataHeight = this.$body.clientHeight;
+                    this.$dataWidth = this.$body.children[0].clientWidth;
+                    this.$dataHeight = this.$body.children[0].clientHeight;
                     this.doUpdate(UpdateType.resize);
                 });
             }
