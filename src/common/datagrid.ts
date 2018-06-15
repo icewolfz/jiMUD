@@ -463,7 +463,7 @@ export class DataGrid extends EventEmitter {
         let parent;
         if (e.data[0].parent !== -1) {
             const dl = e.data.length;
-            parent = this.$rows.slice(e.data[0].parent, e.data[0].parent)[0];
+            parent = this.$rows.slice(e.data[0].parent, e.data[0].parent + 1)[0];
             parent.children = [];
             for (let d = 0; d < dl; d++) {
                 if (e.data[d].parent === -1) break;
@@ -521,7 +521,7 @@ export class DataGrid extends EventEmitter {
         };
         if (e.data[0].parent !== -1) {
             const dl = e.data.length;
-            const parent = this.$rows.slice(e.data[0].parent, e.data[0].parent)[0];
+            const parent = this.$rows.slice(e.data[0].parent, e.data[0].parent + 1)[0];
             parent.children = [];
             for (let d = 0; d < dl; d++) {
                 if (e.data[d].parent === -1) break;
@@ -1785,7 +1785,7 @@ export class DataGrid extends EventEmitter {
             el: el,
             editors: []
         };
-        const oldObj = this.$rows.slice(this.$sortedRows[this.$editor.row], this.$sortedRows[this.$editor.row] + 1);
+        const oldObj = this.$rows.slice(this.$sortedRows[this.$editor.row], this.$sortedRows[this.$editor.row] + 1)[0];
         let changed = false;
         let dataIdx;
         let field;
@@ -1869,8 +1869,12 @@ export class DataGrid extends EventEmitter {
                 });
             }
         }
-        if (changed)
-            this.emit('value-changed', editor.data, oldObj, this.$sortedRows[this.$editor.row]);
+        if (changed) {
+            if (parent !== -1)
+                this.emit('value-changed', editor.data, oldObj.children[child], this.$sortedRows[this.$editor.row]);
+            else
+                this.emit('value-changed', editor.data, oldObj, this.$sortedRows[this.$editor.row]);
+        }
         this.$editor = null;
         this.focus();
     }
