@@ -96,6 +96,7 @@ export class DataGrid extends EventEmitter {
     private $keyClearID;
 
     public selectionSearchField;
+    public clipboardPrefix = '';
 
     get showChildren() {
         return this.$children;
@@ -477,7 +478,7 @@ export class DataGrid extends EventEmitter {
 
         this.emit('cut', e);
         if (e.preventDefault) return;
-        clipboard.writeBuffer('jiMUD/DataGrid', Buffer.from(JSON.stringify({
+        clipboard.writeBuffer(this.clipboardPrefix + 'DataGrid', Buffer.from(JSON.stringify({
             format: e.format,
             data: e.data
         })));
@@ -534,22 +535,22 @@ export class DataGrid extends EventEmitter {
         }
         this.emit('copy', e);
         if (e.preventDefault) return;
-        clipboard.writeBuffer('jiMUD/DataGrid', Buffer.from(JSON.stringify({
+        clipboard.writeBuffer(this.clipboardPrefix + 'DataGrid', Buffer.from(JSON.stringify({
             format: this.columns.map(c => c.label).join(':'),
             data: e.data
         })));
     }
 
     get canPaste() {
-        if (!clipboard.has('jiMUD/DataGrid')) return false;
-        const data = JSON.parse(clipboard.readBuffer('jiMUD/DataGrid').toString());
+        if (!clipboard.has(this.clipboardPrefix + 'DataGrid')) return false;
+        const data = JSON.parse(clipboard.readBuffer(this.clipboardPrefix + 'DataGrid').toString());
         const format = this.columns.map(c => c.label).join(':');
         return format === data.format;
     }
 
     public paste() {
-        if (!clipboard.has('jiMUD/DataGrid')) return;
-        const data = JSON.parse(clipboard.readBuffer('jiMUD/DataGrid').toString());
+        if (!clipboard.has(this.clipboardPrefix + 'DataGrid')) return;
+        const data = JSON.parse(clipboard.readBuffer(this.clipboardPrefix + 'DataGrid').toString());
         const format = this.columns.map(c => c.label).join(':');
         if (format === data.format) {
             const e = { data: data.data, preventDefault: false };
