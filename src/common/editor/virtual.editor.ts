@@ -446,6 +446,7 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$terrainGrid = new DataGrid(el);
+        this.$terrainGrid.clipboardPrefix = 'jiMUD/';
         this.$terrainGrid.addColumns([{
             label: 'Index',
             field: 'idx',
@@ -744,6 +745,7 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$itemGrid = new DataGrid(el);
+        this.$itemGrid.clipboardPrefix = 'jiMUD/';
         this.$itemGrid.showChildren = true;
         this.$itemGrid.on('row-dblclick', (e, data) => {
             if (!data || data.parent === -1) {
@@ -899,6 +901,7 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$exitGrid = new DataGrid(el);
+        this.$exitGrid.clipboardPrefix = 'jiMUD/';
         this.$exitGrid.columns = [
             {
                 label: 'Enabled',
@@ -5748,6 +5751,7 @@ class ExternalExitValueEditor extends ValueEditor {
             el.style.top = '38px';
             header.appendChild(el);
             const dg = new DataGrid(el);
+            dg.clipboardPrefix = 'jiMUD/';
             dg.addColumns([
                 {
                     label: 'Enabled',
@@ -6076,6 +6080,7 @@ class ItemsValueEditor extends ValueEditor {
             el.style.top = '38px';
             header.appendChild(el);
             const dg = new DataGrid(el);
+            dg.clipboardPrefix = 'jiMUD/';
             dg.addColumns([{
                 label: 'Item',
                 field: 'item',
