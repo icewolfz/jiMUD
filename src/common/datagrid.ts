@@ -1,9 +1,9 @@
 //https://developers.google.com/web/updates/2016/10/resizeobserver
 import EventEmitter = require('events');
-import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
+import { capitalize } from './library';
 import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor } from './value.editors';
 const ResizeObserver = require('resize-observer-polyfill');
-const { clipboard, remote } = require('electron');
+const { clipboard } = require('electron');
 
 export interface DataGridOptions {
     container?: any;
@@ -499,6 +499,7 @@ export class DataGrid extends EventEmitter {
             while (cl--) {
                 this.$rows[children[cl].parent].children.splice(children[cl].child, 1);
             }
+            this.doUpdate(UpdateType.buildRows | UpdateType.sort);
         }
         this.removeRows(rows);
         this.emit('cut-done', e);
@@ -590,6 +591,7 @@ export class DataGrid extends EventEmitter {
             while (cl--) {
                 this.$rows[children[cl].parent].children.splice(children[cl].child, 1);
             }
+            this.doUpdate(UpdateType.buildRows | UpdateType.sort);
         }
         this.removeRows(rows);
         this.emit('delete-done', e);
