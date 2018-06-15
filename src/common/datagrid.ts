@@ -452,29 +452,83 @@ export class DataGrid extends EventEmitter {
         const e = {
             preventDefault: false,
             format: this.columns.map(c => c.label).join(':'),
-            data: this.selected.map(c => {
-                return {
-                    parent: c.parent,
-                    child: c.child,
-                    data: c.data
-                };
-            })
+            data: []
         };
-        let parent;
-        if (e.data[0].parent !== -1) {
-            const dl = e.data.length;
-            parent = this.$rows.slice(e.data[0].parent, e.data[0].parent + 1)[0];
-            parent.children = [];
-            for (let d = 0; d < dl; d++) {
-                if (e.data[d].parent === -1) break;
-                parent.children.push(e.data[d].data);
+
+        let prop;
+        const data = this.selected;
+        const sortFn = this.$cols[this.$sort.column].sort;
+        const rows = this.$rows;
+        if (this.$cols[this.$sort.column].hasOwnProperty('index'))
+            prop = this.$cols[this.$sort.column].index;
+        else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
+            prop = this.$cols[this.$sort.column].field;
+        else
+            prop = this.$sort.column;
+        const dir = (this.$sort.order === SortOrder.descending) ? -1 : 1;
+        const oData = data.sort((a, b) => {
+            if ((a.parent === -1 && b.parent !== -1) || a.parent !== -1 && b.parent === -1) {
+                if (a.dataIndex > b.dataIndex)
+                    return 1 * dir;
+                if (a.dataIndex < b.dataIndex)
+                    return -1 * dir;
+                if (a.parent > b.parent)
+                    return 1 * dir;
+                if (a.parent < b.parent)
+                    return -1 * dir;
             }
-            e.data.unshift({
-                parent: -1,
-                child: -1,
-                data: parent
-            });
+            if (sortFn)
+                return sortFn(a.dataIndex, b.dataIndex, dir, prop, rows[a], rows[b], rows);
+            if (rows[a.dataIndex][prop] > rows[b.dataIndex][prop])
+                return 1 * dir;
+            if (rows[a.dataIndex][prop] < rows[b.dataIndex][prop])
+                return -1 * dir;
+            if (this.$children) {
+                if (!rows[a.dataIndex].children && !rows[b].children)
+                    return 0;
+                if (!rows[a.dataIndex].children && rows[b.dataIndex].children)
+                    return -1 * dir;
+                if (rows[a.dataIndex].children && !rows[b.dataIndex].children)
+                    return 1 * dir;
+                const ap = this.$sortedChildren[a.dataIndex].map(c => rows[a.dataIndex].children[c][prop]).join(':');
+                const bp = this.$sortedChildren[b.dataIndex].map(c => rows[b.dataIndex].children[c][prop]).join(':');
+                if (ap > bp)
+                    return 1 * dir;
+                if (ap < bp)
+                    return -1 * dir;
+            }
+            return 0;
+        });
+
+        const nData = [];
+        const ol = oData.length;
+        let p = -1;
+        const oParents = [];
+        for (let o = 0; o < ol; o++) {
+            if (oData[o].parent === -1) {
+                nData.push({
+                    parent: oData[o].parent,
+                    child: oData[o].child,
+                    data: oData[o].data
+                });
+                oParents.push(oData[o].dataIndex);
+            }
+            else if (oParents.indexOf(oData[o].parent) !== -1)
+                continue;
+            else if (p === oData[o].parent)
+                nData[nData.length - 1].data.children.push(oData[o].data);
+            else {
+                const parent = this.$rows.slice(oData[o].parent, oData[o].parent + 1)[0];
+                parent.children = [oData[o].data];
+                p = oData[o].parent;
+                nData.push({
+                    parent: -1,
+                    child: -1,
+                    data: parent
+                });
+            }
         }
+        e.data = nData;
 
         this.emit('cut', e);
         if (e.preventDefault) return;
@@ -485,11 +539,9 @@ export class DataGrid extends EventEmitter {
         this.clearSelection();
 
         //get root and save only the data indexes
-        const rows = e.data.filter(r => r.parent === -1).map(r => this.$rows.indexOf(r.data));
-        if (parent)
-            rows.splice(0);
+        const pRows = oData.filter(r => r.parent === -1).map(r => this.$rows.indexOf(r.data));
         //get children and only if parent not being removed, sort from low to high child to make sure higher indexes are removed first to prevent out of order issues
-        const children = e.data.filter(r => r.parent !== -1 && rows.indexOf(r.parent) === -1).sort((a, b) => {
+        const children = oData.filter(r => r.parent !== -1 && pRows.indexOf(r.parent) === -1).sort((a, b) => {
             if (a.child > b.child) return 1;
             if (a.child < b.child) return -1;
             return 0;
@@ -502,7 +554,7 @@ export class DataGrid extends EventEmitter {
             }
             this.doUpdate(UpdateType.buildRows | UpdateType.sort);
         }
-        this.removeRows(rows);
+        this.removeRows(pRows);
         this.emit('cut-done', e);
     }
 
@@ -510,29 +562,85 @@ export class DataGrid extends EventEmitter {
         if (this.$selected.length === 0) return;
         const e = {
             dataIndexes: this.selected.map(r => r.dataIndex),
-            data: this.selected.map(c => {
-                return {
-                    parent: c.parent,
-                    child: c.child,
-                    data: c.data
-                };
-            }),
+            data: [],
             preventDefault: false
         };
-        if (e.data[0].parent !== -1) {
-            const dl = e.data.length;
-            const parent = this.$rows.slice(e.data[0].parent, e.data[0].parent + 1)[0];
-            parent.children = [];
-            for (let d = 0; d < dl; d++) {
-                if (e.data[d].parent === -1) break;
-                parent.children.push(e.data[d].data);
+
+        let prop;
+        const data = this.selected;
+        const sortFn = this.$cols[this.$sort.column].sort;
+        const rows = this.$rows;
+        if (this.$cols[this.$sort.column].hasOwnProperty('index'))
+            prop = this.$cols[this.$sort.column].index;
+        else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
+            prop = this.$cols[this.$sort.column].field;
+        else
+            prop = this.$sort.column;
+        const dir = (this.$sort.order === SortOrder.descending) ? -1 : 1;
+        const oData = data.sort((a, b) => {
+            if ((a.parent === -1 && b.parent !== -1) || a.parent !== -1 && b.parent === -1) {
+                if (a.dataIndex > b.dataIndex)
+                    return 1 * dir;
+                if (a.dataIndex < b.dataIndex)
+                    return -1 * dir;
+                if (a.parent > b.parent)
+                    return 1 * dir;
+                if (a.parent < b.parent)
+                    return -1 * dir;
             }
-            e.data.unshift({
-                parent: -1,
-                child: -1,
-                data: parent
-            });
+            if (sortFn)
+                return sortFn(a.dataIndex, b.dataIndex, dir, prop, rows[a], rows[b], rows);
+            if (rows[a.dataIndex][prop] > rows[b.dataIndex][prop])
+                return 1 * dir;
+            if (rows[a.dataIndex][prop] < rows[b.dataIndex][prop])
+                return -1 * dir;
+            if (this.$children) {
+                if (!rows[a.dataIndex].children && !rows[b].children)
+                    return 0;
+                if (!rows[a.dataIndex].children && rows[b.dataIndex].children)
+                    return -1 * dir;
+                if (rows[a.dataIndex].children && !rows[b.dataIndex].children)
+                    return 1 * dir;
+                const ap = this.$sortedChildren[a.dataIndex].map(c => rows[a.dataIndex].children[c][prop]).join(':');
+                const bp = this.$sortedChildren[b.dataIndex].map(c => rows[b.dataIndex].children[c][prop]).join(':');
+                if (ap > bp)
+                    return 1 * dir;
+                if (ap < bp)
+                    return -1 * dir;
+            }
+            return 0;
+        });
+
+        const nData = [];
+        const ol = oData.length;
+        let p = -1;
+        const oParents = [];
+        for (let o = 0; o < ol; o++) {
+            if (oData[o].parent === -1) {
+                nData.push({
+                    parent: oData[o].parent,
+                    child: oData[o].child,
+                    data: oData[o].data
+                });
+                oParents.push(oData[o].dataIndex);
+            }
+            else if (oParents.indexOf(oData[o].parent) !== -1)
+                continue;
+            else if (p === oData[o].parent)
+                nData[nData.length - 1].data.children.push(oData[o].data);
+            else {
+                const parent = this.$rows.slice(oData[o].parent, oData[o].parent + 1)[0];
+                parent.children = [oData[o].data];
+                p = oData[o].parent;
+                nData.push({
+                    parent: -1,
+                    child: -1,
+                    data: parent
+                });
+            }
         }
+        e.data = nData;
+
         this.emit('copy', e);
         if (e.preventDefault) return;
         clipboard.writeBuffer(this.clipboardPrefix + 'DataGrid', Buffer.from(JSON.stringify({
@@ -1267,10 +1375,16 @@ export class DataGrid extends EventEmitter {
 
                         if (rowEl.dataset.children !== 'true') {
                             if (this.$children && data.children) {
+                                const sIdx = [...rowEl.parentElement.children].indexOf(rowEl);
                                 const frag = document.createDocumentFragment();
                                 const childLen = data.children.length;
+                                this.$selected = this.$selected.map(s => {
+                                    if (s > sIdx)
+                                        return s + childLen;
+                                    return s;
+                                });
                                 for (let eChild = 0; eChild < childLen; eChild++)
-                                    frag.appendChild(this.generateRow(eR + eChild, data.children[eChild], eR, eR, eR, eChild));
+                                    frag.appendChild(this.generateRow(eR + eChild + 1, data.children[eChild], eR, eR, eR, eChild));
                                 rowEl.parentNode.insertBefore(frag, rowEl.nextSibling);
                             }
                             rowEl.dataset.children = 'true';
