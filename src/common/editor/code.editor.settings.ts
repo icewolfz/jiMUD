@@ -1,5 +1,4 @@
 
-import { DescriptionOnDelete } from './virtual.editor';
 const fs = require('fs-extra');
 
 export class EditorSettings {
@@ -77,7 +76,8 @@ export class EditorSettings {
         showRoomEditor: true,
         showRoomPreview: true,
         rawSpellcheck: false,
-        descriptionOnDelete: DescriptionOnDelete.endPlusOne
+        descriptionOnDelete: 2,
+        itemOnDelete: 1
     };
 
     public static load(file) {

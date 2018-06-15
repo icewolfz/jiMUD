@@ -11,7 +11,9 @@
     - Remote diff - browse and select a file from the mud if connected and compare it to open file
     - Remote test - allows you to select a remote location to test your local file by uploading it to a temporary name in the same folder as the real remote file.
     - New area dialog now allows you to browse and select remote destination if connected to the mud
-    - Virtual area editor: Description editor that allows you to view all terrains, add, remove, delete, cut, copy descriptions and related items
+    - Virtual area editor:
+      - Description editor that allows you to view all terrains, add, delete, cut, copy descriptions and related items
+      - Item editor to edit,add, delete, cut, copy any item group or items in a group
   - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
   - Immortal tools: Error dialogs should appear for all non upload and download errors, as upload and download errors will appear in the queue list next to the item that caused the error
 - **Changed:**

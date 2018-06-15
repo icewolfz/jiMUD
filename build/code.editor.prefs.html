@@ -317,6 +317,9 @@
             $('#virtualOptions-descriptionOnDelete').val(_settings.virtualOptions.descriptionOnDelete);
             $('#virtualOptions-descriptionOnDelete').selectpicker('render');
 
+            //$('#virtualOptions-itemOnDelete').val(_settings.virtualOptions.itemOnDelete);
+            //$('#virtualOptions-itemOnDelete').selectpicker('render');
+
             $('#editorOptions-minimap-showSlider').val(_settings.editorOptions.minimap.showSlider);
             $('#editorOptions-minimap-showSlider').selectpicker('render');
 
@@ -671,7 +674,18 @@
                             <option value="3">Start</option>
                         </select>
                     </label>
-                </div>                
+                </div>        
+                <!--
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Room terrain description on item delete
+                        <br>
+                        <select id="virtualOptions-itemOnDelete" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="0">Leave</option>
+                            <option value="1">End</option>
+                        </select>
+                    </label>
+                </div>      
+                -->
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="window">
                 <div class="col-xs-12">

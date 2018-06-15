@@ -67,6 +67,14 @@ Allows you to edit, add or delete terrain descriptions
 
 **Notes** When cutting or deleting the associated items from the item database are removed as well, When copying, associated items will be copied along with terrain, when pasting associated items will be pasted but will ask if you want to replace any existing ones
 
+### Item editor
+
+Allows editing of all items in one location.
+
+- `Index` The item index, most of the time this matches to the terrain index
+- `Item` The item name
+- `Description` The item description
+
 ### External exit editor
 
 Allows you to edit all external exits in one location
