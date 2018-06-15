@@ -181,7 +181,7 @@
 .datagrid-column-row {}
 
 .datagrid-row {
-    height: 18px;
+    height: 24px;
     line-height: 18px;
     border-bottom: 1px solid #ececec;
     border-top: 1px solid transparent;
@@ -482,6 +482,10 @@ button.datagrid-footer-btn .glyphicon.datagrid-footer-btn-icon {
     text-align: center;
     padding-top: 6px;
     bottom: 0;
+}
+
+.datagrid-cell-collapse-empty {
+    padding-left: 19px;
 }
 
 .datagrid-column-tree {
