@@ -919,6 +919,9 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$exitGrid = new DataGrid(el);
+        this.$exitGrid.on('browse-file', e => {
+            this.emit('browse-file', e);
+        });
         this.$exitGrid.clipboardPrefix = 'jiMUD/';
         this.$exitGrid.columns = [
             {
@@ -972,8 +975,10 @@ export class VirtualEditor extends EditorBase {
                 width: 300,
                 spring: true,
                 editor: {
-                    options: {
-                        singleLine: true
+                    type: EditorType.custom,
+                    editor: FileBrowseValueEditor,
+                    show: (prop, value, object) => {
+                        return value;
                     }
                 }
             }
@@ -1946,6 +1951,9 @@ export class VirtualEditor extends EditorBase {
             else
                 f = this.$selectedRoom.x + ',' + this.$selectedRoom.y + '.c';
             this.emit('open-file', path.join(path.dirname(this.file), f));
+        });
+        this.$roomEditor.on('browse-file', e => {
+            this.emit('browse-file', e);
         });
         this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
             const old = this.$selectedRoom.clone();
@@ -5207,7 +5215,7 @@ export class VirtualEditor extends EditorBase {
                 o.sound = '';
                 o.smell = '';
             }
-            o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z);
+            o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z).map(a => ({ ...a }));
         }
         this.$roomEditor.object = o;
     }
@@ -6026,6 +6034,7 @@ class FileOpenValueEditor extends ValueEditor {
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
             this.control.emit('open-file', this.property);
+            this.focus();
         });
         this.$el.appendChild(vl);
         this.parent.appendChild(this.$el);
@@ -6062,6 +6071,68 @@ class FileOpenValueEditor extends ValueEditor {
     set value(value: any) {
         this.$value = value;
         this.$editor.value = this.formatValue(value);
+        resetCursor(this.$editor);
+    }
+}
+
+class FileBrowseValueEditor extends ValueEditor {
+    private $el: HTMLElement;
+    private $editor: HTMLInputElement;
+
+    public create() {
+        this.$el = document.createElement('div');
+        this.$el.dataset.editor = 'true';
+        this.$el.classList.add('property-grid-editor-dropdown');
+        this.$editor = document.createElement('input');
+        this.$editor.type = 'text';
+        this.$editor.classList.add('property-grid-editor');
+        this.$editor.addEventListener('blur', (e) => {
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            this.control.clearEditor(e);
+        });
+        this.$editor.addEventListener('keyup', (e) => {
+            if (e.keyCode === 27 || e.keyCode === 13) {
+                this.$editor.blur();
+                e.preventDefault();
+            }
+        });
+        this.$el.appendChild(this.$editor);
+
+        const vl = document.createElement('button');
+        vl.title = 'Browse for file...';
+        vl.innerHTML = '&hellip;';
+        vl.dataset.editor = 'dropdown';
+        vl.addEventListener('click', (e) => {
+            const arg = { file: this.$editor.value, property: this.property, editor: this };
+            this.control.emit('browse-file', arg);
+            if (arg.file !== this.$editor.value)
+                this.value = arg.file;
+        });
+        this.$el.appendChild(vl);
+        this.parent.appendChild(this.$el);
+    }
+    public focus() {
+        this.$editor.focus();
+    }
+    public destroy() {
+        if (this.$el.parentElement)
+            this.$el.parentElement.removeChild(this.$el);
+    }
+
+    public scroll() { /**/ }
+
+    public openAdvanced() { /**/ }
+
+    get value() {
+        return this.$editor.value;
+    }
+    set value(value: any) {
+        this.$editor.value = value;
         resetCursor(this.$editor);
     }
 }
@@ -6150,6 +6221,9 @@ class ExternalExitValueEditor extends ValueEditor {
             el.style.top = '38px';
             header.appendChild(el);
             const dg = new DataGrid(el);
+            dg.on('browse-file', ed => {
+                this.control.emit('browse-file', ed);
+            });
             dg.clipboardPrefix = 'jiMUD/';
             dg.addColumns([
                 {
@@ -6190,13 +6264,14 @@ class ExternalExitValueEditor extends ValueEditor {
                     spring: true,
                     width: 200,
                     editor: {
-                        options: {
-                            container: mDialog,
-                            singleLine: true
+                        type: EditorType.custom,
+                        editor: FileBrowseValueEditor,
+                        show: (prop, value, object) => {
+                            return value;
                         }
                     }
                 }]);
-            dg.addRows(this.$value.slice() || []);
+            dg.addRows(this.$value.map(a => ({ ...a })));
             dg.on('selection-changed', () => {
                 if (dg.selectedCount) {
                     this.$edit.removeAttribute('disabled');
@@ -6261,8 +6336,8 @@ class ExternalExitValueEditor extends ValueEditor {
             button.type = 'button';
             button.classList.add('btn', 'btn-primary');
             button.addEventListener('click', () => {
-                if (this.$value.length > 0)
-                    this.data.ee = this.$value.map(e2 => e2.enabled ? RoomExits[e2.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
+                if (dg.rows.length > 0)
+                    this.data.ee = dg.rows.map(e2 => e2.enabled ? RoomExits[e2.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
                 else
                     this.data.ee = 0;
                 this.value = dg.rows;
@@ -6508,7 +6583,7 @@ class ItemsValueEditor extends ValueEditor {
                     }
                 }
             }]);
-            dg.addRows(this.$value.slice() || []);
+            dg.addRows(this.$value.map(a => ({ ...a })));
             dg.on('selection-changed', () => {
                 if (dg.selectedCount) {
                     this.$edit.removeAttribute('disabled');

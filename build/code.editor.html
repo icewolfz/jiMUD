@@ -1924,7 +1924,6 @@
             options.remote = ops.defaultPath || options.remote;
         saveOptions();
 
-
         if (!$dialog) {
             $dialog = {
                 el: document.getElementById('remoteBrowse'),
@@ -3994,6 +3993,20 @@
             p.editor.on('open-file', (file) => {
                 if (existsSync(file))
                     openFile(file);
+            });
+            p.editor.on('browse-file', (e) => {
+                showBrowseDialog({
+                    defaultFile: e.file,
+                    title: 'Select remote file',
+                    properties: ['openFile'],
+                    filters: $fileFilters,
+                }, (files) => {
+                    if (!files || files.length === 0) return;
+                    console.log($dialog.arguments);
+                    $dialog.arguments.editor.value = files[0];
+                    $dialog.arguments.editor.focus();
+                });
+                $dialog.arguments = e;
             });
             p.editor.on('new-file', (file, value) => {
                 newFromValue(value, file);

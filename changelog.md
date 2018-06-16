@@ -14,6 +14,7 @@
     - Virtual area editor:
       - Description editor that allows you to view all terrains, add, delete, cut, copy descriptions and related items
       - Item editor to edit,add, delete, cut, copy any item group or items in a group
+      - Exit editor destination allows remote file selection if connected to mud
   - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
   - Immortal tools: Error dialogs should appear for all non upload and download errors, as upload and download errors will appear in the queue list next to the item that caused the error
 - **Changed:**
@@ -33,6 +34,7 @@
     - Recent list was cleared when trying to open a file that has been moved, deleted or renamed
     - Remove spaces between ! and :: when formatting
     - Display errors found when formatting
+    - Virtual area editor: room external/item editor would update value even if cancel was selected
   - Character manager:
     - Prevent running ok event multiple times after adding/renaming/copying more then one or canceling
     - Renaming lost login, password, and development setting
