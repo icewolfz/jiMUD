@@ -1230,7 +1230,7 @@ export class VirtualEditor extends EditorBase {
         });
         this.$map.addEventListener('mouseup', (e) => {
             this.$mouse = this.getMousePos(e);
-            if (this.$mouse.button === 0 && this.$mouse.rx === this.$mouseDown.rx && this.$mouse.ry === this.$mouseDown.ry) {
+            if (this.$mouse.rx === this.$mouseDown.rx && this.$mouse.ry === this.$mouseDown.ry) {
                 const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
                 const p = this.$selectedRoom;
                 if (r !== this.$selectedRoom)
@@ -1238,7 +1238,6 @@ export class VirtualEditor extends EditorBase {
                 if (p && r !== p) this.DrawRoom(this.$mapContext, p, true, false);
                 if (r) this.DrawRoom(this.$mapContext, r, true, true);
             }
-
             this.$mapDown = false;
         });
         this.$map.addEventListener('mouseenter', (e) => {
@@ -1263,7 +1262,8 @@ export class VirtualEditor extends EditorBase {
         });
         this.$map.addEventListener('contextmenu', (e) => {
             const m = this.getMousePos(e);
-            this.emit('map-context-menu', this.getRoom(m.rx, m.ry).clone());
+            const r = this.getRoom(m.rx, m.ry);
+            this.emit('map-context-menu', r ? r.clone() : null);
         });
         this.$map.addEventListener('dblclick', (e) => {
             const m = this.getMousePos(e);
@@ -2851,7 +2851,23 @@ export class VirtualEditor extends EditorBase {
             case View.map:
                 if (this.$selectedRoom.ef) return;
                 const or = this.$selectedRoom.clone();
-                clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify(or)));
+                clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
+                    external: this.$exits.filter(e => e.x === or.x && e.y === or.y && e.z === or.z),
+                    room: or
+                })));
+                //has external rooms so remove them as they are now tied to the room
+                if (or.ee !== RoomExit.None) {
+                    let nExternal = this.$exits.filter(e => e.x !== or.x || e.y !== or.y || e.z !== or.z);
+                    this.$exits = nExternal;
+                    this.$exitGrid.rows = this.$exits;
+                    if (this.$mapSize.depth > 1)
+                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                    else
+                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                    this.$externalRaw.value = '';
+                    this.updateRaw(this.$externalRaw, 0, nExternal);
+                    resetCursor(this.$externalRaw);
+                }
                 this.$selectedRoom = new Room(this.$selectedRoom.x, this.$selectedRoom.y, this.$selectedRoom.z, 0, 0, 0);
                 this.setRoom(this.$selectedRoom);
                 this.RoomChanged(this.$selectedRoom, or);
@@ -2882,7 +2898,10 @@ export class VirtualEditor extends EditorBase {
         switch (this.$view) {
             case View.map:
                 if (this.$selectedRoom.ef) return;
-                clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify(this.$selectedRoom.clone())));
+                clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
+                    external: this.$exits.filter(e => e.x === this.$selectedRoom.x && e.y === this.$selectedRoom.y && e.z === this.$selectedRoom.z),
+                    room: this.$selectedRoom.clone()
+                })));
                 this.emit('supports-changed');
                 break;
             case View.terrains:
@@ -2910,10 +2929,30 @@ export class VirtualEditor extends EditorBase {
                 if (!clipboard.has('jiMUD/VirtualArea')) return;
                 const or = this.$selectedRoom.clone();
                 const data = JSON.parse(clipboard.readBuffer('jiMUD/VirtualArea').toString());
-                this.$selectedRoom = new Room(or.x, or.y, or.z, data.exits, data.terrain, data.item, data.state);
-                this.$selectedRoom.climbs = data.climbs;
-                this.$selectedRoom.ef = data.ef;
-                this.$selectedRoom.ee = data.ee;
+                this.$selectedRoom = new Room(or.x, or.y, or.z, data.room.exits, data.room.terrain, data.room.item, data.room.state);
+                this.$selectedRoom.climbs = data.room.climbs;
+                this.$selectedRoom.ef = data.room.ef;
+                this.$selectedRoom.ee = data.room.ee;
+                //has external rooms paste them in
+                if (data.external.length > 0) {
+                    //change the coords to match the new room
+                    data.external.map(r => {
+                        r.x = or.x;
+                        r.y = or.y;
+                        r.z = or.z;
+                        return r;
+                    });
+                    //append to raw editors
+                    if (this.$mapSize.depth > 1)
+                        this.updateRaw(this.$externalRaw, this.$exits.length, data.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest));
+                    else
+                        this.updateRaw(this.$externalRaw, this.$exits.length, data.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest));
+                    //append changed exits
+                    this.$exits.push(...data.external);
+                    //refresh the grid to make sure it has all the new data
+                    this.$exitGrid.refresh();
+
+                }
                 this.deleteRoom(or);
                 this.addRoom(this.$selectedRoom);
                 this.RoomChanged(this.$selectedRoom, or);
