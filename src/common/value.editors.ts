@@ -67,6 +67,7 @@ export abstract class ValueEditor extends EventEmitter {
     public abstract focus(): void;
     public abstract destroy(): void;
     public abstract scroll(): void;
+    public abstract openAdvanced(): void;
 
     abstract get value(): any;
     abstract set value(value: any);
@@ -242,6 +243,8 @@ export class TextValueEditor extends ValueEditor {
             this.positionDropdown();
     }
 
+    public openAdvanced() { /**/ }
+
     private positionDropdown() {
         const b = this.parent.getBoundingClientRect();
         const c = this.container.getBoundingClientRect();
@@ -324,6 +327,8 @@ export class BooleanValueEditor extends ValueEditor {
 
     public scroll() { /**/ }
 
+    public openAdvanced() { /**/ }
+
     get value() {
         return this.$el.value === 'true';
     }
@@ -361,6 +366,8 @@ export class NumberValueEditor extends ValueEditor {
     }
 
     public scroll() { /**/ }
+
+    public openAdvanced() { /**/ }
 
     get value() {
         let value = +this.$el.value;
@@ -516,6 +523,8 @@ export class FlagValueEditor extends ValueEditor {
         if (this.$dropdown)
             this.positionDropdown();
     }
+
+    public openAdvanced() { /**/ }
 
     private positionDropdown() {
         const b = this.parent.getBoundingClientRect();
@@ -677,6 +686,8 @@ export class DropDownEditValueEditor extends ValueEditor {
         if (this.$dropdown)
             this.positionDropdown();
     }
+
+    public openAdvanced() { /**/ }
 
     private positionDropdown() {
         const b = this.parent.getBoundingClientRect();

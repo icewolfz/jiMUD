@@ -1261,9 +1261,12 @@ export class VirtualEditor extends EditorBase {
             this.emit('location-changed', -1, -1);
         });
         this.$map.addEventListener('contextmenu', (e) => {
+            if (e.defaultPrevented) return;
             const m = this.getMousePos(e);
             const r = this.getRoom(m.rx, m.ry);
-            this.emit('map-context-menu', r ? r.clone() : null);
+            const ec = { room: r ? r.clone() : null, preventDefault: false };
+            this.emit('map-context-menu', ec);
+            //if (e.preventDefault) return;
         });
         this.$map.addEventListener('dblclick', (e) => {
             const m = this.getMousePos(e);
@@ -2993,6 +2996,27 @@ export class VirtualEditor extends EditorBase {
     public delete() {
         switch (this.$view) {
             case View.map:
+                if (this.$selectedRoom.ef) return;
+                const or = this.$selectedRoom.clone();
+                //has external rooms so remove them as they are now tied to the room
+                if (or.ee !== RoomExit.None) {
+                    let nExternal = this.$exits.filter(e => e.x !== or.x || e.y !== or.y || e.z !== or.z);
+                    this.$exits = nExternal;
+                    this.$exitGrid.rows = this.$exits;
+                    if (this.$mapSize.depth > 1)
+                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                    else
+                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                    this.$externalRaw.value = '';
+                    this.updateRaw(this.$externalRaw, 0, nExternal);
+                    resetCursor(this.$externalRaw);
+                }
+                this.$selectedRoom = new Room(this.$selectedRoom.x, this.$selectedRoom.y, this.$selectedRoom.z, 0, 0, 0);
+                this.setRoom(this.$selectedRoom);
+                this.RoomChanged(this.$selectedRoom, or);
+                this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                this.deleteRoom(or);
+                this.emit('supports-changed');
                 break;
             case View.terrains:
                 this.$terrainGrid.delete();
@@ -5831,6 +5855,10 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
+    public openItems() {
+        this.$roomEditor.beginEdit('items', true);
+    }
+
     public externalCode(r?, y?, z?) {
         if (typeof r === 'number')
             r = this.getRoom(r, y, z);
@@ -5885,7 +5913,7 @@ export class VirtualEditor extends EditorBase {
                 d += '   set_items( ([\n';
                 const items = this.$items[r.item].children;
                 for (c = 0, cl = items.length; c < cl; c++) {
-                    t2 = '      "' + items[c].items + '":"';
+                    t2 = '      "' + items[c].item + '":"';
                     if (t2.length + items[c].description.length + 1 > 85) {
                         t = wordwrap(items[c].description, 80 - t2.length).trim().split('\n');
                         for (c = 0, cl = t.length; c < cl; c++) {
@@ -6007,6 +6035,8 @@ class FileOpenValueEditor extends ValueEditor {
     }
 
     public scroll() { /**/ }
+
+    public openAdvanced() { /**/ }
 
     private formatValue(value?) {
         if (!value) value = this.$value;
@@ -6156,7 +6186,8 @@ class ExternalExitValueEditor extends ValueEditor {
                     width: 200,
                     editor: {
                         options: {
-                            container: mDialog
+                            container: mDialog,
+                            singleLine: true
                         }
                     }
                 }]);
@@ -6337,6 +6368,8 @@ class ExternalExitValueEditor extends ValueEditor {
 
     public scroll() { /**/ }
 
+    public openAdvanced() { /**/ }
+
     private formatValue(value?) {
         if (!value) value = this.$value;
         if (!value)
@@ -6370,6 +6403,7 @@ class ItemsValueEditor extends ValueEditor {
     private $copy;
     private $cut;
     private $paste;
+    private $dButton;
 
     public create() {
         this.$el = document.createElement('div');
@@ -6396,11 +6430,11 @@ class ItemsValueEditor extends ValueEditor {
         });
         this.$el.appendChild(this.$editor);
 
-        const vl = document.createElement('button');
-        vl.title = 'Edit items...';
-        vl.innerHTML = '&hellip;';
-        vl.dataset.editor = 'dropdown';
-        vl.addEventListener('click', (e) => {
+        this.$dButton = document.createElement('button');
+        this.$dButton.title = 'Edit items...';
+        this.$dButton.innerHTML = '&hellip;';
+        this.$dButton.dataset.editor = 'dropdown';
+        this.$dButton.addEventListener('click', (e) => {
             const mDialog = <HTMLDialogElement>document.createElement('dialog');
             mDialog.style.width = '500px';
             mDialog.style.height = '300px';
@@ -6623,7 +6657,7 @@ class ItemsValueEditor extends ValueEditor {
             document.body.appendChild(mDialog);
             mDialog.showModal();
         });
-        this.$el.appendChild(vl);
+        this.$el.appendChild(this.$dButton);
         this.parent.appendChild(this.$el);
     }
     public focus() {
@@ -6635,6 +6669,10 @@ class ItemsValueEditor extends ValueEditor {
     }
 
     public scroll() { /**/ }
+
+    public openAdvanced() {
+        this.$dButton.click();
+    }
 
     private formatValue(value?) {
         if (!value) value = this.$value;

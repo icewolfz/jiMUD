@@ -2973,28 +2973,28 @@
         }
     });
 
-    function newFile(file) {
-        createEditor({ file: file || 'new_' + newCounter + '.c', new: true }, true);
+    function newFile(file, remoteFile) {
+        createEditor({ file: file || 'new_' + newCounter + '.c', new: true, remote: remoteFile }, true);
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
     }
 
-    function newFromFile(file, name) {
+    function newFromFile(file, name, remoteFile) {
         if (!file || file.length === 0) return;
         var value = parseFileTemplate(fs.readFileSync(file, 'utf8'));
-        createEditor({ file: 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c', new: true, value: value }, true);
+        createEditor({ file: 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c', new: true, value: value, remote: remoteFile }, true);
         newCounter++;
         doUpdate(1);
         updatePanel(manager.active);
     }
 
-    function newFromValue(value, file) {
+    function newFromValue(value, file, remoteFile) {
         if (!file || file.length === 0) {
             file = 'new_' + name.replace(/\s/g, '_') + '_' + newCounter + '.c';
             newCounter++;
         }
-        createEditor({ file: file, new: true, value: parseFileTemplate(value || '') }, true);
+        createEditor({ file: file, new: true, value: parseFileTemplate(value || ''), remote: remoteFile }, true);
         doUpdate(1);
         updatePanel(manager.active);
     }
@@ -3237,9 +3237,9 @@
     }
 
     function createVirtualArea() {
-        
+
     }
-    
+
     function roomWizard() {
         newFromFile(parseTemplate(path.join('{assets}', 'templates', 'rooms', 'base.c')), 'room');
     }
@@ -3651,8 +3651,95 @@
                             buttons: ['Yes', 'No'],
                             defaultId: 1
                         }) === 0) {
-                        newFromValue(p.editor.externalCode(room), f);
+                        if (p.editor.remote)
+                            newFromValue(p.editor.externalCode(room), f, path.dirname(p.editor.remote) + '/' + path.basename(f));
+                        else
+                            newFromValue(p.editor.externalCode(room), f);
                     }
+                });
+                p.editor.on('map-context-menu', (e) => {
+                    let temp = [];
+                    temp.push({
+                        label: 'Cut',
+                        click: doCut,
+                        accelerator: "CmdOrCtrl+C"
+                    });
+                    temp.push({
+                        label: 'Copy',
+                        click: doCopy,
+                        accelerator: "CmdOrCtrl+X"
+                    });
+                    if (p.editor.supports('paste'))
+                        temp.push({
+                            label: 'Paste',
+                            click: doPaste,
+                            accelerator: "CmdOrCtrl+V"
+                        });
+                    temp.push({ type: 'separator' });
+                    temp.push({
+                        label: 'Delete',
+                        click: () => {
+                            p.editor.delete();
+                            p.editor.focus();
+                        },
+                        accelerator: "Delete"
+                    });
+                    temp.push({ type: 'separator' });
+                    var f;
+                    if (p.editor.maxLevel > 1)
+                        f = e.room.x + "," + e.room.y + "," + e.room.z + ".c";
+                    else
+                        f = e.room.x + "," + e.room.y + ".c";
+                    f = path.join(path.dirname(p.editor.file), f);
+                    if (existsSync(f)) {
+                        temp.push({
+                            label: 'Open external file',
+                            file: f,
+                            remote: p.editor.remote ? (path.dirname(p.editor.remote) + '/' + path.basename(f)) : null,
+                            click: (item) => {
+                                openFile(item.file, item.remote);
+                            }
+                        });
+                    }
+                    else {
+                        temp.push({
+                            label: 'Create external file',
+                            file: f,
+                            remote: p.editor.remote ? (path.dirname(p.editor.remote) + '/' + path.basename(f)) : null,
+                            coords: [e.room.x, e.room.y, e.room.z],
+                            click: (item) => {
+                                newFromValue(p.editor.externalCode(...item.coords), item.file, item.remote);
+                            }
+                        });
+                        temp.push({
+                            label: 'Create empty external file',
+                            file: f,
+                            remote: p.editor.remote ? (path.dirname(p.editor.remote) + '/' + path.basename(f)) : null,
+                            click: (item) => {
+                                newFile(item.file, item.remote);
+                            }
+                        });
+                        /*
+                        //TODO use room wizard when completed
+                        temp.push({
+                            label: 'Room wizard',
+                            file: f,
+                            remote: p.editor.remote ? (path.dirname(p.editor.remote) + '/' + path.basename(f)) : null,
+                            click: (item) => {
+                                newFile(item.file, item.remote);
+                            }
+                        });
+                        */
+                    }
+                    temp.push({ type: 'separator' });
+                    temp.push({
+                        label: 'Open items',
+                        click: () => {
+                            p.editor.openItems();
+                        }
+                    });
+                    let inputMenu = Menu.buildFromTemplate(temp);
+                    inputMenu.popup({ window: remote.getCurrentWindow() });
                 });
             }
             else {
