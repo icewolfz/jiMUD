@@ -821,7 +821,7 @@ export class DataGrid extends EventEmitter {
         rows = rows || [];
         if (rows.length === 0) return;
         //get index and filter out invalid index, sort smallest to largest index as you always want to remove largest ot smallest
-        rows.map((row) => {
+        rows = rows.map((row) => {
             if (typeof row !== 'number')
                 return this.$rows.indexOf(row);
             else
