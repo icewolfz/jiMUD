@@ -447,111 +447,113 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(el);
         this.$terrainGrid = new DataGrid(el);
         this.$terrainGrid.clipboardPrefix = 'jiMUD/';
-        this.$terrainGrid.addColumns([{
-            label: 'Index',
-            field: 'idx',
-            width: 50,
-            readonly: true
-        },
-        {
-            label: 'Short',
-            field: 'short',
-            width: 250,
-            editor: {
-                options: {
-                    singleLine: true
+        this.$terrainGrid.columns = [
+            {
+                label: 'Index',
+                field: 'idx',
+                width: 50,
+                readonly: true
+            },
+            {
+                label: 'Short',
+                field: 'short',
+                width: 250,
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
+            },
+            {
+                label: 'Light',
+                field: 'light',
+                width: 50
+            },
+            {
+                label: 'Terrain',
+                field: 'terrain',
+                width: 125,
+                editor: {
+                    type: EditorType.dropdown,
+                    options: {
+                        data: [
+                            'water',
+                            'underwater',
+                            'tundra',
+                            'swamp',
+                            'stone',
+                            'savannah',
+                            'sanddesert',
+                            'sand',
+                            'rocky',
+                            'rockdesert',
+                            'river',
+                            'prairie',
+                            'plains',
+                            'pavedroad',
+                            'ocean',
+                            'mountain',
+                            'lake',
+                            'jungle',
+                            'icesheet',
+                            'hills',
+                            'highmountain',
+                            'grassland',
+                            'grass',
+                            'forest',
+                            'farmland',
+                            'dirtroad',
+                            'dirt',
+                            'desert',
+                            'cobble',
+                            'cliff',
+                            'city',
+                            'bog',
+                            'beach'
+                        ]
+                    }
+                }
+            },
+            {
+                label: 'Long',
+                field: 'long',
+                spring: true,
+                width: 250,
+                wrap: true,
+                editor: {
+                    options: {
+                        wrap: true,
+                        singleLine: true
+                    }
+                }
+            },
+            {
+                label: 'Sound',
+                field: 'sound',
+                spring: true,
+                width: 250,
+                wrap: true,
+                editor: {
+                    options: {
+                        wrap: true,
+                        singleLine: true
+                    }
+                }
+            },
+            {
+                label: 'Smell',
+                field: 'smell',
+                spring: true,
+                width: 250,
+                wrap: true,
+                editor: {
+                    options: {
+                        wrap: true,
+                        singleLine: true
+                    }
                 }
             }
-        },
-        {
-            label: 'Light',
-            field: 'light',
-            width: 50
-        },
-        {
-            label: 'Terrain',
-            field: 'terrain',
-            width: 125,
-            editor: {
-                type: EditorType.dropdown,
-                options: {
-                    data: [
-                        'water',
-                        'underwater',
-                        'tundra',
-                        'swamp',
-                        'stone',
-                        'savannah',
-                        'sanddesert',
-                        'sand',
-                        'rocky',
-                        'rockdesert',
-                        'river',
-                        'prairie',
-                        'plains',
-                        'pavedroad',
-                        'ocean',
-                        'mountain',
-                        'lake',
-                        'jungle',
-                        'icesheet',
-                        'hills',
-                        'highmountain',
-                        'grassland',
-                        'grass',
-                        'forest',
-                        'farmland',
-                        'dirtroad',
-                        'dirt',
-                        'desert',
-                        'cobble',
-                        'cliff',
-                        'city',
-                        'bog',
-                        'beach'
-                    ]
-                }
-            }
-        },
-        {
-            label: 'Long',
-            field: 'long',
-            spring: true,
-            width: 250,
-            wrap: true,
-            editor: {
-                options: {
-                    wrap: true,
-                    singleLine: true
-                }
-            }
-        },
-        {
-            label: 'Sound',
-            field: 'sound',
-            spring: true,
-            width: 250,
-            wrap: true,
-            editor: {
-                options: {
-                    wrap: true,
-                    singleLine: true
-                }
-            }
-        },
-        {
-            label: 'Smell',
-            field: 'smell',
-            spring: true,
-            width: 250,
-            wrap: true,
-            editor: {
-                options: {
-                    wrap: true,
-                    singleLine: true
-                }
-            }
-        }]);
+        ];
         this.$terrainGrid.on('delete', (e) => {
             if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
@@ -708,6 +710,36 @@ export class VirtualEditor extends EditorBase {
             this.$itemGrid.refresh();
             this.doUpdate(UpdateType.drawMap);
         });
+        this.$terrainGrid.on('add', e => {
+            const idx = this.$descriptions.length;
+            e.data = {
+                idx: idx,
+                short: '',
+                light: 0,
+                terrain: '',
+                long: '',
+                sound: '',
+                smell: ''
+            };
+            this.updateRaw(this.$descriptionRaw, idx * 3, [':0:', '', '0:0'], false, true);
+            if (idx >= this.$items.length) {
+                let c = 0;
+                while (idx >= this.$items.length) {
+                    this.$items.push(
+                        {
+                            idx: idx + c,
+                            items: '',
+                            description: '',
+                            tag: idx + c + 1
+                        }
+                    );
+                    this.updateRaw(this.$itemRaw, (idx + c) * 2, ['', ''], false, true);
+                    c++;
+                }
+            }
+            this.$itemGrid.refresh();
+            resetCursor(this.$terrainRaw);
+        });
         this.$terrainGrid.sort(0);
         this.$terrainGrid.on('selection-changed', () => {
             if (this.$view !== View.terrains) return;
@@ -753,60 +785,62 @@ export class VirtualEditor extends EditorBase {
                 this.$itemGrid.toggleRows(data.rowIndex);
             }
         });
-        this.$itemGrid.addColumns([{
-            label: 'Index',
-            field: 'idx',
-            width: 50,
-            readonly: true,
-            formatter: (data) => {
-                if (!data || data.parent !== -1) return '';
-                return data.cell;
-            },
-            tooltipFormatter: (data) => {
-                if (!data || data.parent !== -1) return '';
-                return data.cell;
-            }
-        }, {
-            label: 'Item',
-            field: 'item',
-            sortable: false,
-            width: 250,
-            formatter: (data) => {
-                if (!data) return '';
-                if (data.parent === -1 && data.row.children)
-                    return data.row.children.map((c) => c.item).join(':');
-                return data.cell || '';
-            },
-            tooltipFormatter: (data) => {
-                if (!data) return '';
-                if (data.parent === -1 && data.row.children)
-                    return data.row.children.map((c) => c.item).join(':');
-                return data.cell || '';
-            },
-            editor: {
-                options: {
-                    singleLine: true
+        this.$itemGrid.columns = [
+            {
+                label: 'Index',
+                field: 'idx',
+                width: 50,
+                readonly: true,
+                formatter: (data) => {
+                    if (!data || data.parent !== -1) return '';
+                    return data.cell;
+                },
+                tooltipFormatter: (data) => {
+                    if (!data || data.parent !== -1) return '';
+                    return data.cell;
+                }
+            }, {
+                label: 'Item',
+                field: 'item',
+                sortable: false,
+                width: 250,
+                formatter: (data) => {
+                    if (!data) return '';
+                    if (data.parent === -1 && data.row.children)
+                        return data.row.children.map((c) => c.item).join(':');
+                    return data.cell || '';
+                },
+                tooltipFormatter: (data) => {
+                    if (!data) return '';
+                    if (data.parent === -1 && data.row.children)
+                        return data.row.children.map((c) => c.item).join(':');
+                    return data.cell || '';
+                },
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
+            }, {
+                label: 'Description',
+                field: 'description',
+                width: 300,
+                spring: true,
+                sortable: false,
+                formatter: (data) => {
+                    if (!data) return '';
+                    if (data.parent === -1 && data.row.children)
+                        return data.row.children.map((c) => c.description).join(':');
+                    return data.cell;
+                },
+                tooltipFormatter: (data) => {
+                    if (!data) return '';
+                    if (data.parent === -1 && data.row.children)
+                        return data.row.children.map((c) => c.description).join(':');
+                    return data.cell;
                 }
             }
-        }, {
-            label: 'Description',
-            field: 'description',
-            width: 300,
-            spring: true,
-            sortable: false,
-            formatter: (data) => {
-                if (!data) return '';
-                if (data.parent === -1 && data.row.children)
-                    return data.row.children.map((c) => c.description).join(':');
-                return data.cell;
-            },
-            tooltipFormatter: (data) => {
-                if (!data) return '';
-                if (data.parent === -1 && data.row.children)
-                    return data.row.children.map((c) => c.description).join(':');
-                return data.cell;
-            }
-        }]);
+        ];
         this.$itemGrid.on('delete', (e) => {
             if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
@@ -875,6 +909,8 @@ export class VirtualEditor extends EditorBase {
                 idx++;
             }
         });
+        this.$itemGrid.on('contextmenu', e => e.preventDefault());
+        this.$itemGrid.on('add', e => e.preventDefault = true);
         this.$itemGrid.on('selection-changed', () => {
             if (this.$view !== View.items) return;
             if (this.$itemGrid.selectedCount) {
@@ -1084,6 +1120,21 @@ export class VirtualEditor extends EditorBase {
                 }
                 resetCursor(this.$externalRaw);
             }
+        });
+        this.$exitGrid.on('add', e => {
+            e.data = {
+                enabled: true,
+                x: 0,
+                y: 0,
+                z: 0,
+                exit: '',
+                dest: ''
+            };
+            if (this.$mapSize.depth > 1)
+                this.updateRaw(this.$externalRaw, this.$exits.length - 1, ['0,0,0::']);
+            else
+                this.updateRaw(this.$externalRaw, this.$exits.length - 1, ['0,0::']);
+            resetCursor(this.$externalRaw);
         });
         this.$exitGrid.on('selection-changed', () => {
             if (this.$view !== View.exits) return;
@@ -3695,36 +3746,7 @@ export class VirtualEditor extends EditorBase {
                 button.type = 'button';
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
-                    const idx = this.$descriptions.length;
-                    this.$terrainGrid.addRow({
-                        idx: idx,
-                        short: '',
-                        light: 0,
-                        terrain: '',
-                        long: '',
-                        sound: '',
-                        smell: ''
-                    });
-                    this.updateRaw(this.$descriptionRaw, idx * 3, [':0:', '', '0:0'], false, true);
-                    if (idx >= this.$items.length) {
-                        let c = 0;
-                        while (idx >= this.$items.length) {
-                            this.$items.push(
-                                {
-                                    idx: idx + c,
-                                    items: '',
-                                    description: '',
-                                    tag: idx + c + 1
-                                }
-                            );
-                            this.updateRaw(this.$itemRaw, (idx + c) * 2, ['', ''], false, true);
-                            c++;
-                        }
-                    }
-                    this.$itemGrid.refresh();
-                    resetCursor(this.$terrainRaw);
-                    this.$terrainGrid.focus();
-                    this.$terrainGrid.beginEdit(this.$terrainGrid.rows.length - 1);
+                    this.$terrainGrid.addNewRow();
                 });
                 button.title = 'Add terrain';
                 button.innerHTML = '<i class="fa fa-plus"></i> Add';
@@ -3953,21 +3975,7 @@ export class VirtualEditor extends EditorBase {
                 button.type = 'button';
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
-                    this.$exitGrid.addRow({
-                        enabled: true,
-                        x: 0,
-                        y: 0,
-                        z: 0,
-                        exit: '',
-                        dest: ''
-                    });
-                    if (this.$mapSize.depth > 1)
-                        this.updateRaw(this.$externalRaw, this.$exits.length - 1, ['0,0,0::']);
-                    else
-                        this.updateRaw(this.$externalRaw, this.$exits.length - 1, ['0,0::']);
-                    resetCursor(this.$externalRaw);
-                    this.$exitGrid.focus();
-                    this.$exitGrid.beginEdit(this.$exitGrid.rows.length - 1);
+                    this.$exitGrid.addNewRow();
                 });
                 button.title = 'Add exit';
                 button.innerHTML = '<i class="fa fa-plus"></i> Add';
@@ -6316,6 +6324,16 @@ class ExternalExitValueEditor extends ValueEditor {
                 else
                     this.$paste.setAttribute('disabled', 'true');
             });
+            dg.on('add', e2 => {
+                e2.data = {
+                    enabled: true,
+                    x: this.data.x,
+                    y: this.data.y,
+                    z: this.data.z,
+                    exit: '',
+                    dest: ''
+                };
+            });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
             mDialog.appendChild(header);
@@ -6355,16 +6373,7 @@ class ExternalExitValueEditor extends ValueEditor {
             button.type = 'button';
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-                dg.addRow({
-                    enabled: true,
-                    x: this.data.x,
-                    y: this.data.y,
-                    z: this.data.z,
-                    exit: '',
-                    dest: ''
-                });
-                dg.focus();
-                dg.beginEdit(dg.rows.length - 1);
+                dg.addNewRow();
             });
             button.title = 'Add exit';
             button.innerHTML = '<i class="fa fa-plus"></i>';
@@ -6628,6 +6637,12 @@ class ItemsValueEditor extends ValueEditor {
                 else
                     this.$paste.setAttribute('disabled', 'true');
             });
+            dg.on('add', e2 => {
+                e2.data = {
+                    item: '',
+                    description: ''
+                };
+            });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
             mDialog.appendChild(header);
@@ -6664,12 +6679,7 @@ class ItemsValueEditor extends ValueEditor {
             button.type = 'button';
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-                dg.addRow({
-                    item: '',
-                    description: ''
-                });
-                dg.focus();
-                dg.beginEdit(dg.rows.length - 1);
+                dg.addNewRow();
             });
             button.title = 'Add item';
             button.innerHTML = '<i class="fa fa-plus"></i>';
