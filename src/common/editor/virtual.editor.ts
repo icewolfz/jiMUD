@@ -4269,7 +4269,7 @@ export class VirtualEditor extends EditorBase {
         //var clr = "black";
         const x = room.x * 32;
         const y = room.y * 32;
-        const ex = room.exits | room.ee | room.climbs;
+        const ex = room.exits | room.climbs;
         let exs = ex;
         //if(ex === RoomExit.None) clr = "#E6E6E6";
         ctx.save();
@@ -4291,24 +4291,6 @@ export class VirtualEditor extends EditorBase {
             ctx.fillRoundedRect(1 + x, 1 + y, 30, 30, 8);
             ctx.strokeRoundedRect(1 + x, 1 + y, 30, 30, 8);
         }
-
-        if ((exs & RoomExit.Up) === RoomExit.Up) exs &= ~RoomExit.Up;
-        if ((exs & RoomExit.Down) === RoomExit.Down) exs &= ~RoomExit.Down;
-        if ((exs & RoomExit.Out) === RoomExit.Out) exs &= ~RoomExit.Out;
-        if ((exs & RoomExit.Enter) === RoomExit.Enter) exs &= ~RoomExit.Enter;
-        if (exs === RoomExit.None && ex !== RoomExit.None) {
-            ctx.strokeStyle = 'black';
-            ctx.strokeRect(0.5 + x + 7, 0.5 + y + 7, 17, 17);
-        }
-        else
-            ctx.drawImage(window.$roomImg, ((exs % 16) >> 0) * 32, ((exs / 16) >> 0) * 32,
-                32,
-                32,
-                x,
-                y,
-                32,
-                32
-            );
 
         if (room.ee) {
             ctx.strokeStyle = 'red';
@@ -4349,6 +4331,24 @@ export class VirtualEditor extends EditorBase {
             ctx.stroke();
             ctx.strokeStyle = 'black';
         }
+
+        if ((exs & RoomExit.Up) === RoomExit.Up) exs &= ~RoomExit.Up;
+        if ((exs & RoomExit.Down) === RoomExit.Down) exs &= ~RoomExit.Down;
+        if ((exs & RoomExit.Out) === RoomExit.Out) exs &= ~RoomExit.Out;
+        if ((exs & RoomExit.Enter) === RoomExit.Enter) exs &= ~RoomExit.Enter;
+        if (exs === RoomExit.None && ex !== RoomExit.None && room.ee !== RoomExit.None) {
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(0.5 + x + 7, 0.5 + y + 7, 17, 17);
+        }
+        else
+            ctx.drawImage(window.$roomImg, ((exs % 16) >> 0) * 32, ((exs / 16) >> 0) * 32,
+                32,
+                32,
+                x,
+                y,
+                32,
+                32
+            );
 
         if (room.ef) {
             ctx.fillStyle = '#FFE4E1';
