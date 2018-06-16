@@ -1053,7 +1053,7 @@ export class VirtualEditor extends EditorBase {
                 === 1)
                 e.preventDefault = true;
             else {
-                const d = e.data.sort((a, b) => {
+                const d = e.data.map(di => di.dataIndex).sort((a, b) => {
                     if (a > b) return 1;
                     if (a < b) return -1;
                     return 0;
