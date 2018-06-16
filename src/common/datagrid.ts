@@ -1,6 +1,6 @@
 //https://developers.google.com/web/updates/2016/10/resizeobserver
 import EventEmitter = require('events');
-import { capitalize } from './library';
+import { capitalize, clone } from './library';
 import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor } from './value.editors';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard } = require('electron');
@@ -23,18 +23,30 @@ export class Column {
     public visible = true;
     public formatter = (data) => {
         if (!data) return '&nbsp;';
-        switch (typeof (data.cell)) {
-            case 'string':
-                if (data.cell.length === 0)
+        switch (typeof (data)) {
+            case 'object':
+                switch (typeof (data.cell)) {
+                    case 'string':
+                        if (data.cell.length === 0)
+                            return '&nbsp;';
+                        return data.cell;
+                    case 'number':
+                        return data.cell;
+                    case 'boolean':
+                        return capitalize('' + data.cell);
+                }
+                if (!data.cell)
                     return '&nbsp;';
-                return data.cell;
+                return data.cell.value || '&nbsp;';
+            case 'string':
+                if (data.length === 0)
+                    return '&nbsp;';
+                return data;
             case 'number':
-                return data.cell;
+                return data;
             case 'boolean':
-                return capitalize('' + data.cell);
+                return capitalize('' + data);
         }
-        if (!data.cell)
-            return '&nbsp;';
         return data.cell.value || '&nbsp;';
     };
     public align = '';
@@ -1899,7 +1911,7 @@ export class DataGrid extends EventEmitter {
             el: el,
             editors: []
         };
-        const oldObj = this.$rows.slice(this.$sortedRows[this.$editor.row], this.$sortedRows[this.$editor.row] + 1)[0];
+        const oldObj = clone(this.$rows[this.$sortedRows[this.$editor.row]]);
         let changed = false;
         let dataIdx;
         let field;
