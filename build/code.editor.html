@@ -1938,6 +1938,7 @@
                 nav: document.getElementById('remote-navigate'),
                 filter: document.getElementById('remoteBrowseFilter')
             };
+            $dialog.datagrid.on('contextmenu', e => e.preventDefault());
             $dialog.up.addEventListener('click', () => {
                 _ied.getDir(path.dirname($dialog.path.value || ''), true, 'remoteBrowse');
             });
@@ -2226,7 +2227,7 @@
             old_element.parentNode.replaceChild(new_element, old_element);
             $dialog.ok = new_element;
         }
-
+        $dialog.first = true;
         if (ops.properties.indexOf('openDirectory') !== -1) {
             document.getElementById('remoteBrowseFile-label').textContent = 'Folder:';
             $dialog.ok.textContent = 'Select Folder';
@@ -2491,7 +2492,17 @@
                     return f;
                 });
                 filterBrowseDialog();
-                $dialog.datagrid.scrollToTop();
+                if ($dialog.first) {
+                    $dialog.first = false;
+                    if ($dialog.options.defaultFile) {
+                        let idx = $dialog.datagrid.rows.indexOf(path.basename($dialog.options.defaultFile));
+                        $dialog.datagrid.selectByDataIndex(idx, true);
+                    }
+                    else
+                        $dialog.datagrid.scrollToTop();
+                }
+                else
+                    $dialog.datagrid.scrollToTop();
                 if (dir !== '/')
                     $dialog.up.removeAttribute('disabled');
                 else
@@ -3922,7 +3933,8 @@
                     click: () => {
                         if (manager.active && manager.active.editor)
                             manager.active.editor.selectAll();
-                    }
+                    },
+                    accelerator: "CmdOrCtrl+A"
                 });
                 if (p.editor.changed) {
                     temp.push({ type: 'separator' });
