@@ -909,7 +909,127 @@ export class VirtualEditor extends EditorBase {
                 idx++;
             }
         });
-        this.$itemGrid.on('contextmenu', e => e.preventDefault());
+        this.$itemGrid.on('contextmenu', e => {
+            e.preventDefault();
+            const temp = [];
+            temp.push({
+                label: 'Add group',
+                click: () => {
+                    const idx = this.$items.length;
+                    this.$itemGrid.addRow({
+                        idx: idx,
+                        items: '',
+                        description: '',
+                        tag: idx + 1
+                    });
+                    this.updateRaw(this.$itemRaw, idx * 2, ['', ''], false, true);
+                    resetCursor(this.$itemRaw);
+                    this.$itemGrid.focus();
+                    this.$itemGrid.selectByDataIndex(idx, true);
+                }
+            });
+            if (this.$itemGrid.selectedCount > 0) {
+                temp.push({ type: 'separator' });
+                const sc = this.$itemGrid.selected;
+                temp.push({
+                    label: 'Add',
+                    click: () => {
+                        const selected = this.$itemGrid.selected.sort((a, b) => { if (a.row > b.row) return 1; if (a.row < b.row) return -1; return 0; });
+                        if (selected.length === 0) return;
+                        let parent;
+                        if (selected[0].parent === -1)
+                            parent = selected[0].data;
+                        else
+                            parent = this.$items[selected[0].dataIndex];
+                        if (!parent.children)
+                            parent.children = [];
+                        parent.children.push({
+                            idx: '',
+                            item: '',
+                            description: '',
+                            tag: (parent.idx + 1) + '-' + parent.children.length,
+                            parentId: parent.idx
+                        });
+                        this.$itemGrid.refresh();
+                        this.$itemGrid.expandRows(selected[0].index).then(() => {
+                            this.$itemGrid.focus();
+                            this.$itemGrid.beginEditChild(selected[0].dataIndex, parent.children.length - 1);
+                            this.updateRaw(this.$itemRaw, parent.idx * 2, [
+                                parent.children.map(i => i.item).join(':'),
+                                parent.children.map(i => i.description).join(':')
+                            ], false, true);
+                        });
+                    }
+                });
+                if (sc.filter(r => r.parent !== -1).length > 0)
+                    temp.push({
+                        label: 'Edit',
+                        click: () => {
+                            const sl = this.$itemGrid.selectedCount;
+                            const selected = this.$itemGrid.selected;
+                            for (let s = 0; s < sl; s++) {
+                                if (selected[s].parent !== -1) {
+                                    this.$itemGrid.focus();
+                                    this.$itemGrid.beginEditChild(selected[s].parent, selected[s].child);
+                                    break;
+                                }
+                            }
+                        }
+                    });
+
+                temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Cut',
+                    accelerator: 'CmdOrCtrl+X',
+                    click: () => {
+                        this.$itemGrid.cut();
+                    }
+                });
+                temp.push({
+                    label: 'Copy',
+                    click: () => {
+                        this.$itemGrid.copy();
+                    },
+                    accelerator: 'CmdOrCtrl+C'
+                });
+            }
+            if (this.$itemGrid.canPaste) {
+                if (temp.length === 1)
+                    temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Paste',
+                    click: () => {
+                        this.$itemGrid.paste();
+                    },
+                    accelerator: 'CmdOrCtrl+V'
+                });
+            }
+            if (this.$itemGrid.selectedCount > 0) {
+                if (temp.length > 0)
+                    temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Delete',
+                    click: () => {
+                        this.$itemGrid.delete();
+                    },
+                    accelerator: 'Delete'
+                });
+            }
+            if (this.$items.length > 0) {
+                if (temp.length > 0)
+                    temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Select all',
+                    click: () => {
+                        this.$itemGrid.selectAll();
+                    },
+                    accelerator: 'CmdOrCtrl+A'
+                });
+            }
+            if (temp.length === 0) return;
+            const inputMenu = Menu.buildFromTemplate(temp);
+            inputMenu.popup({ window: remote.getCurrentWindow() });
+        });
         this.$itemGrid.on('add', e => e.preventDefault = true);
         this.$itemGrid.on('selection-changed', () => {
             if (this.$view !== View.items) return;
