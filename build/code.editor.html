@@ -3733,9 +3733,15 @@
                     }
                     temp.push({ type: 'separator' });
                     temp.push({
-                        label: 'Open items',
+                        label: 'Edit items',
                         click: () => {
                             p.editor.openItems();
+                        }
+                    });
+                    temp.push({
+                        label: 'Edit external exits',
+                        click: () => {
+                            p.editor.openExternalExits();
                         }
                     });
                     let inputMenu = Menu.buildFromTemplate(temp);

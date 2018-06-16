@@ -5859,6 +5859,10 @@ export class VirtualEditor extends EditorBase {
         this.$roomEditor.beginEdit('items', true);
     }
 
+    public openExternalExits() {
+        this.$roomEditor.beginEdit('external', true);
+    }
+
     public externalCode(r?, y?, z?) {
         if (typeof r === 'number')
             r = this.getRoom(r, y, z);
@@ -6071,6 +6075,7 @@ class ExternalExitValueEditor extends ValueEditor {
     private $copy;
     private $cut;
     private $paste;
+    private $dButton;
 
     public create() {
         this.$el = document.createElement('div');
@@ -6097,11 +6102,11 @@ class ExternalExitValueEditor extends ValueEditor {
         });
         this.$el.appendChild(this.$editor);
 
-        const vl = document.createElement('button');
-        vl.title = 'Edit external exits...';
-        vl.innerHTML = '&hellip;';
-        vl.dataset.editor = 'dropdown';
-        vl.addEventListener('click', (e) => {
+        this.$dButton = document.createElement('button');
+        this.$dButton.title = 'Edit external exits...';
+        this.$dButton.innerHTML = '&hellip;';
+        this.$dButton.dataset.editor = 'dropdown';
+        this.$dButton.addEventListener('click', (e) => {
             const mDialog = <HTMLDialogElement>document.createElement('dialog');
             mDialog.style.width = '500px';
             mDialog.style.height = '300px';
@@ -6355,7 +6360,7 @@ class ExternalExitValueEditor extends ValueEditor {
             document.body.appendChild(mDialog);
             mDialog.showModal();
         });
-        this.$el.appendChild(vl);
+        this.$el.appendChild(this.$dButton);
         this.parent.appendChild(this.$el);
     }
     public focus() {
@@ -6368,7 +6373,9 @@ class ExternalExitValueEditor extends ValueEditor {
 
     public scroll() { /**/ }
 
-    public openAdvanced() { /**/ }
+    public openAdvanced() {
+        this.$dButton.click();
+    }
 
     private formatValue(value?) {
         if (!value) value = this.$value;

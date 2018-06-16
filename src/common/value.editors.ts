@@ -588,7 +588,6 @@ export class DropDownEditValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $dropdown: HTMLElement;
     private $editor: HTMLInputElement;
-    private $value;
 
     public create() {
         this.$el = document.createElement('div');
