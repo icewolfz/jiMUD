@@ -1343,7 +1343,7 @@ export class VirtualEditor extends EditorBase {
                 case 38: //up
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y > 0) {
+                    else if (y > 0 && !this.$selectedRoom.ef) {
                         y--;
                         this.ChangeSelection(this.getRoom(x, y));
                         if (this.$selectedRoom)
@@ -1359,7 +1359,7 @@ export class VirtualEditor extends EditorBase {
                 case 40: //down
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y < this.$mapSize.height - 1) {
+                    else if (y < this.$mapSize.height - 1 && !this.$selectedRoom.ef) {
                         y++;
                         this.ChangeSelection(this.getRoom(x, y));
                         if (this.$selectedRoom)
@@ -1376,7 +1376,7 @@ export class VirtualEditor extends EditorBase {
                 case 37: //left
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x > 0) {
+                    else if (x > 0 && !this.$selectedRoom.ef) {
                         x--;
                         this.ChangeSelection(this.getRoom(x, y));
                         if (this.$selectedRoom) this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
@@ -1391,7 +1391,7 @@ export class VirtualEditor extends EditorBase {
                 case 39: //right
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x < this.$mapSize.width - 1) {
+                    else if (x < this.$mapSize.width - 1 && !this.$selectedRoom.ef) {
                         x++;
                         this.ChangeSelection(this.getRoom(x, y));
                         if (this.$selectedRoom)
@@ -1407,7 +1407,7 @@ export class VirtualEditor extends EditorBase {
                     break;
                 case 110:
                 case 46: //delete
-                    if (!this.$selectedRoom)
+                    if (!this.$selectedRoom || this.$selectedRoom.ef)
                         return;
                     let nx = x;
                     let ny = y;
@@ -1433,6 +1433,19 @@ export class VirtualEditor extends EditorBase {
                     }
                     else
                         this.$selectedRoom.exits = 0;
+                    if (!e.ctrlKey && this.$selectedRoom.ee !== RoomExit.None) {
+                        let nExternal = this.$exits.filter(ex => ex.x !== or.x || ex.y !== or.y || ex.z !== or.z);
+                        this.$exits = nExternal;
+                        this.$exitGrid.rows = this.$exits;
+                        if (this.$mapSize.depth > 1)
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                        else
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                        this.$externalRaw.value = '';
+                        this.updateRaw(this.$externalRaw, 0, nExternal);
+                        resetCursor(this.$externalRaw);
+                        this.$selectedRoom.ee = RoomExit.None;
+                    }
                     this.RoomChanged(this.$selectedRoom, or);
                     this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
                     if (y > 0 && (e.ctrlKey || (o & RoomExit.North) === RoomExit.North)) {
@@ -1574,7 +1587,7 @@ export class VirtualEditor extends EditorBase {
                 case 97: //num1
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y < this.$mapSize.height - 1 && x > 0) {
+                    else if (y < this.$mapSize.height - 1 && x > 0 && !this.$selectedRoom.ef) {
                         y++;
                         x--;
                         if (e.ctrlKey)
@@ -1612,7 +1625,7 @@ export class VirtualEditor extends EditorBase {
                 case 98: //num2
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y < this.$mapSize.height - 1) {
+                    else if (y < this.$mapSize.height - 1 && !this.$selectedRoom.ef) {
                         y++;
                         if (e.ctrlKey)
                             this.$selectedRoom.exits &= ~RoomExit.South;
@@ -1642,7 +1655,7 @@ export class VirtualEditor extends EditorBase {
                 case 99: //num3
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y < this.$mapSize.height - 1 && x < this.$mapSize.width - 1) {
+                    else if (y < this.$mapSize.height - 1 && x < this.$mapSize.width - 1 && !this.$selectedRoom.ef) {
                         y++;
                         x++;
                         if (e.ctrlKey)
@@ -1677,7 +1690,7 @@ export class VirtualEditor extends EditorBase {
                 case 100: //num4
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x > 0) {
+                    else if (x > 0 && !this.$selectedRoom.ef) {
                         x--;
                         if (e.ctrlKey)
                             this.$selectedRoom.exits &= ~RoomExit.West;
@@ -1707,7 +1720,7 @@ export class VirtualEditor extends EditorBase {
                 case 102: //num6
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x < this.$mapSize.width - 1) {
+                    else if (x < this.$mapSize.width - 1 && !this.$selectedRoom.ef) {
                         x++;
                         if (e.ctrlKey)
                             this.$selectedRoom.exits &= ~RoomExit.East;
@@ -1737,7 +1750,7 @@ export class VirtualEditor extends EditorBase {
                 case 103: //num7
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x > 0 && y > 0) {
+                    else if (x > 0 && y > 0 && !this.$selectedRoom.ef) {
                         x--;
                         y--;
                         if (e.ctrlKey)
@@ -1771,7 +1784,7 @@ export class VirtualEditor extends EditorBase {
                 case 104: //num8
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y > 0) {
+                    else if (y > 0 && !this.$selectedRoom.ef) {
                         y--;
                         if (e.ctrlKey)
                             this.$selectedRoom.exits &= ~RoomExit.North;
@@ -1800,7 +1813,7 @@ export class VirtualEditor extends EditorBase {
                 case 105: //num9
                     if (!this.$selectedRoom)
                         this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x < this.$mapSize.width - 1 && y > 0) {
+                    else if (x < this.$mapSize.width - 1 && y > 0 && !this.$selectedRoom.ef) {
                         x++;
                         y--;
                         if (e.ctrlKey)
@@ -1833,7 +1846,7 @@ export class VirtualEditor extends EditorBase {
                     event.preventDefault();
                     break;
                 case 107: //+
-                    if (!this.$selectedRoom)
+                    if (!this.$selectedRoom || this.$selectedRoom.ef)
                         return;
                     or = this.$selectedRoom.clone();
                     if (this.$selectedRoom.item === this.$selectedRoom.terrain)
@@ -1843,7 +1856,7 @@ export class VirtualEditor extends EditorBase {
                     this.RoomChanged(this.$selectedRoom, or);
                     break;
                 case 109: //-
-                    if (!this.$selectedRoom)
+                    if (!this.$selectedRoom || this.$selectedRoom.ef)
                         return;
                     or = this.$selectedRoom.clone();
                     if (this.$selectedRoom.item === this.$selectedRoom.terrain) {
@@ -1858,7 +1871,7 @@ export class VirtualEditor extends EditorBase {
                     this.RoomChanged(this.$selectedRoom, or);
                     break;
                 case 111: // / up
-                    if (!this.$selectedRoom)
+                    if (!this.$selectedRoom || this.$selectedRoom.ef)
                         return;
                     if (this.$depth + 1 < this.$mapSize.depth) {
                         this.$depth++;
@@ -1883,7 +1896,7 @@ export class VirtualEditor extends EditorBase {
                     event.preventDefault();
                     break;
                 case 106: // * down
-                    if (!this.$selectedRoom)
+                    if (!this.$selectedRoom || this.$selectedRoom.ef)
                         return;
                     if (this.$depth - 1 >= 0) {
                         this.$depth--;
