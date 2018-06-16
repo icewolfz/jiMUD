@@ -1463,6 +1463,23 @@ export class VirtualEditor extends EditorBase {
         this.$roomPreview.container = document.createElement('div');
         this.$roomPreview.container.id = this.parent.id + '-room-preview';
         this.$roomPreview.container.classList.add('room-preview');
+        this.$roomPreview.container.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            const sel = getSelection();
+            let inputMenu;
+            if (!sel.isCollapsed && sel.type === 'Range' && this.$roomPreview.container.contains(sel.anchorNode)) {
+                inputMenu = Menu.buildFromTemplate([
+                    { role: 'copy' },
+                    { type: 'separator' },
+                    { role: 'selectall' }
+                ]);
+            }
+            else
+                inputMenu = Menu.buildFromTemplate([
+                    { role: 'selectall' }
+                ]);
+            inputMenu.popup({ window: remote.getCurrentWindow() });
+        });
         this.$roomPreview.short = document.createElement('div');
         this.$roomPreview.short.classList.add('room-short');
         this.$roomPreview.container.appendChild(this.$roomPreview.short);
