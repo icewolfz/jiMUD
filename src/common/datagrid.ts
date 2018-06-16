@@ -3,7 +3,8 @@ import EventEmitter = require('events');
 import { capitalize, clone } from './library';
 import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor } from './value.editors';
 const ResizeObserver = require('resize-observer-polyfill');
-const { clipboard } = require('electron');
+const { clipboard, remote } = require('electron');
+const { Menu } = remote;
 
 export interface DataGridOptions {
     container?: any;
@@ -430,6 +431,84 @@ export class DataGrid extends EventEmitter {
             if (this.$editor && this.$editor.editors.length > 0)
                 this.$editor.editors.map(ed => ed.editor.scroll());
         });
+        el.addEventListener('contextmenu', (e) => {
+            this.emit('contextmenu', e);
+            if (e.defaultPrevented) return;
+            const temp = [];
+            temp.push({
+                label: 'Add',
+                click: () => {
+                    this.addNewRow();
+                }
+            });
+            if (this.$selected.length > 0) {
+                temp.push({
+                    label: 'Edit',
+                    click: () => {
+                        const cEl = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[this.$selected[0]]);
+                        const dataIndex = +cEl.dataset.dataIndex;
+                        const parent = +cEl.dataset.parent;
+                        if (parent === -1)
+                            this.beginEdit(this.$sortedRows.indexOf(dataIndex));
+                        else {
+                            const child = +cEl.dataset.child;
+                            this.beginEditChild(dataIndex, child);
+                        }
+                    }
+                });
+                temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Cut',
+                    accelerator: 'CmdOrCtrl+X',
+                    click: () => {
+                        this.cut();
+                    }
+                });
+                temp.push({
+                    label: 'Copy',
+                    click: () => {
+                        this.copy();
+                    },
+                    accelerator: 'CmdOrCtrl+C'
+                });
+            }
+            if (this.canPaste) {
+                if (temp.length === 1)
+                    temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Paste',
+                    click: () => {
+                        this.paste();
+                    },
+                    accelerator: 'CmdOrCtrl+V'
+                });
+            }
+            if (this.$selected.length > 0) {
+                if (temp.length > 0)
+                    temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Delete',
+                    click: () => {
+                        this.delete();
+                    },
+                    accelerator: 'Delete'
+                });
+            }
+            if (this.$rows.length > 0) {
+                if (temp.length > 0)
+                    temp.push({ type: 'separator' });
+                temp.push({
+                    label: 'Select all',
+                    click: () => {
+                        this.selectAll();
+                    },
+                    accelerator: 'CmdOrCtrl+A'
+                });
+            }
+            if (temp.length === 0) return;
+            const inputMenu = Menu.buildFromTemplate(temp);
+            inputMenu.popup({ window: remote.getCurrentWindow() });
+        });
         this.$body = document.createElement('table');
         this.$body.classList.add('datagrid-body-data');
         this.$dataBody = document.createElement('tbody');
@@ -468,49 +547,70 @@ export class DataGrid extends EventEmitter {
         };
 
         let prop;
-        const data = this.selected;
-        const sortFn = this.$cols[this.$sort.column].sort;
-        const rows = this.$rows;
-        if (this.$cols[this.$sort.column].hasOwnProperty('index'))
-            prop = this.$cols[this.$sort.column].index;
-        else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
-            prop = this.$cols[this.$sort.column].field;
-        else
-            prop = this.$sort.column;
-        const dir = (this.$sort.order === SortOrder.descending) ? -1 : 1;
-        const oData = data.sort((a, b) => {
-            if ((a.parent === -1 && b.parent !== -1) || a.parent !== -1 && b.parent === -1) {
-                if (a.dataIndex > b.dataIndex)
-                    return 1 * dir;
-                if (a.dataIndex < b.dataIndex)
-                    return -1 * dir;
-                if (a.parent > b.parent)
-                    return 1 * dir;
-                if (a.parent < b.parent)
-                    return -1 * dir;
-            }
-            if (sortFn)
-                return sortFn(a.dataIndex, b.dataIndex, dir, prop, rows[a], rows[b], rows);
-            if (rows[a.dataIndex][prop] > rows[b.dataIndex][prop])
-                return 1 * dir;
-            if (rows[a.dataIndex][prop] < rows[b.dataIndex][prop])
-                return -1 * dir;
-            if (this.$children) {
-                if (!rows[a.dataIndex].children && !rows[b].children)
+        let oData;
+        if (this.$sort.column < 0 || this.$sort.column >= this.$cols.length)
+            oData = this.selected.sort((a, b) => {
+                if ((a.parent === -1 && b.parent !== -1) || a.parent !== -1 && b.parent === -1) {
+                    if (a.dataIndex > b.dataIndex)
+                        return 1;
+                    if (a.dataIndex < b.dataIndex)
+                        return -1;
+                    if (a.parent > b.parent)
+                        return 1;
+                    if (a.parent < b.parent)
+                        return -1;
+                    if (a.child < b.child)
+                        return -1;
+                    if (a.child < b.child)
+                        return -1;
                     return 0;
-                if (!rows[a.dataIndex].children && rows[b.dataIndex].children)
-                    return -1 * dir;
-                if (rows[a.dataIndex].children && !rows[b.dataIndex].children)
+                }
+            });
+        else {
+            const data = this.selected;
+            const sortFn = this.$cols[this.$sort.column].sort;
+            const rows = this.$rows;
+            if (this.$cols[this.$sort.column].hasOwnProperty('index'))
+                prop = this.$cols[this.$sort.column].index;
+            else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
+                prop = this.$cols[this.$sort.column].field;
+            else
+                prop = this.$sort.column;
+            const dir = (this.$sort.order === SortOrder.descending) ? -1 : 1;
+            oData = data.sort((a, b) => {
+                if ((a.parent === -1 && b.parent !== -1) || a.parent !== -1 && b.parent === -1) {
+                    if (a.dataIndex > b.dataIndex)
+                        return 1 * dir;
+                    if (a.dataIndex < b.dataIndex)
+                        return -1 * dir;
+                    if (a.parent > b.parent)
+                        return 1 * dir;
+                    if (a.parent < b.parent)
+                        return -1 * dir;
+                }
+                if (sortFn)
+                    return sortFn(a.dataIndex, b.dataIndex, dir, prop, rows[a], rows[b], rows);
+                if (rows[a.dataIndex][prop] > rows[b.dataIndex][prop])
                     return 1 * dir;
-                const ap = this.$sortedChildren[a.dataIndex].map(c => rows[a.dataIndex].children[c][prop]).join(':');
-                const bp = this.$sortedChildren[b.dataIndex].map(c => rows[b.dataIndex].children[c][prop]).join(':');
-                if (ap > bp)
-                    return 1 * dir;
-                if (ap < bp)
+                if (rows[a.dataIndex][prop] < rows[b.dataIndex][prop])
                     return -1 * dir;
-            }
-            return 0;
-        });
+                if (this.$children) {
+                    if (!rows[a.dataIndex].children && !rows[b].children)
+                        return 0;
+                    if (!rows[a.dataIndex].children && rows[b.dataIndex].children)
+                        return -1 * dir;
+                    if (rows[a.dataIndex].children && !rows[b.dataIndex].children)
+                        return 1 * dir;
+                    const ap = this.$sortedChildren[a.dataIndex].map(c => rows[a.dataIndex].children[c][prop]).join(':');
+                    const bp = this.$sortedChildren[b.dataIndex].map(c => rows[b.dataIndex].children[c][prop]).join(':');
+                    if (ap > bp)
+                        return 1 * dir;
+                    if (ap < bp)
+                        return -1 * dir;
+                }
+                return 0;
+            });
+        }
 
         const nData = [];
         const ol = oData.length;
@@ -579,50 +679,70 @@ export class DataGrid extends EventEmitter {
         };
 
         let prop;
-        const data = this.selected;
-        const sortFn = this.$cols[this.$sort.column].sort;
-        const rows = this.$rows;
-        if (this.$cols[this.$sort.column].hasOwnProperty('index'))
-            prop = this.$cols[this.$sort.column].index;
-        else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
-            prop = this.$cols[this.$sort.column].field;
-        else
-            prop = this.$sort.column;
-        const dir = (this.$sort.order === SortOrder.descending) ? -1 : 1;
-        const oData = data.sort((a, b) => {
-            if ((a.parent === -1 && b.parent !== -1) || a.parent !== -1 && b.parent === -1) {
-                if (a.dataIndex > b.dataIndex)
-                    return 1 * dir;
-                if (a.dataIndex < b.dataIndex)
-                    return -1 * dir;
-                if (a.parent > b.parent)
-                    return 1 * dir;
-                if (a.parent < b.parent)
-                    return -1 * dir;
-            }
-            if (sortFn)
-                return sortFn(a.dataIndex, b.dataIndex, dir, prop, rows[a], rows[b], rows);
-            if (rows[a.dataIndex][prop] > rows[b.dataIndex][prop])
-                return 1 * dir;
-            if (rows[a.dataIndex][prop] < rows[b.dataIndex][prop])
-                return -1 * dir;
-            if (this.$children) {
-                if (!rows[a.dataIndex].children && !rows[b].children)
+        let oData;
+        if (this.$sort.column < 0 || this.$sort.column >= this.$cols.length)
+            oData = this.selected.sort((a, b) => {
+                if ((a.parent === -1 && b.parent !== -1) || a.parent !== -1 && b.parent === -1) {
+                    if (a.dataIndex > b.dataIndex)
+                        return 1;
+                    if (a.dataIndex < b.dataIndex)
+                        return -1;
+                    if (a.parent > b.parent)
+                        return 1;
+                    if (a.parent < b.parent)
+                        return -1;
+                    if (a.child < b.child)
+                        return -1;
+                    if (a.child < b.child)
+                        return -1;
                     return 0;
-                if (!rows[a.dataIndex].children && rows[b.dataIndex].children)
-                    return -1 * dir;
-                if (rows[a.dataIndex].children && !rows[b.dataIndex].children)
+                }
+            });
+        else {
+            const data = this.selected;
+            const sortFn = this.$cols[this.$sort.column].sort;
+            const rows = this.$rows;
+            if (this.$cols[this.$sort.column].hasOwnProperty('index'))
+                prop = this.$cols[this.$sort.column].index;
+            else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
+                prop = this.$cols[this.$sort.column].field;
+            else
+                prop = this.$sort.column;
+            const dir = (this.$sort.order === SortOrder.descending) ? -1 : 1;
+            oData = data.sort((a, b) => {
+                if ((a.parent === -1 && b.parent !== -1) || a.parent !== -1 && b.parent === -1) {
+                    if (a.dataIndex > b.dataIndex)
+                        return 1 * dir;
+                    if (a.dataIndex < b.dataIndex)
+                        return -1 * dir;
+                    if (a.parent > b.parent)
+                        return 1 * dir;
+                    if (a.parent < b.parent)
+                        return -1 * dir;
+                }
+                if (sortFn)
+                    return sortFn(a.dataIndex, b.dataIndex, dir, prop, rows[a], rows[b], rows);
+                if (rows[a.dataIndex][prop] > rows[b.dataIndex][prop])
                     return 1 * dir;
-                const ap = this.$sortedChildren[a.dataIndex].map(c => rows[a.dataIndex].children[c][prop]).join(':');
-                const bp = this.$sortedChildren[b.dataIndex].map(c => rows[b.dataIndex].children[c][prop]).join(':');
-                if (ap > bp)
-                    return 1 * dir;
-                if (ap < bp)
+                if (rows[a.dataIndex][prop] < rows[b.dataIndex][prop])
                     return -1 * dir;
-            }
-            return 0;
-        });
-
+                if (this.$children) {
+                    if (!rows[a.dataIndex].children && !rows[b].children)
+                        return 0;
+                    if (!rows[a.dataIndex].children && rows[b.dataIndex].children)
+                        return -1 * dir;
+                    if (rows[a.dataIndex].children && !rows[b.dataIndex].children)
+                        return 1 * dir;
+                    const ap = this.$sortedChildren[a.dataIndex].map(c => rows[a.dataIndex].children[c][prop]).join(':');
+                    const bp = this.$sortedChildren[b.dataIndex].map(c => rows[b.dataIndex].children[c][prop]).join(':');
+                    if (ap > bp)
+                        return 1 * dir;
+                    if (ap < bp)
+                        return -1 * dir;
+                }
+                return 0;
+            });
+        }
         const nData = [];
         const ol = oData.length;
         let p = -1;
@@ -679,6 +799,26 @@ export class DataGrid extends EventEmitter {
             this.addRows(e.data.filter(r => r.parent === -1).map(r => r.data));
             this.emit('paste-done', e);
         }
+    }
+
+    public addNewRow() {
+        const data = {};
+        const e = { data: data, preventDefault: false };
+
+        const cols = this.$cols;
+        let cl = cols.length;
+        while (cl--) {
+            if (cols[cl].hasOwnProperty('index'))
+                data[cols[cl].index] = null;
+            else if (cols[cl].hasOwnProperty('field'))
+                data[cols[cl].field] = null;
+        }
+        this.emit('add', e);
+        if (e.preventDefault) return;
+        this.addRow(e.data);
+        this.focus();
+        this.beginEdit(this.$rows.length - 1);
+        this.emit('add-done');
     }
 
     public delete() {
@@ -826,7 +966,7 @@ export class DataGrid extends EventEmitter {
                 return this.$rows.indexOf(row);
             else
                 return row;
-        }).filter((row) => row < 0 || row >= this.$rows.length).sort();
+        }).filter((row) => row >= 0 && row < this.$rows.length).sort();
         let idx = rows.length;
         while (idx--) {
             this.$rows.splice(rows[idx], 1);
@@ -1300,6 +1440,9 @@ export class DataGrid extends EventEmitter {
             this.$editorClick = null;
             if (this.$editor && this.$editor.editors)
                 this.$editor.editors.map(ed => ed.editorClick = null);
+        });
+        row.addEventListener('contextmenu', (e) => {
+            this.emit('row-contextmenu', e);
         });
         for (c = 0; c < cl; c++) {
             if (!cols[c].visible) continue;
