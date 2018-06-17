@@ -7,7 +7,7 @@
     - Add a remote caching system to save remote paths and data for local files, allowing diff remote/debug systems to work with out having to ask for remote path every time
       - Clear remote caching from preferences dialog or remove all files from %appdata%\jiMUD\editor
     - Performance tweaks and fixes
-    - Formatting will now auto strip trailing whitespace
+    - Formatting will now auto strip trailing white space
     - Remote diff - browse and select a file from the mud if connected and compare it to open file
     - Remote test - allows you to select a remote location to test your local file by uploading it to a temporary name in the same folder as the real remote file.
     - New area dialog now allows you to browse and select remote destination if connected to the mud
@@ -21,14 +21,14 @@
 - **Changed:**
   - Code Editor:
     - Changed formatting rule for semicolon (;), no long can be on a line alone, mostly happened when following a catch or time_expression block
-    - Change how catch is formated, before it used to be put on its own line, it is now treated more like a function, as catch acts more as a function then a keyword
-    - Changed how {} are formated after catch, leave { on the same line as catch as catch is treated more like a function
-    - Moved diff clear, diff local, and diff original into a new submenu folder to help cleanup file menu
+    - Change how catch is formatted, before it used to be put on its own line, it is now treated more like a function, as catch acts more as a function then a keyword
+    - Changed how {} are formatted after catch, leave { on the same line as catch as catch is treated more like a function
+    - Moved diff clear, diff local, and diff original into a new sub menu folder to help cleanup file menu
   - Immortal tools: prefix all immortal tool remote commands with a unique prefix to allow it to know what commands it has sent compared to other window operations
 - **Fixed:**
   - Code Editor:
     - Fixed empty editor on first load if no files opened
-    - New area dialog now properly disables menubar when open
+    - New area dialog now properly disables menu bar when open
     - Fixed formatting of 'char' blocks, most noticeable when '' wrapped a none alpha numeric character
     - After saving new files it should now mark the tab as no longer new
     - Running diff local again on a different file cleared the diff instead
@@ -37,7 +37,7 @@
     - Display errors found when formatting
     - Virtual area editor: room external/item editor would update value even if cancel was selected
   - Character manager:
-    - Prevent running ok event multiple times after adding/renaming/copying more then one or canceling
+    - Prevent running OK event multiple times after adding/renaming/copying more then one or canceling
     - Renaming lost login, password, and development setting
     - Copying did not copy login, password, and development setting
     - When requesting the client reload the character database, when no character load it would create an invalid character named null
@@ -176,7 +176,7 @@
   - Display: Optimize display creation
   - Advanced editor: Changed bold black to send mono11, as many clients cant handle bold black and the mud will handle converts of the code to other clients
   - Remove keyboard shortcut for toggling dev tools for all windows as they are mint for advanced debugging of client
-  - Convert all old menu bars into new menubar system for united code base for easier bug fixing
+  - Convert all old menu bars into new menu bar system for united code base for easier bug fixing
 - **Fixed:**
   - Immortal tools:
     - Buffer size was not correctly being stored as a number when changed from default in preferences
@@ -1035,7 +1035,7 @@
     - Changed how drop down menus where created, now creates on demand instead of staying loaded in memory
     - Area navigator is now  fixed with in the toolbar, should keep it from jumping around or being cut off with long area names
   - Converted from custom bell to system bell sound
-  - View > Status > Limbs was expanded to a new submenu for visible, health and armor toggling
+  - View > Status > Limbs was expanded to a new sub menu for visible, health and armor toggling
   - Upgrade electron to 1.7.0
 - **Fixed:**
   - Capture window
