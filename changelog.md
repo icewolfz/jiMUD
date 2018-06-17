@@ -39,6 +39,7 @@
     - Prevent running ok event multiple times after adding/renaming/copying more then one or canceling
     - Renaming lost login, password, and development setting
     - Copying did not copy login, password, and development setting
+    - When requesting the client reload the character database, when no character load it would create an invalid character named null
   - Attempt to refocus on command input after disconnect, paste special, and progress dialogs are closed
 
 ## 0.4.48 2018-06-05

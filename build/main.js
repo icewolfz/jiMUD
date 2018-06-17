@@ -100,6 +100,19 @@ process.on('uncaughtException', (err) => {
 var characters;
 
 function loadCharacter(char) {
+  if (!char || char.length === 0) {
+    global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
+    global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
+    global.profiles = null;
+    global.character = null;
+    global.characterLogin = null;
+    global.characterPass = null;
+    global.dev = false;
+    global.title = '';
+    global.debug = false;
+    global.editorOnly = false;
+    return;
+  }
   if (!characters)
     characters = { load: 0, characters: {} };
   if (!characters.characters[char]) {
@@ -2205,7 +2218,8 @@ ipcMain.on('flush-end', (event, sender) => {
 
 ipcMain.on('reload-characters', (event) => {
   loadCharacters(true);
-  loadCharacter(global.character);
+  if (global.character)
+    loadCharacter(global.character);
 });
 
 ipcMain.on('profile-item-added', (event, type, profile, item) => {
