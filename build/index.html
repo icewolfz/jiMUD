@@ -1167,6 +1167,7 @@
       _backup.on('progress-start', (title) => {
         ipcRenderer.send('set-progress', { value: 0 });
         ipcRenderer.send('flush', title);
+        client.debug('Flushing map');
         $("#Progressbar").html('<progress max="100"></progress>');
         $("#ProgressTitle").html(title || "Importing data&hellip;");
         $("#Progress")[0].showModal();
@@ -1176,6 +1177,7 @@
         if ($("#Progress")[0].open)
           $("#Progress")[0].close();
         ipcRenderer.send('set-progress', { value: -1 });
+        client.error(err);
         dialog.showMessageBox(remote.getCurrentWindow(), {
           type: 'error',
           title: 'Import error',
@@ -1940,6 +1942,8 @@
     }
 
     ipcRenderer.on('flush-end', (event, sender) => {
+      client.debug('Finished map');
+      client.debug(sender);
       if (sender === 'Saving data')
         _backup.save(2);
       else if (sender === 'Loading data')

@@ -44,7 +44,7 @@ export class Backup extends EventEmitter {
         });
 
         this.client.on('received-GMCP', (mod, obj) => {
-            if (mod.toLowerCase() !== 'client') return;
+            if (mod.toLowerCase() !== 'client' || !obj) return;
             switch (obj.action) {
                 case 'save':
                     if (this._abort) return;
@@ -55,11 +55,12 @@ export class Backup extends EventEmitter {
                     //this.save(2);
                     break;
                 case 'load':
+                    this.client.debug(`Starting load\n    Chunks: ${obj.chunks}\n    Start chunk: ${obj.chunk}\n    Size: ${obj.size}\n`);
                     this._abort = false;
                     this._user = obj.user;
                     this._action = obj.action;
                     this.emit('progress-start', 'Loading data');
-                    this._save = [obj.chunks, obj.chunk, obj.size, ''];
+                    this._save = [obj.chunks || 0, obj.chunk || 0, obj.size, ''];
                     //this.getChunk();
                     break;
                 case 'error':
@@ -77,7 +78,6 @@ export class Backup extends EventEmitter {
         this.client.debug('Map file: ' + this.mapFile);
         const _db = new sqlite3.Database(this.mapFile);
         _db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID', (err, rows) => {
-
             const data = {
                 version: version,
                 profiles: {},
@@ -229,6 +229,10 @@ export class Backup extends EventEmitter {
     }
 
     public abort(err?) {
+        if (err)
+            this.client.debug('client load/save aborted for' + err);
+        else
+            this.client.debug('client load/save aborted');
         this.emit('abort', err);
         this._save = 0;
         this._abort = true;
@@ -236,10 +240,10 @@ export class Backup extends EventEmitter {
             type: 'POST',
             url: this.URL,
             data:
-                {
-                    user: this._user,
-                    a: 'abort'
-                }
+            {
+                user: this._user,
+                a: 'abort'
+            }
         });
     }
 
@@ -251,34 +255,36 @@ export class Backup extends EventEmitter {
             type: 'POST',
             url: this.URL,
             data:
-                {
-                    user: this._user,
-                    a: 'done'
-                }
+            {
+                user: this._user,
+                a: 'done'
+            }
         });
     }
 
     public getChunk() {
+        this.client.debug('Requesting client chunk ' + this._save[1]);
         $.ajax(
             {
                 type: 'POST',
                 url: this.URL,
                 data:
-                    {
-                        user: this._user,
-                        a: 'get',
-                        c: ++this._save[1]
-                    },
+                {
+                    user: this._user,
+                    a: 'get',
+                    c: ++this._save[1]
+                },
                 dataType: 'json',
                 success: (data) => {
                     if (this._abort) return;
                     if (!data)
-                        this.abort(data.error);
+                        this.abort('No data returned');
                     else if (data.error)
                         this.abort(data.error);
                     else {
                         this._save[1] = data.chunk || 0;
                         this._save[3] += data.data || '';
+                        this.client.debug('Got client chunk ' + this._save[1]);
                         this.emit('progress', (this._save[1] + 1) / this._save[0] * 100);
                         if (this._save[1] >= this._save[0] - 1)
                             this.finishLoad();
@@ -298,16 +304,16 @@ export class Backup extends EventEmitter {
                 type: 'POST',
                 url: this.URL,
                 data:
-                    {
-                        user: this._user,
-                        a: 'save',
-                        data: this._save[0].shift(),
-                        append: (this._save[1] > 0 ? 1 : 0)
-                    },
+                {
+                    user: this._user,
+                    a: 'save',
+                    data: this._save[0].shift(),
+                    append: (this._save[1] > 0 ? 1 : 0)
+                },
                 dataType: 'json',
                 success: (data) => {
                     if (!data)
-                        this.abort();
+                        this.abort('No data returned');
                     else if (data.msg !== 'Successfully saved')
                         this.abort(data.msg || 'Error');
                     else if (this._save[0].length > 0) {
@@ -333,6 +339,7 @@ export class Backup extends EventEmitter {
     */
 
     public finishLoad() {
+        this.client.debug('Got last chunk, processing data');
         let data = LZString.decompressFromEncodedURIComponent(this._save[3]);
         data = JSON.parse(data);
         if (data.version === 2) {

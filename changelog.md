@@ -17,6 +17,7 @@
       - Exit editor destination allows remote file selection if connected to mud
   - Character manager: Allow more then # and letters for name, strip any invalid characters and set as login
   - Immortal tools: Error dialogs should appear for all non upload and download errors, as upload and download errors will appear in the queue list next to the item that caused the error
+  - Backup: more debugging output
 - **Changed:**
   - Code Editor:
     - Changed formatting rule for semicolon (;), no long can be on a line alone, mostly happened when following a catch or time_expression block
