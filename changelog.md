@@ -2,9 +2,13 @@
 
 ## 0.4.50
 
+- **New:**
+  - Code Editor: Add upload and upload as system
 - **Fixed:**
   - Profile editor: editor did not properly resize when advanced panel was toggled
   - Display when split scroll enabled would toggle scroll when preferences reloaded
+  - Code editor:
+    - Fix test system for changed/new files, before it only uploaded data saved to disk unsaved files
 
 ## 0.4.49 2018-06-17
 

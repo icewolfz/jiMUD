@@ -2651,6 +2651,61 @@ export class VirtualEditor extends EditorBase {
         this.emit('saved');
     }
 
+    public upload(remoteFile) {
+        remoteFile = remoteFile || this.remote;
+        if (!remoteFile || remoteFile.length === 0) return;
+        const files = [];
+        const remoteRoot = path.dirname(remoteFile);
+        const root = path.dirname(this.file);
+        if (this.changed || this.new) {
+            files.push({ value: this.$mapRaw, remote: remoteFile });
+            if (this.$files['virtual.terrain']) {
+                if (this.new || this.$terrainRaw.dataset.changed === 'true')
+                    files.push({ value: this.$terrainRaw.value, remote: remoteRoot + '/virtual.terrain' });
+                else
+                    files.push({ local: path.join(root, 'virtual.terrain'), remote: remoteRoot + '/virtual.terrain' });
+            }
+            if (this.$files['virtual.state']) {
+                if (this.new || this.$stateRaw.dataset.changed === 'true')
+                    files.push({ value: this.$stateRaw.value, remote: remoteRoot + '/virtual.state' });
+                else
+                    files.push({ local: path.join(root, 'virtual.state'), remote: remoteRoot + '/virtual.state' });
+            }
+            if (this.$files['terrain.desc']) {
+                if (this.new || this.$descriptionRaw.dataset.changed === 'true')
+                    files.push({ value: this.$descriptionRaw.value, remote: remoteRoot + '/terrain.desc' });
+                else
+                    files.push({ local: path.join(root, 'terrain.desc'), remote: remoteRoot + '/terrain.desc' });
+            }
+            if (this.$files['terrain.item']) {
+                if (this.new || this.$itemRaw.dataset.changed === 'true')
+                    files.push({ value: this.$itemRaw.value, remote: remoteRoot + '/terrain.item' });
+                else
+                    files.push({ local: path.join(root, 'terrain.item'), remote: remoteRoot + '/terrain.item' });
+            }
+            if (this.$files['virtual.exits']) {
+                if (this.new || this.$externalRaw.dataset.changed === 'true')
+                    files.push({ value: this.$externalRaw.value, remote: remoteRoot + '/virtual.exits' });
+                else
+                    files.push({ local: path.join(root, 'virtual.exits'), remote: remoteRoot + '/virtual.exits' });
+            }
+        }
+        else {
+            files.push({ local: this.file, remote: remoteFile });
+            if (this.$files['virtual.terrain'])
+                files.push({ local: path.join(root, 'virtual.terrain'), remote: remoteRoot + '/virtual.terrain' });
+            if (this.$files['virtual.state'])
+                files.push({ local: path.join(root, 'virtual.state'), remote: remoteRoot + '/virtual.state' });
+            if (this.$files['terrain.desc'])
+                files.push({ local: path.join(root, 'terrain.desc'), remote: remoteRoot + '/terrain.desc' });
+            if (this.$files['terrain.item'])
+                files.push({ local: path.join(root, 'terrain.item'), remote: remoteRoot + '/terrain.item' });
+            if (this.$files['virtual.exits'])
+                files.push({ local: path.join(root, 'virtual.exits'), remote: remoteRoot + '/virtual.exits' });
+        }
+        this.emit('upload', files);
+    }
+
     public canSaveAs() {
         const files = Object.keys(this.$files).sort().reverse();
         let fl = files.length;
@@ -3353,6 +3408,8 @@ export class VirtualEditor extends EditorBase {
                 return this.$view === View.map || this.$view === View.terrains || this.$view === View.items || this.$view === View.exits;
             case 'buttons':
             case 'menu|view':
+            case 'upload':
+            case 'upload-as':
                 return true;
             case 'cut':
             case 'copy':

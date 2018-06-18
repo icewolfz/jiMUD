@@ -295,6 +295,17 @@ export class MonacoCodeEditor extends EditorBase {
 
     public canSaveAs() { return true; }
 
+    public get value() { return this.$model.getValue(monaco.editor.EndOfLinePreference.LF); }
+
+    public upload(remoteFile) {
+        remoteFile = remoteFile || this.remote;
+        if (!remoteFile || remoteFile.length === 0) return;
+        if (this.changed || this.new)
+            this.emit('upload', [{ value: this.$model.getValue(monaco.editor.EndOfLinePreference.LF), remote: remoteFile }]);
+        else
+            this.emit('upload', [{ local: this.file, remote: remoteFile }]);
+    }
+
     public deleted(keep) {
         if (keep) {
             const old = this.changed;
@@ -399,6 +410,9 @@ export class MonacoCodeEditor extends EditorBase {
             case 'menu|view':
             case 'diff':
             case 'buttons':
+                return true;
+            case 'upload':
+            case 'upload-as':
                 return true;
         }
         return false;

@@ -235,6 +235,14 @@
             </button>
         </div>
         <div class="btn-group" role="group">
+            <button id="btn-upload" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Upload" onclick="uploadFile()">
+                <i class="fa fa-upload"></i>
+            </button>
+            <button id="btn-upload-as" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Upload as..." onclick="uploadFileAs()">
+                <i class="fa fa-cloud-upload"></i>
+            </button>
+        </div>
+        <div class="btn-group" role="group">
             <button id="btn-undo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Undo" onclick="doUndo()">
                 <i class="fa fa-undo"></i>
             </button>
@@ -1047,15 +1055,28 @@
                     enabled: false
                 },
                 {
+                    label: 'Save &As...',
+                    accelerator: "CmdOrCtrl+Shift+S",
+                    click: () => { saveFileAs(); },
+                    enabled: false,
+                },
+                {
                     label: 'Save A&ll',
                     accelerator: "CmdOrCtrl+Alt+S",
                     click: () => { saveAllFiles(); },
                     enabled: false
                 },
+                { type: 'separator' },
                 {
-                    label: 'Save &As',
-                    accelerator: "CmdOrCtrl+Shift+S",
-                    click: () => { saveFileAs(); },
+                    label: '&Upload',
+                    accelerator: "CmdOrCtrl+U",
+                    click: () => { uploadFile(); },
+                    enabled: false,
+                },
+                {
+                    label: 'U&pload As...',
+                    accelerator: "CmdOrCtrl+Alt+U",
+                    click: () => { uploadFileAs(); },
                     enabled: false,
                 },
                 { type: 'separator' },
@@ -1480,9 +1501,13 @@
         $("#btn-close-all").prop('disabled', !enabled);
         menubar.updateItem('File|Close', { enabled: enabled });
         menubar.updateItem('File|Close all', { enabled: enabled });
-        menubar.updateItem('File|save as', { enabled: enabled });
+        menubar.updateItem('File|save as...', { enabled: enabled });
         menubar.updateItem('file|diff|local...', { enabled: enabled && manager.active.editor.supports('diff') });
         menubar.updateItem('file|diff|remote...', { enabled: connected && enabled && manager.active.editor.supports('diff') });
+        menubar.updateItem('file|upload', { enabled: connected && enabled && manager.active.editor.supports('upload') });
+        menubar.updateItem('file|upload as...', { enabled: connected && enabled && manager.active.editor.supports('upload-as') });
+        $("#btn-upload").prop('disabled', !(connected && enabled && manager.active.editor.supports('upload')));
+        $("#btn-upload-as").prop('disabled', !(connected && enabled && manager.active.editor.supports('upload-as')));
         var buttons = document.getElementById("editor-buttons");
         while (buttons.firstChild) {
             buttons.removeChild(buttons.firstChild);
@@ -2566,6 +2591,19 @@
         _ied.on('add', () => {
         });
         _ied.on('remove', () => {
+            if (_ied.queue.length === 0) {
+                closeProgressDialog();
+                if (Array.isArray($tmp)) {
+                    let tl = $tmp.length;
+                    while (tl--) {
+                        var t = $tmp[tl].name;
+                        $tmp[tl].removeCallback();
+                        if (existsSync(t))
+                            fs.unlinkSync(t);
+                    }
+                    $tmp = null;
+                }
+            }
         });
         _ied.on('update', (item) => {
             setProgressDialogValue(Math.ceil(item.percent * 100));
@@ -2615,6 +2653,14 @@
                 monaco.editor.setModelMarkers(model, '', markers);
                 _ied.deleteFile(obj.path + '/' + obj.file);
                 closeProgressDialog();
+                if ($tmp) {
+                    var t = $tmp.name;
+                    _ied.removeActive();
+                    $tmp.removeCallback();
+                    $tmp = null;
+                    if (existsSync(t))
+                        fs.unlinkSync(t);
+                }
             }
         });
         _ied.on('download-finished', (item) => {
@@ -2955,10 +3001,19 @@
     ipcRenderer.on('connected', () => {
         connected = true;
         menubar.updateItem('file|diff|remote...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('diff') });
+        menubar.updateItem('file|upload', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('upload') });
+        menubar.updateItem('file|upload as...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('upload-as') });
+        $("#btn-upload").prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload')));
+        $("#btn-upload-as").prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload-as')));
     });
     ipcRenderer.on('closed', () => {
         connected = false;
         menubar.updateItem('file|diff|remote...', { enabled: false });
+        menubar.updateItem('file|upload', { enabled: false });
+        menubar.updateItem('file|upload as...', { enabled: false });
+        $("#btn-upload").prop('disabled', true);
+        $("#btn-upload-as").prop('disabled', true);
+
     });
 
     ipcRenderer.on('editor-setting-changed', () => {
@@ -3448,6 +3503,47 @@
         return true;
     }
 
+    function uploadFile(panel) {
+        if (!panel) {
+            if (!manager.active)
+                return false;
+            panel = manager.active;
+        }
+        if (!panel.editor.supports('upload')) return;
+        if (!panel.editor.remote || panel.editor.remote.length === 0) {
+            showBrowseDialog({
+                defaultFile: panel.editor.remote,
+                properties: ['openFile'],
+                filters: $fileFilters,
+            }, (files) => {
+                if (!files || files.length === 0) return;
+                panel.editor.remote = files[0];
+                if (!panel.editor.new)
+                    setRemoteCache(panel.editor.file, panel.editor.remote);
+                panel.editor.upload();
+            });
+        }
+        else
+            panel.editor.upload();
+    }
+
+    function uploadFileAs(panel) {
+        if (!panel) {
+            if (!manager.active)
+                return false;
+            panel = manager.active;
+        }
+        if (!panel.editor.supports('upload-as')) return;
+        showBrowseDialog({
+            defaultFile: panel.editor.remote,
+            properties: ['openFile'],
+            filters: $fileFilters,
+        }, (files) => {
+            if (!files || files.length === 0) return;
+            panel.editor.upload(files[0]);
+        });
+    }
+
     function revertFile(panel) {
         if (!panel) {
             if (!manager.active)
@@ -3793,18 +3889,50 @@
                         filters: $fileFilters,
                     }, (files) => {
                         if (!files || files.length === 0) return;
-                        p.editor.remote = files[0];
-                        setRemoteCache(file, p.editor.remote);
+                        if (p.editor.new || p.editor.changed) {
+                            $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
+                            p.editor.write(p.editor.value, $tmp.name);
+                            _ied.uploadTo($tmp.name, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
+                            showProgressDialog('Uploading&hellip;', () => {
+                                _ied.removeActive();
+                                var t = $tmp.name;
+                                _ied.removeActive();
+                                $tmp.removeCallback();
+                                $tmp = null;
+                                if (existsSync(t))
+                                    fs.unlinkSync(t);
+                            });
+                        }
+                        else {
+                            p.editor.remote = files[0];
+                            setRemoteCache(file, p.editor.remote);
+                            _ied.uploadTo(file, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
+                            showProgressDialog('Uploading&hellip;', () => {
+                                _ied.removeActive();
+                            });
+                        }
+                    });
+                else {
+                    if (p.editor.new || p.editor.changed) {
+                        $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
+                        p.editor.write(p.editor.value, $tmp.name);
+                        _ied.uploadTo($tmp.name, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
+                        showProgressDialog('Uploading&hellip;', () => {
+                            _ied.removeActive();
+                            var t = $tmp.name;
+                            _ied.removeActive();
+                            $tmp.removeCallback();
+                            $tmp = null;
+                            if (existsSync(t))
+                                fs.unlinkSync(t);
+                        });
+                    }
+                    else {
                         _ied.uploadTo(file, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
                         showProgressDialog('Uploading&hellip;', () => {
                             _ied.removeActive();
                         });
-                    });
-                else {
-                    _ied.uploadTo(file, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
-                    showProgressDialog('Uploading&hellip;', () => {
-                        _ied.removeActive();
-                    });
+                    }
                 }
             });
             p.editor.on('reload', (type, file) => {
@@ -3856,6 +3984,25 @@
                 updatePanel(p);
                 if (p !== manager.active) return;
                 doUpdate(2);
+            });
+            p.editor.on('upload', files => {
+                if (!files || files.length === 0) return;
+                let fl = files.length;
+                $tmp = [];
+                for (let f = 0; f < fl; f++) {
+                    if (files[f].local)
+                        _ied.uploadTo(files[f].local, files[f].remote, false);
+                    else if (files[f].value) {
+                        $tmp.push(tmp.fileSync({ prefix: 'jiMUD-' }));
+                        p.editor.write(files[f].value, $tmp[$tmp.length - 1].name);
+                        _ied.uploadTo($tmp.name, files[f].remote, false);
+                    }
+                }
+                if ($tmp.length === 0)
+                    $tmp = null;
+                showProgressDialog('Uploading&hellip;', () => {
+                    _ied.clear();
+                });
             });
             p.editor.on('reverted', () => {
                 updatePanel(p);
