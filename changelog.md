@@ -10,6 +10,7 @@
   - Code editor:
     - Fix test system for changed/new files, before it only uploaded data saved to disk unsaved files
     - When closing editor it would not correctly remember new files that where saved
+    - Remove errors when dragging non tab over editor
 
 ## 0.4.49 2018-06-17
 

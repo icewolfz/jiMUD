@@ -99,7 +99,7 @@ export class DockManager extends EventEmitter {
         pane.on('keydown', e => this.emit('keydown', e, this.panes.indexOf(pane)));
         pane.on('dragenter', e => {
             this.emit('dragenter', e, this.panes.indexOf(pane));
-            if (e.defaultPrevented) return;
+            if (e.defaultPrevented || !this.dragPanel) return;
             //if (pane === this.dragPanel.pane) return;
             this.$dropOutline.style.display = 'block';
             const b = pane.bounds;
@@ -130,14 +130,14 @@ export class DockManager extends EventEmitter {
         });
         pane.on('dragleave', e => {
             this.emit('dragleave', e, this.panes.indexOf(pane));
-            if (e.defaultPrevented) return;
+            if (e.defaultPrevented || !this.dragPanel) return;
             this.$dropOutline.style.display = 'none';
             e.preventDefault();
             e.stopPropagation();
         });
         pane.on('dragover', e => {
             this.emit('dragover', e, this.panes.indexOf(pane));
-            if (e.defaultPrevented) return;
+            if (e.defaultPrevented || !this.dragPanel) return;
             this.$dropOutline.style.display = 'block';
             const b = this.$dragBounds;
             if (this.dragPanel.dock === pane && pane.panels.length === 1) {
@@ -162,7 +162,7 @@ export class DockManager extends EventEmitter {
         });
         pane.on('drop', e => {
             this.emit('drop', e, this.panes.indexOf(pane));
-            if (e.defaultPrevented) return;
+            if (e.defaultPrevented || !this.dragPanel) return;
             this.$dropOutline.style.display = 'none';
             let p;
             const dock = this.dragPanel.dock;
