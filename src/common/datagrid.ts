@@ -2020,6 +2020,7 @@ export class DataGrid extends EventEmitter {
         }
         if (typeof row === 'number')
             row = this.$body.firstElementChild.children[row];
+        if(!row) return;
         const top = row.offsetTop;
         const height = row.offsetHeight;
         const sTop = this.$body.parentElement.scrollTop;
