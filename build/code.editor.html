@@ -2851,13 +2851,13 @@
         if (_open) {
             if (options.opened.length && Array.isArray(options.opened[0])) {
                 manager.layout = options.layout;
-                options.opened[0] = options.opened[0].concat(_open.map((l) => { return { file: l[0], remote: l[1] }; }));
+                options.opened[0] = options.opened[0].concat(_open.map((l) => { return { file: l[0], remote: l[1], remoteEdit: [2] }; }));
                 let l = options.opened.length;
                 while (l--)
                     openFiles(options.opened[l], false, manager.panes[l]);
             }
             else
-                openFiles(options.opened.concat(_open.map((l) => { return { file: l[0], remote: l[1] }; })));
+                openFiles(options.opened.concat(_open.map((l) => { return { file: l[0], remote: l[1], remoteEdit: [2] }; })));
             _open = 0;
         }
         else if (options.opened.length && Array.isArray(options.opened[0])) {
@@ -2893,7 +2893,8 @@
                     if (!confirmSave(p))
                         return false;
                 }
-                if (!p.editor.new)
+                //only save none new and local sourced
+                if (!p.editor.new && p.editor.source === 0)
                     opened[s].unshift({
                         file: p.editor.file,
                         remote: p.editor.remote
@@ -2984,14 +2985,14 @@
         return;
     };
 
-    ipcRenderer.on('open-editor', (event, file, remoteFile) => {
+    ipcRenderer.on('open-editor', (event, file, remoteFile, remoteEdit) => {
         if (_loading) {
             if (!_open)
                 _open = [];
-            _open.push([file, remoteFile]);
+            _open.push([file, remoteFile, remoteEdit]);
         }
         else
-            openFile(file, remoteFile);
+            openFile(file, remoteFile, null, remoteEdit);
     });
 
     ipcRenderer.on('send-editor', (event, text, window) => {
@@ -3322,7 +3323,7 @@
         newFromFile(parseTemplate(path.join('{assets}', 'templates', 'monsters', 'base.c')), 'monster');
     }
 
-    function openFile(file, remoteFile, dock) {
+    function openFile(file, remoteFile, dock, remoteEdit) {
         if (!file || file.length === 0) {
             dialog.showOpenDialog(remote.getCurrentWindow(),
                 {
@@ -3343,7 +3344,7 @@
             else
                 setRemoteCache(file, remoteFile);
             _recent.unshift({ file: file, remote: remoteFile });
-            createEditor({ file: file, open: true, remote: remoteFile }, true, dock);
+            createEditor({ file: file, open: true, remote: remoteFile, source: remoteEdit ? 1 : 0 }, true, dock);
             doUpdate(25);
         }
     }
@@ -3365,7 +3366,7 @@
             else
                 setRemoteCache(files[f].file || files[f].path, files[f].remote);
             _recent.unshift({ file: files[f].file || files[f].path, remote: files[f].remote });
-            var p = createEditor({ file: files[f].file || files[f].path, remote: files[f].remote, open: true });
+            var p = createEditor({ file: files[f].file || files[f].path, remote: files[f].remote, open: true, source: files[f].remoteEdit ? 1 : 0 });
             if (p)
                 panels.push(p);
         }
@@ -3747,7 +3748,7 @@
                     stopWatchFile(files[f]);
                 }
             };
-            if (path.extname(data.file) === '.map') {
+            if (path.extname(data.file) === '.map' && data.source !== 1) {
                 data.options = options.virtualOptions;
                 p.editor = new VirtualEditor(data);
                 p.editor.on('room-dblclick', (room) => {

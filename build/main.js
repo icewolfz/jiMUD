@@ -1924,20 +1924,20 @@ ipcMain.on('set-color', (event, type, color, code, window) => {
   }
 });
 
-ipcMain.on('open-editor', (event, file, remote) => {
+ipcMain.on('open-editor', (event, file, remote, remoteEdit) => {
   showCodeEditor();
   //win.webContents.executeJavaScript('showCodeEditor()');
-  openEditor(file, remote);
+  openEditor(file, remote, remoteEdit);
 });
 
-function openEditor(file, remote) {
+function openEditor(file, remote, remoteEdit) {
   if (!codeReady || !winCode) {
     setTimeout(() => {
-      openEditor(file, remote);
+      openEditor(file, remote, remoteEdit);
     }, 1000);
   }
   else {
-    winCode.webContents.send('open-editor', file, remote);
+    winCode.webContents.send('open-editor', file, remote, remoteEdit);
   }
 }
 

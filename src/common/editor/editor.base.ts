@@ -13,6 +13,7 @@ export interface EditorOptions {
     options?: any;
     watch?: Function;
     watchStop?: Function;
+    source?: Source;
 }
 
 export enum FileState {
@@ -86,6 +87,8 @@ export abstract class EditorBase extends EventEmitter {
             this.state |= FileState.new;
         if (options.remote)
             this.remote = options.remote;
+        if (options.source !== Source.local)
+            this.source = options.source;
     }
 
     set parent(parent) {
