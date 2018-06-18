@@ -13,6 +13,7 @@ export class EditorSettings {
     public nativeIcons: boolean = false;
     public spellchecking: true;
     public remote = '.';
+    public uploadAs;
 
     public window = {
         persistent: false,

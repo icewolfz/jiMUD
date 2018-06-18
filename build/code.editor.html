@@ -2612,7 +2612,7 @@
             }
         });
         _ied.on('update', (item) => {
-            if(!item) return;
+            if (!item) return;
             setProgressDialogValue(Math.ceil(item.percent * 100));
         });
         _ied.on('cmd', (obj) => {
@@ -3544,12 +3544,14 @@
         }
         if (!panel.editor.supports('upload-as')) return;
         showBrowseDialog({
-            defaultFile: panel.editor.remote,
+            defaultFile: options.uploadAs || panel.editor.remote,
             properties: ['saveFile'],
             filters: $fileFilters,
         }, (files) => {
             if (!files || files.length === 0) return;
             panel.editor.upload(files[0]);
+            options.uploadAs = files[0];
+            saveOptions();
         });
     }
 
