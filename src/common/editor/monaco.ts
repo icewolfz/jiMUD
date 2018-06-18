@@ -297,7 +297,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public get value() { return this.$model.getValue(monaco.editor.EndOfLinePreference.LF); }
 
-    public upload(remoteFile) {
+    public upload(remoteFile?) {
         remoteFile = remoteFile || this.remote;
         if (!remoteFile || remoteFile.length === 0) return;
         if (this.changed || this.new)

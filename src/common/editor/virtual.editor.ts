@@ -2651,7 +2651,7 @@ export class VirtualEditor extends EditorBase {
         this.emit('saved');
     }
 
-    public upload(remoteFile) {
+    public upload(remoteFile?) {
         remoteFile = remoteFile || this.remote;
         if (!remoteFile || remoteFile.length === 0) return;
         const files = [];
