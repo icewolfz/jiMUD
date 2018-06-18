@@ -900,9 +900,12 @@ export class DataGrid extends EventEmitter {
             indexes = [indexes[0]];
         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
         this.$selected = indexes.map(i => this.$sortedRows.indexOf(i));
+        const rows = <HTMLElement>(<HTMLElement>this.$body.firstChild);
         this.$selected.map(r => {
-            const el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[r];
-            el.classList.add('selected');
+            if (r < 0 || r >= rows.children.length) return;
+            const el = rows.children[r];
+            if (el)
+                el.classList.add('selected');
         });
         if (scroll)
             this.scrollToRow(this.$selected[0]);
