@@ -791,7 +791,7 @@
     var _ied;
     var $dialog;
     var $dialogs = {};
-    var $tmp;
+    var $tmp = {};
 
     var $fileFilters = [
         { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
@@ -1165,13 +1165,13 @@
                                     filters: $fileFilters,
                                 }, (files) => {
                                     if (!files || files.length === 0) return;
-                                    $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
-                                    _ied.downloadToFile(files[0], $tmp.name.substr(0, $tmp.name.length - 4), false, 'editor-download:diffRemote:' + manager.active.id, false);
+                                    $tmp[files[0]] = tmp.fileSync({ prefix: 'jiMUD-' });
+                                    _ied.downloadToFile(files[0], $tmp[files[0]].name.substr(0, $tmp[files[0]].name.length - 4), false, 'editor-download:diffRemote:' + manager.active.id, false);
                                     showProgressDialog('Downloading&hellip;', () => {
-                                        var t = $tmp.name;
+                                        var t = $tmp[files[0]].name;
                                         _ied.removeActive();
-                                        $tmp.removeCallback();
-                                        $tmp = null;
+                                        $tmp[files[0]].removeCallback();
+                                        delete $tmp[files[0]];
                                         if (existsSync(t))
                                             fs.unlinkSync(t);
                                     });
@@ -1275,10 +1275,7 @@
         }
     });
     manager.on('removed', (e, pane) => {
-        e.panel.editor.close();
-        if (e.panel.diffFile)
-            stopWatchFile(e.panel.diffFile);
-        delete _editors[e.panel.editor.file];
+        closeEditor(e.panel);
         if (manager.panes[pane].panels.length === 0) {
             window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
             window.$editors[pane].domElement.style.display = '';
@@ -2596,18 +2593,15 @@
         });
         _ied.on('add', () => {
         });
-        _ied.on('remove', () => {
+        _ied.on('remove', (item) => {
             if (_ied.queue.length === 1) {
                 closeProgressDialog();
-                if (Array.isArray($tmp)) {
-                    let tl = $tmp.length;
-                    while (tl--) {
-                        var t = $tmp[tl].name;
-                        $tmp[tl].removeCallback();
-                        if (existsSync(t))
-                            fs.unlinkSync(t);
-                    }
-                    $tmp = null;
+                if ($tmp[item.remote]) {
+                    var t = tmp[item.remote].name;
+                    $tmp[item.remote].removeCallback();
+                    if (existsSync(t))
+                        fs.unlinkSync(t);
+                    delete $tmp[item.remote];
                 }
             }
         });
@@ -2660,11 +2654,11 @@
                 monaco.editor.setModelMarkers(model, '', markers);
                 _ied.deleteFile(obj.path + '/' + obj.file);
                 closeProgressDialog();
-                if ($tmp) {
-                    var t = $tmp.name;
+                if ($tmp[obj.path + '/' + obj.file]) {
+                    var t = $tmp[obj.path + '/' + obj.file].name;
                     _ied.removeActive();
-                    $tmp.removeCallback();
-                    $tmp = null;
+                    $tmp[obj.path + '/' + obj.file].removeCallback();
+                    delete $tmp[obj.path + '/' + obj.file];
                     if (existsSync(t))
                         fs.unlinkSync(t);
                 }
@@ -2689,11 +2683,18 @@
                 manager.active.editor.activate(window.$dEditors[dock]);
                 window.$dEditors[dock].layout();
                 document.getElementById('progress-dialog').callback = null;
-                var t = $tmp.name;
-                $tmp.removeCallback();
-                $tmp = null;
+                var t = $tmp[item.remote].name;
+                $tmp[item.remote].removeCallback();
+                delete $tmp[item.remote];
                 if (existsSync(t))
                     fs.unlinkSync(t);
+                closeProgressDialog();
+                doUpdate(2);
+            }
+            else if (item.ID.startsWith('editor-download:remote-open:')) {
+                id = parseInt(item.ID.substr(28));
+                document.getElementById('progress-dialog').callback = null;
+                openFile($tmp[item.remote].name, item.remote, null, true, $tmp[item.remote]);
                 closeProgressDialog();
                 doUpdate(2);
             }
@@ -2966,11 +2967,8 @@
                 //clean up
                 var keys = Object.keys(_editors);
                 var p = keys.length;
-                while (p--) {
-                    _editors[keys[p]].editor.close();
-                    if (_editors[keys[p]].diffFile)
-                        stopWatchFile(_editors[keys[p]].diffFile);
-                }
+                while (p--)
+                    closeEditor(_editors[keys[p]]);
                 if (watcher)
                     watcher.close();
                 $closeWindow = true;
@@ -3323,20 +3321,68 @@
         newFromFile(parseTemplate(path.join('{assets}', 'templates', 'monsters', 'base.c')), 'monster');
     }
 
-    function openFile(file, remoteFile, dock, remoteEdit) {
-        if (!file || file.length === 0) {
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+    function openRemote(remoteFile) {
+        if (!connected) {
+            dialog.showMessageBox(
+                remote.getCurrentWindow(),
                 {
-                    filters: $fileFilters,
-                    properties: ['multiSelections', 'openFile'],
-                    defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
-                        return;
-                    }
-                    openFiles(fileNames.map((l) => { return { file: l }; }), true, dock);
+                    type: 'error',
+                    title: 'Must be logged into the mud',
+                    message: 'Must be connected to the mud to open a remote file',
+                    defaultId: 1
                 });
+            return;
+        }
+        if (remoteFile && remoteFile.length !== 0) {
+            $tmp[remoteFile] = tmp.fileSync({ prefix: 'jiMUD-' });
+            _ied.downloadToFile($tmp[remoteFile].name, remoteFile, false, 'editor-download:remote-open:' + manager.active.id, false);
+            showProgressDialog('Downloading&hellip;', () => {
+                var t = $tmp[remoteFile].name;
+                _ied.removeActive();
+                $tmp[remoteFile].removeCallback();
+                delete $tmp[remoteFile];
+                if (existsSync(t))
+                    fs.unlinkSync(t);
+            });
+        }
+        else {
+            showBrowseDialog({
+                defaultFile: manager.active.editor.remote,
+                properties: ['openFile'],
+                filters: $fileFilters,
+            }, (files) => {
+                if (!files || files.length === 0) return;
+                $tmp[files[0]] = tmp.fileSync({ prefix: 'jiMUD-' });
+                _ied.downloadToFile($tmp[files[0]].name, files[0], false, 'editor-download:remote-open:' + manager.active.id, false);
+                showProgressDialog('Downloading&hellip;', () => {
+                    var t = $tmp[files[0]].name;
+                    _ied.removeActive();
+                    $tmp[files[0]].removeCallback();
+                    delete $tmp[files[0]];
+                    if (existsSync(t))
+                        fs.unlinkSync(t);
+                });
+            });
+        }
+    }
+
+    function openFile(file, remoteFile, dock, remoteEdit, tmpObj) {
+        if (!file || file.length === 0) {
+            if (remoteEdit)
+                openRemote(remoteFile);
+            else
+                dialog.showOpenDialog(remote.getCurrentWindow(),
+                    {
+                        filters: $fileFilters,
+                        properties: ['multiSelections', 'openFile'],
+                        defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
+                    },
+                    function (fileNames) {
+                        if (fileNames === undefined) {
+                            return;
+                        }
+                        openFiles(fileNames.map((l) => { return { file: l }; }), true, dock);
+                    });
         }
         else {
             if (!remoteFile || remoteFile.length === 0)
@@ -3345,7 +3391,7 @@
                 setRemoteCache(file, remoteFile);
             if (!remoteEdit)
                 _recent.unshift({ file: file, remote: remoteFile });
-            createEditor({ file: file, open: true, remote: remoteFile, source: remoteEdit ? 1 : 0 }, true, dock);
+            createEditor({ file: file, open: true, remote: remoteFile, source: remoteEdit ? 1 : 0 }, true, dock, tmpObj);
             doUpdate(25);
         }
     }
@@ -3613,6 +3659,28 @@
         });
     }
 
+    function closeEditor(panel) {
+        if (!panel) {
+            if (!manager.active)
+                return false;
+            panel = manager.active;
+        }
+        panel.editor.close();
+        if (panel.tmp) {
+            var t = panel.tmp.name;
+            panel.tmp.removeCallback();
+            panel.tmp = null;
+            if (existsSync(t))
+                fs.unlinkSync(t);
+        }
+        if (panel.diffFile)
+            stopWatchFile(panel.diffFile);
+        if (panel.editor.source)
+            delete _editors['remote:' + panel.editor.remote];
+        else
+            delete _editors[panel.editor.file];
+    }
+
     function revertFile(panel) {
         if (!panel) {
             if (!manager.active)
@@ -3783,8 +3851,12 @@
         }
     }
 
-    function createEditor(data, add, dock) {//file, open, remoteFile, _new, value) {
-        var p = findEditor(data.file);
+    function createEditor(data, add, dock, tmpObj) {//file, open, remoteFile, _new, value) {
+        var p;
+        if (data.source)
+            p = findEditor('remote:' + data.remote);
+        else
+            p = findEditor(data.file);
         if (p) {
             p.editor.remote = data.remote;
             manager.switchToPanel(p);
@@ -3793,6 +3865,7 @@
         else {
             _loading++;
             p = manager.createPanel(path.basename(data.file), getFileIcon(data.file), data.file);
+            p.tmp = tmpObj;
             data.container = p.pane;
             data.watch = (files) => {
                 if (!files) return;
@@ -3959,45 +4032,47 @@
                     }, (files) => {
                         if (!files || files.length === 0) return;
                         p.editor.remote = files[0];
+                        var remoteFile = path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote);
                         if (p.editor.new || p.editor.changed) {
-                            $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
-                            p.editor.write(p.editor.value, $tmp.name);
-                            _ied.uploadTo($tmp.name, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
+                            $tmp[remoteFile] = tmp.fileSync({ prefix: 'jiMUD-' });
+                            p.editor.write(p.editor.value, $tmp[remoteFile].name);
+                            _ied.uploadTo($tmp[remoteFile].name, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
                             showProgressDialog('Uploading&hellip;', () => {
                                 _ied.removeActive();
-                                var t = $tmp.name;
+                                var t = $tmp[remoteFile].name;
                                 _ied.removeActive();
-                                $tmp.removeCallback();
-                                $tmp = null;
+                                $tmp[remoteFile].removeCallback();
+                                delete $tmp[remoteFile];
                                 if (existsSync(t))
                                     fs.unlinkSync(t);
                             });
                         }
                         else {
                             setRemoteCache(file, p.editor.remote);
-                            _ied.uploadTo(file, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
+                            _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
                             showProgressDialog('Uploading&hellip;', () => {
                                 _ied.removeActive();
                             });
                         }
                     });
                 else {
+                    var remoteFile = path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote);
                     if (p.editor.new || p.editor.changed) {
-                        $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
-                        p.editor.write(p.editor.value, $tmp.name);
-                        _ied.uploadTo($tmp.name, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
+                        $tmp[remoteFile] = tmp.fileSync({ prefix: 'jiMUD-' });
+                        p.editor.write(p.editor.value, $tmp[remoteFile].name);                        
+                        _ied.uploadTo($tmp[remoteFile].name, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
                         showProgressDialog('Uploading&hellip;', () => {
                             _ied.removeActive();
-                            var t = $tmp.name;
+                            var t = $tmp[remoteFile].name;
                             _ied.removeActive();
-                            $tmp.removeCallback();
-                            $tmp = null;
+                            $tmp[remoteFile].removeCallback();
+                            delete $tmp[remoteFile];
                             if (existsSync(t))
                                 fs.unlinkSync(t);
                         });
                     }
                     else {
-                        _ied.uploadTo(file, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
+                        _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
                         showProgressDialog('Uploading&hellip;', () => {
                             _ied.removeActive();
                         });
@@ -4057,19 +4132,16 @@
             p.editor.on('upload', files => {
                 if (!files || files.length === 0) return;
                 let fl = files.length;
-                $tmp = [];
+
                 for (let f = 0; f < fl; f++) {
                     if (files[f].local)
                         _ied.uploadTo(files[f].local, files[f].remote, false);
                     else if (files[f].hasOwnProperty('value')) {
-                        var t = tmp.fileSync({ prefix: 'jiMUD-' });
-                        $tmp.push(t);
-                        p.editor.write(files[f].value || '', t.name);
-                        _ied.uploadTo(t.name, files[f].remote, false);
+                        $tmp[files[f].remote] = tmp.fileSync({ prefix: 'jiMUD-' });
+                        p.editor.write(files[f].value || '', $tmp[files[f].remote].name);
+                        _ied.uploadTo($tmp[files[f].remote].name, files[f].remote, false);
                     }
                 }
-                if ($tmp.length === 0)
-                    $tmp = null;
                 showProgressDialog('Uploading&hellip;', () => {
                     _ied.clear();
                 });
@@ -4240,7 +4312,10 @@
             p.editor.on('new-file', (file, value) => {
                 newFromValue(value, file);
             });
-            _editors[data.file] = p;
+            if (data.source)
+                _editors['remote:' + data.remote] = p;
+            else
+                _editors[data.file] = p;
             p.spellCheck = options.spellCheck;
             _loading--;
         }
