@@ -2283,7 +2283,7 @@ export class ScrollBar extends EventEmitter {
         ];
 
         //const m = this.maxPosition;
-        const p = Math.ceil(this.position / this._ratio);
+        const p = Math.ceil(this._position / this._ratio);
         //p = (this.position / this.scrollSize) * this.maxPosition;
         //p = (p < 0 ? Math.floor(p) : Math.ceil(p));
         if (this._type === ScrollType.horizontal) {

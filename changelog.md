@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Profile editor: editor did not properly resize when advanced panel was toggled
+  - Display when split scroll enabled would toggle scroll when preferences reloaded
 
 ## 0.4.49 2018-06-17
 
