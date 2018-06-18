@@ -2,6 +2,9 @@
 
 ## 0.4.50
 
+- **Fixed:**
+  - Profile editor: editor did not properly resize when advanced panel was toggled
+
 ## 0.4.49 2018-06-17
 
 - **New:**

@@ -2450,6 +2450,8 @@ export function init() {
             $(this).closest('table').css('min-height', '');
             ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: false });
         }
+        if (_ide && editors[editor.substr(0, editor.length - 7) + '-value'])
+            editors[editor.substr(0, editor.length - 7) + '-value'].resize(true);
     });
 
     ['cut', 'copy', 'paste'].forEach((event) => {
