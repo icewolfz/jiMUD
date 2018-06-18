@@ -2880,15 +2880,17 @@
             opened[s] = [];
             while (k--) {
                 p = panels[k];
+                if (p.editor.new)
+                    p.editor.remote = null;
+                if (p.editor.new || p.editor.changed) {
+                    if (!confirmSave(p))
+                        return false;
+                }
                 if (!p.editor.new)
                     opened[s].unshift({
                         file: p.editor.file,
                         remote: p.editor.remote
                     });
-                if (!p.editor.new && !p.editor.changed)
-                    continue;
-                if (!confirmSave(p))
-                    return false;
             }
         }
         if (!options) loadOptions();
@@ -3889,6 +3891,7 @@
                         filters: $fileFilters,
                     }, (files) => {
                         if (!files || files.length === 0) return;
+                        p.editor.remote = files[0];
                         if (p.editor.new || p.editor.changed) {
                             $tmp = tmp.fileSync({ prefix: 'jiMUD-' });
                             p.editor.write(p.editor.value, $tmp.name);
@@ -3904,7 +3907,6 @@
                             });
                         }
                         else {
-                            p.editor.remote = files[0];
                             setRemoteCache(file, p.editor.remote);
                             _ied.uploadTo(file, path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote), false, 'editor-upload:debug:' + manager.active.id, false);
                             showProgressDialog('Uploading&hellip;', () => {
@@ -3993,9 +3995,10 @@
                     if (files[f].local)
                         _ied.uploadTo(files[f].local, files[f].remote, false);
                     else if (files[f].value) {
-                        $tmp.push(tmp.fileSync({ prefix: 'jiMUD-' }));
-                        p.editor.write(files[f].value, $tmp[$tmp.length - 1].name);
-                        _ied.uploadTo($tmp.name, files[f].remote, false);
+                        var t = tmp.fileSync({ prefix: 'jiMUD-' });
+                        $tmp.push(t);
+                        p.editor.write(files[f].value, t.name);
+                        _ied.uploadTo(t.name, files[f].remote, false);
                     }
                 }
                 if ($tmp.length === 0)
