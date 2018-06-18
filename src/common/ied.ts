@@ -148,7 +148,10 @@ export class IED extends EventEmitter {
                 break;
             case 'error':
                 if (obj.tag && this.prefix && !obj.tag.startsWith(this.prefix))
+                {
+                    this.nextGMCP();
                     return;
+                }
                 switch (obj.code) {
                     case IEDError.DL_NOTSTART:
                     case IEDError.DL_TOOMANY:
