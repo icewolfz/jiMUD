@@ -115,7 +115,10 @@ export class IED extends EventEmitter {
                     if (e.data.last) {
                         this.active.state = ItemState.done;
                         this.emit('upload-finished', this.active);
-                        this.emit('message', 'Upload complete: ' + this.active.remote);
+                        if (this.active)
+                            this.emit('message', 'Upload complete: ' + this.active.remote);
+                        else
+                            this.emit('message', 'Upload complete');
                         this.removeActive();
                     }
                     else {
