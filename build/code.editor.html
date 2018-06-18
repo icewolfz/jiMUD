@@ -2597,7 +2597,7 @@
         _ied.on('add', () => {
         });
         _ied.on('remove', () => {
-            if (_ied.queue.length === 0) {
+            if (_ied.queue.length === 1) {
                 closeProgressDialog();
                 if (Array.isArray($tmp)) {
                     let tl = $tmp.length;
@@ -2612,6 +2612,7 @@
             }
         });
         _ied.on('update', (item) => {
+            if(!item) return;
             setProgressDialogValue(Math.ceil(item.percent * 100));
         });
         _ied.on('cmd', (obj) => {
@@ -4000,10 +4001,10 @@
                 for (let f = 0; f < fl; f++) {
                     if (files[f].local)
                         _ied.uploadTo(files[f].local, files[f].remote, false);
-                    else if (files[f].value) {
+                    else if (files[f].hasOwnProperty('value')) {
                         var t = tmp.fileSync({ prefix: 'jiMUD-' });
                         $tmp.push(t);
-                        p.editor.write(files[f].value, t.name);
+                        p.editor.write(files[f].value || '', t.name);
                         _ied.uploadTo(t.name, files[f].remote, false);
                     }
                 }
