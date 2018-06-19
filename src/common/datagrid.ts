@@ -1012,6 +1012,7 @@ export class DataGrid extends EventEmitter {
         let child;
         while (sl--) {
             el = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[this.$selected[sl]]);
+            if (!el) continue;
             dataIndex = +el.dataset.dataIndex;
             parent = +el.dataset.parent;
             child = +el.dataset.child;
@@ -2020,7 +2021,7 @@ export class DataGrid extends EventEmitter {
         }
         if (typeof row === 'number')
             row = this.$body.firstElementChild.children[row];
-        if(!row) return;
+        if (!row) return;
         const top = row.offsetTop;
         const height = row.offsetHeight;
         const sTop = this.$body.parentElement.scrollTop;
