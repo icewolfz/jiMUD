@@ -3,7 +3,9 @@
 ## 0.4.50
 
 - **New:**
-  - Code Editor: Add upload and upload as system
+  - Code Editor:
+    - Add upload and upload as system
+    - Add open remote
 - **Fixed:**
   - Profile editor: editor did not properly resize when advanced panel was toggled
   - Display when split scroll enabled would toggle scroll when preferences reloaded
@@ -11,6 +13,8 @@
     - Fix test system for changed/new files, before it only uploaded data saved to disk unsaved files
     - When closing editor it would not correctly remember new files that where saved
     - Remove errors when dragging non tab over editor
+    - Fix issues with menus not being correctly enabled/disabled globally
+    - Fix paste advanced not being enabled when allowed
   - Immortal tools: Fix issue when using with code editor
 
 ## 0.4.49 2018-06-17

@@ -395,7 +395,7 @@ export class MonacoCodeEditor extends EditorBase {
             case 'copy':
             case 'delete':
             case 'pasteadvanced':
-            case 'pasted-advanced':
+            case 'paste-advanced':
                 return this.selected.length > 0;
             case 'undo':
             case 'redo':
