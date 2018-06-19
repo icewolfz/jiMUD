@@ -444,10 +444,10 @@ export class MonacoCodeEditor extends EditorBase {
             const selected = this.selected.length > 0;
             return [
                 {
-                    label: 'Formatting',
+                    label: 'F&ormatting',
                     submenu: [
                         {
-                            label: 'Insert Color...',
+                            label: '&Insert Color...',
                             click: () => {
                                 ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
                                 const setcolor = (event, type, color, code, window) => {
@@ -461,28 +461,28 @@ export class MonacoCodeEditor extends EditorBase {
                         },
                         { type: 'separator' },
                         {
-                            label: 'To Upper Case',
+                            label: 'To &Upper Case',
                             enabled: selected,
                             click: () => {
                                 this.$editor.getAction('editor.action.transformToUppercase').run();
                             }
                         },
                         {
-                            label: 'To Lower Case',
+                            label: 'To &Lower Case',
                             enabled: selected,
                             click: () => {
                                 this.$editor.getAction('editor.action.transformToLowercase').run();
                             }
                         },
                         {
-                            label: 'Capitalize',
+                            label: '&Capitalize',
                             enabled: selected,
                             click: () => {
                                 this.$editor.getAction('jimud.action.transformToCapitalize').run();
                             }
                         },
                         {
-                            label: 'Inverse Case',
+                            label: 'In&verse Case',
                             enabled: selected,
                             click: () => {
                                 this.$editor.getAction('jimud.action.transformToInverse').run();
@@ -490,14 +490,14 @@ export class MonacoCodeEditor extends EditorBase {
                         },
                         { type: 'separator' },
                         {
-                            label: 'Line Comment',
+                            label: '&Line Comment',
                             accelerator: 'CmdOrCtrl+/',
                             click: () => {
                                 this.$editor.getAction('editor.action.commentLine').run();
                             }
                         },
                         {
-                            label: 'Block Comment',
+                            label: '&Block Comment',
                             accelerator: 'Alt+Shift+A',
                             click: () => {
                                 this.$editor.getAction('editor.action.blockComment').run();
@@ -505,7 +505,7 @@ export class MonacoCodeEditor extends EditorBase {
                         },
                         { type: 'separator' },
                         {
-                            label: 'Format Document',
+                            label: '&Format Document',
                             accelerator: 'Alt+Shift+F',
                             click: () => {
                                 monaco.editor.setModelMarkers(this.$model, '', []);
@@ -514,14 +514,15 @@ export class MonacoCodeEditor extends EditorBase {
                         }
                     ]
                 },
+                { type: 'separator' },
                 {
-                    label: 'Test',
+                    label: '&Test',
                     click: () => {
                         this.emit('debug', this.file);
                     }
                 },
                 {
-                    label: 'Test clear',
+                    label: 'T&est Clear',
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
                     }
@@ -626,7 +627,7 @@ export class MonacoCodeEditor extends EditorBase {
         else if (menu === 'view')
             return [
                 {
-                    label: 'Toggle Word Wrap',
+                    label: 'Toggle &Word Wrap',
                     accelerator: 'Alt+Z',
                     click: () => {
                         this.$editor.updateOptions({ wordWrap: (this.$editor.getConfiguration().wrappingInfo.isViewportWrapping ? 'off' : 'on') });
@@ -634,17 +635,17 @@ export class MonacoCodeEditor extends EditorBase {
                 },
                 { type: 'separator' },
                 {
-                    label: 'Folding',
+                    label: '&Folding',
                     submenu: [
                         {
-                            label: 'Expand All',
+                            label: '&Expand All',
                             accelerator: 'CmdOrCtrl+>',
                             click: () => {
                                 this.$editor.getAction('editor.unfoldAll').run();
                             }
                         },
                         {
-                            label: 'Collapse All',
+                            label: '&Collapse All',
                             accelerator: 'CmdOrCtrl+<',
                             click: () => {
                                 this.$editor.getAction('editor.foldAll').run();

@@ -972,7 +972,8 @@
                 accelerator: 'CmdOrCtrl+Shift+U',
                 type: 'checkbox',
                 checked: false,
-                click: toggleOutput
+                click: toggleOutput,
+                enabled: true
             },
             { type: 'separator' },
             {
@@ -982,19 +983,23 @@
                         remote.getCurrentWindow().closeDevTools();
                     else
                         remote.getCurrentWindow().openDevTools();
-                }
+                },
+                enabled: true
             },
             {
                 type: 'separator'
             },
             {
-                role: 'resetzoom'
+                role: 'resetzoom',
+                enabled: true
             },
             {
-                role: 'zoomin'
+                role: 'zoomin',
+                enabled: true
             },
             {
-                role: 'zoomout'
+                role: 'zoomout',
+                enabled: true
             },
         ]
     };
@@ -1052,7 +1057,7 @@
                     accelerator: "CmdOrCtrl+Shift+O",
                     click: () => { openRemote(); },
                     enabled: false
-                },                
+                },
                 {
                     label: 'Open &Recent',
                     submenu: [],
@@ -1536,7 +1541,7 @@
     }
 
     function updateMenu(menu) {
-        var items = subMenus[menu].slice();
+        var items = subMenus[menu];
         if (manager.active && manager.active.editor && manager.active.editor.supports('menu|' + menu)) {
             var cItems = manager.active.editor.menu(menu);
             if (cItems && cItems.length) {
@@ -4266,7 +4271,7 @@
                     });
                 if (p.editor.supports('copy'))
                     temp.push({
-                        label: 'Paste to Advanced Editor',
+                        label: 'Paste to &Advanced Editor',
                         click: doEditor,
                         accelerator: "CmdOrCtrl+Shift+V"
                     });
