@@ -12,6 +12,7 @@ Immortal tools allow wizards and other immortals to manage files. It provides a 
 - `renew` renew all selected files
 - `clone` clone all selected files
 - `copy full path` copy all selected files to a newline delimited string
+- `edit...` edit remote file with internal editor, once open can edit and save from editor with out the need to upload in tools
 
 **Note:** All remote commands are executed as normal commands as if sent from client command line but for copy full path
 
@@ -64,5 +65,5 @@ You may drag files from local to queue or remote list to upload, from remote to 
 
 ## Known Issues
 
-- Dragging multiple files and dropping outside to other applications will only drop the first file, all others ignored. This is a limitation of electron drag and drop support, until it is added it can not be supported outside of application
+- Dragging multiple files and dropping outside to other applications/windows will only drop the first file, all others ignored. This is a limitation of electron drag and drop support, until it is added it can not be supported outside of application
 - Queue pausing, The remote server only allows 2 uploads and 2 downloads at once, if you pause active upload or downloads you will receive in progress errors.

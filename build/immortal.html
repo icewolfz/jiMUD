@@ -329,6 +329,12 @@
                                     remoteTable.rows().select();
                                 }
                             },
+                            { type: 'separator' },
+                            {
+                                label: '&Edit...',
+                                accelerator: "CmdOrCtrl+Shift+O",
+                                click: openRemoteWithEditor
+                            },
                         ]
                     },
                     { type: 'separator' },
@@ -868,7 +874,7 @@
                 //var localFilesOnly = false;
                 //var localFoldersOnly = false;
                 var localSelected = false;
-                //var remoteFilesOnly = false;
+                //var remoteSelectedFiles = false;
                 //var remoteFoldersOnly = false;
                 var remoteSelected = false;
                 var queueSelected = false;
@@ -888,7 +894,8 @@
                 //localFoldersOnly = dirs === data.length;
 
                 data = remoteTable.rows({ selected: true }).data().pluck('size');
-                remoteSelected = data.length != 0;
+                remoteSelected = data.length !== 0;
+                //remoteSelectedFiles = data.filter(f => f !== -2).length !== 0;
                 /*
                 dirs = 0;
                 for (d = 0; d < data.length; d++) {
@@ -926,6 +933,7 @@
                 menubar.updateItem('edit|remote|dest', { enabled: remoteSelected });
                 menubar.updateItem('edit|remote|backup', { enabled: remoteSelected });
                 menubar.updateItem('edit|remote|copy full path', { enabled: remoteSelected });
+                menubar.updateItem('edit|remote|edit...', { enabled: remoteSelected });
 
                 menubar.updateItem('edit|remote|rename', { enabled: remoteSelected });
                 menubar.updateItem('edit|remote|delete', { enabled: remoteSelected });
@@ -941,6 +949,7 @@
                 $("#btn-rename-remote").prop('disabled', !remoteSelected);
                 $("#btn-delete-remote").prop('disabled', !remoteSelected);
                 $("#btn-download-remote").prop('disabled', !remoteSelected);
+                $("#btn-edit-remote").prop('disabled', !remoteSelected);
 
                 $("#btn-start").prop('disabled', !queueSelected);
                 $("#btn-pause").prop('disabled', !queueSelected);
@@ -2458,7 +2467,7 @@
                 var files = [];
                 _remoteDrag = [];
                 for (var s = 0, sl = selected.length; s < sl; s++) {
-                    if(selected[s].size === -2)
+                    if (selected[s].size === -2)
                         files.push("jiMUDPath://" + selected[s].path);
                     else
                         files.push("jiMUD://" + selected[s].path);
@@ -2521,7 +2530,7 @@
                                 downloadPath(p, options.local);
                             else
                                 _ied.download(p);
-                        }                        
+                        }
                         else if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             p = event.dataTransfer.files[f].path.substring(8);
                             if (_remote[path.basename(p)].size === -2)
@@ -2757,6 +2766,14 @@
                     remoteTable.rows().select();
                 }
             }));
+            if (!dirs && selected.length > 0) {
+                c.append(new MenuItem({ type: 'separator' }));
+                c.append(new MenuItem({
+                    label: '&Edit...',
+                    accelerator: "CmdOrCtrl+Shift+O",
+                    click: openRemoteWithEditor
+                }));
+            }
             c.popup({ window: remote.getCurrentWindow() });
         }
 
@@ -3742,6 +3759,14 @@
             }
         }
 
+        function openRemoteWithEditor() {
+            var selected = remoteTable.rows({ selected: true }).data();
+            for (var d = 0, dl = selected.length; d < dl; d++) {
+                if (selected[d].size === -2) continue;
+                ipcRenderer.send('open-editor', null, options.remote + '/' + path.basename(selected[d].path), true);
+            }
+        }
+
         function openWithExternalEditor() {
             var selected = localTable.rows({ selected: true }).data().pluck('path');
             for (var d = 0, dl = selected.length; d < dl; d++) {
@@ -3874,6 +3899,9 @@
                         </button>
                         <button id="btn-editor-remote" type="button" class="btn btn-default btn-xs" title="Open in editor" onclick="toggleEditor()">
                             <i class="fa fa-pencil"></i>
+                        </button>
+                        <button id="btn-edit-remote" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Edit..." onclick="openRemoteWithEditor()">
+                            <i class="fa fa-edit"></i>
                         </button>
                     </label>
 

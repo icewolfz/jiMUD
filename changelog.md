@@ -7,6 +7,10 @@
     - Add upload and upload as system
     - Add open remote
     - Drag and drop local or remote files from immortal tools
+  - Immortal tools:
+    - Edit remote files directly using internal editor using the editor save to upload changed file
+- **Changed:**
+  - Immortal tools: Only allow drag out of files not paths
 - **Fixed:**
   - Profile editor: editor did not properly resize when advanced panel was toggled
   - Display when split scroll enabled would toggle scroll when preferences reloaded
