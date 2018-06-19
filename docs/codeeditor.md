@@ -14,6 +14,10 @@ The code editor allows immortals or those wanting to code lpc files using a grap
 - Remote testing, allows you to test a local file in its remote location, if no remote data it will allow you to browse to the remote file location
 - Remote caching, will cache remote file data in %appdata%\jiMUD\editor to allow local files to be linked to remote files
 - Clear remote data in code preference dialog or deleting the files in %appdata%\jiMUD\editor
+- Remote editing, allows you to edit files directly on server using local temp files and using IED to download/upload on open/save.
+- Upload/Upload as to directly upload file to mud using IED
+
+**Note:** You must be connected to the mud and logged in as an immortal to use remote features
 
 ## Virtual map editor
 
@@ -172,3 +176,4 @@ Editor preferences are stored in their own file independent of client or charact
 
 - `Slow performance` Make sure you are not using --disable-gpu, with out the gpu it can cause slow performance from maps taking 10 to 100 times longer to load
 - Missing context menus, will be addressed in future releases
+- You can not edit remote virtual maps in virtual map editor, as most virtual maps require multiple files and at the moment it is impossible to know all the remote files

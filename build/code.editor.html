@@ -796,6 +796,7 @@
     var $dialogs = {};
     var $queue = [];
     var tmpOptions = { prefix: 'jiMUD-', dir: getTempDir(), postfix: '.tmp' };
+    var $id = 0;
 
     var $fileFilters = [
         { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
@@ -1182,10 +1183,10 @@
                                 }, (files) => {
                                     if (!files || files.length === 0) return;
                                     var t = tmp.tmpNameSync(tmpOptions);
-                                    _ied.downloadToFile(files[0], t, false, 'editor-download:diffRemote:' + manager.active.id, false);
+                                    _ied.downloadToFile(files[0], t, false, 'editor-download:diffRemote:' + (manager.active ? manager.active.id : 0), false);
                                     showProgressDialog({
                                         file: files[0],
-                                        tag: 'editor-download:diffRemote:' + manager.active.id,
+                                        tag: 'editor-download:diffRemote:' + (manager.active ? manager.active.id : 0),
                                         title: 'Downloading&hellip;',
                                         tmp: t
                                     });
@@ -2743,9 +2744,14 @@
                 doUpdate(2);
             }
             else if (item.ID.startsWith('editor-download:remote-open:')) {
-                id = parseInt(item.ID.substr(28));
-                openFile($queue[0].tmp, item.remote, null, true, $queue[0].tmp);
-                closeProgressDialog(item.ID, true);
+                var ids = item.ID.substr(28).split(':');
+                id = parseInt(ids[0]);
+                if (id !== 0) {
+                    panel = manager.findPanel(id);
+                    openFile($queue[0].tmp, item.remote, panel ? panel.dock : null, true, $queue[0].tmp);
+                }
+                else
+                    openFile($queue[0].tmp, item.remote, null, true, $queue[0].tmp);
                 doUpdate(2);
             }
         });
@@ -3402,13 +3408,14 @@
         }
         if (remoteFile && remoteFile.length !== 0) {
             var t = tmp.tmpNameSync(tmpOptions);
-            _ied.downloadToFile(remoteFile, t, false, 'editor-download:remote-open:' + manager.active.id, false);
+            _ied.downloadToFile(remoteFile, t, false, 'editor-download:remote-open:' + (manager.active ? manager.active.id : 0) + ':' + $id, false);
             showProgressDialog({
                 file: remoteFile,
-                tag: 'editor-download:remote-open:' + manager.active.id,
+                tag: 'editor-download:remote-open:' + (manager.active ? manager.active.id : 0) + ':' + $id,
                 title: 'Downloading&hellip;',
                 tmp: t
             });
+            $id++;
         }
         else {
             showBrowseDialog({
@@ -3418,13 +3425,14 @@
             }, (files) => {
                 if (!files || files.length === 0) return;
                 var t = tmp.tmpNameSync(tmpOptions);
-                _ied.downloadToFile(files[0], t, false, 'editor-download:remote-open:' + manager.active.id, false);
+                _ied.downloadToFile(files[0], t, false, 'editor-download:remote-open:' + (manager.active ? manager.active.id : 0) + ':' + $id, false);
                 showProgressDialog({
                     file: files[0],
-                    tag: 'editor-download:remote-open:' + manager.active.id,
+                    tag: 'editor-download:remote-open:' + (manager.active ? manager.active.id : 0) + ':' + $id,
                     title: 'Downloading&hellip;',
                     tmp: t
                 });
+                $id++;
             });
         }
     }
@@ -4117,21 +4125,21 @@
                         if (p.editor.new || p.editor.changed) {
                             var t = tmp.tmpNameSync(tmpOptions);
                             p.editor.write(p.editor.value, t);
-                            _ied.uploadTo(t.name, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
+                            _ied.uploadTo(t.name, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
                             showProgressDialog({
                                 file: remoteFile,
-                                tag: 'editor-upload:debug:' + manager.active.id,
+                                tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
                                 title: 'Uploading&hellip;',
                                 tmp: t
                             });
                         }
                         else {
                             setRemoteCache(file, p.editor.remote);
-                            _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
+                            _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
                             showProgressDialog({
                                 file: remoteFile,
                                 title: 'Uploading&hellip;',
-                                tag: 'editor-upload:debug:' + manager.active.id,
+                                tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
                             });
                         }
                     });
@@ -4140,20 +4148,20 @@
                     if (p.editor.new || p.editor.changed) {
                         var t = tmp.tmpNameSync(tmpOptions);
                         p.editor.write(p.editor.value, t);
-                        _ied.uploadTo(t.name, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
+                        _ied.uploadTo(t.name, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
                         showProgressDialog({
                             file: remoteFile,
-                            tag: 'editor-upload:debug:' + manager.active.id,
+                            tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
                             title: 'Uploading&hellip;',
                             tmp: t
                         });
                     }
                     else {
-                        _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
+                        _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
                         showProgressDialog({
                             file: remoteFile,
                             title: 'Uploading&hellip;',
-                            tag: 'editor-upload:debug:' + manager.active.id,
+                            tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
                         });
                     }
                 }
@@ -4214,11 +4222,11 @@
                 var t = [];
                 for (let f = 0; f < fl; f++) {
                     if (files[f].local)
-                        _ied.uploadTo(files[f].local, files[f].remote, false, 'editor-upload:' + manager.active.id + ':' + f);
+                        _ied.uploadTo(files[f].local, files[f].remote, false, 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':' + f);
                     else if (files[f].hasOwnProperty('value')) {
                         var t2 = tmp.tmpNameSync(tmpOptions);
                         p.editor.write(files[f].value || '', t2);
-                        _ied.uploadTo(t2.name, files[f].remote, false, 'editor-upload:' + manager.active.id + ':' + f);
+                        _ied.uploadTo(t2.name, files[f].remote, false, 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':' + f);
                         t.push(t2);
                     }
                 }
@@ -4226,7 +4234,7 @@
                     files: files,
                     title: 'Uploading&hellip;',
                     tmp: t,
-                    tag: 'editor-upload:' + manager.active.id + ':'
+                    tag: 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':'
                 });
             });
             p.editor.on('reverted', () => {
