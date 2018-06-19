@@ -486,6 +486,19 @@ export function clone(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
 
+export function copy(o) {
+    let output;
+    let v;
+    let key;
+    output = Array.isArray(o) ? [] : {};
+    for (key in o) {
+        if (!o.hasOwnProperty(key)) continue;
+        v = o[key];
+        output[key] = (typeof v === 'object') ? copy(v) : v;
+    }
+    return output;
+}
+
 export function setSelectionRange(input, selectionStart, selectionEnd) {
     if (input.setSelectionRange) {
         input.focus();

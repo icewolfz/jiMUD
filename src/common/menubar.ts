@@ -14,6 +14,7 @@ export class Menubar {
     private $cache = {};
     private $updating;
     private $enabled = true;
+    private $busy = false;
 
     constructor(menu: any[], window?: Electron.BrowserWindow) {
         if (!window)
@@ -24,7 +25,7 @@ export class Menubar {
             i.root = true;
             return i;
         });
-        this.doUpdate(1);
+        this.rebuild();
     }
 
     public getItem(menu: (string | string[]), type?: ItemType) {
@@ -78,6 +79,12 @@ export class Menubar {
     }
 
     public updateItem(menu: (string | string[]), options) {
+        if (this.$busy || (this.$updating & 1) === 1) {
+            setTimeout(() => {
+                this.updateItem(menu, options);
+            }, 10);
+            return;
+        }
         let item;
         let items;
         let tItem;
@@ -87,8 +94,7 @@ export class Menubar {
         if (!items) return;
         item = items[0];
         tItem = items[1];
-
-        if (options.enabled != null) {
+        if (options.hasOwnProperty('enabled')) {
             if (tItem.hasOwnProperty('rootEnabled'))
                 tItem.rootEnabled = options.enabled ? true : false;
             else
@@ -103,21 +109,24 @@ export class Menubar {
         if (options.position != null)
             item.position = options.position;
 
-        if (tItem.hasOwnProperty('rootEnabled'))
-            tItem.rootEnabled = item.enabled;
-        else
+        if (!tItem.hasOwnProperty('rootEnabled'))
             tItem.enabled = item.enabled;
         tItem.checked = item.checked;
         tItem.icon = item.icon;
         tItem.visible = item.visible;
         tItem.position = item.position;
-
+        if (options.submenu != null) {
+            tItem.submenu = options.submenu;
+            this.doUpdate(1);
+        }
         if (tItem.root && !tItem.enabled) {
             tItem.submenu.map(f => {
+                if (f.hasOwnProperty('rootEnabled'))
+                    return f;
                 if (!f.hasOwnProperty('enabled'))
                     f.rootEnabled = true;
                 else
-                    f.rootEnabled = f.enabled;
+                    f.rootEnabled = f.enabled || false;
                 f.enabled = false;
                 return f;
             });
@@ -125,14 +134,11 @@ export class Menubar {
         }
         else if (tItem.root && tItem.enabled) {
             tItem.submenu.map(f => {
-                f.enabled = f.rootEnabled;
+                if (!f.hasOwnProperty('rootEnabled')) return f;
+                f.enabled = f.rootEnabled || false;
                 delete f.rootEnabled;
                 return f;
             });
-            this.doUpdate(1);
-        }
-        if (options.submenu != null) {
-            tItem.submenu = options.submenu;
             this.doUpdate(1);
         }
     }
@@ -142,11 +148,19 @@ export class Menubar {
     }
 
     public set enabled(value) {
+        if (this.$busy || (this.$updating & 1) === 1) {
+            setTimeout(() => {
+                this.enabled = value;
+            }, 10);
+            return;
+        }
         if (value === this.$enabled) return;
+        this.$busy = true;
         this.$enabled = value;
         this.menu.map(i => {
             this.updateItem(i.label.replace(/&/g, ''), { enabled: value });
         });
+        this.$busy = false;
     }
 
     public rebuild() {
