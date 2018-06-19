@@ -1418,6 +1418,23 @@
                 files.push(e.dataTransfer.files[f]);
         }
         if (files.length) {
+            files = files.filter(f => !f.path.startsWith('jiMUDPath://') && !isDirSync(f.path));
+            if (files.length === 0) {
+                event.preventDefault();
+                event.cancelBubble = true;
+                event.stopPropagation();
+                return;
+            }
+            files = files.map(f => {
+                if (f.path.startsWith('jiMUD://')) {
+                    return {
+                        remote: f.path.substring(8),
+                        remoteEdit: true
+                    };
+                }
+                else
+                    return { file: f.path };
+            });
             event.preventDefault();
             event.cancelBubble = true;
             event.stopPropagation();
@@ -1525,8 +1542,8 @@
         }
         if (enabled && manager.active.editor.supports('buttons'))
             buttons.append(...manager.active.editor.buttons);
-        updateMenu('edit');
-        updateMenu('view');
+        updateMenu('edit', 12);
+        updateMenu('view', 9);
         sbSize.textContent = enabled ? ('Length: ' + manager.active.editor.length.toLocaleString()) : '';
         sbMessage.textContent = '';
         sbName.textContent = enabled ? (manager.active.editor.source === Source.local ? manager.active.editor.file : manager.active.editor.remote) : '';
@@ -1541,8 +1558,8 @@
         doUpdate(2);
     }
 
-    function updateMenu(menu) {
-        var items = subMenus[menu];
+    function updateMenu(menu, length) {
+        var items = subMenus[menu].slice(0, length);
         if (manager.active && manager.active.editor && manager.active.editor.supports('menu|' + menu)) {
             var cItems = manager.active.editor.menu(menu);
             if (cItems && cItems.length) {
@@ -3445,6 +3462,7 @@
     function openFiles(files, exists, dock) {
         if (files.length === 0) return;
         var panels = [];
+        var _oRemote = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
             if (exists && !existsSync(files[f].file)) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -3460,6 +3478,10 @@
                 setRemoteCache(files[f].file || files[f].path, files[f].remote);
             if (!files[f].remoteEdit)
                 _recent.unshift({ file: files[f].file || files[f].path, remote: files[f].remote });
+            else if (files[f].remoteEdit && (!files[f].file || files[f].file.length === 0)) {
+                openRemote(files[f].remote);
+                continue;
+            }
             var p = createEditor({ file: files[f].file || files[f].path, remote: files[f].remote, open: true, source: files[f].remoteEdit ? 1 : 0 });
             if (p)
                 panels.push(p);

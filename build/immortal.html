@@ -2300,8 +2300,22 @@
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         var p;
                         if (event.dataTransfer.files[f].path === options.local) continue;
-                        if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
+                        if (event.dataTransfer.files[f].path.startsWith("jiMUDPath://")) {
+                            p = event.dataTransfer.files[f].path.substring(12);
+                            if (_remote[path.basename(p)].size === -2)
+                                downloadPath(p, options.local);
+                            else
+                                _ied.download(p);
+                        }
+                        else if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             p = event.dataTransfer.files[f].path.substring(8);
+                            if (_remote[path.basename(p)].size === -2)
+                                downloadPath(p, options.local);
+                            else
+                                _ied.download(p);
+                        }
+                        else if (event.dataTransfer.files[f].path.startsWith("/jiMUDPath:")) {
+                            p = event.dataTransfer.files[f].path.substring(11);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
@@ -2327,7 +2341,7 @@
             };
 
             $("#remote")[0].ondragenter = (event) => {
-                if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith("jiMUD://") || event.dataTransfer.files[0].path.startsWith("/jiMUD:"))) {
+                if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith("jiMUD://") || event.dataTransfer.files[0].path.startsWith("/jiMUD:") || event.dataTransfer.files[0].path.startsWith("jiMUDPath://") || event.dataTransfer.files[0].path.startsWith("/jiMUDPath:"))) {
                     event.dataTransfer.dropEffect = "none";
                     event.dataTransfer.effectAllowed = "none";
                 }
@@ -2342,7 +2356,7 @@
             };
 
             $("#remote")[0].ondragover = (event) => {
-                if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith("jiMUD://") || event.dataTransfer.files[0].path.startsWith("/jiMUD:"))) {
+                if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith("jiMUD://") || event.dataTransfer.files[0].path.startsWith("/jiMUD:") || event.dataTransfer.files[0].path.startsWith("jiMUDPath://") || event.dataTransfer.files[0].path.startsWith("/jiMUDPath:"))) {
                     event.dataTransfer.dropEffect = "none";
                     event.dataTransfer.effectAllowed = "none";
                 }
@@ -2376,7 +2390,9 @@
                     _ied.begin();
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) continue;
+                        if (event.dataTransfer.files[f].path.startsWith("jiMUDPath://")) continue;
                         if (event.dataTransfer.files[f].path.startsWith("/jiMUD:")) continue;
+                        if (event.dataTransfer.files[f].path.startsWith("/jiMUDPath:")) continue;
                         if (event.dataTransfer.files[f].size < 1) {
                             try {
                                 var stat = fs.statSync(event.dataTransfer.files[f].path);
@@ -2442,7 +2458,10 @@
                 var files = [];
                 _remoteDrag = [];
                 for (var s = 0, sl = selected.length; s < sl; s++) {
-                    files.push("jiMUD://" + selected[s].path);
+                    if(selected[s].size === -2)
+                        files.push("jiMUDPath://" + selected[s].path);
+                    else
+                        files.push("jiMUD://" + selected[s].path);
                     _remoteDrag.push(selected[s].path);
                 }
                 _localDrag = 0;
@@ -2496,8 +2515,22 @@
                     _ied.begin();
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         var p;
-                        if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
+                        if (event.dataTransfer.files[f].path.startsWith("jiMUDPath://")) {
+                            p = event.dataTransfer.files[f].path.substring(12);
+                            if (_remote[path.basename(p)].size === -2)
+                                downloadPath(p, options.local);
+                            else
+                                _ied.download(p);
+                        }                        
+                        else if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             p = event.dataTransfer.files[f].path.substring(8);
+                            if (_remote[path.basename(p)].size === -2)
+                                downloadPath(p, options.local);
+                            else
+                                _ied.download(p);
+                        }
+                        else if (event.dataTransfer.files[f].path.startsWith("/jiMUDPath:")) {
+                            p = event.dataTransfer.files[f].path.substring(11);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else

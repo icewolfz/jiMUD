@@ -6,6 +6,7 @@
   - Code Editor:
     - Add upload and upload as system
     - Add open remote
+    - Drag and drop local or remote files from immortal tools
 - **Fixed:**
   - Profile editor: editor did not properly resize when advanced panel was toggled
   - Display when split scroll enabled would toggle scroll when preferences reloaded
