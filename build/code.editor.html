@@ -235,6 +235,9 @@
             </button>
         </div>
         <div class="btn-group" role="group">
+            <button id="btn-open-remote" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Open Remote..." onclick="openRemote()">
+                <i class="fa fa-cloud-download"></i>
+            </button>
             <button id="btn-upload" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Upload" onclick="uploadFile()">
                 <i class="fa fa-upload"></i>
             </button>
@@ -791,7 +794,8 @@
     var _ied;
     var $dialog;
     var $dialogs = {};
-    var $tmp = {};
+    var $queue = [];
+    var tmpOptions = { prefix: 'jiMUD-', dir: getTempDir(), postfix: '.tmp' };
 
     var $fileFilters = [
         { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
@@ -1039,10 +1043,16 @@
                     ]
                 },
                 {
-                    label: '&Open',
+                    label: '&Open...',
                     accelerator: "CmdOrCtrl+O",
                     click: () => { openFile(); }
                 },
+                {
+                    label: 'Op&en Remote...',
+                    accelerator: "CmdOrCtrl+Shift+O",
+                    click: () => { openRemote(); },
+                    enabled: false
+                },                
                 {
                     label: 'Open &Recent',
                     submenu: [],
@@ -1074,7 +1084,7 @@
                     enabled: false,
                 },
                 {
-                    label: 'U&pload As...',
+                    label: 'Up&load As...',
                     accelerator: "CmdOrCtrl+Alt+U",
                     click: () => { uploadFileAs(); },
                     enabled: false,
@@ -1165,15 +1175,13 @@
                                     filters: $fileFilters,
                                 }, (files) => {
                                     if (!files || files.length === 0) return;
-                                    $tmp[files[0]] = tmp.fileSync({ prefix: 'jiMUD-' });
-                                    _ied.downloadToFile(files[0], $tmp[files[0]].name.substr(0, $tmp[files[0]].name.length - 4), false, 'editor-download:diffRemote:' + manager.active.id, false);
-                                    showProgressDialog('Downloading&hellip;', () => {
-                                        var t = $tmp[files[0]].name;
-                                        _ied.removeActive();
-                                        $tmp[files[0]].removeCallback();
-                                        delete $tmp[files[0]];
-                                        if (existsSync(t))
-                                            fs.unlinkSync(t);
+                                    var t = tmp.tmpNameSync(tmpOptions);
+                                    _ied.downloadToFile(files[0], t, false, 'editor-download:diffRemote:' + manager.active.id, false);
+                                    showProgressDialog({
+                                        file: files[0],
+                                        tag: 'editor-download:diffRemote:' + manager.active.id,
+                                        title: 'Downloading&hellip;',
+                                        tmp: t
                                     });
                                 });
                             },
@@ -1602,25 +1610,31 @@
         var log = console.log.bind(console);
         watcher
             .on('error', error => {
-                log(`Watcher error: ${error}`);
+                if (options.debug)
+                    console.error(`Watcher error: ${error}`);
             })
             .on('ready', () => {
-                log('Initial scan complete. Ready for changes');
+                if (options.debug)
+                    log('Initial scan complete. Ready for changes');
             })
             .on('add', (file, stats) => {
-                log(`File ${file} has been added`);
+                if (options.debug)
+                    log(`File ${file} has been added`);
                 fireWatch('add', file, stats);
             })
             .on('change', (file, stats) => {
-                log(`File ${file} has been changed`);
+                if (options.debug)
+                    log(`File ${file} has been changed`);
                 fireWatch('change', file, stats);
             })
             .on('unlink', file => {
-                log(`File ${file} has been removed`);
+                if (options.debug)
+                    log(`File ${file} has been removed`);
                 fireWatch('unlink', file);
             })
             .on('raw', (event, file, details) => {
-                log('Raw event info:', event, file, details);
+                if (options.debug)
+                    log('Raw event info:', event, file, details);
                 fireWatch('raw', file, details);
             });
     }
@@ -2303,33 +2317,16 @@
                 });
     }
 
-    function showProgressDialog(title, callback) {
-        if (typeof title === 'function') {
-            callback = title;
-            title = null;
-        }
+    function showProgressDialog(data) {
         var progress = document.getElementById('progress-dialog');
-        progress.callback = callback;
+        this.$queue.push(data);
+        if (progress.open) return;
         menubar.enabled = false;
-        document.getElementById('progress-dialog-title').innerHTML = title || 'Retrieving&hellip;';
-
-        var cancel = () => {
-            menubar.enabled = true;
-            if (progress.open)
-                progress.close();
-            setProgressDialogValue(-1);
-            progress.removeEventListener('close', cancel);
-            progress.removeEventListener('cancel', cancel);
-            document.getElementById('progress-dialog-cancel').removeEventListener('click', cancel);
-            if (progress.callback)
-                progress.callback();
-        };
-        progress.addEventListener('close', cancel);
-        progress.addEventListener('cancel', cancel);
-        document.getElementById('progress-dialog-cancel').addEventListener('click', cancel);
-        ipcRenderer.send('set-progress', { value: 0 });
-        ipcRenderer.send('set-progress-window', 'code-editor', { value: 0 });
-        document.getElementById('progress-dialog-progressbar').value = 0;
+        document.getElementById('progress-dialog-title').innerHTML = $queue[0].title || 'Retrieving&hellip;';
+        progress.addEventListener('close', closeProgressDialog);
+        progress.addEventListener('cancel', closeProgressDialog);
+        document.getElementById('progress-dialog-cancel').addEventListener('click', closeProgressDialog);
+        setProgressDialogValue(0);
         progress.showModal();
     }
 
@@ -2339,12 +2336,62 @@
         document.getElementById('progress-dialog-progressbar').value = value;
     }
 
-    function closeProgressDialog() {
+    function closeProgressDialog(id, saveTmp, removeItem) {
         var progress = document.getElementById('progress-dialog');
-        if (!progress.open) return;
-        progress.close();
-        setProgressDialogValue(-1);
-        document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+        if (id) {
+            var ql = $queue.length;
+            var data;
+            for (var q = 0; q < ql; q++) {
+                if ($queue[q].file && $queue[q].tag === id) {
+                    data = $queue[q];
+                    break;
+                }
+                else if ($queue[q].files && ($queue[q].tag + ($queue[q].files.length - 1)) === id) {
+                    data = $queue[q];
+                    break;
+                }
+            }
+            if (!data) return;
+            $queue.splice(q, 1);
+        }
+        else
+            data = $queue.shift();
+        if (removeItem && data.file)
+            _ied.removeItem(data.tag);
+        else if (removeItem && data.files) {
+            var fl = data.files.length;
+            for (var f = 0; f < fl; f++)
+                _ied.removeItem(data.tag + f);
+        }
+        if (data.tmp && !saveTmp) {
+            if (!Array.isArray(data.tmp))
+                data.tmp = [data.tmp];
+            var tl = data.tmp.length;
+            for (var t = 0; t < tl; t++) {
+                if (typeof data.tmp[t] === 'string') {
+                    if (existsSync(data.tmp[t]))
+                        fs.unlinkSync(data.tmp[t]);
+                    continue;
+                }
+                var n = data.tmp[t].name;
+                data.tmp[t].removeCallback();
+                if (existsSync(n))
+                    fs.unlinkSync(n);
+            }
+        }
+        if ($queue.length === 0) {
+            if (progress.open)
+                progress.close();
+            setProgressDialogValue(-1);
+            document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+            menubar.enabled = true;
+        }
+        else {
+            setProgressDialogValue(0);
+            menubar.enabled = false;
+            if (!progress.open)
+                progress.showModal();
+        }
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -2378,7 +2425,7 @@
                             title: 'Permission denied',
                             message: 'Permission denied'
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.DL_NOTSTART:
                     case IEDError.DL_TOOMANY:
@@ -2388,7 +2435,7 @@
                             title: 'Download error',
                             message: `Download error for '${error.path}/${error.file}': ${error.msg}`
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.DL_INVALIDFMT:
                     case IEDError.DL_UNKNOWN:
@@ -2400,7 +2447,7 @@
                             title: 'Download aborted',
                             message: `Download aborted for '${error.path}/${error.file}': ${error.msg}`
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.RESET:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2408,7 +2455,7 @@
                             title: 'Reset',
                             message: 'Server reset: ' + error.msg
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.USERRESET:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2424,7 +2471,7 @@
                             title: 'Upload error',
                             message: `Upload error for '${error.path}/${error.file}': ${error.msg}`
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.UL_INVALIDFMT:
                     case IEDError.UL_USERABORT:
@@ -2441,7 +2488,7 @@
                             title: 'Upload aborted',
                             message: `Upload aborted for '${error.path}/${error.file}': ${error.msg}`
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_EXIST:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2449,7 +2496,7 @@
                             title: 'Already exist',
                             message: `File or directory already exist: '${error.path}/${error.file}`
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_DIRECTORY:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2457,7 +2504,7 @@
                             title: 'Is a directory',
                             message: `File is a directory: '${error.path}/${error.file}`
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_NOEXIST:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2465,7 +2512,7 @@
                             title: 'Does not exist',
                             message: `File or directory does not exist: '${error.path}/${error.file}`
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_FILE:
                         dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -2473,7 +2520,7 @@
                             title: 'Not a directory',
                             message: `File not a directory: '${error.path}/${error.file}`
                         });
-                        closeProgressDialog();
+                        closeProgressDialog(error.tag);
                         break;
                     case IEDError.DIR_CANTREAD:
                         if (error.tag && error.tag === 'editor-dir:remoteBrowse')
@@ -2484,7 +2531,7 @@
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
                             });
-                            closeProgressDialog();
+                            closeProgressDialog(error.tag);
                         }
                         break;
                 }
@@ -2594,16 +2641,11 @@
         _ied.on('add', () => {
         });
         _ied.on('remove', (item) => {
-            if (_ied.queue.length === 1) {
-                closeProgressDialog();
-                if ($tmp[item.remote]) {
-                    var t = tmp[item.remote].name;
-                    $tmp[item.remote].removeCallback();
-                    if (existsSync(t))
-                        fs.unlinkSync(t);
-                    delete $tmp[item.remote];
-                }
-            }
+            if (!item) return;
+            if (item.ID.startsWith('editor-download:remote-open:'))
+                closeProgressDialog(item.ID, true);
+            else
+                closeProgressDialog(item.ID);
         });
         _ied.on('update', (item) => {
             if (!item) return;
@@ -2653,15 +2695,7 @@
                 }
                 monaco.editor.setModelMarkers(model, '', markers);
                 _ied.deleteFile(obj.path + '/' + obj.file);
-                closeProgressDialog();
-                if ($tmp[obj.path + '/' + obj.file]) {
-                    var t = $tmp[obj.path + '/' + obj.file].name;
-                    _ied.removeActive();
-                    $tmp[obj.path + '/' + obj.file].removeCallback();
-                    delete $tmp[obj.path + '/' + obj.file];
-                    if (existsSync(t))
-                        fs.unlinkSync(t);
-                }
+                closeProgressDialog(obj.tag);
             }
         });
         _ied.on('download-finished', (item) => {
@@ -2682,20 +2716,13 @@
                 window.$editors[dock].domElement.style.display = '';
                 manager.active.editor.activate(window.$dEditors[dock]);
                 window.$dEditors[dock].layout();
-                document.getElementById('progress-dialog').callback = null;
-                var t = $tmp[item.remote].name;
-                $tmp[item.remote].removeCallback();
-                delete $tmp[item.remote];
-                if (existsSync(t))
-                    fs.unlinkSync(t);
-                closeProgressDialog();
+                closeProgressDialog(item.ID);
                 doUpdate(2);
             }
             else if (item.ID.startsWith('editor-download:remote-open:')) {
                 id = parseInt(item.ID.substr(28));
-                document.getElementById('progress-dialog').callback = null;
-                openFile($tmp[item.remote].name, item.remote, null, true, $tmp[item.remote]);
-                closeProgressDialog();
+                openFile($queue[0].tmp, item.remote, null, true, $queue[0].tmp);
+                closeProgressDialog(item.ID, true);
                 doUpdate(2);
             }
         });
@@ -2840,6 +2867,14 @@
             addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
         });
 
+        if (connected) {
+            document.getElementById('btn-open-remote').removeAttribute('disabled');
+            menubar.updateItem('file|open remote...', { enabled: connected });
+        }
+        else {
+            document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
+            menubar.updateItem('file|open remote...', { enabled: false });
+        }
         createWatcher();
         postEditorLoad();
     });
@@ -3013,6 +3048,8 @@
         menubar.updateItem('file|upload as...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('upload-as') });
         $("#btn-upload").prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload')));
         $("#btn-upload-as").prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload-as')));
+        document.getElementById('btn-open-remote').removeAttribute('disabled');
+        menubar.updateItem('file|open remote...', { enabled: connected });
     });
     ipcRenderer.on('closed', () => {
         connected = false;
@@ -3021,7 +3058,8 @@
         menubar.updateItem('file|upload as...', { enabled: false });
         $("#btn-upload").prop('disabled', true);
         $("#btn-upload-as").prop('disabled', true);
-
+        document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
+        menubar.updateItem('file|open remote...', { enabled: false });
     });
 
     ipcRenderer.on('editor-setting-changed', () => {
@@ -3340,15 +3378,13 @@
             return;
         }
         if (remoteFile && remoteFile.length !== 0) {
-            $tmp[remoteFile] = tmp.fileSync({ prefix: 'jiMUD-' });
-            _ied.downloadToFile($tmp[remoteFile].name, remoteFile, false, 'editor-download:remote-open:' + manager.active.id, false);
-            showProgressDialog('Downloading&hellip;', () => {
-                var t = $tmp[remoteFile].name;
-                _ied.removeActive();
-                $tmp[remoteFile].removeCallback();
-                delete $tmp[remoteFile];
-                if (existsSync(t))
-                    fs.unlinkSync(t);
+            var t = tmp.tmpNameSync(tmpOptions);
+            _ied.downloadToFile(remoteFile, t, false, 'editor-download:remote-open:' + manager.active.id, false);
+            showProgressDialog({
+                file: remoteFile,
+                tag: 'editor-download:remote-open:' + manager.active.id,
+                title: 'Downloading&hellip;',
+                tmp: t
             });
         }
         else {
@@ -3358,15 +3394,13 @@
                 filters: $fileFilters,
             }, (files) => {
                 if (!files || files.length === 0) return;
-                $tmp[files[0]] = tmp.fileSync({ prefix: 'jiMUD-' });
-                _ied.downloadToFile($tmp[files[0]].name, files[0], false, 'editor-download:remote-open:' + manager.active.id, false);
-                showProgressDialog('Downloading&hellip;', () => {
-                    var t = $tmp[files[0]].name;
-                    _ied.removeActive();
-                    $tmp[files[0]].removeCallback();
-                    delete $tmp[files[0]];
-                    if (existsSync(t))
-                        fs.unlinkSync(t);
+                var t = tmp.tmpNameSync(tmpOptions);
+                _ied.downloadToFile(files[0], t, false, 'editor-download:remote-open:' + manager.active.id, false);
+                showProgressDialog({
+                    file: files[0],
+                    tag: 'editor-download:remote-open:' + manager.active.id,
+                    title: 'Downloading&hellip;',
+                    tmp: t
                 });
             });
         }
@@ -3437,6 +3471,13 @@
         krypto = krypto || require('crypto');
         let name = krypto.createHash('md5').update(file).digest('hex');
         fs.writeFileSync(path.join(p, name), remoteFile);
+    }
+
+    function getTempDir() {
+        let p = path.join(parseTemplate('{data}'), 'editor.temp');
+        if (!existsSync(p))
+            fs.mkdirSync(p);
+        return p;
     }
 
     function getRemoteCache(file) {
@@ -3673,11 +3714,17 @@
         }
         panel.editor.close();
         if (panel.tmp) {
-            var t = panel.tmp.name;
-            panel.tmp.removeCallback();
-            panel.tmp = null;
-            if (existsSync(t))
-                fs.unlinkSync(t);
+            if (typeof panel.tmp === 'string') {
+                if (existsSync(panel.tmp))
+                    fs.unlinkSync(panel.tmp);
+            }
+            else {
+                var t = panel.tmp.name;
+                panel.tmp.removeCallback();
+                panel.tmp = null;
+                if (existsSync(t))
+                    fs.unlinkSync(t);
+            }
         }
         if (panel.diffFile)
             stopWatchFile(panel.diffFile);
@@ -3870,7 +3917,7 @@
         }
         else {
             _loading++;
-            p = manager.createPanel(path.basename(data.file), getFileIcon(data.file), data.file);
+            p = manager.createPanel(data.source ? path.basename(data.remote) : path.basename(data.file), getFileIcon(data.file), data.file);
             p.tmp = tmpObj;
             data.container = p.pane;
             data.watch = (files) => {
@@ -4040,47 +4087,45 @@
                         p.editor.remote = files[0];
                         var remoteFile = path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote);
                         if (p.editor.new || p.editor.changed) {
-                            $tmp[remoteFile] = tmp.fileSync({ prefix: 'jiMUD-' });
-                            p.editor.write(p.editor.value, $tmp[remoteFile].name);
-                            _ied.uploadTo($tmp[remoteFile].name, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
-                            showProgressDialog('Uploading&hellip;', () => {
-                                _ied.removeActive();
-                                var t = $tmp[remoteFile].name;
-                                _ied.removeActive();
-                                $tmp[remoteFile].removeCallback();
-                                delete $tmp[remoteFile];
-                                if (existsSync(t))
-                                    fs.unlinkSync(t);
+                            var t = tmp.tmpNameSync(tmpOptions);
+                            p.editor.write(p.editor.value, t);
+                            _ied.uploadTo(t.name, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
+                            showProgressDialog({
+                                file: remoteFile,
+                                tag: 'editor-upload:debug:' + manager.active.id,
+                                title: 'Uploading&hellip;',
+                                tmp: t
                             });
                         }
                         else {
                             setRemoteCache(file, p.editor.remote);
                             _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
-                            showProgressDialog('Uploading&hellip;', () => {
-                                _ied.removeActive();
+                            showProgressDialog({
+                                file: remoteFile,
+                                title: 'Uploading&hellip;',
+                                tag: 'editor-upload:debug:' + manager.active.id,
                             });
                         }
                     });
                 else {
                     var remoteFile = path.dirname(p.editor.remote) + '/jiMUD.' + path.basename(p.editor.remote);
                     if (p.editor.new || p.editor.changed) {
-                        $tmp[remoteFile] = tmp.fileSync({ prefix: 'jiMUD-' });
-                        p.editor.write(p.editor.value, $tmp[remoteFile].name);
-                        _ied.uploadTo($tmp[remoteFile].name, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
-                        showProgressDialog('Uploading&hellip;', () => {
-                            _ied.removeActive();
-                            var t = $tmp[remoteFile].name;
-                            _ied.removeActive();
-                            $tmp[remoteFile].removeCallback();
-                            delete $tmp[remoteFile];
-                            if (existsSync(t))
-                                fs.unlinkSync(t);
+                        var t = tmp.tmpNameSync(tmpOptions);
+                        p.editor.write(p.editor.value, t);
+                        _ied.uploadTo(t.name, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
+                        showProgressDialog({
+                            file: remoteFile,
+                            tag: 'editor-upload:debug:' + manager.active.id,
+                            title: 'Uploading&hellip;',
+                            tmp: t
                         });
                     }
                     else {
                         _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + manager.active.id, false);
-                        showProgressDialog('Uploading&hellip;', () => {
-                            _ied.removeActive();
+                        showProgressDialog({
+                            file: remoteFile,
+                            title: 'Uploading&hellip;',
+                            tag: 'editor-upload:debug:' + manager.active.id,
                         });
                     }
                 }
@@ -4138,18 +4183,22 @@
             p.editor.on('upload', files => {
                 if (!files || files.length === 0) return;
                 let fl = files.length;
-
+                var t = [];
                 for (let f = 0; f < fl; f++) {
                     if (files[f].local)
-                        _ied.uploadTo(files[f].local, files[f].remote, false);
+                        _ied.uploadTo(files[f].local, files[f].remote, false, 'editor-upload:' + manager.active.id + ':' + f);
                     else if (files[f].hasOwnProperty('value')) {
-                        $tmp[files[f].remote] = tmp.fileSync({ prefix: 'jiMUD-' });
-                        p.editor.write(files[f].value || '', $tmp[files[f].remote].name);
-                        _ied.uploadTo($tmp[files[f].remote].name, files[f].remote, false);
+                        var t2 = tmp.tmpNameSync(tmpOptions);
+                        p.editor.write(files[f].value || '', t2);
+                        _ied.uploadTo(t2.name, files[f].remote, false, 'editor-upload:' + manager.active.id + ':' + f);
+                        t.push(t2);
                     }
                 }
-                showProgressDialog('Uploading&hellip;', () => {
-                    _ied.clear();
+                showProgressDialog({
+                    files: files,
+                    title: 'Uploading&hellip;',
+                    tmp: t,
+                    tag: 'editor-upload:' + manager.active.id + ':'
                 });
             });
             p.editor.on('reverted', () => {
@@ -4310,7 +4359,6 @@
                     arguments: e
                 }, (files) => {
                     if (!files || files.length === 0) return;
-                    console.log($dialog.arguments);
                     $dialog.options.arguments.editor.value = files[0];
                     $dialog.options.arguments.editor.focus();
                 });

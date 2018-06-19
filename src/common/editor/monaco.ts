@@ -240,7 +240,7 @@ export class MonacoCodeEditor extends EditorBase {
     set file(value: string) {
         if (this.file !== value) {
             super.file = value;
-            const ext = path.extname(this.file);
+            const ext = path.extname(this.source === 1 ? this.remote : this.file);
             switch (ext) {
                 case '.c':
                 case '.h':
@@ -656,7 +656,7 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public get buttons() {
-        if (path.extname(this.file) !== '.c')
+        if (path.extname(this.source === 1 ? this.remote : this.file) !== '.c')
             return [];
         const group = document.createElement('div');
         group.classList.add('btn-group');

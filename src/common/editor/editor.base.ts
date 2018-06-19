@@ -80,15 +80,15 @@ export abstract class EditorBase extends EventEmitter {
             this.parent = options.container.container ? options.container.container : options.container;
         else
             this.parent = document.body;
+        if (options.remote)
+            this.remote = options.remote;
+        if (options.source !== Source.local)
+            this.source = options.source;
         this.file = options.file;
         if (options.open)
             this.open();
         if (options.new)
             this.state |= FileState.new;
-        if (options.remote)
-            this.remote = options.remote;
-        if (options.source !== Source.local)
-            this.source = options.source;
     }
 
     set parent(parent) {
