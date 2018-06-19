@@ -899,13 +899,17 @@ export class Client extends EventEmitter {
         this.lastSendTime = Date.now();
     }
 
-    public debug(str: string) {
+    public debug(str: string, style?) {
         const data = { value: str };
         this.emit('debug', data);
         if (!this._enableDebug || data == null || typeof data === 'undefined' || data.value == null || typeof data.value === 'undefined' || data.value.length === 0)
             return;
-        if (window.console)
-            window.console.log(data.value);
+        if (window.console) {
+            if (style)
+                window.console.log('%c' + str, style);
+            else
+                window.console.log(data.value);
+        }
     }
 
     public sendCommand(txt?: string) {

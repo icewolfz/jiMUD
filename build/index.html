@@ -203,11 +203,11 @@
         }
       }
       else {
-        console.log("Message: " + msg);
-        console.log("Url: " + url);
-        console.log("Line: " + line);
-        console.log("Column: " + col);
-        console.log(error);
+        console.error("Message: " + msg);
+        console.error("Url: " + url);
+        console.error("Line: " + line);
+        console.error("Column: " + col);
+        console.error(error);
       }
       return true;
     };
@@ -232,7 +232,7 @@
         if (!client)
           setTimeout(() => {
             if (!client)
-              console.log(ex);
+              console.error(ex);
             else
               client.error(ex);
           }, 1000);
@@ -613,7 +613,7 @@
       };
       _logger.onerror = (e) => {
         if (!client)
-          console.log(e);
+          console.error(e);
         else
           client.error(e);
       };

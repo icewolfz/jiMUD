@@ -3125,7 +3125,7 @@ function copyFile(src, dest) {
   let readStream = fs.createReadStream(src);
 
   readStream.once('error', (err) => {
-    console.log(err);
+    console.error(err);
   });
 
   readStream.once('end', () => { });
@@ -3141,7 +3141,7 @@ function loadCharacters(noLoad) {
         characters = JSON.parse(characters);
       }
       catch (e) {
-        console.log('Could not load: \'characters.json\'');
+        console.error('Could not load: \'characters.json\'');
       }
       if (!noLoad && characters.load)
         loadCharacter(characters.load);

@@ -252,7 +252,7 @@
                         characters.characters = {};
                 }
                 catch (e) {
-                    console.log('Could not load: \'characters.json\'');
+                    console.error('Could not load: \'characters.json\'');
                     characters = { load: 0, characters: {} };
                 }
             }
@@ -683,7 +683,8 @@
         function copyFile(src, dest) {
             let readStream = fs.createReadStream(src);
             readStream.once('error', (err) => {
-                console.log(err);
+                if (!err) return;
+                console.error(err);
             });
             readStream.once('end', () => { });
             readStream.pipe(fs.createWriteStream(dest));

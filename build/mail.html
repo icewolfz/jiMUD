@@ -486,7 +486,7 @@
             else
                 msg = error;
             if (options.debug)
-                console.log(error);
+                console.error(error);
             if (options.logErrors) {
                 if (error.stack && !options.showErrorsExtended)
                     msg = error.stack;

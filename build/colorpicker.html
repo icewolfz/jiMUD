@@ -459,8 +459,6 @@
                 $('body').append(html);
 
                 $("div").on('click', function () {
-                    //console.log($(this));
-                    //console.log($(this).data('mce-color'));
                     ipcRenderer.send('set-color', type, $(this).data('mce-color'), $(this).attr('id'), _window);
                     window.close();
                 });

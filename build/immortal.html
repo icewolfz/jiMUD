@@ -845,7 +845,7 @@
             else
                 msg = error;
             if (options.debug)
-                console.log(error);
+                console.error(error);
             if (options.logErrors) {
                 if (!options.showErrorsExtended && error.stack)
                     msg = error.stack;
@@ -1257,65 +1257,65 @@
             });
             _ied.on('error', (error) => {
                 if (error && error.code) {
-                switch (error.code) {
-                    case IEDError.USER_DENIED:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                            type: 'error',
-                            title: 'Permission denied',
-                            message: 'Permission denied'
-                        });
-                        break;
-                    case IEDError.RESET:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                            type: 'error',
-                            title: 'Reset',
-                            message: 'Server reset: ' + error.msg
-                        });
-                        break;
-                    case IEDError.USERRESET:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                            type: 'error',
-                            title: 'Reset',
-                            message: error.msg
-                        });
-                        break;
-                    case IEDError.CMD_EXIST:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                            type: 'error',
-                            title: 'Already exist',
-                            message: `File or directory already exist: '${error.path}/${error.file}`
-                        });
-                        break;
-                    case IEDError.CMD_DIRECTORY:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                            type: 'error',
-                            title: 'Is a directory',
-                            message: `File is a directory: '${error.path}/${error.file}`
-                        });
-                        break;
-                    case IEDError.CMD_NOEXIST:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                            type: 'error',
-                            title: 'Does not exist',
-                            message: `File or directory does not exist: '${error.path}/${error.file}`
-                        });
-                        break;
-                    case IEDError.CMD_FILE:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                            type: 'error',
-                            title: 'Not a directory',
-                            message: `File not a directory: '${error.path}/${error.file}`
-                        });
-                        break;
-                    case IEDError.DIR_CANTREAD:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
-                            type: 'error',
-                            title: 'Can not read',
-                            message: 'Can not read or permission denied'
-                        });
-                        break;
+                    switch (error.code) {
+                        case IEDError.USER_DENIED:
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'error',
+                                title: 'Permission denied',
+                                message: 'Permission denied'
+                            });
+                            break;
+                        case IEDError.RESET:
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'error',
+                                title: 'Reset',
+                                message: 'Server reset: ' + error.msg
+                            });
+                            break;
+                        case IEDError.USERRESET:
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'error',
+                                title: 'Reset',
+                                message: error.msg
+                            });
+                            break;
+                        case IEDError.CMD_EXIST:
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'error',
+                                title: 'Already exist',
+                                message: `File or directory already exist: '${error.path}/${error.file}`
+                            });
+                            break;
+                        case IEDError.CMD_DIRECTORY:
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'error',
+                                title: 'Is a directory',
+                                message: `File is a directory: '${error.path}/${error.file}`
+                            });
+                            break;
+                        case IEDError.CMD_NOEXIST:
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'error',
+                                title: 'Does not exist',
+                                message: `File or directory does not exist: '${error.path}/${error.file}`
+                            });
+                            break;
+                        case IEDError.CMD_FILE:
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'error',
+                                title: 'Not a directory',
+                                message: `File not a directory: '${error.path}/${error.file}`
+                            });
+                            break;
+                        case IEDError.DIR_CANTREAD:
+                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                                type: 'error',
+                                title: 'Can not read',
+                                message: 'Can not read or permission denied'
+                            });
+                            break;
+                    }
                 }
-            }
                 var msg;
                 if (error.stack)
                     msg = error.stack;
@@ -1419,7 +1419,7 @@
                 }
             });
             _ied.on('resolved', (dir, tag) => {
-                if(tag && tag.startsWith('manager-'))
+                if (tag && tag.startsWith('manager-'))
                     logMessage("Resolved: " + dir);
             });
             _ied.on('message', (msg) => {
@@ -2299,7 +2299,6 @@
                     _ied.begin();
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         var p;
-                        console.log(event.dataTransfer.files[f].path.startsWith("/jiMUD:"));
                         if (event.dataTransfer.files[f].path === options.local) continue;
                         if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
                             p = event.dataTransfer.files[f].path.substring(8);
@@ -2992,7 +2991,7 @@
             watcher
                 .on('error', error => {
                     if (options.debug)
-                        log(`Watcher error: ${error}`);
+                        log(`%cWatcher error: ${error}`, 'color: red');
                     logMessage(`Watcher error: ${error}`);
                 })
                 .on('ready', () => {

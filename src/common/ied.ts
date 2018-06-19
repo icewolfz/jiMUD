@@ -25,7 +25,7 @@ if (process.platform.indexOf('win') === 0) {
         fswin = require('../../lib/fswin');
     }
     catch (err) {
-        //console.log('Not windows!');
+        //Ignore as not windows
     }
 }
 export class IED extends EventEmitter {
