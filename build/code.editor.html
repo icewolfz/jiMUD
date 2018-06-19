@@ -1419,7 +1419,7 @@
                 files.push(e.dataTransfer.files[f]);
         }
         if (files.length) {
-            files = files.filter(f => !f.path.startsWith('jiMUDPath://') && !isDirSync(f.path));
+            files = files.filter(f => !f.path.startsWith('/jiMUDPath:') && !f.path.startsWith('jiMUDPath://') && !isDirSync(f.path));
             if (files.length === 0) {
                 event.preventDefault();
                 event.cancelBubble = true;
@@ -1430,6 +1430,12 @@
                 if (f.path.startsWith('jiMUD://')) {
                     return {
                         remote: f.path.substring(8),
+                        remoteEdit: true
+                    };
+                }
+                else if (f.path.startsWith('/jiMUD:')) {
+                    return {
+                        remote: f.path.substring(7),
                         remoteEdit: true
                     };
                 }
