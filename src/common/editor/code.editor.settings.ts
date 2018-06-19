@@ -2,6 +2,7 @@
 const fs = require('fs-extra');
 
 export class EditorSettings {
+    public debug = false;
     public recent = [];
     public opened = [];
     public layout = [1];
