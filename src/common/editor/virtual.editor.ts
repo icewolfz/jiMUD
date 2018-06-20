@@ -3334,7 +3334,7 @@ export class VirtualEditor extends EditorBase {
     }
     public close() {
         const root = path.dirname(this.file);
-        this.emit('watch-stop', [root]);
+        this.emit('watch-stop', [root, this.file]);
     }
     public deleted(keep, file?) {
         const base = path.basename(file);
