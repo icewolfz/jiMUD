@@ -23,6 +23,7 @@
     - Fixed issues with menus not being correctly enabled/disabled globally
     - Fixed paste advanced not being enabled when allowed
     - Fixed opening files on load that no longer exist
+    - Fixed change event firing when new files created
   - Immortal tools: Fix issue when using with code editor
 
 ## 0.4.49 2018-06-17

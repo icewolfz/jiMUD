@@ -1651,8 +1651,12 @@
                 fireWatch('add', file, stats);
             })
             .on('change', (file, stats) => {
-                if (options.debug)
+                if (options.debug) {
                     log(`File ${file} has been changed`);
+                    log(stats);
+                }
+                if(stats.birthtimeMs === stats.mtimeMs)
+                    return;
                 fireWatch('change', file, stats);
             })
             .on('unlink', file => {
