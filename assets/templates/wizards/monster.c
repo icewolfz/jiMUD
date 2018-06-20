@@ -7,14 +7,11 @@
  * @created {date}
  * @typeof object
  * @doc /doc/build/monster/tutorial
- */
+ {doc}*/
 #include <std.h>
 
-inherit STD_MONSTER;
+inherit {inherit};
 
-{wizard pre}
-void create()
+{wizard pre}void create()
 {
-{wizard create}
-}
-{wizard post}
+{wizard create}}{wizard post}
