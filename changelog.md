@@ -13,6 +13,7 @@
 - **Changed:**
   - Immortal tools: Only allow drag out of files not paths
   - Update chokidar to 2.0.4
+  - rename x32 to ia32 for windows installer/portable to match standard arch naming
 - **Fixed:**
   - Profile editor: editor did not properly resize when advanced panel was toggled
   - Display when split scroll enabled would toggle scroll when preferences reloaded
