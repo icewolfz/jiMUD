@@ -129,7 +129,7 @@
   },
   "dependencies": {
     "buzz": "^1.2.1",
-    "chokidar": "^2.0.3",
+    "chokidar": "^2.0.4",
     "drivelist": "^6.2.2",
     "font-manager": "^0.3.0",
     "fs-extra": "^6.0.1",

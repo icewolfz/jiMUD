@@ -14,6 +14,7 @@ export interface EditorOptions {
     watch?: Function;
     watchStop?: Function;
     source?: Source;
+    opened?: Function;
 }
 
 export enum FileState {
@@ -74,6 +75,8 @@ export abstract class EditorBase extends EventEmitter {
             this.on('watch', options.watch);
         if (options.watchStop)
             this.on('watch-stop', options.watchStop);
+        if (options.opened)
+            this.on('opened', options.opened);
         if (options.parent)
             this.parent = options.parent;
         else if (options.container)
@@ -125,7 +128,11 @@ export abstract class EditorBase extends EventEmitter {
         if (!file || file.length === 0) {
             throw new Error('Invalid file');
         }
-        fs.writeFileSync(file, data);
+        const fd = fs.openSync(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_SYNC);
+        fs.writeSync(fd, data);
+        fs.fsyncSync(fd);
+        fs.closeSync(fd);
+        //fs.writeFileSync(file, data);
     }
 
     public abstract revert(): void;

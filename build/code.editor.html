@@ -422,7 +422,7 @@
                     <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Depth
-                            <input type="number" id="new-virtual-area-depth" class="input-sm form-control" value="1" min="2" max="100" style="width: 100%" />
+                            <input type="number" id="new-virtual-area-depth" class="input-sm form-control" value="1" min="1" max="100" style="width: 100%" />
                         </label>
                     </div>
                 </div>
@@ -443,10 +443,10 @@
                         <div id="new-virtual-area-default-exits">
                             <div class="btn-group" data-toggle="buttons">
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" value="512" id="deUp">Up
+                                    <input type="checkbox" value="512" id="deUp" disabled="disabled">Up
                                 </label>
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" value="256" id="deDown">Down
+                                    <input type="checkbox" value="256" id="deDown" disabled="disabled">Down
                                 </label>
                                 <label class="btn btn-default btn-xs">
                                     <input type="checkbox" value="128" id="deNorth" checked="checked">North
@@ -485,19 +485,19 @@
                         <div id="new-virtual-area-default-states">
                             <div class="btn-group" data-toggle="buttons">
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" value="512" id="dsNoAttack">No Attack
+                                    <input type="checkbox" value="512" id="dsNoAttack">No attack
                                 </label>
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" value="256" id="dsNoMagic">No Magic
+                                    <input type="checkbox" value="256" id="dsNoMagic">No magic
                                 </label>
                                 <label class="btn btn-default btn-xs">
                                     <input type="checkbox" value="128" id="dsCouncil">Council
                                 </label>
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" value="64" id="dsOutdoors">Outdoors
+                                    <input type="checkbox" value="64" id="dsOutdoors">Outdoor
                                 </label>
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" value="32" id="dsIndoors">Indoors
+                                    <input type="checkbox" value="32" id="dsIndoors">Indoor
                                 </label>
                             </div>
                             <div class="btn-group" data-toggle="buttons">
@@ -511,10 +511,10 @@
                                     <input type="checkbox" value="4" id="dsCold">Cold
                                 </label>
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" value="2" id="dsSinkingUp">SinkingUp
+                                    <input type="checkbox" value="2" id="dsSinkingUp">Sinking Up
                                 </label>
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" value="1" id="dsSinkingDown">SinkingDown
+                                    <input type="checkbox" value="1" id="dsSinkingDown">Sinking Down
                                 </label>
                                 <label class="btn btn-default btn-xs">
                                     <input type="checkbox" value="0" id="sNone" checked="checked">None
@@ -1023,13 +1023,11 @@
                             //accelerator: "CmdOrCtrl+N",
                             click: newArea
                         },
-                        /*
                         {
                             label: '&Virtual Area...',
                             //accelerator: "CmdOrCtrl+N",
                             click: newVirtualArea
                         },
-                        */
                         { type: 'separator' },
                         {
                             label: '&Room...',
@@ -1710,7 +1708,7 @@
                         }
                     }
                 }
-                else {
+                else if (event !== 'raw') {
                     choice = dialog.showMessageBox(
                         remote.getCurrentWindow(),
                         {
@@ -2873,14 +2871,12 @@
                     newArea();
                 }
             }));
-            /*
             addMenu.append(new MenuItem({
                 label: 'New virtual area...', click() {
                     clearButton('#btn-add-dropdown');
                     newVirtualArea();
                 }
             }));
-            */
             addMenu.append(new MenuItem({ type: 'separator' }));
             addMenu.append(new MenuItem({
                 label: 'New room...', click() {
@@ -3190,7 +3186,7 @@
             });
             $('#btn-new-area-remote-path').on('click', () => {
                 showBrowseDialog({
-                    defaultFile: manager.active.editor.remote,
+                    defaultFile: manager.active ? (manager.active.editor.remote || options.uploadAs) : options.uploadAs,
                     title: 'Select remote folder',
                     properties: ['openDirectory']
                 }, (files) => {
@@ -3201,6 +3197,7 @@
         }
         $('#new-area *').attr('disabled', false);
         $('#btn-new-area-remote-path').attr('disabled', !connected);
+
         var p = $("#new-area-path").parent().parent();
         p.removeClass("has-error");
         p.removeClass("has-feedback");
@@ -3287,11 +3284,12 @@
             value = fs.readFileSync(template.files[c], 'utf8');
             value = parseFileTemplate(value, data);
             file = template.files[c].replace(templateRegex, aPath);
-            fs.writeFileSync(file, value);
-            files.push({
-                file: file,
-                remote: template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/')
-            });
+            writeFile(file, value);
+            if (['.c', '.h', '.map'].indexOf(path.extname(file)) !== -1)
+                files.push({
+                    file: file,
+                    remote: template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/')
+                });
         }
         openFiles(files);
         document.getElementById('new-area').close();
@@ -3326,7 +3324,7 @@
             });
             $('#btn-new-virtual-area-remote-path').on('click', () => {
                 showBrowseDialog({
-                    defaultFile: manager.active.editor.remote,
+                    defaultFile: manager.active ? (manager.active.editor.remote || options.uploadAs) : options.uploadAs,
                     title: 'Select remote folder',
                     properties: ['openDirectory']
                 }, (files) => {
@@ -3372,18 +3370,206 @@
                 $('.btn-group input').parent().removeClass('active');
                 $('.btn-group input:checked').parent().addClass('active');
             });
+            $('#new-virtual-area-depth').on('change input keypress', () => {
+                var value = +$('#new-virtual-area-depth').val();
+                if (value <= 1) {
+                    $("#deUp").parent().addClass('disabled');
+                    $("#deDown").parent().addClass('disabled');
+                    $("#dsSinkingUp").parent().addClass('disabled');
+                    $("#dsSinkingDown").parent().addClass('disabled');
+                    $("#deUp").prop("checked", false);
+                    $("#deDown").prop("checked", false);
+                    $("#dsSinkingUp").prop("checked", false);
+                    $("#dsSinkingDown").prop("checked", false);
+                }
+                else {
+                    $("#deUp").parent().removeClass('disabled');
+                    $("#deDown").parent().removeClass('disabled');
+                    $("#dsSinkingUp").parent().removeClass('disabled');
+                    $("#dsSinkingDown").parent().removeClass('disabled');
+                }
+            });
         }
+        $('#new-virtual-area *').attr('disabled', false);
+        $('#new-virtual-area .nav-tabs a[href="#general"]').tab('show');
         $('#btn-new-virtual-area-remote-path').attr('disabled', !connected);
+        $('#new-virtual-area-remote-path').val('');
+        $('#new-virtual-area-default-exits .btn-group input:checked').prop('checked', false);
+        $('#new-virtual-area-default-states .btn-group input:checked').prop('checked', false);
+        $('#sNone').prop('checked', true);
+        $('#deNorth').prop('checked', true);
+        $('#deEast').prop('checked', true);
+        $('#deSouth').prop('checked', true);
+        $('#deWest').prop('checked', true);
+        $("#deUp").parent().addClass('disabled');
+        $("#deDown").parent().addClass('disabled');
+        $("#dsSinkingUp").parent().addClass('disabled');
+        $("#dsSinkingDown").parent().addClass('disabled');
         $('#new-virtual-area-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
         $('#new-virtual-area-area').val('');
+        $('#new-virtual-area-area-enabled').prop('checked', false);
+        $('#new-virtual-area-area-enabled').change();
+        $('#new-virtual-area-width').val('2');
+        $('#new-virtual-area-height').val('2');
+        $('#new-virtual-area-depth').val('1');
+        $('#new-virtual-area-coordinates').prop('checked', false);
+        $('#new-virtual-area-cache').val('200');
         $('.btn-group input').parent().removeClass('active');
         $('.btn-group input:checked').parent().addClass('active');
+
+        var p = $("#new-virtual-area-path").parent().parent();
+        p.removeClass("has-error");
+        p.removeClass("has-feedback");
+        $("button", p).removeClass('btn-danger');
+        p = $("#new-virtual-area-area").parent().parent();
+        p.removeClass("has-error");
+        p.removeClass("has-feedback");
+
         menubar.enabled = false;
         document.getElementById('new-virtual-area').showModal();
     }
 
+    // eslint-disable-next-line no-unused-vars
     function createVirtualArea() {
+        var p;
+        p = $("#new-virtual-area-path").parent().parent();
+        p.removeClass("has-error");
+        p.removeClass("has-feedback");
+        $("button", p).removeClass('btn-danger');
+        p = $("#new-virtual-area-name").parent();
+        p.removeClass("has-error");
+        p.removeClass("has-feedback");
+        if (!existsSync($('#new-virtual-area-path').val())) {
+            p = $("#new-virtual-area-path").parent().parent();
+            p.addClass("has-error");
+            p.addClass("has-feedback");
+            $("button", p).addClass('btn-danger');
+            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Path does not exist</small>");
+            $('#new-virtual-area-path').focus();
+            return;
+        }
+        if (!isDirSync($('#new-virtual-area-path').val())) {
+            p = $("#new-virtual-area-path").parent();
+            p.addClass("has-error");
+            p.addClass("has-feedback");
+            $("button", p).addClass('btn-danger');
+            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid path</small>");
+            $('#new-virtual-area-path').focus();
+            return;
+        }
+        if (!$('#new-virtual-area-area-enabled').prop('checked') && existsSync(path.join($('#new-virtual-area-path').val(), 'virtual'))) {
+            p = $("#new-virtual-area-path").parent().parent();
+            p.addClass("has-error");
+            p.addClass("has-feedback");
+            $("button", p).addClass('btn-danger');
+            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Path already contains a virtual server</small>");
+            $('#new-virtual-area-path').focus();
+            return;
+        }
+        var templatePath;
+        var aPath = $('#new-virtual-area-path').val();
+        var data = baseParseData();
+        if ($('#new-virtual-area-area-enabled').prop('checked')) {
+            if (!validName($('#new-virtual-area-area').val())) {
+                p = $("#new-virtual-area-area").parent().parent();
+                p.addClass("has-error");
+                p.addClass("has-feedback");
+                p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid, can only contain letters, numbers, and _</small>");
+                $('#new-virtual-area-area').focus();
+                return;
+            }
+            aPath = path.join(aPath, $('#new-virtual-area-area').val());
+            if (existsSync(aPath)) {
+                p = $("#new-virtual-area-area").parent().parent();
+                p.addClass("has-error");
+                p.addClass("has-feedback");
+                $("button", p).addClass('btn-danger');
+                p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Directory with area name already exist</small>");
+                $('#new-virtual-area-area').focus();
+                return;
+            }
+            $('#new-area *').attr('disabled', true);
+            templatePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'virtual_area'));
+            fs.mkdirSync(aPath);
+            data.area = $('#new-virtual-area-area').val();
+        }
+        else {
+            $('#new-area *').attr('disabled', true);
+            templatePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'virtual_server'));
+            data.area = path.basename(aPath);
+        }
+        data.path = $('#new-virtual-area-remote-path').val() || '/realms/' + data.name.toLowerCase() + '/' + data.area.toLowerCase();
+        if (data.path.endsWith('/'))
+            data.path = data.path.substr(0, data.path.length - 1);
+        if (!data.path.startsWith('/'))
+            data.path = '/' + data.path;
 
+        options.browse = $('#new-area-path').val();
+        doUpdate(16);
+        var template = walkSync(templatePath);
+        var templateRegex = new RegExp('^' + templatePath.replace(/\\/g, '\\\\'));
+        var c = 0;
+        var cl = template.dirs.length;
+        for (; c < cl; c++)
+            fs.mkdirSync(template.dirs[c].replace(templateRegex, aPath));
+        c = 0;
+        cl = template.files.length;
+        var value;
+        var file;
+        var files = [];
+
+        for (; c < cl; c++) {
+            value = fs.readFileSync(template.files[c], 'utf8');
+            data.wizard = '';
+            if (template.files[c].endsWith('server.c')) {
+                if ($('#new-virtual-area-coordinates').prop('checked'))
+                    data.wizard += '   set_coords(1);\n';
+                if ($('#new-virtual-area-cache').val() !== '200') {
+                    data.wizard += '   set_cache_size(' + $('#new-virtual-area-cache').val() + ');\n';
+                }
+            }
+            else if (template.files[c].endsWith('virtual.map'))
+                data.wizard = buildNewVirtualMap(+$('#new-virtual-area-width').val(), +$('#new-virtual-area-height').val(), +$('#new-virtual-area-depth').val(), Array.from(document.querySelectorAll('#new-virtual-area-default-exits input:checked')).map(f => +f.value).reduce((a, c) => a | c), Array.from(document.querySelectorAll('#new-virtual-area-default-states input:checked')).map(f => +f.value).reduce((a, c) => a | c));
+            value = parseFileTemplate(value, data);
+            file = template.files[c].replace(templateRegex, aPath);
+            writeFile(file, value);
+            if (['.c', '.h', '.map'].indexOf(path.extname(file)) !== -1)
+                files.push({
+                    file: file,
+                    remote: template.files[c].replace(templateRegex, data.path).replace(/\\/g, '/')
+                });
+        }
+        openFiles(files);
+        document.getElementById('new-virtual-area').close();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
+    }
+
+    function buildNewVirtualMap(width, height, depth, exits, states) {
+        var f = width + " " + height;
+        if (depth > 1) f += " " + depth;
+        f += "\n";
+        if (states)
+            states = ":0:0:" + states;
+        else
+            states = "";
+        var te = exits & ~128 & ~64 & ~1;
+        var be = exits & ~16 & ~8 & ~4;
+        var m = (te & ~4 & ~2) + states + " ";
+        if (width > 2) m += Array(width - 1).join(te + states + " ");
+        m += (te & ~32 & ~16) + states;
+        m += "\n";
+        for (var y = 1; y < height - 1; y++) {
+            m += (exits & ~4 & ~2 & ~1) + states + " ";
+            if (width > 2) m += Array(width - 1).join(exits + states + " ");
+            m += (exits & ~64 & ~32 & ~16) + states;
+            m += "\n";
+        }
+        m += (be & ~2 & ~1) + states + " ";
+        if (width > 2) m += Array(width - 1).join(be + states + " ");
+        m += (be & ~64 & ~32 & ~16) + states;
+        m += "\n";
+        for (var z = 0; z < depth; z++) f += m + "\n";
+        return f;
     }
 
     function roomWizard() {
@@ -3392,6 +3578,13 @@
 
     function monsterWizard() {
         newFromFile(parseTemplate(path.join('{assets}', 'templates', 'monsters', 'base.c')), 'monster');
+    }
+
+    function writeFile(file, data) {
+        var fd = fs.openSync(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_SYNC);
+        fs.writeSync(fd, data);
+        fs.fsyncSync(fd);
+        fs.closeSync(fd);
     }
 
     function openRemote(remoteFile) {
@@ -3476,14 +3669,14 @@
     function openFiles(files, exists, dock) {
         if (files.length === 0) return;
         var panels = [];
-        var _oRemote = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
-            if (exists && !existsSync(files[f].file)) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
-                    type: 'info',
-                    title: 'Path does not exist',
-                    message: 'The path \'' + files[f].file + '\' does not seem to exist anymore on disk.'
-                });
+            if (!existsSync(files[f].file)) {
+                if (exists)
+                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'info',
+                        title: 'Path does not exist',
+                        message: 'The path \'' + files[f].file + '\' does not seem to exist anymore on disk.'
+                    });
                 continue;
             }
             if (!files[f].remote || files[f].remote.length === 0)

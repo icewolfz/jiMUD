@@ -2587,6 +2587,7 @@ export class VirtualEditor extends EditorBase {
                             this.$externalRaw.dataset.changed === 'true';
                     }
             }
+            this.emit('opened', file);
             return;
         }
         this.emit('watch-stop', [root]);
@@ -2614,7 +2615,7 @@ export class VirtualEditor extends EditorBase {
         this.loadItems();
         this.loadExits();
         this.resetRawCursors();
-        this.emit('opened');
+        this.emit('opened', file);
         this.state |= FileState.opened;
         this.changed = false;
         this.clearRawChanged();

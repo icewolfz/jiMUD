@@ -2,6 +2,37 @@
 
 The code editor allows immortals or those wanting to code lpc files using a graphical editor
 
+## Basic Features
+
+- `New area` allows creation of a new area with standard folder layout and all standard files with basic info and set dates/creator name if possible
+  - `Save path` the local path where all files will be created
+  - `Remote path` optional remote path to be used in code to set default path defines
+  - `Name` the area name, will be created as  folder under save path with all standard folders and files for an area
+- `New virtual area` allows creation of a new virtual area for a current area or create an entire area using the optional area create setting
+  - `General` Basic required options for a virtual area
+    - `Save path` the local path where all files will be created
+    - `Remote path` optional remote path to be used in code to set default path defines
+    - `Area` create an entire area with this name, if not enabled will create just a virtual server under save path
+    - `Width` the width of the virtual area, min 2, max 100
+    - `Height` the height of the virtual area, min 2, max 100
+    - `Depth` the height of the virtual area, min 1, max 100
+  - `Advanced` optional advanced featuers
+    - `Coordinates` Enable coordinate system and assign x,y,z coords to each room
+    - `Room cache` the # of rooms the area caches before it starts removing old rooms, default: 200
+    - `Default exits` the default exits each room will start with, note edge rooms will have all exits leading out of the area stripped out, **Note** up and down are disabled if depth is only 1
+    - `Default states` the default states for each room
+      - `No attack` do not allow combat
+      - `No magic` do not allow magic
+      - `Council` council flag enabled, allows player killing
+      - `Outdoors` rooms are all outdoor
+      - `Indoors` rooms are indoor
+      - `Water` rooms are under water
+      - `Hot` room temperature is set to 200
+      - `Cold` room temperature is set to -200
+      - `Sinking Down` rooms will sink down to room below if possible, only works if base room inherits SINK_ROOM, or has custom set_down(room below path), **Note** disabled if depth is only 1
+      - `Sinking Up` rooms will float up to the room above if possible, only works if base room inherits SINK_ROOM, or has custom set_up(room above path), **Note** disabled if depth is only 1
+      - `None` turn off all states
+
 ## Code editor features
 
 - Syntax highlighting

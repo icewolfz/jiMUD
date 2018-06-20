@@ -280,7 +280,7 @@ export class MonacoCodeEditor extends EditorBase {
         if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
             return;
         this.$model.setValue(this.read());
-        this.emit('opened');
+        this.emit('opened', this.file);
         this.state |= FileState.opened;
         this.changed = false;
     }

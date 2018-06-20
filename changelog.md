@@ -7,19 +7,22 @@
     - Add upload and upload as system
     - Add open remote
     - Drag and drop local or remote files from immortal tools
+    - Add new virtual area creation dialog for quick and easy virtual area creation, either for a current area or an entire new area
   - Immortal tools:
     - Edit remote files directly using internal editor using the editor save to upload changed file
 - **Changed:**
   - Immortal tools: Only allow drag out of files not paths
+  - Update chokidar to 2.0.4
 - **Fixed:**
   - Profile editor: editor did not properly resize when advanced panel was toggled
   - Display when split scroll enabled would toggle scroll when preferences reloaded
   - Code editor:
-    - Fix test system for changed/new files, before it only uploaded data saved to disk unsaved files
+    - Fixed test system for changed/new files, before it only uploaded data saved to disk unsaved files
     - When closing editor it would not correctly remember new files that where saved
     - Remove errors when dragging non tab over editor
-    - Fix issues with menus not being correctly enabled/disabled globally
-    - Fix paste advanced not being enabled when allowed
+    - Fixed issues with menus not being correctly enabled/disabled globally
+    - Fixed paste advanced not being enabled when allowed
+    - Fixed opening files on load that no longer exist
   - Immortal tools: Fix issue when using with code editor
 
 ## 0.4.49 2018-06-17
