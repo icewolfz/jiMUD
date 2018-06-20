@@ -15,5 +15,4 @@ inherit GENERIC_VIRTUAL;
 void create() 
 {
    ::create();
-{wizard}
-}
+{wizard}}
