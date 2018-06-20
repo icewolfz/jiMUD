@@ -1,4 +1,4 @@
-/* *
+/**
  * Base room
  * 
  * Contains all base room systems or features that are common to all rooms

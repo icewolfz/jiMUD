@@ -1,4 +1,4 @@
-/* *
+/**
  * Virtual area server
  * 
  * Controls the virtual area by creating rooms on demand, clean up, and other functions

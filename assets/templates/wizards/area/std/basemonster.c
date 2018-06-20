@@ -1,4 +1,4 @@
-/* *
+/**
  * Base monster
  * 
  * Contants all base monster settings and requirements

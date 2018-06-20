@@ -1,4 +1,4 @@
-/* *
+/**
  * Base virtual room
  * 
  * Contains the base systems for creating a base room, note it inherits the area base room
