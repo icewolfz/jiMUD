@@ -330,6 +330,9 @@ export class Wizard extends EventEmitter {
         this.$nav.selectedIndex = this.$current;
         $(this.$nav).val('' + this.$current);
         $(this.$nav).selectpicker('render');
+        const inputs = this.$body.querySelectorAll('.wizard-body input,.wizard-body textarea,.wizard-body .bootstrap-select button');
+        if (inputs.length !== 0)
+            (<HTMLElement>inputs[0]).focus();
         this.doUpdate(UpdateType.updateNavButtons);
     }
 
