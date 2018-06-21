@@ -134,7 +134,7 @@ export class Wizard extends EventEmitter {
             this.emit('close');
         });
         this.$dialog.addEventListener('open', () => {
-            this.emit('open');
+            //this.emit('open');
         });
         let el;
         let button;
@@ -340,6 +340,7 @@ export class Wizard extends EventEmitter {
             p.emit('reset');
         });
         this.$dialog.showModal();
+        this.emit('open');
     }
 
     private doUpdate(type?: UpdateType) {
