@@ -121,6 +121,7 @@ export class Wizard extends EventEmitter {
     private create() {
         this.$dialog = <HTMLDialogElement>document.createElement('dialog');
         this.$dialog.id = this.id;
+        this.$dialog.classList.add('wizard');
         this.$dialog.style.width = this.$width;
         this.$dialog.style.height = this.$height;
         this.$dialog.style.padding = '5px';
