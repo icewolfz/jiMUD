@@ -32,12 +32,12 @@ export class WizardPage extends EventEmitter {
 
     public set body(value) {
         if (value === this.$body) return;
-        this.$body = value;
         if (this.$body) {
             while (this.$body.firstChild) {
                 this.$body.removeChild(this.$body.firstChild);
             }
         }
+        this.$body = value;
         if (!value) return;
         if (typeof value === 'string')
             this.$el.innerHTML = value;
