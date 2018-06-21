@@ -84,8 +84,10 @@ export class Wizard extends EventEmitter {
     get title() { return this.$title; }
     set title(value) {
         if (this.$title === value) return;
-        if (this.$titleEl)
+        if (this.$titleEl) {
             this.$titleEl.innerHTML = value || '';
+            this.$dialog.dataset.title = value;
+        }
     }
 
     get width() { return this.$width; }
@@ -151,11 +153,11 @@ export class Wizard extends EventEmitter {
         this.$titleEl = document.createElement('div');
         this.$titleEl.style.paddingTop = '2px';
         this.$titleEl.textContent = this.$title || '';
+        this.$dialog.dataset.title = this.$title;
         el.appendChild(this.$titleEl);
         this.$dialog.appendChild(el);
         this.$body = document.createElement('div');
-        this.$body.classList.add('dialog-body');
-        this.$body.style.paddingTop = '33px';
+        this.$body.classList.add('dialog-body', 'wizard-body');
         this.$dialog.appendChild(this.$body);
 
         el = document.createElement('div');
