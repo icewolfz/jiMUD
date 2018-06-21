@@ -10,13 +10,15 @@ export interface PageOptions {
     title: string;
     body;
     reset?: Function;
+    shown?: Function;
+    hidden?: Function;
 }
 
 export class WizardPage extends EventEmitter {
     private $body;
     private $el: HTMLElement;
     public title;
-    private $reset;
+    public wizard: Wizard;
 
     constructor(options?: PageOptions) {
         super();
@@ -27,6 +29,10 @@ export class WizardPage extends EventEmitter {
             this.body = options.body;
             if (options.reset)
                 this.on('reset', options.reset);
+            if (options.shown)
+                this.on('shown', options.shown);
+            if (options.hidden)
+                this.on('hidden', options.hidden);
         }
     }
 
@@ -68,8 +74,9 @@ export class Wizard extends EventEmitter {
     private $width = '500px';
     private $next: HTMLButtonElement;
     private $prev: HTMLButtonElement;
+    private $data;
 
-    public pages: WizardPage[] = [];
+    private $pages: WizardPage[] = [];
     private $current = 0;
     private $nav: HTMLSelectElement;
     private $update: UpdateType;
@@ -107,6 +114,20 @@ export class Wizard extends EventEmitter {
         if (this.$dialog)
             this.$dialog.style.height = this.$height;
     }
+
+    get pages() { return this.$pages; }
+    set pages(value) {
+        value = value || [];
+        if (!Array.isArray(value))
+            value = [value];
+        if (this.$pages === value) return;
+        this.unbindEvents(this.$pages);
+        this.$pages = value;
+        this.$pages.forEach(p => p.wizard = this);
+        this.bindEvents(value);
+    }
+
+    get data() { return this.$data; }
 
     constructor(options?: WizardOptions) {
         super();
@@ -184,9 +205,11 @@ export class Wizard extends EventEmitter {
         button.classList.add('btn', 'btn-primary');
         button.style.cssFloat = 'right';
         button.addEventListener('click', () => {
-            if (this.$current === this.pages.length - 1) {
-                this.emit('finished');
-                this.$dialog.close();
+            if (this.$current === this.$pages.length - 1) {
+                const e = { data: this.$data, preventDefault: false };
+                this.emit('finished', e);
+                if (!e.preventDefault)
+                    this.$dialog.close();
             }
             else
                 this.last();
@@ -230,7 +253,9 @@ export class Wizard extends EventEmitter {
         if (!pages) return;
         if (!Array.isArray(pages))
             pages = [pages];
-        this.pages.push(...pages);
+        this.$pages.push(...pages);
+        this.$pages.forEach(p => p.wizard = this);
+        this.bindEvents(pages);
         this.doUpdate(UpdateType.rebuildNav | UpdateType.refresh);
     }
 
@@ -241,9 +266,10 @@ export class Wizard extends EventEmitter {
         let pl = pages.length;
         let idx;
         while (pl--) {
-            idx = this.pages.indexOf(pages[pl]);
-            this.pages.splice(idx, 1);
+            idx = this.$pages.indexOf(pages[pl]);
+            this.$pages.splice(idx, 1);
         }
+        this.unbindEvents(pages);
         this.doUpdate(UpdateType.rebuildNav | UpdateType.refresh);
     }
 
@@ -251,8 +277,83 @@ export class Wizard extends EventEmitter {
         if (!pages) return;
         if (!Array.isArray(pages))
             pages = [pages];
-        this.pages.splice(idx, 0, ...pages);
+        this.$pages.splice(idx, 0, ...pages);
+        this.$pages.forEach(p => p.wizard = this);
+        this.bindEvents(pages);
         this.doUpdate(UpdateType.rebuildNav | UpdateType.refresh);
+    }
+
+    private bindEvents(pages) {
+        if (!pages) return;
+        if (!Array.isArray(pages))
+            pages = [pages];
+        pages.forEach(p => {
+            let e: HTMLElement[] = Array.from(p.page.querySelectorAll('input[type="checkbox"]'));
+            e.forEach(c => c.addEventListener('change', this.getDataCheckbox.bind(this)));
+            e = Array.from(p.page.querySelectorAll('input[type="radio"]'));
+            e.forEach(c => c.addEventListener('change', this.getDataCheckbox.bind(this)));
+            e = Array.from(p.page.querySelectorAll('input[type="text"]'));
+            e.forEach(c => {
+                c.addEventListener('change', this.getDataInput.bind(this));
+                c.addEventListener('input', this.getDataInput.bind(this));
+            });
+            e = Array.from(p.page.querySelectorAll('input[type="number"]'));
+            e.forEach(c => {
+                c.addEventListener('change', this.getDataNumber.bind(this));
+                c.addEventListener('input', this.getDataNumber.bind(this));
+            });
+            e = Array.from(p.page.querySelectorAll('textarea'));
+            e.forEach(c => {
+                c.addEventListener('change', this.getDataInput.bind(this));
+                c.addEventListener('input', this.getDataInput.bind(this));
+            });
+            e = Array.from(p.page.querySelectorAll('.selectpicker'));
+            e.forEach(c => c.addEventListener('change', this.getDataInput.bind(this)));
+        });
+    }
+
+    private unbindEvents(pages) {
+        if (!pages) return;
+        if (!Array.isArray(pages))
+            pages = [pages];
+        pages.forEach(p => {
+            let e: HTMLElement[] = Array.from(p.page.querySelectorAll('input[type="checkbox"]'));
+            e.forEach(c => c.removeEventListener('change', this.getDataCheckbox));
+            e = Array.from(p.page.querySelectorAll('input[type="radio"]'));
+            e.forEach(c => c.removeEventListener('change', this.getDataCheckbox));
+            e = Array.from(p.page.querySelectorAll('input[type="text"]'));
+            e.forEach(c => {
+                c.removeEventListener('change', this.getDataInput);
+                c.removeEventListener('input', this.getDataInput);
+            });
+            e = Array.from(p.page.querySelectorAll('input[type="number"]'));
+            e.forEach(c => {
+                c.removeEventListener('change', this.getDataNumber);
+                c.removeEventListener('input', this.getDataNumber);
+            });
+            e = Array.from(p.page.querySelectorAll('textarea'));
+            e.forEach(c => {
+                c.removeEventListener('change', this.getDataInput);
+                c.removeEventListener('input', this.getDataInput);
+            });
+            e = Array.from(p.page.querySelectorAll('.selectpicker'));
+            e.forEach(c => c.removeEventListener('change', this.getDataInput));
+        });
+    }
+
+    private getDataInput(e) {
+        const el = e.relatedTarget || e.target;
+        this.$data[el.id || el.name] = el.value;
+    }
+
+    private getDataNumber(e) {
+        const el = e.relatedTarget || e.target;
+        this.$data[el.id || el.name] = +el.value;
+    }
+
+    private getDataCheckbox(e) {
+        const el = e.relatedTarget || e.target;
+        this.$data[el.id || el.name] = el.checked;
     }
 
     private rebuildNav() {
@@ -260,7 +361,7 @@ export class Wizard extends EventEmitter {
             this.$nav.removeChild(this.$nav.firstChild);
         }
         const frag = document.createDocumentFragment();
-        this.pages.forEach((p, idx) => {
+        this.$pages.forEach((p, idx) => {
             const op = document.createElement('option');
             op.textContent = p.title;
             op.value = '' + idx;
@@ -277,7 +378,7 @@ export class Wizard extends EventEmitter {
             this.$prev.setAttribute('disabled', 'disabled');
         else
             this.$prev.removeAttribute('disabled');
-        if (this.$current === this.pages.length - 1)
+        if (this.$current === this.$pages.length - 1)
             this.$next.setAttribute('disabled', 'disabled');
         else
             this.$next.removeAttribute('disabled');
@@ -290,7 +391,7 @@ export class Wizard extends EventEmitter {
                 dest = 0;
                 break;
             case 'last':
-                dest = this.pages.length - 1;
+                dest = this.$pages.length - 1;
                 break;
             case 'next':
                 dest = this.$current + 1;
@@ -304,14 +405,16 @@ export class Wizard extends EventEmitter {
                     dest = where;
                 break;
         }
-        if (dest >= this.pages.length)
-            dest = this.pages.length - 1;
+        if (dest >= this.$pages.length)
+            dest = this.$pages.length - 1;
         if (dest < 0)
             dest = 0;
         if (this.$current === dest && !force) return;
         this.emit('hidden', this.$current);
+        this.$pages[this.$current].emit('hidden', this.$pages[this.$current]);
         this.$current = dest;
         this.refresh();
+        this.$pages[this.$current].emit('shown', this.$pages[this.$current]);
         this.emit('shown', this.$current);
     }
 
@@ -325,8 +428,8 @@ export class Wizard extends EventEmitter {
         while (this.$body.firstChild) {
             this.$body.removeChild(this.$body.firstChild);
         }
-        if (this.pages.length > 0)
-            this.$body.appendChild(this.pages[this.$current].page);
+        if (this.$pages.length > 0)
+            this.$body.appendChild(this.$pages[this.$current].page);
         this.$nav.selectedIndex = this.$current;
         $(this.$nav).val('' + this.$current);
         $(this.$nav).selectpicker('render');
@@ -337,10 +440,17 @@ export class Wizard extends EventEmitter {
     }
 
     public show() {
+        this.$data = {};
         if (this.$dialog.open) return;
         this.goto(0, true);
-        this.pages.forEach(p => {
-            p.emit('reset');
+        this.$pages.forEach(p => {
+            p.emit('reset', p.page);
+            const e: HTMLElement[] = Array.from(p.page.querySelectorAll('input,textarea,.selectpicker'));
+            e.forEach(c => {
+                const evt = document.createEvent('HTMLEvents');
+                evt.initEvent('change', false, true);
+                c.dispatchEvent(evt);
+            });
         });
         this.$dialog.showModal();
         this.emit('open');
