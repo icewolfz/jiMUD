@@ -1291,3 +1291,49 @@ export function enumToString(value, en) {
     }
     return f.join(', ');
 }
+
+//https://j11y.io/snippets/wordwrap-for-javascript/
+export function wordWrap(str, width, brk, cut) {
+    brk = brk || 'n';
+    width = width || 75;
+    cut = cut || false;
+    if (!str) return str;
+    const regex = '.{1,' + width + '}(\s|$)' + (cut ? '|.{' + width + '}|.+$' : '|\S+?(\s|$)');
+    return str.match(RegExp(regex, 'g')).join(brk);
+}
+
+export function wordBreak(str, start, length) {
+    if (length < 0) return 0;
+    let wBreak = length - 1;
+    if (start + wBreak >= str.length)
+        return str.length - start;
+    while (wBreak >= 0 && str.charAt(start + wBreak) !== ' ' && str.charAt(start + wBreak) !== '\\')
+        wBreak--;
+    if (wBreak <= 0)
+        return length;
+    wBreak++;
+    return wBreak;
+}
+
+export function formatString(str, indent, width?) {
+    if (!str || str.length === 0) return '';
+    width = width || 66;
+    if (width < 40) width = 40;
+    if (str.length <= width)
+        return str;
+    const list = [];
+    let wBreak = wordBreak(str, 0, width);
+    list.push(str.substr(0, wBreak));
+    let len = str.length - wBreak;
+    let tmp = wBreak; // set start of next line at window width
+    while (len / width > 0) { // while full lines loop
+        wBreak = wordBreak(str, tmp, width);
+        list.push(str.substr(tmp, wBreak));
+        tmp += wBreak; // move to next line
+        len -= wBreak; // remove line width
+    }
+    if (len > 0) // left over
+        list.push(str.substr(tmp, len));
+
+    return '"' + list.join('"\n' + ' '.repeat(indent) + '"') + '"';
+}
