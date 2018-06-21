@@ -11,7 +11,7 @@
  */
 #include <std.h>
 
-inherit MONTYPE_ATTOOIST;
+inherit MONTYPE_TATTOOIST;
 
 void create()
 {
