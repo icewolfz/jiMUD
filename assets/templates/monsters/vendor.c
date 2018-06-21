@@ -21,7 +21,7 @@ void create()
 	set_long("");
 	set_nouns("");
 	set_adjectives("");
-	set_height(1); // heigh in inches
+	set_height(1); // height in inches
 	
 	set_skill("bargaining", 0);
 	set_shop_quality(5);

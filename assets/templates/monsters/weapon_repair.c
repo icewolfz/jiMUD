@@ -22,5 +22,5 @@ void create()
 	set_long("");
 	set_nouns("");
 	set_adjectives("");	
-	set_height(1); // heigh in inches
+	set_height(1); // height in inches
 }
