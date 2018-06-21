@@ -308,7 +308,7 @@ export class Wizard extends EventEmitter {
                 c.addEventListener('input', this.getDataInput.bind(this));
             });
             e = Array.from(p.page.querySelectorAll('.selectpicker'));
-            e.forEach(c => c.addEventListener('change', this.getDataInput.bind(this)));
+            e.forEach(c => c.addEventListener('change', this.getDataSelect.bind(this)));
         });
     }
 
@@ -337,13 +337,18 @@ export class Wizard extends EventEmitter {
                 c.removeEventListener('input', this.getDataInput);
             });
             e = Array.from(p.page.querySelectorAll('.selectpicker'));
-            e.forEach(c => c.removeEventListener('change', this.getDataInput));
+            e.forEach(c => c.removeEventListener('change', this.getDataSelect));
         });
     }
 
     private getDataInput(e) {
         const el = e.relatedTarget || e.target;
         this.$data[el.id || el.name] = el.value;
+    }
+
+    private getDataSelect(e) {
+        const el = e.relatedTarget || e.target;
+        this.$data[el.id || el.name] = {value: el.value, display: el.selectedOptions[0].textContent};
     }
 
     private getDataNumber(e) {
