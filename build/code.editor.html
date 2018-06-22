@@ -3558,7 +3558,7 @@
     ipcRenderer.on('send-editor', (event, text, window) => {
         if (!manager.active || !manager.active.editor || window != "code-editor")
             return;
-        if ($dialogs.monster.open)
+        if ($dialogs.monster && $dialogs.monster.open)
             document.activeElement.value = text;
         else
             manager.active.editor.insert(text);
