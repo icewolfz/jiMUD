@@ -952,7 +952,7 @@
         </div>
         <div id="mon-wizard-description-long">
             <div class="col-sm-12 form-group">
-                <label class="control-label" style="width: 100%">Long
+                <label class="control-label" style="width: 100%">Long <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('mon-wiz-long').value, 'editor', true);"><i class="fa fa-edit"></i></a>
                     <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 219px;"></textarea>
                 </label>
             </div>
@@ -3555,7 +3555,10 @@
     ipcRenderer.on('send-editor', (event, text, window) => {
         if (!manager.active || !manager.active.editor || window != "code-editor")
             return;
-        manager.active.editor.insert(text);
+        if($dialogs.monster.open)
+            document.activeElement.value = text;
+        else
+            manager.active.editor.insert(text);
     });
 
     ipcRenderer.on('GMCP-received', (event, data) => {
