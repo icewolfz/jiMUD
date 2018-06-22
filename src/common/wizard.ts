@@ -1,4 +1,7 @@
 import EventEmitter = require('events');
+import { DataGrid } from './datagrid';
+const { remote } = require('electron');
+const { dialog } = remote;
 
 export interface WizardOptions {
     id: string;
@@ -7,11 +10,20 @@ export interface WizardOptions {
 }
 
 export interface PageOptions {
+    id: string;
     title: string;
-    body;
+    body?: any;
     reset?: Function;
     shown?: Function;
     hidden?: Function;
+}
+
+export interface DataGridPageOptions extends PageOptions {
+    rows?: any[];
+    columns?: any[];
+    add?: Function;
+    edit?: Function;
+    delete?: Function;
 }
 
 export class WizardPage extends EventEmitter {
@@ -58,6 +70,208 @@ export class WizardPage extends EventEmitter {
     public get body() { return this.$body; }
 
     public get page() { return this.$el; }
+}
+
+export class WizardDataGridPage extends WizardPage {
+    public dataGrid: DataGrid;
+    private $id;
+    private $edit;
+    private $del;
+    private $copy;
+    private $cut;
+    private $paste;
+    private $title;
+
+    get id() { return this.$id || 'wizard-datagrid'; }
+    set id(value) {
+        if (this.$id === value) return;
+        delete this.wizard.data[this.id];
+        this.$id = value;
+        if (this.dataGrid)
+            this.dataGrid.id = this.$id;
+        this.wizard.data[this.id] = this.dataGrid.rows;
+    }
+
+    constructor(options?: DataGridPageOptions) {
+        super(options);
+        if (options)
+            this.$id = options.id;
+        this.$title = document.createElement('div');
+        this.$title.textContent = this.title;
+        this.$title.style.display = 'inline-block';
+        this.$title.style.fontWeight = 'bold';
+        this.$title.style.marginRight = '5px';
+        this.page.appendChild(this.$title);
+
+        let group = document.createElement('div');
+        group.classList.add('btn-group');
+        group.style.marginRight = '5px';
+
+        let button = document.createElement('button');
+        button.type = 'button';
+        button.classList.add('btn', 'btn-default', 'btn-xs');
+        button.addEventListener('click', () => {
+            this.dataGrid.addNewRow();
+        });
+        button.title = 'Add';
+        button.innerHTML = '<i class="fa fa-plus"></i>';
+        group.appendChild(button);
+        button = document.createElement('button');
+        button.type = 'button';
+        button.disabled = true;
+        button.classList.add('btn', 'btn-default', 'btn-xs');
+        button.addEventListener('click', () => {
+            const e = { preventDefault: false };
+            this.emit('edit', e);
+            if (!e.preventDefault)
+                this.dataGrid.beginEdit(this.dataGrid.selected[0].row);
+        });
+        button.title = 'Edit';
+        button.innerHTML = '<i class="fa fa-edit"></i>';
+        this.$edit = button;
+        group.appendChild(button);
+        button = document.createElement('button');
+        button.disabled = true;
+        button.type = 'button';
+        button.title = 'Delete';
+        button.classList.add('btn', 'btn-danger', 'btn-xs');
+        button.addEventListener('click', () => {
+            this.dataGrid.delete();
+        });
+        button.innerHTML = '<i class="fa fa-trash"></i>';
+        this.$del = button;
+        group.appendChild(button);
+        this.page.appendChild(group);
+
+        //CUT COPY PASTE
+        group = document.createElement('div');
+        group.classList.add('btn-group');
+        button = document.createElement('button');
+        button.type = 'button';
+        button.disabled = true;
+        button.classList.add('btn', 'btn-default', 'btn-xs');
+        button.addEventListener('click', () => {
+            this.dataGrid.cut();
+        });
+        button.title = 'Cut';
+        button.innerHTML = '<i class="fa fa-cut"></i>';
+        this.$cut = button;
+        group.appendChild(button);
+        button = document.createElement('button');
+        button.type = 'button';
+        button.disabled = true;
+        button.classList.add('btn', 'btn-default', 'btn-xs');
+        button.addEventListener('click', () => {
+            this.dataGrid.copy();
+        });
+        button.title = 'Copy';
+        button.innerHTML = '<i class="fa fa-copy"></i>';
+        this.$copy = button;
+        group.appendChild(button);
+        button = document.createElement('button');
+        button.type = 'button';
+        button.title = 'Paste';
+        button.classList.add('btn', 'btn-default', 'btn-xs');
+        button.addEventListener('click', () => {
+            this.dataGrid.paste();
+        });
+        button.innerHTML = '<i class="fa fa-paste"></i>';
+        this.$paste = button;
+        group.appendChild(button);
+        this.page.appendChild(group);
+
+        const el = document.createElement('div');
+        el.classList.add('form-group', 'datagrid-standard');
+        el.style.margin = '0';
+        el.style.position = 'absolute';
+        el.style.left = '5px';
+        el.style.right = '5px';
+        el.style.bottom = '5px';
+        el.style.top = '33px';
+        this.page.appendChild(el);
+        this.dataGrid = new DataGrid(el);
+        this.dataGrid.clipboardPrefix = 'wizard/';
+        this.dataGrid.on('selection-changed', () => {
+            if (this.dataGrid.selectedCount) {
+                this.$edit.removeAttribute('disabled');
+                this.$del.removeAttribute('disabled');
+                if (this.dataGrid.selectedCount > 1)
+                    this.$del.title = 'Delete';
+                else
+                    this.$del.title = 'Delete';
+                this.$cut.removeAttribute('disabled');
+                this.$copy.removeAttribute('disabled');
+            }
+            else {
+                this.$edit.setAttribute('disabled', 'true');
+                this.$del.setAttribute('disabled', 'true');
+                this.$cut.setAttribute('disabled', 'true');
+                this.$copy.setAttribute('disabled', 'true');
+            }
+        });
+        this.dataGrid.on('delete', (e) => {
+            const ep = { preventDefault: false };
+            this.emit('delete-prompt', ep);
+            if (!ep.preventDefault && dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
+                === 1)
+                e.preventDefault = true;
+            this.emit('delete', e);
+        });
+        this.dataGrid.on('cut', () => {
+            if (this.dataGrid.canPaste)
+                this.$paste.removeAttribute('disabled');
+            else
+                this.$paste.setAttribute('disabled', 'true');
+        });
+        this.dataGrid.on('copy', () => {
+            if (this.dataGrid.canPaste)
+                this.$paste.removeAttribute('disabled');
+            else
+                this.$paste.setAttribute('disabled', 'true');
+        });
+        this.dataGrid.on('add', e => {
+            this.emit('add', e);
+        });
+        this.dataGrid.on('rows-changed', () => {
+            if (this.wizard)
+                this.wizard.data[this.id] = this.dataGrid.rows;
+        });
+        this.dataGrid.on('row-dblclick', (e) => {
+            this.emit('edit', e);
+        });
+        this.$paste.disabled = !this.dataGrid.canPaste;
+        if (options) {
+            this.dataGrid.columns = options.columns || [];
+            this.dataGrid.rows = options.rows || [];
+            if (options.add)
+                this.on('add', options.add);
+            if (options.edit)
+                this.on('edit', options.edit);
+            if (options.delete)
+                this.on('delete', options.delete);
+        }
+    }
+
+    get wizard(): Wizard { return super.wizard; }
+    set wizard(value: Wizard) {
+        super.wizard = value;
+        this.wizard.data[this.id] = this.dataGrid.rows;
+    }
+
+    get title() { return super.title; }
+    set title(value) {
+        super.title = value;
+        if (this.$title)
+            this.$title.textContent = value;
+    }
 }
 
 enum UpdateType {
@@ -350,7 +564,7 @@ export class Wizard extends EventEmitter {
 
     private getDataSelect(e) {
         const el = e.relatedTarget || e.target;
-        this.$data[el.id || el.name] = {value: el.value, display: el.selectedOptions[0].textContent};
+        this.$data[el.id || el.name] = { value: el.value, display: el.selectedOptions[0].textContent };
     }
 
     private getDataNumber(e) {
