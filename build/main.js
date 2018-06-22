@@ -2704,7 +2704,7 @@ function createEditor(show, loading) {
   if (winEditor) return;
   var s = loadWindowState('editor');
   winEditor = new BrowserWindow({
-    parent: win,
+    parent: global.editorOnly ? winCode : win,
     title: 'Advanced Editor',
     x: s.x,
     y: s.y,

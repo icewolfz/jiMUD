@@ -28,7 +28,9 @@
     - Fixed opening files on load that no longer exist
     - Fixed change event firing when new files created
   - Immortal tools: Fix issue when using with code editor
-  - Advanced editor: Some colors where broken when codes where pasted in or sent from other windows
+  - Advanced editor:
+    - Some colors where broken when codes where pasted in or sent from other windows
+    - Link window to code editor when in editor only mode so the window stays on top and closes when the editor closes
 
 ## 0.4.49 2018-06-17
 
