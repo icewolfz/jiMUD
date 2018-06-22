@@ -31,8 +31,8 @@
         const fs = require('fs');
         const path = require('path');
 
-
         var spellchecker;
+        var editorOnly = remote.getGlobal('editorOnly');
 
         var _colors, _ColorTable, options, _colorCodes;
         var colorNames = {
@@ -827,71 +827,80 @@
                     cMenu.append(new MenuItem({ label: 'Background color', icon: path.join(__dirname, '../assets/icons/png/backcolor.png'), submenu: bmi }));
                     return cMenu;
                 };
-
-                editor.addButton('send', {
-                    type: 'splitbutton',
-                    icon: 'fa-sendraw',
-                    tooltip: 'Send to mud',
-                    onclick: function () {
-                        ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
-                    },
-                    menu: [
-                        {
-                            text: 'Formatted as commands',
-                            onclick: function () {
-                                ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
-                            }
+                if (editorOnly) {
+                    editor.addButton('send', {
+                        icon: 'fa-sendraw',
+                        tooltip: 'Send to code editor',
+                        onclick: function () {
+                            ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor', true);
+                        }
+                    });
+                }
+                else
+                    editor.addButton('send', {
+                        type: 'splitbutton',
+                        icon: 'fa-sendraw',
+                        tooltip: 'Send to mud',
+                        onclick: function () {
+                            ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
                         },
-                        {
-                            text: 'Text as commands',
-                            onclick: function () {
-                                ipcRenderer.send('send-command', getText().replace(/(?:\r)/g, ''));
-                            }
-                        },
-                        {
-                            text: 'Formatted as commands (No echo)',
-                            onclick: function () {
-                                ipcRenderer.send('send-background', getFormatedText().replace(/(?:\r)/g, ''));
-                            }
-                        },
-                        {
-                            text: 'Text as commands (No echo)',
-                            onclick: function () {
-                                ipcRenderer.send('send-background', getText().replace(/(?:\r)/g, ''));
-                            }
-                        },
-                        {
-                            text: 'Formatted verbatim (No echo)',
-                            onclick: function () {
-                                ipcRenderer.send('send', getFormatedText().replace(/(?:\r)/g, ''));
-                            }
-                        },
-                        {
-                            text: 'Text verbatim (No echo)',
-                            onclick: function () {
-                                ipcRenderer.send('send', getText().replace(/(?:\r)/g, ''));
-                            }
-                        },
-                        {
-                            text: 'Raw formatted (No echo)',
-                            onclick: function () {
-                                ipcRenderer.send('send-raw', getFormatedText().replace(/(?:\r)/g, ''));
-                            }
-                        },
-                        {
-                            text: 'Raw text (No echo)',
-                            onclick: function () {
-                                ipcRenderer.send('send-raw', getText().replace(/(?:\r)/g, ''));
-                            }
-                        },
-                        {
-                            text: 'To code editor',
-                            onclick: function () {
-                                ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor', true);
-                            }
-                        },
-                    ]
-                });
+                        menu: [
+                            {
+                                text: 'Formatted as commands',
+                                onclick: function () {
+                                    ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Text as commands',
+                                onclick: function () {
+                                    ipcRenderer.send('send-command', getText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Formatted as commands (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send-background', getFormatedText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Text as commands (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send-background', getText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Formatted verbatim (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send', getFormatedText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Text verbatim (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send', getText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Raw formatted (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send-raw', getFormatedText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'Raw text (No echo)',
+                                onclick: function () {
+                                    ipcRenderer.send('send-raw', getText().replace(/(?:\r)/g, ''));
+                                }
+                            },
+                            {
+                                text: 'To code editor',
+                                onclick: function () {
+                                    ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor', true);
+                                }
+                            },
+                        ]
+                    });
                 editor.addButton('append', {
                     icon: 'fa-open',
                     tooltip: 'Append file...',
@@ -1216,7 +1225,7 @@
             _colorCodes = invert(_colors);
             for (b = 0, bl = _bold.length; b < bl; b++) {
                 _colors["B" + _bold[b]] = _colors[nearestHex("#" + _bold[b]).substr(1)].toUpperCase();
-            }            
+            }
             tinymce.activeEditor.settings.textcolor_map = _ColorTable;
         }
 
