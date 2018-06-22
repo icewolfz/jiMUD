@@ -129,6 +129,8 @@ export class Wizard extends EventEmitter {
 
     get data() { return this.$data; }
 
+    get open() { return this.$dialog.open; }
+
     constructor(options?: WizardOptions) {
         super();
         if (options) {
