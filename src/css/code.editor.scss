@@ -975,6 +975,47 @@ input[type=checkbox].property-grid-editor {
     background-repeat: repeat-x;
 }
 
+.dropdown-menu > li > a.active {
+    border-top: 1px solid #66afe9;
+    border-bottom: 1px solid #66afe9;
+}
+
+.dropdown-menu > li > a.main {
+    font-weight: bold;
+}
+
+.dropdown-menu > li > a.sub {
+    padding-left: 40px;
+}
+
 #remote-navigate {
     overflow: auto;
+}
+
+.edit-dropdown ul {
+    overflow: auto;
+}
+
+.wizard-page {
+    height:100%;
+    width:100%;
+    text-align:left;
+    font-size:12pt;
+}
+
+.wizard-page .bootstrap-select.form-control {
+    height: 30px;
+}
+
+.wizard-page .control-label {
+    width: 100%;
+}
+
+.wizard-body {
+    position: absolute;
+    bottom: 55px;
+    padding: 5px;
+    top: 32px;    
+    left: 0;
+    right: 0;    
 }

@@ -530,161 +530,6 @@
             <button style="float: right" type="button" class="btn btn-primary" onclick="createVirtualArea()">Ok</button>
         </div>
     </dialog>
-
-    <dialog id="monsterWizard" data-title="Create new monster" style="width:500px;height:208px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
-        <div class="dialog-header" style="font-weight: bold">
-            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('monsterWizard').close();">&times;</button>
-            <div style="padding-top: 2px;">Create new monster...</div>
-        </div>
-        <div class="dialog-body" style="padding-top:30px">
-            <div id="mon-wiz-0" style="height:100%;width:100%;text-align:center;font-size:12pt;">
-                <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left">
-                <br> Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.
-            </div>
-            <div id="mon-wiz-1" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
-                <label style="width:100%">
-                    <div style="width: 70px;display:inline-block">Type:</div>
-                    <select id="mon-wiz-Type" data-options="editable:false,onSelect:doMonType" style="width: 130px">
-                        <option>Standard</option>
-                        <option>Armor Repair</option>
-                        <option>Barkeep</option>
-                        <option>Cleric Trainer</option>
-                        <option>Command Trainer</option>
-                        <option>Healer</option>
-                        <option>Jeweler</option>
-                        <option>Lock pick Repair</option>
-                        <option>Mage Trainer</option>
-                        <option>Edible Monster</option>
-                        <option>Getable Monster</option>
-                        <option>Sage</option>
-                        <option>Skill Trainer</option>
-                        <option>Smith</option>
-                        <option>Summon Monster</option>
-                        <option>Tattooist</option>
-                        <option>Vendor</option>
-                        <option>Weapon Repair</option>
-                    </select>
-                </label>
-                <label>Level:
-                    <input id="mon-wiz-Level" style="width: 50px" value="1">
-                </label>
-                <label>Alignment:
-                    <select id="mon-wiz-Alignment" style="width: 90px">
-                        <option>demonic</option>
-                        <option>evil</option>
-                        <option>bad</option>
-                        <option>malevolent</option>
-                        <option>mean</option>
-                        <option selected="selected">neutral</option>
-                        <option>nice</option>
-                        <option>benevolent</option>
-                        <option>good</option>
-                        <option>righteous</option>
-                        <option>saintly</option>
-                    </select>
-                </label>
-                <label style="width:100%;display:block">
-                    <div style="width: 70px;display:inline-block">Race:</div>
-                    <select style="width:400px" id="mon-wiz-Race"></select>
-                </label>
-                <label style="width:100%;display:block;">
-                    <div style="width: 70px;display:inline-block">Class:</div>
-                    <select style="width:400px" id="mon-wiz-Class"></select>
-                </label>
-                <label style="width:100%;display:block;">
-                    <div style="width: 70px;display:inline-block">Language:</div>
-                    <select style="width:400px" id="mon-wiz-lang"></select>
-                </label>
-                <label>
-                    <div style="width: 70px;display:inline-block">Ridable:</div>
-                    <input type="checkbox" id="mon-wiz-ride">
-                </label>
-                <label>Flyer:
-                    <input type="checkbox" id="mon-wiz-fly">
-                </label>
-            </div>
-            <div id="mon-wiz-2" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
-                <label style="width:100%;display:block">
-                    <div style="width: 50px;display:inline-block">Name:</div>
-                    <input id="mon-wiz-Name" style="width:420px">
-                </label>
-                <label style="width:100%;display:block">
-                    <div style="width: 50px;display:inline-block">Short:</div>
-                    <input id="mon-wiz-Short" style="width:420px">
-                </label>
-                <label style="width:100%;display:block;margin-top:2px;">
-                    <div style="width: 50px;display:inline-block;">Long:</div>
-                    <span style="float:right;padding-right:2px;">
-                        <textarea id="mon-wiz-Long" style="width:420px;height:75px;resize: none;" wrap="off" data-options="multiline:true"></textarea>
-                    </span>
-                </label>
-            </div>
-            <div id="mon-wiz-Desc2" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
-                <label style="width:100%;display:block;">
-                    <div style="width: 80px;display:inline-block;">Nouns:</div>
-                    <span style="padding-right:2px;">
-                        <textarea id="mon-wiz-Nouns" style="width:388px;height:60px;resize: none;" wrap="off" data-options="multiline:true,prompt:'A comma delimited list of words'"></textarea>
-                    </span>
-                    <label style="width:100%;display:block;margin-top:2px;">
-                        <div style="width: 80px;display:inline-block;">Adjectives:</div>
-                        <span style="padding-right:2px;">
-                            <textarea id="mon-wiz-adjs" style="width:388px;height:60px;resize: none;" wrap="off" data-options="multiline:true,prompt:'A comma delimited list of words'"></textarea>
-                        </span>
-                    </label>
-            </div>
-            <div id="mon-wiz-3" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
-                <label style="width:100%;display:block">
-                    <div style="width: 75px;display:inline-block">Mass:</div>
-                    <input id="mon-wiz-mass" type="number" min="0" style="width: 100px" value="0"> A mass of 0 will use default mass</label>
-                <label style="width:100%;display:block">
-                    <div style="width: 75px;display:inline-block">Height:</div>
-                    <input id="mon-wiz-height" type="number" min="1" style="width: 100px" value="1"> inches</label>
-                <label style="width:100%;display:block">
-                    <div style="width: 75px;display:inline-block">Eye color:</div>
-                    <select style="width:395px" id="mon-wiz-eyes" data-options="url:'/auth/dev?a=colors',valueField:'color',textField:'color',method:'get'"></select>
-                </label>
-                <label style="width:100%;display:block">
-                    <div style="width: 75px;display:inline-block">Hair color:</div>
-                    <select style="width:395px" id="mon-wiz-hHair" data-options="url:'/auth/dev?a=colors',valueField:'color',textField:'color',method:'get'"></select>
-                </label>
-                <label style="width:100%;display:block">
-                    <div style="width: 75px;display:inline-block">Body type:</div>
-                    <select style="width:395px" id="mon-wiz-body-type" data-options="url:'/auth/dev?a=monraces',valueField:'value',textField:'value',method:'get',prompt:'Defaults based on race'"></select>
-                </label>
-            </div>
-            <div id="mon-wiz-4" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
-                change based on monster type, may not even always need this panel
-            </div>
-            <div id="mon-wiz-Barkeep" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
-                barkeeper
-            </div>
-            <div id="mon-wiz-5" style="height:100%;width:100%;text-align:left;font-size:12pt;display:none;">
-                <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left"> To finish your monster simply click finished
-                <div style="height:100px;width:345px;overflow:auto;border:1px groove">
-                    <span id="mon-wiz-Summary"></span>
-                </div>
-            </div>
-        </div>
-        <div class="dialog-footer">
-            <select id="mon-wiz-Jump" style="float: left" class="form-control selectpicker" onchange="doWizard(this.selectedIndex, 'mon-wiz-', 'goto');" data-width="200px">
-                <option>Welcome</option>
-                <option>General Properties</option>
-                <option>Description</option>
-                <option>Description Continued</option>
-                <option>Physical Properties</option>
-                <option>Finish</option>
-            </select>
-            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('monsterWizard').close();">Cancel</button>
-            <button style="float: right" type="button" class="btn btn-primary" onclick="doWizard('last', 'mon-wiz-');">Finish</button>
-            <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(1, 'mon-wiz-');">
-                <i class="fa fa-chevron-right" aria-hidden="true"></i>
-            </button>
-            <button style="float: right" type="button" class="btn btn-default" onclick="doWizard(-1, 'mon-wiz-');">
-                <i class="fa fa-chevron-left" aria-hidden="true"></i>
-            </button>
-        </div>
-    </dialog>
-
     <dialog id="remoteBrowse" data-title="Open remote file" style="width: 500px; height: 350px; padding: 5px;">
         <div class="dialog-body panel panel-default" style="top: 0;bottom: 85px;left: 0px;right: 0px;padding: 0px;margin: 0px;position: absolute;border:0;border-radius: 0">
             <div class="panel-heading">
@@ -739,6 +584,613 @@
             </button>
         </div>
     </dialog>
+
+    <div style="display: none">
+        <div id="mon-wizard-welcome">
+            <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
+            <div style="padding-top:76px">Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.</div>
+        </div>
+        <div id="mon-wizard-general">
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Type
+                    <select id="mon-wiz-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                        <option value='STD_MONSTER'>Standard</option>
+                        <option value='MONTYPE_ARMOR_REPAIR'>Armor Repair</option>
+                        <option value='MONTYPE_BARKEEP'>Barkeep</option>
+                        <option value='MONTYPE_CLERIC_TRAINER'>Cleric Trainer</option>
+                        <option value='MONTYPE_SUBCLASSER'>Command Trainer</option>
+                        <option value='MONTYPE_HEALER'>Healer</option>
+                        <option value='MONTYPE_JEWELER'>Jeweler</option>
+                        <option value='MONTYPE_LOCKPICK_REPAIR'>Lock pick Repair</option>
+                        <option value='MONTYPE_MAGE_TRAINER'>Mage Trainer</option>
+                        <option value='MONTYPE_MON_EDIBLE'>Edible Monster</option>
+                        <option value='MONTYPE_SAGE_NPC'>Sage</option>
+                        <option value='MONTYPE_SKILL_TRAINER'>Skill Trainer</option>
+                        <option value='MONTYPE_SMITH'>Smith</option>
+                        <option value='MONTYPE_SUMMON_MOB'>Summon Monster</option>
+                        <option value='MONTYPE_TATTOOIST'>Tattooist</option>
+                        <option value='MONTYPE_CMD_TRAIN_NPC'>Trainer</option>
+                        <option value='MONTYPE_VENDOR'>Vendor</option>
+                        <option value='MONTYPE_WEAPON_REPAIR'>Weapon Repair</option>
+                    </select>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Level
+                    <input type="number" id="mon-wiz-level" class="input-sm form-control" min="1" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Alignment
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="mon-wiz-alignment" class="input-sm form-control">
+                        <span class="input-group-btn">
+                            <button id="btn-mon-wiz-alignment" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-alignment" data-container="body">
+                                <li>
+                                    <a href="#">demonic</a>
+                                </li>
+                                <li>
+                                    <a href="#">evil</a>
+                                </li>
+                                <li>
+                                    <a href="#">bad</a>
+                                </li>
+                                <li>
+                                    <a href="#">malevolent</a>
+                                </li>
+                                <li>
+                                    <a href="#">mean</a>
+                                </li>
+                                <li>
+                                    <a href="#">neutral</a>
+                                </li>
+                                <li>
+                                    <a href="#">nice</a>
+                                </li>
+                                <li>
+                                    <a href="#">benevolent</a>
+                                </li>
+                                <li>
+                                    <a href="#">good</a>
+                                </li>
+                                <li>
+                                    <a href="#">righteous</a>
+                                </li>
+                                <li>
+                                    <a href="#">saintly</a>
+                                </li>
+                            </ul>
+                        </span>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Race
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="mon-wiz-race" class="input-sm form-control">
+                        <span class="input-group-btn">
+                            <button id="btn-mon-wiz-race" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul id="mon-wiz-race-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-race" data-container="body">
+                            </ul>
+                        </span>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Class
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="mon-wiz-class" class="input-sm form-control">
+                        <span class="input-group-btn">
+                            <button id="btn-mon-wiz-class" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
+                                <li>
+                                    <a href="#" class="main">cleric</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">baeron</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">cleric</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">edorin</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">ianthe</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">makkairi</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">phaedrus</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">vndyrwynd</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">zaal</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="main">fighter</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">barbarian</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">centurion</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">knight</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">marksman</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">ranger</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">warrior</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="main">mage</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">conjuror</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">elementalist</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">necromancer</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">planeswalker</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">sorcerer</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="main">monk</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">feather clan</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">hoof clan</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">spirit clan</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">tail clan</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">talon clan</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="main">rogue</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">acrobat</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">assassin</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">bard</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">thief</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">thug</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">trickster</a>
+                                </li>
+                            </ul>
+                        </span>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Language
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="mon-wiz-language" class="input-sm form-control" placeholder="Defaults based on race">
+                        <span class="input-group-btn">
+                            <button id="btn-mon-wiz-language" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-language" data-container="body">
+                                <li>
+                                    <a href="#">eltherian</a>
+                                </li>
+                                <li>
+                                    <a href="#">caninen</a>
+                                </li>
+                                <li>
+                                    <a href="#">common</a>
+                                </li>
+                                <li>
+                                    <a href="#">dintali</a>
+                                </li>
+                                <li>
+                                    <a href="#">draconian</a>
+                                </li>
+                                <li>
+                                    <a href="#">draconic</a>
+                                </li>
+                                <li>
+                                    <a href="#">draconic</a>
+                                </li>
+                                <li>
+                                    <a href="#">elcharean</a>
+                                </li>
+                                <li>
+                                    <a href="#">eltherian</a>
+                                </li>
+                                <li>
+                                    <a href="#">ersi</a>
+                                </li>
+                                <li>
+                                    <a href="#">farsi</a>
+                                </li>
+                                <li>
+                                    <a href="#">gobbledegook</a>
+                                </li>
+                                <li>
+                                    <a href="#">jhlorim</a>
+                                </li>
+                                <li>
+                                    <a href="#">loyavenku</a>
+                                </li>
+                                <li>
+                                    <a href="#">malkierien</a>
+                                </li>
+                                <li>
+                                    <a href="#">malkierien</a>
+                                </li>
+                                <li>
+                                    <a href="#">naga</a>
+                                </li>
+                                <li>
+                                    <a href="#">nibelungen</a>
+                                </li>
+                                <li>
+                                    <a href="#">nymal</a>
+                                </li>
+                                <li>
+                                    <a href="#">shangtai</a>
+                                </li>
+                                <li>
+                                    <a href="#">tangetto</a>
+                                </li>
+                                <li>
+                                    <a href="#">terrakarn</a>
+                                </li>
+                                <li>
+                                    <a href="#">westernese</a>
+                                </li>
+                                <li>
+                                    <a href="#">wulinaxin</a>
+                                </li>
+                                <li>
+                                    <a href="#">yak</a>
+                                </li>
+                            </ul>
+                        </span>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-ridable" /> Ridable
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-flying" /> Flying
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-getable" /> Getable
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-undead" /> Undead
+                </label>
+            </div>
+            <div class="col-sm-4 form-group" style="width: auto;">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-waterbreathing" /> Water breathing
+                </label>
+            </div>
+            <div class="col-sm-4 form-group" style="width: auto;">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-requires-water" /> Requires water
+                </label>
+            </div>
+            <div class="col-sm-4 form-group" style="width: auto;">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-no-bleed" /> No bleeding
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-description">
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Name
+                    <input type="text" class="input-sm form-control" id="mon-wiz-name" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Short
+                    <input type="text" class="input-sm form-control" id="mon-wiz-short" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Nouns
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of words</span>
+                    <input type="text" class="input-sm form-control" id="mon-wiz-nouns" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Adjectives
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of words</span>
+                    <input type="text" class="input-sm form-control" id="mon-wiz-adjectives" />
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-description-long">
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Long
+                    <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 219px;"></textarea>
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-physical">
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Mass
+                    <input type="number" id="mon-wiz-mass" class="input-sm form-control" min="0" value="0" />
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A mass of 0 will use default mass</span>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Height
+                    <div class="input-group">
+                        <input type="number" id="mon-wiz-height" class="input-sm form-control" min="1" value="1" />
+                        <div class="input-group-addon">inches</div>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-12" style="padding: 0px;">
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Eye color
+                        <div class="input-group edit-dropdown">
+                            <input type="text" id="mon-wiz-eye" class="input-sm form-control">
+                            <span class="input-group-btn">
+                                <button id="btn-mon-wiz-eye" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="caret" style="margin-left: -1px;"></span>
+                                </button>
+                                <ul id="mon-wiz-eye-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-eye" data-container="body">
+                                </ul>
+                            </span>
+                        </div>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Hair color
+                        <div class="input-group edit-dropdown">
+                            <input type="text" id="mon-wiz-hair" class="input-sm form-control">
+                            <span class="input-group-btn">
+                                <button id="btn-mon-wiz-hair" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="caret" style="margin-left: -1px;"></span>
+                                </button>
+                                <ul id="mon-wiz-hair-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-hair" data-container="body">
+                                </ul>
+                            </span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Gender
+                    <select id="mon-wiz-gender" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                        <option value='male'>male</option>
+                        <option value='female'>female</option>
+                        <option value=''>none</option>
+                    </select>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Body type
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="mon-wiz-body" class="input-sm form-control">
+                        <span class="input-group-btn">
+                            <button id="btn-mon-wiz-body" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul id="mon-wiz-body-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-body" data-container="body">
+                            </ul>
+                        </span>
+                    </div>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Defaults based on race</span>
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-advanced">
+            <div class="col-sm-12 form-group">
+                <label class="control-label">No corpse
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">"" disable, $N or $n name, empty default</span>
+                    <input type="text" class="input-sm form-control" id="mon-wiz-no-corpse" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">No limbs
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">"" disable, $N/$n name, $L/$l limb, empty default</span>
+                    <input type="text" class="input-sm form-control" id="mon-wiz-no-limbs" />
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-finish">
+            <img src="../assets/icons/png/wizmonlogo.png" alt="Monster finish summary" style="float: left;padding-top: 56px;"> To finish your monster simply click finished
+            <div id="mon-wiz-summary" readonly="readonly" class="form-control" style="overflow:auto;height:219px;width:355px;white-space:pre;float: right;"></div>
+        </div>
+        <div id="mon-wizard-combat">
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Attack commands
+                    <textarea class="input-sm form-control" id="mon-wiz-commands" style="width: 100%;height: 44px;"></textarea>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of commands, defaults based on class</span>
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Attack command chance
+                    <div class="input-group">
+                        <input type="number" id="mon-wiz-chance" class="input-sm form-control" min="0" max="101" />
+                        <div class="input-group-addon">%</div>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Attack initiators
+                    <textarea class="input-sm form-control" id="mon-wiz-initiators" style="width: 100%;height: 44px;"></textarea>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of commands, defaults based on class</span>
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-aggressive">
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Aggressive
+                    <textarea class="input-sm form-control" id="mon-wiz-aggressive" style="width: 100%;height: 200px;"></textarea>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">See /doc/build/monster/haggle for details</span>
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-movement">
+            <div class="col-sm-12 form-group">
+                <label class="control-label">
+                    Speed
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline;">0 means no movement</span>
+                    <input type="number" id="mon-wiz-speed" class="input-sm form-control" min="0" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Patrol route
+                    <textarea class="input-sm form-control" id="mon-wiz-patrol" style="width: 100%;height: 44px;"></textarea>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of directions</span>
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">No walk rooms
+                    <textarea class="input-sm form-control" id="mon-wiz-no-walk" style="width: 100%;height: 44px;"></textarea>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of room paths</span>
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-actions">
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Auto drop
+                    <div class="input-group">
+                        <input type="number" id="mon-wiz-auto-drop" class="input-sm form-control" min="0" max="120" />
+                        <div class="input-group-addon" style="border-left: 0;">secs</div>
+                        <div class="input-group-addon">
+                            <label>
+                                <input type="checkbox" id="mon-wiz-auto-drop-enabled" /> Enable</label>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Open storage
+                    <div class="input-group">
+                        <input type="number" id="mon-wiz-storage" class="input-sm form-control" min="0" max="120" />
+                        <div class="input-group-addon" style="border-left: 0;">secs</div>
+                        <div class="input-group-addon">
+                            <label>
+                                <input type="checkbox" id="mon-wiz-storage-enabled" /> Enable</label>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Auto wield
+                    <div class="input-group">
+                        <input type="number" id="mon-wiz-auto-wield" class="input-sm form-control" min="0" max="120" />
+                        <div class="input-group-addon" style="border-left: 0;">secs</div>
+                        <div class="input-group-addon">
+                            <label>
+                                <input type="checkbox" id="mon-wiz-auto-wield-enabled" /> Enable</label>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Auto loot
+                    <div class="input-group">
+                        <input type="number" id="mon-wiz-auto-loot" class="input-sm form-control" min="0" max="120" />
+                        <div class="input-group-addon" style="border-left: 0;">secs</div>
+                        <div class="input-group-addon">
+                            <label>
+                                <input type="checkbox" id="mon-wiz-auto-loot-enabled" /> Enable</label>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Auto wear
+                    <div class="input-group">
+                        <input type="number" id="mon-wiz-auto-wear" class="input-sm form-control" min="0" max="120" />
+                        <div class="input-group-addon" style="border-left: 0;">secs</div>
+                        <div class="input-group-addon">
+                            <label>
+                                <input type="checkbox" id="mon-wiz-auto-wear-enabled" /> Enable</label>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Wimpy
+                    <div class="input-group">
+                        <input type="number" id="mon-wiz-wimpy" class="input-sm form-control" min="0" max="101" />
+                        <div class="input-group-addon">%</div>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-5 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-drop-encumbered" /> Drop encumbered
+                </label>
+            </div>
+            <div class="col-sm-7 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-drop-encumbered-combat" /> Drop encumbered combat
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-auto-stand" /> Auto stand
+                </label>
+            </div>
+
+        </div>
+    </div>
 </body>
 <script>
     if (typeof module === 'object') { window.module = module; module = undefined; }
@@ -757,8 +1209,10 @@
 
     const { dialog, Menu, MenuItem, app } = remote;
     const { Menubar } = require('./js/menubar');
+    const { Wizard, WizardPage } = require('./js/wizard');
+
     // eslint-disable-next-line no-unused-vars
-    const { inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize } = require('./js/library');
+    const { formatString, wordWrap, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize } = require('./js/library');
     const { IEDError } = require('./js/types');
 
     const { IED } = require('./js/ied');
@@ -1633,6 +2087,7 @@
             depth: 0,
             ignoreInitial: true
         });
+        watcher.unwatch('');
 
         // Something to use when events are received.
         var log = console.log.bind(console);
@@ -1655,7 +2110,7 @@
                     log(`File ${file} has been changed`);
                     log(stats);
                 }
-                if(stats.birthtimeMs === stats.mtimeMs)
+                if (stats.birthtimeMs === stats.mtimeMs)
                     return;
                 fireWatch('change', file, stats);
             })
@@ -2902,6 +3357,8 @@
             addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
         });
 
+        Array.from(document.querySelectorAll('.edit-dropdown')).forEach(d => initEditDropdown(d));
+
         if (connected) {
             document.getElementById('btn-open-remote').removeAttribute('disabled');
             menubar.updateItem('file|open remote...', { enabled: connected });
@@ -2913,6 +3370,38 @@
         createWatcher();
         postEditorLoad();
     });
+
+    function initEditDropdown(d) {
+        updateEditDropdown(d);
+        var ip = d.querySelector('input');
+        var b = d.querySelector('button');
+        b.addEventListener('click', (e) => {
+            var m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
+            m.forEach(i => {
+                i.classList.remove('active');
+            });
+            var el = m.filter(i => i.dataset.value === ip.value);
+            if (el.length === 0)
+                el = m.filter(i => i.textContent === ip.value);
+            if (el.length === 0)
+                return;
+            el = el[0];
+            el.classList.add('active');
+        });
+    }
+
+    function updateEditDropdown(d) {
+        var m = Array.from(d.querySelectorAll('ul > li > a'));
+        var ip = d.querySelector('input');
+        m.forEach(i => {
+            i.addEventListener('click', (e) => {
+                ip.value = e.target.dataset.value || e.target.textContent || '';
+                const evt = document.createEvent('HTMLEvents');
+                evt.initEvent('change', false, true);
+                ip.dispatchEvent(evt);
+            });
+        });
+    }
 
     function postEditorLoad() {
         if (!_ready) {
@@ -3581,7 +4070,471 @@
     }
 
     function monsterWizard() {
-        newFromFile(parseTemplate(path.join('{assets}', 'templates', 'monsters', 'base.c')), 'monster');
+        if (!$dialogs.monster) {
+            var colors = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'color.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
+            var races = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'monster-race.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
+            document.getElementById('mon-wiz-body-list').innerHTML = races;
+            document.getElementById('mon-wiz-race-list').innerHTML = races;
+            document.getElementById('mon-wiz-eye-list').innerHTML = colors;
+            document.getElementById('mon-wiz-hair-list').innerHTML = colors;
+            updateEditDropdown(document.getElementById('mon-wiz-body-list').closest('.edit-dropdown'));
+            updateEditDropdown(document.getElementById('mon-wiz-race-list').closest('.edit-dropdown'));
+            updateEditDropdown(document.getElementById('mon-wiz-eye-list').closest('.edit-dropdown'));
+            updateEditDropdown(document.getElementById('mon-wiz-hair-list').closest('.edit-dropdown'));
+            $dialogs.monster = new Wizard({
+                id: 'monster-wizard',
+                title: 'Create new monster...',
+                pages: [
+                    new WizardPage({
+                        title: 'Welcome',
+                        body: document.getElementById('mon-wizard-welcome')
+                    }),
+                    new WizardPage({
+                        title: 'General properties',
+                        body: document.getElementById('mon-wizard-general'),
+                        reset: (e) => {
+                            $('#mon-wiz-type', e).val('STD_MONSTER').selectpicker('render');
+                            e.querySelector('#mon-wiz-level').value = '1';
+                            e.querySelector('#mon-wiz-alignment').value = '';
+                            e.querySelector('#mon-wiz-race').value = '';
+                            e.querySelector('#mon-wiz-class').value = '';
+                            e.querySelector('#mon-wiz-language').value = '';
+                            e.querySelector('#mon-wiz-ridable').checked = false;
+                            e.querySelector('#mon-wiz-flying').checked = false;
+                            e.querySelector('#mon-wiz-getable').checked = false;
+                            e.querySelector('#mon-wiz-undead').checked = false;
+                            e.querySelector('#mon-wiz-waterbreathing').checked = false;
+                            e.querySelector('#mon-wiz-requires-water').checked = false;
+                            e.querySelector('#mon-wiz-no-bleed').checked = false;
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Description',
+                        body: document.getElementById('mon-wizard-description'),
+                        reset: (e) => {
+                            e.querySelector('#mon-wiz-name').value = '';
+                            e.querySelector('#mon-wiz-short').value = '';
+                            e.querySelector('#mon-wiz-nouns').value = '';
+                            e.querySelector('#mon-wiz-adjectives').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Long description',
+                        body: document.getElementById('mon-wizard-description-long'),
+                        reset: (e) => {
+                            e.querySelector('#mon-wiz-long').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Physical properties',
+                        body: document.getElementById('mon-wizard-physical'),
+                        reset: (e) => {
+                            e.querySelector('#mon-wiz-mass').value = '0';
+                            e.querySelector('#mon-wiz-height').value = '1';
+                            e.querySelector('#mon-wiz-eye').value = '';
+                            e.querySelector('#mon-wiz-hair').value = '';
+                            $('#mon-wiz-gender', e).val('male').selectpicker('render');
+                            e.querySelector('#mon-wiz-body').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Advanced properties',
+                        body: document.getElementById('mon-wizard-advanced'),
+                        reset: (e) => {
+                            e.querySelector('#mon-wiz-no-corpse').value = '';
+                            e.querySelector('#mon-wiz-no-limbs').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Movement',
+                        body: document.getElementById('mon-wizard-movement'),
+                        reset: (e) => {
+                            e.querySelector('#mon-wiz-speed').value = '0';
+                            e.querySelector('#mon-wiz-patrol').value = '';
+                            e.querySelector('#mon-wiz-no-walk').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Combat',
+                        body: document.getElementById('mon-wizard-combat'),
+                        reset: (e) => {
+                            e.querySelector('#mon-wiz-chance').value = '33';
+                            e.querySelector('#mon-wiz-commands').value = '';
+                            e.querySelector('#mon-wiz-initiators').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Aggressive',
+                        body: document.getElementById('mon-wizard-aggressive'),
+                        reset: (e) => {
+                            e.querySelector('#mon-wiz-aggressive').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Actions',
+                        body: document.getElementById('mon-wizard-actions'),
+                        reset: (e) => {
+                            e.querySelector('#mon-wiz-auto-drop').value = '1';
+                            e.querySelector('#mon-wiz-auto-drop-enabled').checked = false;
+                            e.querySelector('#mon-wiz-storage').value = '3';
+                            e.querySelector('#mon-wiz-storage-enabled').checked = true;
+                            e.querySelector('#mon-wiz-auto-wield').value = '3';
+                            e.querySelector('#mon-wiz-auto-wield-enabled').checked = true;
+                            e.querySelector('#mon-wiz-auto-wear').value = '3';
+                            e.querySelector('#mon-wiz-auto-wear-enabled').checked = false;
+                            e.querySelector('#mon-wiz-auto-loot').value = '1';
+                            e.querySelector('#mon-wiz-auto-loot-enabled').checked = false;
+                            e.querySelector('#mon-wiz-auto-stand').checked = true;
+                            e.querySelector('#mon-wiz-drop-encumbered').checked = false;
+                            e.querySelector('#mon-wiz-drop-encumbered-combat').checked = false;
+                            e.querySelector('#mon-wiz-wimpy').value = '0';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Finish',
+                        body: document.getElementById('mon-wizard-finish'),
+                        reset: (e) => {
+                            e.querySelector('#mon-wiz-summary').value = '';
+                        },
+                        shown: (e) => {
+                            var summary = e.page.querySelector('#mon-wiz-summary');
+                            var data = e.wizard.data;
+                            var sum = '<div><span style="font-weight:bold">Type:</span> ' + data['mon-wiz-type'].display + '</div>';
+                            sum += '<div><span style="font-weight:bold">Level:</span> ' + data['mon-wiz-level'] + '</div>';
+                            sum += '<div><span style="font-weight:bold">Alignment:</span> ' + (data['mon-wiz-alignment'] || 'neutral') + '</div>';
+                            sum += '<div><span style="font-weight:bold">Race:</span> ' + data['mon-wiz-race'] + '</div>';
+                            if (data['mon-wiz-class'] && data['mon-wiz-class'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Class:</span> ' + data['mon-wiz-class'] + '</div>';
+                            if (data['mon-wiz-language'] && data['mon-wiz-language'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Lang:</span> ' + data['mon-wiz-language'] + '</div>';
+                            if (data['mon-wiz-ridable'])
+                                sum += '<div><span style="font-weight:bold">Ridable:</span> Yes</div>';
+                            if (data['mon-wiz-flying'])
+                                sum += '<div><span style="font-weight:bold">Flying:</span> Yes</div>';
+                            if (data['mon-wiz-getable'])
+                                sum += '<div><span style="font-weight:bold">Getable:</span> Yes</div>';
+                            if (data['mon-wiz-undead'])
+                                sum += '<div><span style="font-weight:bold">Undead:</span> Yes</div>';
+                            if (data['mon-wiz-waterbreathing'])
+                                sum += '<div><span style="font-weight:bold">Water breathing:</span> Yes</div>';
+                            if (data['mon-wiz-requires-water'])
+                                sum += '<div><span style="font-weight:bold">Requires water:</span> Yes</div>';
+                            if (data['mon-wiz-no-bleed'])
+                                sum += '<div><span style="font-weight:bold">No bleeding:</span> Yes</div>';
+                            sum += '<div><span style="font-weight:bold">Name:</span> ' + data['mon-wiz-name'] + '</div>';
+                            sum += '<div><span style="font-weight:bold">Short:</span> ' + data['mon-wiz-short'] + '</div>';
+                            sum += '<div><span style="font-weight:bold">Long:</span> ' + ellipse(data['mon-wiz-long']) + '</div>';
+                            if (data['mon-wiz-nouns'] && data['mon-wiz-nouns'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Nouns:</span> ' + ellipse(data['mon-wiz-nouns'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-adjectives'] && data['mon-wiz-adjectives'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Adjectives:</span> ' + ellipse(data['mon-wiz-adjectives'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-mass'] > 0)
+                                sum += '<div><span style="font-weight:bold">Mass:</span> ' + data['mon-wiz-mass'] + '</div>';
+                            sum += '<div><span style="font-weight:bold">Height:</span> ' + data['mon-wiz-height'] + '</div>';
+                            if (data['mon-wiz-eye'] && data['mon-wiz-eye'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Eyes:</span> ' + data['mon-wiz-eye'] + '</div>';
+                            if (data['mon-wiz-hair'] && data['mon-wiz-hair'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Hair:</span> ' + data['mon-wiz-hair'] + '</div>';
+                            if (data['mon-wiz-gender'].value.length > 0)
+                                sum += '<div><span style="font-weight:bold">Gender:</span> ' + data['mon-wiz-gender'].value + '</div>';
+                            if (data['mon-wiz-body'] && data['mon-wiz-body'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Body type:</span> ' + data['mon-wiz-body'] + '</div>';
+                            if (data['mon-wiz-no-corpse'] && data['mon-wiz-no-corpse'].length > 0)
+                                sum += '<div><span style="font-weight:bold">No corpse:</span> ' + ellipse(data['mon-wiz-no-corpse'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-no-limbs'] && data['mon-wiz-hair'].length > 0)
+                                sum += '<div><span style="font-weight:bold">No limbs:</span> ' + ellipse(data['mon-wiz-no-limbs'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-speed'] > 0)
+                                sum += '<div><span style="font-weight:bold">Speed:</span> ' + data['mon-wiz-speed'] + '</div>';
+                            if (data['mon-wiz-patrol'] && data['mon-wiz-patrol'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Patrol route:</span> ' + ellipse(data['mon-wiz-patrol'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-no-walk'] && data['mon-wiz-no-walk'].length > 0)
+                                sum += '<div><span style="font-weight:bold">No walk:</span> ' + ellipse(data['mon-wiz-no-walk'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-commands'] && data['mon-wiz-commands'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Attack commands:</span> ' + ellipse(data['mon-wiz-commands'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-chance'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Attack commands chance:</span> ' + data['mon-wiz-chance'] + '%</div>';
+                            if (data['mon-wiz-initiators'] && data['mon-wiz-initiators'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Attack initiators:</span> ' + ellipse(data['mon-wiz-initiators'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-aggressive'] && data['mon-wiz-aggressive'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + ellipse(data['mon-wiz-aggressive']) + '</div>';
+
+                            if (data['mon-wiz-auto-drop-enabled']) {
+                                sum += '<div><span style="font-weight:bold">Auto drop:</span> Yes</div>';
+                                sum += '<div><span style="font-weight:bold">Auto drop delay:</span> ' + data['mon-wiz-auto-drop'] + ' seconds</div>';
+                            }
+                            if (data['mon-wiz-storage-enabled']) {
+                                sum += '<div><span style="font-weight:bold">Open storage:</span> Yes</div>';
+                                sum += '<div><span style="font-weight:bold">Open storage delay:</span> ' + data['mon-wiz-storage'] + ' seconds</div>';
+                            }
+                            if (data['mon-wiz-auto-wield-enabled']) {
+                                sum += '<div><span style="font-weight:bold">Auto wield:</span> Yes</div>';
+                                sum += '<div><span style="font-weight:bold">Auto wield delay:</span> ' + data['mon-wiz-auto-wield'] + ' seconds</div>';
+                            }
+                            if (data['mon-wiz-auto-loot-enabled']) {
+                                sum += '<div><span style="font-weight:bold">Auto loot:</span> Yes</div>';
+                                sum += '<div><span style="font-weight:bold">Auto loot delay:</span> ' + data['mon-wiz-auto-loot'] + ' seconds</div>';
+                            }
+                            if (data['mon-wiz-auto-wear-enabled']) {
+                                sum += '<div><span style="font-weight:bold">Auto wear:</span> Yes</div>';
+                                sum += '<div><span style="font-weight:bold">Auto wear delay:</span> ' + data['mon-wiz-auto-wear'] + ' seconds</div>';
+                            }
+                            if (data['mon-wiz-wimpy'] !== 0)
+                                sum += '<div><span style="font-weight:bold">Wimpy:</span> ' + data['mon-wiz-wimpy'] + '%</div>';
+                            if (data['mon-wiz-auto-stand'])
+                                sum += '<div><span style="font-weight:bold">Auto stand:</span> Yes</div>';
+                            if (data['mon-wiz-drop-encumbered'])
+                                sum += '<div><span style="font-weight:bold">Drop encumbered:</span> Yes</div>';
+                            if (data['mon-wiz-drop-encumbered-combat'])
+                                sum += '<div><span style="font-weight:bold">Drop encumbered combat:</span> Yes</div>';
+                            summary.innerHTML = sum;
+                        }
+                    }),
+                ]
+            });
+            $dialogs.monster.height = '340px';
+            $dialogs.monster.on('open', () => {
+                menubar.enabled = false;
+            });
+            $dialogs.monster.on('close', () => {
+                menubar.enabled = true;
+            });
+            $dialogs.monster.on('cancel', () => {
+                menubar.enabled = true;
+            });
+            $dialogs.monster.on('finished', (e) => {
+                var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'monster.c')), 'utf8');
+                var data = e.data;
+                var tmpl = baseParseData();
+                var tmp;
+                var tmp2;
+                tmpl.inherit = data['mon-wiz-type'].value;
+                tmpl['name'] = data['mon-wiz-name'].replace(/"/g, '\\"');
+                if (data['mon-wiz-short'].substring(0, 2) == "(:")
+                    tmpl['short'] = data['mon-wiz-short'];
+                else if (data['mon-wiz-short'].startsWith('"') && data['mon-wiz-short'].endsWith('"'))
+                    tmpl['short'] = `${data['mon-wiz-short']}`;
+                else
+                    tmpl['short'] = `"${data['mon-wiz-short'].replace(/"/g, '\\"')}"`;
+                if (data['mon-wiz-long'].substring(0, 2) == "(:")
+                    tmpl['long'] = data['mon-wiz-long'];
+                else {
+                    if (!data['mon-wiz-short'].startsWith('"') && !data['mon-wiz-short'].endsWith('"'))
+                        data['mon-wiz-long'] = data['mon-wiz-long'].replace(/"/g, '\\"');
+                    if (data['mon-wiz-long'].startsWith('"'))
+                        data['mon-wiz-long'] = data['mon-wiz-long'].substr(1);
+                    if (data['mon-wiz-long'].endsWith('"'))
+                        data['mon-wiz-long'] = data['mon-wiz-long'].substr(0, data['mon-wiz-long'].length - 1);
+                    if (data['mon-wiz-long'].length > 70) {
+                        tmp = data['mon-wiz-long'].substr(0, 66);
+                        let tl = tmp.length;
+                        while (tl--) {
+                            if (tmp.charAt(tl) === ' ') {
+                                tmp.substr(0, tl);
+                                break;
+                            }
+                        }
+                        tmpl['long'] = `"${tmp}"\n     `;
+                        data['mon-wiz-long'] = data['mon-wiz-long'].substr(tmp.length);
+                        tmpl['long'] += `${formatString(data['mon-wiz-long'], 5, 73)}`;
+                    }
+                    else
+                        tmpl['long'] = `"${data['mon-wiz-long']}"`;
+                }
+                tmpl['height'] = data['mon-wiz-height'];
+                tmpl['create pre'] = '';
+                tmpl['create post'] = '';
+                tmpl['create'] = `${data['mon-wiz-level']}, "${data['mon-wiz-race'] || 'human'}"`;
+                tmpl['create comment'] = '';
+                tmpl['doc'] = '';
+                if (data['mon-wiz-class'].length > 0) {
+                    tmpl['create'] += `, "${data['mon-wiz-class']}"`;
+                    tmpl['create comment'] += ', Class';
+                }
+                if (data['mon-wiz-body'].length > 0) {
+                    tmpl['create'] += `, "${data['mon-wiz-body']}"`;
+                    tmpl['create comment'] += ', Body type';
+                }
+                tmpl['create body'] = '';
+                if (data['mon-wiz-nouns'].length > 0) {
+
+                    data['mon-wiz-nouns'] = data['mon-wiz-nouns'].split(',');
+                    data['mon-wiz-nouns'] = data['mon-wiz-nouns'].map(w => {
+                        w = w.trim();
+                        if (!w.startsWith('"'))
+                            w = '"' + w;
+                        if (!w.endsWith('"'))
+                            w += '"';
+                        return w;
+                    });
+                    tmpl['create body'] += '   set_nouns(' + data['mon-wiz-nouns'].join(', ') + ');\n';
+                }
+                if (data['mon-wiz-adjectives'].length > 0) {
+                    data['mon-wiz-adjectives'] = data['mon-wiz-adjectives'].split(',');
+                    data['mon-wiz-adjectives'] = data['mon-wiz-adjectives'].map(w => {
+                        w = w.trim();
+                        if (!w.startsWith('"'))
+                            w = '"' + w;
+                        if (!w.endsWith('"'))
+                            w += '"';
+                        return w;
+                    });
+                    tmpl['create body'] += '   set_adjectives(' + data['mon-wiz-adjectives'].join(', ') + ');\n';
+                }
+                tmp = [];
+                if (data['mon-wiz-undead'])
+                    tmp.push('"undead" : 1');
+                if (data['mon-wiz-waterbreathing'])
+                    tmp.push('"waterbreathing" : 1');
+                if (data['mon-wiz-requires-water'])
+                    tmp.push('"requires water" : 1');
+                if (data['mon-wiz-no-bleed'])
+                    tmp.push('"no bleed" : 1');
+                if (data['mon-wiz-no-corpse'].substring(0, 2) == "(:")
+                    tmp.push(`"no corpse" : ${data['mon-wiz-no-corpse']}`);
+                else if (data['mon-wiz-no-corpse'].startsWith('"') && data['mon-wiz-no-corpse'].endsWith('"'))
+                    tmp.push(`"no corpse" : ${data['mon-wiz-no-corpse']}`);
+                else if(data['mon-wiz-no-corpse'].length > 0)
+                    tmp.push(`"no corpse" : "${data['mon-wiz-no-corpse'].replace(/"/g, '\\"')}"`);
+                if (data['mon-wiz-no-limbs'].substring(0, 2) == "(:")
+                    tmp.push(`"no limbs" : ${data['mon-wiz-no-limbs']}`);
+                else if (data['mon-wiz-no-limbs'].startsWith('"') && data['mon-wiz-no-limbs'].endsWith('"'))
+                    tmp.push(`"no limbs" : ${data['mon-wiz-no-limbs']}`);
+                else if(data['mon-wiz-no-limbs'].length > 0)
+                    tmp.push(`"no limbs" : "${data['mon-wiz-no-limbs'].replace(/"/g, '\\"')}"`);
+                if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_properties( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n      ]));\n';
+                }
+                if (data['mon-wiz-mass'] > 0)
+                    tmpl['create body'] += `   set_mass(${data['mon-wiz-mass']});\n`;
+                tmpl['create body'] += `   set_height(${data['mon-wiz-height']});\n`;
+                if (data['mon-wiz-alignment'].length > 0 && data['mon-wiz-alignment'] !== '0' && data['mon-wiz-alignment'] !== 'neutral') {
+                    if (typeof data['mon-wiz-alignment'] === "string" && parseFloat(data['mon-wiz-alignment']).toString() == data['mon-wiz-alignment'])
+                        tmpl['create body'] += `   set_alignment(${data['mon-wiz-alignment']});\n`;
+                    else
+                        tmpl['create body'] += `   set_alignment("${data['mon-wiz-alignment']}");\n`;
+                }
+                if (data['mon-wiz-language'].length > 0)
+                    tmpl['create body'] += `   set_primary_lang("${data['mon-wiz-mass']}");\n`;
+                if (data['mon-wiz-gender'].value.length > 0)
+                    tmpl['create body'] += `   set_gender("${data['mon-wiz-gender'].value}");\n`;
+                if (data['mon-wiz-eye'].length > 0)
+                    tmpl['create body'] += `   set_eyecolor("${data['mon-wiz-mass']}");\n`;
+                if (data['mon-wiz-hair'].length > 0)
+                    tmpl['create body'] += `   set_haircolor("${data['mon-wiz-mass']}");\n`;
+                if (data['mon-wiz-ridable'])
+                    tmpl['create body'] += '   set_rideable(1); //Enable riding\n   set_follow_type("steed");/ /set the follow type to steed for proper limiting\n';
+                if (data['mon-wiz-flying'])
+                    tmpl['create body'] += '   set_can_fly(1); //Enable fly/land abilities\n';
+                if (data['mon-wiz-flying'])
+                    tmpl['create body'] += '   set_getable(1); //turn on getable\n';
+                data['mon-wiz-speed'] = data['mon-wiz-speed'] || 0;
+                if (data['mon-wiz-patrol'].length > 0)
+                    tmpl['create body'] += `   set_patrol(${data['mon-wiz-speed']}, ${formatArgumentList(data['mon-wiz-patrol'], 64 - ('' + data['mon-wiz-speed']).length)}); //Set speed and patrol route\n`;
+                else if (data['mon-wiz-speed'] > 0)
+                    tmpl['create body'] += `   set_speed(${data['mon-wiz-speed']}); //Set speed\n`;
+                if (data['mon-wiz-no-walk'].length > 0)
+                    tmpl['create body'] += `   set_no_walk(${formatArgumentList(data['mon-wiz-no-walk'], 63, 0, 0, true)}); //Set no walk rooms\n`;
+                if (data['mon-wiz-chance'].length > 0)
+                    tmpl['create body'] += `   set_spell_chance(${data['mon-wiz-chance']}); //Set the chance an attack command will be used\n`;
+                if (data['mon-wiz-commands'].length > 0)
+                    tmpl['create body'] += `   set_spells(${formatArgumentList(data['mon-wiz-commands'], 64)}); //Set attack commands\n`;
+                if (data['mon-wiz-initiators'].length > 0)
+                    tmpl['create body'] += `   set_combat_initiator(${formatArgumentList(data['mon-wiz-initiators'], 56)}); //Set attack initiators\n`;
+                if (data['mon-wiz-aggressive'].length > 0) {
+                    tmpl['create body'] += `   set_aggressive(${data['mon-wiz-chance']}); //Set monster aggressiveness\n`;
+                    tmpl['doc'] += ' * @doc /doc/build/monster/haggle';
+                }
+                if (data['mon-wiz-auto-drop-enabled'])
+                    tmpl['create body'] += `   set_auto_drop(1);`;
+                if (data['mon-wiz-auto-drop'] !== 1)
+                    tmpl['create body'] += `   set_auto_drop_delay(${data['mon-wiz-auto-drop']});`;
+                if (!data['mon-wiz-storage-enabled'])
+                    tmpl['create body'] += `   set_open_storage(0);`;
+                if (data['mon-wiz-storage'] !== 3)
+                    tmpl['create body'] += `   set_open_storage_delay(${data['mon-wiz-storage']});`;
+                if (!data['mon-wiz-auto-wield-enabled'])
+                    tmpl['create body'] += `   set_auto_wield(0);`;
+                if (data['mon-wiz-auto-wield'] !== 3)
+                    tmpl['create body'] += `   set_auto_wield_delay(${data['mon-wiz-auto-wield']});`;
+                if (data['mon-wiz-auto-loot-enabled'])
+                    tmpl['create body'] += `   set_auto_loot(1);`;
+                if (data['mon-wiz-auto-loot'] !== 1)
+                    tmpl['create body'] += `   set_auto_loot_delay(${data['mon-wiz-auto-loot']});`;
+                 if (data['mon-wiz-auto-wear-enabled'])
+                    tmpl['create body'] += `   set_auto_wear(1);`;
+                if (data['mon-wiz-auto-wear'] !== 3)
+                    tmpl['create body'] += `   set_auto_wear_delay(${data['mon-wiz-auto-wear']});`;
+                if (data['mon-wiz-wimpy'] !== 0)
+                    tmpl['create body'] += `   set_wimpy(${data['mon-wiz-wimpy']});`;
+                if (!data['mon-wiz-auto-stand'])
+                    tmpl['create body'] += `   set_auto_stand(0);`;
+                if(data['mon-wiz-drop-encumbered'] && data['mon-wiz-drop-encumbered-combat'])
+                    tmpl['create body'] += '   set_reactions( ([\n       "encumbered 50" : "drop extra"\n       combat encumbered 50" : "drop extra"\n       ]));\n';
+                else if (data['mon-wiz-drop-encumbered'])
+                    tmpl['create body'] += '   set_reaction("encumbered 50", "drop extra");\n';
+                else if (data['mon-wiz-drop-encumbered-combat'])
+                    tmpl['create body'] += '   set_reaction("combat encumbered 50", "drop extra");\n';
+
+                var f = data['mon-wiz-name'].replace(/\s/g, '_');
+                if (!f || f.length === 0) {
+                    if (data['mon-wiz-type'].display === 'Standard')
+                        f = ('new_monster_' + newCounter);
+                    else
+                        f = ('new_' + data['mon-wiz-type'].display.replace(/\s/g, '_') + '_' + newCounter);
+                }
+                f += '.c';
+                f.toLowerCase();
+                newFromValue(parseFileTemplate(value, tmpl), f);
+            });
+        }
+        $dialogs.monster.show();
+    }
+
+    function formatArgumentList(str, first, second, indent, quotes) {
+        if (!str) return;
+        first = first || 64;
+        second = second || 75;
+        indent = indent || 5;
+        if (!Array.isArray(str))
+            str = str.splitQuote(',');
+        str = str.map(w => {
+            w = w.trim().replace(/\n|\r/g, '');
+            if (!quotes && !w.startsWith('"'))
+                w = '"' + w;
+            if (!quotes && !w.endsWith('"'))
+                w += '"';
+            return w;
+        });
+        var tmp = [];
+        var tl = str.length;
+        var tmp2 = [];
+        var tl2 = 0;
+        var w = first;
+        for (var t = 0; t < tl; t++) {
+            var c = str[t];
+            if (tmp.length > 0)
+                w = second;
+            if (tl2 + (tmp2.length - 1) * 2 + c.length < w) {
+                tmp2.push(c);
+                tl2 += c.length;
+            }
+            else {
+                tmp.push(tmp2.join(', '));
+                tmp2 = [c];
+                tl2 = c.length;
+            }
+        }
+        if (tmp2.length)
+            tmp.push(tmp2.join(', '));
+        return tmp.join(',\n' + ' '.repeat(indent));
+    }
+
+    function ellipse(text, len) {
+        if (!len || len < 1) len = 15;
+        if (!text || text.lengt <= len) return text || '';
+        return text.substr(0, len) + '...';
     }
 
     function writeFile(file, data) {
@@ -4684,18 +5637,6 @@ var decorations = editor.deltaDecorations([], [
 		}
 	}
 ]);
-
-
-monaco.editor.setModelMarkers(editor.getModel(), '', [
-    {
-        startColumn: 1,
-        startLineNumber: 6,
-        endColumn: 24,
-        endLineNumber: 7,
-        message: 'Invalid',
-        severity: 8,
-    }
-])
     */
 </script>
 

@@ -12,6 +12,11 @@
 
 inherit {inherit};
 
-{wizard pre}void create()
+{create pre}void create()
 {
-{wizard create}}{wizard post}
+   ::create({create}); //Level, Race{create comment}
+   set_name("{name}");
+   set_short({short});
+   set_long({long});
+   set_height({height}); // height in inches
+{create body}}{create post}
