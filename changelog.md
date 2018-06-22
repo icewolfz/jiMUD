@@ -27,7 +27,7 @@
     - Fixed paste advanced not being enabled when allowed
     - Fixed opening files on load that no longer exist
     - Fixed change event firing when new files created
-  - Immortal tools: Fix issue when using with code editor
+  - Immortal tools: Fix issues when using with code editor
   - Advanced editor:
     - Some colors where broken when codes where pasted in or sent from other windows
     - Link window to code editor when in editor only mode so the window stays on top and closes when the editor closes
@@ -378,7 +378,7 @@
 - **New:**
   - Add [#untrigger](docs/commands.md) command to remove triggers or alarms
   - Immortal Tools: can zoom in/out and reset from menu bar
-  - Mapper, immortal tools, profile manager, advanced editor, and chat window now support loading css/js to allow [customizing](docs/customizing.md) by creating files in the appdata folder.
+  - Mapper, immortal tools, profile manager, advanced editor, and chat window now support loading css/js to allow [customizing](docs/customizing.md) by creating files in the application data folder.
     - Profile manger: profiles.js and profiles.css
     - Chat capture window: chat.js and chat.css
     - Mapper: map.js and map.css
