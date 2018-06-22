@@ -32,6 +32,57 @@ The code editor allows immortals or those wanting to code lpc files using a grap
       - `Sinking Down` rooms will sink down to room below if possible, only works if base room inherits SINK_ROOM, or has custom set_down(room below path), **Note** disabled if depth is only 1
       - `Sinking Up` rooms will float up to the room above if possible, only works if base room inherits SINK_ROOM, or has custom set_up(room above path), **Note** disabled if depth is only 1
       - `None` turn off all states
+- `New monster` create a new monster using a wizard for easy option selection
+  - `General properties` general monster properties
+    - `Type` the monster type
+    - `Level` the level
+    - `Alignment` The alignment, can pick from preselected list or use -1000 to 1000 raw number values, defaults to neutral if empty
+    - `Race` pick from predefined list or supply a custom race, defaults to human if empty
+    - `Class` pick from predefined list of classes and subclasses or supply your own
+    - `Language` pick primary language from predefined list, custom language or leave blank to determine based on race
+    - `Ridable` is monster ridable
+    - `Flying` can the monster fly
+    - `Getable` can the monster be picked up
+    - `Undead` is the monster undead, **Note** some monster races are automatically undead and setting this will not matter
+    - `Water breathing` can monster breathe under water
+    - `Requires water` requires water to live, if out of water it will suffocate
+    - `No bleeding` monster will not bleed
+  - `Description` Basic description properties
+    - `Name` the monster's name
+    - `Short` the monster's short, normal proper cased name or name prefixed with a/a/the
+    - `Nouns` a list of comma delimited nouns used to build an id list
+    - `Adjectives` a list of comma delimited adjectives use to build an id list with nouns
+  - `Long description` The long description, with link to open advanced editor to allow editing in editor for easy colorizing
+  - `Physical properties` properties related to physical attributes
+    - `Mass` the monsters mass, 0 will default to internal formula based on several factors
+    - `Height` the height of the monster in inches from 1 to infinity
+    - `Eye color` monster's eye color, pick from predefined list or supply any color you wish
+    - `Hair color` monster's hair color, pick from predefined list or supply any color you wish
+    - `Gender` the monster's gender, male, female, or none
+    - `Body type` allows you to pick a body type to set the inital limbs for monster, if not set will be determined based on race
+  - `Advanced properties` Advanced options that while usefule are not always needed
+    - `No corpse` will the monster leave a corpse, string will be displayed to player and no corpse left, if "" no message and no corpse, $N/$n replaced with monster's name
+    - `No limbs` will the limbs be dropped on the groud, if "" no limbs and no message, else message displayed to player, $L/$l will be replaced with limb name, $N/$n replaced with monster's name
+  - `Movement` determine if the monste will wander randomly or a set list of direction
+    - `Speed` he speed the monster moves in heartbeats, must be set to enable movement
+    - `Patrol route` a set list of exits the monster will attempt to follow
+    - `No walk rooms` a list of room file names that the monster can no enter, allows containment of monster to a general area, **Note** filenames should always include the trailing `.c`
+  - `Combat` combat related options
+    - `Attack commands` a list of comma delimited abilities or commands the monster will randomly do during combat
+    - `Attack command chance` the chance a command will be used, from 0 to 101, 0 never, 100/101 always
+    - `Attack initiators` list of comma delimited commands or abilities to randomly picked from when the monster starts combat
+  - `Aggressive` monsters aggressiveness, can be a simple number or a complex mapping of values to determine how different races, classes and others options effects auto attacking, see /doc/build/monster/haggle on mud for full list and details
+  - `Actions` actions or reactions to different things
+    - `Auto drop` drop items after a delay of seconds
+    - `Open storage` open storage items that have been given and how long to wait
+    - `Auto wield` wield any weapon given or looted after a delay of seconds
+    - `Auto loot` loot the room of items after a delay of seconds
+    - `Auto wear` wear any armor given or looted after a delay of seconds
+    - `Wimpy` wimpy after percent of damage is reached
+    - `Drop encumbered` drop extra inventory when 50% or higher encumbered
+    - `Drop encumbered combat` drop extra inventory when 50% or higher encumbered if in combat
+    - `Auto stand` stand backup when lying on the ground during combat
+  - `Finish` A final summary of selected options and properties, some properties and options will always be set even if empty: name, level, race, short, long
 
 ## Code editor features
 

@@ -952,7 +952,10 @@
         </div>
         <div id="mon-wizard-description-long">
             <div class="col-sm-12 form-group">
-                <label class="control-label" style="width: 100%">Long <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('mon-wiz-long').value, 'editor', true);"><i class="fa fa-edit"></i></a>
+                <label class="control-label" style="width: 100%">Long
+                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('mon-wiz-long').value, 'editor', true);">
+                        <i class="fa fa-edit"></i>
+                    </a>
                     <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 219px;"></textarea>
                 </label>
             </div>
@@ -3555,7 +3558,7 @@
     ipcRenderer.on('send-editor', (event, text, window) => {
         if (!manager.active || !manager.active.editor || window != "code-editor")
             return;
-        if($dialogs.monster.open)
+        if ($dialogs.monster.open)
             document.activeElement.value = text;
         else
             manager.active.editor.insert(text);
@@ -4205,7 +4208,7 @@
                             var sum = '<div><span style="font-weight:bold">Type:</span> ' + data['mon-wiz-type'].display + '</div>';
                             sum += '<div><span style="font-weight:bold">Level:</span> ' + data['mon-wiz-level'] + '</div>';
                             sum += '<div><span style="font-weight:bold">Alignment:</span> ' + (data['mon-wiz-alignment'] || 'neutral') + '</div>';
-                            sum += '<div><span style="font-weight:bold">Race:</span> ' + data['mon-wiz-race'] + '</div>';
+                            sum += '<div><span style="font-weight:bold">Race:</span> ' + (data['mon-wiz-race'] || 'human') + '</div>';
                             if (data['mon-wiz-class'] && data['mon-wiz-class'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Class:</span> ' + data['mon-wiz-class'] + '</div>';
                             if (data['mon-wiz-language'] && data['mon-wiz-language'].length > 0)
@@ -4396,13 +4399,13 @@
                     tmp.push(`"no corpse" : ${data['mon-wiz-no-corpse']}`);
                 else if (data['mon-wiz-no-corpse'].startsWith('"') && data['mon-wiz-no-corpse'].endsWith('"'))
                     tmp.push(`"no corpse" : ${data['mon-wiz-no-corpse']}`);
-                else if(data['mon-wiz-no-corpse'].length > 0)
+                else if (data['mon-wiz-no-corpse'].length > 0)
                     tmp.push(`"no corpse" : "${data['mon-wiz-no-corpse'].replace(/"/g, '\\"')}"`);
                 if (data['mon-wiz-no-limbs'].substring(0, 2) == "(:")
                     tmp.push(`"no limbs" : ${data['mon-wiz-no-limbs']}`);
                 else if (data['mon-wiz-no-limbs'].startsWith('"') && data['mon-wiz-no-limbs'].endsWith('"'))
                     tmp.push(`"no limbs" : ${data['mon-wiz-no-limbs']}`);
-                else if(data['mon-wiz-no-limbs'].length > 0)
+                else if (data['mon-wiz-no-limbs'].length > 0)
                     tmp.push(`"no limbs" : "${data['mon-wiz-no-limbs'].replace(/"/g, '\\"')}"`);
                 if (tmp.length > 0) {
                     tmpl['create body'] += '   set_properties( ([\n       ';
@@ -4465,7 +4468,7 @@
                     tmpl['create body'] += `   set_auto_loot(1);`;
                 if (data['mon-wiz-auto-loot'] !== 1)
                     tmpl['create body'] += `   set_auto_loot_delay(${data['mon-wiz-auto-loot']});`;
-                 if (data['mon-wiz-auto-wear-enabled'])
+                if (data['mon-wiz-auto-wear-enabled'])
                     tmpl['create body'] += `   set_auto_wear(1);`;
                 if (data['mon-wiz-auto-wear'] !== 3)
                     tmpl['create body'] += `   set_auto_wear_delay(${data['mon-wiz-auto-wear']});`;
@@ -4473,7 +4476,7 @@
                     tmpl['create body'] += `   set_wimpy(${data['mon-wiz-wimpy']});`;
                 if (!data['mon-wiz-auto-stand'])
                     tmpl['create body'] += `   set_auto_stand(0);`;
-                if(data['mon-wiz-drop-encumbered'] && data['mon-wiz-drop-encumbered-combat'])
+                if (data['mon-wiz-drop-encumbered'] && data['mon-wiz-drop-encumbered-combat'])
                     tmpl['create body'] += '   set_reactions( ([\n       "encumbered 50" : "drop extra"\n       combat encumbered 50" : "drop extra"\n       ]));\n';
                 else if (data['mon-wiz-drop-encumbered'])
                     tmpl['create body'] += '   set_reaction("encumbered 50", "drop extra");\n';

@@ -8,6 +8,7 @@
     - Add open remote
     - Drag and drop local or remote files from immortal tools
     - Add new virtual area creation dialog for quick and easy virtual area creation, either for a current area or an entire new area
+    - Add new monster using wizard for selection different properties and options
   - Immortal tools:
     - Edit remote files directly using internal editor using the editor save to upload changed file
 - **Changed:**
