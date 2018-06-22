@@ -13,14 +13,11 @@ buck
 bug
 bullfrog
 camel
-camelid
 canine
 cat
 centaur
 cervine
 chocobo
-clawed_human
-clawed_quadruped
 cow
 coyote
 crab
@@ -33,7 +30,6 @@ donkey
 dragon
 drake
 elephant
-elephantidae
 elk
 emu
 equine
@@ -41,16 +37,11 @@ faerie
 feline
 ferret
 fish
-flippered_quadruped
-footed_quadruped
 frog
 gazelle
 gnoll
 goat
 hippogriff
-hooved_human
-hooved_quadruped
-horned_hooved_quadruped
 horse
 human
 humanoid
@@ -58,15 +49,13 @@ insect
 insectoid
 kangaroo
 kobold
-large_bird
-largeavian
-largebird
+large avian
+large bird
 leporine
 lizard
 lizardfolk
 lizardman
 llama
-lupine
 mammal
 mammoth
 marmoset
@@ -81,7 +70,6 @@ owl
 owlbear
 pachyderm
 parrot
-pawed_quadruped
 penguin
 pig
 plant
@@ -103,17 +91,10 @@ squid
 squirrel
 stag
 swine
-tailed_footed_quadruped
-tailed_human
-tailed_pawed_quadruped
 tree
 turtle
-tusked_elephantidae
 unicorn
 ursine
-winged_human
-winged_insectoid
-winged_quadruped
 wolf
 wolverine
 worm

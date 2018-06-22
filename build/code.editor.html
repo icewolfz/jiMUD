@@ -4079,7 +4079,8 @@
         if (!$dialogs.monster) {
             var colors = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'color.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
             var races = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'monster-race.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
-            document.getElementById('mon-wiz-body-list').innerHTML = races;
+            var bodies = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'monster-bodies.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
+            document.getElementById('mon-wiz-body-list').innerHTML = bodies;
             document.getElementById('mon-wiz-race-list').innerHTML = races;
             document.getElementById('mon-wiz-eye-list').innerHTML = colors;
             document.getElementById('mon-wiz-hair-list').innerHTML = colors;
