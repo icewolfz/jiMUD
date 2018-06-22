@@ -6201,7 +6201,7 @@ export class VirtualEditor extends EditorBase {
     }
 }
 
-class FileOpenValueEditor extends ValueEditor {
+export class FileOpenValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $editor: HTMLInputElement;
     private $value;
@@ -6278,7 +6278,7 @@ class FileOpenValueEditor extends ValueEditor {
     }
 }
 
-class FileBrowseValueEditor extends ValueEditor {
+export class FileBrowseValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $editor: HTMLInputElement;
 
@@ -6340,7 +6340,7 @@ class FileBrowseValueEditor extends ValueEditor {
     }
 }
 
-class ExternalExitValueEditor extends ValueEditor {
+export class ExternalExitValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $editor: HTMLInputElement;
     private $value;
@@ -6680,7 +6680,7 @@ class ExternalExitValueEditor extends ValueEditor {
     }
 }
 
-class ItemsValueEditor extends ValueEditor {
+export class ItemsValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $editor: HTMLInputElement;
     private $value;
