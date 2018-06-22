@@ -8,7 +8,7 @@
  * @typeof object
  * @doc /doc/build/monster/tutorial
  {doc}*/
-#include <std.h>
+#include <std.h>{includes}
 
 inherit {inherit};
 

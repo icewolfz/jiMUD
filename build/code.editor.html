@@ -595,6 +595,7 @@
                 <label class="control-label">Type
                     <select id="mon-wiz-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
                         <option value='STD_MONSTER'>Standard</option>
+                        <option value='BASEMONSTER'>Base</option>
                         <option value='MONTYPE_ARMOR_REPAIR'>Armor Repair</option>
                         <option value='MONTYPE_BARKEEP'>Barkeep</option>
                         <option value='MONTYPE_CLERIC_TRAINER'>Cleric Trainer</option>
@@ -1212,7 +1213,7 @@
 
     const { dialog, Menu, MenuItem, app } = remote;
     const { Menubar } = require('./js/menubar');
-    const { Wizard, WizardPage } = require('./js/wizard');
+    const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
     // eslint-disable-next-line no-unused-vars
     const { formatString, wordWrap, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize } = require('./js/library');
@@ -4315,6 +4316,8 @@
                 var tmp;
                 var tmp2;
                 tmpl.inherit = data['mon-wiz-type'].value;
+                tmpl.includes = data['mon-wiz-type'].display === 'Base' ?  '\n#include "../area.h"': '';
+
                 tmpl['name'] = data['mon-wiz-name'].replace(/"/g, '\\"');
                 if (data['mon-wiz-short'].substring(0, 2) == "(:")
                     tmpl['short'] = data['mon-wiz-short'];
@@ -4486,7 +4489,7 @@
 
                 var f = data['mon-wiz-name'].replace(/\s/g, '_');
                 if (!f || f.length === 0) {
-                    if (data['mon-wiz-type'].display === 'Standard')
+                    if (data['mon-wiz-type'].display === 'Standard' || data['mon-wiz-type'].display === 'Base')
                         f = ('new_monster_' + newCounter);
                     else
                         f = ('new_' + data['mon-wiz-type'].display.replace(/\s/g, '_') + '_' + newCounter);
