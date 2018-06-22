@@ -940,6 +940,7 @@ export class DataGrid extends EventEmitter {
     public addRow(row) {
         if (!row) return;
         this.$rows.push(row);
+        this.emit('rows-added');
         this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
@@ -948,6 +949,7 @@ export class DataGrid extends EventEmitter {
         this.$editorClick = null;
         //this.$rows = this.$rows.concat(rows);
         this.$rows.push(...rows);
+        this.emit('rows-added');
         this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
@@ -957,6 +959,7 @@ export class DataGrid extends EventEmitter {
         if (row === -1 || row >= this.$rows.length)
             return;
         this.$rows.splice(row, 1);
+        this.emit('rows-removed');
         this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
@@ -974,6 +977,7 @@ export class DataGrid extends EventEmitter {
         while (idx--) {
             this.$rows.splice(rows[idx], 1);
         }
+        this.emit('rows-removed');
         this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
@@ -981,6 +985,7 @@ export class DataGrid extends EventEmitter {
     set rows(value) {
         value = value || [];
         this.$rows = value;
+        this.emit('rows-changed');
         this.doUpdate(UpdateType.rows | UpdateType.sort);
     }
     get columns() { return this.$cols.slice(0); }
