@@ -1213,10 +1213,10 @@
                         _colors[g] = "mono" + (r - 232);
                 }
             }
+            _colorCodes = invert(_colors);
             for (b = 0, bl = _bold.length; b < bl; b++) {
                 _colors["B" + _bold[b]] = _colors[nearestHex("#" + _bold[b]).substr(1)].toUpperCase();
-            }
-            _colorCodes = invert(_colors);
+            }            
             tinymce.activeEditor.settings.textcolor_map = _ColorTable;
         }
 
