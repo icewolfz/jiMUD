@@ -5022,7 +5022,7 @@
                     tmpl['create body'] += `   set_prevent_peer(1);\n`;
                 else if (data['room-wiz-prevent-peer'].startsWith('"') && data['room-wiz-prevent-peer'].endsWith('"'))
                     tmpl['create body'] += `   set_prevent_peer(${data['room-wiz-prevent-peer']});\n`;
-                else
+                else if (data['room-wiz-prevent-peer'].length > 0)
                     tmpl['create body'] += `   set_prevent_peer("${data['room-wiz-prevent-peer'].replace(/"/g, '\\"')}");\n`;
                 data['room-wiz-exits'].filter(p => p.peer && e.peer.trim().length > 0).forEach(p => {
                     p.peer = p.peer.trim();
