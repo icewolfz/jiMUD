@@ -132,12 +132,14 @@ export class TextValueEditor extends ValueEditor {
             }
         });
         this.$editor.addEventListener('blur', (e) => {
-            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
+            if (e.relatedTarget && ((<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown')) {
                 e.preventDefault();
                 e.stopPropagation();
                 e.cancelBubble = true;
                 return;
             }
+            if (this.control.parent === e.relatedTarget)
+                return;
             this.control.clearEditor(e);
         });
         this.$editor.addEventListener('click', (e) => {
@@ -402,6 +404,8 @@ export class FlagValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
+            if (this.control.parent === e.relatedTarget)
+                return;
             this.control.clearEditor(e);
         });
         this.$editor.addEventListener('focus', () => {
@@ -603,6 +607,8 @@ export class DropDownEditValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
+            if (this.control.parent === e.relatedTarget)
+                return;
             this.control.clearEditor(e);
         });
         this.$editor.addEventListener('focus', () => {

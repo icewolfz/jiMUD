@@ -518,6 +518,7 @@ export class DataGrid extends EventEmitter {
         this.$body.appendChild(document.createElement('tfoot'));
         this.$body.children[1].addEventListener('click', (e) => {
             this.clearSelection();
+            this.clearEditor(e);
         });
         el.appendChild(this.$body);
         this.$parent.appendChild(el);
@@ -1768,8 +1769,10 @@ export class DataGrid extends EventEmitter {
 
     private resize() {
         const style = window.getComputedStyle(this.$parent, null);
-        let h = parseInt(style.getPropertyValue('height'), 10);
-        let w = parseInt(style.getPropertyValue('width'), 10);
+        //let h = parseInt(style.getPropertyValue('height'), 10);
+        //let w = parseInt(style.getPropertyValue('width'), 10);
+        let h = this.$parent.clientHeight;
+        let w = this.$parent.clientWidth;
         h -= this.$header.offsetHeight;
         if (w < this.$colWidth)
             w = this.$colWidth;

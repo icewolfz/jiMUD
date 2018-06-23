@@ -6221,6 +6221,8 @@ export class FileOpenValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
+            if (this.control.parent === e.relatedTarget)
+                return;
             this.control.clearEditor(e);
         });
         this.$editor.addEventListener('keyup', (e) => {
@@ -6296,6 +6298,8 @@ export class FileBrowseValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
+            if (this.control.parent === e.relatedTarget)
+                return;
             this.control.clearEditor(e);
         });
         this.$editor.addEventListener('keyup', (e) => {
@@ -6366,6 +6370,8 @@ export class ExternalExitValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
+            if (this.control.parent === e.relatedTarget)
+                return;
             this.control.clearEditor(e);
         });
         this.$editor.addEventListener('keyup', (e) => {
@@ -6706,6 +6712,8 @@ export class ItemsValueEditor extends ValueEditor {
                 e.cancelBubble = true;
                 return;
             }
+            if (this.control.parent === e.relatedTarget)
+                return;
             this.control.clearEditor(e);
         });
         this.$editor.addEventListener('keyup', (e) => {
