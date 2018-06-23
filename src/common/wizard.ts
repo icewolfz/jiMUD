@@ -245,7 +245,7 @@ export class WizardDataGridPage extends WizardPage {
         });
         this.dataGrid.on('rows-changed', () => {
             //if (this.wizard)
-                //this.wizard.data[this.id] = this.dataGrid.rows;
+            //this.wizard.data[this.id] = this.dataGrid.rows;
         });
         this.dataGrid.on('row-dblclick', (e) => {
             this.emit('edit', e);
@@ -293,6 +293,7 @@ export class Wizard extends EventEmitter {
     private $next: HTMLButtonElement;
     private $prev: HTMLButtonElement;
     private $data;
+    private $finish;
 
     private $pages: WizardPage[] = [];
     private $current = 0;
@@ -348,6 +349,12 @@ export class Wizard extends EventEmitter {
     get data() { return this.$data; }
 
     get open() { return this.$dialog.open; }
+
+    get disableFinish() { return this.$finish.disabled; }
+    set disableFinish(value) {
+        if (value === this.$finish.disabled) return;
+        this.$finish.disabled = value;
+    }
 
     constructor(options?: WizardOptions) {
         super();
@@ -421,10 +428,10 @@ export class Wizard extends EventEmitter {
         button.textContent = 'Cancel';
         el.appendChild(button);
 
-        button = document.createElement('button');
-        button.classList.add('btn', 'btn-primary');
-        button.style.cssFloat = 'right';
-        button.addEventListener('click', () => {
+        this.$finish = document.createElement('button');
+        this.$finish.classList.add('btn', 'btn-primary');
+        this.$finish.style.cssFloat = 'right';
+        this.$finish.addEventListener('click', () => {
             if (this.$current === this.$pages.length - 1) {
                 const e = { data: this.$data, preventDefault: false };
                 this.emit('finished', e);
@@ -434,8 +441,8 @@ export class Wizard extends EventEmitter {
             else
                 this.last();
         });
-        button.textContent = 'Finish';
-        el.appendChild(button);
+        this.$finish.textContent = 'Finish';
+        el.appendChild(this.$finish);
 
         button = document.createElement('div');
         button.classList.add('btn-group');
