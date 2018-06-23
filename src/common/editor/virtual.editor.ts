@@ -1439,8 +1439,48 @@ export class VirtualEditor extends EditorBase {
         this.$map.addEventListener('contextmenu', (e) => {
             if (e.defaultPrevented) return;
             const m = this.getMousePos(e);
-            const r = this.getRoom(m.rx, m.ry);
-            const ec = { room: r ? r.clone() : null, preventDefault: false };
+            const room: any = this.getRoom(m.rx, m.ry);
+            let o;
+            if (room) {
+                o = room.clone();
+                if (o.ef) {
+                    if (room.items)
+                        o.items = room.items.slice(0);
+                    else
+                        o.items = [];
+                    o.short = room.short;
+                    o.long = room.long;
+                    o.light = room.light || 0;
+                    o.terrainType = room.terrain;
+                    o.sound = room.sound;
+                    o.smell = room.smell;
+                    o.terrain = -1;
+                }
+                else {
+                    if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
+                        o.items = this.$items[o.item].children.slice();
+                    else
+                        o.items = [];
+                    if (o.terrain < this.$descriptions.length && o.terrain >= 0 && this.$descriptions[o.terrain]) {
+                        o.short = this.$descriptions[o.terrain].short;
+                        o.long = this.$descriptions[o.terrain].long;
+                        o.light = this.$descriptions[o.terrain].light;
+                        o.terrainType = this.$descriptions[o.terrain].terrain;
+                        o.sound = this.$descriptions[o.terrain].sound;
+                        o.smell = this.$descriptions[o.terrain].smell;
+                    }
+                    else {
+                        o.short = '';
+                        o.long = '';
+                        o.light = 0;
+                        o.terrainType = '';
+                        o.sound = '';
+                        o.smell = '';
+                    }
+                    o.external = this.$exits.filter(ex => ex.x === o.x && ex.y === o.y && ex.z === o.z).map(a => ({ ...a }));
+                }
+            }
+            const ec = { room: o, preventDefault: false };
             this.emit('map-context-menu', ec);
             //if (e.preventDefault) return;
         });
