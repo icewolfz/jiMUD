@@ -85,12 +85,14 @@ export class WizardDataGridPage extends WizardPage {
     get id() { return this.$id || 'wizard-datagrid'; }
     set id(value) {
         if (this.$id === value) return;
-        delete this.wizard.data[this.id];
+        const old = this.id;
         this.$id = value;
         if (this.dataGrid)
             this.dataGrid.id = this.$id;
-        if (this.wizard.data)
-            this.wizard.data[this.id] = this.dataGrid.rows;
+        if (this.wizard.data) {
+            this.wizard.data[this.id] = this.wizard.data[old];
+            delete this.wizard.data[old];
+        }
     }
 
     constructor(options?: DataGridPageOptions) {
@@ -242,8 +244,8 @@ export class WizardDataGridPage extends WizardPage {
             this.emit('add', e);
         });
         this.dataGrid.on('rows-changed', () => {
-            if (this.wizard)
-                this.wizard.data[this.id] = this.dataGrid.rows;
+            //if (this.wizard)
+                //this.wizard.data[this.id] = this.dataGrid.rows;
         });
         this.dataGrid.on('row-dblclick', (e) => {
             this.emit('edit', e);
@@ -260,8 +262,11 @@ export class WizardDataGridPage extends WizardPage {
                 this.on('delete', options.delete);
         }
         this.on('reset', e => {
-            this.dataGrid.rows = [];
-            this.wizard.data[this.id] = this.dataGrid.rows;
+            if (!this.wizard.data[this.id])
+                this.wizard.data[this.id] = [];
+            else
+                this.wizard.data[this.id].length = 0;
+            this.dataGrid.rows = this.wizard.data[this.id];
         });
     }
 
