@@ -86,6 +86,7 @@ export class DataGrid extends EventEmitter {
     private $dataHeight = 0;
     private $headerWidth = 0;
     private $resizer;
+    private $resizerCache;
     private $observer: MutationObserver;
     private $sort = { order: SortOrder.ascending, column: -1 };
     private $focused = -1;
@@ -523,7 +524,13 @@ export class DataGrid extends EventEmitter {
             this.doUpdate(UpdateType.resize);
         });
         this.$resizer = new ResizeObserver((entries, observer) => {
-            this.doUpdate(UpdateType.resize);
+            if (entries.length === 0) return;
+            if (entries[0].width === 0 || entries[0].height === 0)
+                return;
+            if (!this.$resizerCache || this.$resizerCache.width !== entries[0].width || this.$resizerCache.height !== entries[0].height) {
+                this.$resizerCache = { width: entries[0].width, height: entries[0].height };
+                this.doUpdate(UpdateType.columns | UpdateType.buildRows | UpdateType.resize);
+            }
         });
         this.$resizer.observe(this.$parent);
         this.$observer = new MutationObserver((mutationsList) => {
