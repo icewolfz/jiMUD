@@ -32,6 +32,58 @@ The code editor allows immortals or those wanting to code lpc files using a grap
       - `Sinking Down` rooms will sink down to room below if possible, only works if base room inherits SINK_ROOM, or has custom set_down(room below path), **Note** disabled if depth is only 1
       - `Sinking Up` rooms will float up to the room above if possible, only works if base room inherits SINK_ROOM, or has custom set_up(room above path), **Note** disabled if depth is only 1
       - `None` turn off all states
+- `New room`
+  - `General properties` general room properties
+    - `Type` the room type
+    - `Terrain` the room's terrain
+    - `Short` the short description
+    - `Light` the amount of light in the room
+    - `Night light adjustment` the amount to adjust light when nigh
+    - `Prevent peer all direction` a message, true/false or a function to prevent peering any exit
+  - `Description` The long description, with link to open advanced editor to allow editing in editor for easy colorizing
+  - `Properties` Miscellaneous properties
+    - `Indoors` is the room indoors
+    - `No magic` disable all magic in the room
+    - `No scry` prevent scrying people while in room
+    - `No teleport` prevent teleport in and out
+    - `Explored marker` set an explored marker when player enters room
+    - `No map send` do not send map data to client
+    - `Hide exits` hide the exit line from the player
+    - `No forage` can not forage for food
+    - `Forage` the max amount a player gets each time they forage
+    - `Max forage` the max amount player can forage per reset
+    - `Secret exit` provide a hint that there is a secret exit in this room
+  - `Combat properties` properties related to combat
+    - `No attack` disable all combat in the room
+    - `Council` allow players to kill each other using council rooms, good for arenas
+    - `Melee as ability` all basic melee combat will be considered an ability for protection calculation
+    - `Enable pk` allow players to kill each other
+    - `No dirt` can not throw dirt
+    - `Dirt type` custom dirt type, if empty it will be based on terrain and weather    
+  - `Items` the items you can look at in the room, there should be one for each noun from the description
+    - `Item` the item name
+    - `Description` the item description, you should also add any looks for nouns in descripitions of other items
+  - `Exits` Exits from the room, can be standard, doors, or climbs, **Note** climbs are only supported with standard, base (see area if supported), and climb types.
+    - `Exit` the exit name, a list predefined list of standard exits is provided to pick from or you can enter a custom one
+    - `Door` is this exit a door
+    - `Key ID` a unquie key id to use to lock or unlock if the exit is a door
+    - `Hidden` is the exit hidden
+    - `Blocker` a comma delimited list of monster ids that block the exit
+    - `Prevent peer` a message, true/false or a function to prevent peering this exit
+    - `Destination door` optional destination door id, defaults to door if empty
+    - `Locked` does the door lock every reset
+    - `Climb` is this exit a climbs, **Note** climbs are only supported with standard, base (see area if supported), and climb types.
+    - `Climbing difficulty` how hard the climb is if this exit is a climb
+  - `Smells` the smells for the room
+    - `Smell` the smell, use `default` to have the smell set as default room smell
+    - `Description` the smell description
+  - `Sounds` the sounds for the room
+    - `Sound` the sound, use `default` to have the smell set as default room smell
+    - `Description` the sound description
+  - `Searches` the searches for the room
+    - `Search` the search/searches, you can supply a comma delimited list to assign all searches the same description
+    - `Message` the message to display or a function to execute
+  - `Finish` A final summary of selected options and properties, some properties and options will always be set even if empty: terrain, short, long, exits, items, **Note** climbs are only supported with standard, base (see area if supported), and climb types and will prevent you from finishing until you pick a supported type or remove climbs.
 - `New monster` create a new monster using a wizard for easy option selection
   - `General properties` general monster properties
     - `Type` the monster type

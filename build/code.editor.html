@@ -957,7 +957,7 @@
                     <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('mon-wiz-long').value, 'editor', true);">
                         <i class="fa fa-edit"></i>
                     </a>
-                    <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 219px;"></textarea>
+                    <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 216px;"></textarea>
                 </label>
             </div>
         </div>
@@ -1195,8 +1195,310 @@
 
         </div>
         <div id="room-wizard-welcome">
-            <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
-            <div style="padding-top:76px">Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.</div>
+            <img src="../assets/icons/png/wizroomlogo.png" alt="Welcome to the room wizard" style="float: left;margin-top: 56px;height: 128px;width:128px;">
+            <div style="padding-top:76px">Welcome to the new room wizard, this will take you through the steps to create a room quickly and easily. You may finish at any time to generate a room based on your current selections.</div>
+        </div>
+        <div id="room-wizard-finish">
+            <img src="../assets/icons/png/wizroomlogo.png" alt="Room wizard summary" style="float: left;margin-top: 56px;height: 128px;width:128px;"> To finish your room simply click finished
+            <div id="room-wiz-summary" readonly="readonly" class="form-control" style="overflow:auto;height:219px;width:355px;white-space:pre;float: right;"></div>
+        </div>
+        <div id="room-wizard-general">
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Type
+                    <select id="room-wiz-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                        <option value='STD_ROOM'>Standard</option>
+                        <option value='BASEROOM'>Base</option>
+                        <option value="ROOMTYPE_ADVANCE_ROOM">Advance room</option>
+                        <option value="ROOMTYPE_BANK">Bank</option>
+                        <option value="ROOMTYPE_CLASS_JOIN">Class join</option>
+                        <option value="ROOMTYPE_CLIMB">Climb</option>
+                        <option value="ROOMTYPE_DOCK">Dock</option>
+                        <option value="ROOMTYPE_GUILD_HALL">Guild hall</option>
+                        <option value="ROOMTYPE_INN">Inn</option>
+                        <option value="ROOMTYPE_LIBRARY">Library</option>
+                        <option value="ROOMTYPE_LOCKER">Locker</option>
+                        <option value="ROOMTYPE_MODROOM">Modroom</option>
+                        <option value="ROOMTYPE_PIER">Pier</option>
+                        <option value="ROOMTYPE_SAGE">Sage</option>
+                        <option value="ROOMTYPE_SINK_ROOM">Sink</option>
+                        <option value="ROOMTYPE_SKY_ROOM">Sky</option>
+                        <option value="ROOMTYPE_STABLE">Stable</option>
+                        <option value="ROOMTYPE_TRAIN_ROOM">Train</option>
+                        <option value="ROOMTYPE_VAULT">Vault</option>
+                        <option value="ROOMTYPE_VENDOR_STORAGE">Vendor storage</option>
+                    </select>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Terrain
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="room-wiz-terrain" class="input-sm form-control">
+                        <span class="input-group-btn">
+                            <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul id="room-wiz-terrain-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                                <li>
+                                    <a href="#">beach</a>
+                                </li>
+                                <li>
+                                    <a href="#">bog</a>
+                                </li>
+                                <li>
+                                    <a href="#">city</a>
+                                </li>
+                                <li>
+                                    <a href="#">cliff</a>
+                                </li>
+                                <li>
+                                    <a href="#">cobble</a>
+                                </li>
+                                <li>
+                                    <a href="#">desert</a>
+                                </li>
+                                <li>
+                                    <a href="#">dirt</a>
+                                </li>
+                                <li>
+                                    <a href="#">dirtroad</a>
+                                </li>
+                                <li>
+                                    <a href="#">farmland</a>
+                                </li>
+                                <li>
+                                    <a href="#">forest</a>
+                                </li>
+                                <li>
+                                    <a href="#">grass</a>
+                                </li>
+                                <li>
+                                    <a href="#">grassland</a>
+                                </li>
+                                <li>
+                                    <a href="#">highmountain</a>
+                                </li>
+                                <li>
+                                    <a href="#">hills</a>
+                                </li>
+                                <li>
+                                    <a href="#">icesheet</a>
+                                </li>
+                                <li>
+                                    <a href="#">jungle</a>
+                                </li>
+                                <li>
+                                    <a href="#">lake</a>
+                                </li>
+                                <li>
+                                    <a href="#">mountain</a>
+                                </li>
+                                <li>
+                                    <a href="#">ocean</a>
+                                </li>
+                                <li>
+                                    <a href="#">pavedroad</a>
+                                </li>
+                                <li>
+                                    <a href="#">plains</a>
+                                </li>
+                                <li>
+                                    <a href="#">prairie</a>
+                                </li>
+                                <li>
+                                    <a href="#">river</a>
+                                </li>
+                                <li>
+                                    <a href="#">rockdesert</a>
+                                </li>
+                                <li>
+                                    <a href="#">rocky</a>
+                                </li>
+                                <li>
+                                    <a href="#">sand</a>
+                                </li>
+                                <li>
+                                    <a href="#">sanddesert</a>
+                                </li>
+                                <li>
+                                    <a href="#">savannah</a>
+                                </li>
+                                <li>
+                                    <a href="#">stone</a>
+                                </li>
+                                <li>
+                                    <a href="#">swamp</a>
+                                </li>
+                                <li>
+                                    <a href="#">tundra</a>
+                                </li>
+                                <li>
+                                    <a href="#">underwater</a>
+                                </li>
+                                <li>
+                                    <a href="#">water</a>
+                                </li>
+
+                            </ul>
+                        </span>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Short
+                    <input type="text" class="input-sm form-control" id="room-wiz-short" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Light
+                    <input type="number" id="room-wiz-light" class="input-sm form-control" min="-20" max="20" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Night light adjustment
+                    <input type="number" id="room-wiz-night-adjust" class="input-sm form-control" min="-20" max="20" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Prevent peer all directions
+                    <input type="text" class="input-sm form-control" id="room-wiz-prevent-peer" />
+                </label>
+            </div>
+        </div>
+        <div id="room-wizard-description">
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Long
+                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('room-wiz-long').value, 'editor', true);">
+                        <i class="fa fa-edit"></i>
+                    </a>
+                    <textarea class="input-sm form-control" id="room-wiz-long" style="width: 100%;height: 216px;"></textarea>
+                </label>
+            </div>
+        </div>
+        <div id="room-wizard-properties">
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-indoors" /> Indoors
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-no-magic" /> No magic
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-no-scry" /> No scry
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-no-teleport" /> No teleport
+                </label>
+            </div>
+            <div class="col-sm-4 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-explored" /> Explored Marker
+                </label>
+            </div>
+            <div class="col-sm-4 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-no-map" /> No map send
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-hide-exits" /> Hide exits
+                </label>
+            </div>
+            <div class="col-sm-4 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-no-forage" /> No forage
+                </label>
+            </div>
+            <div class="col-sm-4 form-group">
+                <label class="control-label">
+                    Forage
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">-1 default</span>
+                    <input type="number" id="room-wiz-forage" class="input-sm form-control" min="-1" />
+                </label>
+            </div>
+            <div class="col-sm-4 form-group">
+                <label class="control-label">
+                    Max forage
+                    <input type="number" id="room-wiz-max-forage" class="input-sm form-control" min="0" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Secret exit
+                    <input type="text" class="input-sm form-control" id="room-wiz-secret-exit" />
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;">String, function, or boolean to indicate there is a secret exit</span>
+                </label>
+            </div>
+        </div>
+        <div id="room-wizard-combat-properties">
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-no-attack" /> No attack
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-council" /> Council
+                </label>
+            </div>
+            <div class="col-sm-4 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-melee" /> Melee as ability
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-pk" /> Enable pk
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-no-dirt" /> No dirt
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Dirt type
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="room-wiz-dirt" class="input-sm form-control">
+                        <span class="input-group-btn">
+                            <button id="btn-room-wiz-dirt" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul id="room-wiz-dirt-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-dirt" data-container="body">
+                                <li>
+                                    <a href="#" data-value=''>none</a>
+                                </li>
+                                <li>
+                                    <a href="#">dirt</a>
+                                </li>
+                                <li>
+                                    <a href="#">mud</a>
+                                </li>
+                                <li>
+                                    <a href="#">snow</a>
+                                </li>
+                                <li>
+                                    <a href="#">sand</a>
+                                </li>
+                                <li>
+                                    <a href="#">dust</a>
+                                </li>
+                                <li>
+                                    <a href="#">sludge</a>
+                                </li>
+                            </ul>
+                        </span>
+                    </div>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;">Empty default based on terrain/weather</span>
+                </label>
+            </div>
         </div>
     </div>
 </body>
@@ -1211,8 +1513,8 @@
     /*global _ready:true*/
     const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
-    const { DataGrid } = require('./js/datagrid');
-    const { MonacoCodeEditor, VirtualEditor, Source } = require('./js/editor/code.editor');
+    const { DataGrid, EditorType } = require('./js/datagrid');
+    const { MonacoCodeEditor, VirtualEditor, Source, FileBrowseValueEditor } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
     const { dialog, Menu, MenuItem, app } = remote;
@@ -4077,8 +4379,168 @@
     }
 
     function roomWizard() {
-        //newFromFile(parseTemplate(path.join('{assets}', 'templates', 'rooms', 'base.c')), 'room');
         if (!$dialogs.room) {
+            $dialogs.roomExitPage = new WizardDataGridPage({
+                title: 'Exits',
+                id: 'room-wiz-exits',
+                columns: [
+                    {
+                        label: 'Exit',
+                        field: 'exit',
+                        width: 150,
+                        editor: {
+                            type: EditorType.dropdown,
+                            options: {
+                                container: '#room-wizard',
+                                data: [
+                                    'surface',
+                                    'dive',
+                                    'swim',
+                                    'portal',
+                                    'down',
+                                    'up',
+                                    'enter',
+                                    'out',
+                                    'northwest',
+                                    'west',
+                                    'southwest',
+                                    'south',
+                                    'southeast',
+                                    'east',
+                                    'northeast',
+                                    'north'
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        label: 'Destination',
+                        field: 'dest',
+                        width: 300,
+                        spring: true,
+                        editor: {
+                            type: EditorType.custom,
+                            editor: FileBrowseValueEditor,
+                            show: (prop, value) => {
+                                return value;
+                            }
+                        }
+                    },
+                    {
+                        label: 'Door',
+                        field: 'door',
+                        width: 150,
+                        editor: {
+                            type: EditorType.dropdown,
+                            options: {
+                                container: '#room-wizard',
+                                data: [
+                                    'gates',
+                                    'gate',
+                                    'doors',
+                                    'door'
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        label: 'Key ID',
+                        field: 'key',
+                        width: 200,
+                        editor: {
+                            options: {
+                                container: '#room-wizard',
+                                singleLine: true
+                            }
+                        }
+                    },
+                    {
+                        label: 'Hidden',
+                        field: 'hidden',
+                        width: 60
+                    },
+                    {
+                        label: 'Blocker',
+                        field: 'blocker',
+                        width: 200,
+                        spring: true,
+                        editor: {
+                            options: {
+                                container: '#room-wizard',
+                                singleLine: true
+                            }
+                        }
+                    },
+                    {
+                        label: 'Prevent peer',
+                        field: 'peer',
+                        width: 200,
+                        spring: true,
+                        editor: {
+                            options: {
+                                container: '#room-wizard',
+                                singleLine: true
+                            }
+                        }
+                    },
+                    {
+                        label: 'Destination Door',
+                        field: 'destDoor',
+                        width: 200,
+                        editor: {
+                            options: {
+                                container: '#room-wizard',
+                                singleLine: true
+                            }
+                        }
+                    },
+                    {
+                        label: 'Locked',
+                        field: 'locked',
+                        width: 60
+                    },
+                    {
+                        label: 'Climb',
+                        field: 'climb',
+                        width: 60
+                    },
+                    {
+                        label: 'Climbing Difficulty',
+                        field: 'diff',
+                        width: 130
+                    }
+                ],
+                add: (e) => {
+                    e.data = {
+                        exit: '',
+                        dest: '',
+                        door: '',
+                        key: '',
+                        hidden: false,
+                        blocker: '',
+                        peer: '',
+                        destDoor: '',
+                        locked: false,
+                        climb: false,
+                        diff: 0,
+                    };
+                },
+                edit: (e) => {
+                }
+            });
+            $dialogs.roomExitPage.dataGrid.on('browse-file', e => {
+                showBrowseDialog({
+                    defaultFile: e.file,
+                    title: 'Select remote file',
+                    properties: ['openFile'],
+                    filters: $fileFilters,
+                    arguments: e
+                }, (files) => {
+                    if (!files || files.length === 0) return;
+                    $dialog.options.arguments.editor.value = files[0];
+                    $dialog.options.arguments.editor.focus();
+                });
+            });
             $dialogs.room = new Wizard({
                 id: 'room-wizard',
                 title: 'Create new room...',
@@ -4087,6 +4549,248 @@
                         title: 'Welcome',
                         body: document.getElementById('room-wizard-welcome')
                     }),
+                    new WizardPage({
+                        title: 'General properties',
+                        body: document.getElementById('room-wizard-general'),
+                        reset: (e) => {
+                            $('#room-wiz-type', e.page).val('STD_ROOM').selectpicker('render');
+                            e.page.querySelector('#room-wiz-terrain').value = '';
+                            e.page.querySelector('#room-wiz-short').value = '';
+                            e.page.querySelector('#room-wiz-light').value = '3';
+                            e.page.querySelector('#room-wiz-night-adjust').value = '0';
+                            e.page.querySelector('#room-wiz-prevent-peer').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Description',
+                        body: document.getElementById('room-wizard-description'),
+                        reset: (e) => {
+                            e.page.querySelector('#room-wiz-long').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Properties',
+                        body: document.getElementById('room-wizard-properties'),
+                        reset: (e) => {
+                            e.page.querySelector('#room-wiz-indoors').checked = false;
+                            e.page.querySelector('#room-wiz-no-magic').checked = false;
+                            e.page.querySelector('#room-wiz-no-scry').checked = false;
+                            e.page.querySelector('#room-wiz-no-teleport').checked = false;
+                            e.page.querySelector('#room-wiz-explored').checked = false;
+                            e.page.querySelector('#room-wiz-no-map').checked = false;
+                            e.page.querySelector('#room-wiz-hide-exits').checked = false;
+                            e.page.querySelector('#room-wiz-no-forage').checked = false;
+                            e.page.querySelector('#room-wiz-forage').value = '-1';
+                            e.page.querySelector('#room-wiz-max-forage').value = '0';
+                            e.page.querySelector('#room-wiz-secret-exit').value = '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Combat Properties',
+                        body: document.getElementById('room-wizard-combat-properties'),
+                        reset: (e) => {
+                            e.page.querySelector('#room-wiz-no-attack').checked = false;
+                            e.page.querySelector('#room-wiz-council').checked = false;
+                            e.page.querySelector('#room-wiz-melee').checked = false;
+                            e.page.querySelector('#room-wiz-pk').checked = false;
+                            e.page.querySelector('#room-wiz-no-dirt').checked = false;
+                            e.page.querySelector('#room-wiz-dirt').value = '';
+                        }
+                    }),
+                    new WizardDataGridPage({
+                        title: 'Items',
+                        id: 'room-wiz-items',
+                        columns: [
+                            {
+                                label: 'Item',
+                                field: 'item',
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard',
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Description',
+                                field: 'description',
+                                spring: true,
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard'
+                                    }
+                                }
+                            }
+                        ],
+                        add: (e) => {
+                            e.data = {
+                                item: '',
+                                description: ''
+                            };
+                        }
+                    }),
+                    $dialogs.roomExitPage,
+                    new WizardDataGridPage({
+                        title: 'Smells',
+                        id: 'room-wiz-smells',
+                        columns: [
+                            {
+                                label: 'Smell',
+                                field: 'smell',
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard',
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Description',
+                                field: 'description',
+                                spring: true,
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard'
+                                    }
+                                }
+                            }
+                        ],
+                        add: (e) => {
+                            e.data = {
+                                smell: '',
+                                description: ''
+                            };
+                        }
+                    }),
+                    new WizardDataGridPage({
+                        title: 'Sounds',
+                        id: 'room-wiz-sounds',
+                        columns: [
+                            {
+                                label: 'Sound',
+                                field: 'sound',
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard',
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Description',
+                                field: 'description',
+                                spring: true,
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard'
+                                    }
+                                }
+                            }
+                        ],
+                        add: (e) => {
+                            e.data = {
+                                sound: '',
+                                description: ''
+                            };
+                        }
+                    }),
+                    new WizardDataGridPage({
+                        title: 'Searches',
+                        id: 'room-wiz-searches',
+                        columns: [
+                            {
+                                label: 'Search',
+                                field: 'search',
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard',
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Message',
+                                field: 'message',
+                                spring: true,
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard'
+                                    }
+                                }
+                            }
+                        ],
+                        add: (e) => {
+                            e.data = {
+                                search: '',
+                                message: ''
+                            };
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Finish',
+                        body: document.getElementById('room-wizard-finish'),
+                        reset: (e) => {
+                            e.page.querySelector('#room-wiz-summary').value = '';
+                        },
+                        shown: (e) => {
+                            var summary = e.page.querySelector('#room-wiz-summary');
+                            var data = e.wizard.data;
+                            var doors = data['room-wiz-exits'].filter(r => r.door && r.door.length > 0 && !r.climb);
+                            var exits = data['room-wiz-exits'].filter(r => !r.door || r.door.length === 0 && !r.climb);
+                            var climbs = data['room-wiz-exits'].filter(r => !r.door || r.door.length === 0 && r.climb);
+                            var sum = '<div><span style="font-weight:bold">Type:</span> ' + data['room-wiz-type'].display + '</div>';
+                            sum += '<div><span style="font-weight:bold">Terrain:</span> ' + data['room-wiz-terrain'] + '</div>';
+                            sum += '<div><span style="font-weight:bold">Short:</span> ' + data['room-wiz-short'] + '</div>';
+                            sum += '<div><span style="font-weight:bold">Long:</span> ' + ellipse(data['room-wiz-long']) + '</div>';
+                            sum += '<div><span style="font-weight:bold">Light:</span> ' + (data['room-wiz-light'] || 0) + '</div>';
+                            sum += '<div><span style="font-weight:bold">Night light adjustment:</span> ' + (data['room-wiz-night-adjust'] || 0) + '</div>';
+                            if (data['room-wiz-prevent-peer'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Prevent peer all:</span> ' + data['room-wiz-prevent-peer'] + '</div>';
+                            if (data['room-wiz-indoors']) sum += '<div><span style="font-weight:bold">Indoors:</span> Yes</div>';
+                            if (data['room-wiz-no-magic']) sum += '<div><span style="font-weight:bold">No magic:</span> Yes</div>';
+                            if (data['room-wiz-no-scry']) sum += '<div><span style="font-weight:bold">No scry:</span> Yes</div>';
+                            if (data['room-wiz-no-teleport']) sum += '<div><span style="font-weight:bold">No teleport:</span> Yes</div>';
+                            if (data['room-wiz-explored']) sum += '<div><span style="font-weight:bold">Explored Marker:</span> Yes</div>';
+                            if (data['room-wiz-no-map']) sum += '<div><span style="font-weight:bold">No map send:</span> Yes</div>';
+                            if (data['room-wiz-hide-exits']) sum += '<div><span style="font-weight:bold">Hide exits:</span> Yes</div>';
+                            if (data['room-wiz-no-forage']) sum += '<div><span style="font-weight:bold">No forage:</span> Yes</div>';
+                            if (data['room-wiz-forage'] >= 0) sum += '<div><span style="font-weight:bold">' + data['room-wiz-forage'] + ':</span> Yes</div>';
+                            if (data['room-wiz-no-dirt']) sum += '<div><span style="font-weight:bold">No dirt:</span> Yes</div>';
+                            if (data['room-wiz-max-forage'] > 0)
+                                sum += '<div><span style="font-weight:bold">Max forage:</span> ' + data['room-wiz-max-forage'] + '</div>';
+                            if (data['room-wiz-dirt'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Dirt type:</span> ' + data['room-wiz-dirt'] + '</div>';
+                            if (data['room-wiz-secret-exit'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Secret exit:</span> ' + data['room-wiz-secret-exit'] + '</div>';
+                            if (data['room-wiz-no-attack']) sum += '<div><span style="font-weight:bold">No attack:</span> Yes</div>';
+                            if (data['room-wiz-council']) sum += '<div><span style="font-weight:bold">Council:</span> Yes</div>';
+                            if (data['room-wiz-melee']) sum += '<div><span style="font-weight:bold">Melee as ability:</span> Yes</div>';
+                            if (data['room-wiz-pk']) sum += '<div><span style="font-weight:bold">Enable pk:</span> Yes</div>';
+
+                            sum += '<div><span style="font-weight:bold">Items:</span> ' + data['room-wiz-items'].length + '</div>';
+                            sum += '<div><span style="font-weight:bold">Exits:</span> ' + exits.length + '</div>';
+                            if (doors.length)
+                                sum += '<div><span style="font-weight:bold">Doors:</span> ' + doors.length + '</div>';
+                            if (climbs.length > 0)
+                                sum += '<div><span style="font-weight:bold">Climbs:</span> ' + climbs.length + '</div>';
+                            if (data['room-wiz-smells'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Smells:</span> ' + data['room-wiz-smells'].length + '</div>';
+                            if (data['room-wiz-sounds'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Sounds:</span> ' + data['room-wiz-sounds'].length + '</div>';
+                            if (data['room-wiz-searches'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Searches:</span> ' + data['room-wiz-searches'].length + '</div>';
+
+                            summary.innerHTML = sum;
+                        }
+                    })
                 ]
             });
             $dialogs.room.height = '340px';
@@ -4104,29 +4808,129 @@
                 menubar.enabled = true;
             });
             $dialogs.room.on('finished', (e) => {
-                var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'monster.c')), 'utf8');
+                var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'room.c')), 'utf8');
                 var data = e.data;
                 var tmpl = baseParseData();
-                var tmp, tmp2;
+                var tmp, tmp2, tmp3;
+                var doors = data['room-wiz-exits'].filter(r => r.exit.length > 0 && r.door && r.door.length > 0 && !r.climb);
+                var exits = data['room-wiz-exits'].filter(r => r.exit.length > 0 && !r.door || r.door.length === 0 && !r.climb);
+                var climbs = data['room-wiz-exits'].filter(r => r.exit.length > 0 && !r.door || r.door.length === 0 && r.climb);
+                tmpl.doc = [];
+                tmpl.includes = '';
+                tmpl['create pre'] = '';
+                tmpl['create body'] = '';
+                tmpl['create post'] = '';
+                //if standard but has doors replace with vault, base leave alone as that is a different issue, all other types inherit vault
+                if (doors.length > 0 && data['room-wiz-type'].display === 'Standard')
+                    data['room-wiz-type'] = { display: 'Vault', value: 'ROOMTYPE_VAULT' };
+                else if (climbs.length > 0 && data['room-wiz-type'].display === 'Standard')
+                    data['room-wiz-type'] = { display: 'Climb', value: 'ROOMTYPE_CLIMB' };
+
                 tmpl.inherit = data['room-wiz-type'].value;
-                tmpl.includes = data['room-wiz-type'].display === 'Base' ? '\n#include "area.h"' : '';
+                tmpl.inherits = '';
+                if (climbs.length > 0 && data['room-wiz-type'].display !== 'Climb') {
+                    tmpl.includes += '\n#include <climbing.h>';
+                    tmpl.doc.push('/doc/build/etc/climbing');
+                }
+                if (data['room-wiz-type'].display === 'Base')
+                    tmpl.includes += '\n#include "area.h"';
                 switch (data['room-wiz-type'].display) {
                     case 'Base':
                         tmpl.doc.push('/doc/build/areas/tutorial');
                         break;
+                    case 'Advance room':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/bank');
+                        break;
+                    case 'Bank':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/bank');
+                        break;
+                    case 'Class join':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/classjoin');
+                        break;
+                    case 'Climb':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/climb');
+                        tmpl.doc.push('/doc/build/etc/climbing');
+                        break;
+                    case 'Dock':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/pier');
+                        tmpl.doc.push('/doc/build/room/types/dock');
+                        break;
+                    case 'Guild hall':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/guild_hall');
+                        tmpl.doc.push('/doc/build/etc/voter');
+                        break;
+                    case 'Inn':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/inn');
+                        break;
+                    case 'Library':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/library');
+                        break;
+                    case 'Locker':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/locker');
+                        break;
+                    case 'Modroom':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/modroom');
+                        break;
+                    case 'Pier':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/pier');
+                        tmpl.doc.push('/doc/build/room/fishing');
+                        break;
+                    case 'Sage':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/library');
+                        tmpl.doc.push('/doc/build/room/types/sage');
+                        tmpl.doc.push('/doc/build/etc/sagebase');
+                        break;
+                    case 'Sink':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/sink_room');
+                        break;
+                    case 'Sky':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/sky_room');
+                        break;
+                    case 'Stable':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/stable');
+                        break;
+                    case 'Train':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('/doc/build/room/types/train_room');
+                        break;
+                    case 'Vault':
+                        tmpl.doc.push('/doc/build/room/doors');
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        break;
+                    case 'Vendor storage':
+                        tmpl.doc.push('/doc/build/room/types/vault');
+                        tmpl.doc.push('doc/build/room/types/vendor_storage');
+                        break;
                 }
-                tmpl.doc = [];
-                tmpl['create pre'] = '';
-                tmpl['create body'] = '';
-                tmpl['create post'] = '';
-                if (data['room-wiz-short'].substring(0, 2) == "(:")
-                    tmpl['short'] = data['room-wiz-short'];
+                data['room-wiz-short'] = data['room-wiz-short'].trim();
+                if (data['room-wiz-short'].startsWith('(:')) {
+                    tmpl['short'] = formatFunctionPointer(data['room-wiz-short']);
+                    tmpl['create pre'] += createFunction(data['room-wiz-short'], 'string');
+                }
                 else if (data['room-wiz-short'].startsWith('"') && data['room-wiz-short'].endsWith('"'))
                     tmpl['short'] = `${data['room-wiz-short']}`;
                 else
                     tmpl['short'] = `"${data['room-wiz-short'].replace(/"/g, '\\"')}"`;
-                if (data['room-wiz-long'].substring(0, 2) == "(:")
-                    tmpl['long'] = data['room-wiz-long'];
+                data['room-wiz-long'] = data['room-wiz-long'].trim();
+                if (data['room-wiz-long'].startsWith('(:')) {
+                    tmpl['long'] = formatFunctionPointer(data['room-wiz-long']);
+                    tmpl['create pre'] += createFunction(data['room-wiz-long'], 'string');
+                }
                 else {
                     if (!data['room-wiz-long'].startsWith('"') && !data['room-wiz-long'].endsWith('"'))
                         data['room-wiz-long'] = data['room-wiz-long'].replace(/"/g, '\\"');
@@ -4150,9 +4954,297 @@
                     else
                         tmpl['long'] = `"${data['room-wiz-long']}"`;
                 }
+                tmp = [];
+                if (data['room-wiz-light'] !== 0)
+                    tmp.push(`"light" : ${data['room-wiz-light']}`);
+                if (data['room-wiz-indoors'])
+                    tmp.push('"indoors" : 1');
+                if (data['room-wiz-no-magic'])
+                    tmp.push('"no magic" : 1');
+                if (data['room-wiz-no-attack'])
+                    tmp.push('"no attack" : 1');
+                if (data['room-wiz-no-scry'])
+                    tmp.push('"no scry" : 1');
+                if (data['room-wiz-no-teleport'])
+                    tmp.push('"no teleport" : 1');
+                if (data['room-wiz-council'])
+                    tmp.push('"council" : 1');
+                if (data['room-wiz-no-map'])
+                    tmp.push('"no send info" : 1');
+                if (data['room-wiz-melee'])
+                    tmp.push('"melee as ability" : 1');
+                if (data['room-wiz-pk'])
+                    tmp.push('"enable pk" : 1');
+                if (data['room-wiz-hide-exits'])
+                    tmp.push('"hide exits" : 1');
+                if (data['room-wiz-no-forage'])
+                    tmp.push('"no forage" : 1');
+                if (data['room-wiz-forage'] >= 0)
+                    tmp.push(`"forage" : ${data['room-wiz-forage']}`);
+                if (data['room-wiz-no-dirt'])
+                    tmp.push('"no dirt" : 1');
+                if (data['room-wiz-dirt'].length > 0)
+                    tmp.push(`"dirt type" : ${data['room-wiz-dirt']}`);
+                data['room-wiz-secret-exit'] = data['room-wiz-secret-exit'].trim();
+                if (data['room-wiz-secret-exit'] === 'false') { /**/ }
+                else if (data['room-wiz-secret-exit'].startsWith('(:')) {
+                    tmp.push(`"secret exit" : ${formatFunctionPointer(data['room-wiz-secret-exit'], true)})`);
+                    tmpl['create pre'] += createFunction(data['room-wiz-secret-exit'], 'string', 'object room, object player');
+                }
+                else if (data['room-wiz-secret-exit'] === 'true')
+                    tmp.push(`"secret exit" : 1`);
+                else if (typeof data['room-wiz-secret-exit'] === "string" && parseFloat(data['room-wiz-secret-exit']).toString() == data['room-wiz-secret-exit'])
+                    tmp.push(`"secret exit" : ${data['room-wiz-secret-exit']}`);
+                else if (data['room-wiz-secret-exit'].length > 0) {
+                    tmp.push(`"secret exit" : "${data['room-wiz-secret-exit'].replace(/"/g, '\\"')}"`);
+                }
+                if (data['room-wiz-max-forage'] > 0)
+                    tmp.push(`"light" : ${data['room-wiz-max-forage']}`);
 
-                //TODO
+                if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_properties( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n      ]));\n';
+                }
 
+                if (data['room-wiz-explored'])
+                    tmpl['create body'] += '   set_explored_marker(1);\n';
+                if (data['room-wiz-night-adjust'] !== 0)
+                    tmpl['create body'] += `   set_night_adjust(${data['room-wiz-night-adjust']});\n`;
+
+                data['room-wiz-prevent-peer'] = data['room-wiz-prevent-peer'].trim();
+                if (data['room-wiz-prevent-peer'] === 'false') { /**/ }
+                else if (data['room-wiz-prevent-peer'].startsWith('(:')) {
+                    tmpl['create body'] += `   set_prevent_peer(${formatFunctionPointer(data['room-wiz-prevent-peer'])});\n`;
+                    tmpl['create pre'] += createFunction(data['room-wiz-prevent-peer'], 'string', 'string dir, object player');
+                }
+                else if (data['room-wiz-prevent-peer'] === 'true')
+                    tmpl['create body'] += `   set_prevent_peer(1);\n`;
+                else if (data['room-wiz-prevent-peer'].startsWith('"') && data['room-wiz-prevent-peer'].endsWith('"'))
+                    tmpl['create body'] += `   set_prevent_peer(${data['room-wiz-prevent-peer']});\n`;
+                else
+                    tmpl['create body'] += `   set_prevent_peer("${data['room-wiz-prevent-peer'].replace(/"/g, '\\"')}");\n`;
+                data['room-wiz-exits'].filter(p => p.peer && e.peer.trim().length > 0).forEach(p => {
+                    p.peer = p.peer.trim();
+                    if (p.peer === 'false') { /**/ }
+                    if (p.peer.startsWith('(:')) {
+                        tmpl['create body'] += `   set_prevent_peer("${p.exit}",${formatFunctionPointer(p.peer)});\n`;
+                        tmpl['create pre'] += createFunction(p, 'string', 'string dir, object player');
+                    }
+                    else if (data['room-wiz-prevent-peer'] === 'true')
+                        tmpl['create body'] += `   set_prevent_peer("${p.exit}", 1);\n`;
+                    else if (p.peer.startsWith('"') && p.peer.endsWith('"'))
+                        tmpl['create body'] += `   set_prevent_peer("${p.exit}", ${p.peer});\n`;
+                    else
+                        tmpl['create body'] += `   set_prevent_peer("${p.exit}", "${p.peer.replace(/"/g, '\\"')}");\n`;
+                });
+                //add items
+                tmp = data['room-wiz-items'].map(i => {
+                    tmp2 = i.item.split(',').map(t => {
+                        t.trim();
+                        if (!t.startsWith('"') && !t.endsWith('"'))
+                            t = '"' + t + '"';
+                        return t;
+                    });
+                    if (tmp2.lengh === 1)
+                        tmp2 = tmp2[0];
+                    else
+                        tmp2 = `({ ${tmp2.join(', ')} })`;
+                    tmp3 = i.description.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'string');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    return `${tmp2} : ${tmp3}`;
+                });
+
+                if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_items( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n      ]));\n';
+                }
+                //add exits
+                tmp = exits.map(i => {
+                    if (i.exit.length === 0) return '';
+                    tmp2 = [];
+                    if (i.dest.length > 0)
+                        tmp2.push(`"room" : "${i.dest}"`);
+                    if (i.blocker.length > 0)
+                        tmp2.push(`"blockers" : "${i.blocker}"`);
+                    if (!i.exit.startsWith('"') && !i.exit.endsWith('"')) {
+                        if (tmp2.length > 0)
+                            return `   "${i.exit}" : ([])\n       ${tmp2.join(',\n       ')}\n      ]));\n`;
+                        return `   "${i.exit}" : ([])`;
+                    }
+                    if (tmp2.length > 0)
+                        return `   ${i.exit} : ([])\n       ${tmp2.join(',\n       ')}\n      ]));\n`;
+                    return `   ${i.exit} : ([])`;
+
+                });
+                if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_exits( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n      ]));\n';
+                }
+                tmp = exits.filter(i => i.hidden).map(i => {
+                    i.trim();
+                    if (!i.startsWith('"') && !i.endsWith('"'))
+                        i = '"' + i + '"';
+                    return i;
+                });
+                if (tmp.length > 0)
+                    tmpl['create body'] += `   add_invis_exits(${formatArgumentList(tmp.join(', '), 61)});\n`;
+                //add climbs
+                tmp = exits.map(i => {
+                    if (i.exit.length === 0) return '';
+                    tmp2 = [];
+                    if (exits.dest.length > 0)
+                        tmp2.push(`"dest" : "${exits.dest}"`);
+                    if (exits.diff.length > 0)
+                        tmp2.push(`"difficulty" : "${exits.diff}"`);
+                    if (tmp2.length > 0)
+                        return `   ${i.exit} : ([])\n       ${tmp2.join(',\n       ')}\n      ]));\n`;
+                    return `   ${i.exit} : ([])`;
+                });
+                if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_climbs( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n      ]));\n';
+                }
+                //add doors
+                doors.forEach(d => {
+                    if (!d.door.startsWith('"') && !d.door.endsWith('"'))
+                        d.door = '"' + d.door + '"';
+                    if (!d.exit.startsWith('"') && !d.exit.endsWith('"'))
+                        d.exit = '"' + d.exit + '"';
+                    if (d.key.length === 0)
+                        d.key = '0';
+                    else if (!d.key.startsWith('"') && !d.key.endsWith('"'))
+                        d.key = '"' + d.key + '"';
+                    if (d.destDoor.length > 0) {
+                        if (!d.destDoor.startsWith('"') && !d.destDoor.endsWith('"'))
+                            d.destDoor = '"' + d.destDoor + '"';
+                        tmpl['create body'] += `   set_door(${d.door}, "${d.dest}", ${d.exit}, ${d.key}, ${d.hidden ? 1 : 0}, ${d.destDoor});\n`;
+                    }
+                    else if (d.hidden)
+                        tmpl['create body'] += `   set_door(${d.door}, "${d.dest}", ${d.exit}, ${d.key}, 1);\n`;
+                    else if (d.key !== '0')
+                        tmpl['create body'] += `   set_door(${d.door}, "${d.dest}", ${d.exit}, ${d.key});\n`;
+                    else
+                        tmpl['create body'] += `   set_door(${d.door}, "${d.dest}", ${d.exit});\n`;
+                });
+                //smells
+                tmp = data['room-wiz-smells'].map(i => {
+                    tmp2 = i.smell.split(',').map(t => {
+                        t.trim();
+                        if (!t.startsWith('"') && !t.endsWith('"'))
+                            t = '"' + t + '"';
+                        return t;
+                    });
+                    if (tmp2.lengh === 1)
+                        tmp2 = tmp2[0];
+                    else
+                        tmp2 = `({ ${tmp2.join(', ')} })`;
+                    tmp3 = i.description.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'string', 'string smell, object room, object player');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    return `${tmp2} : ${tmp3}`;
+                });
+
+                if (tmp.length === 1 && data['room-wiz-smells'][0].smell === 'default') {
+                    data['room-wiz-smells'][0].description = data['room-wiz-smells'][0].description.trim();
+                    if (data['room-wiz-smells'][0].description.startsWith('(:'))
+                        tmpl['create body'] += `   set_smell(${formatFunctionPointer(data['room-wiz-smells'][0].description)});`;
+                    else if (!data['room-wiz-smells'][0].description.startsWith('"') && !data['room-wiz-smells'][0].description.endsWith('"'))
+                        tmpl['create body'] += `   set_smell("${data['room-wiz-smells'][0].description}");`;
+                    else
+                        tmpl['create body'] += `   set_smell(${data['room-wiz-smells'][0].description});`;
+                }
+                else if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_smells( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n      ]));\n';
+                }
+                //sounds
+                tmp = data['room-wiz-sounds'].map(i => {
+                    tmp2 = i.sound.split(',').map(t => {
+                        t.trim();
+                        if (!t.startsWith('"') && !t.endsWith('"'))
+                            t = '"' + t + '"';
+                        return t;
+                    });
+                    if (tmp2.lengh === 1)
+                        tmp2 = tmp2[0];
+                    else
+                        tmp2 = `({ ${tmp2.join(', ')} })`;
+                    tmp3 = i.description.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'string', 'string sound, object room, object player');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    return `${tmp2} : ${tmp3}`;
+                });
+
+                if (tmp.length === 1 && data['room-wiz-sounds'][0].smell === 'default') {
+                    data['room-wiz-sounds'][0].description = data['room-wiz-sounds'][0].description.trim();
+                    if (data['room-wiz-sounds'][0].description.startsWith('(:'))
+                        tmpl['create body'] += `   set_listen(${formatFunctionPointer(data['room-wiz-sounds'][0].description)});`;
+                    else if (!data['room-wiz-sounds'][0].description.startsWith('"') && !data['room-wiz-sounds'][0].description.endsWith('"'))
+                        tmpl['create body'] += `   set_listen("${data['room-wiz-sounds'][0].description}");`;
+                    else
+                        tmpl['create body'] += `   set_listen(${data['room-wiz-sounds'][0].description});`;
+                }
+                else if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_listens( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n      ]));\n';
+                }
+                //searches
+                tmp = data['room-wiz-searches'].map(i => {
+                    tmp2 = i.search.split(',').map(t => {
+                        t.trim();
+                        if (!t.startsWith('"') && !t.endsWith('"'))
+                            t = '"' + t + '"';
+                        return t;
+                    });
+                    if (tmp2.lengh === 1)
+                        tmp2 = tmp2[0];
+                    else
+                        tmp2 = `({ ${tmp2.join(', ')} })`;
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'string', 'string search');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    return `${tmp2} : ${tmp3}`;
+                });
+
+                if (tmp.length === 1) {
+                    if (!data['room-wiz-searches'][0].search.trim().startsWith('"') && !data['room-wiz-searches'][0].search.trim().endsWith('"'))
+                        data['room-wiz-searches'][0].search = `"${data['room-wiz-searches'][0].search.trim()}"`;
+                    data['room-wiz-searches'][0].message = data['room-wiz-searches'][0].message.trim();
+                    if (data['room-wiz-searches'][0].message.startsWith('(:'))
+                        tmpl['create body'] += `   set_search(${data['room-wiz-searches'][0].search},${formatFunctionPointer(data['room-wiz-searches'][0].message)});`;
+                    else if (!data['room-wiz-searches'][0].message.startsWith('"') && !data['room-wiz-searches'][0].message.endsWith('"'))
+                        tmpl['create body'] += `   set_search(${data['room-wiz-searches'][0].search}, "${data['room-wiz-searches'][0].message}");`;
+                    else
+                        tmpl['create body'] += `   set_search(${data['room-wiz-searches'][0].search}, ${data['room-wiz-searches'][0].message});`;
+                }
+                else if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_search( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n      ]));\n';
+                }
                 if (tmpl['doc'].length > 0)
                     tmpl['doc'] = ' * @doc' + tmpl['doc'].join('\n * @doc') + '\n';
                 else
@@ -4162,6 +5254,7 @@
                     f = ('new_room_' + newCounter);
                 else
                     f = ('new_' + data['room-wiz-type'].display.replace(/\s/g, '_') + '_' + newCounter);
+                newCounter++;
                 f += '.c';
                 f.toLowerCase();
                 newFromValue(parseFileTemplate(value, tmpl), f);
@@ -4195,108 +5288,108 @@
                         title: 'General properties',
                         body: document.getElementById('mon-wizard-general'),
                         reset: (e) => {
-                            $('#mon-wiz-type', e).val('STD_MONSTER').selectpicker('render');
-                            e.querySelector('#mon-wiz-level').value = '1';
-                            e.querySelector('#mon-wiz-alignment').value = '';
-                            e.querySelector('#mon-wiz-race').value = '';
-                            e.querySelector('#mon-wiz-class').value = '';
-                            e.querySelector('#mon-wiz-language').value = '';
-                            e.querySelector('#mon-wiz-ridable').checked = false;
-                            e.querySelector('#mon-wiz-flying').checked = false;
-                            e.querySelector('#mon-wiz-getable').checked = false;
-                            e.querySelector('#mon-wiz-undead').checked = false;
-                            e.querySelector('#mon-wiz-waterbreathing').checked = false;
-                            e.querySelector('#mon-wiz-requires-water').checked = false;
-                            e.querySelector('#mon-wiz-no-bleed').checked = false;
+                            $('#mon-wiz-type', e.page).val('STD_MONSTER').selectpicker('render');
+                            e.page.querySelector('#mon-wiz-level').value = '1';
+                            e.page.querySelector('#mon-wiz-alignment').value = '';
+                            e.page.querySelector('#mon-wiz-race').value = '';
+                            e.page.querySelector('#mon-wiz-class').value = '';
+                            e.page.querySelector('#mon-wiz-language').value = '';
+                            e.page.querySelector('#mon-wiz-ridable').checked = false;
+                            e.page.querySelector('#mon-wiz-flying').checked = false;
+                            e.page.querySelector('#mon-wiz-getable').checked = false;
+                            e.page.querySelector('#mon-wiz-undead').checked = false;
+                            e.page.querySelector('#mon-wiz-waterbreathing').checked = false;
+                            e.page.querySelector('#mon-wiz-requires-water').checked = false;
+                            e.page.querySelector('#mon-wiz-no-bleed').checked = false;
                         }
                     }),
                     new WizardPage({
                         title: 'Description',
                         body: document.getElementById('mon-wizard-description'),
                         reset: (e) => {
-                            e.querySelector('#mon-wiz-name').value = '';
-                            e.querySelector('#mon-wiz-short').value = '';
-                            e.querySelector('#mon-wiz-nouns').value = '';
-                            e.querySelector('#mon-wiz-adjectives').value = '';
+                            e.page.querySelector('#mon-wiz-name').value = '';
+                            e.page.querySelector('#mon-wiz-short').value = '';
+                            e.page.querySelector('#mon-wiz-nouns').value = '';
+                            e.page.querySelector('#mon-wiz-adjectives').value = '';
                         }
                     }),
                     new WizardPage({
                         title: 'Long description',
                         body: document.getElementById('mon-wizard-description-long'),
                         reset: (e) => {
-                            e.querySelector('#mon-wiz-long').value = '';
+                            e.page.querySelector('#mon-wiz-long').value = '';
                         }
                     }),
                     new WizardPage({
                         title: 'Physical properties',
                         body: document.getElementById('mon-wizard-physical'),
                         reset: (e) => {
-                            e.querySelector('#mon-wiz-mass').value = '0';
-                            e.querySelector('#mon-wiz-height').value = '1';
-                            e.querySelector('#mon-wiz-eye').value = '';
-                            e.querySelector('#mon-wiz-hair').value = '';
-                            $('#mon-wiz-gender', e).val('male').selectpicker('render');
-                            e.querySelector('#mon-wiz-body').value = '';
+                            e.page.querySelector('#mon-wiz-mass').value = '0';
+                            e.page.querySelector('#mon-wiz-height').value = '1';
+                            e.page.querySelector('#mon-wiz-eye').value = '';
+                            e.page.querySelector('#mon-wiz-hair').value = '';
+                            $('#mon-wiz-gender', e.page).val('male').selectpicker('render');
+                            e.page.querySelector('#mon-wiz-body').value = '';
                         }
                     }),
                     new WizardPage({
                         title: 'Advanced properties',
                         body: document.getElementById('mon-wizard-advanced'),
                         reset: (e) => {
-                            e.querySelector('#mon-wiz-no-corpse').value = '';
-                            e.querySelector('#mon-wiz-no-limbs').value = '';
+                            e.page.querySelector('#mon-wiz-no-corpse').value = '';
+                            e.page.querySelector('#mon-wiz-no-limbs').value = '';
                         }
                     }),
                     new WizardPage({
                         title: 'Movement',
                         body: document.getElementById('mon-wizard-movement'),
                         reset: (e) => {
-                            e.querySelector('#mon-wiz-speed').value = '0';
-                            e.querySelector('#mon-wiz-patrol').value = '';
-                            e.querySelector('#mon-wiz-no-walk').value = '';
+                            e.page.querySelector('#mon-wiz-speed').value = '0';
+                            e.page.querySelector('#mon-wiz-patrol').value = '';
+                            e.page.querySelector('#mon-wiz-no-walk').value = '';
                         }
                     }),
                     new WizardPage({
                         title: 'Combat',
                         body: document.getElementById('mon-wizard-combat'),
                         reset: (e) => {
-                            e.querySelector('#mon-wiz-chance').value = '33';
-                            e.querySelector('#mon-wiz-commands').value = '';
-                            e.querySelector('#mon-wiz-initiators').value = '';
+                            e.page.querySelector('#mon-wiz-chance').value = '33';
+                            e.page.querySelector('#mon-wiz-commands').value = '';
+                            e.page.querySelector('#mon-wiz-initiators').value = '';
                         }
                     }),
                     new WizardPage({
                         title: 'Aggressive',
                         body: document.getElementById('mon-wizard-aggressive'),
                         reset: (e) => {
-                            e.querySelector('#mon-wiz-aggressive').value = '';
+                            e.page.querySelector('#mon-wiz-aggressive').value = '';
                         }
                     }),
                     new WizardPage({
                         title: 'Actions',
                         body: document.getElementById('mon-wizard-actions'),
                         reset: (e) => {
-                            e.querySelector('#mon-wiz-auto-drop').value = '1';
-                            e.querySelector('#mon-wiz-auto-drop-enabled').checked = false;
-                            e.querySelector('#mon-wiz-storage').value = '3';
-                            e.querySelector('#mon-wiz-storage-enabled').checked = true;
-                            e.querySelector('#mon-wiz-auto-wield').value = '3';
-                            e.querySelector('#mon-wiz-auto-wield-enabled').checked = true;
-                            e.querySelector('#mon-wiz-auto-wear').value = '3';
-                            e.querySelector('#mon-wiz-auto-wear-enabled').checked = false;
-                            e.querySelector('#mon-wiz-auto-loot').value = '1';
-                            e.querySelector('#mon-wiz-auto-loot-enabled').checked = false;
-                            e.querySelector('#mon-wiz-auto-stand').checked = true;
-                            e.querySelector('#mon-wiz-drop-encumbered').checked = false;
-                            e.querySelector('#mon-wiz-drop-encumbered-combat').checked = false;
-                            e.querySelector('#mon-wiz-wimpy').value = '0';
+                            e.page.querySelector('#mon-wiz-auto-drop').value = '1';
+                            e.page.querySelector('#mon-wiz-auto-drop-enabled').checked = false;
+                            e.page.querySelector('#mon-wiz-storage').value = '3';
+                            e.page.querySelector('#mon-wiz-storage-enabled').checked = true;
+                            e.page.querySelector('#mon-wiz-auto-wield').value = '3';
+                            e.page.querySelector('#mon-wiz-auto-wield-enabled').checked = true;
+                            e.page.querySelector('#mon-wiz-auto-wear').value = '3';
+                            e.page.querySelector('#mon-wiz-auto-wear-enabled').checked = false;
+                            e.page.querySelector('#mon-wiz-auto-loot').value = '1';
+                            e.page.querySelector('#mon-wiz-auto-loot-enabled').checked = false;
+                            e.page.querySelector('#mon-wiz-auto-stand').checked = true;
+                            e.page.querySelector('#mon-wiz-drop-encumbered').checked = false;
+                            e.page.querySelector('#mon-wiz-drop-encumbered-combat').checked = false;
+                            e.page.querySelector('#mon-wiz-wimpy').value = '0';
                         }
                     }),
                     new WizardPage({
                         title: 'Finish',
                         body: document.getElementById('mon-wizard-finish'),
                         reset: (e) => {
-                            e.querySelector('#mon-wiz-summary').value = '';
+                            e.page.querySelector('#mon-wiz-summary').value = '';
                         },
                         shown: (e) => {
                             var summary = e.page.querySelector('#mon-wiz-summary');
@@ -4390,7 +5483,7 @@
                                 sum += '<div><span style="font-weight:bold">Drop encumbered combat:</span> Yes</div>';
                             summary.innerHTML = sum;
                         }
-                    }),
+                    })
                 ]
             });
             $dialogs.monster.height = '340px';
@@ -4412,6 +5505,8 @@
                 tmpl.inherit = data['mon-wiz-type'].value;
                 tmpl.includes = data['mon-wiz-type'].display === 'Base' ? '\n#include "../area.h"' : '';
                 tmpl['doc'] = [];
+                tmpl['create pre'] = '';
+                tmpl['create post'] = '';
                 switch (data['mon-wiz-type'].display) {
                     case 'Base':
                         tmpl.doc.push('/doc/build/areas/tutorial');
@@ -4476,14 +5571,20 @@
                 }
 
                 tmpl['name'] = data['mon-wiz-name'].replace(/"/g, '\\"');
-                if (data['mon-wiz-short'].substring(0, 2) == "(:")
-                    tmpl['short'] = data['mon-wiz-short'];
+                data['mon-wiz-short'] = data['mon-wiz-short'].trim();
+                if (data['mon-wiz-short'].startsWith('(:')) {
+                    tmpl['short'] = formatFunctionPointer(data['mon-wiz-short']);
+                    tmpl['create pre'] += createFunction(data['mon-wiz-short'], 'string');
+                }
                 else if (data['mon-wiz-short'].startsWith('"') && data['mon-wiz-short'].endsWith('"'))
                     tmpl['short'] = `${data['mon-wiz-short']}`;
                 else
                     tmpl['short'] = `"${data['mon-wiz-short'].replace(/"/g, '\\"')}"`;
-                if (data['mon-wiz-long'].substring(0, 2) == "(:")
-                    tmpl['long'] = data['mon-wiz-long'];
+                data['mon-wiz-long'] = data['mon-wiz-long'].trim();
+                if (data['mon-wiz-long'].startsWith('(:')) {
+                    tmpl['long'] = formatFunctionPointer(data['mon-wiz-long']);
+                    tmpl['create pre'] += createFunction(data['mon-wiz-long'], 'string');
+                }
                 else {
                     if (!data['mon-wiz-long'].startsWith('"') && !data['mon-wiz-long'].endsWith('"'))
                         data['mon-wiz-long'] = data['mon-wiz-long'].replace(/"/g, '\\"');
@@ -4508,8 +5609,7 @@
                         tmpl['long'] = `"${data['mon-wiz-long']}"`;
                 }
                 tmpl['height'] = data['mon-wiz-height'];
-                tmpl['create pre'] = '';
-                tmpl['create post'] = '';
+
                 tmpl['create'] = `${data['mon-wiz-level']}, "${data['mon-wiz-race'] || 'human'}"`;
                 tmpl['create comment'] = '';
                 if (data['mon-wiz-class'].length > 0) {
@@ -4555,14 +5655,20 @@
                     tmp.push('"requires water" : 1');
                 if (data['mon-wiz-no-bleed'])
                     tmp.push('"no bleed" : 1');
-                if (data['mon-wiz-no-corpse'].substring(0, 2) == "(:")
-                    tmp.push(`"no corpse" : ${data['mon-wiz-no-corpse']}`);
+                data['mon-wiz-no-corpse'] = data['mon-wiz-no-corpse'].trim();
+                if (data['mon-wiz-no-corpse'].startsWith('(:')) {
+                    tmp.push(`"no corpse" : ${formatFunctionPointer(data['mon-wiz-no-corpse'], true)}`);
+                    tmpl['create pre'] += createFunction(data['mon-wiz-no-corpse'], 'string');
+                }
                 else if (data['mon-wiz-no-corpse'].startsWith('"') && data['mon-wiz-no-corpse'].endsWith('"'))
                     tmp.push(`"no corpse" : ${data['mon-wiz-no-corpse']}`);
                 else if (data['mon-wiz-no-corpse'].length > 0)
                     tmp.push(`"no corpse" : "${data['mon-wiz-no-corpse'].replace(/"/g, '\\"')}"`);
-                if (data['mon-wiz-no-limbs'].substring(0, 2) == "(:")
-                    tmp.push(`"no limbs" : ${data['mon-wiz-no-limbs']}`);
+                data['mon-wiz-no-limbs'] = data['mon-wiz-no-limbs'].trim();
+                if (data['mon-wiz-no-limbs'].startsWith('(:')) {
+                    tmp.push(`"no limbs" : ${formatFunctionPointer(data['mon-wiz-no-limbs'], true)}`);
+                    tmpl['create pre'] += createFunction(data['mon-wiz-no-limbs'], 'string');
+                }
                 else if (data['mon-wiz-no-limbs'].startsWith('"') && data['mon-wiz-no-limbs'].endsWith('"'))
                     tmp.push(`"no limbs" : ${data['mon-wiz-no-limbs']}`);
                 else if (data['mon-wiz-no-limbs'].length > 0)
@@ -4658,9 +5764,36 @@
                 f += '.c';
                 f.toLowerCase();
                 newFromValue(parseFileTemplate(value, tmpl), f);
+                newCounter++;
             });
         }
         $dialogs.monster.show();
+    }
+
+    function createFunction(name, type, args) {
+        name = name.trim();
+        if (name.startsWith('(:'))
+            name = name.substr(2);
+        if (name.endsWith(':)'))
+            name = name.substr(0, name.length - 2);
+        name = name.trim();
+        if (!type) type = 'void';
+        if (type === 'void')
+            return `${type} ${name}(${args})\n{\n}\n\n`;
+        if (type === 'string')
+            return `${type} ${name}(${args})\n{\n   return "";\n}\n\n`;
+        return `${type} ${name}(${args})\n{\n   return 0;\n}\n\n`;
+    }
+
+    function formatFunctionPointer(pointer, trim) {
+        //remove spaces
+        pointer = pointer.trim();
+        //remove (::)
+        pointer = pointer.substr(2);
+        pointer = pointer.substr(0, pointer.length - 2);
+        if (trim)
+            return `(: ${pointer.trim()} :)`;
+        return ` (: ${pointer.trim()} :) `;
     }
 
     function formatArgumentList(str, first, second, indent, quotes) {
