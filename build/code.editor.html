@@ -5004,7 +5004,7 @@
                 if (tmp.length > 0) {
                     tmpl['create body'] += '   set_properties( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
-                    tmpl['create body'] += '\n      ]));\n';
+                    tmpl['create body'] += '\n     ]) );\n';
                 }
 
                 if (data['room-wiz-explored'])
@@ -5063,7 +5063,7 @@
                 if (tmp.length > 0) {
                     tmpl['create body'] += '   set_items( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
-                    tmpl['create body'] += '\n      ]));\n';
+                    tmpl['create body'] += '\n     ]) );\n';
                 }
                 //add exits
                 tmp = exits.map(i => {
@@ -5075,18 +5075,18 @@
                         tmp2.push(`"blockers" : "${i.blocker}"`);
                     if (!i.exit.startsWith('"') && !i.exit.endsWith('"')) {
                         if (tmp2.length > 0)
-                            return `   "${i.exit}" : ([])\n       ${tmp2.join(',\n       ')}\n      ]));\n`;
+                            return `   "${i.exit}" : ([])\n       ${tmp2.join(',\n       ')}\n     ]) );\n`;
                         return `   "${i.exit}" : ([])`;
                     }
                     if (tmp2.length > 0)
-                        return `   ${i.exit} : ([])\n       ${tmp2.join(',\n       ')}\n      ]));\n`;
+                        return `   ${i.exit} : ([])\n       ${tmp2.join(',\n       ')}\n     ]) );\n`;
                     return `   ${i.exit} : ([])`;
 
                 });
                 if (tmp.length > 0) {
                     tmpl['create body'] += '   set_exits( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
-                    tmpl['create body'] += '\n      ]));\n';
+                    tmpl['create body'] += '\n     ]) );\n';
                 }
                 tmp = exits.filter(i => i.hidden).map(i => {
                     i.trim();
@@ -5105,13 +5105,13 @@
                     if (exits.diff.length > 0)
                         tmp2.push(`"difficulty" : "${exits.diff}"`);
                     if (tmp2.length > 0)
-                        return `   ${i.exit} : ([])\n       ${tmp2.join(',\n       ')}\n      ]));\n`;
+                        return `   ${i.exit} : ([])\n       ${tmp2.join(',\n       ')}\n     ]) );\n`;
                     return `   ${i.exit} : ([])`;
                 });
                 if (tmp.length > 0) {
                     tmpl['create body'] += '   set_climbs( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
-                    tmpl['create body'] += '\n      ]));\n';
+                    tmpl['create body'] += '\n     ]) );\n';
                 }
                 //add doors
                 doors.forEach(d => {
@@ -5169,7 +5169,7 @@
                 else if (tmp.length > 0) {
                     tmpl['create body'] += '   set_smells( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
-                    tmpl['create body'] += '\n      ]));\n';
+                    tmpl['create body'] += '\n     ]) );\n';
                 }
                 //sounds
                 tmp = data['room-wiz-sounds'].map(i => {
@@ -5205,7 +5205,7 @@
                 else if (tmp.length > 0) {
                     tmpl['create body'] += '   set_listens( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
-                    tmpl['create body'] += '\n      ]));\n';
+                    tmpl['create body'] += '\n     ]) );\n';
                 }
                 //searches
                 tmp = data['room-wiz-searches'].map(i => {
@@ -5243,7 +5243,7 @@
                 else if (tmp.length > 0) {
                     tmpl['create body'] += '   set_search( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
-                    tmpl['create body'] += '\n      ]));\n';
+                    tmpl['create body'] += '\n     ]) );\n';
                 }
                 if (tmpl['doc'].length > 0)
                     tmpl['doc'] = ' * @doc' + tmpl['doc'].join('\n * @doc') + '\n';
@@ -5676,7 +5676,7 @@
                 if (tmp.length > 0) {
                     tmpl['create body'] += '   set_properties( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
-                    tmpl['create body'] += '\n      ]));\n';
+                    tmpl['create body'] += '\n     ]) );\n';
                 }
                 if (data['mon-wiz-mass'] > 0)
                     tmpl['create body'] += `   set_mass(${data['mon-wiz-mass']});\n`;
@@ -5743,7 +5743,7 @@
                 if (!data['mon-wiz-auto-stand'])
                     tmpl['create body'] += `   set_auto_stand(0);`;
                 if (data['mon-wiz-drop-encumbered'] && data['mon-wiz-drop-encumbered-combat'])
-                    tmpl['create body'] += '   set_reactions( ([\n       "encumbered 50" : "drop extra"\n       combat encumbered 50" : "drop extra"\n       ]));\n';
+                    tmpl['create body'] += '   set_reactions( ([\n       "encumbered 50" : "drop extra"\n       combat encumbered 50" : "drop extra"\n     ]) );\n';
                 else if (data['mon-wiz-drop-encumbered'])
                     tmpl['create body'] += '   set_reaction("encumbered 50", "drop extra");\n';
                 else if (data['mon-wiz-drop-encumbered-combat'])
