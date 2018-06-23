@@ -10,7 +10,7 @@
  * @doc /doc/build/room/Intermediate
  * @doc /doc/build/room/Advanced
  * @doc /doc/build/room/types/vault
- * @doc /doc/build/room/types/modroom 
+ * @doc /doc/build/room/types/locker
  */
 #include <std.h>
 

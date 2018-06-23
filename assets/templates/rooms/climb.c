@@ -9,6 +9,7 @@
  * @doc /doc/build/room/Basic
  * @doc /doc/build/room/Intermediate
  * @doc /doc/build/room/Advanced
+ * @doc /doc/build/room/types/vault
  * @doc /doc/build/room/types/climb
  * @doc /doc/build/etc/climbing
  */
