@@ -1525,6 +1525,8 @@ export class LPCFormatter extends EventEmitter {
                             }
                             if (tokenLine[t3].type === FormatTokenType.operatorNot && tokenLine[t3].value === '!')
                                 op = op.rtrim();
+                            else if (tokenLine[t3].type === FormatTokenType.parenLparen)
+                                op = op.rtrim();
                             else if (tokenLine[t3].type !== FormatTokenType.text || tokenLine[t3].type === FormatTokenType.parenLclosure || tokenLine[t3].type === FormatTokenType.parenRclosure || tokenLine[t3].type === FormatTokenType.parenLmapping || tokenLine[t3].type === FormatTokenType.parenRmapping || tokenLine[t3].type === FormatTokenType.parenRarray || tokenLine[t3].type === FormatTokenType.parenLarray) {
                                 op = op.rtrim();
                                 op += ' ';
@@ -1561,7 +1563,20 @@ export class LPCFormatter extends EventEmitter {
                             op += ' ';
                         }
                         else if (tokenLine[t].type === FormatTokenType.parenRparen)
-                            op = op.rtrim();
+                        {
+                            t3 = t - 1;
+                            while (t3 >= 0 && tokenLine[t3].type === FormatTokenType.whitespace) {
+                                t3--;
+                                if (t3 <= 0)
+                                    break;
+                            }
+                            if (tokenLine[t3].type === FormatTokenType.parenLclosure || tokenLine[t3].type === FormatTokenType.parenRclosure || tokenLine[t3].type === FormatTokenType.parenLmapping || tokenLine[t3].type === FormatTokenType.parenRmapping || tokenLine[t3].type === FormatTokenType.parenRarray || tokenLine[t3].type === FormatTokenType.parenLarray) {
+                                op = op.rtrim();
+                                op += ' ';
+                            }
+                            else
+                                op = op.rtrim();
+                        }
                     }
                     if (tokenLine[t].type === FormatTokenType.newline)
                         op = op.rtrim();
@@ -1898,7 +1913,12 @@ export class LPCFormatter extends EventEmitter {
                             state = 0;
                             //(::key
                             if (idx + 1 < len && idx + 2 < len) {
-                                if (s.charAt(idx + 1) === ':' && s.charAt(idx + 2) !== ':') {
+                                //(::)
+                                if (s.charAt(idx + 1) === ':' && s.charAt(idx + 2) === ')') {
+                                    this.$position = idx + 1;
+                                    return { value: '(:', type: FormatTokenType.parenLclosure };
+                                }
+                                else if (s.charAt(idx + 1) === ':' && s.charAt(idx + 2) !== ':') {
                                     this.$position = idx;
                                     return { value: '(', type: FormatTokenType.parenLparen };
                                 }
