@@ -7,7 +7,7 @@
  * @created {date}
  * @typeof object
  * @doc /doc/build/monster/tutorial
- {doc}*/
+{doc} */
 #include <std.h>{includes}
 
 inherit {inherit};

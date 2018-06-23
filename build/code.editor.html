@@ -585,7 +585,7 @@
         </div>
     </dialog>
 
-    <div style="display: none">
+    <div style="display: none" id="wizard-pages">
         <div id="mon-wizard-welcome">
             <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
             <div style="padding-top:76px">Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.</div>
@@ -1193,6 +1193,10 @@
                 </label>
             </div>
 
+        </div>
+        <div id="room-wizard-welcome">
+            <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
+            <div style="padding-top:76px">Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.</div>
         </div>
     </div>
 </body>
@@ -4073,7 +4077,97 @@
     }
 
     function roomWizard() {
-        newFromFile(parseTemplate(path.join('{assets}', 'templates', 'rooms', 'base.c')), 'room');
+        //newFromFile(parseTemplate(path.join('{assets}', 'templates', 'rooms', 'base.c')), 'room');
+        if (!$dialogs.room) {
+            $dialogs.room = new Wizard({
+                id: 'room-wizard',
+                title: 'Create new room...',
+                pages: [
+                    new WizardPage({
+                        title: 'Welcome',
+                        body: document.getElementById('room-wizard-welcome')
+                    }),
+                ]
+            });
+            $dialogs.room.height = '340px';
+            $dialogs.room.width = '570px';
+            $dialogs.room.on('open', () => {
+                menubar.enabled = false;
+            });
+            $dialogs.room.on('open', () => {
+                menubar.enabled = false;
+            });
+            $dialogs.room.on('close', () => {
+                menubar.enabled = true;
+            });
+            $dialogs.room.on('cancel', () => {
+                menubar.enabled = true;
+            });
+            $dialogs.room.on('finished', (e) => {
+                var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'monster.c')), 'utf8');
+                var data = e.data;
+                var tmpl = baseParseData();
+                var tmp, tmp2;
+                tmpl.inherit = data['room-wiz-type'].value;
+                tmpl.includes = data['room-wiz-type'].display === 'Base' ? '\n#include "area.h"' : '';
+                switch (data['room-wiz-type'].display) {
+                    case 'Base':
+                        tmpl.doc.push('/doc/build/areas/tutorial');
+                        break;
+                }
+                tmpl.doc = [];
+                tmpl['create pre'] = '';
+                tmpl['create body'] = '';
+                tmpl['create post'] = '';
+                if (data['room-wiz-short'].substring(0, 2) == "(:")
+                    tmpl['short'] = data['room-wiz-short'];
+                else if (data['room-wiz-short'].startsWith('"') && data['room-wiz-short'].endsWith('"'))
+                    tmpl['short'] = `${data['room-wiz-short']}`;
+                else
+                    tmpl['short'] = `"${data['room-wiz-short'].replace(/"/g, '\\"')}"`;
+                if (data['room-wiz-long'].substring(0, 2) == "(:")
+                    tmpl['long'] = data['room-wiz-long'];
+                else {
+                    if (!data['room-wiz-long'].startsWith('"') && !data['room-wiz-long'].endsWith('"'))
+                        data['room-wiz-long'] = data['room-wiz-long'].replace(/"/g, '\\"');
+                    if (data['room-wiz-long'].startsWith('"'))
+                        data['room-wiz-long'] = data['room-wiz-long'].substr(1);
+                    if (data['room-wiz-long'].endsWith('"'))
+                        data['room-wiz-long'] = data['room-wiz-long'].substr(0, data['room-wiz-long'].length - 1);
+                    if (data['room-wiz-long'].length > 70) {
+                        tmp = data['room-wiz-long'].substr(0, 66);
+                        let tl = tmp.length;
+                        while (tl--) {
+                            if (tmp.charAt(tl) === ' ') {
+                                tmp.substr(0, tl);
+                                break;
+                            }
+                        }
+                        tmpl['long'] = `"${tmp}"\n     `;
+                        data['room-wiz-long'] = data['room-wiz-long'].substr(tmp.length);
+                        tmpl['long'] += `${formatString(data['room-wiz-long'], 5, 73)}`;
+                    }
+                    else
+                        tmpl['long'] = `"${data['room-wiz-long']}"`;
+                }
+
+                //TODO
+
+                if (tmpl['doc'].length > 0)
+                    tmpl['doc'] = ' * @doc' + tmpl['doc'].join('\n * @doc') + '\n';
+                else
+                    tmpl['doc'] = '';
+                var f;
+                if (data['room-wiz-type'].display === 'Standard' || data['room-wiz-type'].display === 'Base')
+                    f = ('new_room_' + newCounter);
+                else
+                    f = ('new_' + data['room-wiz-type'].display.replace(/\s/g, '_') + '_' + newCounter);
+                f += '.c';
+                f.toLowerCase();
+                newFromValue(parseFileTemplate(value, tmpl), f);
+            });
+        }
+        $dialogs.room.show();
     }
 
     function monsterWizard() {
@@ -4316,7 +4410,70 @@
                 var tmp;
                 var tmp2;
                 tmpl.inherit = data['mon-wiz-type'].value;
-                tmpl.includes = data['mon-wiz-type'].display === 'Base' ?  '\n#include "../area.h"': '';
+                tmpl.includes = data['mon-wiz-type'].display === 'Base' ? '\n#include "../area.h"' : '';
+                tmpl['doc'] = [];
+                switch (data['mon-wiz-type'].display) {
+                    case 'Base':
+                        tmpl.doc.push('/doc/build/areas/tutorial');
+                        break;
+                    case 'Armor Repair':
+                        tmpl.doc.push('/doc/build/monster/types/smith');
+                        tmpl.doc.push('/doc/build/monster/types/vendor');
+                        break;
+                    case 'Barkeep':
+                        tmpl.doc.push('/doc/build/monster/types/barkeep');
+                        break;
+                    case 'Cleric Trainer':
+                        tmpl.doc.push('/doc/build/monster/types/cleric_trainer');
+                        break;
+                    case 'Command Trainer':
+                        tmpl.doc.push('/doc/build/monster/types/subclasser');
+                        break;
+                    case 'Healer':
+                        tmpl.doc.push('/doc/build/monster/types/healer');
+                        break;
+                    case 'Jeweler':
+                        tmpl.doc.push('/doc/build/monster/types/jeweler');
+                        tmpl.doc.push('/doc/build/monster/types/vendor');
+                        break;
+                    case 'Lock pick Repair':
+                        tmpl.doc.push('/doc/build/monster/types/lockpick_repair');
+                        tmpl.doc.push('/doc/build/monster/types/vendor');
+                        break;
+                    case 'Mage Trainer':
+                        tmpl.doc.push('/doc/build/monster/types/mage_trainer');
+                        break;
+                    case 'Edible Monster':
+                        tmpl.doc.push('/doc/build/monster/types/mon_edible');
+                        break;
+                    case 'Sage':
+                        tmpl.doc.push('/doc/build/monster/types/sage');
+                        tmpl.doc.push('/doc/build/etc/sagebase');
+                        break;
+                    case 'Skill Trainer':
+                        tmpl.doc.push('/doc/build/monster/types/skill_trainer');
+                        break;
+                    case 'Smith':
+                        tmpl.doc.push('/doc/build/monster/types/smith');
+                        tmpl.doc.push('/doc/build/monster/types/vendor');
+                        break;
+                    case 'Summon Monster':
+                        tmpl.doc.push('/doc/build/monster/types/summon');
+                        break;
+                    case 'Tattooist':
+                        tmpl.doc.push('/doc/build/monster/types/tattooist');
+                        break;
+                    case 'Trainer':
+                        tmpl.doc.push('/doc/build/monster/types/subclasser');
+                        break;
+                    case 'Vendor':
+                        tmpl.doc.push('/doc/build/monster/types/vendor');
+                        break;
+                    case 'Weapon Repair':
+                        tmpl.doc.push('/doc/build/monster/types/smith');
+                        tmpl.doc.push('/doc/build/monster/types/vendor');
+                        break;
+                }
 
                 tmpl['name'] = data['mon-wiz-name'].replace(/"/g, '\\"');
                 if (data['mon-wiz-short'].substring(0, 2) == "(:")
@@ -4328,7 +4485,7 @@
                 if (data['mon-wiz-long'].substring(0, 2) == "(:")
                     tmpl['long'] = data['mon-wiz-long'];
                 else {
-                    if (!data['mon-wiz-short'].startsWith('"') && !data['mon-wiz-short'].endsWith('"'))
+                    if (!data['mon-wiz-long'].startsWith('"') && !data['mon-wiz-long'].endsWith('"'))
                         data['mon-wiz-long'] = data['mon-wiz-long'].replace(/"/g, '\\"');
                     if (data['mon-wiz-long'].startsWith('"'))
                         data['mon-wiz-long'] = data['mon-wiz-long'].substr(1);
@@ -4355,7 +4512,6 @@
                 tmpl['create post'] = '';
                 tmpl['create'] = `${data['mon-wiz-level']}, "${data['mon-wiz-race'] || 'human'}"`;
                 tmpl['create comment'] = '';
-                tmpl['doc'] = '';
                 if (data['mon-wiz-class'].length > 0) {
                     tmpl['create'] += `, "${data['mon-wiz-class']}"`;
                     tmpl['create comment'] += ', Class';
@@ -4454,7 +4610,7 @@
                     tmpl['create body'] += `   set_combat_initiator(${formatArgumentList(data['mon-wiz-initiators'], 56)}); //Set attack initiators\n`;
                 if (data['mon-wiz-aggressive'].length > 0) {
                     tmpl['create body'] += `   set_aggressive(${data['mon-wiz-chance']}); //Set monster aggressiveness\n`;
-                    tmpl['doc'] += ' * @doc /doc/build/monster/haggle';
+                    tmpl['doc'].push('/doc/build/monster/haggle');
                 }
                 if (data['mon-wiz-auto-drop-enabled'])
                     tmpl['create body'] += `   set_auto_drop(1);`;
@@ -4486,6 +4642,11 @@
                     tmpl['create body'] += '   set_reaction("encumbered 50", "drop extra");\n';
                 else if (data['mon-wiz-drop-encumbered-combat'])
                     tmpl['create body'] += '   set_reaction("combat encumbered 50", "drop extra");\n';
+
+                if (tmpl['doc'].length > 0)
+                    tmpl['doc'] = ' * @doc' + tmpl['doc'].join('\n * @doc') + '\n';
+                else
+                    tmpl['doc'] = '';
 
                 var f = data['mon-wiz-name'].replace(/\s/g, '_');
                 if (!f || f.length === 0) {
