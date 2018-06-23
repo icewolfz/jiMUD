@@ -263,7 +263,9 @@ export class WizardDataGridPage extends WizardPage {
         }
         this.on('reset', e => {
             if (!this.wizard.data[this.id])
-                this.wizard.data[this.id] = [];
+                this.wizard.data[this.id] = this.wizard.defaults[this.id] || [];
+            else if (this.wizard.defaults[this.id])
+                this.wizard.data[this.id] = this.wizard.defaults[this.id] || [];
             else
                 this.wizard.data[this.id].length = 0;
             this.dataGrid.rows = this.wizard.data[this.id];
@@ -299,6 +301,7 @@ export class Wizard extends EventEmitter {
     private $current = 0;
     private $nav: HTMLSelectElement;
     private $update: UpdateType;
+    public defaults;
 
     get id() { return this.$id; }
     set id(value) {
