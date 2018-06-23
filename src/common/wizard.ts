@@ -89,7 +89,8 @@ export class WizardDataGridPage extends WizardPage {
         this.$id = value;
         if (this.dataGrid)
             this.dataGrid.id = this.$id;
-        this.wizard.data[this.id] = this.dataGrid.rows;
+        if (this.wizard.data)
+            this.wizard.data[this.id] = this.dataGrid.rows;
     }
 
     constructor(options?: DataGridPageOptions) {
@@ -258,12 +259,10 @@ export class WizardDataGridPage extends WizardPage {
             if (options.delete)
                 this.on('delete', options.delete);
         }
-    }
-
-    get wizard(): Wizard { return super.wizard; }
-    set wizard(value: Wizard) {
-        super.wizard = value;
-        this.wizard.data[this.id] = this.dataGrid.rows;
+        this.on('reset', e => {
+            this.dataGrid.rows = [];
+            this.wizard.data[this.id] = this.dataGrid.rows;
+        });
     }
 
     get title() { return super.title; }
@@ -665,7 +664,7 @@ export class Wizard extends EventEmitter {
         if (this.$dialog.open) return;
         this.goto(0, true);
         this.$pages.forEach(p => {
-            p.emit('reset', p.page);
+            p.emit('reset', p);
             const e: HTMLElement[] = Array.from(p.page.querySelectorAll('input,textarea,.selectpicker'));
             e.forEach(c => {
                 const evt = document.createEvent('HTMLEvents');
