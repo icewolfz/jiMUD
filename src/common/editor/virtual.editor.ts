@@ -509,7 +509,7 @@ export class VirtualEditor extends EditorBase {
                             'swamp',
                             'tundra',
                             'underwater',
-                            'water',
+                            'water'
                         ]
                     }
                 }
@@ -2400,7 +2400,7 @@ export class VirtualEditor extends EditorBase {
                             'swamp',
                             'tundra',
                             'underwater',
-                            'water',
+                            'water'
                         ],
                         container: document.body
                     }
