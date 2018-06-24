@@ -31,7 +31,7 @@ export enum UpdateType { none = 0, drawMap = 1, buildRooms = 2, buildMap = 4 }
 export enum DescriptionOnDelete { leave = 0, end = 1, endPlusOne = 2, start = 3 }
 export enum ItemOnDelete { leave = 0, end = 1 }
 
-enum RoomExit {
+export enum RoomExit {
     Out = 4096,
     Enter = 2048,
     Unknown = 1024,
@@ -48,7 +48,7 @@ enum RoomExit {
     None = 0
 }
 
-enum RoomStates {
+export enum RoomStates {
     NoAttack = 512,
     NoMagic = 256,
     Council = 128,
@@ -1455,6 +1455,7 @@ export class VirtualEditor extends EditorBase {
                     o.sound = room.sound;
                     o.smell = room.smell;
                     o.terrain = -1;
+                    o.external = [];
                 }
                 else {
                     if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
@@ -1480,7 +1481,7 @@ export class VirtualEditor extends EditorBase {
                     o.external = this.$exits.filter(ex => ex.x === o.x && ex.y === o.y && ex.z === o.z).map(a => ({ ...a }));
                 }
             }
-            const ec = { room: o, preventDefault: false };
+            const ec = { room: o, preventDefault: false, size: this.$mapSize };
             this.emit('map-context-menu', ec);
             //if (e.preventDefault) return;
         });
@@ -6139,7 +6140,7 @@ export class VirtualEditor extends EditorBase {
             d = '/**\n * External virtual room ' + r.x + ', ' + r.y + ', ' + r.z + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */';
         else
             d = '/**\n * External virtual room ' + r.x + ', ' + r.y + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */';
-        d += '#include <std.h>\n#include "../area.h"\n\ninherit BASEROOM;\n\n/**\n * Create\n *\n * Create the base virtual room, passing correct parameters to baseroom\n */\nvoid create() {\n   ::create(' + r.x + ', ' + r.y + ', ' + r.z + ', ' + r.terrain + ', ' + r.item + ', ' + r.exits + ');\n';
+        d += '#include <std.h>\n#include "../area.h"\n\ninherit (VIR+"baseroom.c");\n\n/**\n * Create\n *\n * Create the base virtual room, passing correct parameters to baseroom\n */\nvoid create() {\n   ::create(' + r.x + ', ' + r.y + ', ' + r.z + ', ' + r.terrain + ', ' + r.item + ', ' + r.exits + ');\n';
         let data;
         if (this.$descriptions.length > 0 && r.terrain >= 0 && r.terrain < this.$descriptions.length && this.$descriptions[r.terrain]) {
             data = this.$descriptions[r.terrain];

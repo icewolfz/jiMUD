@@ -1514,7 +1514,7 @@
     const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
     const { DataGrid, EditorType } = require('./js/datagrid');
-    const { MonacoCodeEditor, VirtualEditor, Source, FileBrowseValueEditor } = require('./js/editor/code.editor');
+    const { MonacoCodeEditor, VirtualEditor, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
     const { dialog, Menu, MenuItem, app } = remote;
@@ -4378,7 +4378,7 @@
         return f;
     }
 
-    function roomWizard() {
+    function roomWizard(dData) {
         if (!$dialogs.room) {
             $dialogs.roomExitPage = new WizardDataGridPage({
                 title: 'Exits',
@@ -4553,48 +4553,48 @@
                         title: 'General properties',
                         body: document.getElementById('room-wizard-general'),
                         reset: (e) => {
-                            $('#room-wiz-type', e.page).val('STD_ROOM').selectpicker('render');
-                            e.page.querySelector('#room-wiz-terrain').value = '';
-                            e.page.querySelector('#room-wiz-short').value = '';
-                            e.page.querySelector('#room-wiz-light').value = '3';
-                            e.page.querySelector('#room-wiz-night-adjust').value = '0';
-                            e.page.querySelector('#room-wiz-prevent-peer').value = '';
+                            $('#room-wiz-type', e.page).val(e.wizard.defaults['room-wiz-type'] || 'STD_ROOM').selectpicker('render');
+                            e.page.querySelector('#room-wiz-terrain').value = e.wizard.defaults['room-wiz-terrain'] || '';
+                            e.page.querySelector('#room-wiz-short').value = e.wizard.defaults['room-wiz-short'] || '';
+                            e.page.querySelector('#room-wiz-light').value = e.wizard.defaults['room-wiz-light'] || '3';
+                            e.page.querySelector('#room-wiz-night-adjust').value = e.wizard.defaults['room-wiz-night-adjust'] || '0';
+                            e.page.querySelector('#room-wiz-prevent-peer').value = e.wizard.defaults['room-wiz-prevent-peer'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Description',
                         body: document.getElementById('room-wizard-description'),
                         reset: (e) => {
-                            e.page.querySelector('#room-wiz-long').value = '';
+                            e.page.querySelector('#room-wiz-long').value = e.wizard.defaults['room-wiz-long'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Properties',
                         body: document.getElementById('room-wizard-properties'),
                         reset: (e) => {
-                            e.page.querySelector('#room-wiz-indoors').checked = false;
-                            e.page.querySelector('#room-wiz-no-magic').checked = false;
-                            e.page.querySelector('#room-wiz-no-scry').checked = false;
-                            e.page.querySelector('#room-wiz-no-teleport').checked = false;
-                            e.page.querySelector('#room-wiz-explored').checked = false;
-                            e.page.querySelector('#room-wiz-no-map').checked = false;
-                            e.page.querySelector('#room-wiz-hide-exits').checked = false;
-                            e.page.querySelector('#room-wiz-no-forage').checked = false;
-                            e.page.querySelector('#room-wiz-forage').value = '-1';
-                            e.page.querySelector('#room-wiz-max-forage').value = '0';
-                            e.page.querySelector('#room-wiz-secret-exit').value = '';
+                            e.page.querySelector('#room-wiz-indoors').checked = e.wizard.defaults['room-wiz-indoors'] || false;
+                            e.page.querySelector('#room-wiz-no-magic').checked = e.wizard.defaults['room-wiz-no-magic'] || false;
+                            e.page.querySelector('#room-wiz-no-scry').checked = e.wizard.defaults['room-wiz-no-scry'] || false;
+                            e.page.querySelector('#room-wiz-no-teleport').checked = e.wizard.defaults['room-wiz-no-teleport'] || false;
+                            e.page.querySelector('#room-wiz-explored').checked = e.wizard.defaults['room-wiz-explored'] || false;
+                            e.page.querySelector('#room-wiz-no-map').checked = e.wizard.defaults['room-wiz-no-map'] || false;
+                            e.page.querySelector('#room-wiz-hide-exits').checked = e.wizard.defaults['room-wiz-hide-exits'] || false;
+                            e.page.querySelector('#room-wiz-no-forage').checked = e.wizard.defaults['room-wiz-no-forage'] || false;
+                            e.page.querySelector('#room-wiz-forage').value = e.wizard.defaults['room-wiz-forage'] || '-1';
+                            e.page.querySelector('#room-wiz-max-forage').value = e.wizard.defaults['room-wiz-max-forage'] || '0';
+                            e.page.querySelector('#room-wiz-secret-exit').value = e.wizard.defaults['room-wiz-secret-exit'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Combat Properties',
                         body: document.getElementById('room-wizard-combat-properties'),
                         reset: (e) => {
-                            e.page.querySelector('#room-wiz-no-attack').checked = false;
-                            e.page.querySelector('#room-wiz-council').checked = false;
-                            e.page.querySelector('#room-wiz-melee').checked = false;
-                            e.page.querySelector('#room-wiz-pk').checked = false;
-                            e.page.querySelector('#room-wiz-no-dirt').checked = false;
-                            e.page.querySelector('#room-wiz-dirt').value = '';
+                            e.page.querySelector('#room-wiz-no-attack').checked = e.wizard.defaults['room-wiz-no-attack'] || false;
+                            e.page.querySelector('#room-wiz-council').checked = e.wizard.defaults['room-wiz-council'] || false;
+                            e.page.querySelector('#room-wiz-melee').checked = e.wizard.defaults['room-wiz-melee'] || false;
+                            e.page.querySelector('#room-wiz-pk').checked = e.wizard.defaults['room-wiz-pk'] || false;
+                            e.page.querySelector('#room-wiz-no-dirt').checked = e.wizard.defaults['room-wiz-no-dirt'] || false;
+                            e.page.querySelector('#room-wiz-dirt').value = e.wizard.defaults['room-wiz-dirt'] || '';
                         }
                     }),
                     new WizardDataGridPage({
@@ -4820,8 +4820,12 @@
                 tmpl['create pre'] = '';
                 tmpl['create body'] = '';
                 tmpl['create post'] = '';
+                tmpl['create arguments'] = $dialogs.room.defaults['room-wiz-create'] || '';
+
+                if ($dialogs.room.defaults['room-wiz-virtual'] && (data['room-wiz-type'].display === 'Standard') || data['room-wiz-type'].display === 'Base')
+                    data['room-wiz-type'] = { display: 'Base', value: '(VIR+"baseroom")' };
                 //if standard but has doors replace with vault, base leave alone as that is a different issue, all other types inherit vault
-                if (doors.length > 0 && data['room-wiz-type'].display === 'Standard')
+                else if (doors.length > 0 && data['room-wiz-type'].display === 'Standard')
                     data['room-wiz-type'] = { display: 'Vault', value: 'ROOMTYPE_VAULT' };
                 else if (climbs.length > 0 && data['room-wiz-type'].display === 'Standard')
                     data['room-wiz-type'] = { display: 'Climb', value: 'ROOMTYPE_CLIMB' };
@@ -4832,7 +4836,7 @@
                     tmpl.includes += '\n#include <climbing.h>';
                     tmpl.doc.push('/doc/build/etc/climbing');
                 }
-                if (data['room-wiz-type'].display === 'Base')
+                if (data['room-wiz-type'].display === 'Base' || $dialogs.room.defaults['room-wiz-virtual'])
                     tmpl.includes += '\n#include "area.h"';
                 switch (data['room-wiz-type'].display) {
                     case 'Base':
@@ -5245,6 +5249,9 @@
                     tmpl['create body'] += tmp.join(',\n       ');
                     tmpl['create body'] += '\n     ]) );\n';
                 }
+                if(data['room-wiz-create-body'] && data['room-wiz-create-body'].length > 0
+                    tmpl['create body'] += data['room-wiz-create-body'];
+                //ad docs
                 if (tmpl['doc'].length > 0)
                     tmpl['doc'] = ' * @doc' + tmpl['doc'].join('\n * @doc') + '\n';
                 else
@@ -5254,12 +5261,14 @@
                     f = ('new_room_' + newCounter);
                 else
                     f = ('new_' + data['room-wiz-type'].display.replace(/\s/g, '_') + '_' + newCounter);
-                newCounter++;
+                if (!this.$dialogs.room.defaults['room-wiz-file'] || this.$dialogs.room.defaults['room-wiz-file'].length === 0)
+                    newCounter++;
                 f += '.c';
                 f.toLowerCase();
-                newFromValue(parseFileTemplate(value, tmpl), f);
+                newFromValue(parseFileTemplate(value, tmpl), this.$dialogs.room.defaults['room-wiz-file'] || f);
             });
         }
+        $dialogs.room.defaults = dData || {};
         $dialogs.room.show();
     }
 
@@ -6516,17 +6525,231 @@
                                 newFile(item.file, item.remote);
                             }
                         });
-                        /*
-                        //TODO use room wizard when completed
                         temp.push({
                             label: 'Room wizard',
                             file: f,
+                            room: e.room,
                             remote: p.editor.remote ? (path.dirname(p.editor.remote) + '/' + path.basename(f)) : null,
                             click: (item) => {
-                                newFile(item.file, item.remote);
+                                var data = {};
+                                var room = item.room;
+                                data['room-wiz-file'] = item.file;
+                                data['room-wiz-virtual'] = true;
+                                data['room-wiz-create'] = `${room.x}, ${room.y}, ${room.z}, ${room.terrain}, ${room.item}, ${room.exits}`;
+                                data['room-wiz-short'] = room.short;
+                                data['room-wiz-long'] = room.long;
+                                data['room-wiz-light'] = '' + (room.light || 0);
+                                if (room.terrainType.length > 0 && room.terrainType !== '0')
+                                    data['room-wiz-terrain'] = room.terrainType;
+                                if (room.sound.length > 0 && room.sound !== '0')
+                                    data['room-wiz-sounds'] = [{
+                                        sound: 'default',
+                                        description: room.sound
+                                    }];
+                                if (room.smell.length > 0 && room.smell !== '0')
+                                    data['room-wiz-smells'] = [{
+                                        smell: 'default',
+                                        description: room.smell
+                                    }];
+                                data['room-wiz-items'] = room.items;
+                                data['room-wiz-exits'] = room.external.map(r => {
+                                    return {
+                                        exit: r.exit,
+                                        dest: r.dest,
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    };
+                                });
+                                var tmp = [];
+                                var x = room.x;
+                                var y = room.y;
+                                var z = room.z;
+                                var width = e.size.width;
+                                var height = e.size.height;
+                                var depth = e.size.depth;
+                                var f;
+                                if (depth === 1)
+                                    f = '(VIR+"{x},{y}.c")';
+                                else
+                                    f = '(VIR+"{x},{y},{z}.c")';
+                                if ((room.exits & RoomExit.Up) === RoomExit.Up && z + 1 < depth) {
+                                    tmp.push({
+                                        exit: 'up',
+                                        dest: f.replace('{x}', x).replace('{y}', y).replace('{z}', z + 1),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                if ((room.exits & RoomExit.Down) === RoomExit.Down && z > 0) {
+                                    tmp.push({
+                                        exit: 'down',
+                                        dest: f.replace('{x}', x).replace('{y}', y).replace('{z}', z - 1),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                if ((room.exits & RoomExit.North) === RoomExit.North) {
+                                    tmp.push({
+                                        exit: 'north',
+                                        dest: f.replace('{x}', x).replace('{y}', y - 1).replace('{z}', z),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                if ((room.exits & RoomExit.NorthEast) === RoomExit.NorthEast) {
+                                    tmp.push({
+                                        exit: 'northeast',
+                                        dest: f.replace('{x}', x + 1).replace('{y}', y - 1).replace('{z}', z),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                if ((room.exits & RoomExit.East) === RoomExit.East) {
+                                    tmp.push({
+                                        exit: 'east',
+                                        dest: f.replace('{x}', x + 1).replace('{y}', y).replace('{z}', z),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                if ((room.exits & RoomExit.SouthEast) === RoomExit.SouthEast) {
+                                    tmp.push({
+                                        exit: 'southeast',
+                                        dest: f.replace('{x}', x + 1).replace('{y}', y + 1).replace('{z}', z),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                if ((room.exits & RoomExit.South) === RoomExit.South) {
+                                    tmp.push({
+                                        exit: 'south',
+                                        dest: f.replace('{x}', x).replace('{y}', y + 1).replace('{z}', z),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                if ((room.exits & RoomExit.SouthWest) === RoomExit.SouthWest) {
+                                    tmp.push({
+                                        exit: 'southwest',
+                                        dest: f.replace('{x}', x - 1).replace('{y}', y + 1).replace('{z}', z),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                if ((room.exits & RoomExit.West) === RoomExit.West) {
+                                    tmp.push({
+                                        exit: 'west',
+                                        dest: f.replace('{x}', x - 1).replace('{y}', y).replace('{z}', z),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                if ((room.exits & RoomExit.NorthWest) === RoomExit.NorthWest) {
+                                    tmp.push({
+                                        exit: 'southwest',
+                                        dest: f.replace('{x}', x - 1).replace('{y}', y - 1).replace('{z}', z),
+                                        door: '',
+                                        key: '',
+                                        hidden: false,
+                                        blocker: '',
+                                        peer: '',
+                                        destDoor: '',
+                                        locked: false,
+                                        climb: false,
+                                        diff: 0,
+                                    });
+                                }
+                                data['room-wiz-no-attack'] = (room.state & RoomStates.NoAttack) === RoomStates.NoAttack;
+                                data['room-wiz-council'] = (room.state & RoomStates.Council) === RoomStates.Council;
+                                data['room-wiz-no-magic'] = (room.state & RoomStates.NoMagic) === RoomStates.NoMagic;
+                                data['room-wiz-indoors'] = (room.state & RoomStates.Indoors) === RoomStates.Indoors;
+                                if((room.state & RoomStates.Water) === RoomStates.Water)
+                                    data['room-wiz-terrain'] = 'water';
+                                data['room-wiz-create-body'] = '';
+                                if((room.state & RoomStates.Cold) === RoomStates.Cold)
+                                    data['room-wiz-create-body'] += '   set_temperature(-200);\n';
+                                else if((room.state & RoomStates.Hot) === RoomStates.Hot)
+                                    data['room-wiz-create-body'] += '   set_temperature(200);\n';
+                                if(((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth) || ((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1))
+                                    data['room-wiz-create-body'] += '   set_living_sink(1);\n';
+                                if((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth) 
+                                    data['room-wiz-create-body'] += `   set_up(VIR+"${x},${y},${z+1}");\n`;
+                                if((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1)
+                                    data['room-wiz-create-body'] += `   set_up(VIR+"${x},${y},${z-1}");\n`;
+                                data['room-wiz-exits'].push(...tmp);
+                                roomWizard(data);
                             }
                         });
-                        */
                     }
                     temp.push({ type: 'separator' });
                     temp.push({
