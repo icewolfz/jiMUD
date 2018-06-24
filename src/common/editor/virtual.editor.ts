@@ -910,6 +910,11 @@ export class VirtualEditor extends EditorBase {
             }
         });
         this.$itemGrid.on('contextmenu', e => {
+            if (e.srcElement && e.editor) {
+                const row = e.srcElement.closest('tr.datagrid-row');
+                if (row === e.editor.el && !e.srcElement.classList.contains('datagrid-cell'))
+                    return;
+            }
             e.preventDefault();
             const temp = [];
             temp.push({

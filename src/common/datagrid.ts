@@ -434,8 +434,14 @@ export class DataGrid extends EventEmitter {
                 this.$editor.editors.map(ed => ed.editor.scroll());
         });
         el.addEventListener('contextmenu', (e) => {
+            (<any>e).editor = this.$editor;
             this.emit('contextmenu', e);
             if (e.defaultPrevented) return;
+            if (e.srcElement && this.$editor) {
+                const row = e.srcElement.closest('tr.datagrid-row');
+                if (row === this.$editor.el && !e.srcElement.classList.contains('datagrid-cell'))
+                    return;
+            }
             const temp = [];
             temp.push({
                 label: 'Add',
