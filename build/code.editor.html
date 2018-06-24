@@ -954,7 +954,7 @@
         <div id="mon-wizard-description-long">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Long
-                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('mon-wiz-long').value, 'editor', true);">
+                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('mon-wiz-long').value, 'editor', true);document.getElementById('mon-wizard-description-long').focus();">
                         <i class="fa fa-edit"></i>
                     </a>
                     <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 216px;"></textarea>
@@ -1369,7 +1369,7 @@
         <div id="room-wizard-description">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Long
-                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('room-wiz-long').value, 'editor', true);">
+                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('room-wiz-long').value, 'editor', true);document.getElementById('room-wiz-long').focus();">
                         <i class="fa fa-edit"></i>
                     </a>
                     <textarea class="input-sm form-control" id="room-wiz-long" style="width: 100%;height: 216px;"></textarea>
@@ -3865,8 +3865,16 @@
     ipcRenderer.on('send-editor', (event, text, window) => {
         if (!manager.active || !manager.active.editor || window != "code-editor")
             return;
-        if ($dialogs.monster && $dialogs.monster.open)
-            document.activeElement.value = text;
+        if (($dialogs.monster && $dialogs.monster.open) || ($dialogs.room && $dialogs.room.open)) {
+            if ((document.activeElement.tagName === 'INPUT' && document.activeElement.type === 'text') || document.activeElement.tagName === 'TEXTAREA')
+                document.activeElement.value = text;
+            else {
+                var el = document.activeElement.closest('.wizard');
+                el = el.querySelector('.wizard-page textarea,.wizard-page input[type="text"]');
+                if (el)
+                    el.value = text;
+            }
+        }
         else
             manager.active.editor.insert(text);
     });
@@ -5249,7 +5257,7 @@
                     tmpl['create body'] += tmp.join(',\n       ');
                     tmpl['create body'] += '\n     ]) );\n';
                 }
-                if(data['room-wiz-create-body'] && data['room-wiz-create-body'].length > 0)
+                if (data['room-wiz-create-body'] && data['room-wiz-create-body'].length > 0)
                     tmpl['create body'] += data['room-wiz-create-body'];
                 //ad docs
                 if (tmpl['doc'].length > 0)
@@ -6733,19 +6741,19 @@
                                 data['room-wiz-council'] = (room.state & RoomStates.Council) === RoomStates.Council;
                                 data['room-wiz-no-magic'] = (room.state & RoomStates.NoMagic) === RoomStates.NoMagic;
                                 data['room-wiz-indoors'] = (room.state & RoomStates.Indoors) === RoomStates.Indoors;
-                                if((room.state & RoomStates.Water) === RoomStates.Water)
+                                if ((room.state & RoomStates.Water) === RoomStates.Water)
                                     data['room-wiz-terrain'] = 'water';
                                 data['room-wiz-create-body'] = '';
-                                if((room.state & RoomStates.Cold) === RoomStates.Cold)
+                                if ((room.state & RoomStates.Cold) === RoomStates.Cold)
                                     data['room-wiz-create-body'] += '   set_temperature(-200);\n';
-                                else if((room.state & RoomStates.Hot) === RoomStates.Hot)
+                                else if ((room.state & RoomStates.Hot) === RoomStates.Hot)
                                     data['room-wiz-create-body'] += '   set_temperature(200);\n';
-                                if(((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth) || ((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1))
+                                if (((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth) || ((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1))
                                     data['room-wiz-create-body'] += '   set_living_sink(1);\n';
-                                if((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth) 
-                                    data['room-wiz-create-body'] += `   set_up(VIR+"${x},${y},${z+1}");\n`;
-                                if((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1)
-                                    data['room-wiz-create-body'] += `   set_up(VIR+"${x},${y},${z-1}");\n`;
+                                if ((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth)
+                                    data['room-wiz-create-body'] += `   set_up(VIR+"${x},${y},${z + 1}");\n`;
+                                if ((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1)
+                                    data['room-wiz-create-body'] += `   set_up(VIR+"${x},${y},${z - 1}");\n`;
                                 data['room-wiz-exits'].push(...tmp);
                                 roomWizard(data);
                             }
