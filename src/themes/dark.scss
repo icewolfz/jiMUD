@@ -159,7 +159,7 @@ body {
     */
 }
 
-#display-find {
+.find {
     top: 5px;
     right: 20px;
     color: #{$color};
@@ -171,8 +171,8 @@ body {
     background-color: #{$panelBackground};
 }
 
-#display-find input,
-#display-find input:focus {
+.find input,
+.find input:focus {
     border: 1px solid #{$borderColor};
     width: 100px;
     background-color: inherit;
@@ -183,17 +183,17 @@ body {
     border-radius: 2px;
 }
 
-#display-find input:focus {
+.find input:focus {
     border: 1px solid #{$borderColor};
     color: #{$color};
     background: #{$panelBackground};
 }
 
-#display-find button .fa {
+.find button .fa {
     margin-top: 3px;
 }
 
-#display-find button {
+.find button {
     width: 22px;
     height: 22px;
     border: 1px solid transparent;
@@ -209,41 +209,41 @@ body {
     border-radius: 2px;
 }
 
-#display-find button:hover {
+.find button:hover {
     border: 1px solid #{$color};
     background-color: #5a5d5e;
     color: #{$color};
 }
 
-#display-find button.active:hover {
+.find button.active:hover {
     border: 1px solid #{$color};
     color: #5a5d5e;
     background-color: #{$color};
 }
 
-#display-find button:active {
+.find button:active {
     border: 1px solid #fff;
 }
 
-#display-find button:disabled,
-#display-find button:disabled:hover {
+.find button:disabled,
+.find button:disabled:hover {
     border: 1px solid transparent;
     color: #555;
     background-color: inherit;
 }
 
-#display-find button.active {
+.find button.active {
     border: 1px solid #3f3f46;
     background: rgba(63, 63, 70, 0.5);
     color: #{$color};
 }
 
 
-#display-find-case {
+.find-case {
     font-size: 10px;
 }
 
-#display-find-word {
+.find-word {
     text-decoration: overline underline;
     font-size: 10px;
 }
