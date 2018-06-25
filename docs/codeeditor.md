@@ -142,7 +142,7 @@ The code editor allows immortals or those wanting to code lpc files using a grap
 - Code folding
 - Templates to quickly create basic objects, rooms, monsters, weapons and armors
 - Formatting and indention system for making code easier and more standard
-- Side by side file views for up to 3 files, just drag and drop to layout how how you want to view files, with restore state on reopen if `Remember open files on reload` turned on
+- Side by side file views for up to 3 files, just drag and drop to layout how how you want to view files, with restore state on reopen if `Remember opened files on reload` turned on
 - Diff file with original file if changed or local file
 - Diff file with remote file, does not cache to allow you to test against any file as needed
 - Remote testing, allows you to test a local file in its remote location, if no remote data it will allow you to browse to the remote file location
@@ -240,7 +240,7 @@ Editor preferences are stored in their own file independent of client or charact
 ### General
 
 - `Max recent items` max number of items to store in recent list
-- `Remember open files on reload` remember open files when editor reopened
+- `Remember opened files on reload` remember opened files when editor was last closed and reopen them
 - `Use native icons in tabs` use the native icon associated with file type set in OS
 - `Enable spellchecking when possible` detect spelling errors when possible
 - `Enable remote caching` cache remote file names linked to local files in {data}/editor/ folder, each local file will have a file linked to it to store remote data associated with local file
