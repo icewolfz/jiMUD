@@ -212,7 +212,6 @@ export class VirtualEditor extends EditorBase {
 
     private $rooms: Room[][][];
     private $maxTerrain;
-    private $mouseCaptured = false;
     private $mousePrevious: MousePosition = {
         x: 0,
         y: 0,
@@ -234,7 +233,7 @@ export class VirtualEditor extends EditorBase {
         ry: 0,
         button: 0
     };
-    private $mapDown = false;
+
     private $colorCache;
     private $measure;
 
@@ -1407,7 +1406,6 @@ export class VirtualEditor extends EditorBase {
         this.$map.addEventListener('mousedown', (e) => {
             this.$mouse = this.getMousePos(e);
             this.$mouseDown = this.getMousePos(e);
-            this.$mapDown = true;
         });
         this.$map.addEventListener('mouseup', (e) => {
             this.$mouse = this.getMousePos(e);
@@ -1419,7 +1417,6 @@ export class VirtualEditor extends EditorBase {
                 if (p && r !== p) this.DrawRoom(this.$mapContext, p, true, false);
                 if (r) this.DrawRoom(this.$mapContext, r, true, true);
             }
-            this.$mapDown = false;
         });
         this.$map.addEventListener('mouseenter', (e) => {
             this.$mouse = this.getMousePos(e);
