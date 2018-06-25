@@ -1,6 +1,10 @@
 # Changelog
 
-## 4.4.51
+## 0.4.51
+
+- **Fixed:**
+  - Code editor:
+    - Virtual editor property grid had wrong variable
 
 ## 0.4.50 2018-06-25
 

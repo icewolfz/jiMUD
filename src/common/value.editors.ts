@@ -465,7 +465,7 @@ export class FlagValueEditor extends ValueEditor {
                         let cl = children.length;
                         let child;
                         let value = 0;
-                        if ((<HTMLInputElement>e.currentTarget).value === '0') {
+                        if ((<HTMLInputElement>e2.currentTarget).value === '0') {
                             while (cl--) {
                                 child = children[cl];
                                 if (child.value !== '0')
