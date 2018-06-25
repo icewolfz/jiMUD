@@ -238,7 +238,7 @@ export class Finder extends EventEmitter {
             this._display.addOverlays(ranges, 'find-highlight', 'find');
         if (this.Reverse)
             this._results.reverse();
-        this.gotoResult(0, !focus);
+        this.gotoResult(0, focus);
         this.emit('found-results', this._results);
     }
 
