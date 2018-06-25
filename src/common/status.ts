@@ -562,13 +562,23 @@ export class Status extends EventEmitter {
         }
         else {
             const w = $('#status-border').outerWidth();
+            let r;
             $('#status').css('visibility', 'hidden');
             $('#status').css('display', 'none');
             $('#status-border').css('visibility', 'hidden');
             $('#status-border').css('display', 'none');
-            $('#display').css('right', ((parseInt($('#display').css('right'), 10) || 0) - w) + 'px');
-            $('#display-border').css('right', ((parseInt($('#display-border').css('right'), 10) || 0) - w) + 'px');
-            $('#command').css('right', ((parseInt($('#command').css('right'), 10) || 0) - w) + 'px');
+            r = parseInt($('#display').css('right'), 10) || 0;
+            if (r > w)
+                r = w;
+            $('#display').css('right', (r - w) + 'px');
+            r = parseInt($('#display-border').css('right'), 10) || 0;
+            if (r > w)
+                r = w;
+            $('#display-border').css('right', (r - w) + 'px');
+            r = parseInt($('#command').css('right'), 10) || 0;
+            if (r > w)
+                r = w;
+            $('#command').css('right', (r - w) + 'px');
             return;
         }
 

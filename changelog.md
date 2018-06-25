@@ -23,6 +23,7 @@
   - Display:
     - When split scroll enabled would toggle scroll when preferences reloaded
     - When searching it would not correctly refocus when you reversed search
+  - When loading the width of display and command box are incorrect leaving them very narrow when status display was hidden
   - Code editor:
     - Fixed test system for changed/new files, before it only uploaded data saved to disk unsaved files
     - When closing editor it would not correctly remember new files that where saved
