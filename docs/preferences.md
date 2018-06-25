@@ -66,6 +66,13 @@ Reset - Resetting will revert all settings back to default values
 
 [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
 
+## Logging > Viewer
+
+- `Remember opened files on reload` Restore any files that where opened last time the viewer was closed
+- `Always on top of the main window` Force viewer window to always be above main client window, when ever client window is focused it will bring the viewer window along with it. _When disabled requires viewer to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of all windows` Force viewer window to always be on top of all windows
+- `Persistent` causes the viewer window to remain in memory to help speed up load times on future uses
+
 ## Telnet
 
 Settings to control how to handle telnet options and emulation
@@ -116,7 +123,7 @@ Controls what is captured into the chat window
 
 - `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. _When disabled requires chat to be closed to fully exits client_ **Requires restart on windows**
 - `Always on top of all windows` Force chat window to always be on top of all windows
-- `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
+- `Persistent` causes the chat window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
 
 ## Status
 

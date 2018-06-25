@@ -109,6 +109,14 @@
                 },
                 { type: 'separator' },
                 {
+                    label: '&Preferences...',
+                    accelerator: "CmdOrCtrl+Comma",
+                    click: () => {
+                        ipcRenderer.send('show-window', 'prefs');
+                    }
+                },                
+                { type: 'separator' },
+                {
                     label: '&Close',
                     click: () => { closeFile(); },
                     accelerator: "CmdOrCtrl+F4",
