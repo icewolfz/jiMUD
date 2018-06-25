@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.50
+## 0.4.50 2018-06-25
 
 - **New:**
   - Log viewer: display your logs as if from the mud, supports html, raw ansi, and text files
