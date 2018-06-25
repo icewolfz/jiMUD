@@ -458,17 +458,17 @@
         if (files.length === 0) return;
         var panels = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
-            if (!existsSync(files[f].file)) {
+            if (!existsSync(files[f])) {
                 if (exists)
                     dialog.showMessageBox(remote.getCurrentWindow(), {
                         type: 'info',
                         title: 'Path does not exist',
-                        message: 'The path \'' + files[f].file + '\' does not seem to exist anymore on disk.'
+                        message: 'The path \'' + files[f] + '\' does not seem to exist anymore on disk.'
                     });
                 continue;
             }
-            _recent.unshift(files[f].file || files[f].path);
-            var p = createViewer({ file: files[f].file || files[f].path, open: true });
+            _recent.unshift(files[f] || files[f].path);
+            var p = createViewer({ file: files[f] || files[f].path, open: true });
             if (p)
                 panels.push(p);
         }
@@ -853,7 +853,7 @@
             var p;
             opened[s] = [];
             while (k--)
-                opened[s].unshift(panels[k]);
+                opened[s].unshift(panels[k].file);
         }
         if (!options) loadOptions();
         if (options.reopen)
