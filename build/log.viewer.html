@@ -670,7 +670,7 @@
             while (s--)
                 p.viewer.removeChild(style[s]);
         }
-        else if (path.extname(p.file) === '.txt') {
+        else {
             p.viewer.classList.add('text-viewer');
             var contents = '';
             p.displayFunction = () => {
