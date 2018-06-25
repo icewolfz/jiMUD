@@ -378,7 +378,7 @@
 
     function updateUIChange() {
         var selected = false;
-        if (manager.active && manager.active.viewer) {
+        if (manager.active && manager.active.viewer && manager.active.viewer.ownerDocument && manager.active.viewer.ownerDocument.defaultView) {
             var ow = manager.active.viewer.ownerDocument.defaultView;
             var sel = ow.getSelection();
             selected = !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode);
@@ -618,8 +618,7 @@
                         {
                             label: '&Copy',
                             accelerator: "CmdOrCtrl+C",
-                            click: doCopy,
-                            enabled: false,
+                            click: doCopy
                         },
                         { type: 'separator' },
                         {
@@ -651,9 +650,12 @@
             oDoc.addEventListener("selectionchange", function () {
                 doUpdate(2);
             });
+            oDoc.addEventListener("mousedown", function () {
+                manager.focusPane(p.dock);
+            });
             loadContents(p);
         };
-        p.iframe.src = '/build/log.viewer.tab.html';
+        p.iframe.src = './log.viewer.tab.html';
         p.pane.appendChild(p.iframe);
         if (add) {
             manager.addPanels([p], dock);
@@ -677,6 +679,7 @@
                 display.removeListener('parse-done', p.displayFunction);
                 display.removeListener('add-line-done', p.displayAdd);
                 p.viewer.innerHTML = contents;
+                display.clear();
             };
             p.displayAdd = (data) => {
                 contents += createLine(data.line, data.formats);

@@ -21,7 +21,7 @@ export class Search extends EventEmitter {
     set search(value) {
         if (value === this.$search) return;
         this.$search = value;
-        if (this.$search) {
+        if (this.$search && this.$search.ownerDocument && this.$search.ownerDocument.defaultView) {
             const style = this.$search.ownerDocument.defaultView.getComputedStyle(this.$search, null);
             this.$ctx.font = style.getPropertyValue('font-size') + ' ' + style.getPropertyValue('font-family');
         }
@@ -345,7 +345,7 @@ export class Search extends EventEmitter {
         if (this._results.length > 0) {
             const r = this._results[idx];
             this.setSelectionRange(this.search, r.index, r.index + r.length);
-            if (focus) {
+            if (focus && this.search.ownerDocument && this.search.ownerDocument.defaultView) {
                 const ow = this.search.ownerDocument.defaultView;
                 const sel = ow.getSelection();
                 this.scrollIntoView(sel);
