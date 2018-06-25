@@ -522,42 +522,42 @@ table.dataTable {
     line-height: normal;
 }
 
-#find {
+#display-find {
     position: absolute;
     display: none;
     z-index: 100;
 }
 
-#find input,
-#find input:focus {
+#display-find input,
+#display-find input:focus {
     outline: none;
     position: relative;
 }
 
-#find button {
+#display-find button {
     display: inline-block;
     outline: none;
 }
 
-#find button:disabled,
-#find button:disabled:hover {
+#display-find button:disabled,
+#display-find button:disabled:hover {
     cursor: not-allowed;
 }
 
-#find button:hover,
-#find button.active:hover {
+#display-find button:hover,
+#display-find button.active:hover {
     cursor: default;
 }
 
-#find button:active {
+#display-find button:active {
     cursor: default;
 }
 
-#find button.active {
+#display-find button.active {
     cursor: default;
 }
 
-#find-count {
+#display-find-count {
     display: inline-block;
     width: 100px;
     font-family: Arial, Helvetica, sans-serif;
@@ -565,7 +565,7 @@ table.dataTable {
     text-align: center;
 }
 
-#find-selection {
+#display-find-selection {
     display: none !important;
 }
 

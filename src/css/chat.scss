@@ -51,7 +51,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     position: absolute;
 }
 
-#find {
+#display-find {
     top: 5px;
     right: 20px;
     padding: 2px;
@@ -64,8 +64,8 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     text-shadow: 0 1px 0 #fff;
 }
 
-#find input,
-#find input:focus {
+#display-find input,
+#display-find input:focus {
     border: 1px solid #{$borderColor};
     width: 100px;
     background-color: white;
@@ -76,16 +76,16 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     border-radius: 2px;
 }
 
-#find input:focus {
+#display-find input:focus {
     border: 1px solid adadad;
     color: #{$color};
 }
 
-#find button .fa {
+#display-find button .fa {
     margin-top: 3px;
 }
 
-#find button {
+#display-find button {
     width: 22px;
     height: 22px;
     border: 1px solid transparent;
@@ -101,8 +101,8 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     border-radius: 2px;
 }
 
-#find button:hover,
-#find button.active:hover {
+#display-find button:hover,
+#display-find button.active:hover {
     color: #{$color};
     background-color: #e0e0e0;
     background-position: 0 -15px;
@@ -111,7 +111,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     text-shadow: 0 1px 0 #fff;
 }
 
-#find button.active:hover {
+#display-find button.active:hover {
     color: #{$color};
     background-color: #a0a0a0;
     background-position: 0 -15px;
@@ -120,12 +120,12 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     text-shadow: 0 1px 0 #333;
 }
 
-#find button:active {
+#display-find button:active {
     border: 1px solid #0052A4;
 }
 
-#find button:disabled,
-#find button:disabled:hover {
+#display-find button:disabled,
+#display-find button:disabled:hover {
     background-color: inherit !important;
     background-image: none;
     box-shadow: none;
@@ -134,22 +134,22 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     color: #666;
 }
 
-#find button.active {
+#display-find button.active {
     background-color: #666;
     border-color: #ccc;
     text-shadow: 0 1px 0 #{$color};
     color: #fff;
 }
 
-#find-count {
+#display-find-count {
     padding: 0px;
 }
 
-#find-case {
+#display-find-case {
     font-size: 10px;
 }
 
-#find-word {
+#display-find-word {
     text-decoration: overline underline;
     font-size: 10px;
 }

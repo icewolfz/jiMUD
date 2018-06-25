@@ -103,6 +103,9 @@ export class Display extends EventEmitter {
     private _mxpLinkFunction;
     private _mxpSendFunction;
     private _mxpTooltipFunction;
+    private _wMove;
+    private _wUp;
+    private _wResize;
 
     get roundedRanges(): boolean { return this._roundedRanges; }
     set roundedRanges(value: boolean) {
@@ -286,6 +289,11 @@ export class Display extends EventEmitter {
         this._mxpTooltipFunction = val;
     }
 
+    get id() {
+        if (this._el) return this._el.id;
+        return '';
+    }
+
     constructor(display: string | JQuery | HTMLElement, options?);
     constructor(display?: any, options?: DisplayOptions) {
         super();
@@ -320,7 +328,7 @@ export class Display extends EventEmitter {
         this._el.appendChild(fragment);
 
         this._character = document.createElement('div');
-        this._character.id = 'Character';
+        this._character.id = this.id + '-Character';
         this._character.className = 'ansi';
         this._character.style.borderBottom = '1px solid black';
         this._character.innerText = 'W';
@@ -612,16 +620,15 @@ export class Display extends EventEmitter {
             this.emit('context-menu', e);
         });
 
-        window.addEventListener('mousemove', (e) => {
+        this._wMove = (e) => {
             this._lastMouse = e;
             if (this._currentSelection.drag) {
                 this._currentSelection.end = this.getLineOffset(e);
                 this.emit('selection-changed');
                 this.doUpdate(UpdateType.selection);
             }
-        });
-
-        window.addEventListener('mouseup', (e) => {
+        };
+        this._wUp = (e) => {
             this._lastMouse = e;
             if (this._currentSelection.drag) {
                 clearInterval(this._currentSelection.scrollTimer);
@@ -631,11 +638,16 @@ export class Display extends EventEmitter {
                 this.emit('selection-done');
                 this.doUpdate(UpdateType.selection);
             }
-        });
-
-        window.addEventListener('resize', (e) => {
+        };
+        this._wResize = (e) => {
             this.doUpdate(UpdateType.update);
-        });
+        };
+
+        window.addEventListener('mousemove', this._wMove.bind(this));
+
+        window.addEventListener('mouseup', this._wUp.bind(this));
+
+        window.addEventListener('resize', this._wResize.bind(this));
 
         this._finder = new Finder(this);
         this._finder.on('word', () => {
@@ -2046,6 +2058,20 @@ export class Display extends EventEmitter {
             this._backgroundLines[idx] = t[1];
         }
     }
+
+    public dispose() {
+        this._finder.dispose();
+        this._HScroll.dispose();
+        this._VScroll.dispose();
+        document.body.removeChild(this._character);
+        while (this._el.firstChild)
+            this._el.removeChild(this._el.firstChild);
+        window.removeEventListener('mousemove', this._wMove);
+
+        window.removeEventListener('mouseup', this._wUp);
+
+        window.removeEventListener('resize', this._wResize);
+    }
 }
 
 export class ScrollBar extends EventEmitter {
@@ -2069,6 +2095,9 @@ export class ScrollBar extends EventEmitter {
     public _type: ScrollType = ScrollType.vertical;
     public maxPosition: number = 0;
     private _maxDrag: number = 0;
+    private _wMove;
+    private _wUp;
+    private _wResize;
 
     public thumb: HTMLElement;
     public track: HTMLElement;
@@ -2194,25 +2223,28 @@ export class ScrollBar extends EventEmitter {
         this._parent.addEventListener('wheel', (event) => {
             this.scrollBy(this._type === ScrollType.horizontal ? event.deltaX : event.deltaY);
         });
-
-        window.addEventListener('mousemove', (e) => {
+        this._wMove = (e) => {
             this._lastMouse = e;
             if (this.state.dragging) {
                 this.updatePosition(this.currentPosition());
             }
-        });
-
-        window.addEventListener('mouseup', (e) => {
+        };
+        this._wUp = (e) => {
             this._lastMouse = e;
             if (this.state.dragging) {
                 this.state.dragging = false;
                 this.updatePosition(this.currentPosition());
             }
-        });
-
-        window.addEventListener('resize', (e) => {
+        };
+        this._wResize = (e) => {
             this.resize();
-        });
+        };
+
+        window.addEventListener('mousemove', this._wMove.bind(this));
+
+        window.addEventListener('mouseup', this._wUp.bind(this));
+
+        window.addEventListener('resize', this._wResize.bind(this));
         this.resize();
     }
 
@@ -2338,5 +2370,13 @@ export class ScrollBar extends EventEmitter {
             top: rect.top + bodyElt.scrollTop,
             left: rect.left + bodyElt.scrollLeft
         };
+    }
+
+    public dispose() {
+        if (this.track)
+            this._parent.removeChild(this.track);
+            window.removeEventListener('mousemove', this._wMove);
+            window.removeEventListener('mouseup', this._wUp);
+            window.removeEventListener('resize', this._wResize);
     }
 }
