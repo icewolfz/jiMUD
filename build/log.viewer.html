@@ -221,6 +221,7 @@
     });
     manager.on('removed', (e, pane) => {
         closeViewer(e.panel);
+        $search.search = null;
         doUpdate(1);
     });
     manager.on('dock-changed', (e, pane, oPane) => {
@@ -841,9 +842,10 @@
     function doFind() {
         if (manager.active && manager.active.viewer) {
             var flag = 0;
-            var sel = window.getSelection();
+            var ow = manager.active.viewer.ownerDocument.defaultView;
+            var sel = ow.getSelection();
             if (sel.rangeCount > 0 && manager.active.viewer.contains(sel.getRangeAt(0).startContainer))
-                sel = window.getSelection().toString();
+                sel = ow.getSelection().toString();
             else
                 sel = 0;
             $search.search = manager.active.viewer;

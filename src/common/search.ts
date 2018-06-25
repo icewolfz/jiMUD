@@ -12,10 +12,21 @@ export class Search extends EventEmitter {
     private _word;
     private _reverse;
     private _regex;
-    private _all = false;
     private _key;
+    private $canvas;
+    private $ctx;
+    private $search;
 
-    public search;
+    get search() { return this.$search; }
+    set search(value) {
+        if (value === this.$search) return;
+        this.$search = value;
+        if (this.$search) {
+            const style = this.$search.ownerDocument.defaultView.getComputedStyle(this.$search, null);
+            this.$ctx.font = style.getPropertyValue('font-size') + ' ' + style.getPropertyValue('font-family');
+        }
+        this.find();
+    }
 
     constructor(parent?) {
         super();
@@ -40,6 +51,8 @@ export class Search extends EventEmitter {
             //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
             this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
         });
+        this.$canvas = document.createElement('canvas');
+        this.$ctx = this.$canvas.getContext('2d');
     }
 
     get id() {
@@ -138,7 +151,7 @@ export class Search extends EventEmitter {
     }
 
     private createControl() {
-        this._control = $('<div id="' + this.id + '-find" class="find"><input placeholder="Find" /><button id="' + this.id + '-find-case" title="Match Case" class="find-case">Aa</button><button id="' + this.id + '-find-word" title="Match Whole Word" class="find-word">Aa|</button><button id="' + this.id + '-find-regex" title="Use Regular Expression" class="find-regex">.*</button><div id="' + this.id + '-find-count" class="find-count"></div><button id="' + this.id + '-find-prev" title="Previous Match" disabled="disabled" class="find-prev"><i class="fa fa-arrow-up"></i></button><button id="' + this.id + '-find-next" title="Next Match" disabled="disabled" class="find-next"><i class="fa fa-arrow-down"></i></button><button id="' + this.id + '-find-selection" title="Find in selection" disabled="disabled" class="find-selection"><i class="fa fa-align-left"></i></button><button id="' + this.id + '-find-reverse" title="Search Down" class="find-reverse"><i class="fa fa-caret-down"></i></button><button id="' + this.id + '-find-close" title="Close" class="find-close"><i class="fa fa-close"></i></button></div>');
+        this._control = $('<div id="' + this.id + '-find" class="find"><input placeholder="Find" /><button id="' + this.id + '-find-case" title="Match Case" class="find-case">Aa</button><button id="' + this.id + '-find-word" title="Match Whole Word" class="find-word">Aa|</button><button id="' + this.id + '-find-regex" title="Use Regular Expression" class="find-regex">.*</button><div id="' + this.id + '-find-count" class="find-count"></div><button id="' + this.id + '-find-prev" title="Previous Match" disabled="disabled" class="find-prev"><i class="fa fa-arrow-up"></i></button><button id="' + this.id + '-find-next" title="Next Match" disabled="disabled" class="find-next"><i class="fa fa-arrow-down"></i></button><button id="' + this.id + '-find-selection" title="Find in selection" disabled="disabled" class="find-selection"><i class="fa fa-align-left"></i></button><button id="' + this.id + '-find-reverse" title="Search Up" class="find-reverse"><i class="fa fa-caret-up"></i></button><button id="' + this.id + '-find-close" title="Close" class="find-close"><i class="fa fa-close"></i></button></div>');
         $('#' + this.id + '-find-close', this._control).on('click', () => {
             this.hide();
         });
@@ -180,16 +193,20 @@ export class Search extends EventEmitter {
         });
     }
 
-    public find(search?, focus?: boolean) {
+    public find(focus?: boolean, search?) {
         const val = $('input', this._control).val();
         this.clear();
         if (val.length === 0) {
-            $('#' + this.id + '-find-count', this._control).html('No Results');
+            this.updateCount();
             this.emit('found-results', this._results);
             return;
         }
-        this.search = search || this.search;
-        if (!this.search) return;
+        this.$search = search || this.$search;
+        if (!this.$search) {
+            this.updateCount();
+            this.emit('found-results', this._results);
+            return;
+        }
         //let hs = this._display.text();
         let pattern;
         if (this._regex)
@@ -220,12 +237,11 @@ export class Search extends EventEmitter {
             });
             m = re.exec(content);
         }
-        //items.reverse();
         this._results.push.apply(this._results, items);
 
         if (this.Reverse)
             this._results.reverse();
-        this.gotoResult(0, !focus);
+        this.gotoResult(0, focus);
         this.emit('found-results', this._results);
     }
 
@@ -330,12 +346,21 @@ export class Search extends EventEmitter {
             const r = this._results[idx];
             this.setSelectionRange(this.search, r.index, r.index + r.length);
             if (focus) {
-                //let n = this.search.textContent.lastIndexOf('\n', r.index);
-                //if (n < 0) n = 0;
                 const ow = this.search.ownerDocument.defaultView;
-                this.scrollIntoView(ow.getSelection());
-                //n = r.index - n;
-                //this.search.scrollLeft = n * 16;
+                const sel = ow.getSelection();
+                this.scrollIntoView(sel);
+                const text = this.$ctx.measureText(sel.anchorNode.textContent.substr(0, sel.anchorOffset));
+                const hText = this.$ctx.measureText(sel.anchorNode.textContent.substr(sel.anchorOffset, r.length));
+                let l;
+                if (!sel.anchorNode.tagName)
+                    l = $(sel.anchorNode.parentNode).offset().left;
+                else
+                    l = $(sel.anchorNode).offset().left;
+                l += text.width;
+                if (l + hText.width < this.$search.clientWidth)
+                    this.$search.scrollLeft = 0;
+                else
+                    this.$search.scrollLeft = l;
             }
         }
         setTimeout(() => { this.emit('moved', this._position, idx); }, 0);
