@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Log viewer</title>
-    <link rel="shortcut icon" href="../assets/icons/win/code.ico" />
+    <link rel="shortcut icon" href="../assets/icons/png/log.png" />
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
@@ -598,14 +598,6 @@
         p.iframe.style.border = '0';
         _viewers[data.file] = p;
         p.iframe.onload = () => {
-            var otherhead = p.iframe.contentWindow.document.getElementsByTagName("head")[0];
-            ["../lib/bootstrap.min.css", "../lib/bootstrap-theme.min.css", "../lib/bootstrap-select.min.css", " ../lib/font-awesome.min.css", "css/main.css", "css/ansi.css", "css/theme.css", "css/form.css", "css/cm.css", "css/log.viewer.css"].forEach(i => {
-                var css = document.createElement("link");
-                css.type = "text/css";
-                css.rel = "stylesheet";
-                css.href = i;
-                otherhead.appendChild(css);
-            });
             p.viewer = document.createElement('pre');
             p.viewer.classList.add('viewer');
             //p.viewer.tabIndex = '-1';
@@ -661,7 +653,7 @@
             });
             loadContents(p);
         };
-        p.iframe.src = 'about:blank';
+        p.iframe.src = '/build/log.viewer.tab.html';
         p.pane.appendChild(p.iframe);
         if (add) {
             manager.addPanels([p], dock);
