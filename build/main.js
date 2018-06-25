@@ -179,7 +179,10 @@ var menuTemp = [
         }
       },
       {
-        label: '&View logs...'
+        label: '&View logs...',
+        click: () => {
+          win.webContents.executeJavaScript('showLogViewer()');
+        }
       },
       {
         type: 'separator'

@@ -2098,6 +2098,16 @@
         ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
     }
 
+     // eslint-disable-next-line no-unused-vars
+    function showLogViewer() {
+      if (client.options.windows['log-viewer'] && client.options.windows['log-viewer'].options) {
+        client.options.windows['log-viewer'].options.show = true;
+        ipcRenderer.send('show-window', 'log-viewer', client.options.windows['log-viewer'].options);
+      }
+      else
+        ipcRenderer.send('show-window', 'log-viewer', { show: true, file: 'log.viewer.html', icon: 'log', alwaysOnTopClient: true });
+    }
+
     // eslint-disable-next-line no-unused-vars
     function showCodeEditor() {
       ipcRenderer.send('show-window', 'code-editor');
