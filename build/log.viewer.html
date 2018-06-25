@@ -68,6 +68,7 @@
     const { Menubar } = require('./js/menubar');
     const { Settings } = require('./js/settings');
     const { Display } = require('./js/display');
+    const { Search } = require('./js/search');
     const { FormatType, FontStyle } = require('./js/types');
     // eslint-disable-next-line no-unused-vars
     const { parseTemplate, existsSync, isDirSync, walkSync } = require('./js/library');
@@ -87,6 +88,7 @@
     var logPath = '';
     var font, fontSize;
     var display;
+    var $search;
 
     var $fileFilters = [
         { name: 'Supported files (*.txt, *.htm, *.html)', extensions: ['txt', 'htm', 'html'] },
@@ -114,7 +116,7 @@
                     click: () => {
                         ipcRenderer.send('show-window', 'prefs');
                     }
-                },                
+                },
                 { type: 'separator' },
                 {
                     label: '&Close',
@@ -228,12 +230,14 @@
 
     });
     manager.on('activated', (e, pane) => {
+        $search.search = e.panel.viewer;
         doUpdate(1);
     });
     manager.on('pane-activated', () => {
         doUpdate(1);
     });
     manager.on('deactivated', (e, pane) => {
+        $search.search = null;
     });
     manager.on('dragenter', (e) => {
         event.dataTransfer.dropEffect = "copy";
@@ -372,14 +376,16 @@
     }
 
     function updateUIChange() {
-        const sel = getSelection();
         var selected = false;
-        if (manager.active && manager.active.viewer && !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode))
-            selected = true;
+        if (manager.active && manager.active.viewer) {
+            var ow = manager.active.viewer.ownerDocument.defaultView;
+            var sel = ow.getSelection();
+            selected = !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode);
+        }
         $("#btn-copy").prop('disabled', (manager.active && manager.active.viewer) ? !selected : true);
         menubar.updateItem('edit|copy', { enabled: (manager.active && manager.active.viewer) ? selected : false });
         $("#btn-find").prop('disabled', (manager.active && manager.active.viewer) ? false : true);
-        menubar.updateItem('edit|find', { enabled: (manager.active && manager.active.viewer) ? false : false });
+        menubar.updateItem('edit|find', { enabled: (manager.active && manager.active.viewer) ? true : false });
         $("#btn-refresh").prop('disabled', (manager.active && manager.active.viewer) ? false : true);
         menubar.updateItem('view|refresh', { enabled: (manager.active && manager.active.viewer) ? true : false });
         menubar.updateItem('edit|select all', { enabled: (manager.active && manager.active.viewer) ? true : false });
@@ -452,7 +458,7 @@
                     if (fileNames === undefined) {
                         return;
                     }
-                    openFiles(fileNames.map((l) => { return { file: l }; }), true, dock);
+                    openFiles(fileNames, true, dock);
                 });
         }
         else {
@@ -551,27 +557,17 @@
         menubar.updateItem('file|open recent', { submenu: menu });
     }
 
-    function getSelectionText() {
-        var text = "";
-        if (window.getSelection) {
-            text = window.getSelection().toString();
-        } else if (document.selection && document.selection.type != "Control") {
-            text = document.selection.createRange().text;
-        }
-        return text;
-    }
-
     function selectText(node) {
         if (!node) return;
-        if (typeof node === 'string')
-            node = document.getElementById(node);
-        if (document.body.createTextRange) {
-            const range = document.body.createTextRange();
+        var od = node.ownerDocument;
+        var ow = node.ownerDocument.defaultView;
+        if (od.body.createTextRange) {
+            const range = od.body.createTextRange();
             range.moveToElementText(node);
             range.select();
-        } else if (window.getSelection) {
-            const selection = window.getSelection();
-            const range = document.createRange();
+        } else if (ow.getSelection) {
+            const selection = ow.getSelection();
+            const range = od.createRange();
             range.selectNodeContents(node);
             selection.removeAllRanges();
             selection.addRange(range);
@@ -594,46 +590,78 @@
         }
         p = manager.createPanel(path.basename(data.file), 'fa fa-file-text-o', data.file);
         p.file = data.file;
-        p.viewer = document.createElement('pre');
-        p.viewer.classList.add('viewer');
-        p.viewer.tabIndex = '-1';
-        p.viewer.style.fontSize = fontSize;
-        p.viewer.style.fontFamily = font;
-        p.viewer.id = 'viewer' + p.id;
-        p.pane.appendChild(p.viewer);
-        p.viewer.addEventListener('contextmenu', e => {
-            e.preventDefault();
-            const sel = getSelection();
-            let inputMenu;
-            if (!sel.isCollapsed && sel.type === 'Range' && p.viewer.contains(sel.anchorNode)) {
-                inputMenu = Menu.buildFromTemplate([
-                    { role: 'copy' },
-                    { type: 'separator' },
-                    {
-                        label: '&Select All',
-                        accelerator: "CmdOrCtrl+A",
-                        click: () => {
-                            if (manager.active && manager.active.viewer)
-                                selectText(manager.active.viewer);
-                        }
-                    }
-                ]);
-            }
-            else
-                inputMenu = Menu.buildFromTemplate([
-                    {
-                        label: '&Select All',
-                        accelerator: "CmdOrCtrl+A",
-                        click: () => {
-                            if (manager.active && manager.active.viewer)
-                                selectText(manager.active.viewer);
-                        }
-                    }
-                ]);
-            inputMenu.popup({ window: remote.getCurrentWindow() });
-        });
+        p.iframe = document.createElement('iframe');
+        p.iframe.classList.add('viewer');
+        p.iframe.style.width = '100%';
+        p.iframe.style.height = '100%';
+        p.iframe.style.border = '0';
         _viewers[data.file] = p;
-        loadContents(p);
+        p.iframe.onload = () => {
+            var otherhead = p.iframe.contentWindow.document.getElementsByTagName("head")[0];
+            ["../lib/bootstrap.min.css", "../lib/bootstrap-theme.min.css", "../lib/bootstrap-select.min.css", " ../lib/font-awesome.min.css", "css/main.css", "css/ansi.css", "css/theme.css", "css/form.css", "css/cm.css", "css/log.viewer.css"].forEach(i => {
+                var css = document.createElement("link");
+                css.type = "text/css";
+                css.rel = "stylesheet";
+                css.href = i;
+                otherhead.appendChild(css);
+            });
+            p.viewer = document.createElement('pre');
+            p.viewer.classList.add('viewer');
+            //p.viewer.tabIndex = '-1';
+            p.viewer.style.fontSize = fontSize;
+            p.viewer.style.fontFamily = font;
+            p.viewer.id = 'viewer' + p.id;
+            p.viewer.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                var selected = false;
+                if (manager.active && manager.active.viewer) {
+                    var ow = manager.active.viewer.ownerDocument.defaultView;
+                    var sel = ow.getSelection();
+                    selected = !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode);
+                }
+                let inputMenu;
+                if (selected) {
+                    inputMenu = Menu.buildFromTemplate([
+                        {
+                            label: '&Copy',
+                            accelerator: "CmdOrCtrl+C",
+                            click: doCopy,
+                            enabled: false,
+                        },
+                        { type: 'separator' },
+                        {
+                            label: '&Select All',
+                            accelerator: "CmdOrCtrl+A",
+                            click: () => {
+                                if (manager.active && manager.active.viewer)
+                                    selectText(manager.active.viewer);
+                            }
+                        }
+                    ]);
+                }
+                else
+                    inputMenu = Menu.buildFromTemplate([
+                        {
+                            label: '&Select All',
+                            accelerator: "CmdOrCtrl+A",
+                            click: () => {
+                                if (manager.active && manager.active.viewer)
+                                    selectText(manager.active.viewer);
+                            }
+                        }
+                    ]);
+                inputMenu.popup({ window: remote.getCurrentWindow() });
+            });
+
+            var oDoc = (document.all) ? p.iframe.contentWindow.document : p.iframe.contentDocument;
+            oDoc.body.appendChild(p.viewer);
+            oDoc.addEventListener("selectionchange", function () {
+                doUpdate(2);
+            });
+            loadContents(p);
+        };
+        p.iframe.src = 'about:blank';
+        p.pane.appendChild(p.iframe);
         if (add) {
             manager.addPanels([p], dock);
         }
@@ -802,7 +830,8 @@
 
     function doCopy() {
         if (manager.active && manager.active.viewer) {
-            var text = getSelectionText() || '';
+            var ow = manager.active.viewer.ownerDocument.defaultView;
+            var text = ow.getSelection().toString() || '';
             clipboard.writeText(text);
             clipboard.writeText(text);
         }
@@ -810,8 +839,16 @@
     }
 
     function doFind() {
-        if (manager.active && manager.active.editor && manager.active.editor.supports('find'))
-            manager.active.editor.find();
+        if (manager.active && manager.active.viewer) {
+            var flag = 0;
+            var sel = window.getSelection();
+            if (sel.rangeCount > 0 && manager.active.viewer.contains(sel.getRangeAt(0).startContainer))
+                sel = window.getSelection().toString();
+            else
+                sel = 0;
+            $search.search = manager.active.viewer;
+            this.$search.show(sel);
+        }
     }
 
     function doRefresh() {
@@ -941,11 +978,9 @@
     };
 
     $(document).ready(() => {
+        $search = new Search(manager.parent);
         display = new Display(document.getElementById('display'));
         loadOptions();
-        document.addEventListener("selectionchange", function () {
-            doUpdate(2);
-        });
 
         $('#toolbar').on('click', () => {
             if (manager.active && manager.active.viewer)
