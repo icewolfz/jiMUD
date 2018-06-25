@@ -857,6 +857,8 @@ export class DockPane extends EventEmitter {
     }
 
     public destroy() {
+        if (this.$measure && this.$measure.parentElement)
+            this.$measure.parentElement.removeChild(this.$measure);
         if (this.$el) {
             this.$el.removeChild(this.$tabstrip);
             this.$el.removeChild(this.$tabpane);
