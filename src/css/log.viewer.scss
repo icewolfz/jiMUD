@@ -448,7 +448,56 @@ dialog .close {
     line-height: inherit;
 }
 
+.html-viewer .line, 
+.text-viewer .line,
 .line {
     display: block !important;
     position: relative;
+}
+
+.find {
+    position: absolute;
+    display: none;
+    z-index: 100;
+}
+
+.find input,
+.findlay-find input:focus {
+    outline: none;
+    position: relative;
+}
+
+.find button {
+    display: inline-block;
+    outline: none;
+}
+
+.find button:disabled,
+.find button:disabled:hover {
+    cursor: not-allowed;
+}
+
+.find button:hover,
+.find button.active:hover {
+    cursor: default;
+}
+
+.find button:active {
+    cursor: default;
+}
+
+.find button.active {
+    cursor: default;
+}
+
+.find-count {
+    display: inline-block;
+    width: 100px;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 4px;
+    text-align: center;
+}
+
+.find-selection {
+    display: none !important;
 }

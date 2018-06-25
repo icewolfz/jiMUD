@@ -427,6 +427,8 @@
                 return false;
             panel = manager.active;
         }
+        if (_viewers[panel.file].display)
+            _viewers[panel.file].display.dispose();
         delete _viewers[panel.file];
     }
 
@@ -589,6 +591,7 @@
         p.viewer.tabIndex = '-1';
         p.viewer.style.fontSize = fontSize;
         p.viewer.style.fontFamily = font;
+        p.viewer.id = 'viewer' + p.id;
         p.pane.appendChild(p.viewer);
         p.viewer.addEventListener('contextmenu', e => {
             e.preventDefault();
@@ -631,6 +634,7 @@
 
     function loadContents(p) {
         if (path.extname(p.file) === '.htm' || path.extname(p.file) === '.html') {
+            p.viewer.classList.add('html-viewer');
             p.viewer.innerHTML = fs.readFileSync(p.file, 'utf8');
             var style = p.viewer.querySelectorAll('style');
             var s = style.length;
@@ -638,6 +642,7 @@
                 p.viewer.removeChild(style[s]);
         }
         else if (path.extname(p.file) === '.txt') {
+            p.viewer.classList.add('text-viewer');
             var contents = '';
             p.displayFunction = () => {
                 display.removeListener('parse-done', p.displayFunction);
@@ -916,7 +921,7 @@
                 var keys = Object.keys(_viewers);
                 var p = keys.length;
                 while (p--)
-                    closeViewer(_viewers[keys[p]]);                    
+                    closeViewer(_viewers[keys[p]]);
                 $closeWindow = true;
                 remote.getCurrentWindow().close();
             });
@@ -951,6 +956,9 @@
         //menubar.enabled = true;
     });
 
+    ipcRenderer.on('reload-options', () => {
+        loadOptions();
+    });
 </script>
 
 </html>
