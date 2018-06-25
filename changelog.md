@@ -3,7 +3,7 @@
 ## 0.4.50
 
 - **New:**
-  - Log viewer, display your logs as if from the mud, supports html, raw ansi, and text files
+  - Log viewer: display your logs as if from the mud, supports html, raw ansi, and text files
   - Code Editor:
     - Add upload and upload as system
     - Add open remote
