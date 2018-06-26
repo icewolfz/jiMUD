@@ -6138,12 +6138,15 @@
         });
         if (file === undefined)
             return false;
-        panel.editor.file = file;
+        let old = panel.editor.file;
         if (!panel.editor.canSaveAs())
             return false;
+        panel.editor.file = file;
         manager.setPanelTooltip(panel.editor.file, panel);
         manager.setPanelTitle(panel.editor.filename, panel);
         panel.editor.save();
+        delete _editors[old];
+        _editors[file] = panel;
         if (manager.active && manager.active.editor)
             manager.active.editor.focus();
         return true;
