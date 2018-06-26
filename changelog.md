@@ -3,7 +3,7 @@
 ## 0.4.52 2018-06-25
 
 - **Changed:**
-  - Code editor: change how commands are formated following a }
+  - Code editor: change how commas are formated following a }
 - **Fixed:**
   - Code editor:
     - Virtual editor did not update terrains when raw terrains map is edited
