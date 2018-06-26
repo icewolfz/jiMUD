@@ -1515,7 +1515,7 @@ export class LPCFormatter extends EventEmitter {
                     }
                     else if (s !== t) {
                         if (tokenLine[t].type === FormatTokenType.comma || tokenLine[t].type === FormatTokenType.semicolon)
-                            op = op.rtrim();
+                            op = op.trimRight();
                         else if (tokenLine[t].type === FormatTokenType.operatorBase) {
                             t3 = t - 1;
                             while (t3 >= 0 && tokenLine[t3].type === FormatTokenType.whitespace) {
@@ -1562,8 +1562,7 @@ export class LPCFormatter extends EventEmitter {
                             op = op.rtrim();
                             op += ' ';
                         }
-                        else if (tokenLine[t].type === FormatTokenType.parenRparen)
-                        {
+                        else if (tokenLine[t].type === FormatTokenType.parenRparen) {
                             t3 = t - 1;
                             while (t3 >= 0 && tokenLine[t3].type === FormatTokenType.whitespace) {
                                 t3--;
@@ -1578,7 +1577,9 @@ export class LPCFormatter extends EventEmitter {
                                 op = op.rtrim();
                         }
                     }
-                    if (tokenLine[t].type === FormatTokenType.newline)
+                    if (tokenLine[t].type === FormatTokenType.comma)
+                        op = op.trimRight();
+                    else if (tokenLine[t].type === FormatTokenType.newline)
                         op = op.rtrim();
                     if (tokenLine[t].type === FormatTokenType.parenRbrace && s !== t && !op.rtrim().endsWith('\n'))
                         op += '\n' + leading;
@@ -1651,9 +1652,9 @@ export class LPCFormatter extends EventEmitter {
                                         }
                                     }
                                     else if (tokenLine[t].value === '--' || tokenLine[t].value === '++')
-                                        op = op.rtrim();
+                                        op = op.trimRight();
                                     else {
-                                        op = op.rtrim();
+                                        op = op.trimRight();
                                         op += ' ';
                                     }
                                 }
