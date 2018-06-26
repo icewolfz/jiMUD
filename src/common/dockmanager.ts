@@ -515,7 +515,6 @@ export class DockManager extends EventEmitter {
 
     public dock(panel, dock, active?) {
         const oDock = panel.dock;
-        const oIndex = oDock.panels.indexOf(panel);
         oDock.removePanel(panel, true);
         dock.addPanels([panel]);
         const nIndex = dock.panels.indexOf(panel);
@@ -802,7 +801,7 @@ export class DockPane extends EventEmitter {
             this.panels[t].title.style.maxWidth = `${w - 22}px`;
         }
 
-        if (this.$tabstrip.scrollWidth > this.$parent.clientWidth)
+        if (this.$tabstrip.scrollWidth > this.$el.clientWidth)
             this.$tabstrip.classList.add('scroll');
         else
             this.$tabstrip.classList.remove('scroll');
