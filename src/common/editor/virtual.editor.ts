@@ -3946,9 +3946,9 @@ export class VirtualEditor extends EditorBase {
         this.$view = view;
         switch (this.$view) {
             case View.map:
-                if (this.$terrainRaw.dataset.dirty === 'true') {
+                if (this.$descriptionRaw.dataset.dirty === 'true') {
                     this.loadDescriptions();
-                    this.$terrainRaw.dataset.dirty = null;
+                    this.$descriptionRaw.dataset.dirty = null;
                     this.doUpdate(UpdateType.drawMap);
                 }
                 if (this.$itemRaw.dataset.dirty === 'true') {
@@ -3960,12 +3960,14 @@ export class VirtualEditor extends EditorBase {
                     this.$externalRaw.dataset.dirty = null;
                     this.doUpdate(UpdateType.drawMap);
                 }
-                if (this.$mapRaw.dataset.dirty === 'true') {
+                if (this.$terrainRaw.dataset.dirty === 'true' || this.$mapRaw.dataset.dirty === 'true') {
                     this.BuildRooms();
                     this.BuildMap();
-                    this.$mapRaw.dataset.dirty = null;
                     this.doUpdate(UpdateType.drawMap);
+                    this.$mapRaw.dataset.dirty = null;
+                    this.$terrainRaw.dataset.dirty = null;
                 }
+                this.UpdateEditor(this.$selectedRoom);
                 this.UpdatePreview(this.$selectedRoom);
                 this.$label.style.display = 'none';
                 this.$splitterEditor.show();
@@ -5352,6 +5354,7 @@ export class VirtualEditor extends EditorBase {
                 lines[y] = line.join(' ');
                 this.$stateRaw.value = lines.join('\n');
                 c++;
+                this.$stateRaw.dataset.changed = 'true';
             }
         }
         else {
@@ -5383,6 +5386,7 @@ export class VirtualEditor extends EditorBase {
                 lines[y] = line.join(' ');
                 this.$terrainRaw.value = lines.join('\n');
                 c++;
+                this.$terrainRaw.dataset.changed = 'true';
             }
         }
         else {

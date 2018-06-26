@@ -2,6 +2,12 @@
 
 ## 0.4.52 2018-06-25
 
+- **Fixed:**
+  - Code editor:
+    - Virtual editor did not update terrains when raw terrains map is edited
+    - Virtual editor did not update descriptions when raw file was edited
+    - Virtual editor did not save changes to terrain or state files when changed from the visual map
+
 ## 0.4.51 2018-06-25
 
 - **Fixed:**
