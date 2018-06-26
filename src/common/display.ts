@@ -324,6 +324,10 @@ export class Display extends EventEmitter {
 
         this._view = document.createElement('div');
         this._view.id = this._el.id + '-view';
+        this._view.setAttribute('aria-live', 'polite');
+        this._view.setAttribute('aria-atomic', 'false');
+        this._view.setAttribute('role', 'log');
+        this._view.setAttribute('aria-relevant', 'additions');
         fragment.appendChild(this._view);
         this._el.appendChild(fragment);
 
