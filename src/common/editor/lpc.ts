@@ -1803,7 +1803,7 @@ export class LPCFormatter extends EventEmitter {
                         }
                     }
                 }
-                if (mblock === tokenLine[t].value)
+                if (t === s && mblock === tokenLine[t].value && t + 1 < tll && tokens[tp][t + 1].value === ';')
                     mblock = 0;
                 t = e;
                 t++;
