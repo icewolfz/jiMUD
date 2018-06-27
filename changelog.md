@@ -12,6 +12,7 @@
     - Fix issue when split view and scrolling tabs not correctly setting scroll width
     - String blocks where not correctly terminated and formated text in side
     - Save file as would not correctly clear the previous file name data
+    - Would open files sent from immortal tools always in remote edit more if code editor is not already open
 
 ## 0.4.51 2018-06-25
 

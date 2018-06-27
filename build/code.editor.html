@@ -3719,13 +3719,13 @@
         if (_open) {
             if (options.opened.length && Array.isArray(options.opened[0])) {
                 manager.layout = options.layout;
-                options.opened[0] = options.opened[0].concat(_open.map((l) => { return { file: l[0], remote: l[1], remoteEdit: [2] }; }));
+                options.opened[0] = options.opened[0].concat(_open.map((l) => { return { file: l[0], remote: l[1], remoteEdit: l[2] }; }));
                 let l = options.opened.length;
                 while (l--)
                     openFiles(options.opened[l], false, manager.panes[l]);
             }
             else
-                openFiles(options.opened.concat(_open.map((l) => { return { file: l[0], remote: l[1], remoteEdit: [2] }; })));
+                openFiles(options.opened.concat(_open.map((l) => { return { file: l[0], remote: l[1], remoteEdit: l[2] }; })));
             _open = 0;
         }
         else if (options.opened.length && Array.isArray(options.opened[0])) {
