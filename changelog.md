@@ -3,7 +3,9 @@
 ## 0.4.52
 
 - **New:**
-  - Code editor: Virtual area editor now supports multi room selection by clicking and dragging mouse to form a selection box, all rooms inside the box will be selected or by clicking one room then shift click in a 2nd one and all rooms that form a rectangle using the 2 rooms as corners will be selected.
+  - Code editor:
+    -Virtual area editor now supports multi room selection by clicking and dragging mouse to form a selection box, all rooms inside the box will be selected or by clicking one room then shift click in a 2nd one and all rooms that form a rectangle using the 2 rooms as corners will be selected.
+    - Unused terrains in the description editor will have thier index # in bolded in red
 - **Changed:**
   - Code editor:
     - Change how commas are formated following a }

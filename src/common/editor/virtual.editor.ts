@@ -507,7 +507,24 @@ export class VirtualEditor extends EditorBase {
                 label: 'Index',
                 field: 'idx',
                 width: 50,
-                readonly: true
+                readonly: true,
+                styleFormatter: (e) => {
+                    let c = false;
+                    const zl = this.$mapSize.depth;
+                    const yl = this.$mapSize.height;
+                    const xl = this.$mapSize.width;
+                    rooms:
+                    for (let z = 0; z < zl; z++)
+                        for (let y = 0; y < yl; y++)
+                            for (let x = 0; x < xl; x++) {
+                                if (this.$rooms[z][y][x].terrain === e.dataIndex) {
+                                    c = true;
+                                    break rooms;
+                                }
+                            }
+                    if (!c)
+                        e.cell.classList.add('cell-unused-terrain');
+                }
             },
             {
                 label: 'Short',
@@ -1975,6 +1992,7 @@ export class VirtualEditor extends EditorBase {
                             sR.exits = 0;
                             sR.terrain = 0;
                             sR.item = 0;
+                            this.$terrainGrid.refresh();
                         }
                         if (!e.ctrlKey && sR.ee !== RoomExit.None) {
                             let nExternal = this.$exits.filter(ex => ex.x !== or.x || ex.y !== or.y || ex.z !== or.z);
@@ -2384,6 +2402,7 @@ export class VirtualEditor extends EditorBase {
                         if (this.$selectedRooms[sl].item === this.$selectedRooms[sl].terrain)
                             this.$selectedRooms[sl].item++;
                         this.$selectedRooms[sl].terrain++;
+                        this.$terrainGrid.refresh();
                         this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
                         this.RoomChanged(this.$selectedRooms[sl], or);
                     }
@@ -2402,6 +2421,7 @@ export class VirtualEditor extends EditorBase {
                         this.$selectedRooms[sl].terrain--;
                         if (this.$selectedRooms[sl].terrain < 0)
                             this.$selectedRooms[sl].terrain = 0;
+                        this.$terrainGrid.refresh();
                         this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
                         this.RoomChanged(this.$selectedRooms[sl], or);
                     }
@@ -6413,6 +6433,7 @@ export class VirtualEditor extends EditorBase {
         }
         Timer.end('BuildRooms time');
         this.updateStatus();
+        this.$terrainGrid.refresh();
     }
 
     private BuildMap() {

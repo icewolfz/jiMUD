@@ -195,7 +195,7 @@ The room editor allows you to editor the currently selected room, if more then o
 
 Allows you to edit, add or delete terrain descriptions
 
-- `Index` read-only index of the description, used to tie terrains to rooms
+- `Index` read-only index of the description, used to tie terrains to rooms, unused descriptions will have red indexes
 - `Short` The rooms short description which is a single line of text
 - `Light` The amount of light for a room
 - `Terrain` The terrain for the room, 0 or empty value is considered no terrain set
