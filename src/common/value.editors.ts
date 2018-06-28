@@ -116,7 +116,6 @@ export class TextValueEditor extends ValueEditor {
                 start: this.$editor.selectionStart,
                 end: this.$editor.selectionEnd
             };
-            const initialLength = this.$editor.value.length;
             window.setTimeout(() => {
                 this.$editor.value = this.$editor.value.replace(/(?:\r\n|\r|\n)/g, '');
                 this.$editor.selectionStart = sel.start;

@@ -25,6 +25,7 @@
     - String blocks where not correctly terminated and formated text in side
     - Save file as would not correctly clear the previous file name data
     - Would open files sent from immortal tools always in remote edit more if code editor is not already open
+    - Fix context menus for data grid editors
 
 ## 0.4.51 2018-06-25
 
