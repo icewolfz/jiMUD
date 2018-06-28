@@ -3485,6 +3485,7 @@ export class VirtualEditor extends EditorBase {
     public selectAll() {
         switch (this.$view) {
             case View.map:
+                this.setSelection(0, 0, this.$mapSize.width, this.$mapSize.height);
                 break;
             case View.terrains:
                 this.$terrainGrid.selectAll();
@@ -3526,8 +3527,17 @@ export class VirtualEditor extends EditorBase {
                     return n;
                 });
                 if (rooms.length === 0) return;
+                const details = {};
+                rooms.forEach(r =>
+                    details[r.item] = {
+                        items: this.$items[r.item],
+                        description: r.terrain >= 0 && r.terrain < this.$descriptions.length ? this.$descriptions[r.terrain] : null
+                    }
+                );
                 clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
-                    rooms: rooms
+                    rooms: rooms,
+                    details: details,
+                    file: this.file
                 })));
                 let sl = this.$selectedRooms.length;
                 while (sl--) {
@@ -3582,8 +3592,17 @@ export class VirtualEditor extends EditorBase {
                     return n;
                 });
                 if (rooms.length === 0) return;
+                const details = {};
+                rooms.forEach(r =>
+                    details[r.item] = {
+                        items: this.$items[r.item],
+                        description: r.terrain >= 0 && r.terrain < this.$descriptions.length ? this.$descriptions[r.terrain] : null
+                    }
+                );
                 clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
-                    rooms: rooms
+                    rooms: rooms,
+                    details: details,
+                    file: this.file
                 })));
                 this.emit('supports-changed');
                 break;
@@ -3852,6 +3871,8 @@ export class VirtualEditor extends EditorBase {
             case 'menu|view':
             case 'upload':
             case 'upload-as':
+            case 'selectall':
+            case 'select-all':
                 return true;
             case 'cut':
             case 'copy':
@@ -3898,9 +3919,6 @@ export class VirtualEditor extends EditorBase {
                         return true;
                 }
                 return false;
-            case 'selectall':
-            case 'select-all':
-                return this.$view === View.exits || this.$view === View.items || this.$view === View.terrains || this.$view === View.mapRaw || this.$view === View.terrainsRaw || this.$view === View.descriptionsRaw || this.$view === View.itemsRaw || this.$view === View.stateRaw || this.$view === View.exitsRaw;
             case 'undo':
             case 'redo':
                 return this.$view === View.mapRaw || this.$view === View.terrainsRaw || this.$view === View.descriptionsRaw || this.$view === View.itemsRaw || this.$view === View.stateRaw || this.$view === View.exitsRaw;
