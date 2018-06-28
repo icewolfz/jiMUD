@@ -2002,7 +2002,9 @@
     var manager = new DockManager();
     var dock = $(".dock-manager");
     manager.hideTabstrip = false;
-    manager.on('add', () => {
+    manager.on('add', (e, pane) => {
+        if(e.panel && e.panel.editor)
+            e.panel.editor.resize();
     });
     manager.on('add-pane', (idx, pane) => {
         var el = document.createElement('div');
@@ -2031,6 +2033,15 @@
         });
         initEditor(editor);
         window.$dEditors.splice(idx, 0, editor);
+
+        var keys = Object.keys(_editors);
+        var k = keys.length;
+        var p;
+        while (k--) {
+            p = keys[k];
+            if (!_editors[p]) continue;
+            _editors[p].editor.resize();
+        }
     });
     manager.on('destroy-pane', (idx) => {
         window.$editors[idx].dispose();
@@ -2039,6 +2050,14 @@
         window.$dEditors.splice(idx, 1);
         if (idx === 0)
             window.$editor = window.$editors[0];
+            var keys = Object.keys(_editors);
+        var k = keys.length;
+        var p;
+        while (k--) {
+            p = keys[k];
+            if (!_editors[p]) continue;
+            _editors[p].editor.resize();
+        }            
     });
     manager.on('tab-moved', (e) => {
         if (e.panel && e.panel.editor)
@@ -7105,6 +7124,7 @@
         if (add) {
             manager.addPanels([p], dock);
             doUpdate(1);
+            p.editor.resize();
             p.editor.focus();
         }
         return p;

@@ -2,13 +2,21 @@
 
 ## 0.4.52 2018-06-25
 
+- **New:**
+  - Code editor: Virtual area editor now supports multi room selection by clicking and dragging mouse to form a selection box, all rooms inside the box will be selected or by clicking one room then shift click in a 2nd one and all rooms that form a rectangle using the 2 rooms as corners will be selected.
 - **Changed:**
-  - Code editor: change how commas are formated following a }
+  - Code editor:
+    - Change how commas are formated following a }
+    - When deleting a room it will now set terrain and item indexes to 0
 - **Fixed:**
   - Code editor:
-    - Virtual editor did not update terrains when raw terrains map is edited
-    - Virtual editor did not update descriptions when raw file was edited
-    - Virtual editor did not save changes to terrain or state files when changed from the visual map
+    - Virtual area editor
+      - Did not update terrains when raw terrains map is edited
+      - Did not update descriptions when raw file was edited
+      - Did not save changes to terrain or state files when changed from the visual map
+      - Reverting map did not refresh the visual map
+      - Fix x axis numbers not being displayed correctly
+      - Correctly highlight row or column of rooms when map has been scrolled
     - Fix issue when split view and scrolling tabs not correctly setting scroll width
     - String blocks where not correctly terminated and formated text in side
     - Save file as would not correctly clear the previous file name data
@@ -23,7 +31,7 @@
 
 - **New:**
   - Log viewer: display your logs as if from the mud, supports html, raw ansi, and text files
-  - Code Editor:
+  - Code editor:
     - Add upload and upload as system
     - Add open remote
     - Drag and drop local or remote files from immortal tools
@@ -59,7 +67,7 @@
 ## 0.4.49 2018-06-17
 
 - **New:**
-  - Code Editor:
+  - Code editor:
     - Add a remote caching system to save remote paths and data for local files, allowing diff remote/debug systems to work with out having to ask for remote path every time
       - Clear remote caching from preferences dialog or remove all files from %appdata%\jiMUD\editor
     - Performance tweaks and fixes
@@ -75,14 +83,14 @@
   - Immortal tools: Error dialogs should appear for all non upload and download errors, as upload and download errors will appear in the queue list next to the item that caused the error
   - Backup: more debugging output
 - **Changed:**
-  - Code Editor:
+  - Code editor:
     - Changed formatting rule for semicolon (;), no long can be on a line alone, mostly happened when following a catch or time_expression block
     - Change how catch is formatted, before it used to be put on its own line, it is now treated more like a function, as catch acts more as a function then a keyword
     - Changed how {} are formatted after catch, leave { on the same line as catch as catch is treated more like a function
     - Moved diff clear, diff local, and diff original into a new sub menu folder to help cleanup file menu
   - Immortal tools: prefix all immortal tool remote commands with a unique prefix to allow it to know what commands it has sent compared to other window operations
 - **Fixed:**
-  - Code Editor:
+  - Code editor:
     - Fixed empty editor on first load if no files opened
     - New area dialog now properly disables menu bar when open
     - Fixed formatting of 'char' blocks, most noticeable when '' wrapped a none alpha numeric character
@@ -104,14 +112,14 @@
 - **New:**
   - Add a limit to how many times to try to auto login in a row
   - Do not attempt to login using character name if ShadowMUD says it does not exist
-  - Code Editor:
+  - Code editor:
     - Diff file with original if changed or local file
   - Immortal tools:
     - Compressed dir systems to allow receiving of compressed dir file list to send data for larger folders faster
     - Dir performance tweaks to improve loading and changing directory speeds
 - **Fixed:**
   - Backup: map file was not correctly updating when new character was loaded when connected to mud
-  - Code Editor:
+  - Code editor:
     - Fix output window display
     - Fix dock change asking to save new files
     - Fix file save cancel
@@ -126,13 +134,13 @@
 ## 0.4.47 2018-06-03
 
 - **New:**
-  - Code Editor:
+  - Code editor:
     - Code complete for ShadowMUD inheritable files, simple begin to type inherit and it will suggest a list of predefined inherits
     - Drag and drop reorder opened files
     - Drag and drop side by side viewing for up to 3 files at once with ability to resize each splitter area.
   - Backup: add debug output when doing client save
 - **Fixed:**
-  - Code Editor:
+  - Code editor:
     - Editor did not correctly resize when output window resized
     - Formatting :: directly after a (: was incorrect
   - Mapper:

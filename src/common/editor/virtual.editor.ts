@@ -4,6 +4,7 @@ import { PropertyGrid } from './../propertygrid';
 import { EditorType, ValueEditor } from './../value.editors';
 import { DataGrid } from './../datagrid';
 import { existsSync, capitalize, wordwrap, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
+const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
 const path = require('path');
@@ -26,7 +27,7 @@ declare global {
     }
 }
 
-export enum UpdateType { none = 0, drawMap = 1, buildRooms = 2, buildMap = 4 }
+export enum UpdateType { none = 0, drawMap = 1, buildRooms = 2, buildMap = 4, resize = 8 }
 
 export enum DescriptionOnDelete { leave = 0, end = 1, endPlusOne = 2, start = 3 }
 export enum ItemOnDelete { leave = 0, end = 1 }
@@ -90,6 +91,7 @@ export class Room {
     public state = 0;
     public ef = false;
     public climbs = 0;
+    public external = null;
 
     constructor(x, y, z, e, t, i, s?) {
         e = +e;
@@ -191,6 +193,7 @@ export class VirtualEditor extends EditorBase {
     private $terrainGrid: DataGrid;
     private $itemGrid: DataGrid;
     private $exitGrid: DataGrid;
+    private _lastMouse: MouseEvent;
 
     private $startValues: any = {};
 
@@ -207,6 +210,13 @@ export class VirtualEditor extends EditorBase {
 
     private $focused: boolean;
     private _updating;
+    private _os;
+    private _wMove;
+    private _wUp;
+    private _scrollTimer: NodeJS.Timer;
+    private $resizer;
+    private $resizerCache;
+    private $observer: MutationObserver;
 
     private $mapSize;
 
@@ -233,6 +243,7 @@ export class VirtualEditor extends EditorBase {
         ry: 0,
         button: 0
     };
+    private $mouseSelect;
 
     private $colorCache;
     private $measure;
@@ -241,7 +252,9 @@ export class VirtualEditor extends EditorBase {
     private $rcount;
     private $depthToolbar: HTMLInputElement;
 
-    private $selectedRoom: Room;
+    private $selectedRooms: Room[] = [];
+    private $focusedRoom: Room;
+    private $shiftRoom: Room;
     private $showTerrain: boolean = false;
     private $showColors: boolean = false;
 
@@ -250,6 +263,22 @@ export class VirtualEditor extends EditorBase {
     private $exits;
     private $roomPreview;
     private $roomEditor;
+
+    public get selectedRoom(): Room {
+        if (this.$selectedRooms.length === 0)
+            return null;
+        return this.$selectedRooms[0];
+    }
+
+    public get selectedFocusedRoom(): Room {
+        if (this.$selectedRooms.length === 0 || this.$selectedRooms.indexOf(this.$focusedRoom) === -1)
+            return this.selectedRoom;
+        return this.$focusedRoom;
+    }
+
+    public get selectedRooms() {
+        return this.$selectedRooms;
+    }
 
     public descriptionOnDelete: DescriptionOnDelete = DescriptionOnDelete.endPlusOne;
     public itemOnDelete: ItemOnDelete = ItemOnDelete.end;
@@ -288,10 +317,6 @@ export class VirtualEditor extends EditorBase {
         }
         this.doUpdate(UpdateType.drawMap);
         this.emit('option-changed', 'showColors', value);
-    }
-
-    public get SelectedRoom(): Room {
-        return this.$selectedRoom;
     }
 
     public get maxLevel() {
@@ -401,16 +426,30 @@ export class VirtualEditor extends EditorBase {
             if (this.$depthToolbar.value === '' + this.$depth)
                 return;
             this.$depth = +this.$depthToolbar.value;
-            if (this.$selectedRoom)
-                this.ChangeSelection(this.getRoom(this.$selectedRoom.x, this.$selectedRoom.y, this.$depth));
+            if (this.$selectedRooms.length > 0) {
+                const old = this.$selectedRooms.slice();
+                let ol = old.length;
+                this.$selectedRooms.length = 0;
+                while (ol--)
+                    this.$selectedRooms.push(this.getRoom(old[ol].x, old[ol].y, this.$depth));
+                this.ChangeSelection();
+                this.setFocusedRoom(null);
+            }
             this.doUpdate(UpdateType.drawMap);
         });
         this.$depthToolbar.addEventListener('input', (e) => {
             if (this.$depthToolbar.value === '' + this.$depth)
                 return;
             this.$depth = +this.$depthToolbar.value;
-            if (this.$selectedRoom)
-                this.ChangeSelection(this.getRoom(this.$selectedRoom.x, this.$selectedRoom.y, this.$depth));
+            if (this.$selectedRooms.length > 0) {
+                const old = this.$selectedRooms.slice();
+                let ol = old.length;
+                this.$selectedRooms.length = 0;
+                while (ol--)
+                    this.$selectedRooms.push(this.getRoom(old[ol].x, old[ol].y, this.$depth));
+                this.ChangeSelection();
+                this.setFocusedRoom(null);
+            }
             this.doUpdate(UpdateType.drawMap);
         });
         if (!window.$roomImg) {
@@ -1161,12 +1200,12 @@ export class VirtualEditor extends EditorBase {
                 r = this.getRoom(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z);
                 r.ee &= ~RoomExits[this.$exits[d[dl]].exit];
                 this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
-                if (this.$selectedRoom && this.$selectedRoom.at(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z))
+                if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z))
                     sr = true;
             }
             if (sr) {
-                this.UpdateEditor(this.$selectedRoom);
-                this.UpdatePreview(this.$selectedRoom);
+                this.UpdateEditor(this.selectedFocusedRoom);
+                this.UpdatePreview(this.selectedFocusedRoom);
             }
             resetCursor(this.$externalRaw);
             this.emit('supports-changed');
@@ -1197,12 +1236,12 @@ export class VirtualEditor extends EditorBase {
                 r = this.getRoom(exit.x, exit.y, exit.z);
                 r.ee |= RoomExits[exit.exit];
                 this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
-                if (this.$selectedRoom && this.$selectedRoom.at(exit.x, exit.y, exit.z))
+                if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(exit.x, exit.y, exit.z))
                     sr = true;
             }
             if (sr) {
-                this.UpdateEditor(this.$selectedRoom);
-                this.UpdatePreview(this.$selectedRoom);
+                this.UpdateEditor(this.selectedFocusedRoom);
+                this.UpdatePreview(this.selectedFocusedRoom);
             }
         });
         this.$exitGrid.on('delete', (e) => {
@@ -1235,12 +1274,12 @@ export class VirtualEditor extends EditorBase {
                     r = this.getRoom(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z);
                     r.ee &= ~RoomExits[this.$exits[d[dl]].exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
-                    if (this.$selectedRoom && this.$selectedRoom.at(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z))
+                    if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z))
                         sr = true;
                 }
                 if (sr) {
-                    this.UpdateEditor(this.$selectedRoom);
-                    this.UpdatePreview(this.$selectedRoom);
+                    this.UpdateEditor(this.selectedFocusedRoom);
+                    this.UpdatePreview(this.selectedFocusedRoom);
                 }
                 resetCursor(this.$externalRaw);
             }
@@ -1293,9 +1332,9 @@ export class VirtualEditor extends EditorBase {
                 if (!r.ef) {
                     r.ee &= ~RoomExits[oldValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
-                    if (this.$selectedRoom && this.$selectedRoom.at(oldValue.x, oldValue.y, oldValue.z)) {
-                        this.UpdateEditor(this.$selectedRoom);
-                        this.UpdatePreview(this.$selectedRoom);
+                    if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(oldValue.x, oldValue.y, oldValue.z)) {
+                        this.UpdateEditor(this.selectedFocusedRoom);
+                        this.UpdatePreview(this.selectedFocusedRoom);
                     }
                 }
             }
@@ -1305,9 +1344,9 @@ export class VirtualEditor extends EditorBase {
                 if (!r.ef) {
                     r.ee |= RoomExits[newValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
-                    if (this.$selectedRoom && this.$selectedRoom.at(newValue.x, newValue.y, newValue.z)) {
-                        this.UpdateEditor(this.$selectedRoom);
-                        this.UpdatePreview(this.$selectedRoom);
+                    if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(newValue.x, newValue.y, newValue.z)) {
+                        this.UpdateEditor(this.selectedFocusedRoom);
+                        this.UpdatePreview(this.selectedFocusedRoom);
                     }
                 }
             }
@@ -1390,40 +1429,121 @@ export class VirtualEditor extends EditorBase {
         this.$map.height = 290;
         this.$map.width = 290;
         this.$map.tabIndex = 1;
-        this.$map.addEventListener('mousemove', (e: MouseEvent) => {
+
+        this._wMove = (e) => {
             this.$mousePrevious = this.$mouse;
-            this.$mouse = this.getMousePos(e);
-            const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
-            const p = this.getRoom(this.$mousePrevious.rx, this.$mousePrevious.ry);
-            if (r !== p) {
-                if (p) this.DrawRoom(this.$mapContext, p, true, false);
-                if (r) this.DrawRoom(this.$mapContext, r, true, true);
+            this._lastMouse = e;
+            this.$mouse = this.getMousePosFromWindow(e);
+            if (this.$mouseSelect) {
+                this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mousePrevious.x - this.$mouseDown.x, this.$mousePrevious.y - this.$mouseDown.y);
+                this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mouse.x - this.$mouseDown.x, this.$mouse.y - this.$mouseDown.y, true);
             }
-            this.emit('location-changed', this.$mouse.rx, this.$mouse.ry);
-            e.preventDefault();
-            return false;
-        });
+            else {
+                const x = this._os.left;
+                const y = this._os.top;
+                if (e.clientX >= x && e.clientX <= this.$mapContainer.clientWidth + x && e.clientY >= y && e.clientY <= this.$mapContainer.clientHeight + y) {
+                    const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+                    const p = this.getRoom(this.$mousePrevious.rx, this.$mousePrevious.ry);
+                    if (r !== p) {
+                        if (p) this.DrawRoom(this.$mapContext, p, true, false);
+                        if (r) this.DrawRoom(this.$mapContext, r, true, true);
+                    }
+                }
+                else {
+                    const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+                    const p = this.getRoom(this.$mousePrevious.rx, this.$mousePrevious.ry);
+                    if (r !== p) {
+                        if (p) this.DrawRoom(this.$mapContext, p, true);
+                        if (r) this.DrawRoom(this.$mapContext, r, true);
+                    }
+                }
+                this.emit('location-changed', this.$mouse.rx, this.$mouse.ry);
+                e.preventDefault();
+                return false;
+            }
+        };
+
+        this._wUp = (e) => {
+            this._lastMouse = e;
+            this.$mouse = this.getMousePosFromWindow(e);
+            if ((this.$focusedRoom || this.$selectedRooms.length > 0) && e.shiftKey) {
+                let x;
+                let y;
+                let height;
+                let width;
+                if (this.$focusedRoom) {
+                    x = (Math.min(this.$mouseDown.x, this.$focusedRoom.x * 32) / 32) >> 0;
+                    y = (Math.min(this.$mouseDown.y, this.$focusedRoom.y * 32) / 32) >> 0;
+                    width = Math.ceil(Math.max(this.$mouseDown.x, (this.$focusedRoom.x * 32) + 17) / 32);
+                    height = Math.ceil(Math.max(this.$mouseDown.y, (this.$focusedRoom.y * 32) + 17) / 32);
+                }
+                else {
+                    x = (Math.min(this.$mouseDown.x, this.selectedRoom.x * 32) / 32) >> 0;
+                    y = (Math.min(this.$mouseDown.y, this.selectedRoom.y * 32) / 32) >> 0;
+                    width = Math.ceil(Math.max(this.$mouseDown.x, (this.selectedRoom.x * 32) + 17) / 32);
+                    height = Math.ceil(Math.max(this.$mouseDown.y, (this.selectedRoom.y * 32) + 17) / 32);
+                    this.setFocusedRoom(this.selectedRoom);
+                }
+                this.setSelection(x, y, width, height);
+                this.$mouseSelect = false;
+            }
+            else if (this.$mouseSelect) {
+                this.$mouseSelect = false;
+                this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mousePrevious.x - this.$mouseDown.x, this.$mousePrevious.y - this.$mouseDown.y);
+                this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mouse.x - this.$mouseDown.x, this.$mouse.y - this.$mouseDown.y);
+                const x = Math.min(this.$mouseDown.rx, this.$mouse.rx);
+                const y = Math.min(this.$mouseDown.ry, this.$mouse.ry);
+                const width = Math.ceil(Math.max(this.$mouseDown.x, this.$mouse.x) / 32);
+                const height = Math.ceil(Math.max(this.$mouseDown.y, this.$mouse.y) / 32);
+                this.setSelection(x, y, width, height);
+                if (this.$selectedRooms.length !== 0)
+                    this.setFocusedRoom(this.$selectedRooms[this.$selectedRooms.length - 1]);
+                else
+                    this.setFocusedRoom(this.$mouse.rx, this.$mouse.ry);
+            }
+            else {
+                const x = this._os.left;
+                const y = this._os.top;
+                if (e.clientX >= x && e.clientX <= this.$mapContainer.clientWidth + x && e.clientY >= y && e.clientY <= this.$mapContainer.clientHeight + y) {
+                    if (this.$mouse.rx === this.$mouseDown.rx && this.$mouse.ry === this.$mouseDown.ry) {
+                        const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+                        if (this.$selectedRooms.indexOf(r) !== -1) return;
+                        const old = this.$selectedRooms.slice();
+                        this.$selectedRooms.length = 0;
+                        let ol = old.length;
+                        while (ol--)
+                            this.DrawRoom(this.$mapContext, old[ol], true);
+                        if (r) {
+                            this.$selectedRooms.push(r);
+                            this.ChangeSelection();
+                            this.DrawRoom(this.$mapContext, r, true, true);
+                        }
+                    }
+                    this.setFocusedRoom(this.$mouse.rx, this.$mouse.ry);
+                }
+                if (this._scrollTimer) {
+                    clearInterval(this._scrollTimer);
+                    this._scrollTimer = null;
+                }
+            }
+        };
+        window.addEventListener('mousemove', this._wMove.bind(this));
+        window.addEventListener('mouseup', this._wUp.bind(this));
         this.$map.addEventListener('mousedown', (e) => {
             this.$mouse = this.getMousePos(e);
             this.$mouseDown = this.getMousePos(e);
-        });
-        this.$map.addEventListener('mouseup', (e) => {
-            this.$mouse = this.getMousePos(e);
-            if (this.$mouse.rx === this.$mouseDown.rx && this.$mouse.ry === this.$mouseDown.ry) {
-                const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
-                const p = this.$selectedRoom;
-                if (r !== this.$selectedRoom)
-                    this.ChangeSelection(r);
-                if (p && r !== p) this.DrawRoom(this.$mapContext, p, true, false);
-                if (r) this.DrawRoom(this.$mapContext, r, true, true);
-            }
+            this.$mouseSelect = this.$mouseDown.button === 0;
         });
         this.$map.addEventListener('mouseenter', (e) => {
             this.$mouse = this.getMousePos(e);
             this.ClearPrevMouse();
             const p = this.getRoom(this.$mouse.rx, this.$mouse.ry);
             if (p) this.DrawRoom(this.$mapContext, p, true, true);
+            if (this.$mouseSelect)
+                this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mouse.x - this.$mouseDown.x, this.$mouse.y - this.$mouseDown.y, true);
             this.emit('location-changed', this.$mouse.rx, this.$mouse.ry);
+            clearInterval(this._scrollTimer);
+            this._scrollTimer = null;
         });
         this.$map.addEventListener('mouseleave', (e) => {
             this.ClearPrevMouse();
@@ -1432,11 +1552,57 @@ export class VirtualEditor extends EditorBase {
             this.$mouse = this.getMousePos(event);
             const p = this.getRoom(this.$mouse.rx, this.$mouse.ry);
             if (p) this.DrawRoom(this.$mapContext, p, true, false);
+            if (this.$mouseSelect)
+                this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mouse.x - this.$mouseDown.x, this.$mouse.y - this.$mouseDown.y, true);
             this.$mouse.x = -1;
             this.$mouse.y = -1;
             this.$mouse.rx = -1;
             this.$mouse.ry = -1;
             this.emit('location-changed', -1, -1);
+            if (this.$mouseSelect) {
+                this._lastMouse = e;
+                this._scrollTimer = setInterval(() => {
+                    /// pull as long as you can scroll either direction
+
+                    if (!this._lastMouse || !this.$mouseSelect) {
+                        clearInterval(this._scrollTimer);
+                        this._scrollTimer = null;
+                        return;
+                    }
+                    const os = this._os;
+                    let x = this._lastMouse.pageX - os.left;
+                    let y = this._lastMouse.pageY - os.top;
+
+                    if (y <= 0 && this.$mapContainer.scrollTop > 0) {
+                        y = -1 * 32;
+                    }
+                    else if (y >= this.$mapContainer.clientHeight && this.$mapContainer.scrollTop < this.$mapContainer.scrollHeight - this.$mapContainer.clientHeight) {
+                        y = 32;
+                    }
+                    else
+                        y = 0;
+
+                    if (x < 0 && this.$mapContainer.scrollLeft > 0) {
+                        x = -1 * 32;
+                    }
+                    else if (x >= this.$mapContainer.clientWidth && this.$mapContainer.scrollLeft < this.$mapContainer.scrollWidth - - this.$mapContainer.clientWidth) {
+                        x = 32;
+                    }
+                    else
+                        x = 0;
+
+                    if (x === 0 && y === 0)
+                        return;
+                    this.$mouse = this.getMousePosFromWindow(this._lastMouse);
+                    if (this.$mouseSelect) {
+                        this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mousePrevious.x - this.$mouseDown.x, this.$mousePrevious.y - this.$mouseDown.y);
+                        this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mouse.x - this.$mouseDown.x, this.$mouse.y - this.$mouseDown.y, true);
+                    }
+                    this.emit('selection-changed');
+                    this.$mapContainer.scrollTop += y;
+                    this.$mapContainer.scrollLeft += x;
+                }, 50);
+            }
         });
         this.$map.addEventListener('contextmenu', (e) => {
             if (e.defaultPrevented) return;
@@ -1485,6 +1651,7 @@ export class VirtualEditor extends EditorBase {
             }
             const ec = { room: o, preventDefault: false, size: this.$mapSize };
             this.emit('map-context-menu', ec);
+            this.setFocusedRoom(this.$mouse.rx, this.$mouse.ry);
             //if (e.preventDefault) return;
         });
         this.$map.addEventListener('dblclick', (e) => {
@@ -1551,20 +1718,22 @@ export class VirtualEditor extends EditorBase {
             let b;
             let t;
             let po;
-            let p = this.$selectedRoom;
+            let p = this.selectedFocusedRoom;
             let o = 0;
             let or;
             let s;
-            if (this.$selectedRoom)
-                or = this.$selectedRoom.clone();
-            if (!this.$selectedRoom) {
+            let sl;
+            let width;
+            let height;
+            if (!p) {
                 x = (32 - this.$mapContainer.scrollLeft) / 32;
                 y = (32 - this.$mapContainer.scrollTop) / 32;
             }
             else {
-                x = this.$selectedRoom.x;
-                y = this.$selectedRoom.y;
-                o = this.$selectedRoom.exits;
+                or = this.selectedFocusedRoom.clone();
+                x = this.selectedFocusedRoom.x;
+                y = this.selectedFocusedRoom.y;
+                o = this.selectedFocusedRoom.exits;
             }
             switch (e.which) {
                 case 67: //c copy
@@ -1580,372 +1749,518 @@ export class VirtualEditor extends EditorBase {
                         this.paste();
                     break;
                 case 38: //up
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y > 0 && !this.$selectedRoom.ef) {
+                    if (e.shiftKey) {
+                        let sf = this.$shiftRoom;
+                        let ef = this.$focusedRoom;
+                        if (!ef) {
+                            ef = this.getRoom(0, 0);
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        if (!sf) sf = ef;
+                        x = sf.x;
+                        y = sf.y;
+                        if (y > 0) {
+                            y--;
+                            s = 32 + (y - 2) * 32;
+                            if (s < this.$mapContainer.scrollTop)
+                                this.$mapContainer.scrollTop = 32 + (y - 2) * 32;
+                            sf = this.getRoom(x, y);
+                            x = Math.min(ef.x, sf.x);
+                            y = Math.min(ef.y, sf.y);
+                            width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                            height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                            this.setSelection(x, y, width, height);
+                            this.$map.focus();
+                            for (let u = x; u < width; u++)
+                                this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y + 1][u], true);
+                            for (let u = x; u < width; u++)
+                                this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y][u], true);
+                        }
+                        this.$shiftRoom = sf;
+                    }
+                    else if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                        this.setFocusedRoom(this.selectedRoom);
+                    }
+                    else if (y > 0) {
                         y--;
-                        this.ChangeSelection(this.getRoom(x, y));
-                        if (this.$selectedRoom)
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
-                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.setSelectedRooms(this.getRoom(x, y));
                         s = 32 + (y - 2) * 32;
                         if (s < this.$mapContainer.scrollTop)
                             this.$mapContainer.scrollTop = 32 + (y - 2) * 32;
                         this.$map.focus();
+                        this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
                     break;
                 case 40: //down
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y < this.$mapSize.height - 1 && !this.$selectedRoom.ef) {
+                    if (e.shiftKey) {
+                        let sf = this.$shiftRoom;
+                        let ef = this.$focusedRoom;
+                        if (!ef) {
+                            ef = this.getRoom(0, 0);
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        if (!sf) sf = ef;
+                        x = sf.x;
+                        y = sf.y;
+                        if (y < this.$mapSize.height - 1) {
+                            y++;
+                            s = 32 + (y - 2) * 32;
+                            t = ((this.$mapContainer.scrollTop) / 32) >> 0;
+                            b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
+                            if (y >= b)
+                                this.$mapContainer.scrollTop = this.$mapContainer.scrollTop + 32;
+                            sf = this.getRoom(x, y);
+                            x = Math.min(ef.x, sf.x);
+                            y = Math.min(ef.y, sf.y);
+                            width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                            height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                            this.setSelection(x, y, width, height);
+                            this.$map.focus();
+                            for (let u = x; u < width; u++)
+                                this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y - 1][u], true);
+                            for (let u = x; u < width; u++)
+                                this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y][u], true);
+                        }
+                        this.$shiftRoom = sf;
+                    }
+                    else if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                        this.setFocusedRoom(this.selectedRoom);
+                    }
+                    else if (y < this.$mapSize.height - 1) {
                         y++;
-                        this.ChangeSelection(this.getRoom(x, y));
-                        if (this.$selectedRoom)
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
-                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.setSelectedRooms(this.getRoom(x, y));
                         t = ((this.$mapContainer.scrollTop) / 32) >> 0;
                         b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
-                        if (this.$selectedRoom.y >= b)
+                        if (y >= b)
                             this.$mapContainer.scrollTop = this.$mapContainer.scrollTop + 32;
                         this.$map.focus();
+                        this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
                     break;
                 case 37: //left
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x > 0 && !this.$selectedRoom.ef) {
+                    if (e.shiftKey) {
+                        let sf = this.$shiftRoom;
+                        let ef = this.$focusedRoom;
+                        if (!ef) {
+                            ef = this.getRoom(0, 0);
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        if (!sf) sf = ef;
+                        x = sf.x;
+                        y = sf.y;
+                        if (x > 0) {
+                            x--;
+                            s = 32 + (x - 1) * 32;
+                            if (s < this.$mapContainer.scrollLeft)
+                                this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
+                            sf = this.getRoom(x, y);
+                            x = Math.min(ef.x, sf.x);
+                            y = Math.min(ef.y, sf.y);
+                            width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                            height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                            this.setSelection(x, y, width, height);
+                            this.$map.focus();
+                            for (let u = y; u < height; u++)
+                                this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][u][sf.x + 1], true);
+                            for (let u = y; u < height; u++)
+                                this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][u][sf.x], true);
+                        }
+                        this.$shiftRoom = sf;
+                    }
+                    else if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                        this.setFocusedRoom(this.selectedRoom);
+                    }
+                    else if (x > 0) {
                         x--;
-                        this.ChangeSelection(this.getRoom(x, y));
-                        if (this.$selectedRoom) this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
-                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.setSelectedRooms(this.getRoom(x, y));
                         s = 32 + (x - 1) * 32;
                         if (s < this.$mapContainer.scrollLeft)
                             this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
                         this.$map.focus();
+                        this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
                     break;
                 case 39: //right
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x < this.$mapSize.width - 1 && !this.$selectedRoom.ef) {
+                    if (e.shiftKey) {
+                        let sf = this.$shiftRoom;
+                        let ef = this.$focusedRoom;
+                        if (!ef) {
+                            ef = this.getRoom(0, 0);
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        if (!sf) sf = ef;
+                        x = sf.x;
+                        y = sf.y;
+                        if (x < this.$mapSize.width - 1) {
+                            x++;
+                            l = (this.$mapContainer.scrollLeft / 32) >> 0;
+                            r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
+                            if (x >= r)
+                                this.$mapContainer.scrollLeft = this.$mapContainer.scrollLeft + 32;
+                            sf = this.getRoom(x, y);
+                            x = Math.min(ef.x, sf.x);
+                            y = Math.min(ef.y, sf.y);
+                            width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                            height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                            this.setSelection(x, y, width, height);
+                            this.$map.focus();
+                            for (let u = y; u < height; u++)
+                                this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][u][sf.x - 1], true);
+                            for (let u = y; u < height; u++)
+                                this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][u][sf.x], true);
+                        }
+                        this.$shiftRoom = sf;
+                    }
+                    else if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                        this.setFocusedRoom(this.selectedRoom);
+                    }
+                    else if (x < this.$mapSize.width - 1) {
                         x++;
-                        this.ChangeSelection(this.getRoom(x, y));
-                        if (this.$selectedRoom)
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
-                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.setSelectedRooms(this.getRoom(x, y));
                         l = (this.$mapContainer.scrollLeft / 32) >> 0;
                         r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (this.$selectedRoom.x >= r)
+                        if (x >= r)
                             this.$mapContainer.scrollLeft = this.$mapContainer.scrollLeft + 32;
                         this.$map.focus();
+                        this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
                     break;
                 case 110:
                 case 46: //delete
-                    if (!this.$selectedRoom || this.$selectedRoom.ef)
+                    if (this.$selectedRooms.length === 0)
                         return;
-                    let nx = x;
-                    let ny = y;
-                    if (e.ctrlKey) {
-                        if (y > 0) {
-                            this.$selectedRoom.exits |= RoomExit.North;
+                    sl = this.$selectedRooms.length;
+                    while (sl--) {
+                        const sR = this.$selectedRooms[sl];
+                        if (sR.ef) continue;
+                        or = sR.clone();
+                        x = sR.x;
+                        y = sR.y;
+                        o = sR.exits;
+                        let nx = sR.x;
+                        let ny = sR.y;
+                        if (e.ctrlKey) {
+                            if (y > 0) {
+                                sR.exits |= RoomExit.North;
+                                if (x > 0)
+                                    sR.exits |= RoomExit.NorthWest;
+                                if (x < this.$mapSize.width - 1)
+                                    sR.exits |= RoomExit.NorthEast;
+                            }
+                            if (y < this.$mapSize.height - 1) {
+                                sR.exits |= RoomExit.South;
+                                if (x > 0)
+                                    sR.exits |= RoomExit.SouthWest;
+                                if (x < this.$mapSize.width - 1)
+                                    sR.exits |= RoomExit.SouthEast;
+                            }
                             if (x > 0)
-                                this.$selectedRoom.exits |= RoomExit.NorthWest;
+                                sR.exits |= RoomExit.West;
                             if (x < this.$mapSize.width - 1)
-                                this.$selectedRoom.exits |= RoomExit.NorthEast;
+                                sR.exits |= RoomExit.East;
                         }
-                        if (y < this.$mapSize.height - 1) {
-                            this.$selectedRoom.exits |= RoomExit.South;
-                            if (x > 0)
-                                this.$selectedRoom.exits |= RoomExit.SouthWest;
-                            if (x < this.$mapSize.width - 1)
-                                this.$selectedRoom.exits |= RoomExit.SouthEast;
+                        else {
+                            sR.exits = 0;
+                            sR.terrain = 0;
+                            sR.item = 0;
                         }
-                        if (x > 0)
-                            this.$selectedRoom.exits |= RoomExit.West;
-                        if (x < this.$mapSize.width - 1)
-                            this.$selectedRoom.exits |= RoomExit.East;
-                    }
-                    else
-                        this.$selectedRoom.exits = 0;
-                    if (!e.ctrlKey && this.$selectedRoom.ee !== RoomExit.None) {
-                        let nExternal = this.$exits.filter(ex => ex.x !== or.x || ex.y !== or.y || ex.z !== or.z);
-                        this.$exits = nExternal;
-                        this.$exitGrid.rows = this.$exits;
-                        if (this.$mapSize.depth > 1)
-                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
-                        else
-                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
-                        this.$externalRaw.value = '';
-                        this.updateRaw(this.$externalRaw, 0, nExternal);
-                        resetCursor(this.$externalRaw);
-                        this.$selectedRoom.ee = RoomExit.None;
-                    }
-                    this.RoomChanged(this.$selectedRoom, or);
-                    this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
-                    if (y > 0 && (e.ctrlKey || (o & RoomExit.North) === RoomExit.North)) {
-                        nx = x;
-                        ny = y - 1;
-                        p = this.getRoom(nx, ny);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.South;
+                        if (!e.ctrlKey && sR.ee !== RoomExit.None) {
+                            let nExternal = this.$exits.filter(ex => ex.x !== or.x || ex.y !== or.y || ex.z !== or.z);
+                            this.$exits = nExternal;
+                            this.$exitGrid.rows = this.$exits;
+                            if (this.$mapSize.depth > 1)
+                                nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
                             else
-                                p.exits &= ~RoomExit.South;
-                            this.DrawRoom(this.$mapContext, p, true, false);
-                            this.RoomChanged(p, po);
+                                nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                            this.$externalRaw.value = '';
+                            this.updateRaw(this.$externalRaw, 0, nExternal);
+                            resetCursor(this.$externalRaw);
+                            sR.ee = RoomExit.None;
                         }
-                    }
-                    if (y > 0 && x > 0 && (e.ctrlKey || (o & RoomExit.NorthWest) === RoomExit.NorthWest)) {
-                        nx = x - 1;
-                        ny = y - 1;
-                        p = this.getRoom(nx, ny);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.SouthEast;
-                            else
-                                p.exits &= ~RoomExit.SouthEast;
-                            this.DrawRoom(this.$mapContext, p, true, false);
-                            this.RoomChanged(p, po);
+                        this.RoomChanged(sR, or);
+                        this.DrawRoom(this.$mapContext, sR, true, sR.at(this.$mouse.rx, this.$mouse.ry));
+                        if (y > 0 && (e.ctrlKey || (o & RoomExit.North) === RoomExit.North)) {
+                            nx = x;
+                            ny = y - 1;
+                            p = this.getRoom(nx, ny);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.South;
+                                else
+                                    p.exits &= ~RoomExit.South;
+                                this.DrawRoom(this.$mapContext, p, true, false);
+                                this.RoomChanged(p, po);
+                            }
                         }
-                    }
-                    if (y > 0 && x < this.$mapSize.width - 1 && (e.ctrlKey || (o & RoomExit.NorthEast) === RoomExit.NorthEast)) {
-                        nx = x + 1;
-                        ny = y - 1;
-                        p = this.getRoom(nx, ny);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.SouthWest;
-                            else
-                                p.exits &= ~RoomExit.SouthWest;
-                            this.DrawRoom(this.$mapContext, p, true, false);
-                            this.RoomChanged(p, po);
+                        if (y > 0 && x > 0 && (e.ctrlKey || (o & RoomExit.NorthWest) === RoomExit.NorthWest)) {
+                            nx = x - 1;
+                            ny = y - 1;
+                            p = this.getRoom(nx, ny);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.SouthEast;
+                                else
+                                    p.exits &= ~RoomExit.SouthEast;
+                                this.DrawRoom(this.$mapContext, p, true, false);
+                                this.RoomChanged(p, po);
+                            }
                         }
-                    }
-                    if (x < this.$mapSize.width - 1 && (e.ctrlKey || (o & RoomExit.East) === RoomExit.East)) {
-                        nx = x + 1;
-                        ny = y;
-                        p = this.getRoom(nx, ny);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.West;
-                            else
-                                p.exits &= ~RoomExit.West;
-                            this.DrawRoom(this.$mapContext, p, true, false);
-                            this.RoomChanged(p, po);
+                        if (y > 0 && x < this.$mapSize.width - 1 && (e.ctrlKey || (o & RoomExit.NorthEast) === RoomExit.NorthEast)) {
+                            nx = x + 1;
+                            ny = y - 1;
+                            p = this.getRoom(nx, ny);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.SouthWest;
+                                else
+                                    p.exits &= ~RoomExit.SouthWest;
+                                this.DrawRoom(this.$mapContext, p, true, false);
+                                this.RoomChanged(p, po);
+                            }
                         }
-                    }
-                    if (x > 0 && (e.ctrlKey || (o & RoomExit.West) === RoomExit.West)) {
-                        nx = x - 1;
-                        ny = y;
-                        p = this.getRoom(nx, ny);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.East;
-                            else
-                                p.exits &= ~RoomExit.East;
-                            this.DrawRoom(this.$mapContext, p, true, false);
-                            this.RoomChanged(p, po);
+                        if (x < this.$mapSize.width - 1 && (e.ctrlKey || (o & RoomExit.East) === RoomExit.East)) {
+                            nx = x + 1;
+                            ny = y;
+                            p = this.getRoom(nx, ny);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.West;
+                                else
+                                    p.exits &= ~RoomExit.West;
+                                this.DrawRoom(this.$mapContext, p, true, false);
+                                this.RoomChanged(p, po);
+                            }
                         }
-                    }
-                    if (y < this.$mapSize.height - 1 && (e.ctrlKey || (o & RoomExit.South) === RoomExit.South)) {
-                        nx = x;
-                        ny = y + 1;
-                        p = this.getRoom(nx, ny);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.North;
-                            else
-                                p.exits &= ~RoomExit.North;
-                            this.DrawRoom(this.$mapContext, p, true, false);
-                            this.RoomChanged(p, po);
+                        if (x > 0 && (e.ctrlKey || (o & RoomExit.West) === RoomExit.West)) {
+                            nx = x - 1;
+                            ny = y;
+                            p = this.getRoom(nx, ny);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.East;
+                                else
+                                    p.exits &= ~RoomExit.East;
+                                this.DrawRoom(this.$mapContext, p, true, false);
+                                this.RoomChanged(p, po);
+                            }
                         }
-                    }
-                    if (y < this.$mapSize.height - 1 && x < this.$mapSize.height - 1 && (e.ctrlKey || (o & RoomExit.SouthEast) === RoomExit.SouthEast)) {
-                        nx = x + 1;
-                        ny = y + 1;
-                        p = this.getRoom(nx, ny);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.NorthWest;
-                            else
-                                p.exits &= ~RoomExit.NorthWest;
-                            this.DrawRoom(this.$mapContext, p, true, false);
-                            this.RoomChanged(p, po);
+                        if (y < this.$mapSize.height - 1 && (e.ctrlKey || (o & RoomExit.South) === RoomExit.South)) {
+                            nx = x;
+                            ny = y + 1;
+                            p = this.getRoom(nx, ny);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.North;
+                                else
+                                    p.exits &= ~RoomExit.North;
+                                this.DrawRoom(this.$mapContext, p, true, false);
+                                this.RoomChanged(p, po);
+                            }
                         }
-                    }
-                    if (x > 0 && y < this.$mapSize.height - 1 && (e.ctrlKey || (o & RoomExit.SouthWest) === RoomExit.SouthWest)) {
-                        nx = x - 1;
-                        ny = y + 1;
-                        p = this.getRoom(nx, ny);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.NorthEast;
-                            else
-                                p.exits &= ~RoomExit.NorthEast;
-                            this.DrawRoom(this.$mapContext, p, true, false);
-                            this.RoomChanged(p, po);
+                        if (y < this.$mapSize.height - 1 && x < this.$mapSize.height - 1 && (e.ctrlKey || (o & RoomExit.SouthEast) === RoomExit.SouthEast)) {
+                            nx = x + 1;
+                            ny = y + 1;
+                            p = this.getRoom(nx, ny);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.NorthWest;
+                                else
+                                    p.exits &= ~RoomExit.NorthWest;
+                                this.DrawRoom(this.$mapContext, p, true, false);
+                                this.RoomChanged(p, po);
+                            }
                         }
-                    }
-                    if (this.$depth + 1 < this.$mapSize.depth && (e.ctrlKey || (o & RoomExit.Up) === RoomExit.Up)) {
-                        p = this.getRoom(x, y, this.$depth + 1);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.Down;
-                            else
-                                p.exits &= ~RoomExit.Down;
-                            this.RoomChanged(p, po);
+                        if (x > 0 && y < this.$mapSize.height - 1 && (e.ctrlKey || (o & RoomExit.SouthWest) === RoomExit.SouthWest)) {
+                            nx = x - 1;
+                            ny = y + 1;
+                            p = this.getRoom(nx, ny);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.NorthEast;
+                                else
+                                    p.exits &= ~RoomExit.NorthEast;
+                                this.DrawRoom(this.$mapContext, p, true, false);
+                                this.RoomChanged(p, po);
+                            }
                         }
-                    }
-                    if (this.$depth - 1 >= 0 && (e.ctrlKey || (o & RoomExit.Down) === RoomExit.Down)) {
-                        p = this.getRoom(x, y, this.$depth - 1);
-                        if (p) {
-                            po = p.clone();
-                            if (e.ctrlKey)
-                                p.exits |= RoomExit.Up;
-                            else
-                                p.exits &= ~RoomExit.Up;
-                            this.RoomChanged(p, po);
+                        if (this.$depth + 1 < this.$mapSize.depth && (e.ctrlKey || (o & RoomExit.Up) === RoomExit.Up)) {
+                            p = this.getRoom(x, y, this.$depth + 1);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.Down;
+                                else
+                                    p.exits &= ~RoomExit.Down;
+                                this.RoomChanged(p, po);
+                            }
+                        }
+                        if (this.$depth - 1 >= 0 && (e.ctrlKey || (o & RoomExit.Down) === RoomExit.Down)) {
+                            p = this.getRoom(x, y, this.$depth - 1);
+                            if (p) {
+                                po = p.clone();
+                                if (e.ctrlKey)
+                                    p.exits |= RoomExit.Up;
+                                else
+                                    p.exits &= ~RoomExit.Up;
+                                this.RoomChanged(p, po);
+                            }
                         }
                     }
                     event.preventDefault();
                     break;
                 case 97: //num1
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y < this.$mapSize.height - 1 && x > 0 && !this.$selectedRoom.ef) {
+                    if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                    }
+                    else if (y < this.$mapSize.height - 1 && x > 0 && !this.selectedFocusedRoom.ef) {
                         y++;
                         x--;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.SouthWest;
+                            p.exits &= ~RoomExit.SouthWest;
                         else
-                            this.$selectedRoom.exits |= RoomExit.SouthWest;
+                            p.exits |= RoomExit.SouthWest;
 
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                        if (o !== p.exits) this.RoomChanged(p, or);
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.NorthEast;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.NorthEast;
                             else
-                                this.$selectedRoom.exits |= RoomExit.NorthEast;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
+                                this.selectedFocusedRoom.exits |= RoomExit.NorthEast;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
 
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
                         t = ((this.$mapContainer.scrollTop) / 32) >> 0;
                         b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
-                        if (this.$selectedRoom.y >= b)
+                        if (this.selectedFocusedRoom && this.selectedFocusedRoom.y >= b)
                             this.$mapContainer.scrollTop = this.$mapContainer.scrollTop + 32;
 
                         s = 32 + (x - 1) * 32;
                         if (s < this.$mapContainer.scrollLeft)
                             this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
-
+                        this.$map.focus();
                     }
-                    this.$map.focus();
+                    this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
                     break;
                 case 98: //num2
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y < this.$mapSize.height - 1 && !this.$selectedRoom.ef) {
+                    if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                    }
+                    else if (y < this.$mapSize.height - 1 && !this.selectedFocusedRoom.ef) {
                         y++;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.South;
+                            this.selectedFocusedRoom.exits &= ~RoomExit.South;
                         else
-                            this.$selectedRoom.exits |= RoomExit.South;
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.South;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.North;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.North;
                             else
-                                this.$selectedRoom.exits |= RoomExit.North;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
+                                this.selectedFocusedRoom.exits |= RoomExit.North;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
                         t = ((this.$mapContainer.scrollTop) / 32) >> 0;
                         b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
-                        if (this.$selectedRoom.y >= b)
+                        if (this.selectedFocusedRoom && this.selectedFocusedRoom.y >= b)
                             this.$mapContainer.scrollTop = this.$mapContainer.scrollTop + 32;
                         this.$map.focus();
                     }
+                    this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
                     break;
                 case 99: //num3
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y < this.$mapSize.height - 1 && x < this.$mapSize.width - 1 && !this.$selectedRoom.ef) {
+                    if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                    }
+                    else if (y < this.$mapSize.height - 1 && x < this.$mapSize.width - 1 && !this.selectedFocusedRoom.ef) {
                         y++;
                         x++;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.SouthEast;
+                            this.selectedFocusedRoom.exits &= ~RoomExit.SouthEast;
                         else
-                            this.$selectedRoom.exits |= RoomExit.SouthEast;
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.SouthEast;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.NorthWest;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.NorthWest;
                             else
-                                this.$selectedRoom.exits |= RoomExit.NorthWest;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
+                                this.selectedFocusedRoom.exits |= RoomExit.NorthWest;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
                         t = ((this.$mapContainer.scrollTop) / 32) >> 0;
                         b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
-                        if (this.$selectedRoom.y >= b)
+                        if (this.selectedFocusedRoom && this.selectedFocusedRoom.y >= b)
                             this.$mapContainer.scrollTop = this.$mapContainer.scrollTop + 32;
                         l = (this.$mapContainer.scrollLeft / 32) >> 0;
                         r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (this.$selectedRoom.x >= r)
+                        if (this.selectedFocusedRoom && this.selectedFocusedRoom.x >= r)
                             this.$mapContainer.scrollLeft = this.$mapContainer.scrollLeft + 32;
                         this.$map.focus();
                     }
+                    this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
                     break;
                 case 100: //num4
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x > 0 && !this.$selectedRoom.ef) {
+                    if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                    }
+                    else if (x > 0 && !this.selectedFocusedRoom.ef) {
                         x--;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.West;
+                            this.selectedFocusedRoom.exits &= ~RoomExit.West;
                         else
-                            this.$selectedRoom.exits |= RoomExit.West;
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.West;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.East;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.East;
                             else
-                                this.$selectedRoom.exits |= RoomExit.East;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
+                                this.selectedFocusedRoom.exits |= RoomExit.East;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
                         s = 32 + (x - 1) * 32;
@@ -1953,93 +2268,103 @@ export class VirtualEditor extends EditorBase {
                             this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
                         this.$map.focus();
                     }
+                    this.setFocusedRoom(this.selectedRoom);
+                    event.preventDefault();
                     break;
                 case 101: //num5
                     break;
                 case 102: //num6
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x < this.$mapSize.width - 1 && !this.$selectedRoom.ef) {
+                    if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                    }
+                    else if (x < this.$mapSize.width - 1 && !this.selectedFocusedRoom.ef) {
                         x++;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.East;
+                            this.selectedFocusedRoom.exits &= ~RoomExit.East;
                         else
-                            this.$selectedRoom.exits |= RoomExit.East;
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.East;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.West;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.West;
                             else
-                                this.$selectedRoom.exits |= RoomExit.West;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
+                                this.selectedFocusedRoom.exits |= RoomExit.West;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
                         l = (this.$mapContainer.scrollLeft / 32) >> 0;
                         r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (this.$selectedRoom.x >= r)
+                        if (this.selectedFocusedRoom && this.selectedFocusedRoom.x >= r)
                             this.$mapContainer.scrollLeft = this.$mapContainer.scrollLeft + 32;
                         this.$map.focus();
                     }
+                    this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
                     break;
                 case 103: //num7
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x > 0 && y > 0 && !this.$selectedRoom.ef) {
+                    if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                    }
+                    else if (x > 0 && y > 0 && !this.selectedFocusedRoom.ef) {
                         x--;
                         y--;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.NorthWest;
+                            this.selectedFocusedRoom.exits &= ~RoomExit.NorthWest;
                         else
-                            this.$selectedRoom.exits |= RoomExit.NorthWest;
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.NorthWest;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.SouthEast;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.SouthEast;
                             else
-                                this.$selectedRoom.exits |= RoomExit.SouthEast;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
+                                this.selectedFocusedRoom.exits |= RoomExit.SouthEast;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
                         l = (this.$mapContainer.scrollLeft / 32) >> 0;
                         r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (this.$selectedRoom.x >= r)
+                        if (this.selectedFocusedRoom && this.selectedFocusedRoom.x >= r)
                             this.$mapContainer.scrollLeft = this.$mapContainer.scrollLeft + 32;
                         s = 32 + (x - 1) * 32;
                         if (s < this.$mapContainer.scrollLeft)
                             this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
                         this.$map.focus();
                     }
+                    this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
                     break;
                 case 104: //num8
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (y > 0 && !this.$selectedRoom.ef) {
+                    if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                    }
+                    else if (y > 0 && !this.selectedFocusedRoom.ef) {
                         y--;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.North;
+                            this.selectedFocusedRoom.exits &= ~RoomExit.North;
                         else
-                            this.$selectedRoom.exits |= RoomExit.North;
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.North;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.South;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.South;
                             else
-                                this.$selectedRoom.exits |= RoomExit.South;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
+                                this.selectedFocusedRoom.exits |= RoomExit.South;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
                         s = 32 + (y - 2) * 32;
@@ -2050,113 +2375,126 @@ export class VirtualEditor extends EditorBase {
                     event.preventDefault();
                     break;
                 case 105: //num9
-                    if (!this.$selectedRoom)
-                        this.ChangeSelection(this.getRoom(0, 0));
-                    else if (x < this.$mapSize.width - 1 && y > 0 && !this.$selectedRoom.ef) {
+                    if (this.$selectedRooms.length === 0) {
+                        this.$selectedRooms.push(this.getRoom(0, 0));
+                        this.ChangeSelection();
+                    }
+                    else if (x < this.$mapSize.width - 1 && y > 0 && !this.selectedFocusedRoom.ef) {
                         x++;
                         y--;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.NorthEast;
+                            this.selectedFocusedRoom.exits &= ~RoomExit.NorthEast;
                         else
-                            this.$selectedRoom.exits |= RoomExit.NorthEast;
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.NorthEast;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.SouthWest;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.SouthWest;
                             else
-                                this.$selectedRoom.exits |= RoomExit.SouthWest;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
+                                this.selectedFocusedRoom.exits |= RoomExit.SouthWest;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
                         l = (this.$mapContainer.scrollLeft / 32) >> 0;
                         r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (this.$selectedRoom.x >= r)
+                        if (this.selectedFocusedRoom && this.selectedFocusedRoom.x >= r)
                             this.$mapContainer.scrollLeft = this.$mapContainer.scrollLeft + 32;
                         l = (this.$mapContainer.scrollLeft / 32) >> 0;
                         r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (this.$selectedRoom.x >= r)
+                        if (this.selectedFocusedRoom && this.selectedFocusedRoom.x >= r)
                             this.$mapContainer.scrollLeft = this.$mapContainer.scrollLeft + 32;
                         this.$map.focus();
                     }
+                    this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
                     break;
                 case 107: //+
-                    if (!this.$selectedRoom || this.$selectedRoom.ef)
+                    if (this.$selectedRooms.length === 0)
                         return;
-                    or = this.$selectedRoom.clone();
-                    if (this.$selectedRoom.item === this.$selectedRoom.terrain)
-                        this.$selectedRoom.item++;
-                    this.$selectedRoom.terrain++;
-                    this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
-                    this.RoomChanged(this.$selectedRoom, or);
+                    sl = this.$selectedRooms.length;
+                    while (sl--) {
+                        or = this.$selectedRooms[sl].clone();
+                        if (this.$selectedRooms[sl].item === this.$selectedRooms[sl].terrain)
+                            this.$selectedRooms[sl].item++;
+                        this.$selectedRooms[sl].terrain++;
+                        this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
+                        this.RoomChanged(this.$selectedRooms[sl], or);
+                    }
                     break;
                 case 109: //-
-                    if (!this.$selectedRoom || this.$selectedRoom.ef)
+                    if (this.$selectedRooms.length === 0)
                         return;
-                    or = this.$selectedRoom.clone();
-                    if (this.$selectedRoom.item === this.$selectedRoom.terrain) {
-                        this.$selectedRoom.item--;
-                        if (this.$selectedRoom.item < 0)
-                            this.$selectedRoom.item = 0;
+                    sl = this.$selectedRooms.length;
+                    while (sl--) {
+                        or = this.$selectedRooms[sl].clone();
+                        if (this.$selectedRooms[sl].item === this.$selectedRooms[sl].terrain) {
+                            this.$selectedRooms[sl].item--;
+                            if (this.$selectedRooms[sl].item < 0)
+                                this.$selectedRooms[sl].item = 0;
+                        }
+                        this.$selectedRooms[sl].terrain--;
+                        if (this.$selectedRooms[sl].terrain < 0)
+                            this.$selectedRooms[sl].terrain = 0;
+                        this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
+                        this.RoomChanged(this.$selectedRooms[sl], or);
                     }
-                    this.$selectedRoom.terrain--;
-                    if (this.$selectedRoom.terrain < 0)
-                        this.$selectedRoom.terrain = 0;
-                    this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
-                    this.RoomChanged(this.$selectedRoom, or);
                     break;
                 case 111: // / up
-                    if (!this.$selectedRoom || this.$selectedRoom.ef)
+                    if (this.$selectedRooms.length === 0 || this.selectedFocusedRoom.ef)
                         return;
                     if (this.$depth + 1 < this.$mapSize.depth) {
                         this.$depth++;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.Up;
+                            this.selectedFocusedRoom.exits &= ~RoomExit.Up;
                         else
-                            this.$selectedRoom.exits |= RoomExit.Up;
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y, this.$depth));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.Up;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y, this.$depth), true);
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.Down;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.Down;
                             else
-                                this.$selectedRoom.exits |= RoomExit.Down;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
+                                this.selectedFocusedRoom.exits |= RoomExit.Down;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
                         }
+                        this.setFocusedRoom(null);
                         this.doUpdate(UpdateType.drawMap);
                         this.$map.focus();
                     }
+                    this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
                     break;
                 case 106: // * down
-                    if (!this.$selectedRoom || this.$selectedRoom.ef)
+                    if (this.$selectedRooms.length === 0 || this.selectedFocusedRoom.ef)
                         return;
                     if (this.$depth - 1 >= 0) {
                         this.$depth--;
                         if (e.ctrlKey)
-                            this.$selectedRoom.exits &= ~RoomExit.Down;
+                            this.selectedFocusedRoom.exits &= ~RoomExit.Down;
                         else
-                            this.$selectedRoom.exits |= RoomExit.Down;
-                        if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
-                        this.ChangeSelection(this.getRoom(x, y, this.$depth));
-                        or = this.$selectedRoom.clone();
-                        if (this.$selectedRoom) {
-                            o = this.$selectedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.Down;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y, this.$depth), true);
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
-                                this.$selectedRoom.exits &= ~RoomExit.Up;
+                                this.selectedFocusedRoom.exits &= ~RoomExit.Up;
                             else
-                                this.$selectedRoom.exits |= RoomExit.Up;
-                            if (o !== this.$selectedRoom.exits) this.RoomChanged(this.$selectedRoom, or);
+                                this.selectedFocusedRoom.exits |= RoomExit.Up;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
                         }
+                        this.setFocusedRoom(null);
                         this.doUpdate(UpdateType.drawMap);
                         this.$map.focus();
                     }
+                    this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
                     break;
             }
@@ -2178,21 +2516,21 @@ export class VirtualEditor extends EditorBase {
         this.$roomEditor.on('open-file', (property) => {
             let f;
             if (this.$mapSize.depth > 1)
-                f = this.$selectedRoom.x + ',' + this.$selectedRoom.y + ',' + this.$selectedRoom.z + '.c';
+                f = this.selectedFocusedRoom.x + ',' + this.selectedFocusedRoom.y + ',' + this.selectedFocusedRoom.z + '.c';
             else
-                f = this.$selectedRoom.x + ',' + this.$selectedRoom.y + '.c';
+                f = this.selectedFocusedRoom.x + ',' + this.selectedFocusedRoom.y + '.c';
             this.emit('open-file', path.join(path.dirname(this.file), f));
         });
         this.$roomEditor.on('browse-file', e => {
             this.emit('browse-file', e);
         });
         this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
-            const old = this.$selectedRoom.clone();
+            const old = this.selectedFocusedRoom.clone();
             let data;
             switch (prop) {
                 case 'external':
                     let nExternal = this.$exits.filter(e => e.x !== old.x || e.y !== old.y || e.z !== old.z);
-                    this.$selectedRoom.ee = newValue.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
+                    this.selectedFocusedRoom.ee = newValue.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
                     nExternal = nExternal.concat(newValue);
                     this.$exits = nExternal;
                     this.$exitGrid.rows = this.$exits;
@@ -2202,16 +2540,16 @@ export class VirtualEditor extends EditorBase {
                         nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
                     this.$externalRaw.value = '';
                     this.updateRaw(this.$externalRaw, 0, nExternal);
-                    this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                    this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, this.selectedFocusedRoom.at(this.$mouse.rx, this.$mouse.ry));
                     resetCursor(this.$externalRaw);
                     break;
                 case 'ee':
                 case 'ef':
                     break;
                 case 'items':
-                    this.$items[this.$selectedRoom.item].children = newValue;
+                    this.$items[this.selectedFocusedRoom.item].children = newValue;
                     this.$itemGrid.rows = this.$items;
-                    this.updateRaw(this.$itemRaw, this.$selectedRoom.item * 2, [
+                    this.updateRaw(this.$itemRaw, this.selectedFocusedRoom.item * 2, [
                         newValue.map(i => i.item).join(':'),
                         newValue.map(i => i.description).join(':')
                     ]);
@@ -2225,13 +2563,13 @@ export class VirtualEditor extends EditorBase {
                 case 'smell':
                     if (prop === 'terrainType')
                         prop = 'terrain';
-                    //invalide index
-                    if (this.$selectedRoom.terrain < 0) return;
+                    //invalid index
+                    if (this.selectedFocusedRoom.terrain < 0) return;
                     //get current data and if none set defaults and assign to the index
-                    data = this.$descriptions[this.$selectedRoom.terrain];
+                    data = this.$descriptions[this.selectedFocusedRoom.terrain];
                     if (!data) {
                         data = {
-                            idx: this.$selectedRoom.terrain,
+                            idx: this.selectedFocusedRoom.terrain,
                             short: '',
                             light: 0,
                             terrain: '',
@@ -2242,7 +2580,7 @@ export class VirtualEditor extends EditorBase {
                     }
                     data[prop] = newValue;
                     //update the object data
-                    this.$descriptions[this.$selectedRoom.terrain] = data;
+                    this.$descriptions[this.selectedFocusedRoom.terrain] = data;
                     //update the file data
                     this.updateRaw(this.$descriptionRaw, data.idx * 3, [
                         data.short + ':' + data.light + ':' + data.terrain,
@@ -2252,9 +2590,9 @@ export class VirtualEditor extends EditorBase {
                     resetCursor(this.$descriptionRaw);
                     break;
                 case 'terrain':
-                    this.$selectedRoom[prop] = newValue;
+                    this.selectedFocusedRoom[prop] = newValue;
                     if (this.$roomEditor.object.item === oldValue)
-                        this.$selectedRoom.item = newValue;
+                        this.selectedFocusedRoom.item = newValue;
                     //new high terrain, clear cache and redraw whole map as colors should have shifted
                     if (newValue > this.$maxTerrain) {
                         this.$maxTerrain = newValue;
@@ -2262,16 +2600,16 @@ export class VirtualEditor extends EditorBase {
                         this.doUpdate(UpdateType.drawMap);
                     }
                     else //else just redraw the current room
-                        this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
-                    this.RoomChanged(this.$selectedRoom, old);
+                        this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, this.selectedFocusedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                    this.RoomChanged(this.selectedFocusedRoom, old);
                     break;
                 default:
-                    this.$selectedRoom[prop] = newValue;
-                    this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
-                    this.RoomChanged(this.$selectedRoom, old);
+                    this.selectedFocusedRoom[prop] = newValue;
+                    this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, this.selectedFocusedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                    this.RoomChanged(this.selectedFocusedRoom, old);
                     break;
             }
-            this.UpdatePreview(this.$selectedRoom);
+            this.UpdatePreview(this.selectedFocusedRoom);
         });
         this.$roomEditor.setPropertyOptions([
             {
@@ -2473,6 +2811,27 @@ export class VirtualEditor extends EditorBase {
                 }
             }
         ]);
+        this.resize();
+        this.$resizer = new ResizeObserver((entries, observer) => {
+            if (entries.length === 0) return;
+            if (entries[0].width === 0 || entries[0].height === 0)
+                return;
+            if (!this.$resizerCache || this.$resizerCache.width !== entries[0].width || this.$resizerCache.height !== entries[0].height) {
+                this.$resizerCache = { width: entries[0].width, height: entries[0].height };
+                this.doUpdate(UpdateType.resize);
+            }
+        });
+        this.$resizer.observe(this.$mapContainer);
+        this.$observer = new MutationObserver((mutationsList) => {
+            let mutation;
+            for (mutation of mutationsList) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    if (mutation.oldValue === 'display: none;')
+                        this.doUpdate(UpdateType.resize);
+                }
+            }
+        });
+        this.$observer.observe(this.$mapContainer, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
 
         //#endregion
     }
@@ -3160,30 +3519,38 @@ export class VirtualEditor extends EditorBase {
     public cut() {
         switch (this.$view) {
             case View.map:
-                if (this.$selectedRoom.ef) return;
-                const or = this.$selectedRoom.clone();
+                if (this.$selectedRooms.length === 0) return;
+                const rooms = this.$selectedRooms.filter(r => !r.ef).map(r => {
+                    const n = r.clone();
+                    n.external = this.$exits.filter(e => e.x === n.x && e.y === n.y && e.z === n.z);
+                    return n;
+                });
+                if (rooms.length === 0) return;
                 clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
-                    external: this.$exits.filter(e => e.x === or.x && e.y === or.y && e.z === or.z),
-                    room: or
+                    rooms: rooms
                 })));
-                //has external rooms so remove them as they are now tied to the room
-                if (or.ee !== RoomExit.None) {
-                    let nExternal = this.$exits.filter(e => e.x !== or.x || e.y !== or.y || e.z !== or.z);
-                    this.$exits = nExternal;
-                    this.$exitGrid.rows = this.$exits;
-                    if (this.$mapSize.depth > 1)
-                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
-                    else
-                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
-                    this.$externalRaw.value = '';
-                    this.updateRaw(this.$externalRaw, 0, nExternal);
-                    resetCursor(this.$externalRaw);
+                let sl = this.$selectedRooms.length;
+                while (sl--) {
+                    const or = this.$selectedRooms[sl];
+                    //has external rooms so remove them as they are now tied to the room
+                    if (or.ee !== RoomExit.None) {
+                        let nExternal = this.$exits.filter(e => e.x !== or.x || e.y !== or.y || e.z !== or.z);
+                        this.$exits = nExternal;
+                        this.$exitGrid.rows = this.$exits;
+                        if (this.$mapSize.depth > 1)
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                        else
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                        this.$externalRaw.value = '';
+                        this.updateRaw(this.$externalRaw, 0, nExternal);
+                        resetCursor(this.$externalRaw);
+                    }
+                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, 0, 0, 0);
+                    this.setRoom(this.$selectedRooms[sl]);
+                    this.RoomChanged(this.$selectedRooms[sl], or);
+                    this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, this.$selectedRooms[sl].at(this.$mouse.rx, this.$mouse.ry));
+                    this.deleteRoom(or);
                 }
-                this.$selectedRoom = new Room(this.$selectedRoom.x, this.$selectedRoom.y, this.$selectedRoom.z, 0, 0, 0);
-                this.setRoom(this.$selectedRoom);
-                this.RoomChanged(this.$selectedRoom, or);
-                this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
-                this.deleteRoom(or);
                 this.emit('supports-changed');
                 break;
             case View.terrains:
@@ -3208,10 +3575,15 @@ export class VirtualEditor extends EditorBase {
     public copy() {
         switch (this.$view) {
             case View.map:
-                if (this.$selectedRoom.ef) return;
+                if (this.$selectedRooms.length === 0) return;
+                const rooms = this.$selectedRooms.filter(r => !r.ef).map(r => {
+                    const n = r.clone();
+                    n.external = this.$exits.filter(e => e.x === n.x && e.y === n.y && e.z === n.z);
+                    return n;
+                });
+                if (rooms.length === 0) return;
                 clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
-                    external: this.$exits.filter(e => e.x === this.$selectedRoom.x && e.y === this.$selectedRoom.y && e.z === this.$selectedRoom.z),
-                    room: this.$selectedRoom.clone()
+                    rooms: rooms
                 })));
                 this.emit('supports-changed');
                 break;
@@ -3238,36 +3610,49 @@ export class VirtualEditor extends EditorBase {
         switch (this.$view) {
             case View.map:
                 if (!clipboard.has('jiMUD/VirtualArea')) return;
-                const or = this.$selectedRoom.clone();
+                let or;
+                if (this.$focusedRoom && this.$selectedRooms.indexOf(this.$focusedRoom) === -1)
+                    or = this.$focusedRoom.clone();
+                else
+                    or = this.selectedFocusedRoom.clone();
                 const data = JSON.parse(clipboard.readBuffer('jiMUD/VirtualArea').toString());
-                this.$selectedRoom = new Room(or.x, or.y, or.z, data.room.exits, data.room.terrain, data.room.item, data.room.state);
-                this.$selectedRoom.climbs = data.room.climbs;
-                this.$selectedRoom.ef = data.room.ef;
-                this.$selectedRoom.ee = data.room.ee;
-                //has external rooms paste them in
-                if (data.external.length > 0) {
-                    //change the coords to match the new room
-                    data.external.map(r => {
-                        r.x = or.x;
-                        r.y = or.y;
-                        r.z = or.z;
-                        return r;
-                    });
-                    //append to raw editors
-                    if (this.$mapSize.depth > 1)
-                        this.updateRaw(this.$externalRaw, this.$exits.length, data.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest));
-                    else
-                        this.updateRaw(this.$externalRaw, this.$exits.length, data.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest));
-                    //append changed exits
-                    this.$exits.push(...data.external);
-                    //refresh the grid to make sure it has all the new data
-                    this.$exitGrid.refresh();
-
+                const osX = data.rooms[0].x - or.x;
+                const osY = data.rooms[0].y - or.y;
+                let dl = data.rooms.length;
+                const rooms = [];
+                while (dl--) {
+                    const dRoom = data.rooms[dl];
+                    const room = new Room(dRoom.x - osX, dRoom.y - osY, dRoom.z, dRoom.exits, dRoom.terrain, dRoom.item, dRoom.state);
+                    room.climbs = dRoom.climbs;
+                    room.ef = dRoom.ef;
+                    room.ee = dRoom.ee;
+                    //has external rooms paste them in
+                    if (dRoom.external && dRoom.external.length > 0) {
+                        //change the coords to match the new room
+                        dRoom.external.map(r => {
+                            r.x = or.x;
+                            r.y = or.y;
+                            r.z = or.z;
+                            return r;
+                        });
+                        //append to raw editors
+                        if (this.$mapSize.depth > 1)
+                            this.updateRaw(this.$externalRaw, this.$exits.length, dRoom.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest));
+                        else
+                            this.updateRaw(this.$externalRaw, this.$exits.length, dRoom.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest));
+                        //append changed exits
+                        this.$exits.push(...dRoom.external);
+                        //refresh the grid to make sure it has all the new data
+                        this.$exitGrid.refresh();
+                    }
+                    this.deleteRoom(or);
+                    this.addRoom(room);
+                    this.RoomChanged(room, or);
+                    rooms.push(room);
                 }
-                this.deleteRoom(or);
-                this.addRoom(this.$selectedRoom);
-                this.RoomChanged(this.$selectedRoom, or);
-                this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                if (this.$focusedRoom)
+                    this.setFocusedRoom(this.$focusedRoom.x, this.$focusedRoom.y);
+                this.setSelectedRooms(rooms);
                 break;
             case View.terrains:
                 this.$terrainGrid.paste();
@@ -3291,26 +3676,35 @@ export class VirtualEditor extends EditorBase {
     public delete() {
         switch (this.$view) {
             case View.map:
-                if (this.$selectedRoom.ef) return;
-                const or = this.$selectedRoom.clone();
-                //has external rooms so remove them as they are now tied to the room
-                if (or.ee !== RoomExit.None) {
-                    let nExternal = this.$exits.filter(e => e.x !== or.x || e.y !== or.y || e.z !== or.z);
-                    this.$exits = nExternal;
-                    this.$exitGrid.rows = this.$exits;
-                    if (this.$mapSize.depth > 1)
-                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
-                    else
-                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
-                    this.$externalRaw.value = '';
-                    this.updateRaw(this.$externalRaw, 0, nExternal);
-                    resetCursor(this.$externalRaw);
+                if (this.$selectedRooms.length === 0) return;
+                const rooms = this.$selectedRooms.filter(r => !r.ef).map(r => {
+                    const n = r.clone();
+                    n.external = this.$exits.filter(e => e.x === n.x && e.y === n.y && e.z === n.z);
+                    return n;
+                });
+                if (rooms.length === 0) return;
+                let sl = this.$selectedRooms.length;
+                while (sl--) {
+                    const or = this.$selectedRooms[sl];
+                    //has external rooms so remove them as they are now tied to the room
+                    if (or.ee !== RoomExit.None) {
+                        let nExternal = this.$exits.filter(e => e.x !== or.x || e.y !== or.y || e.z !== or.z);
+                        this.$exits = nExternal;
+                        this.$exitGrid.rows = this.$exits;
+                        if (this.$mapSize.depth > 1)
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                        else
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                        this.$externalRaw.value = '';
+                        this.updateRaw(this.$externalRaw, 0, nExternal);
+                        resetCursor(this.$externalRaw);
+                    }
+                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, 0, 0, 0);
+                    this.setRoom(this.$selectedRooms[sl]);
+                    this.RoomChanged(this.$selectedRooms[sl], or);
+                    this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, this.$selectedRooms[sl].at(this.$mouse.rx, this.$mouse.ry));
+                    this.deleteRoom(or);
                 }
-                this.$selectedRoom = new Room(this.$selectedRoom.x, this.$selectedRoom.y, this.$selectedRoom.z, 0, 0, 0);
-                this.setRoom(this.$selectedRoom);
-                this.RoomChanged(this.$selectedRoom, or);
-                this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
-                this.deleteRoom(or);
                 this.emit('supports-changed');
                 break;
             case View.terrains:
@@ -3376,10 +3770,14 @@ export class VirtualEditor extends EditorBase {
                 break;
         }
     }
+
     public close() {
         const root = path.dirname(this.file);
         this.emit('watch-stop', [root, this.file]);
+        window.removeEventListener('mousemove', this._wMove);
+        window.removeEventListener('mouseup', this._wUp);
     }
+
     public deleted(keep, file?) {
         const base = path.basename(file);
         if (file === this.file) {
@@ -3839,7 +4237,20 @@ export class VirtualEditor extends EditorBase {
                 break;
         }
     }
-    public resize() { /**/ }
+
+    private offset(elt) {
+        const rect = elt.getBoundingClientRect();
+        const bodyElt = document.body;
+        return {
+            top: rect.top + bodyElt.scrollTop,
+            left: rect.left + bodyElt.scrollLeft
+        };
+    }
+
+    public resize() {
+        this._os = this.offset(this.$mapContainer);
+    }
+
     public set options(value: any) {
         if (!value) return;
         this.ShowColors = value.showColors;
@@ -3963,12 +4374,11 @@ export class VirtualEditor extends EditorBase {
                 if (this.$terrainRaw.dataset.dirty === 'true' || this.$mapRaw.dataset.dirty === 'true') {
                     this.BuildRooms();
                     this.BuildMap();
-                    this.doUpdate(UpdateType.drawMap);
                     this.$mapRaw.dataset.dirty = null;
                     this.$terrainRaw.dataset.dirty = null;
                 }
-                this.UpdateEditor(this.$selectedRoom);
-                this.UpdatePreview(this.$selectedRoom);
+                this.UpdateEditor(this.selectedFocusedRoom);
+                this.UpdatePreview(this.selectedFocusedRoom);
                 this.$label.style.display = 'none';
                 this.$splitterEditor.show();
                 break;
@@ -4307,12 +4717,15 @@ export class VirtualEditor extends EditorBase {
     private setFocus(value) {
         if (this.$focused === value) return;
         this.$focused = value;
-        if (this.$selectedRoom)
-            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, this.$selectedRoom.at(this.$mouse.rx, this.$mouse.ry));
+        let sl = this.$selectedRooms.length;
+        while (sl--)
+            this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, this.$selectedRooms[sl].at(this.$mouse.rx, this.$mouse.ry));
         if (this.$mouse.rx >= 0 && this.$mouse.ry > 0) {
             const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
             if (r) this.DrawRoom(this.$mapContext, r, true, true);
         }
+        if (this.$focusedRoom)
+            this.DrawRoom(this.$mapContext, this.$focusedRoom, true, this.$focusedRoom.at(this.$mouse.rx, this.$mouse.ry));
         if (this.$focused)
             this.$xAxisHighlight.style.backgroundColor = 'rgba(135, 206, 250, 0.25)';
         else
@@ -4330,6 +4743,20 @@ export class VirtualEditor extends EditorBase {
             y: evt.offsetY,
             rx: (evt.offsetX / 32) >> 0,
             ry: (evt.offsetY / 32) >> 0,
+            button: evt.button
+        };
+    }
+
+    private getMousePosFromWindow(evt): MousePosition {
+        evt = evt || window.event;
+        const os = this._os;
+        const x = (evt.pageX - os.left) + this.$mapContainer.scrollLeft;
+        const y = (evt.pageY - os.top) + this.$mapContainer.scrollTop;
+        return {
+            x: x,
+            y: y,
+            rx: (x / 32) >> 0,
+            ry: (y / 32) >> 0,
             button: evt.button
         };
     }
@@ -4360,7 +4787,7 @@ export class VirtualEditor extends EditorBase {
         if (r.x >= this.$rooms[r.z][r.y].length)
             return;
         this.$rooms[r.z][r.y][r.x] = r;
-        if (this.$selectedRoom && this.$selectedRoom.at(r.x, r.y, r.z)) {
+        if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(r.x, r.y, r.z)) {
             this.UpdateEditor(r);
             this.UpdatePreview(r);
         }
@@ -4382,7 +4809,21 @@ export class VirtualEditor extends EditorBase {
         }
 
         ///ctx.translate(0.5,0.5);
-        if (this.$selectedRoom === room) {
+        if (this.$focusedRoom === room) {
+            if (this.$selectedRooms.indexOf(room) !== -1) {
+                if (this.$focused)
+                    ctx.fillStyle = 'rgba(135, 206, 250, 0.50)';
+                else
+                    ctx.fillStyle = 'rgba(142, 142, 142, 0.50)';
+                ctx.fillRoundedRect(1 + x, 1 + y, 30, 30, 8);
+            }
+            if (this.$focused)
+                ctx.strokeStyle = '#f7b32e';
+            else
+                ctx.strokeStyle = 'rgba(142, 142, 142, 0.50)';
+            ctx.strokeRoundedRect(1 + x, 1 + y, 30, 30, 8);
+        }
+        else if (this.$selectedRooms.indexOf(room) !== -1) {
             if (this.$focused) {
                 ctx.fillStyle = 'rgba(135, 206, 250, 0.50)';
                 ctx.strokeStyle = 'rgba(135, 206, 250, 0.50)';
@@ -4583,6 +5024,54 @@ export class VirtualEditor extends EditorBase {
         this.$mapContext.restore();
     }
 
+    private drawRegion(sX, sY, sWidth, sHeight, selection?) {
+        let r;
+        let x = (Math.min(sX, sX + sWidth) / 32) >> 0;
+        x--;
+        let y = (Math.min(sY, sY + sHeight) / 32) >> 0;
+        y--;
+        let width = Math.ceil(Math.max(sX, sX + sWidth) / 32) + 1;
+        let height = Math.ceil(Math.max(sY, sY + sHeight) / 32) + 1;
+        if (!this.$mapContext) return;
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (width > this.$mapSize.width)
+            width = this.$mapSize.width;
+        if (height > this.$mapSize.height)
+            height = this.$mapSize.height;
+        this.$mapContext.save();
+        this.$mapContext.fillStyle = 'white';
+        this.$mapContext.fillRect(x * 32, y * 32, (width - x) * 32, (height - y) * 32);
+        this.$mapContext.lineWidth = 0.6;
+        if (!this.$rooms) {
+            this.$mapContext.restore();
+            return;
+        }
+        if (!window.$roomImgLoaded) {
+            setTimeout(() => { this.drawRegion(sX, sY, sWidth, sHeight); }, 10);
+            return;
+        }
+        this.$mapContext.strokeStyle = 'black';
+        for (let rY = y; rY < height; rY++) {
+            r = this.$rooms[this.$depth][rY];
+            for (let rX = x; rX < width; rX++)
+                this.DrawRoom(this.$mapContext, r[rX], false);
+        }
+        if (selection) {
+            this.$mapContext.save();
+            this.$mapContext.beginPath();
+            this.$mapContext.fillStyle = 'rgba(135, 206, 250, 0.50)';
+            this.$mapContext.strokeStyle = 'rgba(135, 206, 250, 0.50)';
+            this.$mapContext.rect(sX, sY, sWidth, sHeight);
+            this.$mapContext.stroke();
+            this.$mapContext.fill();
+            this.$mapContext.closePath();
+            this.$mapContext.restore();
+        }
+        this.$mapContext.strokeStyle = 'black';
+        this.$mapContext.restore();
+    }
+
     private GetColorFromColorScale(val, min, max, colors) {
         if (!colors || colors.length < 2) return 'white';
         if (max === min) return colors[0];
@@ -4671,19 +5160,101 @@ export class VirtualEditor extends EditorBase {
                 this.BuildMap();
                 this._updating &= ~UpdateType.buildMap;
             }
+            if ((this._updating & UpdateType.resize) === UpdateType.resize) {
+                this.resize();
+                this._updating &= ~UpdateType.resize;
+            }
             this.doUpdate(this._updating);
         });
     }
 
-    private ChangeSelection(room) {
-        this.$selectedRoom = room;
-        this.UpdateEditor(room);
-        this.UpdatePreview(room);
+    private ChangeSelection() {
+        this.UpdateEditor(this.selectedFocusedRoom);
+        this.UpdatePreview(this.selectedFocusedRoom);
+        this.$shiftRoom = null;
+    }
+
+    private setSelectedRooms(rooms, noDraw?) {
+        if (!Array.isArray(rooms))
+            rooms = [rooms];
+        let ol;
+        if (!noDraw) {
+            const old = this.$selectedRooms.slice();
+            this.$selectedRooms.length = 0;
+            ol = old.length;
+            while (ol--)
+                this.DrawRoom(this.$mapContext, old[ol], true);
+        }
+        else
+            this.$selectedRooms.length = 0;
+        ol = rooms.length;
+        for (let o = 0; o < ol; o++) {
+            if (!rooms[o]) continue;
+            this.$selectedRooms.push(rooms[o]);
+            if (!noDraw)
+                this.DrawRoom(this.$mapContext, rooms[o], true, rooms[o].at(this.$mouse.rx, this.$mouse.ry));
+        }
+        this.ChangeSelection();
+    }
+
+    private setSelection(x, y, width, height) {
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (width > this.$mapSize.width) width = this.$mapSize.width;
+        if (height > this.$mapSize.height) height = this.$mapSize.height;
+        const old = this.$selectedRooms.slice();
+        this.$selectedRooms.length = 0;
+        let ol = old.length;
+        while (ol--)
+            this.DrawRoom(this.$mapContext, old[ol], true);
+        if (y === height) {
+            const r = this.$rooms[this.$depth][y];
+            if (x === width)
+                this.$selectedRooms.push(r[x]);
+            else
+                for (let rX = x; rX < width; rX++) {
+                    this.$selectedRooms.push(r[rX]);
+                    this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                }
+        }
+        else
+            for (let rY = y; rY < height; rY++) {
+                const r = this.$rooms[this.$depth][rY];
+                if (x === width)
+                    this.$selectedRooms.push(r[x]);
+                else
+                    for (let rX = x; rX < width; rX++) {
+                        this.$selectedRooms.push(r[rX]);
+                        this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                    }
+            }
+        this.ChangeSelection();
+    }
+
+    private setFocusedRoom(r, y?, z?) {
+        if (typeof r === 'number')
+            r = this.getRoom(r, y, z);
+        else if (Array.isArray(r)) {
+            if (r.length >= 3)
+                r = this.getRoom(r[0], r[1], r[2]);
+            else if (r.length === 2)
+                r = this.getRoom(r[0], r[1]);
+            else //not enough data
+                return;
+        }
+        const oldFocus = this.$focusedRoom;
+        this.$focusedRoom = r;
+        if (oldFocus)
+            this.DrawRoom(this.$mapContext, oldFocus, true);
+        if (r)
+            this.DrawRoom(this.$mapContext, r, true, r.at(this.$mouse.rx, this.$mouse.ry));
     }
 
     private ClearPrevMouse() {
         const p = this.getRoom(this.$mousePrevious.rx, this.$mousePrevious.ry);
-        if (p) this.DrawRoom(this.$mapContext, p, true, false);
+        if (p) this.DrawRoom(this.$mapContext, p, true);
+        if (this.$mouseSelect)
+            this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mousePrevious.x - this.$mouseDown.x, this.$mousePrevious.y - this.$mouseDown.y);
     }
 
     private loadRoom(r) {
@@ -5416,7 +5987,7 @@ export class VirtualEditor extends EditorBase {
         }
 
         if (c) {
-            if (room === this.$selectedRoom)
+            if (this.$selectedRooms.length !== 0 && this.selectedFocusedRoom === room)
                 this.UpdateEditor(room);
             this.$mapRaw.dataset.changed = 'true';
             this.changed = true;
@@ -5425,47 +5996,50 @@ export class VirtualEditor extends EditorBase {
     }
 
     private UpdateEditor(room) {
-        if (this.$selectedRoom) {
-            this.DrawRoom(this.$mapContext, this.$selectedRoom, true, false);
-            this.emit('room-selected', this.$selectedRoom);
-            this.$depthToolbar.value = '' + this.$selectedRoom.z;
+        if (this.selectedFocusedRoom) {
+            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
+            this.emit('room-selected', this.selectedFocusedRoom);
+            this.$depthToolbar.value = '' + this.selectedFocusedRoom.z;
         }
-        const o = room.clone();
-        if (o.ef) {
-            if (room.items)
-                o.items = room.items.slice(0);
-            else
-                o.items = [];
-            o.short = room.short;
-            o.long = room.long;
-            o.light = room.light || 0;
-            o.terrainType = room.terrain;
-            o.sound = room.sound;
-            o.smell = room.smell;
-            o.terrain = -1;
-        }
-        else {
-            if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
-                o.items = this.$items[o.item].children.slice();
-            else
-                o.items = [];
-            if (o.terrain < this.$descriptions.length && o.terrain >= 0 && this.$descriptions[o.terrain]) {
-                o.short = this.$descriptions[o.terrain].short;
-                o.long = this.$descriptions[o.terrain].long;
-                o.light = this.$descriptions[o.terrain].light;
-                o.terrainType = this.$descriptions[o.terrain].terrain;
-                o.sound = this.$descriptions[o.terrain].sound;
-                o.smell = this.$descriptions[o.terrain].smell;
+        let o;
+        if (room) {
+            o = room.clone();
+            if (o.ef) {
+                if (room.items)
+                    o.items = room.items.slice(0);
+                else
+                    o.items = [];
+                o.short = room.short;
+                o.long = room.long;
+                o.light = room.light || 0;
+                o.terrainType = room.terrain;
+                o.sound = room.sound;
+                o.smell = room.smell;
+                o.terrain = -1;
             }
             else {
-                o.short = '';
-                o.long = '';
-                o.light = 0;
-                o.terrainType = '';
-                o.sound = '';
-                o.smell = '';
+                if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
+                    o.items = this.$items[o.item].children.slice();
+                else
+                    o.items = [];
+                if (o.terrain < this.$descriptions.length && o.terrain >= 0 && this.$descriptions[o.terrain]) {
+                    o.short = this.$descriptions[o.terrain].short;
+                    o.long = this.$descriptions[o.terrain].long;
+                    o.light = this.$descriptions[o.terrain].light;
+                    o.terrainType = this.$descriptions[o.terrain].terrain;
+                    o.sound = this.$descriptions[o.terrain].sound;
+                    o.smell = this.$descriptions[o.terrain].smell;
+                }
+                else {
+                    o.short = '';
+                    o.long = '';
+                    o.light = 0;
+                    o.terrainType = '';
+                    o.sound = '';
+                    o.smell = '';
+                }
+                o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z).map(a => ({ ...a }));
             }
-            o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z).map(a => ({ ...a }));
         }
         this.$roomEditor.object = o;
     }
@@ -5768,6 +6342,8 @@ export class VirtualEditor extends EditorBase {
             let e;
             let t;
             let i;
+            const selected = this.$selectedRooms.slice();
+            this.$selectedRooms.length = 0;
             if (xl > 0 && yl > 0 && zl > 0) {
                 const rooms = this.$rooms;
                 let rcount = 0;
@@ -5815,8 +6391,8 @@ export class VirtualEditor extends EditorBase {
                                 r = new Room(x, y, z, e, t, i, s);
                                 if (t > maxTerrain) maxTerrain = t;
                             }
-                            if (this.$selectedRoom && this.$selectedRoom.at(r.x, r.y, r.z))
-                                this.ChangeSelection(r);
+                            if (selected.length > 0 && selected.filter(sR => sR.at(r.x, r.y, r.z)).length > 0)
+                                this.$selectedRooms.push(r);
                             cname = x + ',' + y;
                             if (zl > 1)
                                 cname += ',' + z;
@@ -5831,6 +6407,14 @@ export class VirtualEditor extends EditorBase {
                 }
                 this.$rcount = rcount;
                 this.$maxTerrain = maxTerrain;
+            }
+            if (selected.length !== 0 || this.$selectedRooms.length !== 0)
+                this.ChangeSelection();
+            if (this.$focusedRoom) {
+                const oldFocus = this.$focusedRoom;
+                this.$focusedRoom = this.getRoom(this.$focusedRoom.x, this.$focusedRoom.y);
+                this.DrawRoom(this.$mapContext, oldFocus, true);
+                this.DrawRoom(this.$mapContext, this.$focusedRoom, true, true);
             }
         }
         else {
@@ -5859,6 +6443,8 @@ export class VirtualEditor extends EditorBase {
                 this.DrawMap();
             }, 500);
         }
+        else
+            this.doUpdate(UpdateType.drawMap);
         const cols = this.$exitGrid.columns;
         if (this.$mapSize.depth < 2) {
             this.$depth = 0;
@@ -5891,13 +6477,13 @@ export class VirtualEditor extends EditorBase {
         while (this.$xAxis.firstChild)
             this.$xAxis.removeChild(this.$xAxis.firstChild);
         while (this.$yAxis.firstChild)
-            this.$yAxis.removeChild(this.$xAxis.firstChild);
+            this.$yAxis.removeChild(this.$yAxis.firstChild);
         let frag = document.createDocumentFragment();
         let el: HTMLElement;
         this.$xAxisHighlight.style.height = '100%';
         this.$yAxisHighlight.style.width = '100%';
         let x;
-        const xl = this.$mapSize.widh;
+        const xl = this.$mapSize.width;
         for (x = 0; x < xl; x++) {
             el = document.createElement('div');
             el.dataset.x = '' + x;
@@ -5909,6 +6495,7 @@ export class VirtualEditor extends EditorBase {
                     this.$xAxisHighlight.style.backgroundColor = 'rgba(221, 221, 221, 0.25)';
                 this.$xAxisHighlight.style.display = 'block';
                 this.$xAxisHighlight.style.left = ((+(<HTMLElement>e.currentTarget).dataset.x) * 32) + 'px';
+                this.$xAxisHighlight.style.top = this.$mapContainer.scrollTop + 'px';
             });
             el.addEventListener('mouseout', (e) => {
                 this.$xAxisHighlight.style.display = '';
@@ -5930,6 +6517,7 @@ export class VirtualEditor extends EditorBase {
                     this.$yAxisHighlight.style.backgroundColor = 'rgba(221, 221, 221, 0.25)';
                 this.$yAxisHighlight.style.display = 'block';
                 this.$yAxisHighlight.style.top = ((+(<HTMLElement>e.currentTarget).dataset.y) * 32) + 'px';
+                this.$yAxisHighlight.style.left = this.$mapContainer.scrollLeft + 'px';
             });
             el.addEventListener('mouseout', (e) => {
                 this.$yAxisHighlight.style.display = '';
@@ -6133,7 +6721,7 @@ export class VirtualEditor extends EditorBase {
                 return '';
         }
         else if (!r)
-            r = this.$selectedRoom;
+            r = this.selectedFocusedRoom;
         //no room return empty string
         if (!r)
             return '';

@@ -237,6 +237,7 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: left;
+
     /*direction: rtl;*/
 }
 
@@ -997,10 +998,10 @@ input[type=checkbox].property-grid-editor {
 }
 
 .wizard-page {
-    height:100%;
-    width:100%;
-    text-align:left;
-    font-size:12pt;
+    height: 100%;
+    width: 100%;
+    text-align: left;
+    font-size: 12pt;
 }
 
 .wizard-page .bootstrap-select.form-control {
@@ -1016,7 +1017,7 @@ input[type=checkbox].property-grid-editor {
     position: absolute;
     bottom: 55px;
     padding: 5px;
-    top: 32px;    
+    top: 32px;
     left: 0;
-    right: 0;    
+    right: 0;
 }
