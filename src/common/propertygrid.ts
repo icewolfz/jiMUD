@@ -7,6 +7,7 @@ export interface PropertyGridOptions {
     parent?: any;
     id?: string;
     object?: any;
+    objects?: any;
 }
 
 export enum UpdateType { none = 0, build = 1 }
@@ -15,7 +16,7 @@ export class PropertyGrid extends EventEmitter {
     private $el: HTMLElement;
     private $parent: HTMLElement;
     private $id;
-    private $object;
+    private $objects = [];
     private $options = {};
     private $state = {};
     private $editor;
@@ -35,7 +36,10 @@ export class PropertyGrid extends EventEmitter {
                 this.parent = options.parent;
             else
                 this.parent = document.body;
-            this.object = options.object;
+            if (options.objects)
+                this.objects = options.objects;
+            else
+                this.object = options.object;
         }
         else
             this.parent = document.body;
@@ -62,7 +66,7 @@ export class PropertyGrid extends EventEmitter {
                 return true;
         }
         if (typeof this.$readonly === 'function')
-            return this.$readonly(prop, this.object[prop], this.object);
+            return this.$readonly(prop, this.getValue(prop), this.$objects.length !== 0 ? this.$objects : null);
         return this.$readonly;
     }
 
@@ -73,20 +77,35 @@ export class PropertyGrid extends EventEmitter {
         this.$el.id = this.id;
     }
 
-    get object() { return this.$object; }
+    get object() {
+        if (this.$objects.length === 0) return null;
+        return this.$objects[0];
+    }
     set object(value) {
-        if (value === this.$object) return;
+        this.objects = value;
+    }
+
+    get objects() { return this.$objects; }
+    set objects(value) {
+        if (!Array.isArray(value))
+            value = [value];
+        value = value.filter(v => v);
+        if (value === this.$objects) return;
         let eProp;
         if (this.$editorClick)
             eProp = this.$editorClick.dataset.prop;
         this.clearEditor();
-        if (this.$object)
-            delete this.$object['$propertyGrid'];
-        this.$object = value;
-        this.$object['$propertyGrid'] = true;
+        if (this.$objects.length)
+            this.$objects.forEach(o => delete o['$propertyGrid']);
+        this.$objects = value;
+        this.$objects.forEach(o => o['$propertyGrid'] = true);
         this.buildProperties();
-        if (eProp)
-            this.createEditor(document.querySelector('[data-prop="' + eProp + '"]'));
+        if (eProp){
+            const el = <HTMLElement>document.querySelector('[data-prop="' + eProp + '"]');
+            if (!el) return;
+            if (el.dataset.readonly !== 'true')
+                this.createEditor(el);
+        }
     }
 
     set parent(parent) {
@@ -104,8 +123,21 @@ export class PropertyGrid extends EventEmitter {
             this.$parent = document.body;
         this.createControl();
     }
-
     get parent(): HTMLElement { return this.$parent; }
+
+    public refresh() {
+        this.doUpdate(UpdateType.build);
+    }
+
+    public getValue(prop) {
+        if (this.$objects.length === 0)
+            return null;
+        return this.$objects[0][prop];
+    }
+    public setValue(prop, value) {
+        if (this.$objects.length === 0) return;
+        this.$objects.forEach(o => o[prop] = value);
+    }
 
     public setPropertyOptions(prop: any, ops?) {
         if (Array.isArray(prop)) {
@@ -160,16 +192,28 @@ export class PropertyGrid extends EventEmitter {
         return EditorType.default;
     }
 
-    private formatedValue(prop) {
-        if (!prop || !this.$object)
+    private defaultValue(prop) {
+        if (!prop || !this.$options[prop])
+            return null;
+        return this.$options[prop].default;
+    }
+
+    private formattedValue(prop) {
+        if (!prop || this.$objects.length === 0)
             return null;
         if (!this.$options[prop])
-            return this.$object[prop];
+            return this.getValue(prop);
         if (this.$options[prop].formatter)
-            return this.$options[prop].formatter(prop, this.$object[prop], this.$object);
+            return this.$options[prop].formatter(prop, this.getValue(prop), this.$objects.length !== 0 ? this.$objects : null);
         if (this.$options[prop].editor && this.$options[prop].editor.options && this.$options[prop].editor.type === EditorType.flag)
-            return enumToString(this.$object[prop], this.$options[prop].editor.options.enum);
-        return this.$object[prop];
+            return enumToString(this.getValue(prop), this.$options[prop].editor.options.enum);
+        return this.getValue(prop);
+    }
+
+    private sameValue(prop) {
+        const obs = this.$objects;
+        const obj = this.$objects[0];
+        return obs.filter(o => o[prop] === obj[prop]).length === obs.length;
     }
 
     private buildProperties() {
@@ -178,10 +222,11 @@ export class PropertyGrid extends EventEmitter {
         this.$prevEditor = null;
         while (this.$el.firstChild)
             this.$el.removeChild(this.$el.firstChild);
-        if (!this.$object) return;
+        if (this.$objects.length === 0) return;
         const layout = { Misc: [] };
         let group;
-        const props = Object.keys(this.$object);
+        const obj = this.$objects[0];
+        const props = Object.keys(obj);
         props.splice(props.indexOf('$propertyGrid', 1));
         props.sort((a, b) => {
             let sA = 0;
@@ -197,26 +242,29 @@ export class PropertyGrid extends EventEmitter {
             return a.localeCompare(b) * -1;
         });
         let pl = props.length;
+        const obs = this.$objects;
         while (pl--) {
-            if (this.$options[props[pl]]) {
-                if (this.$options[props[pl]].hasOwnProperty('visible') && !this.$options[props[pl]].visible)
+            const prop = props[pl];
+            const same = obs.filter(o => o[prop] === obj[prop]).length === obs.length;
+            if (this.$options[prop]) {
+                if (this.$options[prop].hasOwnProperty('visible') && !this.$options[prop].visible)
                     continue;
-                group = this.$options[props[pl]].group || 'Misc';
+                group = this.$options[prop].group || 'Misc';
                 if (!layout[group])
                     layout[group] = [];
                 layout[group].push({
-                    name: this.$options[props[pl]].label || props[pl],
-                    value: this.formatedValue(props[pl]),
-                    property: props[pl],
-                    readonly: this.isReadonly(props[pl])
+                    name: this.$options[prop].label || prop,
+                    value: same ? this.formattedValue(prop) : '',
+                    property: prop,
+                    readonly: this.isReadonly(prop)
                 });
             }
             else {
                 layout['Misc'].push({
-                    name: props[pl],
-                    value: this.$object[props[pl]],
-                    property: props[pl],
-                    readonly: this.isReadonly(props[pl])
+                    name: prop,
+                    value: same ? obj[prop] : '',
+                    property: prop,
+                    readonly: this.isReadonly(prop)
                 });
             }
         }
@@ -317,15 +365,12 @@ export class PropertyGrid extends EventEmitter {
         let value;
         let oldValue;
         const prop = this.$editor.property;
-        let eData;
-        if (this.$editor.editor) {
+        if (this.$editor.editor)
             value = this.$editor.editor.value;
-            eData = this.$editor.editor.data;
-        }
-        oldValue = this.$object[this.$editor.property];
-        if (value !== oldValue) {
-            this.$object[prop] = value;
-            this.$editor.el.textContent = this.formatedValue(this.$editor.property);
+        oldValue = this.$objects[0][this.$editor.property];
+        if (value !== oldValue || !this.sameValue(prop)) {
+            this.$objects.forEach(o => o[prop] = value);
+            this.$editor.el.textContent = this.formattedValue(this.$editor.property);
         }
         if (this.$editor.editor)
             this.$editor.editor.destroy();
@@ -361,7 +406,7 @@ export class PropertyGrid extends EventEmitter {
             editorOptions = this.$options[prop].editor.options;
             if (this.$options[prop].editor.hasOwnProperty('show')) {
                 if (typeof this.$options[prop].editor.show === 'function') {
-                    if (!this.$options[prop].editor.show(prop, this.$object[prop], this.$object)) {
+                    if (!this.$options[prop].editor.show(prop, this.$objects[0][prop], this.$objects)) {
                         this.$editor = null;
                         return;
                     }
@@ -391,7 +436,7 @@ export class PropertyGrid extends EventEmitter {
                     this.$editor.editor = new this.$options[prop].editor.editor(this, el, prop, editorOptions);
                 break;
             default:
-                switch (typeof (this.$object[prop])) {
+                switch (typeof (this.$objects[0][prop])) {
                     case 'boolean':
                         this.$editor.editor = new BooleanValueEditor(this, el, prop, editorOptions);
                         break;
@@ -405,8 +450,8 @@ export class PropertyGrid extends EventEmitter {
                 break;
         }
         if (this.$editor.editor) {
-            this.$editor.editor.data = this.object;
-            this.$editor.editor.value = this.$object[prop];
+            this.$editor.editor.data = this.$objects[0];
+            this.$editor.editor.value = this.sameValue(prop) ? this.$objects[0][prop] : null;
             this.$editor.editor.focus();
         }
         else

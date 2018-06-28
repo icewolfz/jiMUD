@@ -202,7 +202,7 @@ export class TextValueEditor extends ValueEditor {
                 const ec = this.editorClick;
                 this.value = this.$dropdown.value;
                 this.$editor.dataset.aOpen = 'true';
-                this.$dropdown.parentElement.removeChild(this.$dropdown);
+                this.$dropdown.remove();
                 this.$dropdown = null;
                 if (ec)
                     this.control.createEditor(ec);
@@ -233,10 +233,10 @@ export class TextValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
-        if (this.$dropdown && this.$dropdown.parentElement)
-            this.$dropdown.parentElement.removeChild(this.$dropdown);
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
+        if (this.$dropdown)
+            this.$dropdown.remove();
+        if (this.$el)
+            this.$el.remove();
     }
 
     public scroll() {
@@ -322,8 +322,8 @@ export class BooleanValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
+        if (this.$el)
+            this.$el.remove();
     }
 
     public scroll() { /**/ }
@@ -362,8 +362,8 @@ export class NumberValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
+        if (this.$el)
+            this.$el.remove();
     }
 
     public scroll() { /**/ }
@@ -516,10 +516,10 @@ export class FlagValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
-        if (this.$dropdown && this.$dropdown.parentElement)
-            this.$dropdown.parentElement.removeChild(this.$dropdown);
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
+        if (this.$dropdown)
+            this.$dropdown.remove();
+        if (this.$el)
+            this.$el.remove();
     }
 
     public scroll() {
@@ -559,7 +559,7 @@ export class FlagValueEditor extends ValueEditor {
         }
         const ec = this.editorClick;
         this.$editor.dataset.aOpen = 'true';
-        this.$dropdown.parentElement.removeChild(this.$dropdown);
+        this.$dropdown.remove();
         this.$dropdown = null;
         if (ec)
             this.control.createEditor(ec);
@@ -680,10 +680,10 @@ export class DropDownEditValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
-        if (this.$dropdown && this.$dropdown.parentElement)
-            this.$dropdown.parentElement.removeChild(this.$dropdown);
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
+        if (this.$dropdown)
+            this.$dropdown.parentElement.remove();
+        if (this.$el)
+            this.$el.remove();
     }
 
     public scroll() {
@@ -723,7 +723,7 @@ export class DropDownEditValueEditor extends ValueEditor {
         }
         const ec = this.editorClick;
         this.$editor.dataset.aOpen = 'true';
-        this.$dropdown.parentElement.removeChild(this.$dropdown);
+        this.$dropdown.remove();
         this.$dropdown = null;
         if (ec)
             this.control.createEditor(ec);
