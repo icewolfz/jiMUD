@@ -3519,6 +3519,8 @@ export class VirtualEditor extends EditorBase {
                         resetCursor(this.$externalRaw);
                     }
                     this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, 0, 0, 0);
+                    if (this.$focusedRoom.at(or.x, or.y, or.z))
+                        this.$focusedRoom = this.$selectedRooms[sl];
                     this.setRoom(this.$selectedRooms[sl]);
                     this.RoomChanged(this.$selectedRooms[sl], or);
                     this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, this.$selectedRooms[sl].at(this.$mouse.rx, this.$mouse.ry));
@@ -3630,10 +3632,10 @@ export class VirtualEditor extends EditorBase {
                     this.deleteRoom(or);
                     this.addRoom(room);
                     this.RoomChanged(room, or);
-                    rooms.push(room);
+                    rooms.unshift(room);
                 }
                 if (this.$focusedRoom)
-                    this.setFocusedRoom(this.$focusedRoom.x, this.$focusedRoom.y);
+                    this.setFocusedRoom(this.$focusedRoom.x, this.$focusedRoom.y, this.$focusedRoom.z);
                 this.setSelectedRooms(rooms);
                 break;
             case View.terrains:
@@ -3682,6 +3684,8 @@ export class VirtualEditor extends EditorBase {
                         resetCursor(this.$externalRaw);
                     }
                     this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, 0, 0, 0);
+                    if (this.$focusedRoom.at(or.x, or.y, or.z))
+                        this.$focusedRoom = this.$selectedRooms[sl];
                     this.setRoom(this.$selectedRooms[sl]);
                     this.RoomChanged(this.$selectedRooms[sl], or);
                     this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, this.$selectedRooms[sl].at(this.$mouse.rx, this.$mouse.ry));
