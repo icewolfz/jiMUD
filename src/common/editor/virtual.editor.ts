@@ -1238,7 +1238,7 @@ export class VirtualEditor extends EditorBase {
                     sr = true;
             }
             if (sr) {
-                this.UpdateEditor(this.selectedFocusedRoom);
+                this.UpdateEditor(this.$selectedRooms);
                 this.UpdatePreview(this.selectedFocusedRoom);
             }
             resetCursor(this.$externalRaw);
@@ -1274,7 +1274,7 @@ export class VirtualEditor extends EditorBase {
                     sr = true;
             }
             if (sr) {
-                this.UpdateEditor(this.selectedFocusedRoom);
+                this.UpdateEditor(this.$selectedRooms);
                 this.UpdatePreview(this.selectedFocusedRoom);
             }
         });
@@ -1312,7 +1312,7 @@ export class VirtualEditor extends EditorBase {
                         sr = true;
                 }
                 if (sr) {
-                    this.UpdateEditor(this.selectedFocusedRoom);
+                    this.UpdateEditor(this.$selectedRooms);
                     this.UpdatePreview(this.selectedFocusedRoom);
                 }
                 resetCursor(this.$externalRaw);
@@ -1367,7 +1367,7 @@ export class VirtualEditor extends EditorBase {
                     r.ee &= ~RoomExits[oldValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
                     if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(oldValue.x, oldValue.y, oldValue.z)) {
-                        this.UpdateEditor(this.selectedFocusedRoom);
+                        this.UpdateEditor(this.$selectedRooms);
                         this.UpdatePreview(this.selectedFocusedRoom);
                     }
                 }
@@ -1379,7 +1379,7 @@ export class VirtualEditor extends EditorBase {
                     r.ee |= RoomExits[newValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
                     if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(newValue.x, newValue.y, newValue.z)) {
-                        this.UpdateEditor(this.selectedFocusedRoom);
+                        this.UpdateEditor(this.$selectedRooms);
                         this.UpdatePreview(this.selectedFocusedRoom);
                     }
                 }
@@ -2489,11 +2489,9 @@ export class VirtualEditor extends EditorBase {
         });
         this.$roomEditor = new PropertyGrid({ parent: this.$splitterEditor.panel2 });
         this.$roomEditor.readonly = (prop, value, object) => {
-            if (object && object.ef)
+            if (object && object.filter(o => o.ef).length !== 0)
                 return prop !== 'ef';
-            if (prop === 'ef')
-                return true;
-            return false;
+            return prop === 'ef';
         };
         this.$roomEditor.on('open-file', (property) => {
             let f;
@@ -2507,90 +2505,108 @@ export class VirtualEditor extends EditorBase {
             this.emit('browse-file', e);
         });
         this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
-            const old = this.selectedFocusedRoom.clone();
-            let data;
-            switch (prop) {
-                case 'external':
-                    let nExternal = this.$exits.filter(e => e.x !== old.x || e.y !== old.y || e.z !== old.z);
-                    this.selectedFocusedRoom.ee = newValue.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
-                    nExternal = nExternal.concat(newValue);
-                    this.$exits = nExternal;
-                    this.$exitGrid.rows = this.$exits;
-                    if (this.$mapSize.depth > 1)
-                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
-                    else
-                        nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
-                    this.$externalRaw.value = '';
-                    this.updateRaw(this.$externalRaw, 0, nExternal);
-                    this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, this.selectedFocusedRoom.at(this.$mouse.rx, this.$mouse.ry));
-                    resetCursor(this.$externalRaw);
-                    break;
-                case 'ee':
-                case 'ef':
-                    break;
-                case 'items':
-                    this.$items[this.selectedFocusedRoom.item].children = newValue;
-                    this.$itemGrid.rows = this.$items;
-                    this.updateRaw(this.$itemRaw, this.selectedFocusedRoom.item * 2, [
-                        newValue.map(i => i.item).join(':'),
-                        newValue.map(i => i.description).join(':')
-                    ]);
-                    resetCursor(this.$itemRaw);
-                    break;
-                case 'terrainType':
-                case 'short':
-                case 'long':
-                case 'light':
-                case 'sound':
-                case 'smell':
-                    if (prop === 'terrainType')
-                        prop = 'terrain';
-                    //invalid index
-                    if (this.selectedFocusedRoom.terrain < 0) return;
-                    //get current data and if none set defaults and assign to the index
-                    data = this.$descriptions[this.selectedFocusedRoom.terrain];
-                    if (!data) {
-                        data = {
-                            idx: this.selectedFocusedRoom.terrain,
-                            short: '',
-                            light: 0,
-                            terrain: '',
-                            long: '',
-                            sound: '',
-                            smell: ''
-                        };
-                    }
-                    data[prop] = newValue;
-                    //update the object data
-                    this.$descriptions[this.selectedFocusedRoom.terrain] = data;
-                    //update the file data
-                    this.updateRaw(this.$descriptionRaw, data.idx * 3, [
-                        data.short + ':' + data.light + ':' + data.terrain,
-                        data.long,
-                        (data.smell.length > 0 ? data.smell : '0') + ':' + (data.sound.length > 0 ? data.sound : '0')
-                    ]);
-                    resetCursor(this.$descriptionRaw);
-                    break;
-                case 'terrain':
-                    this.selectedFocusedRoom[prop] = newValue;
-                    if (this.$roomEditor.object.item === oldValue)
-                        this.selectedFocusedRoom.item = newValue;
-                    //new high terrain, clear cache and redraw whole map as colors should have shifted
-                    if (newValue > this.$maxTerrain) {
-                        this.$maxTerrain = newValue;
-                        this.$colorCache = null;
-                        this.doUpdate(UpdateType.drawMap);
-                    }
-                    else //else just redraw the current room
+            const selected = this.$selectedRooms;
+            let sl = selected.length;
+            const first = selected[0];
+            items:
+            while (sl--) {
+                const old = selected[sl].clone();
+                const curr = selected[sl];
+                let data;
+                switch (prop) {
+                    case 'external':
+                        let nExternal = this.$exits.filter(e => e.x !== old.x || e.y !== old.y || e.z !== old.z);
+                        curr.ee = newValue.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
+                        nExternal = nExternal.concat(newValue);
+                        this.$exits = nExternal;
+                        this.$exitGrid.rows = this.$exits;
+                        if (this.$mapSize.depth > 1)
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                        else
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                        this.$externalRaw.value = '';
+                        this.updateRaw(this.$externalRaw, 0, nExternal);
                         this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, this.selectedFocusedRoom.at(this.$mouse.rx, this.$mouse.ry));
-                    this.RoomChanged(this.selectedFocusedRoom, old);
-                    break;
-                default:
-                    this.selectedFocusedRoom[prop] = newValue;
-                    this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, this.selectedFocusedRoom.at(this.$mouse.rx, this.$mouse.ry));
-                    this.RoomChanged(this.selectedFocusedRoom, old);
-                    break;
+                        resetCursor(this.$externalRaw);
+                        break;
+                    case 'ee':
+                    case 'ef':
+                        break;
+                    case 'items':
+                        this.$items[first.item].children = newValue;
+                        this.$itemGrid.rows = this.$items;
+                        this.updateRaw(this.$itemRaw, this.selectedFocusedRoom.item * 2, [
+                            newValue.map(i => i.item).join(':'),
+                            newValue.map(i => i.description).join(':')
+                        ]);
+                        resetCursor(this.$itemRaw);
+                        this.$selectedRooms.forEach(r => {
+                            if (first.terrain === first.item)
+                                r.terrain = first.terrain;
+                            r.item = first.item;
+                        });
+                        break items;
+                    case 'terrainType':
+                    case 'short':
+                    case 'long':
+                    case 'light':
+                    case 'sound':
+                    case 'smell':
+                        if (prop === 'terrainType')
+                            prop = 'terrain';
+                        selected.forEach(r => {
+                            if (first.terrain === first.item)
+                                r.item = first.item;
+                            r.terrain = first.terrain;
+                        });
+                        //invalid index
+                        if (first.terrain < 0) break items;
+                        //get current data and if none set defaults and assign to the index
+                        data = this.$descriptions[this.selectedFocusedRoom.terrain];
+                        if (!data) {
+                            data = {
+                                idx: this.selectedFocusedRoom.terrain,
+                                short: '',
+                                light: 0,
+                                terrain: '',
+                                long: '',
+                                sound: '',
+                                smell: ''
+                            };
+                        }
+                        data[prop] = newValue;
+                        //update the object data
+                        this.$descriptions[this.selectedFocusedRoom.terrain] = data;
+                        //update the file data
+                        this.updateRaw(this.$descriptionRaw, data.idx * 3, [
+                            data.short + ':' + data.light + ':' + data.terrain,
+                            data.long,
+                            (data.smell.length > 0 ? data.smell : '0') + ':' + (data.sound.length > 0 ? data.sound : '0')
+                        ]);
+                        resetCursor(this.$descriptionRaw);
+                        break items;
+                    case 'terrain':
+                        if (first.item === oldValue)
+                            curr.item = newValue;
+                        curr[prop] = newValue;
+                        //new high terrain, clear cache and redraw whole map as colors should have shifted
+                        if (newValue > this.$maxTerrain) {
+                            this.$maxTerrain = newValue;
+                            this.$colorCache = null;
+                            this.doUpdate(UpdateType.drawMap);
+                        }
+                        else //else just redraw the current room
+                            this.DrawRoom(this.$mapContext, curr, true, curr.at(this.$mouse.rx, this.$mouse.ry));
+                        this.RoomChanged(curr, old, true);
+                        break;
+                    default:
+                        curr[prop] = newValue;
+                        this.DrawRoom(this.$mapContext, curr, true, curr.at(this.$mouse.rx, this.$mouse.ry));
+                        this.RoomChanged(curr, old, true);
+                        break;
+                }
             }
+            setTimeout(() => this.UpdateEditor(this.$selectedRooms));
             this.UpdatePreview(this.selectedFocusedRoom);
         });
         this.$roomEditor.setPropertyOptions([
@@ -4381,7 +4397,7 @@ export class VirtualEditor extends EditorBase {
                     this.$mapRaw.dataset.dirty = null;
                     this.$terrainRaw.dataset.dirty = null;
                 }
-                this.UpdateEditor(this.selectedFocusedRoom);
+                this.UpdateEditor(this.$selectedRooms);
                 this.UpdatePreview(this.selectedFocusedRoom);
                 this.$label.style.display = 'none';
                 this.$splitterEditor.show();
@@ -4790,11 +4806,18 @@ export class VirtualEditor extends EditorBase {
             return;
         if (r.x >= this.$rooms[r.z][r.y].length)
             return;
+        //see if selected
+        const idx = this.$selectedRooms.indexOf(this.$rooms[r.z][r.y][r.x]);
         this.$rooms[r.z][r.y][r.x] = r;
-        if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(r.x, r.y, r.z)) {
-            this.UpdateEditor(r);
+        //if selected update the selected systm to point to new room object
+        if (idx !== -1) {
+            this.$selectedRooms[idx] = this.$rooms[r.z][r.y][r.x];
+            this.UpdateEditor(this.$selectedRooms);
             this.UpdatePreview(r);
         }
+        //was the old room focused? if so point ot new room object
+        if (this.$focusedRoom.at(r.x, r.y, r.z))
+            this.$focusedRoom = r;
         if (r.z === this.$depth)
             this.DrawRoom(this.$mapContext, r, true, r.at(this.$mouse.rx, this.$mouse.ry));
     }
@@ -5173,9 +5196,10 @@ export class VirtualEditor extends EditorBase {
     }
 
     private ChangeSelection() {
-        this.UpdateEditor(this.selectedFocusedRoom);
+        this.UpdateEditor(this.$selectedRooms);
         this.UpdatePreview(this.selectedFocusedRoom);
         this.$shiftRoom = null;
+        this.emit('rooms-selected', this.$selectedRooms);
     }
 
     private setSelectedRooms(rooms, noDraw?) {
@@ -5900,7 +5924,7 @@ export class VirtualEditor extends EditorBase {
         return pair;
     }
 
-    private RoomChanged(room, old) {
+    private RoomChanged(room, old, siletUpdate?) {
         let c = 0;
         let s = 0;
         let nl = '';
@@ -5991,61 +6015,66 @@ export class VirtualEditor extends EditorBase {
         }
 
         if (c) {
-            if (this.$selectedRooms.length !== 0 && this.selectedFocusedRoom === room)
-                this.UpdateEditor(room);
+            if (!siletUpdate && this.$selectedRooms.indexOf(room) !== -1)
+                this.UpdateEditor(this.$selectedRooms);
             this.$mapRaw.dataset.changed = 'true';
             this.changed = true;
         }
         this.UpdatePreview(room);
     }
 
-    private UpdateEditor(room) {
-        if (this.selectedFocusedRoom) {
-            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
-            this.emit('room-selected', this.selectedFocusedRoom);
+    private UpdateEditor(rooms) {
+        if (this.selectedFocusedRoom)
             this.$depthToolbar.value = '' + this.selectedFocusedRoom.z;
-        }
-        let o;
-        if (room) {
-            o = room.clone();
-            if (o.ef) {
-                if (room.items)
-                    o.items = room.items.slice(0);
-                else
-                    o.items = [];
-                o.short = room.short;
-                o.long = room.long;
-                o.light = room.light || 0;
-                o.terrainType = room.terrain;
-                o.sound = room.sound;
-                o.smell = room.smell;
-                o.terrain = -1;
-            }
-            else {
-                if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
-                    o.items = this.$items[o.item].children.slice();
-                else
-                    o.items = [];
-                if (o.terrain < this.$descriptions.length && o.terrain >= 0 && this.$descriptions[o.terrain]) {
-                    o.short = this.$descriptions[o.terrain].short;
-                    o.long = this.$descriptions[o.terrain].long;
-                    o.light = this.$descriptions[o.terrain].light;
-                    o.terrainType = this.$descriptions[o.terrain].terrain;
-                    o.sound = this.$descriptions[o.terrain].sound;
-                    o.smell = this.$descriptions[o.terrain].smell;
+        const objs = [];
+        if (rooms) {
+            let rl = rooms.length;
+            const ri = {};
+            while (rl--) {
+                const o = rooms[rl].clone();
+                if (o.ef) {
+                    if (rooms[rl].items)
+                        o.items = rooms[rl].items.slice(0);
+                    else
+                        o.items = [];
+                    o.short = rooms[rl].short;
+                    o.long = rooms[rl].long;
+                    o.light = rooms[rl].light || 0;
+                    o.terrainType = rooms[rl].terrain;
+                    o.sound = rooms[rl].sound;
+                    o.smell = rooms[rl].smell;
+                    o.terrain = -1;
                 }
                 else {
-                    o.short = '';
-                    o.long = '';
-                    o.light = 0;
-                    o.terrainType = '';
-                    o.sound = '';
-                    o.smell = '';
+                    if (!ri[o.item]) {
+                        if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
+                            ri[o.item] = this.$items[o.item].children.slice();
+                        else
+                            ri[o.item] = [];
+                    }
+                    o.items = ri[o.item];
+                    if (o.terrain < this.$descriptions.length && o.terrain >= 0 && this.$descriptions[o.terrain]) {
+                        o.short = this.$descriptions[o.terrain].short;
+                        o.long = this.$descriptions[o.terrain].long;
+                        o.light = this.$descriptions[o.terrain].light;
+                        o.terrainType = this.$descriptions[o.terrain].terrain;
+                        o.sound = this.$descriptions[o.terrain].sound;
+                        o.smell = this.$descriptions[o.terrain].smell;
+                    }
+                    else {
+                        o.short = '';
+                        o.long = '';
+                        o.light = 0;
+                        o.terrainType = '';
+                        o.sound = '';
+                        o.smell = '';
+                    }
+                    o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z).map(a => ({ ...a }));
                 }
-                o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z).map(a => ({ ...a }));
+                objs.unshift(o);
             }
         }
-        this.$roomEditor.object = o;
+        this.$roomEditor.objects = objs;
     }
 
     private UpdatePreview(room) {
@@ -6888,8 +6917,8 @@ export class FileOpenValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
+        if (this.$el)
+            this.$el.remove();
     }
 
     public scroll() { /**/ }
@@ -6967,8 +6996,8 @@ export class FileBrowseValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
+        if (this.$el)
+            this.$el.remove();
     }
 
     public scroll() { /**/ }
@@ -7032,8 +7061,7 @@ export class ExternalExitValueEditor extends ValueEditor {
             mDialog.style.height = '300px';
             mDialog.style.padding = '5px';
             mDialog.addEventListener('close', () => {
-                if (mDialog.parentElement)
-                    mDialog.parentElement.removeChild(mDialog);
+                mDialog.remove();
                 this.focus();
             });
             let header = document.createElement('div');
@@ -7045,8 +7073,7 @@ export class ExternalExitValueEditor extends ValueEditor {
             button.dataset.dismiss = 'modal';
             button.addEventListener('click', () => {
                 mDialog.close();
-                if (mDialog.parentElement)
-                    mDialog.parentElement.removeChild(mDialog);
+                mDialog.remove();
                 this.focus();
             });
             button.innerHTML = '&times;';
@@ -7184,8 +7211,7 @@ export class ExternalExitValueEditor extends ValueEditor {
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
                 mDialog.close();
-                if (mDialog.parentElement)
-                    mDialog.parentElement.removeChild(mDialog);
+                mDialog.remove();
                 this.focus();
             });
             button.textContent = 'Cancel';
@@ -7201,8 +7227,7 @@ export class ExternalExitValueEditor extends ValueEditor {
                     this.data.ee = 0;
                 this.value = dg.rows;
                 mDialog.close();
-                if (mDialog.parentElement)
-                    mDialog.parentElement.removeChild(mDialog);
+                mDialog.remove();
                 this.focus();
             });
             button.textContent = 'Ok';
@@ -7292,8 +7317,8 @@ export class ExternalExitValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
+        if (this.$el)
+            this.$el.remove();
     }
 
     public scroll() { /**/ }
@@ -7374,8 +7399,7 @@ export class ItemsValueEditor extends ValueEditor {
             mDialog.style.height = '300px';
             mDialog.style.padding = '5px';
             mDialog.addEventListener('close', () => {
-                if (mDialog.parentElement)
-                    mDialog.parentElement.removeChild(mDialog);
+                mDialog.remove();
                 this.focus();
             });
             let header = document.createElement('div');
@@ -7387,8 +7411,7 @@ export class ItemsValueEditor extends ValueEditor {
             button.dataset.dismiss = 'modal';
             button.addEventListener('click', () => {
                 mDialog.close();
-                if (mDialog.parentElement)
-                    mDialog.parentElement.removeChild(mDialog);
+                mDialog.remove();
                 this.focus();
             });
             button.innerHTML = '&times;';
@@ -7495,8 +7518,7 @@ export class ItemsValueEditor extends ValueEditor {
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
                 mDialog.close();
-                if (mDialog.parentElement)
-                    mDialog.parentElement.removeChild(mDialog);
+                mDialog.remove();
                 this.focus();
             });
             button.textContent = 'Cancel';
@@ -7508,8 +7530,7 @@ export class ItemsValueEditor extends ValueEditor {
             button.addEventListener('click', () => {
                 this.value = dg.rows;
                 mDialog.close();
-                if (mDialog.parentElement)
-                    mDialog.parentElement.removeChild(mDialog);
+                mDialog.remove();
                 this.focus();
             });
             button.textContent = 'Ok';
@@ -7599,8 +7620,8 @@ export class ItemsValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
-        if (this.$el.parentElement)
-            this.$el.parentElement.removeChild(this.$el);
+        if (this.$el)
+            this.$el.remove();
     }
 
     public scroll() { /**/ }

@@ -4,8 +4,9 @@
 
 - **New:**
   - Code editor:
-    -Virtual area editor now supports multi room selection by clicking and dragging mouse to form a selection box, all rooms inside the box will be selected or by clicking one room then shift click in a 2nd one and all rooms that form a rectangle using the 2 rooms as corners will be selected.
-    - Unused terrains in the description editor will have thier index # in bolded in red
+    - Virtual area editor now supports multi room selection by clicking and dragging mouse to form a selection box, all rooms inside the box will be selected or by clicking one room then shift click in a 2nd one and all rooms that form a rectangle using the 2 rooms as corners will be selected.
+    - You can edit multiple rooms at once with the room editor, just selection them all in a block using drag selection and then change the option, **Note** if values for a property are all different the property will be set to blank until edited.
+    - Unused terrains in the description editor will have their index # in bolded in red
 - **Changed:**
   - Code editor:
     - Change how commas are formatted following a }
@@ -21,6 +22,7 @@
       - Correctly highlight row or column of rooms when map has been scrolled
       - When using arrow or numpad to move around map, it would not correctly scroll the newly selected room if you have scrolled off the old room
       - Fix mouse hover room while scroll, as old x/y they are now invalid
+      - When after editing a room property and clicking on a read only field it would allow you to edit the field
     - Fix issue when split view and scrolling tabs not correctly setting scroll width
     - String blocks where not correctly terminated and formatted text in side
     - Save file as would not correctly clear the previous file name data

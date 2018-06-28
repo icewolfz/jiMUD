@@ -171,7 +171,7 @@ Allows you to edit a virtual map easily with out having to know all file formats
 
 ### Room editor
 
-The room editor allows you to editor the currently selected room, if more then one room is selected it is the top left room or the last focused room
+The room editor allows you to editor the currently selected rooms, if rooms have different property values, that property will remain blank until edited
 
 - `Description` the properties of a room related to description
   - `Short` the room short
