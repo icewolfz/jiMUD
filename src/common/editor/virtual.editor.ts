@@ -324,6 +324,23 @@ export class VirtualEditor extends EditorBase {
         return this.$mapSize.depth;
     }
 
+    public ensureVisible(x, y) {
+        let s = 32 + (y - 1) * 32;
+        if (s < this.$mapContainer.scrollTop)
+            this.$mapContainer.scrollTop = 32 + (y - 1) * 32;
+        s = 32 + (x - 1) * 32;
+        if (s < this.$mapContainer.scrollLeft)
+            this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
+        let t = ((this.$mapContainer.scrollTop) / 32) >> 0;
+        let b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
+        if (y >= b)
+            this.$mapContainer.scrollTop = y * 32 - this.$mapContainer.clientHeight + 32;
+        t = (this.$mapContainer.scrollLeft / 32) >> 0;
+        b = t + ((this.$mapContainer.clientWidth / 32) >> 0);
+        if (x >= b)
+            this.$mapContainer.scrollLeft = x * 32 - this.$mapContainer.clientWidth + 32;
+    }
+
     constructor(options?: VirtualEditorOptions) {
         super(options);
         if (options && options.options)
@@ -1713,15 +1730,10 @@ export class VirtualEditor extends EditorBase {
             if (!this.$focused) return;
             let x = 0;
             let y = 0;
-            let l;
-            let r;
-            let b;
-            let t;
             let po;
             let p = this.selectedFocusedRoom;
             let o = 0;
             let or;
-            let s;
             let sl;
             let width;
             let height;
@@ -1761,9 +1773,7 @@ export class VirtualEditor extends EditorBase {
                         y = sf.y;
                         if (y > 0) {
                             y--;
-                            s = 32 + (y - 1) * 32;
-                            if (s < this.$mapContainer.scrollTop)
-                                this.$mapContainer.scrollTop = 32 + (y - 1) * 32;
+                            this.ensureVisible(x, y);
                             sf = this.getRoom(x, y);
                             x = Math.min(ef.x, sf.x);
                             y = Math.min(ef.y, sf.y);
@@ -1786,9 +1796,7 @@ export class VirtualEditor extends EditorBase {
                     else if (y > 0) {
                         y--;
                         this.setSelectedRooms(this.getRoom(x, y));
-                        s = 32 + (y - 1) * 32;
-                        if (s < this.$mapContainer.scrollTop)
-                            this.$mapContainer.scrollTop = 32 + (y - 1) * 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                         this.setFocusedRoom(this.selectedRoom);
                     }
@@ -1807,10 +1815,7 @@ export class VirtualEditor extends EditorBase {
                         y = sf.y;
                         if (y < this.$mapSize.height - 1) {
                             y++;
-                            t = ((this.$mapContainer.scrollTop) / 32) >> 0;
-                            b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
-                            if (y >= b)
-                                this.$mapContainer.scrollTop = y * 32 - this.$mapContainer.clientHeight + 32;
+                            this.ensureVisible(x, y);
                             sf = this.getRoom(x, y);
                             x = Math.min(ef.x, sf.x);
                             y = Math.min(ef.y, sf.y);
@@ -1833,10 +1838,7 @@ export class VirtualEditor extends EditorBase {
                     else if (y < this.$mapSize.height - 1) {
                         y++;
                         this.setSelectedRooms(this.getRoom(x, y));
-                        t = ((this.$mapContainer.scrollTop) / 32) >> 0;
-                        b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
-                        if (y >= b)
-                            this.$mapContainer.scrollTop = y * 32 - this.$mapContainer.clientHeight + 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                         this.setFocusedRoom(this.selectedRoom);
                     }
@@ -1855,9 +1857,7 @@ export class VirtualEditor extends EditorBase {
                         y = sf.y;
                         if (x > 0) {
                             x--;
-                            s = 32 + (x - 1) * 32;
-                            if (s < this.$mapContainer.scrollLeft)
-                                this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
+                            this.ensureVisible(x, y);
                             sf = this.getRoom(x, y);
                             x = Math.min(ef.x, sf.x);
                             y = Math.min(ef.y, sf.y);
@@ -1880,9 +1880,7 @@ export class VirtualEditor extends EditorBase {
                     else if (x > 0) {
                         x--;
                         this.setSelectedRooms(this.getRoom(x, y));
-                        s = 32 + (x - 1) * 32;
-                        if (s < this.$mapContainer.scrollLeft)
-                            this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                         this.setFocusedRoom(this.selectedRoom);
                     }
@@ -1901,10 +1899,7 @@ export class VirtualEditor extends EditorBase {
                         y = sf.y;
                         if (x < this.$mapSize.width - 1) {
                             x++;
-                            l = (this.$mapContainer.scrollLeft / 32) >> 0;
-                            r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                            if (x >= r)
-                                this.$mapContainer.scrollLeft = this.$mapContainer.scrollLeft + 32;
+                            this.ensureVisible(x, y);
                             sf = this.getRoom(x, y);
                             x = Math.min(ef.x, sf.x);
                             y = Math.min(ef.y, sf.y);
@@ -1927,10 +1922,7 @@ export class VirtualEditor extends EditorBase {
                     else if (x < this.$mapSize.width - 1) {
                         x++;
                         this.setSelectedRooms(this.getRoom(x, y));
-                        l = (this.$mapContainer.scrollLeft / 32) >> 0;
-                        r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (x >= r)
-                            this.$mapContainer.scrollLeft = x * 32 - this.$mapContainer.clientWidth + 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                         this.setFocusedRoom(this.selectedRoom);
                     }
@@ -2154,14 +2146,7 @@ export class VirtualEditor extends EditorBase {
 
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        t = ((this.$mapContainer.scrollTop) / 32) >> 0;
-                        b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
-                        if (y >= b)
-                            this.$mapContainer.scrollTop = y * 32 - this.$mapContainer.clientHeight + 32;
-
-                        s = 32 + (x - 1) * 32;
-                        if (s < this.$mapContainer.scrollLeft)
-                            this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                     }
                     this.setFocusedRoom(this.selectedRoom);
@@ -2191,10 +2176,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        t = ((this.$mapContainer.scrollTop) / 32) >> 0;
-                        b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
-                        if (y >= b)
-                            this.$mapContainer.scrollTop = y * 32 - this.$mapContainer.clientHeight + 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                     }
                     this.setFocusedRoom(this.selectedRoom);
@@ -2225,14 +2207,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        t = ((this.$mapContainer.scrollTop) / 32) >> 0;
-                        b = t + ((this.$mapContainer.clientHeight / 32) >> 0);
-                        if (y >= b)
-                            this.$mapContainer.scrollTop = y * 32 - this.$mapContainer.clientHeight + 32;
-                        l = (this.$mapContainer.scrollLeft / 32) >> 0;
-                        r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (x >= r)
-                            this.$mapContainer.scrollLeft = x * 32 - this.$mapContainer.clientWidth + 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                     }
                     this.setFocusedRoom(this.selectedRoom);
@@ -2262,9 +2237,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        s = 32 + (x - 1) * 32;
-                        if (s < this.$mapContainer.scrollLeft)
-                            this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                     }
                     this.setFocusedRoom(this.selectedRoom);
@@ -2296,10 +2269,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        l = (this.$mapContainer.scrollLeft / 32) >> 0;
-                        r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (x >= r)
-                            this.$mapContainer.scrollLeft = x * 32 - this.$mapContainer.clientWidth + 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                     }
                     this.setFocusedRoom(this.selectedRoom);
@@ -2330,12 +2300,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        s = 32 + (y - 1) * 32;
-                        if (s < this.$mapContainer.scrollTop)
-                            this.$mapContainer.scrollTop = 32 + (y - 1) * 32;
-                        s = 32 + (x - 1) * 32;
-                        if (s < this.$mapContainer.scrollLeft)
-                            this.$mapContainer.scrollLeft = 32 + (x - 1) * 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                     }
                     this.setFocusedRoom(this.selectedRoom);
@@ -2365,9 +2330,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        s = 32 + (y - 1) * 32;
-                        if (s < this.$mapContainer.scrollTop)
-                            this.$mapContainer.scrollTop = 32 + (y - 1) * 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                     }
                     event.preventDefault();
@@ -2397,13 +2360,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
-                        s = 32 + (y - 1) * 32;
-                        if (s < this.$mapContainer.scrollTop)
-                            this.$mapContainer.scrollTop = 32 + (y - 1) * 32;
-                        l = (this.$mapContainer.scrollLeft / 32) >> 0;
-                        r = l + ((this.$mapContainer.clientWidth / 32) >> 0);
-                        if (x >= r)
-                            this.$mapContainer.scrollLeft = x * 32 - this.$mapContainer.clientWidth + 32;
+                        this.ensureVisible(x, y);
                         this.$map.focus();
                     }
                     this.setFocusedRoom(this.selectedRoom);
