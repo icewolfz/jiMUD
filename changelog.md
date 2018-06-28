@@ -18,6 +18,7 @@
       - Fix x axis numbers not being displayed correctly
       - Correctly highlight row or column of rooms when map has been scrolled
       - When using arrow or numpad to move around map, it would not correctly scroll the newly selected room if you have scrolled off the old room
+      - Fix mouse hover room while scroll, as old x/y they are now invalid
     - Fix issue when split view and scrolling tabs not correctly setting scroll width
     - String blocks where not correctly terminated and formated text in side
     - Save file as would not correctly clear the previous file name data

@@ -1425,6 +1425,15 @@ export class VirtualEditor extends EditorBase {
         this.$mapContainer.addEventListener('scroll', () => {
             this.$xAxis.style.left = (32 - this.$mapContainer.scrollLeft) + 'px';
             this.$yAxis.style.top = (32 - this.$mapContainer.scrollTop) + 'px';
+            let r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+            if (r) this.DrawRoom(this.$mapContext, r, true);
+            const x = this._os.left;
+            const y = this._os.top;
+            if (this._lastMouse.clientX >= x && this._lastMouse.clientX <= this.$mapContainer.clientWidth + x && this._lastMouse.clientY >= y && this._lastMouse.clientY <= this.$mapContainer.clientHeight + y) {
+                this.$mouse = this.getMousePosFromWindow(this._lastMouse);
+                r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
+                if (r) this.DrawRoom(this.$mapContext, r, true, true);
+            }
         });
         this.$mapContainer.addEventListener('click', (e) => {
             this.$map.focus();
