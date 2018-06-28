@@ -1494,7 +1494,7 @@ export class DataGrid extends EventEmitter {
             cell.style.maxWidth = w + 'px';
             cell.style.textAlign = cols[c].align || '';
             if (cols[c].styleFormatter)
-                cols[c].styleFormatter({ row: data, cell: data[field], rowIndex: r, column: c, index: idx, field: cols[c].field, rows: this.$rows, parent: parent, child: child, dataIndex: dataIdx });
+                cols[c].styleFormatter({ row: data, cell: cell, rowIndex: r, column: c, index: idx, field: cols[c].field, rows: this.$rows, parent: parent, child: child, dataIndex: dataIdx });
             cell.dataset.row = '' + cnt;
             cell.dataset.column = '' + c;
             cell.dataset.field = cols[c].field || '';
