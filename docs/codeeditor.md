@@ -311,3 +311,4 @@ Editor preferences are stored in their own file independent of client or charact
 - `Slow performance` Make sure you are not using --disable-gpu, with out the gpu it can cause slow performance from maps taking 10 to 100 times longer to load
 - Missing context menus, will be addressed in future releases
 - You can not edit remote virtual maps in virtual map editor, as most virtual maps require multiple files and at the moment it is impossible to know all the remote files
+- Pasting virtual area rooms into other maps does not copy descriptions or items
