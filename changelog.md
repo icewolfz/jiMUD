@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.52 2018-06-25
+## 0.4.52
 
 - **New:**
   - Code editor: Virtual area editor now supports multi room selection by clicking and dragging mouse to form a selection box, all rooms inside the box will be selected or by clicking one room then shift click in a 2nd one and all rooms that form a rectangle using the 2 rooms as corners will be selected.
