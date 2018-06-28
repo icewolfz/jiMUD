@@ -1474,6 +1474,7 @@ export class VirtualEditor extends EditorBase {
         this.$map.tabIndex = 1;
 
         this._wMove = (e) => {
+            if (this.$view !== View.map) return;
             this.$mousePrevious = this.$mouse;
             this._lastMouse = e;
             this.$mouse = this.getMousePosFromWindow(e);
@@ -1491,6 +1492,7 @@ export class VirtualEditor extends EditorBase {
                         if (p) this.DrawRoom(this.$mapContext, p, true, false);
                         if (r) this.DrawRoom(this.$mapContext, r, true, true);
                     }
+                    this.emit('location-changed', this.$mouse.rx, this.$mouse.ry);
                 }
                 else {
                     const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
@@ -1500,9 +1502,6 @@ export class VirtualEditor extends EditorBase {
                         if (r) this.DrawRoom(this.$mapContext, r, true);
                     }
                 }
-                this.emit('location-changed', this.$mouse.rx, this.$mouse.ry);
-                e.preventDefault();
-                return false;
             }
         };
 
