@@ -2287,7 +2287,7 @@ export class Parser extends EventEmitter {
   }
 
   /**
-   * CurrentAnsiCode - return an ansi formated code based on current ansi state
+   * CurrentAnsiCode - return an ansi formatted code based on current ansi state
    *
    * @returns {String}
    */

@@ -8,7 +8,7 @@
     - Unused terrains in the description editor will have thier index # in bolded in red
 - **Changed:**
   - Code editor:
-    - Change how commas are formated following a }
+    - Change how commas are formatted following a }
     - When deleting a room it will now set terrain and item indexes to 0
 - **Fixed:**
   - Code editor:
@@ -22,7 +22,7 @@
       - When using arrow or numpad to move around map, it would not correctly scroll the newly selected room if you have scrolled off the old room
       - Fix mouse hover room while scroll, as old x/y they are now invalid
     - Fix issue when split view and scrolling tabs not correctly setting scroll width
-    - String blocks where not correctly terminated and formated text in side
+    - String blocks where not correctly terminated and formatted text in side
     - Save file as would not correctly clear the previous file name data
     - Would open files sent from immortal tools always in remote edit more if code editor is not already open
     - Fix context menus for data grid editors

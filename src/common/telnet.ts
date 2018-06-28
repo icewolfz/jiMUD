@@ -1594,9 +1594,9 @@ export class Telnet extends EventEmitter {
 
     /**
      * @name Telnet#sendGMCP
-     * @desc Send a GMCP formated string
+     * @desc Send a GMCP formatted string
      *
-     * @param {String} str The GMCP formated string to send to the host
+     * @param {String} str The GMCP formatted string to send to the host
      */
     public sendGMCP(str) {
         if (this.connected && this.server.GMCP) {

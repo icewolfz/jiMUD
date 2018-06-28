@@ -5,7 +5,7 @@ string item_list(mixed items...)
 mixed items - can be a string array or a string list
 
 DESCRIPTION
-Will return a formated list as string
+Will return a formatted list as string
 
 EXAMPLE
     list_item("one", "two") //returns "one and two"

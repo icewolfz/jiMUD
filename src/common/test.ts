@@ -7,7 +7,7 @@ import { AnsiColorCode, Ansi } from './ansi';
  * Client text functions
  *
  * Functions that can be executed from the command line to display information
- * or display formated text to ensure it looks or functions correctly
+ * or display formatted text to ensure it looks or functions correctly
  *
  * @author Icewolfz
  * @export

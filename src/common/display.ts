@@ -1,7 +1,7 @@
 /**
  * Ansi display
  *
- * Display ansi and mxp formated text
+ * Display ansi and mxp formatted text
  *
  * @arthur Icewolfz
  * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support

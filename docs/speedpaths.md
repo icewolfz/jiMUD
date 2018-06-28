@@ -1,6 +1,6 @@
 # Speedpaths
 
-- Speedpaths are a formated string expanded by the client before sent to the mud allowing for easy repetitive commands in the format of #command repeated with as many commands as you like with no spaces between. The leader command is the only command that can not have a number
+- Speedpaths are a formatted string expanded by the client before sent to the mud allowing for easy repetitive commands in the format of #command repeated with as many commands as you like with no spaces between. The leader command is the only command that can not have a number
 - Speedpaths are executed by starting the line with the speedpath character if enabled, which by default is ! and can be changed in Settings > General
 - You can escape the speedpath character by doubling it so !!2n would send !2n to the mud instead of being expanded, you can escape a number but doing \# so \0 would be considered a 0 in th command
 
