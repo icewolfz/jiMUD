@@ -193,7 +193,7 @@ export class ReplaceCommand implements monaco.editor.ICommand {
 }
 
 export class MonacoCodeEditor extends EditorBase {
-    private $el: HTMLElement;
+    private $oEditor: monaco.editor.IStandaloneCodeEditor;
     private $editor: monaco.editor.IStandaloneCodeEditor;
     private $model: monaco.editor.ITextModel;
     private $saving = false;
@@ -326,27 +326,42 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public get selected() {
+        let s;
+        if (this.$oEditor && this.$oEditor.isFocused()) {
+            s = this.$oEditor.getSelection();
+            if (!s) return '';
+            return this.$diffModel.getValueInRange(s) || '';
+        }
         if (!this.$editor) return '';
-        const s = this.$editor.getSelection();
+        s = this.$editor.getSelection();
         if (!s) return '';
         return this.$model.getValueInRange(s) || '';
     }
 
     public selectAll() {
-        if (!this.$editor) return;
-        this.$editor.setSelection({
-            startLineNumber: 1,
-            startColumn: 1,
-            endColumn: this.$model.getLineMaxColumn(this.$model.getLineCount()),
-            endLineNumber: this.$model.getLineCount()
-        });
+        if (this.$oEditor && this.$oEditor.isFocused())
+            this.$oEditor.setSelection({
+                startLineNumber: 1,
+                startColumn: 1,
+                endColumn: this.$model.getLineMaxColumn(this.$model.getLineCount()),
+                endLineNumber: this.$model.getLineCount()
+            });
+        else if (this.$editor)
+            this.$editor.setSelection({
+                startLineNumber: 1,
+                startColumn: 1,
+                endColumn: this.$model.getLineMaxColumn(this.$model.getLineCount()),
+                endLineNumber: this.$model.getLineCount()
+            });
     }
     public cut() {
         if (!this.$editor) return;
         this.$editor.getAction('editor.action.clipboardCutAction').run();
     }
     public copy() {
-        if (!this.$editor) return;
+        if (this.$oEditor && this.$oEditor.isFocused())
+            this.$oEditor.getAction('editor.action.clipboardCopyAction').run();
+        else if (this.$editor) return;
         this.$editor.getAction('editor.action.clipboardCopyAction').run();
     }
     public paste() {
@@ -382,25 +397,35 @@ export class MonacoCodeEditor extends EditorBase {
     }
     public set spellcheck(value: boolean) { /**/ }
     public find() {
-        if (!this.$editor) return;
-        this.$editor.getAction('actions.find').run();
+        if (this.$oEditor && this.$oEditor.isFocused())
+            this.$oEditor.getAction('actions.find').run();
+        else if (this.$editor)
+            this.$editor.getAction('actions.find').run();
     }
     public replace() {
-        if (!this.$editor) return;
-        this.$editor.getAction('editor.action.startFindReplaceAction').run();
+        if (this.$oEditor && this.$oEditor.isFocused())
+            this.$oEditor.getAction('editor.action.find').run();
+        else if (this.$editor)
+            this.$editor.getAction('editor.action.startFindReplaceAction').run();
     }
     public supports(what) {
         switch (what) {
             case 'cut':
-            case 'copy':
             case 'delete':
             case 'pasteadvanced':
             case 'paste-advanced':
+                if (this.$oEditor && this.$oEditor.isFocused())
+                    return false;
                 return this.selected.length > 0;
+            case 'copy':
+                return this.selected.length > 0;
+            case 'paste':
             case 'undo':
             case 'redo':
+                if (this.$oEditor && this.$oEditor.isFocused())
+                    return false;
+                return true;
             case 'indent':
-            case 'paste':
             case 'find':
             case 'replace':
             case 'select-all':
@@ -422,8 +447,10 @@ export class MonacoCodeEditor extends EditorBase {
         this.$editor.focus();
     }
     public resize() {
-        if (!this.$editor) return;
-        this.$editor.layout();
+        if (this.$editor)
+            this.$editor.layout();
+        if (this.$oEditor)
+            this.$oEditor.layout();
     }
     public set options(value) {
         if (!value)
@@ -441,7 +468,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public menu(menu) {
         if (menu === 'edit') {
-            const selected = this.selected.length > 0;
+            const selected = this.$oEditor && this.$oEditor.isFocused() ? false : this.selected.length > 0;
             return [
                 {
                     label: 'F&ormatting',
@@ -531,6 +558,23 @@ export class MonacoCodeEditor extends EditorBase {
         }
         else if (menu === 'context') {
             const selected = this.selected.length > 0;
+            if (this.$oEditor && this.$oEditor.isFocused())
+                return [
+                    {
+                        label: 'Expand All',
+                        accelerator: 'CmdOrCtrl+>',
+                        click: () => {
+                            this.$editor.getAction('editor.unfoldAll').run();
+                        }
+                    },
+                    {
+                        label: 'Collapse All',
+                        accelerator: 'CmdOrCtrl+<',
+                        click: () => {
+                            this.$editor.getAction('editor.foldAll').run();
+                        }
+                    }
+                ];
             return [
                 {
                     label: 'Formatting',
@@ -641,14 +685,20 @@ export class MonacoCodeEditor extends EditorBase {
                             label: '&Expand All',
                             accelerator: 'CmdOrCtrl+>',
                             click: () => {
-                                this.$editor.getAction('editor.unfoldAll').run();
+                                if (this.$oEditor && this.$oEditor.isFocused())
+                                    this.$oEditor.getAction('editor.unfoldAll').run();
+                                else
+                                    this.$editor.getAction('editor.unfoldAll').run();
                             }
                         },
                         {
                             label: '&Collapse All',
                             accelerator: 'CmdOrCtrl+<',
                             click: () => {
-                                this.$editor.getAction('editor.foldAll').run();
+                                if (this.$oEditor && this.$oEditor.isFocused())
+                                    this.$oEditor.getAction('editor.foldAll').run();
+                                else
+                                    this.$editor.getAction('editor.foldAll').run();
                             }
                         }
                     ]
@@ -705,6 +755,11 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public get location() {
+        if (this.$oEditor && this.$oEditor.isFocused()) {
+            if (!this.$oEditor.getPosition())
+                return [0, 0];
+            return [this.$oEditor.getPosition().column, this.$oEditor.getPosition().lineNumber];
+        }
         if (!this.$editor || !this.$editor.getPosition())
             return [0, 0];
         return [this.$editor.getPosition().column, this.$editor.getPosition().lineNumber];
@@ -727,11 +782,13 @@ export class MonacoCodeEditor extends EditorBase {
     public activate(editor) {
         if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
             this.$editor = editor;
+            this.$oEditor = null;
             editor.setModel(this.$model);
             editor.restoreViewState(this.$state);
         }
         else {
             this.$editor = editor.getModifiedEditor();
+            this.$oEditor = editor.getOriginalEditor();
             editor.setModel({
                 original: this.$diffModel || this.$model,
                 modified: this.$model

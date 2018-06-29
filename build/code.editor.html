@@ -131,6 +131,9 @@
                 editor.onDidChangeCursorPosition(() => {
                     doUpdate(64);
                 });
+                editor.onDidFocusEditor(() => {
+                    doUpdate(32);
+                });
             }
             else {
                 let m = monaco.editor.createModel('', 'lpc');
@@ -140,6 +143,20 @@
                 });
                 editor.setModel(null);
                 m.dispose();
+                editor.getOriginalEditor().onContextMenu((e) => {
+                    let idx = window.$dEditors.indexOf(editor);
+                    if (manager.activePane === manager.panes[idx])
+                        manager.active.editor.emit('contextmenu-diff', e);
+                });
+                editor.getOriginalEditor().onDidChangeCursorSelection(() => {
+                    doUpdate(32);
+                });
+                editor.getOriginalEditor().onDidChangeCursorPosition(() => {
+                    doUpdate(64);
+                });
+                editor.getOriginalEditor().onDidFocusEditor(() => {
+                    doUpdate(32);
+                });
                 editor.getModifiedEditor().onContextMenu((e) => {
                     let idx = window.$dEditors.indexOf(editor);
                     if (manager.activePane === manager.panes[idx])
@@ -150,6 +167,9 @@
                 });
                 editor.getModifiedEditor().onDidChangeCursorPosition(() => {
                     doUpdate(64);
+                });
+                editor.getModifiedEditor().onDidFocusEditor(() => {
+                    doUpdate(32);
                 });
             }
 
@@ -7043,6 +7063,62 @@
                 if (p.editor.supports('buttons'))
                     buttons.append(...p.editor.buttons);
             });
+            p.editor.on('contextmenu-diff', () => {
+                var temp = [];
+                if (p.editor.type === 1) {
+                    temp.push({
+                        label: '&Previous change',
+                        click: gotoPrevChange
+                    });
+                    temp.push({
+                        label: '&Next change',
+                        click: gotoNextChange
+                    });
+                    temp.push({ type: 'separator' });
+                }
+                if (p.editor.supports('copy')) {
+                    temp.push({
+                        label: 'Copy',
+                        click: doCopy,
+                        accelerator: "CmdOrCtrl+X"
+                    });
+                    temp.push({ type: 'separator' });
+                }
+                temp.push({
+                    label: 'Select all',
+                    click: () => {
+                        if (manager.active && manager.active.editor)
+                            manager.active.editor.selectAll();
+                    },
+                    accelerator: "CmdOrCtrl+A"
+                });
+                if (p.editor.changed) {
+                    temp.push({ type: 'separator' });
+                    temp.push({
+                        label: 'Revert',
+                        click: () => { revertFile(); }
+                    });
+                }
+                if (p.editor.supports('find') || p.editor.supports('replace'))
+                    temp.push({ type: 'separator' });
+                if (p.editor.supports('find'))
+                    temp.push({
+                        label: 'Find',
+                        click: doFind
+                    });
+                if (p.editor.supports('replace'))
+                    temp.push({
+                        label: 'Replace',
+                        click: doReplace
+                    });
+
+                if (p.editor.supports('menu|context')) {
+                    temp.push({ type: 'separator' });
+                    temp = temp.concat(p.editor.menu('context'));
+                }
+                let inputMenu = Menu.buildFromTemplate(temp);
+                inputMenu.popup({ window: remote.getCurrentWindow() });
+            });
             p.editor.on('contextmenu', () => {
                 var temp = [];
                 if (p.editor.supports('refresh')) {
@@ -7053,7 +7129,7 @@
                     });
                     temp.push({ type: 'separator' });
                 }
-                if (p.editor.type === 1) {
+                if (p.editor.type === 1 && p.editor.diff) {
                     temp.push({
                         label: '&Previous change',
                         click: gotoPrevChange
