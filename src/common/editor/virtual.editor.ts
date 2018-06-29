@@ -7504,7 +7504,7 @@ export class ItemsValueEditor extends ValueEditor {
                     if (dg.selectedCount > 1)
                         this.$del.title = 'Delete items';
                     else
-                        this.$del.title = 'Delete exit';
+                        this.$del.title = 'Delete item';
                     this.$cut.removeAttribute('disabled');
                     this.$copy.removeAttribute('disabled');
                 }
