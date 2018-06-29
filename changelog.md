@@ -11,6 +11,7 @@
   - Code editor:
     - Change how commas are formatted following a }
     - When deleting a room it will now set terrain and item indexes to 0
+    - Changed default settings for show colors/terrains to on
 - **Fixed:**
   - Code editor:
     - Virtual area editor

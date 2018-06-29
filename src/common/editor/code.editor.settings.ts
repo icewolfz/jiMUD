@@ -65,8 +65,8 @@ export class EditorSettings {
     };
 
     public virtualOptions = {
-        showColors: false,
-        showTerrain: false,
+        showColors: true,
+        showTerrain: true,
         rawFontSize: 16,
         rawFontFamily: 'Consolas, \'Courier New\', monospace',
         rawFontWeight: 'normal',
