@@ -181,9 +181,11 @@ export class TextValueEditor extends ValueEditor {
             }
             this.$dropdown = document.createElement('textarea');
             this.$dropdown.classList.add('grid-editor-dropdown');
+            if (this.$noEnter)
+                this.$dropdown.classList.add('single');
             (<any>this.$dropdown).editor = this.$editor;
             if (!this.$wrap)
-                this.$dropdown.style.whiteSpace = 'nowrap';
+                this.$dropdown.classList.add('no-wrap');
             this.$dropdown.value = this.value;
             this.$dropdown.addEventListener('keydown', (e2) => {
                 if (e2.keyCode === 27) {
@@ -300,18 +302,24 @@ export class TextValueEditor extends ValueEditor {
             this.$noEnter = ops.singleLine || ops.noReturn;
             this.$wrap = ops.wrap;
         }
-        if (this.$noEnter)
+        if (this.$noEnter) {
             this.$editor.classList.add('single');
-        else
-            this.$editor.classList.add('remove');
+            if (this.$dropdown)
+                this.$dropdown.classList.add('single');
+        }
+        else {
+            this.$editor.classList.remove('single');
+            if (this.$dropdown)
+                this.$dropdown.classList.remove('single');
+        }
         if (this.$wrap && this.$editor)
             this.$editor.style.whiteSpace = 'normal';
         else if (this.$editor)
             this.$editor.style.whiteSpace = '';
         if (this.$wrap && this.$dropdown)
-            this.$dropdown.style.whiteSpace = 'normal';
+            this.$dropdown.classList.remove('no-wrap');
         else if (this.$dropdown)
-            this.$dropdown.style.whiteSpace = 'nowrap';
+            this.$dropdown.classList.add('no-wrap');
     }
     get options() { return super.options; }
 
@@ -382,7 +390,7 @@ export class NumberValueEditor extends ValueEditor {
             }
         });
         this.$el.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27){
+            if (e.keyCode === 27) {
                 this.$el.blur();
                 e.stopPropagation();
                 e.preventDefault();

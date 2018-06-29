@@ -867,6 +867,17 @@ input[type=checkbox].property-grid-editor {
     z-index: 2147483647;
 }
 
+.grid-editor-dropdown.no-wrap {
+    white-space: nowrap;
+}
+
+.grid-editor-dropdown.single,
+.grid-editor-dropdown.no-wrap.single {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;    
+}
+
 .property-grid-editor-flag-dropdown {
     overflow: auto;
     background-color: white;
