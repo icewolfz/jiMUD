@@ -2001,9 +2001,10 @@
     menubar.enabled = false;
     var manager = new DockManager();
     var dock = $(".dock-manager");
+    var toolbar = $('#toolbar');
     manager.hideTabstrip = false;
-    manager.on('add', (e, pane) => {
-        if(e.panel && e.panel.editor)
+    manager.on('add', (e) => {
+        if (e.panel && e.panel.editor)
             e.panel.editor.resize();
     });
     manager.on('add-pane', (idx, pane) => {
@@ -2050,14 +2051,14 @@
         window.$dEditors.splice(idx, 1);
         if (idx === 0)
             window.$editor = window.$editors[0];
-            var keys = Object.keys(_editors);
+        var keys = Object.keys(_editors);
         var k = keys.length;
         var p;
         while (k--) {
             p = keys[k];
             if (!_editors[p]) continue;
             _editors[p].editor.resize();
-        }            
+        }
     });
     manager.on('tab-moved', (e) => {
         if (e.panel && e.panel.editor)
@@ -2341,6 +2342,8 @@
         else
             sbLocation.textContent = '';
         if (enabled && manager.active.editor.updateUI) manager.active.editor.updateUI();
+        var tbh = toolbar.outerHeight();
+        dock.css('top', tbh + 'px');
         doUpdate(2);
     }
 
@@ -3592,7 +3595,9 @@
         });
 
         $(window).on('resize', () => {
-            if (output.outerHeight() < 170 && (dock.outerHeight() + 28) > 172) {
+            var tbh = toolbar.outerHeight();
+            dock.css('top', tbh + 'px');
+            if (output.outerHeight() < 170 && (dock.outerHeight() + tbh) > 172) {
                 options.outputSize = 170;
                 output.css("height", (options.outputSize - 20) + 'px');
                 dock.css("bottom", options.outputSize + 'px');
@@ -3702,7 +3707,7 @@
         updateEditDropdown(d);
         var ip = d.querySelector('input');
         var b = d.querySelector('button');
-        b.addEventListener('click', (e) => {
+        b.addEventListener('click', () => {
             var m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
             m.forEach(i => {
                 i.classList.remove('active');
@@ -4550,8 +4555,6 @@
                         climb: false,
                         diff: 0,
                     };
-                },
-                edit: (e) => {
                 }
             });
             $dialogs.roomExitPage.dataGrid.on('browse-file', e => {
@@ -5536,7 +5539,6 @@
                 var data = e.data;
                 var tmpl = baseParseData();
                 var tmp;
-                var tmp2;
                 tmpl.inherit = data['mon-wiz-type'].value;
                 tmpl.includes = data['mon-wiz-type'].display === 'Base' ? '\n#include "../area.h"' : '';
                 tmpl['doc'] = [];
@@ -6600,8 +6602,6 @@
                                 var x = room.x;
                                 var y = room.y;
                                 var z = room.z;
-                                var width = e.size.width;
-                                var height = e.size.height;
                                 var depth = e.size.depth;
                                 var f;
                                 if (depth === 1)
