@@ -2400,7 +2400,7 @@ function trackWindowState(id, window) {
       width: bounds.width,
       height: bounds.height
     };
-  else {
+  else if (!window.isMaximized()) {
     states[id].x = bounds.x;
     states[id].y = bounds.y;
     states[id].width = bounds.width;
