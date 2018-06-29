@@ -152,8 +152,19 @@ export class TextValueEditor extends ValueEditor {
                 this.$editor.blur();
                 return false;
             }
-            else if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey))
+            else if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
                 this.$editor.blur();
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+        this.$editor.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                return false;
+            }
         });
         el.appendChild(this.$editor);
 
@@ -175,9 +186,21 @@ export class TextValueEditor extends ValueEditor {
                 this.$dropdown.style.whiteSpace = 'nowrap';
             this.$dropdown.value = this.value;
             this.$dropdown.addEventListener('keydown', (e2) => {
+                if (e2.keyCode === 27) {
+                    e2.preventDefault();
+                    e2.stopPropagation();
+                    return false;
+                }
                 if (this.$noEnter && e2.keyCode === 13) {
                     e2.preventDefault();
                     e2.cancelBubble = true;
+                    e2.stopPropagation();
+                    return false;
+                }
+            });
+            this.$dropdown.addEventListener('keypress', (e2) => {
+                if (e2.keyCode === 27) {
+                    e2.preventDefault();
                     e2.stopPropagation();
                     return false;
                 }
@@ -191,6 +214,9 @@ export class TextValueEditor extends ValueEditor {
                 else if (e2.keyCode === 27 || (e2.keyCode === 13 && e2.ctrlKey)) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
+                    e2.preventDefault();
+                    e2.stopPropagation();
+                    return false;
                 }
                 return;
             });
@@ -348,9 +374,20 @@ export class NumberValueEditor extends ValueEditor {
         this.$el.type = 'number';
         this.$el.max = this.options ? (this.options.max || 1000) : 1000;
         this.$el.min = this.options ? (this.options.min || 0) : 0;
+        this.$el.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                return false;
+            }
+        });
         this.$el.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27)
+            if (e.keyCode === 27){
                 this.$el.blur();
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            }
             return;
         });
         this.$el.addEventListener('blur', (e) => {
@@ -413,10 +450,19 @@ export class FlagValueEditor extends ValueEditor {
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
         });
+        this.$editor.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                return false;
+            }
+        });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
                 this.$editor.blur();
                 e.preventDefault();
+                e.stopPropagation();
+                return false;
             }
         });
         this.$el.appendChild(this.$editor);
@@ -440,8 +486,18 @@ export class FlagValueEditor extends ValueEditor {
                 if (e2.keyCode === 27) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
+                    e2.preventDefault();
+                    e2.stopPropagation();
+                    return false;
                 }
                 return;
+            });
+            this.$dropdown.addEventListener('keydown', (e2) => {
+                if (e2.keyCode === 27) {
+                    e2.preventDefault();
+                    e2.stopPropagation();
+                    return false;
+                }
             });
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
@@ -620,6 +676,15 @@ export class DropDownEditValueEditor extends ValueEditor {
             if (e.keyCode === 27 || e.keyCode === 13) {
                 this.$editor.blur();
                 e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+        this.$editor.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                return false;
             }
         });
         this.$el.appendChild(this.$editor);
@@ -643,8 +708,20 @@ export class DropDownEditValueEditor extends ValueEditor {
                 if (e2.keyCode === 27) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
+                    e2.preventDefault();
+                    e2.stopPropagation();
+                    return false;
                 }
                 return;
+            });
+            this.$dropdown.addEventListener('keydown', (e2) => {
+                if (e2.keyCode === 27) {
+                    this.focus();
+                    this.$editor.dataset.aOpen = null;
+                    e2.preventDefault();
+                    e2.stopPropagation();
+                    return false;
+                }
             });
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';

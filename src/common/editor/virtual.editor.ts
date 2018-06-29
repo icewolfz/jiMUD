@@ -6898,6 +6898,15 @@ export class FileOpenValueEditor extends ValueEditor {
             if (e.keyCode === 27 || e.keyCode === 13) {
                 this.$editor.blur();
                 e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+        this.$editor.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                return false;
             }
         });
         this.$el.appendChild(this.$editor);
@@ -6975,6 +6984,15 @@ export class FileBrowseValueEditor extends ValueEditor {
             if (e.keyCode === 27 || e.keyCode === 13) {
                 this.$editor.blur();
                 e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+        this.$editor.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                return false;
             }
         });
         this.$el.appendChild(this.$editor);
@@ -7047,6 +7065,17 @@ export class ExternalExitValueEditor extends ValueEditor {
             if (e.keyCode === 27 || e.keyCode === 13) {
                 this.$editor.blur();
                 e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return false;
+            }
+        });
+        this.$editor.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+                return false;
             }
         });
         this.$el.appendChild(this.$editor);
@@ -7385,6 +7414,15 @@ export class ItemsValueEditor extends ValueEditor {
             if (e.keyCode === 27 || e.keyCode === 13) {
                 this.$editor.blur();
                 e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+        this.$editor.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                return false;
             }
         });
         this.$el.appendChild(this.$editor);

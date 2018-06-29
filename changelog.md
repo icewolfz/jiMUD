@@ -19,17 +19,18 @@
       - Did not update descriptions when raw file was edited
       - Did not save changes to terrain or state files when changed from the visual map
       - Reverting map did not refresh the visual map
-      - Fix x axis numbers not being displayed correctly
+      - Fixed x axis numbers not being displayed correctly
       - Correctly highlight row or column of rooms when map has been scrolled
       - When using arrow or numpad to move around map, it would not correctly scroll the newly selected room if you have scrolled off the old room
-      - Fix mouse hover room while scroll, as old x/y they are now invalid
+      - Fixed mouse hover room while scroll, as old x/y they are now invalid
       - When after editing a room property and clicking on a read only field it would allow you to edit the field
-    - Fix issue when split view and scrolling tabs not correctly setting scroll width
+    - Fixed issue when split view and scrolling tabs not correctly setting scroll width
     - String blocks where not correctly terminated and formatted text in side
     - Save file as would not correctly clear the previous file name data
     - Would open files sent from immortal tools always in remote edit more if code editor is not already open
-    - Fix context menus for data grid editors
-  - Fix window save state system, correctly saves restore state so when un-minimized it returns to previous size instead of max size
+    - Fixed context menus for data grid editors
+  - Fixed window save state system, correctly saves restore state so when un-minimized it returns to previous size instead of max size
+  - Fixed data grid editors closing dialogs when pressing escape to exit editor
 
 ## 0.4.51 2018-06-25
 
