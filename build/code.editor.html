@@ -182,6 +182,12 @@
                 theme: 'lpcTheme',
                 model: null
             })];
+            window.$dNavs = [
+                monaco.editor.createDiffNavigator(window.$dEditors[0], {
+                    followsCaret: true, // resets the navigator state when the user selects something in the editor
+                    ignoreCharChanges: true // jump from line to line
+                })
+            ];
             initEditor(window.$dEditors[0]);
             _ready = true;
         });
@@ -277,6 +283,14 @@
         <button id="btn-refresh" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Refresh" onclick="doRefresh()">
             <i class="fa fa-refresh"></i>
         </button>
+        <div id="btn-group-diff-nav" style="display: none" class="btn-group" role="group">
+            <button id="btn-diff-nav-prev" type="button" class="btn btn-default btn-xs" title="Previous change" onclick="gotoPrevChange()">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <button id="btn-diff-nav-prev" type="button" class="btn btn-default btn-xs" title="Next change" onclick="gotoNextChange()">
+                <i class="fa fa-arrow-right"></i>
+            </button>
+        </div>
         <div id="editor-buttons"></div>
     </div>
     <div id="output" class="output">
@@ -1729,6 +1743,17 @@
                 enabled: false,
                 click: doRefresh
             },
+            { type: 'separator', visible: false, id: 'diffSep' },
+            {
+                label: '&Previous change',
+                visible: false,
+                click: gotoPrevChange
+            },
+            {
+                label: '&Next change',
+                visible: false,
+                click: gotoNextChange
+            },
             { type: 'separator' },
             {
                 label: '&Output',
@@ -1879,6 +1904,7 @@
                                     stopWatchFile(manager.active.diffFile);
                                 manager.active.diffFile = null;
                                 window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+                                toggleDiffNav(false);
                                 window.$editors[pane].domElement.style.display = 'block';
                                 manager.active.editor.activate(window.$editors[pane]);
                                 window.$editors[pane].layout();
@@ -1896,6 +1922,7 @@
                                 manager.active.diffFile = manager.active.editor.file;
                                 watchFile(manager.active.diffFile);
                                 window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
+                                toggleDiffNav(true);
                                 window.$editors[pane].domElement.style.display = '';
                                 manager.active.editor.activate(window.$dEditors[pane]);
                                 window.$dEditors[pane].layout();
@@ -1925,6 +1952,7 @@
                                         manager.active.diffFile = fileNames[0];
                                         watchFile(manager.active.diffFile);
                                         window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
+                                        toggleDiffNav(true);
                                         window.$editors[pane].domElement.style.display = '';
                                         manager.active.editor.activate(window.$dEditors[pane]);
                                         window.$dEditors[pane].layout();
@@ -2034,6 +2062,11 @@
         });
         initEditor(editor);
         window.$dEditors.splice(idx, 0, editor);
+        var nav = monaco.editor.createDiffNavigator(editor, {
+            followsCaret: true, // resets the navigator state when the user selects something in the editor
+            ignoreCharChanges: true // jump from line to line
+        });
+        window.$dNavs.splice(idx, 0, nav);
 
         var keys = Object.keys(_editors);
         var k = keys.length;
@@ -2049,6 +2082,8 @@
         window.$editors.splice(idx, 1);
         window.$dEditors[idx].dispose();
         window.$dEditors.splice(idx, 1);
+        window.$dNavs[idx].dispose();
+        window.$dNavs.splice(idx, 1);
         if (idx === 0)
             window.$editor = window.$editors[0];
         var keys = Object.keys(_editors);
@@ -2074,6 +2109,7 @@
         if (manager.panes[pane].panels.length === 0) {
             window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
             window.$editors[pane].domElement.style.display = '';
+            toggleDiffNav(false);
         }
         doUpdate(1);
     });
@@ -2081,6 +2117,7 @@
         if (manager.panes[oPane].panels.length === 0) {
             window.$editors[oPane].domElement.style.display = '';
             window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+            toggleDiffNav(false);
         }
         doUpdate(1);
     });
@@ -2100,24 +2137,28 @@
                     window.$editors[pane].domElement.style.display = '';
                     e.panel.editor.activate(window.$dEditors[pane]);
                     window.$dEditors[pane].layout();
+                    toggleDiffNav(true);
                 }
                 else {
                     window.$editors[pane].domElement.style.display = 'block';
                     window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
                     e.panel.editor.activate(window.$editors[pane]);
                     window.$editors[pane].layout();
+                    toggleDiffNav(false);
                 }
             }
             else {
                 window.$editors[pane].domElement.style.display = '';
                 window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
                 e.panel.editor.activate();
+                toggleDiffNav(false);
             }
             setTimeout(() => { e.panel.editor.focus(); }, 50);
         }
         else {
             window.$editors[pane].domElement.style.display = '';
             window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+            toggleDiffNav(false);
         }
         doUpdate(1);
     });
@@ -2130,6 +2171,7 @@
                 e.panel.editor.deactivate(window.$dEditors[pane]);
             else
                 e.panel.editor.deactivate(window.$editors[pane]);
+            toggleDiffNav(false);
         }
         else
             e.panel.editor.deactivate();
@@ -2491,6 +2533,7 @@
                         if (a) {
                             window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
                             window.$editors[pane].domElement.style.display = 'block';
+                            toggleDiffNav(false);
                             _editors[p].editor.activate(window.$editors[pane]);
                             window.$editors[pane].layout();
                             doUpdate(2);
@@ -3223,6 +3266,24 @@
         window.$dEditors[dock].setPosition({ column: 1, lineNumber: line });
     }
 
+    function gotoNextChange() {
+        if (!manager.active && !manager.active.editor && manager.active.editor.type !== 1)
+            return;
+        if (!manager.active && !manager.active.editor && manager.active.editor.type !== 1)
+            return;
+        var idx = manager.panes.indexOf(manager.active.dock);
+        if (idx !== -1)
+            window.$dNavs[idx].next();
+    }
+
+    function gotoPrevChange() {
+        if (!manager.active && !manager.active.editor && manager.active.editor.type !== 1)
+            return;
+        var idx = manager.panes.indexOf(manager.active.dock);
+        if (idx !== -1)
+            window.$dNavs[idx].previous();
+    }
+
     $(document).ready(() => {
         loadOptions();
         _ied = new IED();
@@ -3530,6 +3591,7 @@
                     stopWatchFile(manager.active.diffFile);
                 manager.active.editor.diff = manager.active.editor.read(item.local);
                 window.$dEditors[dock].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
+                toggleDiffNav(true);
                 window.$editors[dock].domElement.style.display = '';
                 manager.active.editor.activate(window.$dEditors[dock]);
                 window.$dEditors[dock].layout();
@@ -3766,6 +3828,16 @@
         remote.getCurrentWindow().setEnabled(true);
         menubar.enabled = true;
         _loading = 0;
+    }
+
+    function toggleDiffNav(state) {
+        menubar.updateItem('view|previous change', { visible: state });
+        menubar.updateItem('view|next change', { visible: state });
+        menubar.updateItem('view|diffSep', { visible: state });
+        if (state)
+            document.getElementById('btn-group-diff-nav').style.display = 'inline-block';
+        else
+            document.getElementById('btn-group-diff-nav').style.display = 'none';
     }
 
     function savedOpened() {
@@ -6979,6 +7051,18 @@
                         click: doRefresh,
                         accelerator: "F5"
                     });
+                    temp.push({ type: 'separator' });
+                }
+                if (p.editor.type === 1) {
+                    temp.push({
+                        label: '&Previous change',
+                        click: gotoPrevChange
+                    });
+                    temp.push({
+                        label: '&Next change',
+                        click: gotoNextChange
+                    });
+                    temp.push({ type: 'separator' });
                 }
                 if (p.editor.supports('undo'))
                     temp.push({

@@ -7,6 +7,7 @@
     - Virtual area editor now supports multi room selection by clicking and dragging mouse to form a selection box, all rooms inside the box will be selected or by clicking one room then shift click in a 2nd one and all rooms that form a rectangle using the 2 rooms as corners will be selected.
     - You can edit multiple rooms at once with the room editor, just selection them all in a block using drag selection and then change the option, **Note** if values for a property are all different the property will be set to blank until edited.
     - Unused terrains in the description editor will have their index # in bolded in red
+    - Diff navigation, use previous or next buttons to move between changes when viewing in diff mode
 - **Changed:**
   - Code editor:
     - Change how commas are formatted following a }
