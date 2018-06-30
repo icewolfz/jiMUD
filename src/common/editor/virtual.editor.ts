@@ -190,7 +190,7 @@ export class VirtualEditor extends EditorBase {
     private $externalRaw: HTMLTextAreaElement;
     private $splitterPreview: Splitter;
     private $splitterEditor: Splitter;
-    private $terrainGrid: DataGrid;
+    private $descriptionGrid: DataGrid;
     private $itemGrid: DataGrid;
     private $exitGrid: DataGrid;
     private _lastMouse: MouseEvent;
@@ -500,9 +500,9 @@ export class VirtualEditor extends EditorBase {
         el.classList.add('datagrid-standard');
         el.style.display = 'none';
         frag.appendChild(el);
-        this.$terrainGrid = new DataGrid(el);
-        this.$terrainGrid.clipboardPrefix = 'jiMUD/';
-        this.$terrainGrid.columns = [
+        this.$descriptionGrid = new DataGrid(el);
+        this.$descriptionGrid.clipboardPrefix = 'jiMUD/';
+        this.$descriptionGrid.columns = [
             {
                 label: 'Index',
                 field: 'idx',
@@ -626,13 +626,13 @@ export class VirtualEditor extends EditorBase {
                 }
             }
         ];
-        this.$terrainGrid.on('delete', (e) => {
+        this.$descriptionGrid.on('delete', (e) => {
             if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
                     title: 'Delete',
-                    message: 'Delete terrain' + (this.$terrainGrid.selectedCount > 1 ? 's' : '') + '?',
+                    message: 'Delete terrain' + (this.$descriptionGrid.selectedCount > 1 ? 's' : '') + '?',
                     buttons: ['Yes', 'No'],
                     defaultId: 1
                 })
@@ -696,7 +696,7 @@ export class VirtualEditor extends EditorBase {
             }
         });
 
-        this.$terrainGrid.on('cut', (e) => {
+        this.$descriptionGrid.on('cut', (e) => {
             const l = e.data.length;
             for (let d = 0; d < l; d++) {
                 const idx = e.data[d].data.idx;
@@ -735,7 +735,7 @@ export class VirtualEditor extends EditorBase {
             this.$itemGrid.refresh();
             this.emit('supports-changed');
         });
-        this.$terrainGrid.on('copy', (e) => {
+        this.$descriptionGrid.on('copy', (e) => {
             const l = e.data.length;
             for (let d = 0; d < l; d++) {
                 const idx = e.data[d].data.idx;
@@ -744,7 +744,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('supports-changed');
         });
-        this.$terrainGrid.on('paste', (e) => {
+        this.$descriptionGrid.on('paste', (e) => {
             let idx = this.$descriptions.length;
             let all = false;
             let choice;
@@ -784,7 +784,7 @@ export class VirtualEditor extends EditorBase {
             this.$itemGrid.refresh();
             this.doUpdate(UpdateType.drawMap);
         });
-        this.$terrainGrid.on('add', e => {
+        this.$descriptionGrid.on('add', e => {
             const idx = this.$descriptions.length;
             e.data = {
                 idx: idx,
@@ -814,14 +814,14 @@ export class VirtualEditor extends EditorBase {
             this.$itemGrid.refresh();
             resetCursor(this.$terrainRaw);
         });
-        this.$terrainGrid.sort(0);
-        this.$terrainGrid.on('selection-changed', () => {
+        this.$descriptionGrid.sort(0);
+        this.$descriptionGrid.on('selection-changed', () => {
             if (this.$view !== View.terrains) return;
-            if (this.$terrainGrid.selectedCount) {
+            if (this.$descriptionGrid.selectedCount) {
                 this.$label.children[0].children[1].removeAttribute('disabled');
                 this.$label.children[0].children[2].removeAttribute('disabled');
                 this.$label.children[0].children[3].removeAttribute('disabled');
-                if (this.$terrainGrid.selectedCount > 1)
+                if (this.$descriptionGrid.selectedCount > 1)
                     (<HTMLElement>this.$label.children[0].children[3]).title = 'Delete terrains';
                 else
                     (<HTMLElement>this.$label.children[0].children[3]).title = 'Delete terrain';
@@ -839,7 +839,7 @@ export class VirtualEditor extends EditorBase {
             }
             this.emit('selection-changed');
         });
-        this.$terrainGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+        this.$descriptionGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
             this.updateRaw(this.$descriptionRaw, newValue.idx * 3, [
                 newValue.short + ':' + newValue.light + ':' + newValue.terrain,
                 newValue.long,
@@ -1993,7 +1993,7 @@ export class VirtualEditor extends EditorBase {
                             sR.exits = 0;
                             sR.terrain = 0;
                             sR.item = 0;
-                            this.$terrainGrid.refresh();
+                            this.$descriptionGrid.refresh();
                         }
                         if (!e.ctrlKey && sR.ee !== RoomExit.None) {
                             let nExternal = this.$exits.filter(ex => ex.x !== or.x || ex.y !== or.y || ex.z !== or.z);
@@ -2403,7 +2403,7 @@ export class VirtualEditor extends EditorBase {
                         if (this.$selectedRooms[sl].item === this.$selectedRooms[sl].terrain)
                             this.$selectedRooms[sl].item++;
                         this.$selectedRooms[sl].terrain++;
-                        this.$terrainGrid.refresh();
+                        this.$descriptionGrid.refresh();
                         this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
                         this.RoomChanged(this.$selectedRooms[sl], or);
                     }
@@ -2422,7 +2422,7 @@ export class VirtualEditor extends EditorBase {
                         this.$selectedRooms[sl].terrain--;
                         if (this.$selectedRooms[sl].terrain < 0)
                             this.$selectedRooms[sl].terrain = 0;
-                        this.$terrainGrid.refresh();
+                        this.$descriptionGrid.refresh();
                         this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
                         this.RoomChanged(this.$selectedRooms[sl], or);
                     }
@@ -3461,7 +3461,7 @@ export class VirtualEditor extends EditorBase {
             case View.map:
                 return '';
             case View.terrains:
-                return this.$terrainGrid.selected;
+                return this.$descriptionGrid.selected;
             case View.items:
                 return this.$itemGrid.selected;
             case View.exits:
@@ -3488,7 +3488,7 @@ export class VirtualEditor extends EditorBase {
                 this.setSelection(0, 0, this.$mapSize.width, this.$mapSize.height);
                 break;
             case View.terrains:
-                this.$terrainGrid.selectAll();
+                this.$descriptionGrid.selectAll();
                 break;
             case View.items:
                 this.$itemGrid.selectAll();
@@ -3566,7 +3566,7 @@ export class VirtualEditor extends EditorBase {
                 this.emit('supports-changed');
                 break;
             case View.terrains:
-                this.$terrainGrid.cut();
+                this.$descriptionGrid.cut();
                 break;
             case View.items:
                 this.$itemGrid.cut();
@@ -3609,7 +3609,7 @@ export class VirtualEditor extends EditorBase {
                 this.emit('supports-changed');
                 break;
             case View.terrains:
-                this.$terrainGrid.copy();
+                this.$descriptionGrid.copy();
                 break;
             case View.items:
                 this.$itemGrid.copy();
@@ -3676,7 +3676,7 @@ export class VirtualEditor extends EditorBase {
                 this.setSelectedRooms(rooms);
                 break;
             case View.terrains:
-                this.$terrainGrid.paste();
+                this.$descriptionGrid.paste();
                 break;
             case View.items:
                 this.$itemGrid.paste();
@@ -3731,7 +3731,7 @@ export class VirtualEditor extends EditorBase {
                 this.emit('supports-changed');
                 break;
             case View.terrains:
-                this.$terrainGrid.delete();
+                this.$descriptionGrid.delete();
                 break;
             case View.items:
                 this.$itemGrid.delete();
@@ -3885,7 +3885,7 @@ export class VirtualEditor extends EditorBase {
                     case View.map:
                         return true;
                     case View.terrains:
-                        return this.$terrainGrid.selectedCount > 0;
+                        return this.$descriptionGrid.selectedCount > 0;
                     case View.items:
                         return this.$itemGrid.selectedCount > 0;
                     case View.exits:
@@ -3909,7 +3909,7 @@ export class VirtualEditor extends EditorBase {
                     case View.map:
                         return clipboard.has('jiMUD/VirtualArea');
                     case View.terrains:
-                        return this.$terrainGrid.canPaste;
+                        return this.$descriptionGrid.canPaste;
                     case View.items:
                         return this.$itemGrid.canPaste;
                     case View.exits:
@@ -4231,7 +4231,7 @@ export class VirtualEditor extends EditorBase {
                 }, 10);
                 break;
             case View.terrains:
-                this.$terrainGrid.focus();
+                this.$descriptionGrid.focus();
                 break;
             case View.items:
                 this.$itemGrid.focus();
@@ -4349,7 +4349,7 @@ export class VirtualEditor extends EditorBase {
                 this.$splitterEditor.hide();
                 break;
             case View.terrains:
-                this.$terrainGrid.parent.style.display = 'none';
+                this.$descriptionGrid.parent.style.display = 'none';
                 break;
             case View.items:
                 this.$itemGrid.parent.style.display = 'none';
@@ -4418,7 +4418,7 @@ export class VirtualEditor extends EditorBase {
                 button.type = 'button';
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
-                    this.$terrainGrid.addNewRow();
+                    this.$descriptionGrid.addNewRow();
                 });
                 button.title = 'Add terrain';
                 button.innerHTML = '<i class="fa fa-plus"></i> Add';
@@ -4428,7 +4428,7 @@ export class VirtualEditor extends EditorBase {
                 //TODO remove when insert works
                 button.style.display = 'none';
                 button.type = 'button';
-                button.disabled = this.$terrainGrid.selectedCount === 0;
+                button.disabled = this.$descriptionGrid.selectedCount === 0;
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
 
@@ -4439,23 +4439,23 @@ export class VirtualEditor extends EditorBase {
 
                 button = document.createElement('button');
                 button.type = 'button';
-                button.disabled = this.$terrainGrid.selectedCount === 0;
+                button.disabled = this.$descriptionGrid.selectedCount === 0;
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
-                    this.$terrainGrid.focus();
-                    this.$terrainGrid.beginEdit(this.$terrainGrid.selected[0].row);
+                    this.$descriptionGrid.focus();
+                    this.$descriptionGrid.beginEdit(this.$descriptionGrid.selected[0].row);
                 });
                 button.title = 'Edit terrain';
                 button.innerHTML = '<i class="fa fa-edit"></i> Edit';
                 bGroup.appendChild(button);
 
                 button = document.createElement('button');
-                button.disabled = this.$terrainGrid.selectedCount === 0;
+                button.disabled = this.$descriptionGrid.selectedCount === 0;
                 button.type = 'button';
                 button.title = 'Delete terrain(s)';
                 button.classList.add('btn', 'btn-danger', 'btn-xs');
                 button.addEventListener('click', () => {
-                    this.$terrainGrid.delete();
+                    this.$descriptionGrid.delete();
                 });
                 button.innerHTML = '<i class="fa fa-trash"></i> Delete';
                 bGroup.appendChild(button);
@@ -4466,7 +4466,7 @@ export class VirtualEditor extends EditorBase {
                 bGroup.style.display = 'none';
 
                 button = document.createElement('button');
-                button.disabled = this.$terrainGrid.selectedCount === 0;
+                button.disabled = this.$descriptionGrid.selectedCount === 0;
                 button.type = 'button';
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
@@ -4477,7 +4477,7 @@ export class VirtualEditor extends EditorBase {
                 bGroup.appendChild(button);
 
                 button = document.createElement('button');
-                button.disabled = this.$terrainGrid.selectedCount === 0;
+                button.disabled = this.$descriptionGrid.selectedCount === 0;
                 button.type = 'button';
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
@@ -4489,8 +4489,8 @@ export class VirtualEditor extends EditorBase {
 
                 this.$label.appendChild(bGroup);
 
-                this.$terrainGrid.parent.style.display = '';
-                this.$terrainGrid.focus();
+                this.$descriptionGrid.parent.style.display = '';
+                this.$descriptionGrid.focus();
                 break;
             case View.items:
                 if (this.$itemRaw.dataset.dirty === 'true') {
@@ -4607,7 +4607,7 @@ export class VirtualEditor extends EditorBase {
                 bGroup.style.display = 'none';
 
                 button = document.createElement('button');
-                button.disabled = this.$terrainGrid.selectedCount === 0;
+                button.disabled = this.$descriptionGrid.selectedCount === 0;
                 button.type = 'button';
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
@@ -4618,7 +4618,7 @@ export class VirtualEditor extends EditorBase {
                 bGroup.appendChild(button);
 
                 button = document.createElement('button');
-                button.disabled = this.$terrainGrid.selectedCount === 0;
+                button.disabled = this.$descriptionGrid.selectedCount === 0;
                 button.type = 'button';
                 button.classList.add('btn', 'btn-default', 'btn-xs');
                 button.addEventListener('click', () => {
@@ -6484,7 +6484,7 @@ export class VirtualEditor extends EditorBase {
         }
         Timer.end('BuildRooms time');
         this.updateStatus();
-        this.$terrainGrid.refresh();
+        this.$descriptionGrid.refresh();
     }
 
     private BuildMap() {
@@ -6631,7 +6631,7 @@ export class VirtualEditor extends EditorBase {
             rows.push(row);
         }
         this.$descriptions = rows;
-        this.$terrainGrid.rows = this.$descriptions;
+        this.$descriptionGrid.rows = this.$descriptions;
     }
 
     private loadItems() {
