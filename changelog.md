@@ -2,6 +2,9 @@
 
 ## 0.4.53
 
+- **Fixed:**
+  -Data grid: Fix position and width of advanced editors for datagrid on smaller windows, as data grid advanced editors are not true floating windows and must fit inside the window for full visibility.
+
 ## 0.4.52 2018-06-29
 
 - **New:**

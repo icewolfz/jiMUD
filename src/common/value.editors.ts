@@ -287,6 +287,12 @@ export class TextValueEditor extends ValueEditor {
             left = b.left - c.left;
             width = b.width;
         }
+        if (left < -c.left)
+            left = -c.left;
+        if (width > document.body.clientWidth)
+            width = document.body.clientWidth;
+        if (Math.abs(left) + width > document.body.clientWidth)
+            left = document.body.clientWidth - width;
         //extends past bottom so open up
         if (top + 150 > document.body.clientHeight)
             top = b.top - 150;
@@ -606,6 +612,12 @@ export class FlagValueEditor extends ValueEditor {
             left = b.left - c.left;
             width = b.width;
         }
+        if (left < -c.left)
+            left = -c.left;
+        if (width > document.body.clientWidth)
+            width = document.body.clientWidth;
+        if (Math.abs(left) + width > document.body.clientWidth)
+            left = document.body.clientWidth - width;
         //extends past bottom so open up
         if (top + this.$dropdown.clientHeight > document.body.clientHeight)
             top = b.top - this.$dropdown.clientHeight;
@@ -791,6 +803,12 @@ export class DropDownEditValueEditor extends ValueEditor {
             left = b.left - c.left;
             width = b.width;
         }
+        if (left < -c.left)
+            left = -c.left;
+        if (width > document.body.clientWidth)
+            width = document.body.clientWidth;
+        if (Math.abs(left) + width > document.body.clientWidth)
+            left = document.body.clientWidth - width;
         //extends past bottom so open up
         if (top + this.$dropdown.offsetHeight > document.body.clientHeight)
             top = b.top - this.$dropdown.offsetHeight;
