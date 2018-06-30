@@ -652,7 +652,7 @@ export class VirtualEditor extends EditorBase {
                     //store room lengths
                     const zl = this.$mapSize.depth;
                     const xl = this.$mapSize.width;
-                    const yl = this.$mapSize.width;
+                    const yl = this.$mapSize.height;
                     //update rooms terrain/item indexes
                     this.$maxTerrain = 0;
                     for (let z = 0; z < zl; z++) {
