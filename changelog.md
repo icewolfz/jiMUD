@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.53
+
 ## 0.4.52 2018-06-29
 
 - **New:**
@@ -30,7 +32,7 @@
     - Fixed issue when split view and scrolling tabs not correctly setting scroll width
     - String blocks where not correctly terminated and formatted text in side
     - Save file as would not correctly clear the previous file name data
-    - Would open files sent from immortal tools always in remote edit more if code editor is not already open
+    - Would open files sent from immortal tools always in remote edit mode if code editor is not already open
     - Fixed context menus for data grid editors
     - Fixed toolbar buttons being covered when width is small
   - Fixed window save state system, correctly saves restore state so when un-minimized it returns to previous size instead of max size
