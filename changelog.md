@@ -7,7 +7,10 @@
     - Fix position and width of advanced editors for datagrid on smaller windows, as data grid advanced editors are not true floating windows and must fit inside the window for full visibility.
     - Readd focus outline to advance editor buttons to know when focused from tab
   - Code editor:
-    - Virtual editor: when deleting a description from the description editor it was using width instead of height for adjusting room terrain indexes
+    - Virtual editor:
+      - When deleting a description from the description editor it was using width instead of height for adjusting room terrain indexes
+      - Deleting descriptions where being saved to the wrong file
+      - Room terrain indexes where not saved when changed from deleting a description
 
 ## 0.4.52 2018-06-29
 

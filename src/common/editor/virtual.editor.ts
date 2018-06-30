@@ -644,7 +644,7 @@ export class VirtualEditor extends EditorBase {
                     const idx = e.data[d].data.idx;
                     const eIdx = this.$descriptions.length - 1;
                     //update the raw data
-                    this.removeRaw(this.$terrainRaw, idx * 3, 3, false, true);
+                    this.removeRaw(this.$descriptionRaw, idx * 3, 3, false, true);
                     this.removeRaw(this.$itemRaw, idx * 2, 2, false, true);
                     this.$items.splice(idx, 1);
                     this.reduceIdx(this.$descriptions, idx);
@@ -689,6 +689,7 @@ export class VirtualEditor extends EditorBase {
                         }
                     }
                 }
+                this.roomsChanged();
                 //redraw map to update terrain changes
                 this.doUpdate(UpdateType.drawMap);
                 this.$itemGrid.refresh();
@@ -700,7 +701,7 @@ export class VirtualEditor extends EditorBase {
             for (let d = 0; d < l; d++) {
                 const idx = e.data[d].data.idx;
                 //update the raw data
-                this.removeRaw(this.$terrainRaw, idx * 3, 3, false, true);
+                this.removeRaw(this.$descriptionRaw, idx * 3, 3, false, true);
                 this.removeRaw(this.$itemRaw, idx * 2, 2, false, true);
                 //add items to cut data so items travel
                 e.data[d].items = this.$items[idx];
@@ -710,7 +711,7 @@ export class VirtualEditor extends EditorBase {
                 //store room lengths
                 const zl = this.$mapSize.depth;
                 const xl = this.$mapSize.width;
-                const yl = this.$mapSize.width;
+                const yl = this.$mapSize.height;
                 //update rooms terrain/item indexes
                 this.$maxTerrain = 0;
                 for (let z = 0; z < zl; z++) {
@@ -728,6 +729,7 @@ export class VirtualEditor extends EditorBase {
                     }
                 }
             }
+            this.roomsChanged();
             //redraw map to update terrain changes
             this.doUpdate(UpdateType.drawMap);
             this.$itemGrid.refresh();
@@ -5924,15 +5926,17 @@ export class VirtualEditor extends EditorBase {
         return pair;
     }
 
-    private RoomChanged(room, old, siletUpdate?) {
+    private RoomChanged(room, old?, silentUpdate?) {
         let c = 0;
         let s = 0;
         let nl = '';
-        if (room.state === old.state && room.exits === old.exits && room.terrain === old.terrain && room.item === old.item)
-            return;
-        if (old.exits) this.$rcount--;
-        if (room.exits) this.$rcount++;
-        this.updateStatus();
+        if (old) {
+            if (room.state === old.state && room.exits === old.exits && room.terrain === old.terrain && room.item === old.item)
+                return;
+            if (old.exits) this.$rcount--;
+            if (room.exits) this.$rcount++;
+            this.updateStatus();
+        }
         const y = room.y + 1 + room.z * (this.$mapSize.height + 1);
         const x = room.x;
         let line;
@@ -5940,7 +5944,7 @@ export class VirtualEditor extends EditorBase {
         //dimensions + ((height + space) * depth)
         const maxLines = 1 + (this.$mapSize.height + 1) * this.$mapSize.depth;
         if (this.$files['virtual.state']) {
-            if (room.state !== old.state) {
+            if (!old || room.state !== old.state) {
                 lines = this.$stateRaw.value.split('\n');
                 while (lines.length < maxLines)
                     lines.push('');
@@ -5959,12 +5963,12 @@ export class VirtualEditor extends EditorBase {
         else {
             if (room.state > 0)
                 nl = ':' + leadingZeros(room.state, 3, '0');
-            if (room.state !== old.state)
+            if (!old || room.state !== old.state)
                 s = 1;
         }
 
         if (this.$files['virtual.terrain']) {
-            if (room.terrain !== old.terrain || room.item !== old.item || s || nl.length > 0) {
+            if (!old || room.terrain !== old.terrain || room.item !== old.item || s || nl.length > 0) {
                 lines = this.$terrainRaw.value.split('\n');
                 while (lines.length < maxLines)
                     lines.push('');
@@ -5989,13 +5993,13 @@ export class VirtualEditor extends EditorBase {
             }
         }
         else {
-            if (room.terrain !== old.terrain || room.item !== old.item)
+            if (!old || room.terrain !== old.terrain || room.item !== old.item)
                 c++;
             nl = ':' + leadingZeros(room.item, 3, '0') + nl;
             nl = ':' + leadingZeros(room.terrain, 3, '0') + nl;
         }
 
-        if (room.exits !== old.exits || s || nl.length > 0) {
+        if (!old || room.exits !== old.exits || s || nl.length > 0) {
             lines = this.$mapRaw.value.split('\n');
             while (lines.length < maxLines)
                 lines.push('');
@@ -6015,12 +6019,31 @@ export class VirtualEditor extends EditorBase {
         }
 
         if (c) {
-            if (!siletUpdate && this.$selectedRooms.indexOf(room) !== -1)
+            if (!silentUpdate && this.$selectedRooms.indexOf(room) !== -1)
                 this.UpdateEditor(this.$selectedRooms);
             this.$mapRaw.dataset.changed = 'true';
             this.changed = true;
         }
-        this.UpdatePreview(room);
+        if (!silentUpdate)
+            this.UpdatePreview(room);
+    }
+
+    private roomsChanged() {
+        //store room lengths
+        const zl = this.$mapSize.depth;
+        const xl = this.$mapSize.width;
+        const yl = this.$mapSize.height;
+        this.$rcount = 0;
+        for (let z = 0; z < zl; z++) {
+            for (let y = 0; y < yl; y++) {
+                for (let x = 0; x < xl; x++) {
+                    const room = this.$rooms[z][y][x];
+                    this.RoomChanged(room, null, true);
+                    if (room.exits) this.$rcount++;
+                }
+            }
+        }
+        this.updateStatus();
     }
 
     private UpdateEditor(rooms) {
