@@ -139,7 +139,7 @@ export class TextValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            this.control.clearEditor(e);
+            setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
@@ -261,9 +261,9 @@ export class TextValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
-        if (this.$dropdown && this.$dropdown.parentElement && this.$dropdown.parentElement.contains(this.$dropdown))
+        if (this.$dropdown && this.$dropdown.parentNode && this.$dropdown.parentNode.contains(this.$dropdown))
             this.$dropdown.remove();
-        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
 
@@ -354,7 +354,7 @@ export class BooleanValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
-            this.control.clearEditor(e);
+            setTimeout(() => this.control.clearEditor(e));
         });
         this.parent.appendChild(this.$el);
     }
@@ -362,7 +362,7 @@ export class BooleanValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
-        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
 
@@ -405,7 +405,7 @@ export class NumberValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
-            this.control.clearEditor(e);
+            setTimeout(() => this.control.clearEditor(e));
         });
         this.parent.appendChild(this.$el);
     }
@@ -413,7 +413,7 @@ export class NumberValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
-        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
 
@@ -456,7 +456,7 @@ export class FlagValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            this.control.clearEditor(e);
+            setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('focus', () => {
             this.$editor.select();
@@ -586,9 +586,9 @@ export class FlagValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
-        if (this.$dropdown && this.$dropdown.parentElement && this.$dropdown.parentElement.contains(this.$dropdown))
+        if (this.$dropdown && this.$dropdown.parentNode && this.$dropdown.parentNode.contains(this.$dropdown))
             this.$dropdown.remove();
-        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
 
@@ -684,7 +684,7 @@ export class DropDownEditValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            this.control.clearEditor(e);
+            setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('focus', () => {
             this.$editor.select();
@@ -777,9 +777,9 @@ export class DropDownEditValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
-        if (this.$dropdown && this.$dropdown.parentElement && this.$dropdown.parentElement.contains(this.$dropdown))
+        if (this.$dropdown && this.$dropdown.parentNode && this.$dropdown.parentNode.contains(this.$dropdown))
             this.$dropdown.remove();
-        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
 
