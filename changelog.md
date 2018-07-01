@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.53
+## 0.4.53 2018-06-30
 
 - **Fixed:**
   - Data grid:
