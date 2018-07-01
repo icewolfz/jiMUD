@@ -5958,9 +5958,8 @@ export class VirtualEditor extends EditorBase {
                 this.$stateRaw.dataset.changed = 'true';
             }
         }
-        else {
-            if (room.state > 0)
-                nl = ':' + leadingZeros(room.state, 3, '0');
+        else if (room.state > 0) {
+            nl = ':' + leadingZeros(room.state, 3, '0');
             if (!old || room.state !== old.state)
                 s = 1;
         }
@@ -6075,9 +6074,10 @@ export class VirtualEditor extends EditorBase {
                 line = '';
                 for (let x = 0; x < xl; x++) {
                     const room = this.$rooms[z][y][x];
+                    s = false;
                     if (sLine)
                         sLine[x] = leadingZeros(room.state, 3, '0');
-                    else {
+                    else if (room.state > 0) {
                         line = ':' + leadingZeros(room.state, 3, '0');
                         s = true;
                     }
@@ -6116,7 +6116,7 @@ export class VirtualEditor extends EditorBase {
             this.$stateRaw.dataset.changed = 'true';
         }
         if (tLines) {
-            this.$terrainRaw.value = sLines.join('\n');
+            this.$terrainRaw.value = tLines.join('\n');
             this.$terrainRaw.dataset.changed = 'true';
         }
         this.$mapRaw.value = mLines.join('\n');
