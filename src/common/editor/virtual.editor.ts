@@ -639,9 +639,14 @@ export class VirtualEditor extends EditorBase {
                 === 1)
                 e.preventDefault = true;
             else {
-                const l = e.data.length;
-                for (let d = 0; d < l; d++) {
-                    const idx = e.data[d].data.idx;
+                let l = e.data.length;
+                e.data.sort((a, b) => {
+                    if (a.data.idx > b.data.idx) return 1;
+                    if (a.data.idx < b.data.idx) return -1;
+                    return 0;
+                });
+                while (l--) {
+                    const idx = e.data[l].data.idx;
                     const eIdx = this.$descriptions.length - 1;
                     //update the raw data
                     this.removeRaw(this.$descriptionRaw, idx * 3, 3, false, true);
@@ -697,14 +702,19 @@ export class VirtualEditor extends EditorBase {
         });
 
         this.$descriptionGrid.on('cut', (e) => {
-            const l = e.data.length;
-            for (let d = 0; d < l; d++) {
-                const idx = e.data[d].data.idx;
+            let l = e.data.length;
+            e.data.sort((a, b) => {
+                if (a.data.idx > b.data.idx) return 1;
+                if (a.data.idx < b.data.idx) return -1;
+                return 0;
+            });
+            while (l--) {
+                const idx = e.data[l].data.idx;
                 //update the raw data
                 this.removeRaw(this.$descriptionRaw, idx * 3, 3, false, true);
                 this.removeRaw(this.$itemRaw, idx * 2, 2, false, true);
                 //add items to cut data so items travel
-                e.data[d].items = this.$items[idx];
+                e.data[l].items = this.$items[idx];
                 this.$items.splice(idx, 1);
                 this.reduceIdx(this.$descriptions, idx);
                 this.reduceIdx(this.$items, idx);
