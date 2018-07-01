@@ -396,7 +396,7 @@ export class NumberValueEditor extends ValueEditor {
             }
         });
         this.$el.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27) {
+            if (e.keyCode === 27 || e.keyCode === 13) {
                 this.$el.blur();
                 e.stopPropagation();
                 e.preventDefault();

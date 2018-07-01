@@ -12,6 +12,7 @@
       - Deleting descriptions where being saved to the wrong file
       - Room terrain indexes where not saved when changed from deleting a description
       - Room editor would throw an error when switching rooms with a property is in active edit.
+      - When hitting enter after editing a number in a number editor did not cause the editor to close and save
 
 ## 0.4.52 2018-06-29
 
