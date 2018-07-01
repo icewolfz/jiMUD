@@ -5953,7 +5953,7 @@ export class VirtualEditor extends EditorBase {
                 while (line.length < this.$mapSize.width)
                     lines.push('');
                 if (x < 0 || x >= line.length) return;
-                line[x] = leadingZeros(room.terrain, 3, '0');
+                line[x] = leadingZeros(room.state, 3, '0');
                 lines[y] = line.join(' ');
                 this.$stateRaw.value = lines.join('\n');
                 c++;
@@ -6033,16 +6033,97 @@ export class VirtualEditor extends EditorBase {
         const zl = this.$mapSize.depth;
         const xl = this.$mapSize.width;
         const yl = this.$mapSize.height;
+        const maxLines = 1 + (yl + 1) * zl;
         this.$rcount = 0;
+        let sLines = null;
+        let tLines = null;
+        let mLines = null;
+        let yLine;
+        let line;
+        let sLine;
+        let tLine;
+        let mLine;
+        let s = false;
+        if (this.$files['virtual.state']) {
+            sLines = this.$stateRaw.value.split('\n');
+            while (sLines.length < maxLines)
+                sLines.push('');
+        }
+        if (this.$files['virtual.terrain']) {
+            tLines = this.$stateRaw.value.split('\n');
+            while (tLines.length < maxLines)
+                tLines.push('');
+        }
+        mLines = this.$mapRaw.value.split('\n');
+        while (mLines.length < maxLines)
+            mLines.push('');
+
         for (let z = 0; z < zl; z++) {
             for (let y = 0; y < yl; y++) {
+                yLine = y + 1 + z * (yl + 1);
+                if (sLines) {
+                    sLine = sLines[yLine].split(' ');
+                    while (sLine.length < xl)
+                        sLine.push('');
+                }
+                if (tLines) {
+                    tLine = tLines[yLine].split(' ');
+                    while (tLine.length < xl)
+                        tLine.push('');
+                }
+                mLine = mLines[yLine].split(' ');
+                while (mLine.length < xl)
+                    mLine.push('');
+                line = '';
                 for (let x = 0; x < xl; x++) {
                     const room = this.$rooms[z][y][x];
-                    this.RoomChanged(room, null, true);
+                    if (sLine)
+                        sLine[x] = leadingZeros(room.state, 3, '0');
+                    else {
+                        line = ':' + leadingZeros(room.state, 3, '0');
+                        s = true;
+                    }
+                    if (tLine) {
+                        tLine[x] = leadingZeros(room.terrain, 2, '0');
+                        if (s || line.length > 0) {
+                            tLine[x] += ':' + leadingZeros(room.item, 2, '0') + line;
+                            line = '';
+                            s = false;
+                        }
+                        else if (room.terrain !== room.item)
+                            tLine[x] += ':' + leadingZeros(room.item, 2, '0');
+                    }
+                    else {
+                        line = ':' + leadingZeros(room.item, 3, '0') + line;
+                        line = ':' + leadingZeros(room.terrain, 3, '0') + line;
+                    }
+                    mLine[x] = leadingZeros(room.exits, 3, '0');
+                    if (s || line.length > 0)
+                        mLine[x] += line;
+                    if (mLine[x] === '000:000' || mLine[x] === '000:000:000' || mLine[x] === '000:000:000:000')
+                        mLine[x] = '000';
+                    //this.RoomChanged(room, null, true);
                     if (room.exits) this.$rcount++;
                 }
+                if (sLine)
+                    sLines[yLine] = sLine.join(' ');
+                if (tLine)
+                    tLines[yLine] = tLine.join(' ');
+                mLines[yLine] = mLine.join(' ');
             }
         }
+
+        if (sLines) {
+            this.$stateRaw.value = sLines.join('\n');
+            this.$stateRaw.dataset.changed = 'true';
+        }
+        if (tLines) {
+            this.$terrainRaw.value = sLines.join('\n');
+            this.$terrainRaw.dataset.changed = 'true';
+        }
+        this.$mapRaw.value = mLines.join('\n');
+        this.$mapRaw.dataset.changed = 'true';
+        this.changed = true;
         this.updateStatus();
     }
 
@@ -6915,7 +6996,7 @@ export class FileOpenValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            this.control.clearEditor(e);
+            setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -6949,7 +7030,7 @@ export class FileOpenValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
-        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
 
@@ -7001,7 +7082,7 @@ export class FileBrowseValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            this.control.clearEditor(e);
+            setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -7037,7 +7118,7 @@ export class FileBrowseValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
-        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
 
@@ -7082,7 +7163,7 @@ export class ExternalExitValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            this.control.clearEditor(e);
+            setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -7369,7 +7450,7 @@ export class ExternalExitValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
-        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
 
@@ -7431,7 +7512,7 @@ export class ItemsValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            this.control.clearEditor(e);
+            setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -7681,7 +7762,7 @@ export class ItemsValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
-        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
 
