@@ -941,8 +941,7 @@ function createTray() {
         if (!s) getWindowState('main', win);
         if (s.maximized)
           win.maximize();
-        else
-          win.show();
+        win.show();
         if (s.isFullScreen)
           win.setFullScreen(s.fullscreen);
         win.focus();
@@ -965,8 +964,7 @@ function createTray() {
         if (!s) getWindowState('main', win);
         if (s.maximized)
           win.maximize();
-        else
-          win.show();
+        win.show();
         if (s.isFullScreen)
           win.setFullScreen(s.fullscreen);
         win.focus();
@@ -1071,8 +1069,7 @@ function createTray() {
       case TrayClick.show:
         if (s.maximized)
           win.maximize();
-        else
-          win.show();
+        win.show();
         if (s.isFullScreen)
           win.setFullScreen(s.fullscreen);
         win.focus();
@@ -1087,8 +1084,7 @@ function createTray() {
         else {
           if (s.maximized)
             win.maximize();
-          else
-            win.show();
+          win.show();
           if (s.isFullScreen)
             win.setFullScreen(s.fullscreen);
           win.focus();
@@ -1113,8 +1109,7 @@ function createTray() {
       case TrayClick.show:
         if (s.maximized)
           win.maximize();
-        else
-          win.show();
+        win.show();
         if (s.isFullScreen)
           win.setFullScreen(s.fullscreen);
         win.focus();
@@ -1129,8 +1124,7 @@ function createTray() {
         else {
           if (s.maximized)
             win.maximize();
-          else
-            win.show();
+          win.show();
           if (s.isFullScreen)
             win.setFullScreen(s.fullscreen);
           win.focus();
@@ -1407,8 +1401,7 @@ function createWindow() {
     loadWindowScripts(win, "user");
     if (s.maximized)
       win.maximize();
-    else
-      win.show();
+    win.show();
 
     if (set.showMapper)
       showMapper(true);
@@ -2580,8 +2573,7 @@ function createMapper(show, loading, loaded) {
     if (show) {
       if (s.maximized)
         winMap.maximize();
-      else
-        winMap.show();
+      winMap.show();
     }
     else
       mapperMax = s.maximized;
@@ -2614,8 +2606,7 @@ function showMapper(loading) {
   if (winMap != null) {
     if (mapperMax)
       winMap.maximize();
-    else
-      winMap.show();
+    winMap.show();
     mapperMax = false;
     if (loading) {
       clearTimeout(loadid);
@@ -2672,8 +2663,7 @@ function showProfiles() {
     //addInputContext(winProfiles);
     if (s.maximized)
       winProfiles.maximize();
-    else
-      winProfiles.show();
+    winProfiles.show();
   });
 
   winProfiles.on('close', (e) => {
@@ -2767,8 +2757,7 @@ function createEditor(show, loading) {
     if (show) {
       if (s.maximized)
         winEditor.maximize();
-      else
-        winEditor.show();
+      winEditor.show();
     }
     else
       editorMax = s.maximized;
@@ -2800,8 +2789,7 @@ function showEditor(loading) {
   if (winEditor != null) {
     if (editorMax)
       winEditor.maximize();
-    else
-      winEditor.show();
+    winEditor.show();
     editorMax = false;
     if (loading) {
       clearTimeout(loadid);
@@ -2879,8 +2867,7 @@ function createChat(show, loading) {
     if (show) {
       if (s.maximized)
         winChat.maximize();
-      else
-        winChat.show();
+      winChat.show();
     }
     else
       chatMax = s.maximized;
@@ -2912,8 +2899,7 @@ function showChat(loading) {
   if (winChat != null) {
     if (chatMax)
       winChat.maximize();
-    else
-      winChat.show();
+    winChat.show();
     chatMax = false;
     if (loading) {
       clearTimeout(loadid);
@@ -3039,8 +3025,7 @@ function createNewWindow(name, options) {
     if (options.show) {
       if (s.maximized)
         windows[name].window.maximize();
-      else
-        windows[name].window.show();
+      windows[name].window.show();
     }
     else
       windows[name].max = s.maximized;
@@ -3072,8 +3057,7 @@ function showWindow(name, options) {
   if (windows[name] && windows[name].window) {
     if (windows[name].max)
       windows[name].window.maximize();
-    else
-      windows[name].window.show();
+    windows[name].window.show();
     windows[name].max = false;
   }
   else
@@ -3312,8 +3296,7 @@ function createCodeEditor(show, loading, loaded) {
     if (show) {
       if (s.maximized)
         winCode.maximize();
-      else
-        winCode.show();
+      winCode.show();
     }
     else
       codeMax = s.maximized;
@@ -3405,8 +3388,7 @@ function showCodeEditor(loading) {
   if (winCode != null) {
     if (codeMax)
       winCode.maximize();
-    else
-      winCode.show();
+    winCode.show();
     codeMax = false;
     if (loading) {
       clearTimeout(loadid);
