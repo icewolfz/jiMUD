@@ -261,9 +261,9 @@ export class TextValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
-        if (this.$dropdown)
+        if (this.$dropdown && this.$dropdown.parentElement && this.$dropdown.parentElement.contains(this.$dropdown))
             this.$dropdown.remove();
-        if (this.$el)
+        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
             this.$el.remove();
     }
 
@@ -362,7 +362,7 @@ export class BooleanValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
-        if (this.$el)
+        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
             this.$el.remove();
     }
 
@@ -413,7 +413,7 @@ export class NumberValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
-        if (this.$el)
+        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
             this.$el.remove();
     }
 
@@ -586,9 +586,9 @@ export class FlagValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
-        if (this.$dropdown)
+        if (this.$dropdown && this.$dropdown.parentElement && this.$dropdown.parentElement.contains(this.$dropdown))
             this.$dropdown.remove();
-        if (this.$el)
+        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
             this.$el.remove();
     }
 
@@ -777,9 +777,9 @@ export class DropDownEditValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
-        if (this.$dropdown)
-            this.$dropdown.parentElement.remove();
-        if (this.$el)
+        if (this.$dropdown && this.$dropdown.parentElement && this.$dropdown.parentElement.contains(this.$dropdown))
+            this.$dropdown.remove();
+        if (this.$el && this.$el.parentElement && this.$el.parentElement.contains(this.$el))
             this.$el.remove();
     }
 

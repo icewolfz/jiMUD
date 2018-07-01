@@ -11,6 +11,7 @@
       - When deleting a description from the description editor it was using width instead of height for adjusting room terrain indexes
       - Deleting descriptions where being saved to the wrong file
       - Room terrain indexes where not saved when changed from deleting a description
+      - Room editor would throw an error when switching rooms with a property is in active edit.
 
 ## 0.4.52 2018-06-29
 
