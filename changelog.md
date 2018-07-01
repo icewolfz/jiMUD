@@ -2,6 +2,10 @@
 
 ## 0.4.54
 
+- **Fixed:**
+  - Code editor:
+    - External exits was displaying empty always after multiple room support was added
+
 ## 0.4.53 2018-06-30
 
 - **Fixed:**

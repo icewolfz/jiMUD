@@ -2841,20 +2841,6 @@ export class VirtualEditor extends EditorBase {
         return value.map(i => i.item).join(':');
     }
 
-    private formatState(prop, value) {
-        if (value === 0)
-            return 'None';
-        const states = Object.keys(RoomStates).filter(key => !isNaN(Number(RoomStates[key])));
-        const f = [];
-        let state = states.length;
-        while (state--) {
-            if (states[state] === 'None') continue;
-            if ((value & RoomStates[states[state]]) === RoomStates[states[state]])
-                f.push(capitalize(states[state]));
-        }
-        return f.join(', ');
-    }
-
     private formatExits(prop, value) {
         if (value === 0)
             return 'None';
@@ -2870,14 +2856,16 @@ export class VirtualEditor extends EditorBase {
     }
 
     private formatExternal(prop, value, data) {
-        if (data.ee === 0)
+        if (!data) return 'None';
+        const ee = data[0].ee;
+        if (ee === 0)
             return 'None';
         const states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomExit[key])));
         const f = [];
         let state = states.length;
         while (state--) {
             if (states[state] === 'None') continue;
-            if ((data.ee & RoomExit[states[state]]) === RoomExit[states[state]])
+            if ((ee & RoomExit[states[state]]) === RoomExit[states[state]])
                 f.push(capitalize(states[state]));
         }
         return f.join(', ');
@@ -6134,6 +6122,7 @@ export class VirtualEditor extends EditorBase {
         if (rooms) {
             let rl = rooms.length;
             const ri = {};
+            const re = [];
             while (rl--) {
                 const o = rooms[rl].clone();
                 if (o.ef) {
@@ -6174,6 +6163,8 @@ export class VirtualEditor extends EditorBase {
                         o.smell = '';
                     }
                     o.external = this.$exits.filter(e => e.x === o.x && e.y === o.y && e.z === o.z).map(a => ({ ...a }));
+                    if (o.external.length === 0)
+                        o.external = re;
                 }
                 objs.unshift(o);
             }
