@@ -2526,13 +2526,13 @@ export class VirtualEditor extends EditorBase {
             this.emit('browse-file', e);
         });
         this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
-            const selected = this.$selectedRooms;
+            const selected = this.$roomEditor.objects;
             let sl = selected.length;
             const first = selected[0];
             items:
             while (sl--) {
-                const old = selected[sl].clone();
                 const curr = selected[sl];
+                const old = this.getRoom(curr.x, curr.y, curr.z);
                 let data;
                 switch (prop) {
                     case 'external':
@@ -2616,11 +2616,15 @@ export class VirtualEditor extends EditorBase {
                         else //else just redraw the current room
                             this.DrawRoom(this.$mapContext, curr, true, curr.at(this.$mouse.rx, this.$mouse.ry));
                         this.RoomChanged(curr, old, true);
+                        if (curr.item === newValue)
+                            old.item = newValue;
+                        old[prop] = newValue;
                         break;
                     default:
                         curr[prop] = newValue;
                         this.DrawRoom(this.$mapContext, curr, true, curr.at(this.$mouse.rx, this.$mouse.ry));
                         this.RoomChanged(curr, old, true);
+                        old[prop] = newValue;
                         break;
                 }
             }
@@ -2878,7 +2882,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     private formatExternal(prop, value, data) {
-        if (!data) return 'None';
+        if (!data || data.length === 0) return 'None';
         const ee = data[0].ee;
         if (ee === 0)
             return 'None';

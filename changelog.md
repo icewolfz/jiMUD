@@ -22,6 +22,7 @@
       - Update terrain color scale after using short customs +/- or when new descriptions added
       - Fixed room editor/room preview breaking when no items
       - Fixed removing northwest exit of connected room when room deleted or cut
+      - Fixed room edits when switching selected rooms, was updating new selection instead of previous
     - Make diff navigation buttons visible but disabled when not in use as you can not hide the menu due to a limitation in election not allowing hiding of separators
 
 ## 0.4.53 2018-06-30
