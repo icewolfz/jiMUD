@@ -5757,7 +5757,7 @@ export class VirtualEditor extends EditorBase {
                                         let s;
                                         const sl = k.length;
                                         for (s = 0; s < sl; s++)
-                                            r.item.push({
+                                            r.items.push({
                                                 item: this.parseString(k[s].trim()),
                                                 description: this.parseString(items[item].trim())
                                             });
