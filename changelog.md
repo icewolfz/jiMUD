@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.4.54
+## 0.4.54 2018-07-02
 
 - **Changed:**
-  - Code editor: light range for virtual editor room/descritions is not -15 to 15 instead of default
+  - Code editor: light range for virtual editor room/descriptions is not -15 to 15 instead of default
 - **Fixed:**
   - Code editor:
     - Virtual editor:
