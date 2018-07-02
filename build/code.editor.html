@@ -7013,7 +7013,10 @@
                 updatePanel(p);
                 if (p !== manager.active) return;
                 doUpdate(2);
-                sbSize.textContent = 'Length: ' + length.toLocaleString();
+                if(length === -1)
+                    sbSize.textContent = '';
+                else
+                    sbSize.textContent = 'Length: ' + length.toLocaleString();
             });
             p.editor.on('saved', () => {
                 updatePanel(p);

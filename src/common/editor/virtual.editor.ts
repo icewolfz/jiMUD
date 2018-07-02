@@ -2899,21 +2899,29 @@ export class VirtualEditor extends EditorBase {
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
+            if (this.$view === view)
+                this.emit('changed', el.value.length);
         });
         el.addEventListener('input', (e) => {
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
+            if (this.$view === view)
+                this.emit('changed', el.value.length);
         });
         el.addEventListener('paste', (e) => {
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
+            if (this.$view === view)
+                this.emit('changed', el.value.length);
         });
         el.addEventListener('cut', (e) => {
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
+            if (this.$view === view)
+                this.emit('changed', el.value.length);
         });
         return el;
     }
@@ -4401,6 +4409,7 @@ export class VirtualEditor extends EditorBase {
                 this.UpdatePreview(this.selectedFocusedRoom);
                 this.$label.style.display = 'none';
                 this.$splitterEditor.show();
+                this.emit('location-changed', -1, -1);
                 break;
             case View.terrains:
                 if (this.$terrainRaw.dataset.dirty === 'true') {
@@ -4721,17 +4730,63 @@ export class VirtualEditor extends EditorBase {
         this.setButtonState('terrains', view === View.terrains);
         this.setButtonState('items', view === View.items);
         this.setButtonState('external exits', view === View.exits);
+        this.updateUI();
         this.emit('supports-changed');
         this.focus();
     }
 
     public updateUI() {
-        this.emit('location-changed', (this.$mouse.x / 32), this.$mouse.y / 32);
+
+        switch (this.$view) {
+            case View.map:
+                this.emit('location-changed', (this.$mouse.rx), this.$mouse.ry);
+                this.emit('changed', -1);
+                break;
+            case View.terrains:
+                this.emit('location-changed', -1, -1);
+                this.emit('changed', this.$descriptions.length);
+                break;
+            case View.items:
+                this.emit('location-changed', -1, -1);
+                this.emit('changed', this.$items.length);
+                break;
+            case View.exits:
+                this.emit('location-changed', -1, -1);
+                this.emit('changed', this.$exits.length);
+                break;
+            case View.mapRaw:
+                this.emit('location-changed', -1, -1);
+                this.emit('changed', this.$mapRaw.value.length);
+                break;
+            case View.terrainsRaw:
+                this.emit('location-changed', -1, -1);
+                this.emit('changed', this.$terrainRaw.value.length);
+                break;
+            case View.descriptionsRaw:
+                this.emit('location-changed', -1, -1);
+                this.emit('changed', this.$descriptionRaw.value.length);
+                break;
+            case View.itemsRaw:
+                this.emit('location-changed', -1, -1);
+                this.emit('changed', this.$itemRaw.value.length);
+                break;
+            case View.stateRaw:
+                this.emit('location-changed', -1, -1);
+                this.emit('changed', this.$stateRaw.value.length);
+                break;
+            case View.exitsRaw:
+                this.emit('location-changed', -1, -1);
+                this.emit('changed', this.$externalRaw.value.length);
+                break;
+        }
         this.updateStatus();
     }
 
     private updateStatus() {
-        this.emit('status-message', `Rooms ${this.$rcount}, Empty rooms ${(this.$mapSize.width * this.$mapSize.height * this.$mapSize.depth) - this.$rcount}, Total rooms ${this.$mapSize.width * this.$mapSize.height * this.$mapSize.depth}`);
+        if (this.$view === View.map)
+            this.emit('status-message', `Rooms ${this.$rcount}, Empty rooms ${(this.$mapSize.width * this.$mapSize.height * this.$mapSize.depth) - this.$rcount}, Total rooms ${this.$mapSize.width * this.$mapSize.height * this.$mapSize.depth}`);
+        else
+            this.emit('status-message', '');
     }
 
     private setFocus(value) {
