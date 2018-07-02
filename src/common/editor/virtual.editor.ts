@@ -5962,7 +5962,7 @@ export class VirtualEditor extends EditorBase {
             pair = this.parseKeyPair(str.substring(pIdx, idx).trim());
             m[pair[0]] = pair[1];
         }
-        return m;
+        return m || {};
 
     }
 
@@ -5972,7 +5972,7 @@ export class VirtualEditor extends EditorBase {
         const pair = ['', ''];
         let c;
         let idx = 0;
-        const end = str.length - 2;
+        const end = str.length;
         let array;
         for (; idx < end; idx++) {
             c = str.charAt(idx);
@@ -5987,6 +5987,7 @@ export class VirtualEditor extends EditorBase {
                     pair[1] = str.substring(idx).trim();
                     return pair;
                 case '"':
+                    idx++;
                     while (idx < end) {
                         c = str.charAt(idx);
                         if (str === '\\')
