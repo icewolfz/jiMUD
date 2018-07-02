@@ -303,11 +303,11 @@
         <button id="btn-refresh" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Refresh" onclick="doRefresh()">
             <i class="fa fa-refresh"></i>
         </button>
-        <div id="btn-group-diff-nav" style="display: none" class="btn-group" role="group">
-            <button id="btn-diff-nav-prev" type="button" class="btn btn-default btn-xs" title="Previous change" onclick="gotoPrevChange()">
+        <div id="btn-group-diff-nav" class="btn-group" role="group">
+            <button id="btn-diff-nav-prev" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Previous change" onclick="gotoPrevChange()">
                 <i class="fa fa-arrow-left"></i>
             </button>
-            <button id="btn-diff-nav-prev" type="button" class="btn btn-default btn-xs" title="Next change" onclick="gotoNextChange()">
+            <button id="btn-diff-nav-next" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Next change" onclick="gotoNextChange()">
                 <i class="fa fa-arrow-right"></i>
             </button>
         </div>
@@ -1763,15 +1763,15 @@
                 enabled: false,
                 click: doRefresh
             },
-            { type: 'separator', visible: false, id: 'diffSep' },
+            { type: 'separator' },
             {
                 label: '&Previous change',
-                visible: false,
+                enabled: false,
                 click: gotoPrevChange
             },
             {
                 label: '&Next change',
-                visible: false,
+                enabled: false,
                 click: gotoNextChange
             },
             { type: 'separator' },
@@ -3851,13 +3851,10 @@
     }
 
     function toggleDiffNav(state) {
-        menubar.updateItem('view|previous change', { visible: state });
-        menubar.updateItem('view|next change', { visible: state });
-        menubar.updateItem('view|diffSep', { visible: state });
-        if (state)
-            document.getElementById('btn-group-diff-nav').style.display = 'inline-block';
-        else
-            document.getElementById('btn-group-diff-nav').style.display = 'none';
+        menubar.updateItem('view|previous change', { enabled: state });
+        menubar.updateItem('view|next change', { enabled: state });
+        $("#btn-diff-nav-prev").prop('disabled', !state);
+        $("#btn-diff-nav-next").prop('disabled', !state);
     }
 
     function savedOpened() {

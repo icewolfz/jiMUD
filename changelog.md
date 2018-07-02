@@ -13,6 +13,7 @@
     - Do not display terrain text for external rooms
     - Fixed display of external file name in room editor
     - Ignore comments embedded in mappings when parsing external room code
+    - Make diff navigation buttons visible but disabled when not in use as you can not hide the menu due to a limitation in election not allowing hidding of seperators
 
 ## 0.4.53 2018-06-30
 
