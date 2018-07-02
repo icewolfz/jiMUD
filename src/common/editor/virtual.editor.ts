@@ -539,7 +539,13 @@ export class VirtualEditor extends EditorBase {
             {
                 label: 'Light',
                 field: 'light',
-                width: 50
+                width: 50,
+                editor: {
+                    options: {
+                        min: -15,
+                        max: 15
+                    }
+                }
             },
             {
                 label: 'Terrain',
@@ -2749,7 +2755,13 @@ export class VirtualEditor extends EditorBase {
             {
                 property: 'light',
                 group: 'Description',
-                sort: 4
+                sort: 4,
+                editor: {
+                    options: {
+                        min: -15,
+                        max: 15
+                    }
+                }
             },
             {
                 property: 'terrainType',

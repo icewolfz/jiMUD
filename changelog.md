@@ -2,6 +2,8 @@
 
 ## 0.4.54
 
+- **Changed:**
+  - Code editor: light range for virtual editor room/descritions is not -15 to 15 instead of default
 - **Fixed:**
   - Code editor:
     - Virtual editor:
