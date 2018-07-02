@@ -5376,6 +5376,7 @@ export class VirtualEditor extends EditorBase {
         r.ee = 0;
         r.state = 0;
         let exit;
+        let exits;
         for (; idx < len; idx++) {
             c = code.charAt(idx);
             i = code.charCodeAt(idx);
@@ -5515,7 +5516,7 @@ export class VirtualEditor extends EditorBase {
                                     if (!quote && c === ';')
                                         break;
                                 }
-                                let exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
+                                exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
                                 for (exit in exits) {
                                     if (!exits.hasOwnProperty(exit)) continue;
                                     switch (exit) {

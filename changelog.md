@@ -9,6 +9,7 @@
     - Fixed cut/deleting descriptions was formatting terrain file wrong
     - Fixed shift click selection for room editor
     - Fixed status bar better supported in virtual editor
+    - Fixed issue parsing external room files in virtual editor
 
 ## 0.4.53 2018-06-30
 
