@@ -497,6 +497,7 @@ cause test to be brighter but more bold looking
     border-bottom: 1px black solid;
     z-index: 1;
     right: 0;
+    min-width: 100%;
 }
 
 .x-axis div {
@@ -521,6 +522,7 @@ cause test to be brighter but more bold looking
     left: 0;
     border-right: 1px black solid;
     z-index: 1;
+    min-height: 100%;
 }
 
 .y-axis div {

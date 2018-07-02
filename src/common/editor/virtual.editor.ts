@@ -2104,7 +2104,7 @@ export class VirtualEditor extends EditorBase {
                                 this.RoomChanged(p, po);
                             }
                         }
-                        if (y < this.$mapSize.height - 1 && x < this.$mapSize.height - 1 && (e.ctrlKey || (o & RoomExit.SouthEast) === RoomExit.SouthEast)) {
+                        if (y < this.$mapSize.height - 1 && x < this.$mapSize.width - 1 && (e.ctrlKey || (o & RoomExit.SouthEast) === RoomExit.SouthEast)) {
                             nx = x + 1;
                             ny = y + 1;
                             p = this.getRoom(nx, ny);
@@ -3272,7 +3272,7 @@ export class VirtualEditor extends EditorBase {
                 this.RoomChanged(p, po);
             }
         }
-        if (room.y < this.$mapSize.height - 1 && room.x < this.$mapSize.height - 1 && (o & RoomExit.SouthEast) === RoomExit.SouthEast) {
+        if (room.y < this.$mapSize.height - 1 && room.x < this.$mapSize.width - 1 && (o & RoomExit.SouthEast) === RoomExit.SouthEast) {
             nx = room.x + 1;
             ny = room.y + 1;
             p = this.getRoom(nx, ny);
@@ -3414,7 +3414,7 @@ export class VirtualEditor extends EditorBase {
             } else
                 room.exits &= ~RoomExit.South;
         }
-        if (room.y < this.$mapSize.height - 1 && room.x < this.$mapSize.height - 1 && (o & RoomExit.SouthEast) === RoomExit.SouthEast) {
+        if (room.y < this.$mapSize.height - 1 && room.x < this.$mapSize.width - 1 && (o & RoomExit.SouthEast) === RoomExit.SouthEast) {
             nx = room.x + 1;
             ny = room.y + 1;
             p = this.getRoom(nx, ny);
