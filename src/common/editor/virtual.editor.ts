@@ -2414,7 +2414,10 @@ export class VirtualEditor extends EditorBase {
                             this.$selectedRooms[sl].item++;
                         this.$selectedRooms[sl].terrain++;
                         this.$descriptionGrid.refresh();
-                        this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
+                        if (this.$selectedRooms[sl].terrain > this.$maxTerrain)
+                            this.updateMaxTerrain(this.$selectedRooms[sl].terrain);
+                        else
+                            this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
                         this.RoomChanged(this.$selectedRooms[sl], or);
                     }
                     break;
@@ -2602,11 +2605,8 @@ export class VirtualEditor extends EditorBase {
                             curr.item = newValue;
                         curr[prop] = newValue;
                         //new high terrain, clear cache and redraw whole map as colors should have shifted
-                        if (newValue > this.$maxTerrain) {
-                            this.$maxTerrain = newValue;
-                            this.$colorCache = null;
-                            this.doUpdate(UpdateType.drawMap);
-                        }
+                        if (newValue > this.$maxTerrain)
+                            this.updateMaxTerrain(newValue);
                         else //else just redraw the current room
                             this.DrawRoom(this.$mapContext, curr, true, curr.at(this.$mouse.rx, this.$mouse.ry));
                         this.RoomChanged(curr, old, true);
@@ -6806,6 +6806,7 @@ export class VirtualEditor extends EditorBase {
         }
         this.$descriptions = rows;
         this.$descriptionGrid.rows = this.$descriptions;
+        this.updateMaxTerrain(this.$descriptions.length);
     }
 
     private loadItems() {
@@ -7073,6 +7074,14 @@ export class VirtualEditor extends EditorBase {
         resetCursor(this.$itemRaw);
         resetCursor(this.$externalRaw);
         resetCursor(this.$mapRaw);
+    }
+
+    private updateMaxTerrain(t) {
+        if (t > this.$maxTerrain) {
+            this.$maxTerrain = t;
+            this.$colorCache = null;
+            this.doUpdate(UpdateType.drawMap);
+        }
     }
 }
 
