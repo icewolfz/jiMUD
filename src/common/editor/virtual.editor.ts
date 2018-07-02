@@ -6238,7 +6238,7 @@ export class VirtualEditor extends EditorBase {
                 }
                 else {
                     if (!ri[o.item]) {
-                        if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item])
+                        if (o.item < this.$items.length && o.item >= 0 && this.$items[o.item] && this.$items[o.item].children && this.$items[o.item].children.length > 0)
                             ri[o.item] = this.$items[o.item].children.slice();
                         else
                             ri[o.item] = [];
