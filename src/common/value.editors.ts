@@ -409,7 +409,7 @@ export class NumberValueEditor extends ValueEditor {
         this.$el.classList.add('property-grid-editor');
         this.$el.type = 'number';
         this.$el.max = this.options ? (this.options.max || 1000) : 1000;
-        this.$el.min = this.options ? (this.options.min || 0) : 0;
+        this.$el.min = this.options ? (this.options.min || 0) : -1000;
         this.$el.addEventListener('keydown', (e2) => {
             if (e2.keyCode === 27) {
                 e2.preventDefault();
