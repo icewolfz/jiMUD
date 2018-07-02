@@ -143,6 +143,16 @@ export class TextValueEditor extends ValueEditor {
         });
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
+        this.$editor.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
+        this.$editor.addEventListener('mouseup', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (this.$noEnter && e.keyCode === 13) {
@@ -245,6 +255,18 @@ export class TextValueEditor extends ValueEditor {
                     this.focus();
                 }
             }, { once: true });
+            this.$dropdown.addEventListener('click', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
+            this.$dropdown.addEventListener('mousedown', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
+            this.$dropdown.addEventListener('mouseup', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
             this.container.appendChild(this.$dropdown);
             if (this.$noEnter)
                 this.$dropdown.placeholder = 'Press enter to accept text.';
@@ -407,6 +429,18 @@ export class NumberValueEditor extends ValueEditor {
         this.$el.addEventListener('blur', (e) => {
             setTimeout(() => this.control.clearEditor(e));
         });
+        this.$el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
+        this.$el.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
+        this.$el.addEventListener('mouseup', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
         this.parent.appendChild(this.$el);
     }
     public focus() {
@@ -463,6 +497,8 @@ export class FlagValueEditor extends ValueEditor {
         });
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
+            e.stopPropagation();
+            e.cancelBubble = true;
         });
         this.$editor.addEventListener('keydown', (e2) => {
             if (e2.keyCode === 27) {
@@ -470,6 +506,18 @@ export class FlagValueEditor extends ValueEditor {
                 e2.stopPropagation();
                 return false;
             }
+        });
+        this.$editor.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
+        this.$editor.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
+        this.$editor.addEventListener('mouseup', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -574,6 +622,18 @@ export class FlagValueEditor extends ValueEditor {
             }
             else
                 this.$dropdown.style.height = '154px';
+            this.$dropdown.addEventListener('click', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
+            this.$dropdown.addEventListener('mousedown', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
+            this.$dropdown.addEventListener('mouseup', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
             this.positionDropdown();
             this.container.appendChild(this.$dropdown);
             this.$dropdown.focus();
@@ -691,6 +751,8 @@ export class DropDownEditValueEditor extends ValueEditor {
         });
         this.$editor.addEventListener('click', (e) => {
             this.$editor.dataset.aOpen = null;
+            e.stopPropagation();
+            e.cancelBubble = true;
         });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 27 || e.keyCode === 13) {
@@ -706,6 +768,14 @@ export class DropDownEditValueEditor extends ValueEditor {
                 e2.stopPropagation();
                 return false;
             }
+        });
+        this.$editor.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
+        this.$editor.addEventListener('mouseup', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
         });
         this.$el.appendChild(this.$editor);
 
@@ -765,6 +835,18 @@ export class DropDownEditValueEditor extends ValueEditor {
             }
             else
                 this.$dropdown.style.height = '160px';
+            this.$dropdown.addEventListener('click', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
+            this.$dropdown.addEventListener('mousedown', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
+            this.$dropdown.addEventListener('mouseup', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
             this.positionDropdown();
             this.container.appendChild(this.$dropdown);
             this.$dropdown.focus();

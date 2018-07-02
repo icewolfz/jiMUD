@@ -7,6 +7,7 @@
     - External exits was displaying empty always after multiple room support was added
     - Fixed cut/deleting of descriptions, was doing smallest to largest index, throwing off later #s, now reversed and does largest to smallest fixing the issue
     - Fixed cut/deleting descriptions was formatting terrain file wrong
+    - Fixed shift click selection for room editor
 
 ## 0.4.53 2018-06-30
 
