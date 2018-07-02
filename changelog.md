@@ -10,6 +10,9 @@
     - Fixed shift click selection for room editor
     - Fixed status bar better supported in virtual editor
     - Fixed issue parsing external room files in virtual editor
+    - Do not display terrain text for external rooms
+    - Fixed display of external file name in room editor
+    - Ignore comments embedded in mappings when parsing external room code
 
 ## 0.4.53 2018-06-30
 

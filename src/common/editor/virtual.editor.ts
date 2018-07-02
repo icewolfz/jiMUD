@@ -2882,10 +2882,10 @@ export class VirtualEditor extends EditorBase {
     }
 
     private formatEF(prop, value, object) {
-        if (!object || !value) return 'None';
+        if (!object || object.length === 0 || !value) return 'None';
         if (this.$mapSize > 1)
-            return object.x + ',' + object.y + ',' + object.z + '.c';
-        return object.x + ',' + object.y + '.c';
+            return object[0].x + ',' + object[0].y + ',' + object[0].z + '.c';
+        return object[0].x + ',' + object[0].y + '.c';
     }
 
     private createRawControl(view) {
@@ -4979,7 +4979,6 @@ export class VirtualEditor extends EditorBase {
         if (room.ef) {
             ctx.fillStyle = '#FFE4E1';
             ctx.fillRect(x + 8, y + 8, 16, 16);
-            ctx.fillStyle = 'black';
             if (ex !== RoomExit.None) {
                 ctx.strokeStyle = 'black';
                 ctx.strokeRect(0.5 + x + 7, 0.5 + y + 7, 17, 17);
@@ -4990,7 +4989,7 @@ export class VirtualEditor extends EditorBase {
             ctx.fillRect(x + 8, y + 8, 16, 16);
         }
 
-        if (this.$showTerrain) {
+        if (this.$showTerrain && !room.ef) {
             if (exs === RoomExit.None && ex === RoomExit.None)
                 ctx.fillStyle = 'rgb(234, 233, 233)';
             else if (this.$showColors)
@@ -5518,7 +5517,7 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
                                 for (exit in exits) {
-                                    if (!exits.hasOwnProperty(exit)) continue;
+                                    if (exit.length === 0 || !exits.hasOwnProperty(exit)) continue;
                                     switch (exit) {
                                         case 'north':
                                             r.exits |= RoomExit.North;
@@ -5666,7 +5665,7 @@ export class VirtualEditor extends EditorBase {
                                         const sounds = this.parseMapping(block);
                                         let sound;
                                         for (sound in sounds) {
-                                            if (!sounds.hasOwnProperty(sound)) continue;
+                                            if (sound.length === 0 || !sounds.hasOwnProperty(sound)) continue;
                                             if (sound === 'default') {
                                                 r.sound = sound;
                                                 break;
@@ -5722,7 +5721,7 @@ export class VirtualEditor extends EditorBase {
                                         const smells = this.parseMapping(block);
                                         let smell;
                                         for (smell in smells) {
-                                            if (!smells.hasOwnProperty(smell)) continue;
+                                            if (smell.length === 0 || !smells.hasOwnProperty(smell)) continue;
                                             if (smell === 'default') {
                                                 r.smell = smell;
                                                 break;
@@ -5752,7 +5751,7 @@ export class VirtualEditor extends EditorBase {
                                 if (!r.items) r.items = [];
                                 let item;
                                 for (item in items) {
-                                    if (!items.hasOwnProperty(item)) continue;
+                                    if (item.length === 0 || !items.hasOwnProperty(item)) continue;
                                     if (item.startsWith('({') && item.endsWith('})')) {
                                         const k = item.slice(2, -2).splitQuote(',', 3, 3);
                                         let s;
@@ -5805,7 +5804,7 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
                                 for (exit in exits) {
-                                    if (!exits.hasOwnProperty(exit)) continue;
+                                    if (exit.length === 0 || !exits.hasOwnProperty(exit)) continue;
                                     if (exit === 'light') {
                                         r.light = +exits[exit];
                                         break;
@@ -5902,6 +5901,35 @@ export class VirtualEditor extends EditorBase {
         for (; idx < end; idx++) {
             c = str.charAt(idx);
             switch (c) {
+                case '/':
+                    if (idx + 1 < end && str.charAt(idx + 1) === '/') {
+                        if (pIdx < idx) {
+                            pair = this.parseKeyPair(str.substring(pIdx, idx).trim());
+                            m[pair[0]] = pair[1];
+                        }
+                        while (idx < end) {
+                            c = str.charAt(idx);
+                            if (c === '\n')
+                                break;
+                            idx++;
+                            pIdx = idx;
+                        }
+                    }
+                    else if (idx + 1 < end && str.charAt(idx + 1) === '*') {
+                        if (pIdx < idx) {
+                            pair = this.parseKeyPair(str.substring(pIdx, idx).trim());
+                            m[pair[0]] = pair[1];
+                        }
+                        while (idx < end) {
+                            c = str.charAt(idx);
+                            if (idx + 1 < end && c === '*' && str.charAt(idx + 1) === '/') {
+                                break;
+                            }
+                            idx++;
+                            pIdx = idx;
+                        }
+                    }
+                    break;
                 case '(':
                     array++;
                     break;
