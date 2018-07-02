@@ -6396,7 +6396,7 @@ export class VirtualEditor extends EditorBase {
                 this.$roomPreview.long.textContent = data.long;
                 str = this.$roomPreview.long.innerHTML;
 
-                if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children.length > 0) {
+                if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children && items[room.item].children.length > 0) {
                     items = items[room.item].children.slice().sort((a, b) => { return b.item.length - a.item.length; });
                     for (c = 0, cl = items.length; c < cl; c++)
                         str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
