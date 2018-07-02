@@ -4,22 +4,26 @@
 
 - **Fixed:**
   - Code editor:
-    - External exits was displaying empty always after multiple room support was added
-    - Fixed cut/deleting of descriptions, was doing smallest to largest index, throwing off later #s, now reversed and does largest to smallest fixing the issue
-    - Fixed cut/deleting descriptions was formatting terrain file wrong
-    - Fixed shift click selection for room editor
-    - Fixed status bar better supported in virtual editor
-    - Fixed issues parsing external room files in virtual editor
-    - Do not display terrain text for external rooms
-    - Fixed display of external file name in room editor
-    - Ignore comments embedded in mappings when parsing external room code
-    - Make diff navigation buttons visible but disabled when not in use as you can not hide the menu due to a limitation in election not allowing hidding of seperators
+    - Virtual editor:
+      - External exits was displaying empty always after multiple room support was added
+      - Fixed cut/deleting of descriptions, was doing smallest to largest index, throwing off later #s, now reversed and does largest to smallest fixing the issue
+      - Fixed cut/deleting descriptions was formatting terrain file wrong
+      - Fixed shift click selection for room editor
+      - Fixed status bar better supported in virtual editor
+      - Fixed issues parsing external room files in virtual editor
+      - Do not display terrain text for external rooms
+      - Fixed display of external file name in room editor
+      - Ignore comments embedded in mappings when parsing external room code
+      - Add room states to external room generation
+      - Corrected code formatting of generated external room
+      - Fixed when used in split views
+    - Make diff navigation buttons visible but disabled when not in use as you can not hide the menu due to a limitation in election not allowing hiding of separators
 
 ## 0.4.53 2018-06-30
 
 - **Fixed:**
   - Data grid:
-    - Fix position and width of advanced editors for datagrid on smaller windows, as data grid advanced editors are not true floating windows and must fit inside the window for full visibility.
+    - Fix position and width of advanced editors for data grid on smaller windows, as data grid advanced editors are not true floating windows and must fit inside the window for full visibility.
     - Readd focus outline to advance editor buttons to know when focused from tab
   - Code editor:
     - Virtual editor:

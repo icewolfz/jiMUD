@@ -2087,15 +2087,7 @@
             ignoreCharChanges: true // jump from line to line
         });
         window.$dNavs.splice(idx, 0, nav);
-
-        var keys = Object.keys(_editors);
-        var k = keys.length;
-        var p;
-        while (k--) {
-            p = keys[k];
-            if (!_editors[p]) continue;
-            _editors[p].editor.resize();
-        }
+        doUpdate(128);
     });
     manager.on('destroy-pane', (idx) => {
         window.$editors[idx].dispose();
@@ -2106,14 +2098,7 @@
         window.$dNavs.splice(idx, 1);
         if (idx === 0)
             window.$editor = window.$editors[0];
-        var keys = Object.keys(_editors);
-        var k = keys.length;
-        var p;
-        while (k--) {
-            p = keys[k];
-            if (!_editors[p]) continue;
-            _editors[p].editor.resize();
-        }
+            doUpdate(128);
     });
     manager.on('tab-moved', (e) => {
         if (e.panel && e.panel.editor)
@@ -2139,7 +2124,7 @@
             window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
             toggleDiffNav(false);
         }
-        doUpdate(1);
+        doUpdate(129);
     });
     manager.on('resize', () => {
         if (!window.$editors) return;
@@ -3685,14 +3670,7 @@
                 dock.css("bottom", options.outputSize + 'px');
                 doUpdate(16);
             }
-            var keys = Object.keys(_editors);
-            var k = keys.length;
-            var p;
-            while (k--) {
-                p = keys[k];
-                if (!_editors[p]) continue;
-                _editors[p].editor.resize();
-            }
+            doUpdate(128);
             if (manager.active && manager.active.editor) manager.active.editor.focus();
             if (!window.$editors) return;
             var e = window.$editors.length;
@@ -6863,7 +6841,7 @@
                                 if ((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth)
                                     data['room-wiz-create-body'] += `   set_up(VIR+"${x},${y},${z + 1}");\n`;
                                 if ((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1)
-                                    data['room-wiz-create-body'] += `   set_up(VIR+"${x},${y},${z - 1}");\n`;
+                                    data['room-wiz-create-body'] += `   set_down(VIR+"${x},${y},${z - 1}");\n`;
                                 data['room-wiz-exits'].push(...tmp);
                                 roomWizard(data);
                             }
@@ -7010,7 +6988,7 @@
                 updatePanel(p);
                 if (p !== manager.active) return;
                 doUpdate(2);
-                if(length === -1)
+                if (length === -1)
                     sbSize.textContent = '';
                 else
                     sbSize.textContent = 'Length: ' + length.toLocaleString();
@@ -7317,13 +7295,25 @@
                 _updating &= ~16;
             }
             if ((_updating & 32) === 32) {
-                manager.active.editor.selectionChanged();
+                if (manager.active.editor.selectionChanged)
+                    manager.active.editor.selectionChanged();
                 _updating &= ~32;
             }
             if ((_updating & 64) === 64) {
                 let l = manager.active.editor.location;
                 sbLocation.textContent = `Ln ${l[1]}, Col ${l[0]}`;
                 _updating &= ~64;
+            }
+            if ((_updating & 128) === 128) {
+                var keys = Object.keys(_editors);
+                var k = keys.length;
+                var p;
+                while (k--) {
+                    p = keys[k];
+                    if (!_editors[p]) continue;
+                    _editors[p].editor.resize();
+                }
+                _updating &= ~128;
             }
             doUpdate(_updating);
         });

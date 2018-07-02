@@ -3,7 +3,7 @@ import { Splitter, Orientation } from './../splitter';
 import { PropertyGrid } from './../propertygrid';
 import { EditorType, ValueEditor } from './../value.editors';
 import { DataGrid } from './../datagrid';
-import { existsSync, capitalize, wordwrap, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
+import { formatString, existsSync, capitalize, wordwrap, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -53,7 +53,7 @@ export enum RoomStates {
     NoAttack = 512,
     NoMagic = 256,
     Council = 128,
-    Otdoors = 64,
+    Outdoors = 64,
     Indoors = 32,
     Water = 16,
     Hot = 8,
@@ -3859,6 +3859,7 @@ export class VirtualEditor extends EditorBase {
                 r = this.getRoom(c[0], c[1], c[2]);
             else
                 r = this.getRoom(c[0], c[1]);
+            if (!r) return;
             switch (action) {
                 case 'add':
                 case 'change':
@@ -6950,60 +6951,59 @@ export class VirtualEditor extends EditorBase {
         if (!r)
             return '';
         let t;
-        let c;
-        let cl;
-        let t2;
         let d;
         if (this.$mapSize.depth > 1)
-            d = '/**\n * External virtual room ' + r.x + ', ' + r.y + ', ' + r.z + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */';
+            d = '/**\n * External virtual room ' + r.x + ', ' + r.y + ', ' + r.z + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */\n';
         else
-            d = '/**\n * External virtual room ' + r.x + ', ' + r.y + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */';
-        d += '#include <std.h>\n#include "../area.h"\n\ninherit (VIR+"baseroom.c");\n\n/**\n * Create\n *\n * Create the base virtual room, passing correct parameters to baseroom\n */\nvoid create() {\n   ::create(' + r.x + ', ' + r.y + ', ' + r.z + ', ' + r.terrain + ', ' + r.item + ', ' + r.exits + ');\n';
+            d = '/**\n * External virtual room ' + r.x + ', ' + r.y + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */\n';
+        d += '#include <std.h>\n#include "../area.h"\n\ninherit (VIR + "baseroom.c");\n\n/**\n * Create\n *\n * Create the base virtual room, passing correct parameters to baseroom\n */\nvoid create()\n{\n   ::create(' + r.x + ', ' + r.y + ', ' + r.z + ', ' + r.terrain + ', ' + r.item + ', ' + r.exits + ');\n';
         let data;
         if (this.$descriptions.length > 0 && r.terrain >= 0 && r.terrain < this.$descriptions.length && this.$descriptions[r.terrain]) {
             data = this.$descriptions[r.terrain];
-            if (data.light !== 0) {
-                d += '   set_properties( ([\n      "light":' + data.light + '\n   ]) );\n';
+            t = [];
+            if (data.light !== 0)
+                t.push(`"light" : ${data.light}`);
+            if ((r.state & RoomStates.NoAttack) === RoomStates.NoAttack)
+                t.push('"no attack" : 1');
+            if ((r.state & RoomStates.NoMagic) === RoomStates.NoMagic)
+                t.push('"no magic" : 1');
+            if ((r.state & RoomStates.Council) === RoomStates.Council)
+                t.push('"council" : 1');
+            if ((r.state & RoomStates.Indoors) === RoomStates.Indoors)
+                t.push('"indoors" : 1');
+            if (t.length > 0) {
+                d += '   set_properties( ([\n       ';
+                d += t.join(',\n       ');
+                d += '\n     ]) );\n';
             }
             d += '   set_short("' + data.short + '");\n';
             d += '   set_long("';
-            if (data.long.length > 68) {
-                t = wordwrap(data.long, 68).trim().split('\n');
-                for (c = 0, cl = t.length; c < cl; c++) {
-                    if (c === 0)
-                        d += t[c] + '"\n';
-                    else if (c === cl - 1)
-                        d += '            "' + t[c] + '");\n';
-                    else
-                        d += '            "' + t[c] + '"\n';
+            if (data.long.length > 70) {
+                t = data.long.substr(0, 66);
+                let tl = t.length;
+                while (tl--) {
+                    if (t.charAt(tl) === ' ') {
+                        t.substr(0, tl);
+                        break;
+                    }
                 }
+                d += `"${t}"\n     `;
+                d += formatString(data.long.substr(t.length), 5, 73);
             }
             else
                 d += data.long + '");\n';
             if (data.terrain.length > 0 && data.terrain !== '0')
                 d += '   set_terrain("' + data.terrain + '");\n';
+            else if ((r.state & RoomStates.Water) === RoomStates.Water)
+                d += '   set_terrain("water");\n';
 
             if (this.$items.length > 0 && r.item >= 0 && r.item < this.$items.length && this.$items[r.item] && this.$items[r.item].children.length > 0) {
-                d += '   set_items( ([\n';
+                d += '   set_items( ([\n       ';
                 const items = this.$items[r.item].children;
-                for (c = 0, cl = items.length; c < cl; c++) {
-                    t2 = '      "' + items[c].item + '":"';
-                    if (t2.length + items[c].description.length + 1 > 85) {
-                        t = wordwrap(items[c].description, 80 - t2.length).trim().split('\n');
-                        for (c = 0, cl = t.length; c < cl; c++) {
-                            if (c === 0)
-                                d += t[c] + '"\n';
-                            else if (c === cl - 1)
-                                d += ('"' + t[c] + '",\n').padStart(t2.length - 1);
-                            else
-                                d += ('"' + t[c] + '"\n').padStart(t2.length - 1);
-                        }
-                    }
-                    else {
-                        d += t2 + items[c].description + '",\n';
-                    }
-                }
-                d += '   ]) );\n';
+                d += items.map(i => {
+                    return `"${i.item}" : "${i.description}"`;
+                });
+                d += '\n     ]) );\n';
             }
             if (data.smell.length > 0 && data.smell !== '0')
                 d += '   set_smell("' + data.smell + '");\n';
@@ -7014,38 +7014,48 @@ export class VirtualEditor extends EditorBase {
             d += '   set_exits( ([\n';
             if (this.$mapSize.depth > 1) {
                 if ((r.exits & RoomExit.Up) === RoomExit.Up)
-                    d += '      "up":VIR+"' + (r.x) + ',' + (r.y) + ',' + (r.z + 1) + '.c",\n';
+                    d += '       "up" : VIR + "' + (r.x) + ',' + (r.y) + ',' + (r.z + 1) + '.c",\n';
                 if ((r.exits & RoomExit.Down) === RoomExit.Down)
-                    d += '      "down":VIR+"' + (r.x) + ',' + (r.y) + ',' + (r.z - 1) + '.c",\n';
+                    d += '       "down" : VIR + "' + (r.x) + ',' + (r.y) + ',' + (r.z - 1) + '.c",\n';
                 t = ',' + r.z;
             }
             else
                 t = '';
             if ((r.exits & RoomExit.North) === RoomExit.North)
-                d += '      "north":VIR+"' + (r.x) + ',' + (r.y - 1) + t + '.c",\n';
+                d += '       "north" : VIR + "' + (r.x) + ',' + (r.y - 1) + t + '.c",\n';
             if ((r.exits & RoomExit.NorthWest) === RoomExit.NorthWest)
-                d += '      "northwest":VIR+"' + (r.x - 1) + ',' + (r.y - 1) + t + '.c",\n';
+                d += '       "northwest" : VIR + "' + (r.x - 1) + ',' + (r.y - 1) + t + '.c",\n';
             if ((r.exits & RoomExit.NorthEast) === RoomExit.NorthEast)
-                d += '      "northeast":VIR+"' + (r.x + 1) + ',' + (r.y - 1) + t + '.c",\n';
+                d += '       "northeast" : VIR + "' + (r.x + 1) + ',' + (r.y - 1) + t + '.c",\n';
             if ((r.exits & RoomExit.East) === RoomExit.East)
-                d += '      "east":VIR+"' + (r.x + 1) + ',' + (r.y) + t + '.c",\n';
+                d += '       "east" : VIR + "' + (r.x + 1) + ',' + (r.y) + t + '.c",\n';
             if ((r.exits & RoomExit.West) === RoomExit.West)
-                d += '      "west":VIR+"' + (r.x - 1) + ',' + (r.y) + t + '.c",\n';
+                d += '       "west" : VIR + "' + (r.x - 1) + ',' + (r.y) + t + '.c",\n';
             if ((r.exits & RoomExit.South) === RoomExit.South)
-                d += '      "south":VIR+"' + (r.x) + ',' + (r.y + 1) + t + '.c",\n';
+                d += '       "south" : VIR + "' + (r.x) + ',' + (r.y + 1) + t + '.c",\n';
             if ((r.exits & RoomExit.SouthEast) === RoomExit.SouthEast)
-                d += '      "southeast":VIR+"' + (r.x + 1) + ',' + (r.y + 1) + t + '.c",\n';
+                d += '       "southeast" : VIR + "' + (r.x + 1) + ',' + (r.y + 1) + t + '.c",\n';
             if ((r.exits & RoomExit.SouthWest) === RoomExit.SouthWest)
-                d += '      "southwest":VIR+"' + (r.x - 1) + ',' + (r.y + 1) + t + '.c",\n';
+                d += '       "southwest" : VIR + "' + (r.x - 1) + ',' + (r.y + 1) + t + '.c",\n';
             let ri;
             const rl = this.$exits.length;
             for (ri = 0; ri < rl; ri++) {
                 if (!this.$exits[ri].enabled || +this.$exits[ri].x !== r.x || +this.$exits[ri].y !== r.y || +this.$exits[ri].z !== r.z)
                     continue;
-                d += '      "' + this.$exits[ri].exit + '":"' + this.$exits[ri].dest + '",\n';
+                d += '       "' + this.$exits[ri].exit + '":"' + this.$exits[ri].dest + '",\n';
             }
-            d += '   ]) );\n';
+            d += '     ]) );\n';
         }
+        if ((r.state & RoomStates.Cold) === RoomStates.Cold)
+            d += '   set_temperature(-200);\n';
+        else if ((r.state & RoomStates.Hot) === RoomStates.Hot)
+            d += '   set_temperature(200);\n';
+        if ((r.state & RoomStates.SinkingUp) === RoomStates.SinkingUp || (r.state & RoomStates.SinkingDown) === RoomStates.SinkingDown)
+            d += '   set_living_sink(1);\n';
+        if ((r.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && r.z + 1 < this.$mapSize.depth)
+            d += `   set_up(VIR+"${r.x},${r.y},${r.z + 1}");\n`;
+        if ((r.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && r.z > 0 && this.$mapSize.depth > 1)
+            d += `   set_down(VIR+"${r.x},${r.y},${r.z - 1}");\n`;
         d += '}';
         return d;
     }
