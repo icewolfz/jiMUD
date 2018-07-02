@@ -4278,6 +4278,8 @@ export class VirtualEditor extends EditorBase {
 
     public resize() {
         this._os = this.offset(this.$mapContainer);
+        this.$xAxis.style.left = (32 - this.$mapContainer.scrollLeft) + 'px';
+        this.$yAxis.style.top = (32 - this.$mapContainer.scrollTop) + 'px';
     }
 
     public set options(value: any) {
@@ -6703,6 +6705,8 @@ export class VirtualEditor extends EditorBase {
             this.$xAxis.removeChild(this.$xAxis.firstChild);
         while (this.$yAxis.firstChild)
             this.$yAxis.removeChild(this.$yAxis.firstChild);
+        this.$xAxis.style.width = this.$mapSize.right + 'px';
+        this.$yAxis.style.height = this.$mapSize.bottom + 'px';
         let frag = document.createDocumentFragment();
         let el: HTMLElement;
         this.$xAxisHighlight.style.height = '100%';
@@ -6724,6 +6728,7 @@ export class VirtualEditor extends EditorBase {
             });
             el.addEventListener('mouseout', (e) => {
                 this.$xAxisHighlight.style.display = '';
+                this.$xAxisHighlight.style.top = '0';
             });
             frag.appendChild(el);
         }
@@ -6746,6 +6751,7 @@ export class VirtualEditor extends EditorBase {
             });
             el.addEventListener('mouseout', (e) => {
                 this.$yAxisHighlight.style.display = '';
+                this.$yAxisHighlight.style.left = '0';
             });
             frag.appendChild(el);
         }
