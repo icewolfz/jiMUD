@@ -2120,7 +2120,12 @@ export class DataGrid extends EventEmitter {
             el: el,
             editors: []
         };
-        const oldObj = clone(this.$rows[this.$sortedRows[this.$editor.row]]);
+        let oldObj;
+        if (this.$editor.parent === -1)
+            oldObj = clone(this.$rows[this.$sortedRows[this.$editor.row]]);
+        else
+            oldObj = clone(this.$rows[this.$editor.parent].children[this.$editor.child]);
+
         let changed = false;
         let dataIdx;
         let field;
@@ -2206,9 +2211,9 @@ export class DataGrid extends EventEmitter {
         }
         if (changed && !canceled) {
             if (parent !== -1)
-                this.emit('value-changed', editor.data, oldObj.children[child], this.$sortedRows[this.$editor.row]);
+                this.emit('value-changed', editor.data, oldObj, this.$editor.dataIndex);
             else
-                this.emit('value-changed', editor.data, oldObj, this.$sortedRows[this.$editor.row]);
+                this.emit('value-changed', editor.data, oldObj, this.$editor.dataIndex);
         }
         this.$editor = null;
         if (next)
@@ -2236,7 +2241,10 @@ export class DataGrid extends EventEmitter {
         this.$editor = {
             el: el,
             editors: [],
-            row: row
+            row: row,
+            dataIndex: +el.dataset.dataIndex,
+            parent: +el.dataset.parent,
+            child: +el.dataset.child
         };
         let cell;
         let prop;

@@ -17,13 +17,15 @@
     - Fixed undefined/undefined error when uploading folders, now correctly displays error or ignores error if required
     - Fixed bug when downloading a folder with multiple sub folders, was not correctly storing related local folder destination
     - Fixed open in editor button state when option is changed from preferences dialog
+  - Code editor:
     - Fixed enter accept for editable dropdowns and checkbox dropdowns
     - Fixed when adding new external exit did not update changed state when starting with no exits
+    - Fixed editing items in dedicated item editor
 
 ## 0.4.54 2018-07-02
 
 - **Changed:**
-  - Code editor: light range for virtual editor room/descriptions is not -15 to 15 instead of default
+  - Code editor: light range for virtual editor room/descriptions is now -15 to 15 instead of default
 - **Fixed:**
   - Code editor:
     - Virtual editor:
