@@ -879,7 +879,7 @@ export class VirtualEditor extends EditorBase {
         this.$itemGrid.enterMoveFirst = this.$enterMoveFirst;
         this.$itemGrid.enterMoveNext = this.$enterMoveNext;
         //this.$itemGrid.enterMoveNew = this.$enterMoveNew;
-        //TODO figure out how t odo this, as add is prevented due complex tree design
+        this.$itemGrid.enterMoveNew = false;
         this.$itemGrid.clipboardPrefix = 'jiMUD/';
         this.$itemGrid.showChildren = true;
         this.$itemGrid.on('row-dblclick', (e, data) => {
@@ -1139,6 +1139,39 @@ export class VirtualEditor extends EditorBase {
             inputMenu.popup({ window: remote.getCurrentWindow() });
         });
         this.$itemGrid.on('add', e => e.preventDefault = true);
+        this.$itemGrid.on('edit', e => {
+            if (e.parent === -1) {
+                if (!this.$items[e.dataIndex].children)
+                    this.$items[e.dataIndex].children = [];
+                if (this.$items[e.dataIndex].children.length === 0) {
+                    if (this.$itemGrid.enterMoveNew) {
+                        this.$items[e.dataIndex].children.push({
+                            idx: '',
+                            item: '',
+                            description: '',
+                            tag: (e.dataIndex + 1) + '-' + this.$items[e.dataIndex].children.length,
+                            parentId: e.dataIndex
+                        });
+                        this.$itemGrid.refresh();
+                        this.$itemGrid.expandRows(e.row).then(() => {
+                            this.$itemGrid.focus();
+                            this.$itemGrid.beginEditChild(e.dataIndex, this.$items[e.dataIndex].children.length - 1);
+                            this.updateRaw(this.$itemRaw, e.dataIndex * 2, [
+                                this.$items[e.dataIndex].children.map(i => i.item).join(':'),
+                                this.$items[e.dataIndex].children.map(i => i.description).join(':')
+                            ], false, true);
+                        });
+                    }
+                }
+                else {
+                    this.$itemGrid.expandRows(e.row).then(() => {
+                        this.$itemGrid.focus();
+                        this.$itemGrid.beginEditChild(e.dataIndex, 0);
+                    });
+                }
+                e.preventDefault = true;
+            }
+        });
         this.$itemGrid.on('selection-changed', () => {
             if (this.$view !== View.items) return;
             if (this.$itemGrid.selectedCount) {
@@ -4340,7 +4373,7 @@ export class VirtualEditor extends EditorBase {
         if (this.$itemGrid) {
             this.$itemGrid.enterMoveFirst = value.enterMoveFirst;
             this.$itemGrid.enterMoveNext = value.enterMoveNext;
-            this.$descriptionGrid.enterMoveNew = value.enterMoveNew;
+            //this.$itemGrid.enterMoveNew = value.enterMoveNew;
         }
         if (this.$exitGrid) {
             this.$exitGrid.enterMoveFirst = value.enterMoveFirst;

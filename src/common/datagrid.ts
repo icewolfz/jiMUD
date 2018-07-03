@@ -240,12 +240,41 @@ export class DataGrid extends EventEmitter {
                         this.emit('selection-changed');
                     }
                     break;
+                case 37: //left
+                    if (this.$focused >= 0 && this.$focused < (<HTMLElement>this.$body.firstChild).children.length) {
+                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        if (el) {
+                            this.collapseRows(+el.dataset.row).then(() => {
+                                el = this.$body.firstElementChild.querySelector('[data-row="' + el.dataset.row + '"][data-parent="-1"]');
+                                idx = [...el.parentElement.children].indexOf(el);
+                                if (idx !== this.$focused) {
+                                    Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
+                                    Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
+                                    this.$focused = idx;
+                                    this.$selected = [this.$focused];
+                                    (<HTMLElement>this.$body.firstChild).children[this.$focused].classList.add('selected', 'focused');
+                                    this.scrollToRow((<HTMLElement>this.$body.firstChild).children[this.$focused]);
+                                }
+                            });
+                        }
+                    }
+                    break;
+                case 39: //right
+                    if (this.$focused >= 0 && this.$focused < (<HTMLElement>this.$body.firstChild).children.length) {
+                        el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
+                        if (el)
+                            this.expandRows(+el.dataset.row);
+                    }
+                    break;
                 case 38: //up
                     Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
                     if (this.$focused < 1)
                         this.$focused = 0;
-                    else if (this.$focused > 0)
+                    else if (this.$focused > 0) {
                         this.$focused--;
+                        while (this.$focused > 0 && (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[this.$focused]).style.display !== '')
+                            this.$focused--;
+                    }
                     if (e.ctrlKey) {
                         el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
                         el.classList.add('focused');
@@ -301,8 +330,12 @@ export class DataGrid extends EventEmitter {
                     break;
                 case 40: //down
                     Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
-                    if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length - 1)
+                    if (this.$focused < (<HTMLElement>this.$body.firstChild).children.length - 1) {
                         this.$focused++;
+                        const l = (<HTMLElement>this.$body.firstChild).children.length - 1;
+                        while (this.$focused <= l && (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[this.$focused]).style.display !== '')
+                            this.$focused++;
+                    }
                     if (e.ctrlKey) {
                         el = (<HTMLElement>this.$body.firstChild).children[this.$focused];
                         el.classList.add('focused');
@@ -1086,7 +1119,7 @@ export class DataGrid extends EventEmitter {
             cEl = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[cEl]);
         else if (!cEl)
             return;
-        const row = +cEl.dataset.row;
+        const row = [...cEl.parentElement.children].indexOf(cEl);
         const e = { preventDefault: false, el: cEl, parent: +cEl.dataset.parent, child: +cEl.dataset.child, row: row, dataIndex: +cEl.dataset.dataIndex };
         this.emit('edit', e);
         if (e.preventDefault)
@@ -2038,7 +2071,8 @@ export class DataGrid extends EventEmitter {
             rows.map(r => {
                 if (this.$viewState[this.$sortedRows[r]])
                     return;
-                const e = this.$body.firstElementChild.children[r];
+                //const e = this.$body.firstElementChild.children[r];
+                const e = this.$body.firstElementChild.querySelector('[data-row="' + r + '"][data-parent="-1"]');
                 if (!e || e.children.length === 0) return;
                 const nl = e.children[0].getElementsByClassName('datagrid-collapse');
                 if (nl.length > 0)
@@ -2049,27 +2083,30 @@ export class DataGrid extends EventEmitter {
     }
 
     public collapseRows(rows) {
-        if ((this._updating & UpdateType.rows) === UpdateType.rows || (this._updating & UpdateType.buildRows) === UpdateType.buildRows) {
-            setTimeout(() => {
-                this.collapseRows(rows);
-            }, 10);
-            return;
-        }
-        if (!Array.isArray(rows))
-            rows = [rows];
-        rows.map(r => {
-            if (typeof r !== 'number')
-                return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
-            return r;
-        });
-        rows.map(r => {
-            if (!this.$viewState[this.$sortedRows[r]])
+        return new Promise((resolve, reject) => {
+            if ((this._updating & UpdateType.rows) === UpdateType.rows || (this._updating & UpdateType.buildRows) === UpdateType.buildRows) {
+                setTimeout(() => {
+                    this.collapseRows(rows).then(resolve);
+                }, 10);
                 return;
-            const e = this.$body.firstElementChild.querySelector('[data-row="' + r + '"][data-parent="-1"]');
-            if (!e || e.children.length === 0) return;
-            const nl = e.children[0].getElementsByClassName('datagrid-collapse');
-            if (nl.length > 0)
-                (<HTMLElement>nl[0]).click();
+            }
+            if (!Array.isArray(rows))
+                rows = [rows];
+            rows.map(r => {
+                if (typeof r !== 'number')
+                    return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
+                return r;
+            });
+            rows.map(r => {
+                if (!this.$viewState[this.$sortedRows[r]])
+                    return;
+                const e = this.$body.firstElementChild.querySelector('[data-row="' + r + '"][data-parent="-1"]');
+                if (!e || e.children.length === 0) return;
+                const nl = e.children[0].getElementsByClassName('datagrid-collapse');
+                if (nl.length > 0)
+                    (<HTMLElement>nl[0]).click();
+            });
+            resolve();
         });
     }
 
