@@ -99,6 +99,7 @@ export class TextValueEditor extends ValueEditor {
     private $wrap;
     private $ignore = false;
     private $dBlur;
+    private $cancel = false;
 
     public create() {
         this.$el = document.createElement('div');
@@ -163,7 +164,7 @@ export class TextValueEditor extends ValueEditor {
                 return false;
             }
             else if (e.keyCode === 27) {
-                this.$editor.blur();
+                setTimeout(() => this.control.clearEditor(e, this, true));
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
@@ -215,6 +216,7 @@ export class TextValueEditor extends ValueEditor {
         vl.innerHTML = '<span class="caret"></span>';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
+            this.$cancel = false;
             if (this.$editor.dataset.aOpen === 'true') {
                 this.$editor.dataset.aOpen = null;
                 this.$editor.focus();
@@ -282,6 +284,7 @@ export class TextValueEditor extends ValueEditor {
                     e2.preventDefault();
                 }
                 else if (e2.keyCode === 27) {
+                    this.$cancel = true;
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                     e2.preventDefault();
@@ -300,7 +303,8 @@ export class TextValueEditor extends ValueEditor {
                     return;
                 }
                 const ec = this.editorClick;
-                this.value = this.$dropdown.value;
+                if (!this.$cancel)
+                    this.value = this.$dropdown.value;
                 this.$editor.dataset.aOpen = 'true';
                 this.$dropdown.remove();
                 this.$dropdown = null;
@@ -488,7 +492,7 @@ export class NumberValueEditor extends ValueEditor {
                 return false;
             }
             else if (e.keyCode === 27) {
-                this.$el.blur();
+                setTimeout(() => this.control.clearEditor(e, null, true));
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
@@ -542,6 +546,8 @@ export class FlagValueEditor extends ValueEditor {
     private $dropdown: HTMLElement;
     private $editor: HTMLInputElement;
     private $value;
+    private $dValue;
+    private $cancel;
 
     public create() {
         this.$el = document.createElement('div');
@@ -596,7 +602,7 @@ export class FlagValueEditor extends ValueEditor {
                 return false;
             }
             else if (e.keyCode === 27) {
-                this.$editor.blur();
+                setTimeout(() => this.control.clearEditor(e, null, true));
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
@@ -609,6 +615,8 @@ export class FlagValueEditor extends ValueEditor {
         vl.innerHTML = '<span class="caret"></span>';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
+            this.$cancel = false;
+            this.$dValue = this.$value;
             if (this.$editor.dataset.aOpen === 'true') {
                 this.$editor.dataset.aOpen = null;
                 this.$editor.focus();
@@ -621,6 +629,7 @@ export class FlagValueEditor extends ValueEditor {
             this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
             this.$dropdown.addEventListener('keyup', (e2) => {
                 if (e2.keyCode === 27) {
+                    this.$cancel = true;
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                     e2.preventDefault();
@@ -679,7 +688,7 @@ export class FlagValueEditor extends ValueEditor {
                             if (none && value === 0)
                                 none.checked = true;
                         }
-                        this.value = value;
+                        this.$dValue = value;
                         this.$dropdown.focus();
                     });
                     l.appendChild(i);
@@ -769,6 +778,8 @@ export class FlagValueEditor extends ValueEditor {
             return;
         }
         const ec = this.editorClick;
+        if (!this.$cancel)
+            this.value = this.$dValue;
         this.$editor.dataset.aOpen = 'true';
         this.$dropdown.remove();
         this.$dropdown = null;
@@ -802,6 +813,8 @@ export class DropDownEditValueEditor extends ValueEditor {
     private $el: HTMLElement;
     private $dropdown: HTMLElement;
     private $editor: HTMLInputElement;
+    private $cancel = false;
+    private $dValue;
 
     public create() {
         this.$el = document.createElement('div');
@@ -837,7 +850,7 @@ export class DropDownEditValueEditor extends ValueEditor {
                 return false;
             }
             else if (e.keyCode === 27) {
-                this.$editor.blur();
+                setTimeout(() => this.control.clearEditor(e, null, true));
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
@@ -865,6 +878,8 @@ export class DropDownEditValueEditor extends ValueEditor {
         vl.innerHTML = '<span class="caret"></span>';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
+            this.$cancel = false;
+            this.$dValue = this.value;
             if (this.$editor.dataset.aOpen === 'true') {
                 this.$editor.dataset.aOpen = null;
                 this.$editor.focus();
@@ -877,6 +892,7 @@ export class DropDownEditValueEditor extends ValueEditor {
             this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
             this.$dropdown.addEventListener('keyup', (e2) => {
                 if (e2.keyCode === 27) {
+                    this.$cancel = true;
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                     e2.preventDefault();
@@ -887,6 +903,7 @@ export class DropDownEditValueEditor extends ValueEditor {
             });
             this.$dropdown.addEventListener('keydown', (e2) => {
                 if (e2.keyCode === 27) {
+                    this.$cancel = true;
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                     e2.preventDefault();
@@ -904,7 +921,7 @@ export class DropDownEditValueEditor extends ValueEditor {
                 const el = document.createElement('div');
                 el.textContent = capitalize(data[tl]);
                 el.addEventListener('click', (e2) => {
-                    this.value = (<HTMLElement>e2.currentTarget).textContent.toLowerCase();
+                    this.$dValue = (<HTMLElement>e2.currentTarget).textContent.toLowerCase();
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                 });
@@ -988,6 +1005,8 @@ export class DropDownEditValueEditor extends ValueEditor {
             return;
         }
         const ec = this.editorClick;
+        if (!this.$cancel)
+            this.value = this.$dValue;
         this.$editor.dataset.aOpen = 'true';
         this.$dropdown.remove();
         this.$dropdown = null;

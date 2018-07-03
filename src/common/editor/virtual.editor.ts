@@ -7200,7 +7200,7 @@ export class FileOpenValueEditor extends ValueEditor {
                 return false;
             }
             else if (e.keyCode === 27) {
-                this.$editor.blur();
+                setTimeout(() => this.control.clearEditor(e, null, true));
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
@@ -7292,7 +7292,7 @@ export class FileBrowseValueEditor extends ValueEditor {
                 return false;
             }
             else if (e.keyCode === 27) {
-                this.$editor.blur();
+                setTimeout(() => this.control.clearEditor(e, null, true));
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
@@ -7376,10 +7376,11 @@ export class ExternalExitValueEditor extends ValueEditor {
                 setTimeout(() => this.control.clearEditor(e, this));
                 e.preventDefault();
                 e.stopPropagation();
+                e.cancelBubble = true;
                 return false;
             }
             else if (e.keyCode === 27) {
-                this.$editor.blur();
+                setTimeout(() => this.control.clearEditor(e, null, true));
                 e.preventDefault();
                 e.stopPropagation();
                 e.cancelBubble = true;
@@ -7733,12 +7734,14 @@ export class ItemsValueEditor extends ValueEditor {
                 setTimeout(() => this.control.clearEditor(e, this));
                 e.preventDefault();
                 e.stopPropagation();
+                e.cancelBubble = true;
                 return false;
             }
             else if (e.keyCode === 27) {
-                this.$editor.blur();
+                setTimeout(() => this.control.clearEditor(e, null, true));
                 e.preventDefault();
                 e.stopPropagation();
+                e.cancelBubble = true;
                 return false;
             }
         });

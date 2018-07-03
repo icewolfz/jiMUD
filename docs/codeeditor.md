@@ -171,7 +171,8 @@ Allows you to edit a virtual map easily with out having to know all file formats
 
 ### Room editor
 
-The room editor allows you to editor the currently selected rooms, if rooms have different property values, that property will remain blank until edited
+The room editor allows you to editor the currently selected rooms, if rooms have different property values, that property will remain blank until edited.
+Pressing escape inside any active property editor will cancel the editor and not modify the value, pressing enter or clicking outside of the editor will confirm the change and update the value.
 
 - `Description` the properties of a room related to description
   - `Short` the room short
@@ -193,7 +194,8 @@ The room editor allows you to editor the currently selected rooms, if rooms have
 
 ### Description editor
 
-Allows you to edit, add or delete terrain descriptions
+Allows you to edit, add or delete terrain descriptions.
+Pressing escape inside any active property editor will cancel the editor and not modify the value, pressing enter or clicking outside of the editor will confirm the change and update the value.
 
 - `Index` read-only index of the description, used to tie terrains to rooms, unused descriptions will have red indexes
 - `Short` The rooms short description which is a single line of text
@@ -208,6 +210,7 @@ Allows you to edit, add or delete terrain descriptions
 ### Item editor
 
 Allows editing of all items in one location.
+Pressing escape inside any active property editor will cancel the editor and not modify the value, pressing enter or clicking outside of the editor will confirm the change and update the value.
 
 - `Index` The item index, most of the time this matches to the terrain index
 - `Item` The item name
@@ -216,6 +219,7 @@ Allows editing of all items in one location.
 ### External exit editor
 
 Allows you to edit all external exits in one location
+Pressing escape inside any active property editor will cancel the editor and not modify the value, pressing enter or clicking outside of the editor will confirm the change and update the value.
 
 - `Enabled` is exit enabled
 - `X`, `Y`, `Z` the coordinates of the room the exit will be added to, Z is only shown/required if using multi level area

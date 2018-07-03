@@ -360,7 +360,7 @@ export class PropertyGrid extends EventEmitter {
         this.$el.appendChild(frag);
     }
 
-    public clearEditor() {
+    public clearEditor(evt?, next?, canceled?) {
         if (!this.$editor) return;
         let value;
         let oldValue;
@@ -368,7 +368,7 @@ export class PropertyGrid extends EventEmitter {
         if (this.$editor.editor)
             value = this.$editor.editor.value;
         oldValue = this.$objects[0][this.$editor.property];
-        if (value !== oldValue || !this.sameValue(prop)) {
+        if (!canceled && (value !== oldValue || !this.sameValue(prop))) {
             this.$objects.forEach(o => o[prop] = value);
             this.$editor.el.textContent = this.formattedValue(this.$editor.property);
         }
@@ -381,7 +381,7 @@ export class PropertyGrid extends EventEmitter {
         };
         this.$editor = null;
         //do last in case the event changes the property editor
-        if (value !== oldValue)
+        if (!canceled && value !== oldValue)
             this.emit('value-changed', prop, value, oldValue);
     }
 

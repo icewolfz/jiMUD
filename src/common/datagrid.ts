@@ -2096,7 +2096,7 @@ export class DataGrid extends EventEmitter {
         return col;
     }
 
-    public clearEditor(evt?, next?) {
+    public clearEditor(evt?, next?, canceled?) {
         if (!this.$editor) return;
         if (evt && evt.relatedTarget && (this.$editor.el.contains(evt.relatedTarget) || this.$editor.el.contains(evt.relatedTarget.editor)))
             return;
@@ -2141,7 +2141,7 @@ export class DataGrid extends EventEmitter {
                 eData = editor.editor.data;
             }
             oldValue = editor.data[editor.property];
-            if (value !== oldValue) {
+            if (value !== oldValue && !canceled) {
                 editor.data[prop] = value;
                 oldObj[prop] = oldValue;
                 changed = true;
@@ -2190,7 +2190,7 @@ export class DataGrid extends EventEmitter {
                 type: editor.type
             });
             //do last in case the event changes the property editor
-            if (value !== oldValue) {
+            if (value !== oldValue && !canceled) {
                 this.emit('cell-value-changed', {
                     new: value,
                     old: oldValue,
@@ -2204,7 +2204,7 @@ export class DataGrid extends EventEmitter {
                 });
             }
         }
-        if (changed) {
+        if (changed && !canceled) {
             if (parent !== -1)
                 this.emit('value-changed', editor.data, oldObj.children[child], this.$sortedRows[this.$editor.row]);
             else

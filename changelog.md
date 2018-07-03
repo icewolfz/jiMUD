@@ -8,7 +8,9 @@
     - Enter in active editor in a data grid will move to next editor or begin edit of next row
     - Add preferences to control how enter works in data grids, either move on to next cell, or close editor
 - **Changed:**
-  - Code editor: Changed how multi-line text editor works in room editor advanced item and data grids, enter now always accepts, ctrl+enter will insert a new lines are allowed, if not will accept like normal enter
+  - Code editor:
+    - Changed how multi-line text editor works in room editor advanced item and data grids, enter now always accepts, ctrl+enter will insert a new lines are allowed, if not will accept like normal enter
+    - Escape now truly cancels editors with out changing values
 - **Fixed:**
   - Replace localstroage for connection state with a global variable, removes major slowdown when loading jimud
   - Immortal tools:
