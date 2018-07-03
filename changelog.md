@@ -2,6 +2,8 @@
 
 ## 0.4.55
 
+- **New:**
+  - Use enter key to begin editing of currently focused item when datagrid is focused
 - **Fixed:**
   - Replace localstroage for connection state with a global variable, removes major slowdown when loading jimud
   - Immortal tools:

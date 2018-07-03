@@ -370,6 +370,23 @@ export class DataGrid extends EventEmitter {
             }
         });
 
+        this.$parent.addEventListener('keyup', e => {
+            if (e.key === 'Enter' && this.$focused >= 0 && this.$focused < (<HTMLElement>this.$body.firstChild).children.length) {
+                const cEl = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[this.$focused]);
+                const dataIndex = +cEl.dataset.dataIndex;
+                const parent = +cEl.dataset.parent;
+                if (parent === -1)
+                    this.beginEdit(this.$sortedRows.indexOf(dataIndex));
+                else {
+                    const child = +cEl.dataset.child;
+                    this.beginEditChild(dataIndex, child);
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+            }
+        });
+
         this.$parent.addEventListener('keypress', (e) => {
             if (!this.selectionSearchField || this.selectionSearchField.length === 0) return;
 
@@ -2076,7 +2093,7 @@ export class DataGrid extends EventEmitter {
         return col;
     }
 
-    public clearEditor(evt?) {
+    public clearEditor(evt?, next?) {
         if (!this.$editor) return;
         if (evt && evt.relatedTarget && (this.$editor.el.contains(evt.relatedTarget) || this.$editor.el.contains(evt.relatedTarget.editor)))
             return;
