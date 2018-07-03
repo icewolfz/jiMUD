@@ -374,7 +374,7 @@ export class DataGrid extends EventEmitter {
         });
 
         this.$parent.addEventListener('keyup', e => {
-            if (e.key === 'Enter' && this.$focused >= 0 && this.$focused < (<HTMLElement>this.$body.firstChild).children.length) {
+            if ((e.key === 'Enter' || e.key === 'F2') && this.$focused >= 0 && this.$focused < (<HTMLElement>this.$body.firstChild).children.length) {
                 this.beginEditRow(this.$focused);
                 e.preventDefault();
                 e.stopPropagation();
@@ -1074,11 +1074,28 @@ export class DataGrid extends EventEmitter {
         return this.$selected.length;
     }
 
-    private beginEditRow(cEl) {
+    public beginEditRow(cEl) {
+        //sort pending delay
+        if ((this._updating & UpdateType.sort) === UpdateType.sort) {
+            setTimeout(() => {
+                this.beginEditRow(cEl);
+            }, 10);
+            return;
+        }
         if (typeof cEl === 'number')
             cEl = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[cEl]);
         else if (!cEl)
             return;
+        const row = +cEl.dataset.row;
+        const e = { preventDefault: false, el: cEl, parent: +cEl.dataset.parent, child: +cEl.dataset.child, row: row, dataIndex: +cEl.dataset.dataIndex };
+        this.emit('edit', e);
+        if (e.preventDefault)
+            return;
+        if (row !== e.row) {
+            if (e.row < 0 || e.row >= (<HTMLElement>this.$body.firstChild).children.length)
+                return;
+            cEl = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[row]);
+        }
         const dataIndex = +cEl.dataset.dataIndex;
         const parent = +cEl.dataset.parent;
         if (parent === -1)
@@ -2104,15 +2121,17 @@ export class DataGrid extends EventEmitter {
         let e = 0;
         const el = this.$editor.editors.length;
         if (next && this.enterMoveNext) {
+            /*
             for (; e < el; e++) {
                 if (this.$editor.editors[e].editor === next && e < el - 1) {
                     this.$editor.editors[e + 1].editor.focus();
                     return;
                 }
             }
+            */
             next = this.$editor.el.nextSibling;
             if (!next && this.enterMoveNew)
-                next = null;
+                next = true;
             else if (!next && this.enterMoveFirst)
                 next = this.$editor.el.parentElement.firstChild;
         }
@@ -2219,7 +2238,7 @@ export class DataGrid extends EventEmitter {
                 this.emit('value-changed', editor.data, oldObj, this.$editor.dataIndex);
         }
         this.$editor = null;
-        if (!next && this.enterMoveNext && this.enterMoveNew)
+        if (next === true && this.enterMoveNext && this.enterMoveNew)
             setTimeout(() => this.addNewRow());
         else if (next)
             setTimeout(() => this.beginEditRow(next));
