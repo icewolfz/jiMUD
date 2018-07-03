@@ -896,6 +896,10 @@ input[type=checkbox].property-grid-editor {
     margin: 0px;
 }
 
+.property-grid-editor-flag-dropdown-item {
+    cursor: default;
+}
+
 .property-grid-editor-flag-dropdown label:hover, .property-grid-editor-flag-dropdown div:hover {
     background-color: rgba(135, 206, 250, 0.5);
 }
