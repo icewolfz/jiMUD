@@ -147,8 +147,7 @@ export class IED extends EventEmitter {
                 this.emit('init');
                 break;
             case 'error':
-                if (obj.tag && this.prefix && !obj.tag.startsWith(this.prefix))
-                {
+                if (obj.tag && this.prefix && !obj.tag.startsWith(this.prefix)) {
                     this.nextGMCP();
                     return;
                 }
@@ -221,10 +220,13 @@ export class IED extends EventEmitter {
                         break;
                     case IEDError.CMD_EXIST:
                         if (obj && this._callbacks[obj.tag]) {
-                            this._callbacks[obj.tag](obj.path + '/' + obj.file, (obj.tag.startsWith('mkdirIgnore') || obj.tag.startsWith('mkdirPIgnore')) ? IEDCmdStatus.success : IEDCmdStatus.failed);
+                            this._callbacks[obj.tag](obj.path + '/' + obj.file, (obj.tag.startsWith(this.prefix + 'mkdirIgnore') || obj.tag.startsWith(this.prefix + 'mkdirPIgnore')) ? IEDCmdStatus.success : IEDCmdStatus.failed);
                             delete this._callbacks[obj.tag];
                         }
-                        this.emit('message', `File or directory already exist: '${obj.path}/${obj.file}`);
+                        if (obj.path && obj.file)
+                            this.emit('message', `File or directory already exist: '${obj.path}/${obj.file}`);
+                        else if (!obj.tag.startsWith(this.prefix + 'mkdirIgnore') && !obj.tag.startsWith(this.prefix + 'mkdirPIgnore'))
+                            this.emit('message', obj.msg);
                         break;
                     case IEDError.CMD_DIRECTORY:
                         if (obj && this._callbacks[obj.tag]) {

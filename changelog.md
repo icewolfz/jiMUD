@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Replace localstroage for connection state with a global variable, removes major slowdown when loading jimud
+  - Immortal tools: fixed undefined/undefined error when uploading folders, now correctly displays error or ignores error if required
 
 ## 0.4.54 2018-07-02
 
