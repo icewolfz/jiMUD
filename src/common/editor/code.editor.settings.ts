@@ -79,7 +79,9 @@ export class EditorSettings {
         showRoomPreview: true,
         rawSpellcheck: false,
         descriptionOnDelete: 2,
-        itemOnDelete: 1
+        itemOnDelete: 1,
+        enterMoveNext: true,
+        enterMoveFirst: true
     };
 
     public static load(file) {

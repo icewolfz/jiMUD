@@ -297,7 +297,7 @@
             $('#virtualOptions-previewFontSize').val(_settings.virtualOptions.previewFontSize);
             $('#virtualOptions-previewFontSize').change();
             $('#virtualOptions-previewFontSize').trigger('input');
-            
+
             $('#editorOptions-acceptSuggestionOnEnter-0').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'on');
             $('#editorOptions-acceptSuggestionOnEnter-1').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'smart');
             $('#editorOptions-acceptSuggestionOnEnter-2').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'off');
@@ -425,7 +425,7 @@
                     <label class="control-label">
                         <input type="checkbox" id="debug" /> Enable debug
                     </label>
-                </div>                
+                </div>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editor">
                 <div class="col-sm-6 form-group">
@@ -559,7 +559,6 @@
                         <input type="number" id="editorOptions-fontSize" class="input-sm form-control" min="1" />
                     </label>
                 </div>
-
                 <div class="col-sm-12 form-group">
                     <label class="control-label">Font sample
                         <div id="editorOptions-font-sample" style="margin: 0px; padding: 2px;height:1.5em;width:100%;overflow:hidden;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
@@ -567,6 +566,16 @@
                 </div>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="virtualEditor">
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="virtualOptions-enterMoveNext" /> Move to next editor or next row when editing data grid
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="virtualOptions-enterMoveFirst" /> Move back to first on enter in last row when editing data grid
+                    </label>
+                </div>
                 <div class="col-sm-6 form-group">
                     <label class="control-label">Raw Font
                         <br>
@@ -679,7 +688,7 @@
                             <option value="3">Start</option>
                         </select>
                     </label>
-                </div>        
+                </div>
                 <!--
                 <div class="col-sm-6 form-group">
                     <label class="control-label">Room terrain description on item delete

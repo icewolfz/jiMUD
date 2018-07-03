@@ -269,6 +269,8 @@ Editor preferences are stored in their own file independent of client or charact
 
 ### Virtual Area Editor
 
+- `Move to next editor or next row when editing data grid` when editing a data grid, move to next editor on enter
+- `Move back to first on enter in last row when editing data grid` when editing a data grid, move to first row if on last on enter
 - `Raw Font` font used for raw editors
 - `Raw Font weight` font weight for raw editors
 - `Raw Font size` font size for raw editors

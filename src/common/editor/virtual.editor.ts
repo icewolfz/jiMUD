@@ -194,6 +194,8 @@ export class VirtualEditor extends EditorBase {
     private $itemGrid: DataGrid;
     private $exitGrid: DataGrid;
     private _lastMouse: MouseEvent;
+    private $enterMoveNext;
+    private $enterMoveFirst;
 
     private $startValues: any = {};
 
@@ -361,7 +363,9 @@ export class VirtualEditor extends EditorBase {
                 showRoomPreview: true,
                 rawSpellcheck: false,
                 descriptionOnDelete: DescriptionOnDelete.endPlusOne,
-                itemOnDelete: ItemOnDelete.end
+                itemOnDelete: ItemOnDelete.end,
+                enterMoveNext: true,
+                enterMoveFirst: true
             };
         if (options && options.new) {
             this.$startValues.map = options.value || '';
@@ -501,6 +505,8 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$descriptionGrid = new DataGrid(el);
+        this.$descriptionGrid.enterMoveFirst = this.$enterMoveFirst;
+        this.$descriptionGrid.enterMoveNext = this.$enterMoveNext;
         this.$descriptionGrid.clipboardPrefix = 'jiMUD/';
         this.$descriptionGrid.columns = [
             {
@@ -867,6 +873,8 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$itemGrid = new DataGrid(el);
+        this.$itemGrid.enterMoveFirst = this.$enterMoveFirst;
+        this.$itemGrid.enterMoveNext = this.$enterMoveNext;
         this.$itemGrid.clipboardPrefix = 'jiMUD/';
         this.$itemGrid.showChildren = true;
         this.$itemGrid.on('row-dblclick', (e, data) => {
@@ -1170,6 +1178,8 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$exitGrid = new DataGrid(el);
+        this.$exitGrid.enterMoveFirst = this.$enterMoveFirst;
+        this.$exitGrid.enterMoveNext = this.$enterMoveNext;
         this.$exitGrid.on('browse-file', e => {
             this.emit('browse-file', e);
         });
@@ -2659,7 +2669,11 @@ export class VirtualEditor extends EditorBase {
                 sort: 5,
                 editor: {
                     type: EditorType.custom,
-                    editor: ExternalExitValueEditor
+                    editor: ExternalExitValueEditor,
+                    options: {
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext
+                    }
                 }
             },
             {
@@ -2730,7 +2744,11 @@ export class VirtualEditor extends EditorBase {
                 formatter: this.formatItems,
                 editor: {
                     type: EditorType.custom,
-                    editor: ItemsValueEditor
+                    editor: ItemsValueEditor,
+                    options: {
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext
+                    }
                 },
                 sort: 2
             },
@@ -4300,6 +4318,55 @@ export class VirtualEditor extends EditorBase {
 
     public set options(value: any) {
         if (!value) return;
+        this.$enterMoveFirst = value.enterMoveFirst;
+        this.$enterMoveNext = value.enterMoveNext;
+
+        if (this.$descriptionGrid) {
+            this.$descriptionGrid.enterMoveFirst = value.enterMoveFirst;
+            this.$descriptionGrid.enterMoveNext = value.enterMoveNext;
+        }
+        if (this.$itemGrid) {
+            this.$itemGrid.enterMoveFirst = value.enterMoveFirst;
+            this.$itemGrid.enterMoveNext = value.enterMoveNext;
+        }
+        if (this.$exitGrid) {
+            this.$exitGrid.enterMoveFirst = value.enterMoveFirst;
+            this.$exitGrid.enterMoveNext = value.enterMoveNext;
+        }
+
+        if (this.$roomEditor) {
+            this.$roomEditor.setPropertyOptions([
+                {
+                    property: 'external',
+                    label: 'External exits',
+                    formatter: this.formatExternal,
+                    sort: 5,
+                    editor: {
+                        type: EditorType.custom,
+                        editor: ExternalExitValueEditor,
+                        options: {
+                            enterMoveFirst: this.$enterMoveFirst,
+                            enterMoveNext: this.$enterMoveNext
+                        }
+                    }
+                },
+                {
+                    property: 'items',
+                    group: 'Description',
+                    formatter: this.formatItems,
+                    editor: {
+                        type: EditorType.custom,
+                        editor: ItemsValueEditor,
+                        options: {
+                            enterMoveFirst: this.$enterMoveFirst,
+                            enterMoveNext: this.$enterMoveNext
+                        }
+                    },
+                    sort: 2
+                }
+            ]);
+        }
+
         this.ShowColors = value.showColors;
         this.ShowTerrain = value.showTerrain;
         this.$mapRaw.style.fontFamily = value.rawFontFamily;
@@ -7375,6 +7442,8 @@ export class ExternalExitValueEditor extends ValueEditor {
             el.style.top = '38px';
             header.appendChild(el);
             const dg = new DataGrid(el);
+            dg.enterMoveFirst = this.options ? this.options.enterMoveFirst : true;
+            dg.enterMoveNext = this.options ? this.options.enterMoveNext : true;
             dg.on('browse-file', ed => {
                 this.control.emit('browse-file', ed);
             });
@@ -7728,6 +7797,8 @@ export class ItemsValueEditor extends ValueEditor {
             el.style.top = '38px';
             header.appendChild(el);
             const dg = new DataGrid(el);
+            dg.enterMoveFirst = this.options ? this.options.enterMoveFirst : true;
+            dg.enterMoveNext = this.options ? this.options.enterMoveNext : true;
             dg.clipboardPrefix = 'jiMUD/';
             dg.addColumns([{
                 label: 'Item',
