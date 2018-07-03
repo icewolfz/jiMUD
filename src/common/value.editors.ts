@@ -164,7 +164,7 @@ export class TextValueEditor extends ValueEditor {
                 return false;
             }
             else if (e.keyCode === 27) {
-                setTimeout(() => this.control.clearEditor(e, this, true));
+                setTimeout(() => this.control.clearEditor(e, false, true));
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
