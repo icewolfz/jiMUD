@@ -113,28 +113,28 @@ var colors = [];
 //random start
 var offset = Math.ceil(Math.random()*1000);
 //build color list
-for(var i=0; i&lt;20; i++)
+for(var i=0; i < 20; i++)
 {
-  if(3+i &lt; 10)
-    colors[i] = "%^mono0"+(3+i)+"%^";
+  if(3+i < 10)
+    colors[i] = '%^mono0'+(3+i)+'%^';
   else
-    colors[i] = "%^mono"+(3+i)+"%^";
-  if(23-i &lt; 10)
-    colors[i+20] = "%^mono0"+(23-i)+"%^";
+    colors[i] = '%^mono'+(3+i)+'%^';
+  if(23-i < 10)
+    colors[i+20] = '%^mono0'+(23-i)+'%^';
   else
-    colors[i+20] = "%^mono"+(23-i)+"%^";
+    colors[i+20] = '%^mono'+(23-i)+'%^';
 }
 
 //start at arguments 2 since 0 is full line, and 1 is the line,
 //so any thing after 2 is the text we want
 var args = Array.prototype.slice.call(arguments);
-var oldstr = args.slice(2).join(" ");
+var oldStr = args.slice(2).join(' ');
 
-for(var c = 0; c&lt;oldstr.length;c++)
+for(var c = 0; c < oldStr.length;c++)
 {
-  var i = (c+offset)%colors.length;
-  str += colors[i]+oldstr.charAt(c);
+  var i = (c + offset) % colors.length;
+  str += colors[i]+oldStr.charAt(c);
 }
-this.sendCommand(line + " " + str);
+this.sendCommand(line + ' ' + str);
 //End mono grayscale example
 ```

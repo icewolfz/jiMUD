@@ -4,7 +4,7 @@
 
 - **New:**
   - Code editor:
-    - Use enter key to begin editing of currently focused item when dat agrid is focused
+    - Use enter key to begin editing of currently focused item when data grid is focused
     - Enter in active editor in a data grid will move to next editor or begin edit of next row
     - Add preferences to control how enter works in data grids, either move on to next cell, or close editor
 - **Changed:**
@@ -13,7 +13,7 @@
   - Replace localstroage for connection state with a global variable, removes major slowdown when loading jimud
   - Immortal tools:
     - Fixed undefined/undefined error when uploading folders, now correctly displays error or ignores error if required
-    - Fixed bug when downloading a folder with multiple subfolders, was not correctly storing related local folder destination
+    - Fixed bug when downloading a folder with multiple sub folders, was not correctly storing related local folder destination
     - Fixed open in editor button state when option is changed from preferences dialog
 
 ## 0.4.54 2018-07-02
@@ -78,7 +78,7 @@
       - Reverting map did not refresh the visual map
       - Fixed x axis numbers not being displayed correctly
       - Correctly highlight row or column of rooms when map has been scrolled
-      - When using arrow or numpad to move around map, it would not correctly scroll the newly selected room if you have scrolled off the old room
+      - When using arrow or number pad to move around map, it would not correctly scroll the newly selected room if you have scrolled off the old room
       - Fixed mouse hover room while scroll, as old x/y they are now invalid
       - When after editing a room property and clicking on a read only field it would allow you to edit the field
       - Fixed advanced editors for single lines to wrap text
@@ -246,7 +246,7 @@
       - Edit exits, descriptions, external exits, room items
       - Generate external room files quickly based on current room settings
       - Preview selected room as if on mud, with item highlight
-      - Generate exits by using numpad, and ctrl+numpad to remove exits
+      - Generate exits by using number pad, and ctrl+number pad to remove exits
       - Edit raw files directly when needed
       - Edit all external exits in a single list
     - Window can be persistent when not in editor only mode again

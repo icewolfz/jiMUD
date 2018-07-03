@@ -16,7 +16,7 @@ The code editor allows immortals or those wanting to code lpc files using a grap
     - `Width` the width of the virtual area, min 2, max 100
     - `Height` the height of the virtual area, min 2, max 100
     - `Depth` the height of the virtual area, min 1, max 100
-  - `Advanced` optional advanced featuers
+  - `Advanced` optional advanced features
     - `Coordinates` Enable coordinate system and assign x,y,z coords to each room
     - `Room cache` the # of rooms the area caches before it starts removing old rooms, default: 200
     - `Default exits` the default exits each room will start with, note edge rooms will have all exits leading out of the area stripped out, **Note** up and down are disabled if depth is only 1
@@ -59,14 +59,14 @@ The code editor allows immortals or those wanting to code lpc files using a grap
     - `Melee as ability` all basic melee combat will be considered an ability for protection calculation
     - `Enable pk` allow players to kill each other
     - `No dirt` can not throw dirt
-    - `Dirt type` custom dirt type, if empty it will be based on terrain and weather    
+    - `Dirt type` custom dirt type, if empty it will be based on terrain and weather
   - `Items` the items you can look at in the room, there should be one for each noun from the description
     - `Item` the item name
-    - `Description` the item description, you should also add any looks for nouns in descripitions of other items
+    - `Description` the item description, you should also add any looks for nouns in descriptions of other items
   - `Exits` Exits from the room, can be standard, doors, or climbs, **Note** climbs are only supported with standard, base (see area if supported), and climb types.
     - `Exit` the exit name, a list predefined list of standard exits is provided to pick from or you can enter a custom one
     - `Door` is this exit a door
-    - `Key ID` a unquie key id to use to lock or unlock if the exit is a door
+    - `Key ID` a unique key id to use to lock or unlock if the exit is a door
     - `Hidden` is the exit hidden
     - `Blocker` a comma delimited list of monster ids that block the exit
     - `Prevent peer` a message, true/false or a function to prevent peering this exit
@@ -111,11 +111,11 @@ The code editor allows immortals or those wanting to code lpc files using a grap
     - `Eye color` monster's eye color, pick from predefined list or supply any color you wish
     - `Hair color` monster's hair color, pick from predefined list or supply any color you wish
     - `Gender` the monster's gender, male, female, or none
-    - `Body type` allows you to pick a body type to set the inital limbs for monster, if not set will be determined based on race
-  - `Advanced properties` Advanced options that while usefule are not always needed
+    - `Body type` allows you to pick a body type to set the initial limbs for monster, if not set will be determined based on race
+  - `Advanced properties` Advanced options that while useful are not always needed
     - `No corpse` will the monster leave a corpse, string will be displayed to player and no corpse left, if "" no message and no corpse, $N/$n replaced with monster's name
-    - `No limbs` will the limbs be dropped on the groud, if "" no limbs and no message, else message displayed to player, $L/$l will be replaced with limb name, $N/$n replaced with monster's name
-  - `Movement` determine if the monste will wander randomly or a set list of direction
+    - `No limbs` will the limbs be dropped on the ground, if "" no limbs and no message, else message displayed to player, $L/$l will be replaced with limb name, $N/$n replaced with monster's name
+  - `Movement` determine if the monster will wander randomly or a set list of direction
     - `Speed` he speed the monster moves in heartbeats, must be set to enable movement
     - `Patrol route` a set list of exits the monster will attempt to follow
     - `No walk rooms` a list of room file names that the monster can no enter, allows containment of monster to a general area, **Note** filenames should always include the trailing `.c`
