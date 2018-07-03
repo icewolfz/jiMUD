@@ -2,6 +2,9 @@
 
 ## 0.4.56
 
+- **Fixed:**
+  - Code editor: path not updated in status bar after save as
+
 ## 0.4.55 2018-07-03
 
 - **New:**

@@ -2098,7 +2098,7 @@
         window.$dNavs.splice(idx, 1);
         if (idx === 0)
             window.$editor = window.$editors[0];
-            doUpdate(128);
+        doUpdate(128);
     });
     manager.on('tab-moved', (e) => {
         if (e.panel && e.panel.editor)
@@ -6235,8 +6235,11 @@
         panel.editor.save();
         delete _editors[old];
         _editors[file] = panel;
-        if (manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor) {
             manager.active.editor.focus();
+            sbName.textContent = manager.active.editor.source === Source.local ? manager.active.editor.file : manager.active.editor.remote;
+            sbName.title = manager.active.editor.source === Source.local ? manager.active.editor.file : manager.active.editor.remote;
+        }
         return true;
     }
 
