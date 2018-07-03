@@ -628,7 +628,13 @@ export class FlagValueEditor extends ValueEditor {
             this.$dropdown.tabIndex = -1;
             this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
             this.$dropdown.addEventListener('keyup', (e2) => {
-                if (e2.keyCode === 27) {
+                if (e2.keyCode === 13) {
+                    setTimeout(() => this.control.clearEditor(e, this));
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                else if (e2.keyCode === 27) {
                     this.$cancel = true;
                     this.focus();
                     this.$editor.dataset.aOpen = null;
@@ -887,7 +893,13 @@ export class DropDownEditValueEditor extends ValueEditor {
             this.$dropdown.tabIndex = -1;
             this.$dropdown.classList.add('property-grid-editor-flag-dropdown');
             this.$dropdown.addEventListener('keyup', (e2) => {
-                if (e2.keyCode === 27) {
+                if (e2.keyCode === 13) {
+                    setTimeout(() => this.control.clearEditor(e, this));
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                else if (e2.keyCode === 27) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                     e2.preventDefault();
@@ -918,7 +930,7 @@ export class DropDownEditValueEditor extends ValueEditor {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                 });
-                this.$dropdown.appendChild(el);
+                this.$dropdown.insertBefore(el, this.$dropdown.firstChild);
             }
             if (height < 160) {
                 this.$dropdown.style.height = height + 'px';

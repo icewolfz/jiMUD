@@ -17,6 +17,7 @@
     - Fixed undefined/undefined error when uploading folders, now correctly displays error or ignores error if required
     - Fixed bug when downloading a folder with multiple sub folders, was not correctly storing related local folder destination
     - Fixed open in editor button state when option is changed from preferences dialog
+    - Fixed enter accept for editable dropdowns and checkbox dropdowns
 
 ## 0.4.54 2018-07-02
 

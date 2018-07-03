@@ -1210,22 +1210,22 @@ export class VirtualEditor extends EditorBase {
                     type: EditorType.dropdown,
                     options: {
                         data: [
-                            'surface',
-                            'dive',
-                            'swim',
-                            'portal',
-                            'down',
-                            'up',
-                            'enter',
-                            'out',
-                            'northwest',
-                            'west',
-                            'southwest',
-                            'south',
-                            'southeast',
-                            'east',
+                            'north',
                             'northeast',
-                            'north'
+                            'east',
+                            'southeast',
+                            'south',
+                            'southwest',
+                            'west',
+                            'northwest',
+                            'out',
+                            'enter',
+                            'up',
+                            'down',
+                            'portal',
+                            'swim',
+                            'dive',
+                            'surface'
                         ]
                     }
                 }
@@ -7462,22 +7462,22 @@ export class ExternalExitValueEditor extends ValueEditor {
                         options: {
                             container: mDialog,
                             data: [
-                                'surface',
-                                'dive',
-                                'swim',
-                                'portal',
-                                'down',
-                                'up',
-                                'enter',
-                                'out',
-                                'northwest',
-                                'west',
-                                'southwest',
-                                'south',
-                                'southeast',
-                                'east',
-                                'northeast',
-                                'north'
+                                'north',
+                            'northeast',
+                            'east',
+                            'southeast',
+                            'south',
+                            'southwest',
+                            'west',
+                            'northwest',
+                            'out',
+                            'enter',
+                            'up',
+                            'down',
+                            'portal',
+                            'swim',
+                            'dive',
+                            'surface'
                             ]
                         }
                     }
