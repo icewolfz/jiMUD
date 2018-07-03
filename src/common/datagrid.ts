@@ -114,6 +114,7 @@ export class DataGrid extends EventEmitter {
     public clipboardPrefix = '';
     public enterMoveNext = true;
     public enterMoveFirst = true;
+    public enterMoveNew = true;
 
     get showChildren() {
         return this.$children;
@@ -2110,7 +2111,9 @@ export class DataGrid extends EventEmitter {
                 }
             }
             next = this.$editor.el.nextSibling;
-            if (!next && this.enterMoveFirst)
+            if (!next && this.enterMoveNew)
+                next = null;
+            else if (!next && this.enterMoveFirst)
                 next = this.$editor.el.parentElement.firstChild;
         }
         else
@@ -2216,7 +2219,9 @@ export class DataGrid extends EventEmitter {
                 this.emit('value-changed', editor.data, oldObj, this.$editor.dataIndex);
         }
         this.$editor = null;
-        if (next)
+        if (!next && this.enterMoveNext && this.enterMoveNew)
+            setTimeout(() => this.addNewRow());
+        else if (next)
             setTimeout(() => this.beginEditRow(next));
         else
             this.focus();

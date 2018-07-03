@@ -81,7 +81,8 @@ export class EditorSettings {
         descriptionOnDelete: 2,
         itemOnDelete: 1,
         enterMoveNext: true,
-        enterMoveFirst: true
+        enterMoveFirst: true,
+        enterMoveNew: true
     };
 
     public static load(file) {

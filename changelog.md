@@ -5,7 +5,7 @@
 - **New:**
   - Code editor:
     - Use enter key to begin editing of currently focused item when data grid is focused
-    - Enter in active editor in a data grid will move to next editor or begin edit of next row
+    - Enter in active editor in a data grid will move to next editor or begin edit of next row, or add a new row
     - Add preferences to control how enter works in data grids, either move on to next cell, or close editor
 - **Changed:**
   - Code editor:

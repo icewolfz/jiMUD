@@ -196,6 +196,7 @@ export class VirtualEditor extends EditorBase {
     private _lastMouse: MouseEvent;
     private $enterMoveNext;
     private $enterMoveFirst;
+    private $enterMoveNew;
 
     private $startValues: any = {};
 
@@ -365,7 +366,8 @@ export class VirtualEditor extends EditorBase {
                 descriptionOnDelete: DescriptionOnDelete.endPlusOne,
                 itemOnDelete: ItemOnDelete.end,
                 enterMoveNext: true,
-                enterMoveFirst: true
+                enterMoveFirst: true,
+                enterMoveNew: true
             };
         if (options && options.new) {
             this.$startValues.map = options.value || '';
@@ -507,6 +509,7 @@ export class VirtualEditor extends EditorBase {
         this.$descriptionGrid = new DataGrid(el);
         this.$descriptionGrid.enterMoveFirst = this.$enterMoveFirst;
         this.$descriptionGrid.enterMoveNext = this.$enterMoveNext;
+        this.$descriptionGrid.enterMoveNew = this.$enterMoveNew;
         this.$descriptionGrid.clipboardPrefix = 'jiMUD/';
         this.$descriptionGrid.columns = [
             {
@@ -875,6 +878,8 @@ export class VirtualEditor extends EditorBase {
         this.$itemGrid = new DataGrid(el);
         this.$itemGrid.enterMoveFirst = this.$enterMoveFirst;
         this.$itemGrid.enterMoveNext = this.$enterMoveNext;
+        //this.$itemGrid.enterMoveNew = this.$enterMoveNew;
+        //TODO figure out how t odo this, as add is prevented due complex tree design
         this.$itemGrid.clipboardPrefix = 'jiMUD/';
         this.$itemGrid.showChildren = true;
         this.$itemGrid.on('row-dblclick', (e, data) => {
@@ -1180,6 +1185,7 @@ export class VirtualEditor extends EditorBase {
         this.$exitGrid = new DataGrid(el);
         this.$exitGrid.enterMoveFirst = this.$enterMoveFirst;
         this.$exitGrid.enterMoveNext = this.$enterMoveNext;
+        this.$exitGrid.enterMoveNew = this.$enterMoveNew;
         this.$exitGrid.on('browse-file', e => {
             this.emit('browse-file', e);
         });
@@ -2674,7 +2680,8 @@ export class VirtualEditor extends EditorBase {
                     editor: ExternalExitValueEditor,
                     options: {
                         enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
                     }
                 }
             },
@@ -2749,7 +2756,8 @@ export class VirtualEditor extends EditorBase {
                     editor: ItemsValueEditor,
                     options: {
                         enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
                     }
                 },
                 sort: 2
@@ -4322,18 +4330,22 @@ export class VirtualEditor extends EditorBase {
         if (!value) return;
         this.$enterMoveFirst = value.enterMoveFirst;
         this.$enterMoveNext = value.enterMoveNext;
+        this.$enterMoveNew = value.enterMoveNew;
 
         if (this.$descriptionGrid) {
             this.$descriptionGrid.enterMoveFirst = value.enterMoveFirst;
             this.$descriptionGrid.enterMoveNext = value.enterMoveNext;
+            this.$descriptionGrid.enterMoveNew = value.enterMoveNew;
         }
         if (this.$itemGrid) {
             this.$itemGrid.enterMoveFirst = value.enterMoveFirst;
             this.$itemGrid.enterMoveNext = value.enterMoveNext;
+            this.$descriptionGrid.enterMoveNew = value.enterMoveNew;
         }
         if (this.$exitGrid) {
             this.$exitGrid.enterMoveFirst = value.enterMoveFirst;
             this.$exitGrid.enterMoveNext = value.enterMoveNext;
+            this.$descriptionGrid.enterMoveNew = value.enterMoveNew;
         }
 
         if (this.$roomEditor) {
@@ -4348,7 +4360,8 @@ export class VirtualEditor extends EditorBase {
                         editor: ExternalExitValueEditor,
                         options: {
                             enterMoveFirst: this.$enterMoveFirst,
-                            enterMoveNext: this.$enterMoveNext
+                            enterMoveNext: this.$enterMoveNext,
+                            enterMoveNew: this.$enterMoveNew
                         }
                     }
                 },
@@ -4361,7 +4374,8 @@ export class VirtualEditor extends EditorBase {
                         editor: ItemsValueEditor,
                         options: {
                             enterMoveFirst: this.$enterMoveFirst,
-                            enterMoveNext: this.$enterMoveNext
+                            enterMoveNext: this.$enterMoveNext,
+                            enterMoveNew: this.$enterMoveNew
                         }
                     },
                     sort: 2
@@ -7447,6 +7461,7 @@ export class ExternalExitValueEditor extends ValueEditor {
             const dg = new DataGrid(el);
             dg.enterMoveFirst = this.options ? this.options.enterMoveFirst : true;
             dg.enterMoveNext = this.options ? this.options.enterMoveNext : true;
+            dg.enterMoveNew = this.options ? this.options.enterMoveNew : true;
             dg.on('browse-file', ed => {
                 this.control.emit('browse-file', ed);
             });
@@ -7804,6 +7819,7 @@ export class ItemsValueEditor extends ValueEditor {
             const dg = new DataGrid(el);
             dg.enterMoveFirst = this.options ? this.options.enterMoveFirst : true;
             dg.enterMoveNext = this.options ? this.options.enterMoveNext : true;
+            dg.enterMoveNew = this.options ? this.options.enterMoveNew : true;
             dg.clipboardPrefix = 'jiMUD/';
             dg.addColumns([{
                 label: 'Item',
