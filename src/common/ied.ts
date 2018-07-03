@@ -862,6 +862,7 @@ export class IED extends EventEmitter {
 
     public reset() {
         ipcRenderer.send('send-gmcp', 'IED.reset ' + JSON.stringify({ msg: 'Requested reset' }));
+        this._gmcp = [];
         this._id++;
         this.emit('message', 'Requesting reset');
     }

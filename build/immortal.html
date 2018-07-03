@@ -1379,16 +1379,20 @@
                         logMessage("Creating directory: " + path.join(local, path.basename(dir)));
                     }
                     */
+                    console.log(files);
                     for (f = 0, fl = files.length; f < fl; f++) {
                         file = (dir === "/" ? '' : dir) + "/" + files[f].file;
                         if (files[f].size == -2) {
+                            console.log(file);
+                            console.log(local);
+                            console.log(path.basename(file));
                             //create local
                             if (local && !existsSync(path.join(local, path.basename(file)))) {
                                 fs.mkdirSync(path.join(local, path.basename(file)));
                                 logMessage("Creating directory: " + path.join(local, path.basename(file)));
                             }
                             pTotal++;
-                            _ied.getDir(file, true, 'download', path.join(local, path.basename(file)));
+                            _ied.getDir(file, true, 'download:' + file, path.join(local, path.basename(file)));
                         }
                         else
                             downNext(file, path.join(options.local, r));
