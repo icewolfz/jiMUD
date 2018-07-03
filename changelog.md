@@ -3,7 +3,9 @@
 ## 0.4.55
 
 - **New:**
-  - Use enter key to begin editing of currently focused item when datagrid is focused
+  - Code editor:
+    - Use enter key to begin editing of currently focused item when dat agrid is focused
+    - Enter in active editor in a data grid will move to next editor or begin edit of next row
 - **Fixed:**
   - Replace localstroage for connection state with a global variable, removes major slowdown when loading jimud
   - Immortal tools:

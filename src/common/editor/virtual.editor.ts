@@ -7126,7 +7126,13 @@ export class FileOpenValueEditor extends ValueEditor {
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27 || e.keyCode === 13) {
+            if (e.keyCode === 13) {
+                setTimeout(() => this.control.clearEditor(e, this));
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            else if (e.keyCode === 27) {
                 this.$editor.blur();
                 e.preventDefault();
                 e.stopPropagation();
@@ -7212,7 +7218,13 @@ export class FileBrowseValueEditor extends ValueEditor {
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27 || e.keyCode === 13) {
+            if (e.keyCode === 13) {
+                setTimeout(() => this.control.clearEditor(e, this));
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            else if (e.keyCode === 27) {
                 this.$editor.blur();
                 e.preventDefault();
                 e.stopPropagation();
@@ -7293,7 +7305,13 @@ export class ExternalExitValueEditor extends ValueEditor {
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27 || e.keyCode === 13) {
+            if (e.keyCode === 13) {
+                setTimeout(() => this.control.clearEditor(e, this));
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            else if (e.keyCode === 27) {
                 this.$editor.blur();
                 e.preventDefault();
                 e.stopPropagation();
@@ -7642,7 +7660,13 @@ export class ItemsValueEditor extends ValueEditor {
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27 || e.keyCode === 13) {
+            if (e.keyCode === 13) {
+                setTimeout(() => this.control.clearEditor(e, this));
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            else if (e.keyCode === 27) {
                 this.$editor.blur();
                 e.preventDefault();
                 e.stopPropagation();

@@ -155,14 +155,14 @@ export class TextValueEditor extends ValueEditor {
             e.cancelBubble = true;
         });
         this.$editor.addEventListener('keyup', (e) => {
-            if (this.$noEnter && e.keyCode === 13) {
+            if ((this.$noEnter && e.keyCode === 13) || (e.keyCode === 13 && e.ctrlKey)) {
                 e.preventDefault();
                 e.cancelBubble = true;
                 e.stopPropagation();
-                this.$editor.blur();
+                setTimeout(() => this.control.clearEditor(e, this));
                 return false;
             }
-            else if (e.keyCode === 27 || (e.keyCode === 13 && e.ctrlKey)) {
+            else if (e.keyCode === 27) {
                 this.$editor.blur();
                 e.preventDefault();
                 e.stopPropagation();
@@ -371,7 +371,7 @@ export class BooleanValueEditor extends ValueEditor {
         this.$el.addEventListener('keyup', (e) => {
             if (e.keyCode === 13) {
                 e.preventDefault();
-                this.$el.blur();
+                setTimeout(() => this.control.clearEditor(e, this));
             }
             return;
         });
@@ -418,7 +418,13 @@ export class NumberValueEditor extends ValueEditor {
             }
         });
         this.$el.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27 || e.keyCode === 13) {
+            if (e.keyCode === 13) {
+                e.stopPropagation();
+                e.preventDefault();
+                setTimeout(() => this.control.clearEditor(e, this));
+                return false;
+            }
+            else if (e.keyCode === 27) {
                 this.$el.blur();
                 e.stopPropagation();
                 e.preventDefault();
@@ -520,7 +526,13 @@ export class FlagValueEditor extends ValueEditor {
             e.cancelBubble = true;
         });
         this.$editor.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27 || e.keyCode === 13) {
+            if (e.keyCode === 13) {
+                setTimeout(() => this.control.clearEditor(e, this));
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            else if (e.keyCode === 27) {
                 this.$editor.blur();
                 e.preventDefault();
                 e.stopPropagation();
@@ -755,7 +767,13 @@ export class DropDownEditValueEditor extends ValueEditor {
             e.cancelBubble = true;
         });
         this.$editor.addEventListener('keyup', (e) => {
-            if (e.keyCode === 27 || e.keyCode === 13) {
+            if (e.keyCode === 13) {
+                setTimeout(() => this.control.clearEditor(e, this));
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            else if (e.keyCode === 27) {
                 this.$editor.blur();
                 e.preventDefault();
                 e.stopPropagation();

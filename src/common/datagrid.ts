@@ -112,6 +112,7 @@ export class DataGrid extends EventEmitter {
 
     public selectionSearchField;
     public clipboardPrefix = '';
+    public enterMoveNext = true;
 
     get showChildren() {
         return this.$children;
@@ -372,15 +373,7 @@ export class DataGrid extends EventEmitter {
 
         this.$parent.addEventListener('keyup', e => {
             if (e.key === 'Enter' && this.$focused >= 0 && this.$focused < (<HTMLElement>this.$body.firstChild).children.length) {
-                const cEl = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[this.$focused]);
-                const dataIndex = +cEl.dataset.dataIndex;
-                const parent = +cEl.dataset.parent;
-                if (parent === -1)
-                    this.beginEdit(this.$sortedRows.indexOf(dataIndex));
-                else {
-                    const child = +cEl.dataset.child;
-                    this.beginEditChild(dataIndex, child);
-                }
+                this.beginEditRow(this.$focused);
                 e.preventDefault();
                 e.stopPropagation();
                 e.cancelBubble = true;
@@ -476,15 +469,7 @@ export class DataGrid extends EventEmitter {
                 temp.push({
                     label: 'Edit',
                     click: () => {
-                        const cEl = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[this.$selected[0]]);
-                        const dataIndex = +cEl.dataset.dataIndex;
-                        const parent = +cEl.dataset.parent;
-                        if (parent === -1)
-                            this.beginEdit(this.$sortedRows.indexOf(dataIndex));
-                        else {
-                            const child = +cEl.dataset.child;
-                            this.beginEditChild(dataIndex, child);
-                        }
+                        this.beginEditRow(this.$selected[0]);
                     }
                 });
                 temp.push({ type: 'separator' });
@@ -1087,6 +1072,21 @@ export class DataGrid extends EventEmitter {
         return this.$selected.length;
     }
 
+    private beginEditRow(cEl) {
+        if (typeof cEl === 'number')
+            cEl = (<HTMLElement>(<HTMLElement>this.$body.firstChild).children[cEl]);
+        else if (!cEl)
+            return;
+        const dataIndex = +cEl.dataset.dataIndex;
+        const parent = +cEl.dataset.parent;
+        if (parent === -1)
+            this.beginEdit(this.$sortedRows.indexOf(dataIndex));
+        else {
+            const child = +cEl.dataset.child;
+            this.beginEditChild(dataIndex, child);
+        }
+    }
+
     public beginEdit(row, col?) {
         //sort pending delay
         if ((this._updating & UpdateType.sort) === UpdateType.sort) {
@@ -1105,6 +1105,7 @@ export class DataGrid extends EventEmitter {
             this.$selected = [row];
             this.emit('selection-changed');
         }
+        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
         this.$focused = row;
         const el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[row];
         el.classList.add('selected', 'focused');
@@ -1140,6 +1141,7 @@ export class DataGrid extends EventEmitter {
             this.$selected = [sIdx];
             this.emit('selection-changed');
         }
+        Array.from(this.$body.querySelectorAll('.focused'), a => a.classList.remove('focused'));
         this.$focused = sIdx;
         const el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[sIdx];
         el.classList.add('selected', 'focused');
@@ -2097,9 +2099,20 @@ export class DataGrid extends EventEmitter {
         if (!this.$editor) return;
         if (evt && evt.relatedTarget && (this.$editor.el.contains(evt.relatedTarget) || this.$editor.el.contains(evt.relatedTarget.editor)))
             return;
-
         let e = 0;
         const el = this.$editor.editors.length;
+        if (next && this.enterMoveNext) {
+            for (; e < el; e++) {
+                if (this.$editor.editors[e].editor === next && e < el - 1) {
+                    this.$editor.editors[e + 1].editor.focus();
+                    return;
+                }
+            }
+            next = this.$editor.el.nextSibling;
+        }
+        else
+            next = null;
+        e = 0;
         this.$prevEditor = {
             el: el,
             editors: []
@@ -2195,7 +2208,10 @@ export class DataGrid extends EventEmitter {
                 this.emit('value-changed', editor.data, oldObj, this.$sortedRows[this.$editor.row]);
         }
         this.$editor = null;
-        this.focus();
+        if (next)
+            setTimeout(() => this.beginEditRow(next));
+        else
+            this.focus();
     }
 
     public createEditor(el: HTMLElement, fCol: any = 0) {
@@ -2205,8 +2221,11 @@ export class DataGrid extends EventEmitter {
             fCol = [...fCol.parentElement.children].indexOf(fCol);
         const cols = this.$cols;
         if (this.$editor) {
-            if (this.$editor && this.$editor.row === row)
+            if (this.$editor && this.$editor.row === row) {
+                if (fCol >= 0 && fCol < this.$editor.editors.length)
+                    this.$editor.editors[fCol].editor.focus();
                 return;
+            }
             this.clearEditor();
         }
         let c;
