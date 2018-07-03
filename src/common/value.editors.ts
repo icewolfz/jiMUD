@@ -1,4 +1,3 @@
-
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 
@@ -98,6 +97,8 @@ export class TextValueEditor extends ValueEditor {
     private $editor: HTMLTextAreaElement;
     private $noEnter;
     private $wrap;
+    private $ignore = false;
+    private $dBlur;
 
     public create() {
         this.$el = document.createElement('div');
@@ -122,15 +123,8 @@ export class TextValueEditor extends ValueEditor {
                 this.$editor.selectionEnd = sel.end;
             });
         });
-        this.$editor.addEventListener('keydown', (e) => {
-            if (this.$noEnter && e.keyCode === 13) {
-                e.preventDefault();
-                e.cancelBubble = true;
-                e.stopPropagation();
-                return false;
-            }
-        });
         this.$editor.addEventListener('blur', (e) => {
+            if (this.$ignore) return;
             if (e.relatedTarget && ((<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown')) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -155,7 +149,13 @@ export class TextValueEditor extends ValueEditor {
             e.cancelBubble = true;
         });
         this.$editor.addEventListener('keyup', (e) => {
-            if ((this.$noEnter && e.keyCode === 13) || (e.keyCode === 13 && e.ctrlKey)) {
+            if (!this.$noEnter && e.keyCode === 13 && e.ctrlKey) {
+                e.preventDefault();
+                e.cancelBubble = true;
+                e.stopPropagation();
+                return false;
+            }
+            else if (e.keyCode === 13) {
                 e.preventDefault();
                 e.cancelBubble = true;
                 e.stopPropagation();
@@ -169,13 +169,45 @@ export class TextValueEditor extends ValueEditor {
                 return false;
             }
         });
-        this.$editor.addEventListener('keydown', (e2) => {
-            if (e2.keyCode === 27) {
-                e2.preventDefault();
-                e2.stopPropagation();
+        this.$editor.addEventListener('keypress', e => {
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
                 return false;
             }
         });
+        this.$editor.addEventListener('keydown', (e) => {
+            if (!this.$noEnter && e.keyCode === 13 && e.ctrlKey) {
+                const start = this.$editor.selectionStart;
+                const end = this.$editor.selectionEnd;
+                const value = this.$editor.value;
+                this.$editor.value = value.substring(0, start) + '\n' + value.substring(end);
+                this.$editor.selectionStart = start + 1;
+                this.$editor.selectionEnd = start + 1;
+                this.$editor.setSelectionRange(start + 2, start + 2);
+                this.$ignore = true;
+                this.$editor.blur();
+                this.$editor.focus();
+                this.$ignore = false;
+                e.preventDefault();
+                e.cancelBubble = true;
+                e.stopPropagation();
+                return false;
+            }
+            else if (e.keyCode === 13) {
+                e.preventDefault();
+                e.cancelBubble = true;
+                e.stopPropagation();
+                return false;
+            }
+            else if (e.keyCode === 27) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+
         el.appendChild(this.$editor);
 
         const vl = document.createElement('button');
@@ -203,7 +235,23 @@ export class TextValueEditor extends ValueEditor {
                     e2.stopPropagation();
                     return false;
                 }
-                if (this.$noEnter && e2.keyCode === 13) {
+                else if (!this.$noEnter && e2.keyCode === 13 && e2.ctrlKey) {
+                    const start = this.$dropdown.selectionStart;
+                    const end = this.$dropdown.selectionEnd;
+                    const value = this.$dropdown.value;
+                    this.$dropdown.value = value.substring(0, start) + '\n' + value.substring(end);
+                    this.$dropdown.selectionStart = start + 1;
+                    this.$dropdown.selectionEnd = start + 1;
+                    this.$dropdown.setSelectionRange(start + 1, start + 1);
+                    this.$ignore = true;
+                    this.$dropdown.blur();
+                    this.$dropdown.focus();
+                    this.$ignore = false;
+                    e2.preventDefault();
+                    e2.stopPropagation();
+                    return false;
+                }
+                else if (this.$noEnter && e2.keyCode === 13) {
                     e2.preventDefault();
                     e2.cancelBubble = true;
                     e2.stopPropagation();
@@ -211,6 +259,11 @@ export class TextValueEditor extends ValueEditor {
                 }
             });
             this.$dropdown.addEventListener('keypress', (e2) => {
+                if (e2.keyCode === 13) {
+                    e2.preventDefault();
+                    e2.stopPropagation();
+                    return false;
+                }
                 if (e2.keyCode === 27) {
                     e2.preventDefault();
                     e2.stopPropagation();
@@ -218,12 +271,17 @@ export class TextValueEditor extends ValueEditor {
                 }
             });
             this.$dropdown.addEventListener('keyup', (e2) => {
-                if (this.$noEnter && e2.keyCode === 13) {
+                if (!this.$noEnter && e2.keyCode === 13 && e2.ctrlKey) {
+                    e2.preventDefault();
+                    e2.stopPropagation();
+                    return;
+                }
+                if (e2.keyCode === 13) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                     e2.preventDefault();
                 }
-                else if (e2.keyCode === 27 || (e2.keyCode === 13 && e2.ctrlKey)) {
+                else if (e2.keyCode === 27) {
                     this.focus();
                     this.$editor.dataset.aOpen = null;
                     e2.preventDefault();
@@ -236,7 +294,11 @@ export class TextValueEditor extends ValueEditor {
             this.$dropdown.style.height = '150px';
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
-            this.$dropdown.addEventListener('blur', (e2) => {
+            this.$dBlur = (e2) => {
+                if (this.$ignore) {
+                    this.$dropdown.addEventListener('blur', this.$dBlur.bind(this), { once: true });
+                    return;
+                }
                 const ec = this.editorClick;
                 this.value = this.$dropdown.value;
                 this.$editor.dataset.aOpen = 'true';
@@ -254,7 +316,8 @@ export class TextValueEditor extends ValueEditor {
                 else {
                     this.focus();
                 }
-            }, { once: true });
+            };
+            this.$dropdown.addEventListener('blur', this.$dBlur.bind(this), { once: true });
             this.$dropdown.addEventListener('click', (e2) => {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
@@ -271,7 +334,7 @@ export class TextValueEditor extends ValueEditor {
             if (this.$noEnter)
                 this.$dropdown.placeholder = 'Press enter to accept text.';
             else
-                this.$dropdown.placeholder = 'Press enter to begin a new line.\nPress Ctrl+Enter to accept text.';
+                this.$dropdown.placeholder = 'Press ctrl+enter to begin a new line.\nPress enter to accept text.';
             this.$dropdown.focus();
             resetCursor(this.$dropdown);
         });
