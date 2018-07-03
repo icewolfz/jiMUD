@@ -630,6 +630,10 @@
                 $("#bottom").css('display', 'none');
                 $("#main").css('bottom', '28px');
             }
+            if (options.openEditor)
+                $('#btn-editor-remote').addClass('active');
+            else
+                $('#btn-editor-remote').removeClass('active');            
             doUpdate(14);
         }
 
@@ -1254,10 +1258,6 @@
             _ied.compressUpload = options.compress;
             _ied.compressDownload = options.compress;
             _ied.compressDir = options.compress;
-            if (options.openEditor)
-                $('#btn-editor-remote').addClass('active');
-            else
-                $('#btn-editor-remote').removeClass('active');
             _ied.on('init', () => {
                 if (!options.remote || options.remote.length === 0)
                     _ied.getDir(".");
