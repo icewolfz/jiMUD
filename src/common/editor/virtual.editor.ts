@@ -1355,10 +1355,12 @@ export class VirtualEditor extends EditorBase {
                 exit: '',
                 dest: ''
             };
+            let idx = this.$exits.length - 1;
+            if (idx < 0) idx = 0;
             if (this.$mapSize.depth > 1)
-                this.updateRaw(this.$externalRaw, this.$exits.length - 1, ['0,0,0::']);
+                this.updateRaw(this.$externalRaw, idx, ['0,0,0::']);
             else
-                this.updateRaw(this.$externalRaw, this.$exits.length - 1, ['0,0::']);
+                this.updateRaw(this.$externalRaw, idx, ['0,0::']);
             resetCursor(this.$externalRaw);
         });
         this.$exitGrid.on('selection-changed', () => {
@@ -7463,21 +7465,21 @@ export class ExternalExitValueEditor extends ValueEditor {
                             container: mDialog,
                             data: [
                                 'north',
-                            'northeast',
-                            'east',
-                            'southeast',
-                            'south',
-                            'southwest',
-                            'west',
-                            'northwest',
-                            'out',
-                            'enter',
-                            'up',
-                            'down',
-                            'portal',
-                            'swim',
-                            'dive',
-                            'surface'
+                                'northeast',
+                                'east',
+                                'southeast',
+                                'south',
+                                'southwest',
+                                'west',
+                                'northwest',
+                                'out',
+                                'enter',
+                                'up',
+                                'down',
+                                'portal',
+                                'swim',
+                                'dive',
+                                'surface'
                             ]
                         }
                     }

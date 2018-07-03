@@ -18,6 +18,7 @@
     - Fixed bug when downloading a folder with multiple sub folders, was not correctly storing related local folder destination
     - Fixed open in editor button state when option is changed from preferences dialog
     - Fixed enter accept for editable dropdowns and checkbox dropdowns
+    - Fixed when adding new external exit did not update changed state when starting with no exits
 
 ## 0.4.54 2018-07-02
 
