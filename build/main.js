@@ -83,6 +83,7 @@ global.dev = false;
 global.title = '';
 global.debug = false;
 global.editorOnly = false;
+global.connected = false;
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
@@ -1873,6 +1874,7 @@ ipcMain.on('set-title', (event, title) => {
 });
 
 ipcMain.on('closed', (event) => {
+  global.connected = false;
   if (winChat)
     winChat.webContents.send('closed');
   if (winProfiles)
@@ -1891,6 +1893,7 @@ ipcMain.on('closed', (event) => {
 });
 
 ipcMain.on('connected', (event) => {
+  global.connected = true;
   if (winChat)
     winChat.webContents.send('connected');
   if (winProfiles)

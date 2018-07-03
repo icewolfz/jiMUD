@@ -2,6 +2,9 @@
 
 ## 0.4.55
 
+- **Fixed:**
+  - Replace localstroage for connection state with a global variable, removes major slowdown when loading jimud
+
 ## 0.4.54 2018-07-02
 
 - **Changed:**

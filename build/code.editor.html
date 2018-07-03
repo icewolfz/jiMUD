@@ -1586,7 +1586,7 @@
     var sbName = document.getElementById('statusbar-file');
     var sbLocation = document.getElementById('statusbar-location');
     var sbMessage = document.getElementById('statusbar-message');
-    var connected = localStorage.getItem('connected') === 'true';
+    var connected = remote.getGlobal('connected') === true;
     var _ied;
     var $dialog;
     var $dialogs = {};

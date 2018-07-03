@@ -148,7 +148,6 @@
         //68 - d
       }
     });
-
     const Client = require('./js/client.js').Client;
     const Status = require('./js/status.js').Status;
     const Backup = require('./js/backup.js').Backup;
@@ -159,7 +158,6 @@
     //    const fs = require('fs');
     const path = require('path');
     const { version } = require("../package.json");
-
     var spellchecker;
     var autoConnectID;
     var autoLoginCounter = 0;
@@ -575,7 +573,6 @@
       $(window).resize(function () {
         client.UpdateWindow();
       });
-
       _logger = new Worker("./js/logging.js");
       _logger.onmessage = (e) => {
         switch (e.data.event) {
@@ -617,7 +614,6 @@
         else
           client.error(e);
       };
-
       client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
 
       window.$selectedurl = '';
@@ -709,7 +705,6 @@
           }
         });
       });
-      localStorage.setItem('connected', false);
       window.client = client;
       window.OoMUD = client;
       window.readClipboard = () => { return clipboard.readText('selection') || clipboard.readText() || ''; };
@@ -1016,7 +1011,6 @@
         ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
         ipcRenderer.send('set-overlay', 0);
         ipcRenderer.send('closed');
-        localStorage.setItem('connected', false);
         _logger.postMessage({ action: 'connected', args: client.connected });
         _logger.postMessage({ action: 'stop' });
         switch (client.options.onDisconnect) {
@@ -1059,7 +1053,6 @@
 
       client.on('connected', () => {
         ipcRenderer.send('connected');
-        localStorage.setItem('connected', true);
         if (_disconnectTimerID) {
           clearTimeout(_disconnectTimerID);
           _disconnectTimerID = null;
@@ -1270,7 +1263,6 @@
           format: client.options.logTimeFormat
         }
       });
-
       let closeWindow = false;
 
       window.onbeforeunload = function (evt) {
@@ -1427,7 +1419,6 @@
         return;
         */
       };
-
       $("#status").on('contextmenu', (e) => {
         e.preventDefault();
         var c = new Menu();
@@ -1703,7 +1694,6 @@
         inputMenu.popup({ window: remote.getCurrentWindow() });
 
       });
-
       client.display.on('word', () => {
         client.options.find.word = client.display.MatchWord;
         client.saveOptions();
@@ -1737,7 +1727,6 @@
       client.display.RegularExpression = client.options.find.regex;
       if (client.options.find.show)
         client.display.showFind();
-
       if (client.options.showCharacterManager)
         showCharacters();
       autoConnect();
@@ -2098,7 +2087,7 @@
         ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
     }
 
-     // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars
     function showLogViewer() {
       if (client.options.windows['log-viewer'] && client.options.windows['log-viewer'].options) {
         client.options.windows['log-viewer'].options.show = true;
@@ -2133,8 +2122,6 @@
       else
         ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false });
     }
-
-    $(document).ready(init);
 
     // eslint-disable-next-line no-unused-vars
     function toggleLogging() {
@@ -2236,6 +2223,7 @@
       $('#disconnectDialog')[0].close();
       $("#commandinput").focus();
     }
+    $(document).ready(init);
   </script>
 </head>
 
