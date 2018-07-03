@@ -113,6 +113,7 @@ export class DataGrid extends EventEmitter {
     public selectionSearchField;
     public clipboardPrefix = '';
     public enterMoveNext = true;
+    public enterMoveFirst = true;
 
     get showChildren() {
         return this.$children;
@@ -2109,6 +2110,8 @@ export class DataGrid extends EventEmitter {
                 }
             }
             next = this.$editor.el.nextSibling;
+            if (!next && this.enterMoveFirst)
+                next = this.$editor.el.parentElement.firstChild;
         }
         else
             next = null;
