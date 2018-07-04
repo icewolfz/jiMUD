@@ -1498,6 +1498,328 @@ export class Mapper extends EventEmitter {
             this.drawMarker(ctx, x, y, 'red');
     }
 
+    public DrawNormalizedRoom(ctx, x, y, room, ex) {
+        ctx.beginPath();
+        let f = false;
+        if (room.background) {
+            ctx.fillStyle = room.background;
+            f = true;
+        }
+        else if (room.env) {
+            switch (room.env) {
+                case 'wood':
+                    ctx.fillStyle = '#966F33';
+                    f = true;
+                    break;
+                case 'jungle':
+                    ctx.fillStyle = '#347C2C';
+                    f = true;
+                    break;
+                case 'forest':
+                    ctx.fillStyle = '#4E9258';
+                    f = true;
+                    break;
+                case 'grass':
+                case 'grassland':
+                case 'plains':
+                case 'prairie':
+                case 'savannah':
+                    ctx.fillStyle = '#4AA02C';
+                    f = true;
+                    break;
+                case 'desert':
+                case 'dirt':
+                case 'dirtroad':
+                case 'beach':
+                case 'sand':
+                case 'sanddesert':
+                    ctx.fillStyle = '#C2B280';
+                    f = true;
+                    break;
+                case 'snow':
+                    ctx.fillStyle = '#F0F8FF';
+                    f = true;
+                    break;
+                case 'tundra':
+                case 'icesheet':
+                    ctx.fillStyle = '#368BC1';
+                    f = true;
+                    break;
+                case 'underwater':
+                case 'water':
+                case 'lake':
+                case 'river':
+                    ctx.fillStyle = '#EBF4FA';
+                    f = true;
+                    break;
+                case 'ocean':
+                    ctx.fillStyle = '#C2DFFF';
+                    f = true;
+                    break;
+                case 'bog':
+                case 'city':
+                case 'cliff':
+                case 'cobble':
+                case 'farmland':
+                case 'highmountain':
+                case 'hills':
+                case 'mountain':
+                case 'pavedroad':
+                case 'rockdesert':
+                case 'rocky':
+                case 'stone':
+                case 'swamp':
+                    f = false;
+                    break;
+                default:
+                    f = false;
+                    break;
+            }
+        }
+        else
+            f = false;
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 0.6;
+        if (!room.indoors) {
+            ctx.arc(x + 16, y + 16, 8.5, 0, Math.PI * 2, false);
+            if (f) ctx.fill();
+            ctx.stroke();
+        }
+        else {
+            if (f) ctx.fillRect(x + 8, y + 8, 16, 16);
+            ctx.strokeRect(x + 8, y + 8, 16, 16);
+        }
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.fillStyle = '#cccccc';
+        if (room.exits.north) {
+            ctx.moveTo(x + 16, y);
+            ctx.lineTo(x + 16, y + 8);
+        }
+        else if (this._fillWalls)
+            ctx.fillRect(x + 9, y, 14.5, 4.5);
+        if (room.exits.northwest) {
+            if (!room.indoors) {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 10, y + 10);
+            }
+            else {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 8, y + 8);
+            }
+        }
+        else if (this._fillWalls) {
+            ctx.fillRect(x + 2, y, 2.5, 2.5);
+            ctx.fillRect(x, y + 2, 4.5, 2.5);
+            if (!room.exits.north)
+                ctx.fillRect(x + 4, y, 5.5, 4.5);
+            if (!room.exits.west)
+                ctx.fillRect(x, y + 4, 4.5, 5.5);
+        }
+        if (room.exits.northeast) {
+            if (!room.indoors) {
+                ctx.moveTo(x + 32, y);
+                ctx.lineTo(x + 22, y + 10);
+            }
+            else {
+                ctx.moveTo(x + 32, y);
+                ctx.lineTo(x + 24, y + 8);
+            }
+        }
+        else if (this._fillWalls) {
+            ctx.fillRect(x + 28, y, 2.5, 2.5);
+            ctx.fillRect(x + 28, y + 2, 4.5, 2.5);
+            ctx.clearRect(x + 30, y, 2, 2);
+            if (!room.exits.north)
+                ctx.fillRect(x + 23, y, 5.5, 4.5);
+            if (!room.exits.east)
+                ctx.fillRect(x + 28, y + 4, 4.5, 5.5);
+        }
+        if (room.exits.east) {
+            ctx.moveTo(x + 24, y + 16);
+            ctx.lineTo(x + 32, y + 16);
+        }
+        else if (this._fillWalls)
+            ctx.fillRect(x + 28, y + 9, 4.5, 14.5);
+        if (room.exits.west) {
+            ctx.moveTo(x, y + 16);
+            ctx.lineTo(x + 8, y + 16);
+        }
+        else if (this._fillWalls)
+            ctx.fillRect(x, y + 9, 4.5, 14.5);
+        if (room.exits.south) {
+            ctx.moveTo(x + 16, y + 24);
+            ctx.lineTo(x + 16, y + 32);
+        }
+        else if (this._fillWalls)
+            ctx.fillRect(x + 9, y + 28, 14.5, 4.5);
+        if (room.exits.southeast) {
+            if (!room.Indoors) {
+                ctx.moveTo(x + 32, y + 32);
+                ctx.lineTo(x + 22, y + 22);
+            }
+            else {
+                ctx.moveTo(x + 32, y + 32);
+                ctx.lineTo(x + 24, y + 24);
+            }
+        }
+        else if (this._fillWalls) {
+            ctx.fillRect(x + 28, y + 28, 4.5, 2.5);
+            ctx.fillRect(x + 28, y + 30, 2.5, 2.5);
+            if (!room.exits.south)
+                ctx.fillRect(x + 23, y + 28, 5.5, 4.5);
+            if (!room.exits.east)
+                ctx.fillRect(x + 28, y + 23, 4.5, 5.5);
+        }
+        if (room.exits.southwest) {
+            if (!room.indoors) {
+                ctx.moveTo(x, y + 32);
+                ctx.lineTo(x + 10, y + 22);
+            }
+            else {
+                ctx.moveTo(x, y + 32);
+                ctx.lineTo(x + 8, y + 24);
+            }
+        }
+        else if (this._fillWalls) {
+            ctx.fillRect(x, y + 28, 4.5, 2.5);
+            ctx.fillRect(x + 2, y + 30, 2.5, 2.5);
+            if (!room.exits.south)
+                ctx.fillRect(x + 4, y + 28, 5.5, 4.5);
+            if (!room.exits.west)
+                ctx.fillRect(x, y + 23, 4.5, 5.5);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = 'black';
+        ctx.strokeStyle = 'black';
+        if (room.exits.up) {
+            ctx.beginPath();
+            ctx.moveTo(x + 1, y + 11);
+            ctx.lineTo(x + 7, y + 11);
+            ctx.lineTo(x + 4, y + 8);
+            ctx.closePath();
+            ctx.fill();
+        }
+        if (room.exits.down) {
+            ctx.beginPath();
+            ctx.moveTo(x + 1, y + 21);
+            ctx.lineTo(x + 7, y + 21);
+            ctx.lineTo(x + 4, y + 24);
+            ctx.closePath();
+            ctx.fill();
+        }
+        if (room.exits.out) {
+            ctx.beginPath();
+            ctx.moveTo(x + 26, y + 8);
+            ctx.lineTo(x + 29, y + 11);
+            ctx.lineTo(x + 26, y + 14);
+            ctx.closePath();
+            ctx.fill();
+
+        }
+        if (room.exits.enter) {
+            ctx.beginPath();
+            ctx.moveTo(x + 29, y + 19);
+            ctx.lineTo(x + 26, y + 22);
+            ctx.lineTo(x + 29, y + 25);
+            ctx.closePath();
+            ctx.fill();
+        }
+        this.DrawDoor(ctx, x + 12, y - 2, 8, 3, room.exits.north);
+        this.DrawDoor(ctx, x + 31, y + 12, 3, 8, room.exits.east);
+        this.DrawDoor(ctx, x - 1, y + 12, 3, 8, room.exits.west);
+        this.DrawDoor(ctx, x + 12, y + 30, 8, 3, room.exits.south);
+        this.DrawDDoor(ctx, x, y, 5, 5, room.exits.northwest);
+        this.DrawDDoor(ctx, x + 32, y, -5, 5, room.exits.northeast);
+        this.DrawDDoor(ctx, x + 32, y + 32, -5, -5, room.exits.southeast);
+        this.DrawDDoor(ctx, x, y + 32, 5, -5, room.exits.southwest);
+        if ((room.details & RoomDetails.Dock) === RoomDetails.Dock) {
+            ctx.fillStyle = 'chocolate';
+            ctx.beginPath();
+            ctx.arc(x + 20, y + 5, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+        }
+        else if ((room.details & RoomDetails.Pier) === RoomDetails.Pier) {
+            ctx.fillStyle = 'gray';
+            ctx.beginPath();
+            ctx.arc(x + 12, y + 5, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+        }
+        if ((room.details & RoomDetails.WaterSource) === RoomDetails.WaterSource) {
+            ctx.fillStyle = 'aqua';
+            ctx.beginPath();
+            ctx.arc(x + 12, y + 5, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+        }
+        if ((room.details & RoomDetails.Bank) === RoomDetails.Bank) {
+            ctx.fillStyle = 'goldenrod';
+            ctx.beginPath();
+            ctx.fillText('$', x + 9, y + 17);
+            ctx.closePath();
+        }
+        if ((room.details & RoomDetails.Shop) === RoomDetails.Shop) {
+            ctx.fillStyle = 'purple';
+            ctx.beginPath();
+            ctx.fillText('\u23CF', x + 15, y + 17);
+            ctx.closePath();
+        }
+        if ((room.details & RoomDetails.Hospital) === RoomDetails.Hospital) {
+            ctx.fillStyle = 'blue';
+            ctx.beginPath();
+            ctx.fillText('\u2665', x + 15, y + 17);
+            ctx.closePath();
+        }
+        if ((room.details & RoomDetails.Trainer) === RoomDetails.Trainer) {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.fillText('\u260D', x + 15, y + 17);
+            ctx.closePath();
+        }
+        if ((room.details & RoomDetails.Stable) === RoomDetails.Stable) {
+            ctx.fillStyle = 'rgb(153, 102, 0)';
+            ctx.beginPath();
+            ctx.fillText('\u2658', x + 7, y + 17);
+            ctx.closePath();
+        }
+        if ((room.details & RoomDetails.Restaurant) === RoomDetails.Restaurant && (room.details & RoomDetails.Bar) === RoomDetails.Bar) {
+            ctx.fillStyle = 'green';
+            ctx.beginPath();
+            ctx.fillText('\u2617', x + 15, y + 17);
+            ctx.closePath();
+        }
+        else if ((room.details & RoomDetails.Bar) === RoomDetails.Bar) {
+            ctx.fillStyle = 'green';
+            ctx.beginPath();
+            ctx.fillText('\u266A', x + 15, y + 17);
+            ctx.closePath();
+        }
+        else if ((room.details & RoomDetails.Restaurant) === RoomDetails.Restaurant) {
+            ctx.fillStyle = 'green';
+            ctx.beginPath();
+            ctx.fillText('\u2616', x + 15, y + 17);
+            ctx.closePath();
+        }
+
+        if (!ex && this.selected.ID === room.ID) {
+            ctx.fillStyle = 'rgba(135, 206, 250, 0.5)';
+            ctx.strokeStyle = 'LightSkyBlue';
+            ctx.fillRoundedRect(x, y, 32, 32, 8);
+            ctx.strokeRoundedRect(x, y, 32, 32, 8);
+        }
+        if (this.markers[room.ID] === 2)
+            this.drawMarker(ctx, x, y, 'green');
+        else if (this.markers[room.ID] === 3)
+            this.drawMarker(ctx, x, y, 'blue');
+        else if (this.markers[room.ID])
+            this.drawMarker(ctx, x, y, 'yellow');
+        if (!ex && room.ID === this.current.ID)
+            this.drawMarker(ctx, x, y, 'red');
+    }
+
     public drawMarker(ctx, x, y, color) {
         if (!color) color = 'yellow';
         ctx.beginPath();

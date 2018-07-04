@@ -7,6 +7,7 @@
 - **Fixed:**
   - Code editor: path not updated in status bar after save as
   - Immortal tools: fix undefined/undefined error correctly this time
+  - Mapper: fix export as image
 
 ## 0.4.55 2018-07-03
 

@@ -42,7 +42,7 @@
           {
             label: '&Export',
             submenu: [
-              { label: 'Export as image', click: exportImage },
+              { label: 'Export as image', click: ()=> save(exportImage) },
               { label: 'Export current view as image', click: exportCurrentImage },
               { type: 'separator' },
               { label: 'Export current area', click: exportCurrentArea },
@@ -850,14 +850,14 @@
               room = rooms[rms];
               if (room == null) continue;
               if (x == null) {
-                x = room.X;
-                w = room.X + 1;
-                y = room.Y;
-                h = room.Y + 1;
+                x = room.x;
+                w = room.x + 1;
+                y = room.y;
+                h = room.y + 1;
                 continue;
               }
-              if (room.X < x) x = room.X; else if (room.X > w) w = room.X;
-              if (room.Y < y) y = room.Y; else if (room.Y > h) h = room.Y;
+              if (room.x < x) x = room.x; else if (room.x > w) w = room.x;
+              if (room.y < y) y = room.y; else if (room.y > h) h = room.y;
             }
             mapper._context.font = "italic bold 16pt Georgia";
             var fx = mapper._context.measureText(t).width;
@@ -894,9 +894,9 @@
               room = rooms[rms];
               //no room
               if (room == null) continue;
-              cx = (room.X - x) * 32 + 30.5;
-              cy = (room.Y - y) * 32 + 30.5;
-              mapper.DrawRoom(ctx, cx, cy, room, true);
+              cx = (room.x - x) * 32 + 30.5;
+              cy = (room.y - y) * 32 + 30.5;
+              mapper.DrawNormalizedRoom(ctx, cx, cy, room, true);
             }
             ctx.save();
             ctx.strokeStyle = "black";
