@@ -2,6 +2,8 @@
 
 ## 0.4.56
 
+- **New:**
+  - Mapper: character name is appened to window title to easily know who a map window is for
 - **Fixed:**
   - Code editor: path not updated in status bar after save as
 

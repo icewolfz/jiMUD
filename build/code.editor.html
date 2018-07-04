@@ -2478,8 +2478,10 @@
                     log('Initial scan complete. Ready for changes');
             })
             .on('add', (file, stats) => {
-                if (options.debug)
+                if (options.debug) {
                     log(`File ${file} has been added`);
+                    log(stats);
+                }
                 fireWatch('add', file, stats);
             })
             .on('change', (file, stats) => {

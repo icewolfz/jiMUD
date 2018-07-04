@@ -244,6 +244,10 @@
     };
 
     $(document).ready(() => {
+      if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
+        document.title = 'Mapper - ' + remote.getGlobal('character');
+      else
+        document.title = 'Mapper';
       $("#mapper-room input").prop("disabled", true);
       $("#mapper-room textarea").prop("disabled", true);
       $("#mapper-room select").prop("disabled", true);
@@ -664,8 +668,26 @@
         mapper.processGMCP(data.mod, data.obj);
     }
 
-    ipcRenderer.on('load-char', () => {
+    ipcRenderer.on('load-char', (event, char) => {
+      if (char && char.length > 0)
+        document.title = 'Mapper - ' + char;
+      else
+        document.title = 'Mapper';
       mapper.mapFile = remote.getGlobal('mapFile');
+    });
+
+    ipcRenderer.on('load-default', () => {
+      if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
+        document.title = 'Mapper - ' + remote.getGlobal('character');
+      else
+        document.title = 'Mapper';
+    });
+
+    ipcRenderer.on('set-title', (title) => {
+      if (title && title.length > 0)
+        document.title = 'Mapper - ' + title;
+      else
+        document.title = 'Mapper';
     });
 
     ipcRenderer.on('reload-options', () => {
