@@ -4074,30 +4074,31 @@
 
     function newArea() {
         if (!$dialogs.area) {
-            $dialog.area = {
+            $dialogs.area = {
                 dialog: document.getElementById('new-area'),
-                path: document.getElementById('new-area-path')
+                path: document.getElementById('new-area-path'),
+                remote: document.getElementById('new-area-remote-path')
             };
             $("#btn-new-area-path").on('click', () => {
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
-                    defaultPath: $dialog.area.path.val(),
+                    defaultPath: $dialogs.area.path.value,
                     properties: ['openDirectory', 'createDirectory']
                 },
                     function (fileNames) {
                         if (fileNames === undefined) {
                             return;
                         }
-                        $dialog.area.path.val(fileNames[0]);
+                        $dialogs.area.path.value = fileNames[0];
                     });
             });
             $('#btn-new-area-remote-path').on('click', () => {
                 showBrowseDialog({
-                    defaultFile: manager.active ? (manager.active.editor.remote || options.uploadAs) : options.uploadAs,
+                    defaultFile: $dialogs.area.remote.value || (manager.active ? (manager.active.editor.remote || options.uploadAs) : options.uploadAs),
                     title: 'Select remote folder',
                     properties: ['openDirectory']
                 }, (files) => {
                     if (!files || files.length === 0) return;
-                    document.getElementById('new-area-remote-path').value = files[0];
+                    $dialogs.area.remote.value = files[0];
                 });
             });
         }
