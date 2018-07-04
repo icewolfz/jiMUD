@@ -4073,7 +4073,7 @@
     }
 
     function newArea() {
-        if ($dialogs.area) {
+        if (!$dialogs.area) {
             $dialog.area = {
                 dialog: document.getElementById('new-area'),
                 path: document.getElementById('new-area-path')
