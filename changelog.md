@@ -6,6 +6,7 @@
   - Mapper: character name is appened to window title to easily know who a map window is for
 - **Fixed:**
   - Code editor: path not updated in status bar after save as
+  - Immortal tools: fix undefined/undefined error correctly this time
 
 ## 0.4.55 2018-07-03
 

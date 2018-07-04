@@ -223,10 +223,12 @@ export class IED extends EventEmitter {
                             this._callbacks[obj.tag](obj.path + '/' + obj.file, (obj.tag.startsWith(this.prefix + 'mkdirIgnore') || obj.tag.startsWith(this.prefix + 'mkdirPIgnore')) ? IEDCmdStatus.success : IEDCmdStatus.failed);
                             delete this._callbacks[obj.tag];
                         }
-                        if (obj.path && obj.file)
-                            this.emit('message', `File or directory already exist: '${obj.path}/${obj.file}`);
-                        else if (!obj.tag.startsWith(this.prefix + 'mkdirIgnore') && !obj.tag.startsWith(this.prefix + 'mkdirPIgnore'))
-                            this.emit('message', obj.msg);
+                        if (obj && !obj.tag.startsWith(this.prefix + 'mkdirIgnore') && !obj.tag.startsWith(this.prefix + 'mkdirPIgnore')) {
+                            if (obj.path && obj.file)
+                                this.emit('message', `File or directory already exist: '${obj.path}/${obj.file}`);
+                            else
+                                this.emit('message', obj.msg);
+                        }
                         break;
                     case IEDError.CMD_DIRECTORY:
                         if (obj && this._callbacks[obj.tag]) {

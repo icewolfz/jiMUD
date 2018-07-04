@@ -633,7 +633,7 @@
             if (options.openEditor)
                 $('#btn-editor-remote').addClass('active');
             else
-                $('#btn-editor-remote').removeClass('active');            
+                $('#btn-editor-remote').removeClass('active');
             doUpdate(14);
         }
 
@@ -1289,11 +1289,20 @@
                             });
                             break;
                         case IEDError.CMD_EXIST:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
-                                type: 'error',
-                                title: 'Already exist',
-                                message: `File or directory already exist: '${error.path}/${error.file}`
-                            });
+                            if (error && !error.tag.startsWith(_ied.prefix + 'mkdirIgnore') && !error.tag.startsWith(_ied.prefix + 'mkdirPIgnore')) {
+                                if (error.path && error.file)
+                                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                                        type: 'error',
+                                        title: 'Already exist',
+                                        message: `File or directory already exist: '${error.path}/${error.file}`
+                                    });
+                                else
+                                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                                        type: 'error',
+                                        title: 'Already exist',
+                                        message: error.msg
+                                    });
+                            }
                             break;
                         case IEDError.CMD_DIRECTORY:
                             dialog.showMessageBox(remote.getCurrentWindow(), {
