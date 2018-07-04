@@ -24,10 +24,10 @@ varargs void create(int x, int y, int z, int terrainIdx, int itemIdx, int exits)
    set_property("item id", i);
    set_property("exit id", e);    
    ::create();
-   set_properties( ([ 
-     "indoors":0,
-     "light":3
-    ]) );   
+   set_properties( ([
+       "indoors" : 0,
+       "light" : 3
+     ]) );
 }
          
 /**
@@ -35,7 +35,8 @@ varargs void create(int x, int y, int z, int terrainIdx, int itemIdx, int exits)
  * 
  * Called when room has been completed and loaded
  */
-void compile_done(){
+void compile_done()
+{
              
 }
 
@@ -44,7 +45,8 @@ void compile_done(){
  * 
  * Reset function triggered every 7 to 15 mins, add monsters or reset data as needed
  */
-void reset() {
+void reset()
+{
    string tmp;
    ::reset();
    //virtual area so check exits, use the exit id as exits may not be created on first reset

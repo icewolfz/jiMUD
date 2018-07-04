@@ -22,10 +22,10 @@ inherit STD_ROOM;
 void create()
 {
    ::create();
-   set_properties( ([ 
-     "indoors":0,
-     "light":3
-    ]) );
+   set_properties( ([
+       "indoors" : 0,
+       "light" : 3
+     ]) );
 }
 
 /**
@@ -33,7 +33,8 @@ void create()
  * 
  * Reset function triggered every 7 to 15 mins, add monsters or reset data as needed
  */
-void reset() {
+void reset()
+{
    ::reset();
    //virtual area so check exits, use the exit id as exits may not be created on first reset
    //Perform a probably check to allow disabling of default monsters
