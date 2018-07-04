@@ -18,12 +18,12 @@ inherit OBJ_SHEATH;
 
 void create()
 {
-	//Material, Quality, Limbs, Natural enchantment
-	::create("", "", ({ "" }), 0 );
-    set_nouns("");
-    set_adjectives("");
-    set_name("");
-    set_short("");
-    set_long("");
-    set_weapon_type("");
+   //Material, Quality, Limbs, Natural enchantment
+   ::create("", "", ({ "" }), 0);
+   set_nouns("");
+   set_adjectives("");
+   set_name("");
+   set_short("");
+   set_long("");
+   set_weapon_type("");
 }

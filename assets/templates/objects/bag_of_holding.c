@@ -22,5 +22,5 @@ void create()
    set_long("");
    set_material("");
    //Max amount of weight it can hold
-   set_max_encumbrance(40000);   
+   set_max_encumbrance(40000);
 }

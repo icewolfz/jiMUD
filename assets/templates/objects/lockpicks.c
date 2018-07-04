@@ -13,11 +13,11 @@ inherit OBJ_LOCKPICKS;
 
 void create()
 {
-	//materal, quality, charm
-    ::create("", "", 0);
-	set_name("");
-	set_short("");
-	set_long("");
-	set_nouns("");
-	set_adjectives("");
+   //material, quality, charm
+   ::create("", "", 0);
+   set_name("");
+   set_short("");
+   set_long("");
+   set_nouns("");
+   set_adjectives("");
 }

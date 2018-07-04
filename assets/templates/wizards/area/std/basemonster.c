@@ -15,7 +15,10 @@
 inherit STD_MONSTER;
 
 //allow for easy filtering
-int is_{area}_monster() { return 1; }
+int is_{area}_monster()
+{
+   return 1;
+}
 
 //reproduce core arguments from monster
 varargs void create(int lvl, string race, string cls, string btype, int autospells, mapping args)

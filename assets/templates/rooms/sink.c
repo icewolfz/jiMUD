@@ -18,20 +18,20 @@ inherit ROOMTYPE_SINK_ROOM;
 
 void create()
 {
-	::create();
-	set_properties( ([ 
-		"indoors":0,
-		"light":3
-	]) );
-	set_short("");
-	set_long("");
-	set_terrain("");
-	set_items( ([ 
+   ::create();
+   set_properties( ([
+       "indoors" : 0,
+       "light" : 3
+     ]) );
+   set_short("");
+   set_long("");
+   set_terrain("");
+   set_items( ([
 
-	]) );
-	set_exits( ([
+     ]) );
+   set_exits( ([
 
-	]) );
-	set_up(); //the target room where floating items go
-	set_down(); //the target room where sunken items go
+     ]) );
+   set_up(); //the target room where floating items go
+   set_down(); //the target room where sunken items go
 }

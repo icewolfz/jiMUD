@@ -16,7 +16,7 @@ inherit OBJ_BACKPACK;
 
 void create()
 {
-	 //Material, Quality, charm
+   //Material, Quality, charm
    ::create("", "");
    set_nouns("");
    set_adjectives("");

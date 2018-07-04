@@ -13,10 +13,10 @@ inherit OBJ_SMOKEBOMB;
 
 void create()
 {
-	::create(/*strength || effect*/);
-	set_name("");
-	set_short("");
-	set_long("");
-	set_nouns("");
-	set_adjectives("");
+   ::create(/*strength || effect*/);
+   set_name("");
+   set_short("");
+   set_long("");
+   set_nouns("");
+   set_adjectives("");
 }

@@ -19,19 +19,19 @@ inherit ROOMTYPE_GUILD_HALL;
 
 void create()
 {
-	::create();
-	set_properties( ([ 
-		"indoors":0,
-		"light":3
-	]) );
-	set_short("");
-	set_long("");
-	set_terrain("");
-	set_items( ([ 
+   ::create();
+   set_properties( ([
+       "indoors" : 0,
+       "light" : 3
+     ]) );
+   set_short("");
+   set_long("");
+   set_terrain("");
+   set_items( ([
 
-	]) );
-	set_exits( ([
+     ]) );
+   set_exits( ([
 
-	]) );
-	set_guild(""); //guild name, if not set will default based on path name
+     ]) );
+   set_guild(""); //guild name, if not set will default based on path name
 }

@@ -15,12 +15,12 @@ inherit OBJ_MATERIAL;
 
 void create()
 {
-	//Material, size, quality
-	::create("", 1, "");
-	set_name("");
-	set_short("");
-	set_long("");
-	set_nouns("");
-	set_adjectives("");
-	set_decribers(""); // List of describers for use in crafting custom weapons
+   //Material, size, quality
+   ::create("", 1, "");
+   set_name("");
+   set_short("");
+   set_long("");
+   set_nouns("");
+   set_adjectives("");
+   set_describers(""); // List of describers for use in crafting custom weapons
 }

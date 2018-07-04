@@ -18,7 +18,7 @@ inherit OBJ_CRAFTINGTOOL_WEAPON;
 
 void create()
 {
-	 //Type, Material, Quality, Natural enchantment, Craft skills...
+   //Type, Material, Quality, Natural enchantment, Craft skills...
    ::create("", "", "", 0, "");
    set_nouns("");
    set_adjectives("");

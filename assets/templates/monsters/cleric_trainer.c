@@ -15,11 +15,11 @@ inherit MONTYPE_CLERIC_TRAINER;
 
 void create()
 {
-	::create(1, "", "");//Level, Race, Class
-	set_name("");
-	set_short("");
-	set_long("");
-	set_nouns("");
-	set_adjectives("");
-	set_height(1); // height in inches
+   ::create(1, "", ""); //Level, Race, Class
+   set_name("");
+   set_short("");
+   set_long("");
+   set_nouns("");
+   set_adjectives("");
+   set_height(1); // height in inches
 }

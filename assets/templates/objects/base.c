@@ -14,10 +14,10 @@ inherit STD_OBJECT;
 
 void create()
 {
-	::create();
-	set_name("");
-	set_short("");
-	set_long("");
-	set_nouns("");
-	set_adjectives("");
+   ::create();
+   set_name("");
+   set_short("");
+   set_long("");
+   set_nouns("");
+   set_adjectives("");
 }

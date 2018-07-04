@@ -19,7 +19,8 @@ inherit BASEROOM;
  *
  * Create function first called when creating a new room to allow setting up the room
  */
-varargs void create(int x, int y, int z, int terrainIdx, int itemIdx, int exits) {
+varargs void create(int x, int y, int z, int terrainIdx, int itemIdx, int exits)
+{
    //save ids in case needed, this allows you to create dynamic coded based on the ids
    set_property("terrain id", t); 
    set_property("item id", i);
@@ -32,6 +33,7 @@ varargs void create(int x, int y, int z, int terrainIdx, int itemIdx, int exits)
  * 
  * Called when room has been completed and loaded
  */
-void compile_done(){
+void compile_done()
+{
              
 }
