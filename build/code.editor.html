@@ -1572,6 +1572,7 @@
     var spellchecker, menubar;
     var options, _updating = 0;
     var _loading = 1;
+    var _opening = {};
     var _open;
     var newCounter = 1;
     let $closeWindow = false;
@@ -2506,6 +2507,7 @@
     }
 
     function fireWatch(event, file, args) {
+        if (_opening[file]) return;
         var keys = Object.keys(_editors);
         var k = keys.length;
         var p;
@@ -6023,6 +6025,7 @@
                     });
         }
         else {
+            _opening[file] = 1;
             if (!remoteFile || remoteFile.length === 0)
                 remoteFile = getRemoteCache(file);
             else if (!remoteEdit)
@@ -6031,6 +6034,7 @@
                 _recent.unshift({ file: file, remote: remoteFile });
             createEditor({ file: file, open: true, remote: remoteFile, source: remoteEdit ? 1 : 0 }, true, dock, tmpObj);
             doUpdate(25);
+            delete _opening[file];
         }
     }
 
@@ -6047,6 +6051,7 @@
                     });
                 continue;
             }
+            _opening[files[f].file || files[f].path] = 1;
             if (!files[f].remote || files[f].remote.length === 0)
                 files[f].remote = getRemoteCache(files[f].file || files[f].path);
             else if (!files[f].remoteEdit)
@@ -6060,6 +6065,7 @@
             var p = createEditor({ file: files[f].file || files[f].path, remote: files[f].remote, open: true, source: files[f].remoteEdit ? 1 : 0 });
             if (p)
                 panels.push(p);
+            delete _opening[files[f].file || files[f].path];
         }
         manager.addPanels(panels, dock);
         doUpdate(25);

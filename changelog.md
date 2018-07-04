@@ -8,6 +8,7 @@
   - Code editor:
     - Path not updated in status bar after save as
     - New area local/remote file browsing buttons
+    - Try not to display a change dialog when opening files
   - Immortal tools: fix undefined/undefined error correctly this time
   - Mapper: fix export as image
 
