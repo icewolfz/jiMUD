@@ -462,9 +462,13 @@ export class PropertyGrid extends EventEmitter {
         if (!property) return;
         const e = <HTMLElement>this.$el.querySelector('div.property-grid-item-value[data-prop="' + property.toLowerCase() + '"]');
         if (!e) return;
+        e.focus();
         e.click();
         if (openAdvanced)
+        {
+            this.$editor.editor.focus();
             this.$editor.editor.openAdvanced();
+        }
     }
 
     private doUpdate(type?: UpdateType) {

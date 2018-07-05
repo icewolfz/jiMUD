@@ -2565,6 +2565,9 @@ export class VirtualEditor extends EditorBase {
                 return prop !== 'ef';
             return prop === 'ef';
         };
+        this.$roomEditor.on('dialog-open', () => this.emit('dialog-open'));
+        this.$roomEditor.on('dialog-close', () => this.emit('dialog-close'));
+        this.$roomEditor.on('dialog-cancel', () => this.emit('dialog-cancel'));
         this.$roomEditor.on('open-file', (property) => {
             let f;
             if (this.$mapSize.depth > 1)
@@ -2588,7 +2591,11 @@ export class VirtualEditor extends EditorBase {
                 switch (prop) {
                     case 'external':
                         let nExternal = this.$exits.filter(e => e.x !== old.x || e.y !== old.y || e.z !== old.z);
-                        curr.ee = newValue.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0).reduce((a, c) => a | c);
+                        let ex = newValue.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0);
+                        if (ex.length > 0)
+                            ex = ex.reduce((a, c) => a | c);
+                        else
+                            ex = 0;
                         nExternal = nExternal.concat(newValue);
                         this.$exits = nExternal;
                         this.$exitGrid.rows = this.$exits;
@@ -2598,7 +2605,11 @@ export class VirtualEditor extends EditorBase {
                             nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
                         this.$externalRaw.value = '';
                         this.updateRaw(this.$externalRaw, 0, nExternal);
-                        this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, this.selectedFocusedRoom.at(this.$mouse.rx, this.$mouse.ry));
+                        selected.forEach(r => {
+                            const o = this.getRoom(r.x, r.y, r.z);
+                            o.ee = ex;
+                            this.DrawRoom(this.$mapContext, o, true, o.at(this.$mouse.rx, this.$mouse.ry));
+                        });
                         resetCursor(this.$externalRaw);
                         break;
                     case 'ee':
@@ -2607,15 +2618,20 @@ export class VirtualEditor extends EditorBase {
                     case 'items':
                         this.$items[first.item].children = newValue;
                         this.$itemGrid.rows = this.$items;
-                        this.updateRaw(this.$itemRaw, this.selectedFocusedRoom.item * 2, [
+                        this.updateRaw(this.$itemRaw, first.item * 2, [
                             newValue.map(i => i.item).join(':'),
                             newValue.map(i => i.description).join(':')
                         ]);
                         resetCursor(this.$itemRaw);
-                        this.$selectedRooms.forEach(r => {
+                        selected.forEach(r => {
+                            const o = this.getRoom(r.x, r.y, r.z);
                             if (first.terrain === first.item)
-                                r.terrain = first.terrain;
-                            r.item = first.item;
+                                r.item = first.item;
+                            r.terrain = first.terrain;
+                            this.RoomChanged(r, o, true);
+                            if (first.terrain === first.item)
+                                o.item = first.item;
+                            o.terrain = first.terrain;
                         });
                         break items;
                     case 'terrainType':
@@ -2627,9 +2643,14 @@ export class VirtualEditor extends EditorBase {
                         if (prop === 'terrainType')
                             prop = 'terrain';
                         selected.forEach(r => {
+                            const o = this.getRoom(r.x, r.y, r.z);
                             if (first.terrain === first.item)
                                 r.item = first.item;
                             r.terrain = first.terrain;
+                            this.RoomChanged(r, o, true);
+                            if (first.terrain === first.item)
+                                o.item = first.item;
+                            o.terrain = first.terrain;
                         });
                         //invalid index
                         if (first.terrain < 0) break items;
@@ -2943,8 +2964,12 @@ export class VirtualEditor extends EditorBase {
     }
 
     private formatExternal(prop, value, data) {
-        if (!data || data.length === 0) return 'None';
-        const ee = data[0].ee;
+        if (!data) return 'None';
+        let ee;
+        if (Array.isArray(data))
+            ee = data[0].ee;
+        else
+            ee = data.ee;
         if (ee === 0)
             return 'None';
         const states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomExit[key])));
@@ -7400,6 +7425,7 @@ export class ExternalExitValueEditor extends ValueEditor {
     private $cut;
     private $paste;
     private $dButton;
+    private $dialog;
 
     public create() {
         this.$el = document.createElement('div');
@@ -7410,7 +7436,7 @@ export class ExternalExitValueEditor extends ValueEditor {
         this.$editor.readOnly = true;
         this.$editor.classList.add('property-grid-editor');
         this.$editor.addEventListener('blur', (e) => {
-            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
+            if ((this.$dialog && this.$dialog.contains(e.relatedTarget)) || (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown')) {
                 e.preventDefault();
                 e.stopPropagation();
                 e.cancelBubble = true;
@@ -7451,12 +7477,18 @@ export class ExternalExitValueEditor extends ValueEditor {
         this.$dButton.innerHTML = '&hellip;';
         this.$dButton.dataset.editor = 'dropdown';
         this.$dButton.addEventListener('click', (e) => {
-            const mDialog = <HTMLDialogElement>document.createElement('dialog');
-            mDialog.style.width = '500px';
-            mDialog.style.height = '300px';
-            mDialog.style.padding = '5px';
-            mDialog.addEventListener('close', () => {
-                mDialog.remove();
+            this.$dialog = <HTMLDialogElement>document.createElement('dialog');
+            this.$dialog.style.width = '500px';
+            this.$dialog.style.height = '300px';
+            this.$dialog.style.padding = '5px';
+            this.$dialog.addEventListener('close', () => {
+                this.$dialog.remove();
+                this.control.emit('dialog-close');
+                this.focus();
+            });
+            this.$dialog.addEventListener('cancel', () => {
+                this.$dialog.remove();
+                this.control.emit('dialog-cancel');
                 this.focus();
             });
             let header = document.createElement('div');
@@ -7467,8 +7499,8 @@ export class ExternalExitValueEditor extends ValueEditor {
             button.type = 'button';
             button.dataset.dismiss = 'modal';
             button.addEventListener('click', () => {
-                mDialog.close();
-                mDialog.remove();
+                this.$dialog.close();
+                this.$dialog.remove();
                 this.focus();
             });
             button.innerHTML = '&times;';
@@ -7477,11 +7509,11 @@ export class ExternalExitValueEditor extends ValueEditor {
             el.style.paddingTop = '2px';
             el.innerHTML = capitalize(this.control.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
             header.appendChild(el);
-            mDialog.appendChild(header);
+            this.$dialog.appendChild(header);
             header = document.createElement('div');
             header.classList.add('dialog-body');
             header.style.paddingTop = '40px';
-            mDialog.appendChild(header);
+            this.$dialog.appendChild(header);
             el = document.createElement('div');
             el.classList.add('form-group', 'datagrid-standard');
             el.style.margin = '0';
@@ -7510,7 +7542,7 @@ export class ExternalExitValueEditor extends ValueEditor {
                     editor: {
                         type: EditorType.dropdown,
                         options: {
-                            container: mDialog,
+                            container: this.$dialog,
                             data: [
                                 'north',
                                 'northeast',
@@ -7602,14 +7634,14 @@ export class ExternalExitValueEditor extends ValueEditor {
             });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
-            mDialog.appendChild(header);
+            this.$dialog.appendChild(header);
             button = document.createElement('button');
             button.style.cssFloat = 'right';
             button.type = 'button';
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-                mDialog.close();
-                mDialog.remove();
+                this.$dialog.close();
+                this.$dialog.remove();
                 this.focus();
             });
             button.textContent = 'Cancel';
@@ -7624,8 +7656,8 @@ export class ExternalExitValueEditor extends ValueEditor {
                 else
                     this.data.ee = 0;
                 this.value = dg.rows;
-                mDialog.close();
-                mDialog.remove();
+                this.$dialog.close();
+                this.$dialog.remove();
                 this.focus();
             });
             button.textContent = 'Ok';
@@ -7705,8 +7737,9 @@ export class ExternalExitValueEditor extends ValueEditor {
             el.appendChild(button);
             header.appendChild(el);
 
-            document.body.appendChild(mDialog);
-            mDialog.showModal();
+            document.body.appendChild(this.$dialog);
+            this.control.emit('dialog-open');
+            this.$dialog.showModal();
         });
         this.$el.appendChild(this.$dButton);
         this.parent.appendChild(this.$el);
@@ -7759,6 +7792,7 @@ export class ItemsValueEditor extends ValueEditor {
     private $cut;
     private $paste;
     private $dButton;
+    private $dialog;
 
     public create() {
         this.$el = document.createElement('div');
@@ -7769,7 +7803,7 @@ export class ItemsValueEditor extends ValueEditor {
         this.$editor.readOnly = true;
         this.$editor.classList.add('property-grid-editor');
         this.$editor.addEventListener('blur', (e) => {
-            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
+            if ((this.$dialog && this.$dialog.contains(e.relatedTarget)) || (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown')) {
                 e.preventDefault();
                 e.stopPropagation();
                 e.cancelBubble = true;
@@ -7809,12 +7843,18 @@ export class ItemsValueEditor extends ValueEditor {
         this.$dButton.innerHTML = '&hellip;';
         this.$dButton.dataset.editor = 'dropdown';
         this.$dButton.addEventListener('click', (e) => {
-            const mDialog = <HTMLDialogElement>document.createElement('dialog');
-            mDialog.style.width = '500px';
-            mDialog.style.height = '300px';
-            mDialog.style.padding = '5px';
-            mDialog.addEventListener('close', () => {
-                mDialog.remove();
+            this.$dialog = <HTMLDialogElement>document.createElement('dialog');
+            this.$dialog.style.width = '500px';
+            this.$dialog.style.height = '300px';
+            this.$dialog.style.padding = '5px';
+            this.$dialog.addEventListener('close', () => {
+                this.control.emit('dialog-close');
+                this.$dialog.remove();
+                this.focus();
+            });
+            this.$dialog.addEventListener('cancel', () => {
+                this.control.emit('dialog-cancel');
+                this.$dialog.remove();
                 this.focus();
             });
             let header = document.createElement('div');
@@ -7825,8 +7865,8 @@ export class ItemsValueEditor extends ValueEditor {
             button.type = 'button';
             button.dataset.dismiss = 'modal';
             button.addEventListener('click', () => {
-                mDialog.close();
-                mDialog.remove();
+                this.$dialog.close();
+                this.$dialog.remove();
                 this.focus();
             });
             button.innerHTML = '&times;';
@@ -7835,11 +7875,11 @@ export class ItemsValueEditor extends ValueEditor {
             el.style.paddingTop = '2px';
             el.innerHTML = capitalize(this.control.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
             header.appendChild(el);
-            mDialog.appendChild(header);
+            this.$dialog.appendChild(header);
             header = document.createElement('div');
             header.classList.add('dialog-body');
             header.style.paddingTop = '40px';
-            mDialog.appendChild(header);
+            this.$dialog.appendChild(header);
             el = document.createElement('div');
             el.classList.add('form-group', 'datagrid-standard');
             el.style.margin = '0';
@@ -7860,7 +7900,7 @@ export class ItemsValueEditor extends ValueEditor {
                 width: 150,
                 editor: {
                     options: {
-                        container: mDialog,
+                        container: this.$dialog,
                         singleLine: true
                     }
                 }
@@ -7872,7 +7912,7 @@ export class ItemsValueEditor extends ValueEditor {
                 width: 200,
                 editor: {
                     options: {
-                        container: mDialog
+                        container: this.$dialog
                     }
                 }
             }]);
@@ -7929,14 +7969,14 @@ export class ItemsValueEditor extends ValueEditor {
             });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
-            mDialog.appendChild(header);
+            this.$dialog.appendChild(header);
             button = document.createElement('button');
             button.style.cssFloat = 'right';
             button.type = 'button';
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
-                mDialog.close();
-                mDialog.remove();
+                this.$dialog.close();
+                this.$dialog.remove();
                 this.focus();
             });
             button.textContent = 'Cancel';
@@ -7947,8 +7987,8 @@ export class ItemsValueEditor extends ValueEditor {
             button.classList.add('btn', 'btn-primary');
             button.addEventListener('click', () => {
                 this.value = dg.rows;
-                mDialog.close();
-                mDialog.remove();
+                this.$dialog.close();
+                this.$dialog.remove();
                 this.focus();
             });
             button.textContent = 'Ok';
@@ -8028,8 +8068,9 @@ export class ItemsValueEditor extends ValueEditor {
             this.$paste = button;
             el.appendChild(button);
             header.appendChild(el);
-            document.body.appendChild(mDialog);
-            mDialog.showModal();
+            document.body.appendChild(this.$dialog);
+            this.control.emit('dialog-open');
+            this.$dialog.showModal();
         });
         this.$el.appendChild(this.$dButton);
         this.parent.appendChild(this.$el);

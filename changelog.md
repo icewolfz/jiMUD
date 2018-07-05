@@ -9,6 +9,8 @@
     - Path not updated in status bar after save as
     - New area local/remote file browsing buttons
     - Try not to display a change dialog when opening files
+    - Fixed menubar being enabled when item or external exit dialogs open
+    - Fixed error when accepting external exit dialog
   - Immortal tools: fix undefined/undefined error correctly this time
   - Mapper: fix export as image
 

@@ -6549,6 +6549,9 @@
             if (path.extname(data.file) === '.map' && data.source !== 1) {
                 data.options = options.virtualOptions;
                 p.editor = new VirtualEditor(data);
+                p.editor.on('dialog-close', () => menubar.enabled = true);
+                p.editor.on('dialog-cancel', () => menubar.enabled = true);
+                p.editor.on('dialog-open', () => menubar.enabled = false);
                 p.editor.on('room-dblclick', (room) => {
                     var f;
                     if (p.editor.maxLevel > 1)
