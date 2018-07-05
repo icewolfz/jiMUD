@@ -5031,7 +5031,7 @@ export class VirtualEditor extends EditorBase {
             this.UpdatePreview(r);
         }
         //was the old room focused? if so point ot new room object
-        if (this.$focusedRoom.at(r.x, r.y, r.z))
+        if (this.$focusedRoom && this.$focusedRoom.at(r.x, r.y, r.z))
             this.$focusedRoom = r;
         if (r.z === this.$depth)
             this.DrawRoom(this.$mapContext, r, true, r.at(this.$mouse.rx, this.$mouse.ry));

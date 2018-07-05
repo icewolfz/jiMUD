@@ -2,6 +2,10 @@
 
 ## 0.4.57
 
+- **Fixed:**
+  - Code editor:
+    - Fixed minor issue updating room if no focused room set
+
 ## 0.4.56 2018-07-04
 
 - **New:**
