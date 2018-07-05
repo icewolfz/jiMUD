@@ -279,6 +279,7 @@ export class MonacoCodeEditor extends EditorBase {
     public open() {
         if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
             return;
+        this.opened = new Date().getTime();
         this.$model.setValue(this.read());
         this.emit('opened', this.file);
         this.state |= FileState.opened;
@@ -388,8 +389,11 @@ export class MonacoCodeEditor extends EditorBase {
             case 'add':
             case 'change':
             case 'unlink':
-                if (!this.$saving)
+                if (!this.$saving) {
+                    if (details && details.mtimeMs < this.opened)
+                        return;
                     this.emit('reload', action);
+                }
                 else
                     this.$saving = false;
                 break;

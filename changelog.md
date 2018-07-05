@@ -5,6 +5,7 @@
 - **Fixed:**
   - Code editor:
     - Fixed minor issue updating room if no focused room set
+    - Track open timestamp in an attmpt to remove wierd file change checks
 
 ## 0.4.56 2018-07-04
 

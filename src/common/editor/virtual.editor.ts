@@ -197,6 +197,7 @@ export class VirtualEditor extends EditorBase {
     private $enterMoveNext;
     private $enterMoveFirst;
     private $enterMoveNew;
+    private $opened = {};
 
     private $startValues: any = {};
 
@@ -3044,6 +3045,7 @@ export class VirtualEditor extends EditorBase {
 
     private openRaw(file, raw, noRebuild?) {
         const base = path.basename(file);
+        this.$opened[base] = new Date().getTime();
         this.$files[base] = existsSync(file);
         if (this.$files[base])
             raw.value = this.read(file);
@@ -3087,6 +3089,7 @@ export class VirtualEditor extends EditorBase {
                     break;
                 default:
                     if (file === this.filename) {
+                        this.$opened[this.filename] = new Date().getTime();
                         this.$mapRaw.value = this.read();
                         this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
                         this.$mapRaw.dataset.changed = null;
@@ -3102,6 +3105,8 @@ export class VirtualEditor extends EditorBase {
         }
         this.emit('watch-stop', [root]);
         this.$files = {};
+        this.$opened = {};
+        this.$opened[this.filename] = new Date().getTime();
         this.$files['virtual.terrain'] = existsSync(path.join(root, 'virtual.terrain'));
         this.$files['terrain.desc'] = existsSync(path.join(root, 'terrain.desc'));
         this.$files['terrain.item'] = existsSync(path.join(root, 'terrain.item'));
@@ -3109,16 +3114,26 @@ export class VirtualEditor extends EditorBase {
         this.$files['virtual.state'] = existsSync(path.join(root, 'virtual.state'));
 
         this.$mapRaw.value = this.read();
-        if (this.$files['virtual.terrain'])
+        if (this.$files['virtual.terrain']) {
+            this.$opened['virtual.terrain'] = new Date().getTime();
             this.$terrainRaw.value = this.read(path.join(root, 'virtual.terrain'));
-        if (this.$files['virtual.state'])
+        }
+        if (this.$files['virtual.state']) {
+            this.$opened['virtual.state'] = new Date().getTime();
             this.$stateRaw.value = this.read(path.join(root, 'virtual.state'));
-        if (this.$files['terrain.desc'])
+        }
+        if (this.$files['terrain.desc']) {
+            this.$opened['terrain.desc'] = new Date().getTime();
             this.$descriptionRaw.value = this.read(path.join(root, 'terrain.desc'));
-        if (this.$files['terrain.item'])
+        }
+        if (this.$files['terrain.item']) {
+            this.$opened['terrain.item'] = new Date().getTime();
             this.$itemRaw.value = this.read(path.join(root, 'terrain.item'));
-        if (this.$files['virtual.exits'])
+        }
+        if (this.$files['virtual.exits']) {
+            this.$opened['virtual.exits'] = new Date().getTime();
             this.$externalRaw.value = this.read(path.join(root, 'virtual.exits'));
+        }
         this.emit('watch', [root]);
         this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
         this.loadDescriptions();
@@ -3947,14 +3962,19 @@ export class VirtualEditor extends EditorBase {
                 case 'add':
                 case 'change':
                 case 'unlink':
-                    if (!this.$saving[path.basename(file)])
+                    if (!this.$saving[path.basename(file)]) {
+                        if (details && details.mtimeMs < this.$opened[base])
+                            return;
                         this.emit('reload', action, file);
+                    }
                     else
                         this.$saving[path.basename(file)] = false;
                     break;
             }
         }
         if ((/^\d+,\d+(,\d+)?\.c$/).test(base)) {
+            if (details && details.mtimeMs < this.$opened[this.filename])
+                return;
             const c = base.substring(0, base.length - 2).split(',');
             let r;
             if (c.length === 3)

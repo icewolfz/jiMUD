@@ -36,6 +36,7 @@ export abstract class EditorBase extends EventEmitter {
     private $remote;
     public state: FileState = FileState.closed;
     public source: Source = Source.local;
+    public opened: number;
 
     get file(): string {
         return this.$file;
