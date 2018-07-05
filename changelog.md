@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.4.56
+## 0.4.56 2018-07-04
 
 - **New:**
-  - Mapper: character name is appened to window title to easily know who a map window is for
+  - Mapper: character name is appended to window title to easily know who a map window is for
 - **Fixed:**
   - Code editor:
     - Path not updated in status bar after save as
@@ -11,6 +11,8 @@
     - Try not to display a change dialog when opening files
     - Fixed menubar being enabled when item or external exit dialogs open
     - Fixed error when accepting external exit dialog
+    - Fixed external exits not updating when set from room editor
+    - Fixed items not correctly updating when changed from room editor
   - Immortal tools: fix undefined/undefined error correctly this time
   - Mapper: fix export as image
 
