@@ -2,6 +2,8 @@
 
 ## 0.4.57
 
+- **Changed:**
+  - Update electron from 2.0.2 to 2.0.4
 - **Fixed:**
   - Code editor:
     - Fixed minor issue updating room if no focused room set
