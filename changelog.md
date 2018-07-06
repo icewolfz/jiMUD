@@ -2,6 +2,8 @@
 
 ## 0.4.57
 
+- **New:**
+  - Auto check for updates on load or demand, you can enable auto update checking in preferences > general > check for updates on load or you can check any time from help > check for updates..., by default for now check for updates on load is disabled
 - **Changed:**
   - Update electron from 2.0.2 to 2.0.4
 - **Fixed:**

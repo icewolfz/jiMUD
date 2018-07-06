@@ -136,6 +136,7 @@ export let SettingList: any[] = [
 ];
 
 export class Settings {
+    public checkForUpdates: boolean = false;
     public editorPersistent: boolean = false;
     public AutoCopySelectedToClipboard: boolean = false;
     public autoCreateCharacter: boolean = false;

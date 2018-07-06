@@ -652,6 +652,52 @@ var menuTemp = [
       },
       { type: 'separator' },
       {
+        label: 'Check for updates...',
+        click: () => {
+          const GhReleases = require('electron-gh-releases');
+          const updater = new GhReleases({
+            repo: 'icewolfz/jiMUD',
+            currentVersion: app.getVersion()
+          });
+          // Check for updates
+          // `status` returns true if there is a new update available
+          updater.check((err, status) => {
+            if (!err && status) {
+              dialog.showMessageBox(win, {
+                type: 'question',
+                title: 'A new version is available',
+                message: 'A new version is available, download and install, requires jiMUD to close and restart?',
+                buttons: ['Yes', 'No', 'Open website']
+              }, result => {
+                if (result === 0) // Download the update
+                  updater.download();
+                else if(result === 2)
+                  shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest');
+              });
+            }
+            else if (err && err.message !== 'There is no newer version.')
+              dialog.showMessageBox(win, {
+                type: 'error',
+                title: 'Error checking for updates',
+                message: err.message
+              });
+            else
+              dialog.showMessageBox(win, {
+                type: 'info',
+                title: 'Latest version',
+                message: `You have the latest version, v${app.getVersion()}.`
+              });
+          });
+
+          // When an update has been downloaded
+          updater.on('update-downloaded', (info) => {
+            // Restart the app and install the update
+            updater.install();
+          });
+        }
+      },
+      { type: 'separator' },
+      {
         label: '&About...',
         click: () => {
           var b = win.getBounds();
@@ -1440,6 +1486,7 @@ function createWindow() {
     else if (!global.editorOnly && edset.window.persistent)
       createCodeEditor();
     updateJumpList();
+    checkForUpdates();
   });
 
   win.on('close', (e) => {
@@ -1529,7 +1576,6 @@ app.on('ready', () => {
     }
   }
   global.debug = argv.debug;
-
   if (argv.eo) {
     if (Array.isArray(argv.eo)) {
       al = argv.eo.length;
@@ -3311,8 +3357,10 @@ function createCodeEditor(show, loading, loaded) {
     if (loaded)
       loaded();
     codeReady = true;
-    if (global.editorOnly)
+    if (global.editorOnly) {
       updateJumpList();
+      checkForUpdates();
+    }
   });
 
   winCode.on('close', (e) => {
@@ -3431,5 +3479,44 @@ function updateJumpList() {
     app.setJumpList(list);
   } catch (error) {
     logError(error);
+  }
+}
+
+function checkForUpdates() {
+  if (!set)
+    set = settings.Settings.load(global.settingsFile);
+  if (set.checkForUpdates) {
+    const GhReleases = require('electron-gh-releases');
+    const updater = new GhReleases({
+      repo: 'icewolfz/jiMUD',
+      currentVersion: app.getVersion()
+    });
+    // Check for updates
+    // `status` returns true if there is a new update available
+    updater.check((err, status) => {
+      if (!err && status) {
+        dialog.showMessageBox(win, {
+          type: 'question',
+          title: 'A new version is available',
+          message: 'A new version is available, download and install, requires jiMUD to close and restart?',
+          buttons: ['Yes', 'No', 'Never check again', 'Open website']
+        }, result => {
+          if (result === 0) // Download the update
+            updater.download();
+          else if (result === 2) {
+            set.checkForUpdates = false;
+            set.save(global.settingsFile);
+          }
+          else if(result === 3)
+            shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest');          
+        });
+      }
+      else if (err && err.message !== 'There is no newer version.')
+        dialog.showMessageBox(win, {
+          type: 'error',
+          title: 'Error checking for updates',
+          message: err.message
+        });
+    });
   }
 }

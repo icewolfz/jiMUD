@@ -262,7 +262,9 @@
                     setSettings(obj[option], root + option + '-');
                     continue;
                 }
-                if (typeof (obj[option]) !== "boolean")
+                if (typeof (obj[option]) === "string" || typeof (obj[option]) === "number")
+                    $('#' + root + option).val(obj[option]);
+                else if (typeof (obj[option]) !== "boolean")
                     continue;
                 $('#' + root + option).prop('checked', obj[option]);
             }
@@ -580,7 +582,7 @@
                     <label class="control-label">
                         <input type="checkbox" id="virtualOptions-enterMoveNew" /> Add new row on enter if last row when editing data grid
                     </label>
-                </div>                
+                </div>
                 <div class="col-sm-6 form-group">
                     <label class="control-label">Raw Font
                         <br>

@@ -131,6 +131,7 @@
     "buzz": "^1.2.1",
     "chokidar": "^2.0.4",
     "drivelist": "^6.2.2",
+    "electron-gh-releases": "^2.0.4",
     "font-manager": "^0.3.0",
     "fs-extra": "^6.0.1",
     "jquery": "^3.3.1",

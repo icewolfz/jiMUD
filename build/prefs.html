@@ -258,251 +258,8 @@
       loadThemes();
       loadSettings();
 
-      $("#colorScheme").parent().find('.dropdown-menu.inner li').click(function () {
-        //$("#colorScheme").change();
-        updateScheme($(this).index());
-      });
-      $("#btn-logPath").on('click', () => {
-        dialog.showOpenDialog(remote.getCurrentWindow(), {
-          defaultPath: parseTemplate($("#logPath").val()),
-          properties: ['openDirectory', 'createDirectory']
-        },
-          function (fileNames) {
-            if (fileNames === undefined) {
-              return;
-            }
-            _settings.logPath = templatePath(fileNames[0]);
-            $("#logPath").val(_settings.logPath);
-          });
-      });
-    });
-
-    function sortFiles(a, b) {
-      return a.name.localeCompare(b.name);
-    }
-
-    function getThemes(p) {
-      var p2 = parseTemplate(p);
-      if (!existsSync(p2))
-        return [];
-      var themes = [];
-      var files = fs.readdirSync(p2);
-      for (var f = 0, fl = files.length; f < fl; f++) {
-        if (path.extname(files[f]).toLowerCase() != ".css") continue;
-        themes.push({
-          name: path.basename(files[f], path.extname(files[f])),
-          path: p
-        });
-      }
-      return themes;
-    }
-
-    function loadThemes() {
-      var themes = getThemes("{themes}");
-      themes = themes.concat(getThemes(path.join("{data}", "themes")));
-      themes = themes.concat(getThemes(path.join("{documents}", "jiMUD", "themes")));
-      themes.sort(sortFiles);
-      $("#theme").append($('<option></option>').val(path.join("{themes}", "default")).html("Default"));
-      for (var t = 0, tl = themes.length; t < tl; t++) {
-        if (themes[t].path === "{themes}" && themes[t].name === "default") continue;
-        $("#theme").append($('<option></option>').val(path.join(themes[t].path, themes[t].name)).html(themes[t].name[0].toUpperCase() + themes[t].name.substr(1)));
-      }
-      $("#theme").selectpicker('refresh');
-    }
-
-    function loadSettings() {
-      $('#autoConnect').prop('checked', _settings.autoConnect);
-      $('#autoLogin').prop('checked', _settings.autoLogin);
-      $('#allowEval').prop('checked', _settings.allowEval);
-
-      $('#autoConnectDelay').val(_settings.autoConnectDelay);
-      $('#showCharacterManager').prop('checked', _settings.showCharacterManager);
-      $("#autoCreateCharacter").prop('checked', _settings.autoCreateCharacter);
-      $('#dev').prop('checked', _settings.dev);
-      $('#gamepads').prop('checked', _settings.gamepads);
-
-      $('#lagMeter').prop('checked', _settings.lagMeter);
-      $('#enablePing').prop('checked', _settings.enablePing);
-      $('#showScriptErrors').prop('checked', _settings.showScriptErrors);
-      $('#enableDebug').prop('checked', _settings.enableDebug);
-      $('#allowNegativeNumberNeeded').prop('checked', _settings.allowNegativeNumberNeeded);
-      $('#logErrors').prop('checked', _settings.logErrors);
-      $('#showErrorsExtended').prop('checked', _settings.showErrorsExtended);
-      $('#spellchecking').prop('checked', _settings.spellchecking);
-
-      $('#display-split').prop('checked', _settings.display.split);
-      $('#display-splitLive').prop('checked', _settings.display.splitLive);
-
-      $('#display-roundedOverlays').prop('checked', _settings.display.roundedOverlays);
-      $('#profiles-codeEditor').prop('checked', _settings.profiles.codeEditor);
-      $('#profiles-watchFiles').prop('checked', _settings.profiles.watchFiles);
-
-
-      //$('#font').selectpicker('val', _settings.font);
-      $('#font').val(_settings.font);
-      $('#font').selectpicker('render');
-      $('#fontSize').val(_settings.fontSize);
-      $('#font').change();
-      //$('#cmdfont').selectpicker('val', _settings.cmdfont);
-      $('#cmdfont').val(_settings.font);
-      $('#cmdfont').selectpicker('render');
-      $('#cmdfontSize').val(_settings.cmdfontSize);
-      $('#cmdfont').change();
-      //$('#font').selectpicker('val', _settings.font);
-      $('#chat-font').val(_settings.chat.font);
-      $('#chat-font').selectpicker('render');
-      $('#chat-fontSize').val(_settings.chat.fontSize);
-      $('#chat-font').change();
-
-      $('#enableKeepAlive').prop('checked', _settings.enableKeepAlive);
-      $('#keepAliveDelay').val(_settings.keepAliveDelay);
-
-      $('#commandEcho').prop('checked', _settings.commandEcho);
-      $('#AutoCopySelectedToClipboard').prop('checked', _settings.AutoCopySelectedToClipboard);
-      $('#flashing').prop('checked', _settings.flashing);
-      $('#enableURLDetection').prop('checked', _settings.enableURLDetection);
-      $('#CommandonClick').prop('checked', _settings.CommandonClick);
-      $('#bufferSize').val(_settings.bufferSize);
-      LoadColors();
-      $('#keepLastCommand').prop('checked', _settings.keepLastCommand);
-      $('#commandHistorySize').val(_settings.commandHistorySize);
-      $('#commandStacking').prop('checked', _settings.commandStacking);
-      $('#commandStackingChar').val(_settings.commandStackingChar);
-
-      $('#enableCommands').prop('checked', _settings.enableCommands);
-      $('#commandChar').val(_settings.commandChar);
-
-      $('#allowEscape').prop('checked', _settings.allowEscape);
-      $('#escapeChar').val(_settings.escapeChar);
-
-      $('#enableVerbatim').prop('checked', _settings.enableVerbatim);
-      $('#verbatimChar').val(_settings.verbatimChar);
-
-      $('#enableSpeedpaths').prop('checked', _settings.enableSpeedpaths);
-      $('#speedpathsChar').val(_settings.speedpathsChar);
-      $('#parseSpeedpaths').prop('checked', _settings.parseSpeedpaths);
-
-      $('#parseDoubleQuotes').prop('checked', _settings.parseDoubleQuotes);
-      $('#parseSingleQuotes').prop('checked', _settings.parseSingleQuotes);
-
-      $('#logEnabled').prop('checked', _settings.logEnabled);
-      $('#logGagged').prop('checked', _settings.logEnabled);
-      $('#logPrepend').prop('checked', _settings.logPrepend);
-      $('#logOffline').prop('checked', _settings.logOffline);
-      $('#logUniqueOnConnect').prop('checked', _settings.logUniqueOnConnect);
-      $('#logPath').val(_settings.logPath);
-      $('#logTimeFormat').val(_settings.logTimeFormat);
-
-      $("#editorPersistent").prop('checked', _settings.editorPersistent);
-
-      $('#MapperSplitArea').prop('checked', _settings.mapper.split);
-      $('#mapFollow').prop('checked', _settings.mapper.follow);
-      $('#mapEnabled').prop('checked', _settings.mapper.enabled);
-      $('#mapLegend').prop('checked', _settings.mapper.legend);
-      $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
-
-      $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
-      $('#mapper-memory').prop('checked', _settings.mapper.memory);
-      $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
-      $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
-
-      $('#mapper-importTypeReplace').prop('checked', _settings.mapper.importType === 1);
-      $('#mapper-importTypeMerge').prop('checked', _settings.mapper.importType === 0);
-
-      $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
-      $('#chat-persistent').prop('checked', _settings.chat.persistent);
-      $('#chat-gag').prop('checked', _settings.chat.gag);
-
-      $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
-      $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
-      $('#chat-captureLines').prop('checked', _settings.chat.captureLines);
-      $('#chat-captureReviews').prop('checked', _settings.chat.captureReviews);
-      $('#chat-captureTells').prop('checked', _settings.chat.captureTells);
-      $('#chat-captureTalk').prop('checked', _settings.chat.captureTalk);
-      $('#chat-captureAllLines').prop('checked', _settings.chat.captureAllLines);
-      $('#chat-selective').prop('checked', !_settings.chat.captureAllLines);
-      $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
-      $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
-      $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
-
-      $('#chat-lines').val(_settings.chat.lines.join(','));
-
-      $('#showMapper').prop('checked', _settings.showMapper);
-      $('#commandDelay').val(_settings.commandDelay);
-      $('#commandDelayCount').val(_settings.commandDelayCount);
-
-      $('#enableMCCP').prop('checked', _settings.enableMCCP);
-      $('#enableUTF8').prop('checked', _settings.enableUTF8);
-      $('#enableMXP').prop('checked', _settings.enableMXP);
-      $('#enableEcho').prop('checked', _settings.enableEcho);
-      $('#enableMSP').prop('checked', _settings.enableMSP);
-      $('#notifyMSPPlay').prop('checked', _settings.notifyMSPPlay);
-      $('#statusExperienceNeededProgressbar').prop('checked', _settings.statusExperienceNeededProgressbar);
-      $('#hideOnMinimize').prop('checked', _settings.hideOnMinimize);
-      $('#showTrayIcon').prop('checked', _settings.showTrayIcon);
-
-      $("#backupAllProfiles").prop('checked', _settings.backupAllProfiles);
-
-      $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) === 2);
-      $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) === 4);
-      $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) === 8);
-
-      $('#backup-save-map').prop('checked', (_settings.backupSave & 2) === 2);
-      $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) === 4);
-      $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) === 8);
-
-      $('#logWhat-html').prop('checked', (_settings.logWhat & 1) === 1);
-      $('#logWhat-text').prop('checked', (_settings.logWhat & 2) === 2);
-      $('#logWhat-raw').prop('checked', (_settings.logWhat & 4) === 4);
-
-      $('#newlineShortcut-0').prop('checked', _settings.newlineShortcut === 0);
-      $('#newlineShortcut-1').prop('checked', _settings.newlineShortcut === 1);
-      $('#newlineShortcut-2').prop('checked', _settings.newlineShortcut === 2);
-      $('#newlineShortcut-4').prop('checked', _settings.newlineShortcut === 4);
-      $('#newlineShortcut-8').prop('checked', _settings.newlineShortcut === 8);
-
-      $('#onDisconnect-0').prop('checked', _settings.onDisconnect === 0);
-      $('#onDisconnect-1').prop('checked', _settings.onDisconnect === 1);
-      $('#onDisconnect-2').prop('checked', _settings.onDisconnect === 2);
-      $('#onDisconnect-4').prop('checked', _settings.onDisconnect === 4);
-      $('#onDisconnect-8').prop('checked', _settings.onDisconnect === 8);
-
-      $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
-      $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
-      $('#trayClick-hide').prop('checked', _settings.trayClick === TrayClick.hide);
-      $('#trayClick-toggle').prop('checked', _settings.trayClick === TrayClick.toggle);
-      $('#trayClick-menu').prop('checked', _settings.trayClick === TrayClick.menu);
-
-      $('#trayDblClick-none').prop('checked', _settings.trayDblClick === TrayClick.none);
-      $('#trayDblClick-show').prop('checked', _settings.trayDblClick === TrayClick.show);
-      $('#trayDblClick-hide').prop('checked', _settings.trayDblClick === TrayClick.hide);
-      $('#trayDblClick-toggle').prop('checked', _settings.trayDblClick === TrayClick.toggle);
-      $('#trayDblClick-menu').prop('checked', _settings.trayDblClick === TrayClick.menu);
-
-      $('.btn-group input').parent().removeClass('active');
-      $('.btn-group input:checked').parent().addClass('active');
-
-      $('#theme').val(_settings.theme);
-      $('#theme').selectpicker('render');
-
-      if (!_settings.windows["log-viewer"] || !_settings.windows["log-viewer"].options) {
-        $('#logging-viewer-alwaysOnTopClient').prop('checked', true);
-        $('#logging-viewer-alwaysOnTop').prop('checked', false);
-        $('#logging-viewer-persistent').prop('checked', true);
-
-      }
-      else {
-        $('#logging-viewer-alwaysOnTopClient').prop('checked', _settings.windows["log-viewer"].options.alwaysOnTopClient);
-        $('#logging-viewer-alwaysOnTop').prop('checked', _settings.windows["log-viewer"].options.alwaysOnTop);
-        $('#logging-viewer-persistent').prop('checked', _settings.windows["log-viewer"].options.persistent);
-      }
-
-      if (!_settings.extensions["log-viewer"])
-        $('#logging-viewer-reopen').prop('checked', true);
-      else
-        $('#logging-viewer-reopen').prop('checked', _settings.extensions["log-viewer"].reopen);
-
       $('input[type="checkbox"]').change(function () {
+        var id;
         switch ($(this).attr('id')) {
           case 'logging-viewer-reopen':
             if (!_settings.extensions["log-viewer"])
@@ -523,7 +280,7 @@
                 alwaysOnTopClient: true,
                 alwaysOnTop: false
               };
-            var id = $(this).attr('id').split("-");
+            id = $(this).attr('id').split("-");
             _settings.windows["log-viewer"].options[id[2]] = this.checked;
             break;
           case 'chat-alwaysOnTop':
@@ -625,7 +382,7 @@
               _settings.backupLoad |= 8;
             break;
           default:
-            var id = $(this).attr('id').split("-");
+            id = $(this).attr('id').split("-");
             if (id.length === 2)
               _settings[id[0]][id[1]] = this.checked;
             else
@@ -759,6 +516,202 @@
             break;
         }
       });
+      $("#colorScheme").parent().find('.dropdown-menu.inner li').click(function () {
+        //$("#colorScheme").change();
+        updateScheme($(this).index());
+      });
+      $("#btn-logPath").on('click', () => {
+        dialog.showOpenDialog(remote.getCurrentWindow(), {
+          defaultPath: parseTemplate($("#logPath").val()),
+          properties: ['openDirectory', 'createDirectory']
+        },
+          function (fileNames) {
+            if (fileNames === undefined) {
+              return;
+            }
+            _settings.logPath = templatePath(fileNames[0]);
+            $("#logPath").val(_settings.logPath);
+          });
+      });
+    });
+
+    function sortFiles(a, b) {
+      return a.name.localeCompare(b.name);
+    }
+
+    function getThemes(p) {
+      var p2 = parseTemplate(p);
+      if (!existsSync(p2))
+        return [];
+      var themes = [];
+      var files = fs.readdirSync(p2);
+      for (var f = 0, fl = files.length; f < fl; f++) {
+        if (path.extname(files[f]).toLowerCase() != ".css") continue;
+        themes.push({
+          name: path.basename(files[f], path.extname(files[f])),
+          path: p
+        });
+      }
+      return themes;
+    }
+
+    function loadThemes() {
+      var themes = getThemes("{themes}");
+      themes = themes.concat(getThemes(path.join("{data}", "themes")));
+      themes = themes.concat(getThemes(path.join("{documents}", "jiMUD", "themes")));
+      themes.sort(sortFiles);
+      $("#theme").append($('<option></option>').val(path.join("{themes}", "default")).html("Default"));
+      for (var t = 0, tl = themes.length; t < tl; t++) {
+        if (themes[t].path === "{themes}" && themes[t].name === "default") continue;
+        $("#theme").append($('<option></option>').val(path.join(themes[t].path, themes[t].name)).html(themes[t].name[0].toUpperCase() + themes[t].name.substr(1)));
+      }
+      $("#theme").selectpicker('refresh');
+    }
+
+    function setValue(option, value) {
+      if (value == "false") value = false;
+      if (value == "true") value = true;
+      if (value == "null") value = null;
+      if (value == "undefined") value = undefined;
+      if (typeof value == "string" && parseFloat(value).toString() == value)
+        value = parseFloat(value);
+      option = option.split('-');
+      if (option.length === 3)
+        _settings[option[0]][option[1]][option[2]] = value;
+      else if (option.length === 2)
+        _settings[option[0]][option[1]] = value;
+      else
+        _settings[option[0]] = value;
+    }
+
+    function setSettings(obj, root) {
+      let option;
+      for (option in obj) {
+        if (!obj.hasOwnProperty(option))
+          continue;
+        if (typeof (obj[option]) === "object") {
+          setSettings(obj[option], root + option + '-');
+          continue;
+        }
+        if (typeof (obj[option]) === "string" || typeof (obj[option]) === "number")
+          $('#' + root + option).val(obj[option]);
+        else if (typeof (obj[option]) !== "boolean")
+          continue;
+        $('#' + root + option).prop('checked', obj[option]);
+      }
+    }
+
+    function loadSettings() {
+      setSettings(_settings, '');
+
+      //$('#font').selectpicker('val', _settings.font);
+      $('#font').val(_settings.font);
+      $('#font').selectpicker('render');
+      $('#fontSize').val(_settings.fontSize);
+      $('#font').change();
+      //$('#cmdfont').selectpicker('val', _settings.cmdfont);
+      $('#cmdfont').val(_settings.font);
+      $('#cmdfont').selectpicker('render');
+      $('#cmdfontSize').val(_settings.cmdfontSize);
+      $('#cmdfont').change();
+      //$('#font').selectpicker('val', _settings.font);
+      $('#chat-font').val(_settings.chat.font);
+      $('#chat-font').selectpicker('render');
+      $('#chat-fontSize').val(_settings.chat.fontSize);
+      $('#chat-font').change();
+
+      LoadColors();
+
+      $('#MapperSplitArea').prop('checked', _settings.mapper.split);
+      $('#mapFollow').prop('checked', _settings.mapper.follow);
+      $('#mapEnabled').prop('checked', _settings.mapper.enabled);
+      $('#mapLegend').prop('checked', _settings.mapper.legend);
+      $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
+
+      $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
+      $('#mapper-memory').prop('checked', _settings.mapper.memory);
+      $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
+      $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
+
+      $('#mapper-importTypeReplace').prop('checked', _settings.mapper.importType === 1);
+      $('#mapper-importTypeMerge').prop('checked', _settings.mapper.importType === 0);
+
+      $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
+      $('#chat-persistent').prop('checked', _settings.chat.persistent);
+      $('#chat-gag').prop('checked', _settings.chat.gag);
+
+      $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
+      $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
+      $('#chat-captureLines').prop('checked', _settings.chat.captureLines);
+      $('#chat-captureReviews').prop('checked', _settings.chat.captureReviews);
+      $('#chat-captureTells').prop('checked', _settings.chat.captureTells);
+      $('#chat-captureTalk').prop('checked', _settings.chat.captureTalk);
+      $('#chat-captureAllLines').prop('checked', _settings.chat.captureAllLines);
+      $('#chat-selective').prop('checked', !_settings.chat.captureAllLines);
+      $("#chat-lines").prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
+      $("#chat-selective").prop('disabled', !_settings.chat.captureLines);
+      $("#chat-captureAllLines").prop('disabled', !_settings.chat.captureLines);
+
+      $('#chat-lines').val(_settings.chat.lines.join(','));
+
+      $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) === 2);
+      $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) === 4);
+      $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) === 8);
+
+      $('#backup-save-map').prop('checked', (_settings.backupSave & 2) === 2);
+      $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) === 4);
+      $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) === 8);
+
+      $('#logWhat-html').prop('checked', (_settings.logWhat & 1) === 1);
+      $('#logWhat-text').prop('checked', (_settings.logWhat & 2) === 2);
+      $('#logWhat-raw').prop('checked', (_settings.logWhat & 4) === 4);
+
+      $('#newlineShortcut-0').prop('checked', _settings.newlineShortcut === 0);
+      $('#newlineShortcut-1').prop('checked', _settings.newlineShortcut === 1);
+      $('#newlineShortcut-2').prop('checked', _settings.newlineShortcut === 2);
+      $('#newlineShortcut-4').prop('checked', _settings.newlineShortcut === 4);
+      $('#newlineShortcut-8').prop('checked', _settings.newlineShortcut === 8);
+
+      $('#onDisconnect-0').prop('checked', _settings.onDisconnect === 0);
+      $('#onDisconnect-1').prop('checked', _settings.onDisconnect === 1);
+      $('#onDisconnect-2').prop('checked', _settings.onDisconnect === 2);
+      $('#onDisconnect-4').prop('checked', _settings.onDisconnect === 4);
+      $('#onDisconnect-8').prop('checked', _settings.onDisconnect === 8);
+
+      $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
+      $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
+      $('#trayClick-hide').prop('checked', _settings.trayClick === TrayClick.hide);
+      $('#trayClick-toggle').prop('checked', _settings.trayClick === TrayClick.toggle);
+      $('#trayClick-menu').prop('checked', _settings.trayClick === TrayClick.menu);
+
+      $('#trayDblClick-none').prop('checked', _settings.trayDblClick === TrayClick.none);
+      $('#trayDblClick-show').prop('checked', _settings.trayDblClick === TrayClick.show);
+      $('#trayDblClick-hide').prop('checked', _settings.trayDblClick === TrayClick.hide);
+      $('#trayDblClick-toggle').prop('checked', _settings.trayDblClick === TrayClick.toggle);
+      $('#trayDblClick-menu').prop('checked', _settings.trayDblClick === TrayClick.menu);
+
+      $('.btn-group input').parent().removeClass('active');
+      $('.btn-group input:checked').parent().addClass('active');
+
+      $('#theme').val(_settings.theme);
+      $('#theme').selectpicker('render');
+
+      if (!_settings.windows["log-viewer"] || !_settings.windows["log-viewer"].options) {
+        $('#logging-viewer-alwaysOnTopClient').prop('checked', true);
+        $('#logging-viewer-alwaysOnTop').prop('checked', false);
+        $('#logging-viewer-persistent').prop('checked', true);
+
+      }
+      else {
+        $('#logging-viewer-alwaysOnTopClient').prop('checked', _settings.windows["log-viewer"].options.alwaysOnTopClient);
+        $('#logging-viewer-alwaysOnTop').prop('checked', _settings.windows["log-viewer"].options.alwaysOnTop);
+        $('#logging-viewer-persistent').prop('checked', _settings.windows["log-viewer"].options.persistent);
+      }
+
+      if (!_settings.extensions["log-viewer"])
+        $('#logging-viewer-reopen').prop('checked', true);
+      else
+        $('#logging-viewer-reopen').prop('checked', _settings.extensions["log-viewer"].reopen);
     }
 
     function LoadColors() {
@@ -1162,20 +1115,16 @@
               <input type="checkbox" id="autoCreateCharacter" /> Auto create character
             </label>
           </div>
-
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="autoLogin" /> Auto login
             </label>
           </div>
-
-
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="showCharacterManager" /> Show character manager on load
             </label>
           </div>
-
           <div class="col-sm-6 form-group">
             <label class="control-label">
               <input type="checkbox" id="spellchecking" /> Enable spellchecking
@@ -1191,7 +1140,6 @@
               <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
             </label>
           </div>
-
           <div class="col-sm-12 form-group">
             <label class="control-label">On disconnect do</label>
             <div class="btn-group" data-toggle="buttons">
@@ -1212,7 +1160,11 @@
               </label>
             </div>
           </div>
-
+          <div class="col-sm-6 form-group">
+            <label class="control-label">
+              <input type="checkbox" id="checkForUpdates" /> Check for updates on load
+            </label>
+          </div>
         </div>
         <div role="tabpanel" class="pref-pane" id="display">
           <div class="col-sm-6">
