@@ -1543,7 +1543,7 @@
 <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
 <script>
     /*global _ready:true*/
-    const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
+    const { shell, remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
     const { DataGrid, EditorType } = require('./js/datagrid');
     const { MonacoCodeEditor, VirtualEditor, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
@@ -1813,240 +1813,279 @@
         ]
     };
     menubar = new Menubar([
-        {
-            label: '&File',
-            id: 'file',
-            submenu: [
-                {
-                    label: '&New',
-                    submenu: [
-                        {
-                            label: '&File',
-                            accelerator: "CmdOrCtrl+N",
-                            click: () => { newFile(); }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: '&Area...',
-                            //accelerator: "CmdOrCtrl+N",
-                            click: newArea
-                        },
-                        {
-                            label: '&Virtual Area...',
-                            //accelerator: "CmdOrCtrl+N",
-                            click: newVirtualArea
-                        },
-                        { type: 'separator' },
-                        {
-                            label: '&Room...',
-                            //accelerator: "CmdOrCtrl+N",
-                            click: roomWizard
-                        },
-                        {
-                            label: '&Monster...',
-                            //accelerator: "CmdOrCtrl+N",
-                            click: monsterWizard
-                        },
-                        { type: 'separator' },
-                        {
-                            label: '&Templates',
-                            submenu: menuTemplates
+            {
+                label: '&File',
+                id: 'file',
+                submenu: [
+                    {
+                        label: '&New',
+                        submenu: [
+                            {
+                                label: '&File',
+                                accelerator: "CmdOrCtrl+N",
+                                click: () => { newFile(); }
+                            },
+                            { type: 'separator' },
+                            {
+                                label: '&Area...',
+                                //accelerator: "CmdOrCtrl+N",
+                                click: newArea
+                            },
+                            {
+                                label: '&Virtual Area...',
+                                //accelerator: "CmdOrCtrl+N",
+                                click: newVirtualArea
+                            },
+                            { type: 'separator' },
+                            {
+                                label: '&Room...',
+                                //accelerator: "CmdOrCtrl+N",
+                                click: roomWizard
+                            },
+                            {
+                                label: '&Monster...',
+                                //accelerator: "CmdOrCtrl+N",
+                                click: monsterWizard
+                            },
+                            { type: 'separator' },
+                            {
+                                label: '&Templates',
+                                submenu: menuTemplates
+                            }
+                        ]
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Open...',
+                        accelerator: "CmdOrCtrl+O",
+                        click: () => { openFile(); }
+                    },
+                    {
+                        label: 'Op&en Remote...',
+                        accelerator: "CmdOrCtrl+Shift+O",
+                        click: () => { openRemote(); },
+                        enabled: false
+                    },
+                    {
+                        label: 'Open &Recent',
+                        submenu: [],
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Save',
+                        accelerator: "CmdOrCtrl+S",
+                        click: () => { saveFile(); },
+                        enabled: false
+                    },
+                    {
+                        label: 'Save &As...',
+                        accelerator: "CmdOrCtrl+Shift+S",
+                        click: () => { saveFileAs(); },
+                        enabled: false,
+                    },
+                    {
+                        label: 'Save A&ll',
+                        accelerator: "CmdOrCtrl+Alt+S",
+                        click: () => { saveAllFiles(); },
+                        enabled: false
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Upload',
+                        accelerator: "CmdOrCtrl+U",
+                        click: () => { uploadFile(); },
+                        enabled: false,
+                    },
+                    {
+                        label: 'Up&load As...',
+                        accelerator: "CmdOrCtrl+Alt+U",
+                        click: () => { uploadFileAs(); },
+                        enabled: false,
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Preferences...',
+                        accelerator: "CmdOrCtrl+Comma",
+                        click: () => {
+                            window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                         }
-                    ]
-                },
-                { type: 'separator' },
-                {
-                    label: '&Open...',
-                    accelerator: "CmdOrCtrl+O",
-                    click: () => { openFile(); }
-                },
-                {
-                    label: 'Op&en Remote...',
-                    accelerator: "CmdOrCtrl+Shift+O",
-                    click: () => { openRemote(); },
-                    enabled: false
-                },
-                {
-                    label: 'Open &Recent',
-                    submenu: [],
-                },
-                { type: 'separator' },
-                {
-                    label: '&Save',
-                    accelerator: "CmdOrCtrl+S",
-                    click: () => { saveFile(); },
-                    enabled: false
-                },
-                {
-                    label: 'Save &As...',
-                    accelerator: "CmdOrCtrl+Shift+S",
-                    click: () => { saveFileAs(); },
-                    enabled: false,
-                },
-                {
-                    label: 'Save A&ll',
-                    accelerator: "CmdOrCtrl+Alt+S",
-                    click: () => { saveAllFiles(); },
-                    enabled: false
-                },
-                { type: 'separator' },
-                {
-                    label: '&Upload',
-                    accelerator: "CmdOrCtrl+U",
-                    click: () => { uploadFile(); },
-                    enabled: false,
-                },
-                {
-                    label: 'Up&load As...',
-                    accelerator: "CmdOrCtrl+Alt+U",
-                    click: () => { uploadFileAs(); },
-                    enabled: false,
-                },
-                { type: 'separator' },
-                {
-                    label: '&Preferences...',
-                    accelerator: "CmdOrCtrl+Comma",
-                    click: () => {
-                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
-                    }
-                },
-                { type: 'separator' },
-                {
-                    label: '&Diff',
-                    submenu: [
-                        {
-                            label: '&Clear',
-                            click: () => {
-                                var pane = manager.panes.indexOf(manager.activePane);
-                                if (manager.active.editor.diff)
-                                    manager.active.editor.deactivate(window.$dEditors[pane]);
-                                manager.active.editor.diff = null;
-                                if (manager.active.diffFile)
-                                    stopWatchFile(manager.active.diffFile);
-                                manager.active.diffFile = null;
-                                window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
-                                toggleDiffNav(false);
-                                window.$editors[pane].domElement.style.display = 'block';
-                                manager.active.editor.activate(window.$editors[pane]);
-                                window.$editors[pane].layout();
-                                doUpdate(2);
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Diff',
+                        submenu: [
+                            {
+                                label: '&Clear',
+                                click: () => {
+                                    var pane = manager.panes.indexOf(manager.activePane);
+                                    if (manager.active.editor.diff)
+                                        manager.active.editor.deactivate(window.$dEditors[pane]);
+                                    manager.active.editor.diff = null;
+                                    if (manager.active.diffFile)
+                                        stopWatchFile(manager.active.diffFile);
+                                    manager.active.diffFile = null;
+                                    window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+                                    toggleDiffNav(false);
+                                    window.$editors[pane].domElement.style.display = 'block';
+                                    manager.active.editor.activate(window.$editors[pane]);
+                                    window.$editors[pane].layout();
+                                    doUpdate(2);
+                                },
+                                enabled: false
                             },
-                            enabled: false
-                        },
-                        {
-                            label: '&Original',
-                            click: () => {
-                                var pane = manager.panes.indexOf(manager.activePane);
-                                if (!manager.active.editor.diff)
-                                    manager.active.editor.deactivate(window.$editors[pane]);
-                                manager.active.editor.diff = manager.active.editor.read();
-                                manager.active.diffFile = manager.active.editor.file;
-                                watchFile(manager.active.diffFile);
-                                window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
-                                toggleDiffNav(true);
-                                window.$editors[pane].domElement.style.display = '';
-                                manager.active.editor.activate(window.$dEditors[pane]);
-                                window.$dEditors[pane].layout();
-                                doUpdate(2);
+                            {
+                                label: '&Original',
+                                click: () => {
+                                    var pane = manager.panes.indexOf(manager.activePane);
+                                    if (!manager.active.editor.diff)
+                                        manager.active.editor.deactivate(window.$editors[pane]);
+                                    manager.active.editor.diff = manager.active.editor.read();
+                                    manager.active.diffFile = manager.active.editor.file;
+                                    watchFile(manager.active.diffFile);
+                                    window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
+                                    toggleDiffNav(true);
+                                    window.$editors[pane].domElement.style.display = '';
+                                    manager.active.editor.activate(window.$dEditors[pane]);
+                                    window.$dEditors[pane].layout();
+                                    doUpdate(2);
+                                },
+                                enabled: false
                             },
-                            enabled: false
-                        },
-                        {
-                            label: '&Local...',
-                            click: () => {
-                                dialog.showOpenDialog(remote.getCurrentWindow(),
-                                    {
-                                        filters: $fileFilters,
+                            {
+                                label: '&Local...',
+                                click: () => {
+                                    dialog.showOpenDialog(remote.getCurrentWindow(),
+                                        {
+                                            filters: $fileFilters,
+                                            properties: ['openFile'],
+                                            defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
+                                        },
+                                        function (fileNames) {
+                                            if (fileNames === undefined) {
+                                                return;
+                                            }
+                                            var pane = manager.panes.indexOf(manager.activePane);
+                                            if (!manager.active.editor.diff)
+                                                manager.active.editor.deactivate(window.$editors[pane]);
+                                            if (manager.active.diffFile)
+                                                stopWatchFile(manager.active.diffFile);
+                                            manager.active.editor.diff = manager.active.editor.read(fileNames[0]);
+                                            manager.active.diffFile = fileNames[0];
+                                            watchFile(manager.active.diffFile);
+                                            window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
+                                            toggleDiffNav(true);
+                                            window.$editors[pane].domElement.style.display = '';
+                                            manager.active.editor.activate(window.$dEditors[pane]);
+                                            window.$dEditors[pane].layout();
+                                            doUpdate(2);
+                                        });
+                                },
+                                enabled: false
+                            },
+                            {
+                                label: '&Remote...',
+                                click: () => {
+                                    showBrowseDialog({
+                                        defaultFile: manager.active.editor.remote,
                                         properties: ['openFile'],
-                                        defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                                    },
-                                    function (fileNames) {
-                                        if (fileNames === undefined) {
-                                            return;
-                                        }
-                                        var pane = manager.panes.indexOf(manager.activePane);
-                                        if (!manager.active.editor.diff)
-                                            manager.active.editor.deactivate(window.$editors[pane]);
-                                        if (manager.active.diffFile)
-                                            stopWatchFile(manager.active.diffFile);
-                                        manager.active.editor.diff = manager.active.editor.read(fileNames[0]);
-                                        manager.active.diffFile = fileNames[0];
-                                        watchFile(manager.active.diffFile);
-                                        window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
-                                        toggleDiffNav(true);
-                                        window.$editors[pane].domElement.style.display = '';
-                                        manager.active.editor.activate(window.$dEditors[pane]);
-                                        window.$dEditors[pane].layout();
-                                        doUpdate(2);
+                                        filters: $fileFilters,
+                                    }, (files) => {
+                                        if (!files || files.length === 0) return;
+                                        var t = tmp.tmpNameSync(tmpOptions);
+                                        _ied.downloadToFile(files[0], t, false, 'editor-download:diffRemote:' + (manager.active ? manager.active.id : 0), false);
+                                        showProgressDialog({
+                                            file: files[0],
+                                            tag: 'editor-download:diffRemote:' + (manager.active ? manager.active.id : 0),
+                                            title: 'Downloading&hellip;',
+                                            tmp: t
+                                        });
                                     });
+                                },
+                                enabled: false
                             },
-                            enabled: false
-                        },
-                        {
-                            label: '&Remote...',
-                            click: () => {
-                                showBrowseDialog({
-                                    defaultFile: manager.active.editor.remote,
-                                    properties: ['openFile'],
-                                    filters: $fileFilters,
-                                }, (files) => {
-                                    if (!files || files.length === 0) return;
-                                    var t = tmp.tmpNameSync(tmpOptions);
-                                    _ied.downloadToFile(files[0], t, false, 'editor-download:diffRemote:' + (manager.active ? manager.active.id : 0), false);
-                                    showProgressDialog({
-                                        file: files[0],
-                                        tag: 'editor-download:diffRemote:' + (manager.active ? manager.active.id : 0),
-                                        title: 'Downloading&hellip;',
-                                        tmp: t
-                                    });
-                                });
-                            },
-                            enabled: false
-                        },
 
-                    ]
-                },
-                { type: 'separator' },
-                {
-                    label: 'Re&vert',
-                    click: () => { revertFile(); },
-                    enabled: false
-                },
-                {
-                    label: 'Rever&t All',
-                    click: () => { revertAllFiles(); },
-                    enabled: false
-                },
-                { type: 'separator' },
-                {
-                    label: '&Close',
-                    click: () => { closeFile(); },
-                    accelerator: "CmdOrCtrl+F4",
-                    enabled: false
-                },
-                {
-                    label: 'C&lose All',
-                    click: () => { closeAllFiles(); },
-                    accelerator: "CmdOrCtrl+Shift+F4",
-                    enabled: false
-                },
-                { type: 'separator' },
-                {
-                    label: 'E&xit',
-                    accelerator: "CmdOrCtrl+Shift+W",
-                    click: () => { window.close(); }
-                }
-            ]
-        },
-        {
-            label: '&Edit',
-            submenu: subMenus['edit']
-        },
-        {
-            label: '&View',
-            submenu: subMenus['view']
-        },
-    ]);
+                        ]
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Re&vert',
+                        click: () => { revertFile(); },
+                        enabled: false
+                    },
+                    {
+                        label: 'Rever&t All',
+                        click: () => { revertAllFiles(); },
+                        enabled: false
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Close',
+                        click: () => { closeFile(); },
+                        accelerator: "CmdOrCtrl+F4",
+                        enabled: false
+                    },
+                    {
+                        label: 'C&lose All',
+                        click: () => { closeAllFiles(); },
+                        accelerator: "CmdOrCtrl+Shift+F4",
+                        enabled: false
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'E&xit',
+                        accelerator: "CmdOrCtrl+Shift+W",
+                        click: () => { window.close(); }
+                    }
+                ]
+            },
+            {
+                label: '&Edit',
+                submenu: subMenus['edit']
+            },
+            {
+                label: '&View',
+                submenu: subMenus['view']
+            },
+            {
+                label: '&Help',
+                role: 'help',
+                submenu: [
+                    {
+                        label: '&Immortal',
+                        click: () => {
+                            shell.openExternal("http://www.shadowmud.com/tutorial", '_blank');
+                        }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Code editor',
+                        click: () => {
+                            shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs/codeeditor.md", '_blank');
+                        }
+                    },
+                    {
+                        label: '&jiMUD',
+                        click: () => {
+                            shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
+                        }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Check for updates...',
+                        click: () => {
+                            ipcRenderer.send('check-for-updates');
+                        }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&About...',
+                        click: () => {
+                            ipcRenderer.send('show-window', 'about');
+                        }
+                    }
+                ]
+            }
+        ]);
     menubar.enabled = false;
     var manager = new DockManager();
     var dock = $(".dock-manager");

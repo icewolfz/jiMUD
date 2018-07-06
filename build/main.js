@@ -653,90 +653,12 @@ var menuTemp = [
       { type: 'separator' },
       {
         label: 'Check for updates...',
-        click: () => {
-          const GhReleases = require('electron-gh-releases');
-          const updater = new GhReleases({
-            repo: 'icewolfz/jiMUD',
-            currentVersion: app.getVersion()
-          });
-          // Check for updates
-          // `status` returns true if there is a new update available
-          updater.check((err, status) => {
-            if (!err && status) {
-              dialog.showMessageBox(win, {
-                type: 'question',
-                title: 'A new version is available',
-                message: 'A new version is available, download and install, requires jiMUD to close and restart?',
-                buttons: ['Yes', 'No', 'Open website']
-              }, result => {
-                if (result === 0) // Download the update
-                  updater.download();
-                else if(result === 2)
-                  shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest');
-              });
-            }
-            else if (err && err.message !== 'There is no newer version.')
-              dialog.showMessageBox(win, {
-                type: 'error',
-                title: 'Error checking for updates',
-                message: err.message
-              });
-            else
-              dialog.showMessageBox(win, {
-                type: 'info',
-                title: 'Latest version',
-                message: `You have the latest version, v${app.getVersion()}.`
-              });
-          });
-
-          // When an update has been downloaded
-          updater.on('update-downloaded', (info) => {
-            // Restart the app and install the update
-            updater.install();
-          });
-        }
+        click: checkForUpdatesManual
       },
       { type: 'separator' },
       {
         label: '&About...',
-        click: () => {
-          var b = win.getBounds();
-
-          let about = new BrowserWindow({
-            parent: win,
-            modal: true,
-            x: Math.floor(b.x + b.width / 2 - 225),
-            y: Math.floor(b.y + b.height / 2 - 200),
-            width: 450,
-            height: 400,
-            movable: false,
-            minimizable: false,
-            maximizable: false,
-            skipTaskbar: true,
-            resizable: false,
-            title: 'About jiMUD',
-            icon: path.join(__dirname, '../assets/icons/png/64x64.png')
-          });
-          about.webContents.on('crashed', (event, killed) => {
-            logError(`About crashed, killed: ${killed}\n`, true);
-          });
-
-          about.setMenu(null);
-          about.on('closed', () => {
-            about = null;
-          });
-
-          // and load the index.html of the app.
-          about.loadURL(url.format({
-            pathname: path.join(__dirname, 'about.html'),
-            protocol: 'file:',
-            slashes: true
-          }));
-
-          about.once('ready-to-show', () => {
-            about.show();
-          });
-        }
+        click: showAbout
       }
     ]
   }
@@ -1671,6 +1593,8 @@ app.on('before-quit', () => {
 
 });
 
+ipcMain.on('check-for-updates', checkForUpdatesManual);
+
 ipcMain.on('reload', (event, char) => {
   //already loaded so no need to reload
   if (char === global.character)
@@ -2045,6 +1969,10 @@ ipcMain.on('log', (event, raw) => {
   console.log(raw);
 });
 
+ipcMain.on('log-error', (event, err, skipClient) => {
+  logError(err, skipClient);
+});
+
 ipcMain.on('debug', (event, msg) => {
   if (win && win.webContents)
     win.webContents.send('debug', msg);
@@ -2221,7 +2149,9 @@ ipcMain.on('show-window', (event, window, args) => {
 });
 
 function showSelectedWindow(window, args) {
-  if (window === "prefs")
+  if (window === 'about')
+    showAbout();
+  else if (window === "prefs")
     showPrefs();
   else if (window === "mapper")
     showMapper();
@@ -3507,8 +3437,8 @@ function checkForUpdates() {
             set.checkForUpdates = false;
             set.save(global.settingsFile);
           }
-          else if(result === 3)
-            shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest');          
+          else if (result === 3)
+            shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest');
         });
       }
       else if (err && err.message !== 'There is no newer version.')
@@ -3519,4 +3449,91 @@ function checkForUpdates() {
         });
     });
   }
+}
+
+function checkForUpdatesManual() {
+  const GhReleases = require('electron-gh-releases');
+  const updater = new GhReleases({
+    repo: 'icewolfz/jiMUD',
+    currentVersion: app.getVersion()
+  });
+  // Check for updates
+  // `status` returns true if there is a new update available
+  updater.check((err, status) => {
+    if (!err && status) {
+      dialog.showMessageBox(global.editorOnly ? winCode : win, {
+        type: 'question',
+        title: 'A new version is available',
+        message: 'A new version is available, download and install, requires jiMUD to close and restart?',
+        buttons: ['Yes', 'No', 'Open website']
+      }, result => {
+        if (result === 0) // Download the update
+          updater.download();
+        else if (result === 2)
+          shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest');
+      });
+    }
+    else if (err && err.message !== 'There is no newer version.')
+      dialog.showMessageBox(global.editorOnly ? winCode : win, {
+        type: 'error',
+        title: 'Error checking for updates',
+        message: err.message
+      });
+    else
+      dialog.showMessageBox(global.editorOnly ? winCode : win, {
+        type: 'info',
+        title: 'Latest version',
+        message: `You have the latest version, v${app.getVersion()}.`
+      });
+  });
+
+  // When an update has been downloaded
+  updater.on('update-downloaded', (info) => {
+    // Restart the app and install the update
+    updater.install();
+  });
+}
+
+function showAbout() {
+  var b;
+
+  if (global.editorOnly)
+    b = winCode.getBounds();
+  else
+    b = win.getBounds();
+
+  let about = new BrowserWindow({
+    parent: global.editorOnly ? winCode : win,
+    modal: true,
+    x: Math.floor(b.x + b.width / 2 - 225),
+    y: Math.floor(b.y + b.height / 2 - 200),
+    width: 450,
+    height: 400,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    skipTaskbar: true,
+    resizable: false,
+    title: 'About jiMUD',
+    icon: path.join(__dirname, '../assets/icons/png/64x64.png')
+  });
+  about.webContents.on('crashed', (event, killed) => {
+    logError(`About crashed, killed: ${killed}\n`, true);
+  });
+
+  about.setMenu(null);
+  about.on('closed', () => {
+    about = null;
+  });
+
+  // and load the index.html of the app.
+  about.loadURL(url.format({
+    pathname: path.join(__dirname, 'about.html'),
+    protocol: 'file:',
+    slashes: true
+  }));
+
+  about.once('ready-to-show', () => {
+    about.show();
+  });
 }

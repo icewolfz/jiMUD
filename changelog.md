@@ -4,13 +4,14 @@
 
 - **New:**
   - Auto check for updates on load or demand, you can enable auto update checking in preferences > general > check for updates on load or you can check any time from help > check for updates..., by default for now check for updates on load is disabled
+  - Code editor: Add help menu with basic links to public immortal tutorial, code editor doc on github, and jimud help, and jimud about dialog, as well as new check for updates in case editor only mode
 - **Changed:**
   - Update electron from 2.0.2 to 2.0.4
   - Update node-sqlite3 from 3.1.13 to 4.0.1
 - **Fixed:**
   - Code editor:
     - Fixed minor issue updating room if no focused room set
-    - Track open timestamp in an attmpt to remove wierd file change checks
+    - Track open timestamp in an attempt to remove wierd file change checks
 
 ## 0.4.56 2018-07-04
 
@@ -40,7 +41,7 @@
     - Changed how multi-line text editor works in room editor advanced item and data grids, enter now always accepts, ctrl+enter will insert a new lines if allowed, if not will accept like normal enter
     - Escape now truly cancels editors with out changing values
 - **Fixed:**
-  - Replace localstroage for connection state with a global variable, removes major slowdown when loading jimud
+  - Replace localstorage for connection state with a global variable, removes major slowdown when loading jimud
   - Immortal tools:
     - Fixed undefined/undefined error when uploading folders, now correctly displays error or ignores error if required
     - Fixed bug when downloading a folder with multiple sub folders, was not correctly storing related local folder destination
