@@ -650,11 +650,13 @@ var menuTemp = [
           shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
         }
       },
+      /*
       { type: 'separator' },
       {
         label: 'Check for updates...',
         click: checkForUpdatesManual
       },
+      */
       { type: 'separator' },
       {
         label: '&About...',
@@ -3416,6 +3418,7 @@ function checkForUpdates() {
   if (!set)
     set = settings.Settings.load(global.settingsFile);
   if (set.checkForUpdates) {
+    /*
     const GhReleases = require('electron-gh-releases');
     const updater = new GhReleases({
       repo: 'icewolfz/jiMUD',
@@ -3448,10 +3451,12 @@ function checkForUpdates() {
           message: err.message
         });
     });
+    */
   }
 }
 
 function checkForUpdatesManual() {
+  /*
   const GhReleases = require('electron-gh-releases');
   const updater = new GhReleases({
     repo: 'icewolfz/jiMUD',
@@ -3492,6 +3497,7 @@ function checkForUpdatesManual() {
     // Restart the app and install the update
     updater.install();
   });
+  */
 }
 
 function showAbout() {

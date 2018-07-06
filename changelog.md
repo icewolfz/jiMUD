@@ -3,8 +3,7 @@
 ## 0.4.57
 
 - **New:**
-  - Auto check for updates on load or demand, you can enable auto update checking in preferences > general > check for updates on load or you can check any time from help > check for updates..., by default for now check for updates on load is disabled
-  - Code editor: Add help menu with basic links to public immortal tutorial, code editor doc on github, and jimud help, and jimud about dialog, as well as new check for updates in case editor only mode
+  - Code editor: Add help menu with basic links to public immortal tutorial, code editor doc on github, and jimud help, and jimud about dialog
 - **Changed:**
   - Update electron from 2.0.2 to 2.0.4
   - Update node-sqlite3 from 3.1.13 to 4.0.1
