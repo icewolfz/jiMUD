@@ -219,7 +219,6 @@
     }
 
     window.onbeforeunload = function (evt) {
-      ipcRenderer.send('log', 'Mapper ready: ' + mapper.ready);
       if (!mapper.ready) {
         evt.returnValue = false;
         setTimeout(() => {
@@ -237,7 +236,6 @@
         });
         return 'no';
       }
-      ipcRenderer.send('log', 'Mapper closed');
       $closeWindow = true;
       remote.getCurrentWindow().close();
       return;
