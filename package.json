@@ -92,11 +92,11 @@
     "babili": "^0.1.4",
     "devtron": "^1.4.0",
     "electron": "^2.0.4",
-    "electron-builder": "^20.11.1",
+    "electron-builder": "^20.19.2",
     "electron-installer-dmg": "^0.2.1",
     "electron-local-crash-reporter": "^1.0.2",
     "electron-packager": "^12.1.0",
-    "electron-rebuild": "^1.7.3",
+    "electron-rebuild": "^1.8.1",
     "eslint": "^4.19.1",
     "eslint-plugin-html": "^4.0.3",
     "node-abi": "^2.4.0"
