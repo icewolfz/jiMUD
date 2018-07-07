@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.57 2017-07-07
+## 0.4.57 2018-07-07
 
 - **New:**
   - New build process, 32 and 64 bit for windows are now all contained in a single installer/portable exe
