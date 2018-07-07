@@ -76,7 +76,8 @@
       "./fonts/**/*",
       "./lib/**/*",
       "./changelog.md",
-      "./readme.md"
+      "./readme.md",
+      "./package.json"
     ],
     "extends": null,
     "win": {
