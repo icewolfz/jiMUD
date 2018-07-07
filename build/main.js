@@ -3425,17 +3425,16 @@ function checkForUpdates() {
 function checkForUpdatesManual() {
   const autoUpdater = require("electron-updater").autoUpdater;
   autoUpdater.autoDownload = false;
-  autoUpdater.checkForUpdatesAndNotify();
   autoUpdater.on('error', (error) => {
     dialog.showErrorBox('Error: ', error == null ? "unknown" : (error.stack || error).toString());
   });
 
   autoUpdater.on('update-available', () => {
-    dialog.showMessageBox({
+    dialog.showMessageBox(global.editorOnly ? winCode : win, {
       type: 'info',
       title: 'Found Updates',
       message: 'Found updates, do you want update now?',
-      buttons: ['Sure', 'No']
+      buttons: ['Yes', 'No']
     }, (buttonIndex) => {
       if (buttonIndex === 0) {
         autoUpdater.downloadUpdate();
@@ -3448,7 +3447,7 @@ function checkForUpdatesManual() {
   });
 
   autoUpdater.on('update-not-available', () => {
-    dialog.showMessageBox({
+    dialog.showMessageBox(global.editorOnly ? winCode : win, {
       title: 'No Updates',
       message: 'Current version is up-to-date.'
     });
@@ -3459,7 +3458,7 @@ function checkForUpdatesManual() {
   });
 
   autoUpdater.on('update-downloaded', () => {
-    dialog.showMessageBox({
+    dialog.showMessageBox(global.editorOnly ? winCode : win, {
       title: 'Install Updates',
       message: 'Updates downloaded, application will be quit for update...'
     }, () => {
