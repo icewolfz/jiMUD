@@ -5,7 +5,7 @@
 - **New:**
   - New build process, 32 and 64 bit for windows are now all contained in a single installer/portable exe
     - Adds check for new updates feature with the new build process
-  - Code editor: Add help menu with basic links to public immortal tutorial, code editor doc on github, and jimud help, and jimud about dialog
+  - Code editor: Add help menu with basic links to public immortal tutorial, code editor doc on github, and jiMUD help, and jiMUD about dialog
 - **Changed:**
   - Update electron from 2.0.2 to 2.0.4
   - Update node-sqlite3 from 3.1.13 to 4.0.1
