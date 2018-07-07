@@ -650,13 +650,12 @@ var menuTemp = [
           shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
         }
       },
-      /*
       { type: 'separator' },
       {
         label: 'Check for updates...',
+        id: 'updater',
         click: checkForUpdatesManual
       },
-      */
       { type: 'separator' },
       {
         label: '&About...',
@@ -3418,86 +3417,60 @@ function checkForUpdates() {
   if (!set)
     set = settings.Settings.load(global.settingsFile);
   if (set.checkForUpdates) {
-    /*
-    const GhReleases = require('electron-gh-releases');
-    const updater = new GhReleases({
-      repo: 'icewolfz/jiMUD',
-      currentVersion: app.getVersion()
-    });
-    // Check for updates
-    // `status` returns true if there is a new update available
-    updater.check((err, status) => {
-      if (!err && status) {
-        dialog.showMessageBox(win, {
-          type: 'question',
-          title: 'A new version is available',
-          message: 'A new version is available, download and install, requires jiMUD to close and restart?',
-          buttons: ['Yes', 'No', 'Never check again', 'Open website']
-        }, result => {
-          if (result === 0) // Download the update
-            updater.download();
-          else if (result === 2) {
-            set.checkForUpdates = false;
-            set.save(global.settingsFile);
-          }
-          else if (result === 3)
-            shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest');
-        });
-      }
-      else if (err && err.message !== 'There is no newer version.')
-        dialog.showMessageBox(win, {
-          type: 'error',
-          title: 'Error checking for updates',
-          message: err.message
-        });
-    });
-    */
+    const autoUpdater = require("electron-updater").autoUpdater;
+    autoUpdater.checkForUpdatesAndNotify();
   }
 }
 
 function checkForUpdatesManual() {
-  /*
-  const GhReleases = require('electron-gh-releases');
-  const updater = new GhReleases({
-    repo: 'icewolfz/jiMUD',
-    currentVersion: app.getVersion()
-  });
-  // Check for updates
-  // `status` returns true if there is a new update available
-  updater.check((err, status) => {
-    if (!err && status) {
-      dialog.showMessageBox(global.editorOnly ? winCode : win, {
-        type: 'question',
-        title: 'A new version is available',
-        message: 'A new version is available, download and install, requires jiMUD to close and restart?',
-        buttons: ['Yes', 'No', 'Open website']
-      }, result => {
-        if (result === 0) // Download the update
-          updater.download();
-        else if (result === 2)
-          shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest');
-      });
-    }
-    else if (err && err.message !== 'There is no newer version.')
-      dialog.showMessageBox(global.editorOnly ? winCode : win, {
-        type: 'error',
-        title: 'Error checking for updates',
-        message: err.message
-      });
-    else
-      dialog.showMessageBox(global.editorOnly ? winCode : win, {
-        type: 'info',
-        title: 'Latest version',
-        message: `You have the latest version, v${app.getVersion()}.`
-      });
+  const autoUpdater = require("electron-updater").autoUpdater;
+  autoUpdater.autoDownload = false;
+  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.on('error', (error) => {
+    dialog.showErrorBox('Error: ', error == null ? "unknown" : (error.stack || error).toString());
   });
 
-  // When an update has been downloaded
-  updater.on('update-downloaded', (info) => {
-    // Restart the app and install the update
-    updater.install();
+  autoUpdater.on('update-available', () => {
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Found Updates',
+      message: 'Found updates, do you want update now?',
+      buttons: ['Sure', 'No']
+    }, (buttonIndex) => {
+      if (buttonIndex === 0) {
+        autoUpdater.downloadUpdate();
+      }
+      else if (global.editorOnly)
+        winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: true });
+      else
+        updateMenuItem({ menu: ['help', 'updater'], enabled: true });
+    });
   });
-  */
+
+  autoUpdater.on('update-not-available', () => {
+    dialog.showMessageBox({
+      title: 'No Updates',
+      message: 'Current version is up-to-date.'
+    });
+    if (global.editorOnly)
+      winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: true });
+    else
+      updateMenuItem({ menu: ['help', 'updater'], enabled: true });
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    dialog.showMessageBox({
+      title: 'Install Updates',
+      message: 'Updates downloaded, application will be quit for update...'
+    }, () => {
+      setImmediate(() => autoUpdater.quitAndInstall());
+    });
+  });
+  if (global.editorOnly)
+    winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: false });
+  else
+    updateMenuItem({ menu: ['help', 'updater'], enabled: false });
+  autoUpdater.checkForUpdates();
 }
 
 function showAbout() {

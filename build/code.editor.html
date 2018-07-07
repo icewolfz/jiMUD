@@ -2069,7 +2069,6 @@
                             shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
                         }
                     },
-                    /*
                     { type: 'separator' },
                     {
                         label: 'Check for updates...',
@@ -2077,7 +2076,6 @@
                             ipcRenderer.send('check-for-updates');
                         }
                     },
-                    */
                     { type: 'separator' },
                     {
                         label: '&About...',
@@ -4062,6 +4060,11 @@
                 _editors[p].editor.options = options.virtualOptions;
 
         }
+    });
+
+    ipcRenderer.on('menu-update', (menu, options) => {
+        if(menubar)
+            menubar.updateItem(menu, options);
     });
 
     function newFile(file, remoteFile) {
