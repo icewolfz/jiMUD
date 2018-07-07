@@ -20,6 +20,7 @@
   "scripts": {
     "start": "electron .",
     "debug": "electron . -d",
+    "build:dev": "node_modules/.bin/build --dir",
     "clean": "npm run clean:code && npm run clean:css",
     "compile": "npm run compile:css && npm run compile:themes && npm run compile:worker && npm run compile:common && npm run min && echo Compile Done",
     "compile:debug": "npm run compile:css && npm run compile:themes && npm run compile:worker && npm run compile:common && copy out\\*.js build\\js\\ && xcopy /Y /E /I out\\editor build\\js\\editor && echo Compile Done",
