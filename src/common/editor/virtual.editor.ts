@@ -2656,10 +2656,10 @@ export class VirtualEditor extends EditorBase {
                         //invalid index
                         if (first.terrain < 0) break items;
                         //get current data and if none set defaults and assign to the index
-                        data = this.$descriptions[this.selectedFocusedRoom.terrain];
+                        data = this.$descriptions[first.terrain];
                         if (!data) {
                             data = {
-                                idx: this.selectedFocusedRoom.terrain,
+                                idx: first.terrain,
                                 short: '',
                                 light: 0,
                                 terrain: '',
@@ -2670,7 +2670,7 @@ export class VirtualEditor extends EditorBase {
                         }
                         data[prop] = newValue;
                         //update the object data
-                        this.$descriptions[this.selectedFocusedRoom.terrain] = data;
+                        this.$descriptions[first.terrain] = data;
                         //update the file data
                         this.updateRaw(this.$descriptionRaw, data.idx * 3, [
                             data.short + ':' + data.light + ':' + data.terrain,

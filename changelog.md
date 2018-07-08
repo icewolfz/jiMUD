@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.4.58
+## 0.4.58 2018-07-07
+
+- **Fixed:**
+  - Code editor:
+    - Changing item data would update the new selected room instead of the preivous selected room
 
 ## 0.4.57 2018-07-07
 
