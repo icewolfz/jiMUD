@@ -4,7 +4,7 @@
 
 - **Fixed:**
   - Code editor:
-    - Changing item data would update the new selected room instead of the preivous selected room
+    - Changing item data would update the new selected room instead of the previous selected room
 
 ## 0.4.57 2018-07-07
 
