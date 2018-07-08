@@ -3434,27 +3434,34 @@ function checkForUpdatesManual() {
       type: 'info',
       title: 'Found Updates',
       message: 'Found updates, do you want update now?',
-      buttons: ['Yes', 'No']
+      buttons: ['Yes', 'No', 'Open website']
     }, (buttonIndex) => {
-      if (buttonIndex === 0) {
+      if (buttonIndex === 0)
         autoUpdater.downloadUpdate();
+      else {
+        if (buttonIndex === 2)
+          shell.openExternal("https://github.com/icewolfz/jiMUD/releases/latest", '_blank');
+        if (global.editorOnly)
+          winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: true });
+        else
+          updateMenuItem({ menu: ['help', 'updater'], enabled: true });
       }
-      else if (global.editorOnly)
-        winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: true });
-      else
-        updateMenuItem({ menu: ['help', 'updater'], enabled: true });
     });
   });
 
   autoUpdater.on('update-not-available', () => {
     dialog.showMessageBox(global.editorOnly ? winCode : win, {
       title: 'No Updates',
-      message: 'Current version is up-to-date.'
+      message: 'Current version is up-to-date.',
+      buttons: ['Ok', 'Open website']
+    }, (buttonIndex) => {
+      if (buttonIndex === 0)
+        shell.openExternal("https://github.com/icewolfz/jiMUD/releases/latest", '_blank');
+      if (global.editorOnly)
+        winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: true });
+      else
+        updateMenuItem({ menu: ['help', 'updater'], enabled: true });
     });
-    if (global.editorOnly)
-      winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: true });
-    else
-      updateMenuItem({ menu: ['help', 'updater'], enabled: true });
   });
 
   autoUpdater.on('update-downloaded', () => {
