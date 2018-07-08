@@ -7,6 +7,7 @@
 - **Fixed:**
   - Code editor:
     - Changing item data would update the new selected room instead of the previous selected room
+    - When saving catch any errors and display them
 
 ## 0.4.57 2018-07-07
 
