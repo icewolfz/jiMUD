@@ -88,11 +88,12 @@ export abstract class EditorBase extends EventEmitter {
             this.remote = options.remote;
         if (options.source !== Source.local)
             this.source = options.source;
+        if (options.new)
+            this.state |= FileState.new;
         this.file = options.file;
         if (options.open)
             this.open();
-        if (options.new)
-            this.state |= FileState.new;
+
     }
 
     set parent(parent) {
