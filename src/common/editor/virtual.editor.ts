@@ -2923,10 +2923,10 @@ export class VirtualEditor extends EditorBase {
         this.resize();
         this.$resizer = new ResizeObserver((entries, observer) => {
             if (entries.length === 0) return;
-            if (entries[0].width === 0 || entries[0].height === 0)
+            if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
                 return;
-            if (!this.$resizerCache || this.$resizerCache.width !== entries[0].width || this.$resizerCache.height !== entries[0].height) {
-                this.$resizerCache = { width: entries[0].width, height: entries[0].height };
+            if (!this.$resizerCache || this.$resizerCache.width !== entries[0].contentRect.width || this.$resizerCache.height !== entries[0].contentRect.height) {
+                this.$resizerCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 this.doUpdate(UpdateType.resize);
             }
         });

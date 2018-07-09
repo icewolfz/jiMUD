@@ -2,6 +2,10 @@
 
 ## 0.4.59
 
+- **Fixed:**
+  - Code editor:
+    - Virtual area editor was not correctly firing resizing system to update offsets
+
 ## 0.4.58 2018-07-07
 
 - **Fixed:**
