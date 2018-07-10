@@ -6312,6 +6312,7 @@
                     });
             return false;
         }
+        addToRecent(file);
         delete _editors[old];
         _editors[file] = panel;
         if (manager.active && manager.active.editor) {

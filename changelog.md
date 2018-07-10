@@ -6,6 +6,7 @@
   - Code editor:
     - Virtual area editor was not correctly firing resizing system to update offsets
     - Do not watch new files for disk changes as they do not exist
+    - When saving file as, add resulting file to recent
 
 ## 0.4.58 2018-07-07
 
