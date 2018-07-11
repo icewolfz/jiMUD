@@ -63,7 +63,7 @@ export enum RoomStates {
     None = 0
 }
 
-const RoomExits = {
+export const RoomExits = {
     out: 4096,
     enter: 2048,
     unknown: 1024,
@@ -166,7 +166,7 @@ enum View {
     exitsRaw
 }
 
-interface MousePosition {
+export interface MousePosition {
     x: number;
     y: number;
     rx: number;
@@ -2612,7 +2612,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, o, true, o.at(this.$mouse.rx, this.$mouse.ry));
                         });
                         resetCursor(this.$externalRaw);
-                        break;
+                        break items;
                     case 'ee':
                     case 'ef':
                         break;
