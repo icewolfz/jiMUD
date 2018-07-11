@@ -43,6 +43,8 @@ export class Room {
     public sound = '';
     public smell = '';
     public items = [];
+    public objects = [];
+    public monsters = [];
 
     constructor(x, y, z, e?, s?) {
         e = +e;
@@ -59,16 +61,12 @@ export class Room {
     public clone() {
         const r = new Room(this.x, this.y, this.z, this.exits, this.state);
         let prop;
-        let l;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
             if (prop === 'external')
                 r.external = cloneObject(this.external);
-            else if (prop === 'items') {
-                l = this.items.length;
-                while (l--)
-                    r.items[l] = cloneObject(this.items[l]);
-            }
+            else if (prop === 'objects' || prop === 'monsters' || prop === 'items')
+                r[prop] = cloneArray(this[prop]);
             else
                 r[prop] = this[prop];
         }
@@ -116,16 +114,33 @@ function cloneObject(obj) {
         if (!this.hasOwnProperty(prop)) continue;
         if (typeof obj[prop] === 'object')
             nObj[prop] = cloneObject(obj[prop]);
+        else if (Array.isArray(obj[prop]))
+            nObj[prop] = cloneArray(obj[prop]);
         else
             nObj[prop] = obj[prop];
     }
     return nObj;
 }
 
+function cloneArray(arr) {
+    if (!arr || arr.length === 0) return new Array();
+    const nArr = new Array(arr.length);
+    let l = arr.length;
+    while (l--) {
+        if (typeof arr[l] === 'object')
+            nArr[l] = cloneObject(arr[l]);
+        else if (Array.isArray(arr[l]))
+            nArr[l] = cloneArray(arr[l]);
+        else
+            nArr[l] = cloneObject(arr[l]);
+    }
+    return nArr;
+}
+
 enum View {
     map,
     monsters,
-    items
+    objects
 }
 
 const Timer = new DebugTimer();
@@ -137,12 +152,58 @@ class Monster {
     public class;
     public level;
     public race;
+    public objects = [];
+
+    public clone() {
+        const r = new Monster();
+        let prop;
+        for (prop in this) {
+            if (!this.hasOwnProperty(prop)) continue;
+            if (prop === 'objects')
+                r.objects = cloneArray(this.objects);
+            else
+                r[prop] = this[prop];
+        }
+        return r;
+    }
+
+    public equals(monster) {
+        if (!monster) return false;
+        let prop;
+        for (prop in this) {
+            if (!this.hasOwnProperty(prop)) continue;
+            if (this[prop] !== monster[prop])
+                return false;
+        }
+        return true;
+    }
 }
 
-class Item {
+class StdObject {
     public name;
     public long;
     public short;
+
+    public clone() {
+        const r = new StdObject();
+        let prop;
+        for (prop in this) {
+            if (!this.hasOwnProperty(prop)) continue;
+            r[prop] = this[prop];
+        }
+        return r;
+    }
+
+    public equals(item) {
+        if (!item) return false;
+        let prop;
+        for (prop in this) {
+            if (!this.hasOwnProperty(prop)) continue;
+            if (this[prop] !== item[prop])
+                return false;
+        }
+        return true;
+    }
 }
 
 class Settings {
@@ -173,19 +234,19 @@ class Size {
 class Area {
     public rooms: Room[][][];
     public monsters: Monster[];
-    public items: Item[];
+    public objects: StdObject[];
     public settings: Settings;
     public size: Size;
 
     constructor(width, height, depth) {
         this.size = new Size(width, height, depth);
         this.rooms = Array.from(Array(depth),
-            z => Array.from(Array(height),
-                y => Array.from(Array(width),
-                    x => new Room(x, y, z, 0))
+            (v, z) => Array.from(Array(height),
+                (v2, y) => Array.from(Array(width),
+                    (v3, x) => new Room(x, y, z, 0))
             ));
         this.monsters = new Array();
-        this.items = new Array();
+        this.objects = new Array();
         this.settings = new Settings();
     }
 
@@ -224,10 +285,10 @@ class Area {
         if (data.items) {
             l = data.items.length;
             while (l--) {
-                area.items[l] = new Item();
-                for (prop in data.items[l]) {
-                    if (!data.items[l].hasOwnProperty(prop)) continue;
-                    area.items[l][prop] = data.items[l][prop];
+                area.objects[l] = new StdObject();
+                for (prop in data.objects[l]) {
+                    if (!data.objects[l].hasOwnProperty(prop)) continue;
+                    area.objects[l][prop] = data.objects[l][prop];
                 }
             }
         }
@@ -266,7 +327,7 @@ export class AreaEditor extends EditorBase {
     private $splitterEditor: Splitter;
 
     //private $monsterGrid;
-    //private $itemsGrid;
+    //private $objectGrid;
 
     private _lastMouse: MouseEvent;
     private $enterMoveNext;
@@ -1500,6 +1561,10 @@ export class AreaEditor extends EditorBase {
                 const curr = selected[sl];
                 const old = this.getRoom(curr.x, curr.y, curr.z);
                 switch (prop) {
+                    case 'monsters':
+                        break items;
+                    case 'objects':
+                        break items;
                     case 'external':
                         break items;
                     case 'items':
@@ -1546,11 +1611,6 @@ export class AreaEditor extends EditorBase {
                         enterMoveNew: this.$enterMoveNew
                     }
                 }
-            },
-            {
-                property: 'terrain',
-                label: 'Terrain',
-                sort: 0
             },
             {
                 property: 'exits',
@@ -1630,7 +1690,7 @@ export class AreaEditor extends EditorBase {
                 }
             },
             {
-                property: 'terrainType',
+                property: 'terrain',
                 group: 'Description',
                 label: 'Terrain',
                 editor: {
@@ -1697,9 +1757,39 @@ export class AreaEditor extends EditorBase {
                         container: document.body
                     }
                 }
+            },
+            {
+                property: 'objects',
+                group: 'Description',
+                formatter: this.formatObjects,
+                editor: {
+                    type: EditorType.custom,
+                    editor: ItemsValueEditor,
+                    options: {
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                },
+                sort: 2
+            },
+            {
+                property: 'monsters',
+                group: 'Description',
+                formatter: this.formatMonsters,
+                editor: {
+                    type: EditorType.custom,
+                    editor: ItemsValueEditor,
+                    options: {
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                },
+                sort: 2
             }
         ]);
-        this.resize();
+        this.doUpdate(UpdateType.resize);
         this.$resizer = new ResizeObserver((entries, observer) => {
             if (entries.length === 0) return;
             if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
@@ -1727,6 +1817,16 @@ export class AreaEditor extends EditorBase {
     private formatItems(prop, value) {
         if (!value || value.length === 0) return '';
         return value.map(i => i.item).join(':');
+    }
+
+    private formatMonsters(prop, value) {
+        if (!value || value.length === 0) return '';
+        return value.filter(v => v >= 0 && v < this.$area.monsters.length).map(v => capitalize(this.$area.monsters[v].name)).join(' ,');
+    }
+
+    private formatObjects(prop, value) {
+        if (!value || value.length === 0) return '';
+        return value.filter(v => v >= 0 && v < this.$area.objects.length).map(v => capitalize(this.$area.objects[v].name)).join(' ,');
     }
 
     private formatExits(prop, value) {
@@ -1769,7 +1869,7 @@ export class AreaEditor extends EditorBase {
                 break;
             case View.monsters:
                 break;
-            case View.items:
+            case View.objects:
                 break;
         }
     }
@@ -2115,7 +2215,7 @@ export class AreaEditor extends EditorBase {
                 return '';
             case View.monsters:
                 return null;
-            case View.items:
+            case View.objects:
                 return null;
         }
         return '';
@@ -2128,7 +2228,7 @@ export class AreaEditor extends EditorBase {
                 break;
             case View.monsters:
                 break;
-            case View.items:
+            case View.objects:
                 break;
         }
     }
@@ -2161,7 +2261,7 @@ export class AreaEditor extends EditorBase {
                 break;
             case View.monsters:
                 break;
-            case View.items:
+            case View.objects:
                 break;
         }
     }
@@ -2181,7 +2281,7 @@ export class AreaEditor extends EditorBase {
                 break;
             case View.monsters:
                 break;
-            case View.items:
+            case View.objects:
                 break;
         }
     }
@@ -2218,7 +2318,7 @@ export class AreaEditor extends EditorBase {
                 break;
             case View.monsters:
                 break;
-            case View.items:
+            case View.objects:
                 break;
         }
     }
@@ -2246,7 +2346,7 @@ export class AreaEditor extends EditorBase {
                 break;
             case View.monsters:
                 break;
-            case View.items:
+            case View.objects:
                 break;
         }
     }
@@ -2254,7 +2354,7 @@ export class AreaEditor extends EditorBase {
         switch (this.$view) {
             case View.map:
             case View.monsters:
-            case View.items:
+            case View.objects:
                 break;
         }
     }
@@ -2262,7 +2362,7 @@ export class AreaEditor extends EditorBase {
         switch (this.$view) {
             case View.map:
             case View.monsters:
-            case View.items:
+            case View.objects:
                 break;
         }
     }
@@ -2304,7 +2404,7 @@ export class AreaEditor extends EditorBase {
     public supports(what) {
         switch (what) {
             case 'refresh':
-                return this.$view === View.map || this.$view === View.monsters || this.$view === View.items;
+                return this.$view === View.map || this.$view === View.monsters || this.$view === View.objects;
             case 'buttons':
             case 'menu|view':
             case 'upload':
@@ -2320,7 +2420,7 @@ export class AreaEditor extends EditorBase {
                         return true;
                     case View.monsters:
                         return false;
-                    case View.items:
+                    case View.objects:
                         return false;
                 }
                 return false;
@@ -2330,7 +2430,7 @@ export class AreaEditor extends EditorBase {
                         return clipboard.has('jiMUD/Area');
                     case View.monsters:
                         return false;
-                    case View.items:
+                    case View.objects:
                         return false;
                 }
                 return false;
@@ -2365,8 +2465,8 @@ export class AreaEditor extends EditorBase {
             this.switchView(View.monsters);
         }, this.$view === View.monsters));
         group.appendChild(this.createButton('items', 'list', () => {
-            this.switchView(View.items);
-        }, this.$view === View.items));
+            this.switchView(View.objects);
+        }, this.$view === View.objects));
         frag.appendChild(group);
 
         if (this.$area.size.depth > 1) {
@@ -2436,9 +2536,9 @@ export class AreaEditor extends EditorBase {
                 {
                     label: 'Items',
                     type: 'checkbox',
-                    checked: this.$view === View.items,
+                    checked: this.$view === View.objects,
                     click: () => {
-                        this.switchView(View.items);
+                        this.switchView(View.objects);
                     }
                 }
 
@@ -2476,7 +2576,7 @@ export class AreaEditor extends EditorBase {
                 break;
             case View.monsters:
                 break;
-            case View.items:
+            case View.objects:
                 break;
         }
     }
@@ -2533,6 +2633,37 @@ export class AreaEditor extends EditorBase {
                         }
                     },
                     sort: 2
+                },
+                {
+                    property: 'objects',
+                    group: 'Description',
+                    formatter: this.formatObjects,
+                    editor: {
+                        type: EditorType.custom,
+                        editor: ItemsValueEditor,
+                        options: {
+                            enterMoveFirst: this.$enterMoveFirst,
+                            enterMoveNext: this.$enterMoveNext,
+                            enterMoveNew: this.$enterMoveNew
+                        }
+                    },
+                    sort: 2
+                }
+                ,
+                {
+                    property: 'monsters',
+                    group: 'Description',
+                    formatter: this.formatMonsters,
+                    editor: {
+                        type: EditorType.custom,
+                        editor: ItemsValueEditor,
+                        options: {
+                            enterMoveFirst: this.$enterMoveFirst,
+                            enterMoveNext: this.$enterMoveNext,
+                            enterMoveNew: this.$enterMoveNew
+                        }
+                    },
+                    sort: 2
                 }
             ]);
         }
@@ -2574,7 +2705,7 @@ export class AreaEditor extends EditorBase {
                 break;
             case View.monsters:
                 break;
-            case View.items:
+            case View.objects:
                 break;
         }
         this.$view = view;
@@ -2671,7 +2802,7 @@ export class AreaEditor extends EditorBase {
                 this.$monsterGrid.focus();
                 */
                 break;
-            case View.items:
+            case View.objects:
                 /*
                     this.$label.textContent = 'Items';
                     bGroup = document.createElement('div');
@@ -2812,14 +2943,14 @@ export class AreaEditor extends EditorBase {
         }
         this.emit('menu-update', 'view|map', { checked: view === View.map });
         this.emit('menu-update', 'view|monsters', { checked: view === View.monsters });
-        this.emit('menu-update', 'view|Items', { checked: view === View.items });
+        this.emit('menu-update', 'view|Items', { checked: view === View.objects });
         this.emit('menu-update', 'view|room editor', { enabled: view === View.map });
         this.emit('menu-update', 'view|room preview', { enabled: view === View.map });
         this.setButtonDisabled('room editor', view !== View.map);
         this.setButtonDisabled('room preview', view !== View.map);
         this.setButtonState('map', view === View.map);
         this.setButtonState('monsters', view === View.monsters);
-        this.setButtonState('items', view === View.items);
+        this.setButtonState('items', view === View.objects);
         this.updateUI();
         this.emit('supports-changed');
         this.focus();
@@ -2836,7 +2967,7 @@ export class AreaEditor extends EditorBase {
                 this.emit('location-changed', -1, -1);
                 //this.emit('changed', this.$descriptions.length);
                 break;
-            case View.items:
+            case View.objects:
                 this.emit('location-changed', -1, -1);
                 //this.emit('changed', this.$items.length);
                 break;
@@ -4257,6 +4388,14 @@ export class AreaEditor extends EditorBase {
 
     public openExternalExits() {
         this.$roomEditor.beginEdit('external', true);
+    }
+
+    public openMonsters() {
+        this.$roomEditor.beginEdit('monsters', true);
+    }
+
+    public openObjects() {
+        this.$roomEditor.beginEdit('objects', true);
     }
 
     public externalCode(r?, y?, z?) {

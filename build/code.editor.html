@@ -1546,7 +1546,7 @@
     const { shell, remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
     const { DataGrid, EditorType } = require('./js/datagrid');
-    const { MonacoCodeEditor, VirtualEditor, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
+    const { MonacoCodeEditor, VirtualEditor, AreaEditor, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
     const { dialog, Menu, MenuItem, app } = remote;
@@ -2094,6 +2094,9 @@
     manager.on('add', (e) => {
         if (e.panel && e.panel.editor)
             e.panel.editor.resize();
+    });
+    manager.on('tab-strip-shown', ()=> {
+        doUpdate(128);
     });
     manager.on('add-pane', (idx, pane) => {
         var el = document.createElement('div');
@@ -6590,6 +6593,8 @@
         }
     }
 
+    var enableAreas = false;
+
     function createEditor(data, add, dock, tmpObj) {//file, open, remoteFile, _new, value) {
         var p;
         if (data.source)
@@ -6617,7 +6622,74 @@
                     stopWatchFile(files[f]);
                 }
             };
-            if (path.extname(data.file) === '.map' && data.source !== 1) {
+            if (enableAreas && path.extname(data.file) === '.area') {
+                data.options = options.areaOptions;
+                p.editor = new AreaEditor(data);
+                p.editor.on('dialog-close', () => menubar.enabled = true);
+                p.editor.on('dialog-cancel', () => menubar.enabled = true);
+                p.editor.on('dialog-open', () => menubar.enabled = false);
+                /*
+                p.editor.on('room-dblclick', (room) => {
+                    
+                });
+                */
+                p.editor.on('map-context-menu', (e) => {
+                    let temp = [];
+                    temp.push({
+                        label: 'Cut',
+                        click: doCut,
+                        accelerator: "CmdOrCtrl+C"
+                    });
+                    temp.push({
+                        label: 'Copy',
+                        click: doCopy,
+                        accelerator: "CmdOrCtrl+X"
+                    });
+                    if (p.editor.supports('paste'))
+                        temp.push({
+                            label: 'Paste',
+                            click: doPaste,
+                            accelerator: "CmdOrCtrl+V"
+                        });
+                    temp.push({ type: 'separator' });
+                    temp.push({
+                        label: 'Delete',
+                        click: () => {
+                            p.editor.delete();
+                            p.editor.focus();
+                        },
+                        accelerator: "Delete"
+                    });
+                    temp.push({ type: 'separator' });
+                    temp.push({
+                        label: 'Edit items',
+                        click: () => {
+                            p.editor.openItems();
+                        }
+                    });
+                    temp.push({
+                        label: 'Edit objects',
+                        click: () => {
+                            p.editor.openObjects();
+                        }
+                    });
+                    temp.push({
+                        label: 'Edit monsters',
+                        click: () => {
+                            p.editor.openMonsters();
+                        }
+                    });                    
+                    temp.push({
+                        label: 'Edit external exits',
+                        click: () => {
+                            p.editor.openExternalExits();
+                        }
+                    });
+                    let inputMenu = Menu.buildFromTemplate(temp);
+                    inputMenu.popup({ window: remote.getCurrentWindow() });
+                });
+            }
+            else if (path.extname(data.file) === '.map' && data.source !== 1) {
                 data.options = options.virtualOptions;
                 p.editor = new VirtualEditor(data);
                 p.editor.on('dialog-close', () => menubar.enabled = true);

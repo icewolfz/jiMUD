@@ -85,6 +85,19 @@ export class EditorSettings {
         enterMoveNew: true
     };
 
+    public areaOptions = {
+        previewFontSize: 15,
+        previewFontFamily: 'Consolas, \'Courier New\', monospace',
+        editorWidth: 200,
+        previewHeight: 200,
+        live: true,
+        showRoomEditor: true,
+        showRoomPreview: true,
+        enterMoveNext: true,
+        enterMoveFirst: true,
+        enterMoveNew: true
+    };
+
     public static load(file) {
         try {
             if (!fs.statSync(file).isFile())
