@@ -97,6 +97,8 @@ export class DockManager extends EventEmitter {
         });
         pane.on('keyup', e => this.emit('keyup', e, this.panes.indexOf(pane)));
         pane.on('keydown', e => this.emit('keydown', e, this.panes.indexOf(pane)));
+        pane.on('tab-strip-hidden', () => this.emit('tab-strip-hidden', this.panes.indexOf(pane)));
+        pane.on('tab-strip-shown', () => this.emit('tab-strip-shown', this.panes.indexOf(pane)));
         pane.on('dragenter', e => {
             this.emit('dragenter', e, this.panes.indexOf(pane));
             if (e.defaultPrevented || !this.dragPanel) return;
@@ -1474,16 +1476,23 @@ export class DockPane extends EventEmitter {
 
     private updateStripState() {
         if (!this._hideTabstrip && this.panels.length === 0) {
-            this.$tabstrip.classList.add('hidden');
-            this.$tabpane.classList.add('full');
+            if (!this.$tabstrip.classList.contains('hidden')) {
+                this.$tabstrip.classList.add('hidden');
+                this.$tabpane.classList.add('full');
+                this.emit('tab-strip-hidden');
+            }
         }
         else if (!this._hideTabstrip || this.panels.length > 1) {
-            this.$tabstrip.classList.remove('hidden');
-            this.$tabpane.classList.remove('full');
+            if (this.$tabstrip.classList.contains('hidden')) {
+                this.$tabstrip.classList.remove('hidden');
+                this.$tabpane.classList.remove('full');
+                this.emit('tab-strip-shown');
+            }
         }
-        else {
+        else if (!this.$tabstrip.classList.contains('hidden')) {
             this.$tabstrip.classList.add('hidden');
             this.$tabpane.classList.add('full');
+            this.emit('tab-strip-hidden');
         }
     }
 
