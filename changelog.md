@@ -8,6 +8,7 @@
     - Do not watch new files for disk changes as they do not exist
     - When saving file as, add resulting file to recent
     - Fix issue with external exits and room editor doing data multiple times
+    - Fix format document indenting of arrays if last element in a mapping was an array lookup using []
 
 ## 0.4.58 2018-07-07
 

@@ -1172,6 +1172,25 @@ export class LPCIndenter extends EventEmitter {
                             p++;
                             token = TokenType.RHOOK2;
                         }
+                        //handle array calls inside mappings if last element
+                        else if (line.charAt(p) === ')' && this.$stack.current !== TokenType.XEOT) {
+                            let n = 0;
+                            const l = this.$stack.length;
+                            while (n + 1 < l) {
+                                if (this.$stack.getnext(n) === TokenType.RHOOK && this.$stack.getnext(n + 1) === TokenType.LHOOK)
+                                    n += 2;
+                                else if (this.$stack.getnext(n) === TokenType.TOKEN)
+                                    n++;
+                                else
+                                    break;
+                            }
+                            if (this.$stack.getnext(n) === TokenType.LHOOK2) {
+                                p++;
+                                token = TokenType.RHOOK2;
+                            }
+                            else
+                                token = TokenType.RHOOK;
+                        }
                         else
                             token = TokenType.RHOOK;
                         break;
