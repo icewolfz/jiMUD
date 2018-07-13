@@ -261,7 +261,7 @@ $tabHeight: 26;
 }
 
 #cm-scroll-left .fa, #cm-scroll-right .fa {
-    margin-top: 6px;
+    margin-top: 7px;
 }
 
 #cm-scroll-dropdown-container {
@@ -291,12 +291,9 @@ $tabHeight: 26;
     text-align: center;
     color: black;
     text-shadow: 0px 1px #fff;
-    border-left: 0;
-    border-right: 0;
-    border-bottom: 0;
     padding: 0;
-    border-top: $borderColor 1px solid;
     outline: none;
+    border: 0;
 }
 
 #cm-scroll-left:hover, #cm-scroll-right:hover, #cm-scroll-dropdown:hover, #cm-scroll-dropdown-container.open #cm-scroll-dropdown {
@@ -318,7 +315,6 @@ $tabHeight: 26;
     border-color: transparent;
     color: rgb(224, 222, 222);
     text-shadow: -1px -1px #fff;
-    border-top: $borderColor 1px solid;
 }
 
 #cm-scroll-right {
