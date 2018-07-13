@@ -243,31 +243,7 @@ export class DockManager extends EventEmitter {
             const dock = e.panel.dock;
             const idx = this.panes.indexOf(dock);
             this.emit('removed', e, idx);
-            if (this.panes.length > 1 && pane.panels.length === 0) {
-                if (this.$activePane === dock) {
-                    if (idx < this.panes.length - 1) {
-                        this.focusPane(this.panes[idx + 1]);
-                        if (this.active)
-                            this.emit('activated', { index: this.$activePane.panels.indexOf(this.active), id: this.active.id, panel: this.active }, idx + 1);
-                    }
-                    else {
-                        this.focusPane(this.panes[idx - 1]);
-                        if (this.active)
-                            this.emit('activated', { index: this.$activePane.panels.indexOf(this.active), id: this.active.id, panel: this.active }, idx - 1);
-                    }
-                }
-                this.emit('destroy-pane', idx, dock);
-                this.panes.splice(idx, 1);
-                this.$bars[0].remove();
-                this.$bars.splice(0, 1);
-                dock.destroy();
-                this.$widths = [];
-                let l = this.panes.length;
-                const w = 1.0 / this.panes.length;
-                while (l--)
-                    this.$widths[l] = w;
-                this.resize();
-            }
+            this.destroyPane(dock);
         });
         pane.on('remove', e => this.emit('remove', e, this.panes.indexOf(pane)));
         pane.on('deactivated', e => this.emit('deactivated', e, this.panes.indexOf(pane)));
@@ -526,6 +502,7 @@ export class DockManager extends EventEmitter {
             this.$activePane = dock;
             this.$activePane.focused = true;
         }
+        this.destroyPane(oDock);
     }
 
     public addPanel(title?: string, icon?: string, tooltip?: string, dock?) {
@@ -655,6 +632,35 @@ export class DockManager extends EventEmitter {
         this.$width = this.$el.clientWidth;
         this.emit('resize');
     }
+
+    private destroyPane(pane) {
+        if (this.panes.length > 1 && pane.panels.length === 0) {
+            const idx = this.panes.indexOf(pane);
+            if (this.$activePane === pane) {
+                if (idx < this.panes.length - 1) {
+                    this.focusPane(this.panes[idx + 1]);
+                    if (this.active)
+                        this.emit('activated', { index: this.$activePane.panels.indexOf(this.active), id: this.active.id, panel: this.active }, idx + 1);
+                }
+                else {
+                    this.focusPane(this.panes[idx - 1]);
+                    if (this.active)
+                        this.emit('activated', { index: this.$activePane.panels.indexOf(this.active), id: this.active.id, panel: this.active }, idx - 1);
+                }
+            }
+            this.emit('destroy-pane', idx, pane);
+            this.panes.splice(idx, 1);
+            this.$bars[0].remove();
+            this.$bars.splice(0, 1);
+            pane.destroy();
+            this.$widths = [];
+            let l = this.panes.length;
+            const w = 1.0 / this.panes.length;
+            while (l--)
+                this.$widths[l] = w;
+            this.resize();
+        }
+    }
 }
 
 export class DockPane extends EventEmitter {
@@ -678,7 +684,6 @@ export class DockPane extends EventEmitter {
     private _scrollTimer: NodeJS.Timer;
     private $addCache = [];
     private $measure: HTMLElement;
-    private $dragPanel;
 
     public set focused(value) {
         if (value)
@@ -1100,52 +1105,58 @@ export class DockPane extends EventEmitter {
             if (eDrag.preventDefault) return;
             if (panel.dock.active !== panel)
                 panel.dock.switchToPanel(panel.id);
-            panel.dock.$dragPanel = panel;
-            panel.dock.manager.dragPanel = panel.dock.$dragPanel;
+            panel.dock.manager.dragPanel = panel;
             e.stopPropagation();
             panel.dock.manager.freezePanes();
         };
         panel.tab.ondragover = (e) => {
-            if (panel.dock.$dragPanel === panel) return;
+            if (panel.dock.manager.dragPanel === panel) return;
             e.preventDefault();
             e.stopPropagation();
         };
         panel.tab.ondragend = (e) => {
             panel.tab.classList.remove('drop');
-            panel.dock.$dragPanel = null;
+            panel.dock.manager.dragPanel = null;
             panel.dock.manager.dragPanel = null;
             panel.dock.manager.freePanes();
         };
         panel.tab.ondragenter = (e) => {
-            if (panel.dock.$dragPanel === panel) return;
+            if (panel.dock.manager.dragPanel === panel) return;
             e.preventDefault();
             e.stopPropagation();
             panel.tab.classList.add('drop');
         };
         panel.tab.ondragleave = (e) => {
-            if (panel.dock.$dragPanel === panel) return;
+            if (panel.dock.manager.dragPanel === panel) return;
             e.preventDefault();
             e.stopPropagation();
             panel.tab.classList.remove('drop');
             e.dataTransfer.dropEffect = 'move';
         };
         panel.tab.ondrop = (e) => {
-            if (panel.dock.$dragPanel === panel) return;
+            if (panel.dock.manager.dragPanel === panel) return;
             panel.tab.classList.remove('drop');
             e.dataTransfer.dropEffect = 'move';
-            if (panel.dock !== this.manager.dragPanel.dock)
+            let tl = -1;
+            if (panel.dock !== this.manager.dragPanel.dock) {
+                tl = panel.dock.panels.length - 1;
                 this.manager.dock(this.manager.dragPanel, panel.dock, true);
+            }
             e.preventDefault();
             e.stopPropagation();
-            const idx = panel.dock.panels.indexOf(panel.dock.$dragPanel);
+            const idx = panel.dock.panels.indexOf(panel.dock.manager.dragPanel);
             const idxTo = panel.dock.panels.indexOf(panel);
             panel.dock.panels.splice(idx, 1);
-            panel.dock.panels.splice(idxTo, 0, panel.dock.$dragPanel);
-            if (idxTo > idx)
-                panel.tab.parentNode.insertBefore(panel.dock.$dragPanel.tab, panel.tab.nextElementSibling);
+            panel.dock.panels.splice(idxTo, 0, panel.dock.manager.dragPanel);
+            if (idxTo > idx || (idxTo === tl && tl !== -1)) {
+                if (panel.tab.nextElementSibling)
+                    panel.tab.parentNode.insertBefore(panel.dock.manager.dragPanel.tab, panel.tab.nextElementSibling);
+                else
+                    panel.tab.parentNode.appendChild(panel.dock.manager.dragPanel.tab);
+            }
             else
-                panel.tab.parentNode.insertBefore(panel.dock.$dragPanel.tab, panel.tab);
-            panel.dock.emit('tab-moved', { oldIndex: idx, index: idxTo, id: panel.dock.$dragPanel.id, panel: panel.dock.$dragPanel });
+                panel.tab.parentNode.insertBefore(panel.dock.manager.dragPanel.tab, panel.tab);
+            panel.dock.emit('tab-moved', { oldIndex: idx, index: idxTo, id: panel.dock.manager.dragPanel.id, panel: panel.dock.manager.dragPanel });
             panel.dock.manager.freePanes();
         };
 

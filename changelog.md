@@ -11,6 +11,7 @@
     - Fix format document indenting of arrays if last element in a mapping was an array lookup using []
     - Tabstrip drop down navigation menu now colorized to match tab colors
     - Correctly remember last active open file when reopen is enabled
+    - Fix drag and drop of tabs between two tab groups
 
 ## 0.4.58 2018-07-07
 
