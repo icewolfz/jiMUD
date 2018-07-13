@@ -9,6 +9,7 @@ export class EditorSettings {
     public cacheRemote = true;
     public maxRecent = 15;
     public reopen = true;
+    public lastActive = '';
     public outputSize = 170;
     public output = false;
     public nativeIcons: boolean = false;

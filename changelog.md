@@ -10,6 +10,7 @@
     - Fix issue with external exits and room editor doing data multiple times
     - Fix format document indenting of arrays if last element in a mapping was an array lookup using []
     - Tabstrip drop down navigation menu now colorized to match tab colors
+    - Correctly remember last active open file when reopen is enabled
 
 ## 0.4.58 2018-07-07
 

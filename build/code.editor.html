@@ -2095,7 +2095,7 @@
         if (e.panel && e.panel.editor)
             e.panel.editor.resize();
     });
-    manager.on('tab-strip-shown', ()=> {
+    manager.on('tab-strip-shown', () => {
         doUpdate(128);
     });
     manager.on('add-pane', (idx, pane) => {
@@ -3866,6 +3866,11 @@
         }
         else
             openFiles(options.opened);
+        if (options.opened.length) {
+            var last = findEditor(options.lastActive);
+            if (last)
+                manager.switchToPanel(last);
+        }
         doUpdate(4);
         $("#splashScreenMask").css('display', 'none');
         $("#splashLayout").css('display', 'none');
@@ -3913,6 +3918,14 @@
         else
             options.opened = [];
         options.layout = manager.layout;
+        if (manager.active && manager.active.editor) {
+            if (manager.active.editor.source)
+                options.lastActive = 'remote:' + manager.active.editor.remote;
+            else
+                options.lastActive = manager.active.editor.file;
+        }
+        else
+            options.lastActive = '';
         saveOptions();
         return true;
     }
@@ -6225,13 +6238,13 @@
         }
         catch (err) {
             dialog.showMessageBox(
-                    remote.getCurrentWindow(),
-                    {
-                        type: 'error',
-                        title: 'Error saving',
-                        message: err.toString(),
-                        defaultId: 1
-                    });
+                remote.getCurrentWindow(),
+                {
+                    type: 'error',
+                    title: 'Error saving',
+                    message: err.toString(),
+                    defaultId: 1
+                });
             return false;
         }
         if (panel.editor.source === 1) {
@@ -6306,13 +6319,13 @@
         }
         catch (err) {
             dialog.showMessageBox(
-                    remote.getCurrentWindow(),
-                    {
-                        type: 'error',
-                        title: 'Error saving',
-                        message: err.toString(),
-                        defaultId: 1
-                    });
+                remote.getCurrentWindow(),
+                {
+                    type: 'error',
+                    title: 'Error saving',
+                    message: err.toString(),
+                    defaultId: 1
+                });
             return false;
         }
         addToRecent(file);
@@ -6678,7 +6691,7 @@
                         click: () => {
                             p.editor.openMonsters();
                         }
-                    });                    
+                    });
                     temp.push({
                         label: 'Edit external exits',
                         click: () => {
