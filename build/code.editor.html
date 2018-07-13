@@ -3866,10 +3866,20 @@
         }
         else
             openFiles(options.opened);
-        if (options.opened.length) {
+        if (options.reopen) {
+            if (options.opened.length && Array.isArray(options.opened[0])) {
+                options.opened.forEach((o, i) => {
+                    var a = o.filter(f => f.active);
+                    if (a.length > 0) {
+                        manager.switchToPanel(findEditor(a[0].file), manager.panes[i]);
+                    }
+                });
+            }
             var last = findEditor(options.lastActive);
-            if (last)
-                manager.switchToPanel(last);
+            if (last) {
+                manager.focusPane(last.dock);
+                last.dock.switchToPanel(last.id);
+            }
         }
         doUpdate(4);
         $("#splashScreenMask").css('display', 'none');
@@ -3908,7 +3918,8 @@
                 if (!p.editor.new && p.editor.source === 0)
                     opened[s].unshift({
                         file: p.editor.file,
-                        remote: p.editor.remote
+                        remote: p.editor.remote,
+                        active: p == manager.panes[s].active
                     });
             }
         }
