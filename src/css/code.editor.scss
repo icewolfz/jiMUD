@@ -876,7 +876,7 @@ input[type=checkbox].property-grid-editor {
 .grid-editor-dropdown.no-wrap.single {
     white-space: pre-wrap;
     word-wrap: break-word;
-    word-break: break-all;    
+    word-break: break-all;
 }
 
 .property-grid-editor-flag-dropdown {
@@ -982,7 +982,52 @@ input[type=checkbox].property-grid-editor {
     color: white;
 }
 
-.dropdown-menu > li > a:focus, .dropdown-menu > li > a.active {
+.dropdown-menu > li > a.changed {
+    background-color: rgb(218, 255, 181);
+    border-top: 1px solid rgb(119, 168, 69);
+    border-bottom: 1px solid rgb(119, 168, 69);
+    opacity: 1;
+    color: black;
+    background-image: none;
+}
+
+.dropdown-menu > li > a.new {
+    background-color: rgb(178, 226, 255);
+    border-top: 1px solid rgb(94, 185, 242);
+    border-bottom: 1px solid rgb(94, 185, 242);
+    opacity: 1;
+    color: black;
+    background-image: none;
+}
+
+.dropdown-menu > li > a.new.active {
+    background-color: rgb(178, 226, 255);
+    border-top: 1px solid rgb(247, 216, 106);
+    border-bottom: 1px solid rgb(247, 216, 106);
+    background-image: none;
+}
+
+.dropdown-menu > li > a.active {
+    background-color: rgb(249, 242, 217);
+    border-top: 1px solid rgb(247, 216, 106);
+    border-bottom: 1px solid rgb(247, 216, 106);
+    background-image: none;
+}
+
+.dropdown-menu > li > a.active.changed {
+    background-color: rgb(218, 255, 181);
+    border-top: 1px solid rgb(247, 216, 106);
+    border-bottom: 1px solid rgb(247, 216, 106);
+    background-image: none;
+}
+
+.dropdown-menu > li > a:focus, 
+.dropdown-menu > li > a.new.active:hover,
+.dropdown-menu > li > a.changed:hover,
+.dropdown-menu > li > a.new:hover,
+.dropdown-menu > li > a.active:hover,
+.dropdown-menu > li > a.active.changed:hover
+ {
     background-color: #e8e8e8;
     background-image: -webkit-linear-gradient(top, #f5f5f5 0, #e8e8e8 100%);
     background-image: -o-linear-gradient(top, #f5f5f5 0, #e8e8e8 100%);
@@ -990,11 +1035,6 @@ input[type=checkbox].property-grid-editor {
     background-image: linear-gradient(to bottom, #f5f5f5 0, #e8e8e8 100%);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#ffe8e8e8', GradientType=0);
     background-repeat: repeat-x;
-}
-
-.dropdown-menu > li > a.active {
-    border-top: 1px solid #66afe9;
-    border-bottom: 1px solid #66afe9;
 }
 
 .dropdown-menu > li > a.main {
@@ -1039,6 +1079,6 @@ input[type=checkbox].property-grid-editor {
 }
 
 .cell-unused-terrain {
-    color:red;
+    color: red;
     font-weight: bold;
 }
