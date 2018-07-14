@@ -1054,13 +1054,15 @@ export class LPCIndenter extends EventEmitter {
             }
             else if (this.$quote) {
                 while (true) {
-                    if (line.charAt(p) === this.$quote) {
+                    if (line.charAt(p) === '\\')
+                        p++;
+                    else if (line.charAt(p) === this.$quote) {
                         this.$quote = 0;
                         p++;
                         break;
                     }
                     else if (p >= pl)
-                        throw { message: 'Unterminated string', line: lineNo, col: p - 1 };
+                        throw { message: `Unterminated string, line: ${lineNo}, Column: ${p - 1}`, line: lineNo, col: p - 1 };
                     else if (line.charAt(p) === '\\' && p + 1 === pl)
                         break;
                     p++;
@@ -1077,7 +1079,7 @@ export class LPCIndenter extends EventEmitter {
                     case '"':
                         this.$quote = c;
                         if (p >= pl)
-                            throw { message: 'Unterminated string', line: lineNo, col: p - 1 };
+                            throw { message: `Unterminated string, line: ${lineNo}, Column: ${p - 1}`, line: lineNo, col: p - 1 };
                         continue;
                     case '@':
                         c = line.charAt(p);
@@ -1244,7 +1246,7 @@ export class LPCIndenter extends EventEmitter {
                 if (this.$f[top] <= this.$g[token]) { /* shift the token on the stack */
                     let i;
                     if (sp.bottom)
-                        throw { message: 'Nesting too deep', line: lineNo, col: p - 1 };
+                        throw { message: `Nesting too deep, line: ${lineNo}, Column: ${p - 1}`, line: lineNo, col: p - 1 };
 
                     i = ip.current;
                     if ((token === TokenType.LBRACKET &&
@@ -1333,7 +1335,7 @@ export class LPCIndenter extends EventEmitter {
             this.$after_keyword_t = (token >= TokenType.IF);
         }
         if (p >= pl && this.$quote)
-            throw { message: 'Unterminated string', line: lineNo, col: p - 1 };
+            throw { message: `Unterminated string, line: ${lineNo}, Column: ${p - 1}`, line: lineNo, col: p - 1 };
 
         return newLine || line;
     }

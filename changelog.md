@@ -9,11 +9,13 @@
     - When saving file as, add resulting file to recent
     - Fix issue with external exits and room editor doing data multiple times
     - Fix format document indenting of arrays if last element in a mapping was an array lookup using []
+    - Fix escaped characters when parsing strings when indenting
     - Tabstrip drop down navigation menu:
       - Colorized to match tab colors
       - Display tab tooltips when hovered
     - Correctly remember last active open file when reopen is enabled
     - Fix drag and drop of tabs between two tab groups
+    - Add line/column #s to errors when formatting
   - Immortal tools:
     - Fix windows file name sanitize system, replaces invalid characters with _
 

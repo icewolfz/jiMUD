@@ -112,7 +112,7 @@ export function SetupEditor() {
                                     startLineNumber: e.line + 1,
                                     endColumn: e.col,
                                     endLineNumber: e.line + 1,
-                                    message: e.message + 1,
+                                    message: e.message,
                                     severity: 8
                                 }
                             ]);
