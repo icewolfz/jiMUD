@@ -763,13 +763,15 @@ export class IED extends EventEmitter {
 
     public static sanitizeFile(file: string) {
         if (IED.windows)
-            return file.replace(/[^0-9a-zA-Z^&'@\{\}\[\],$=!#\(\)%.+~_\s.-]/g, '_');
+            return file.replace(/[/\0<>:"\\\|\?\*]/g, '_').replace(/[\x01-\x1F]/g, '_');
+        //return file.replace(/[^0-9a-zA-Z^&'@\{\}\[\],$=!#\(\)%.+~_\s.-]/g, '_');
         return file.replace(/[/\0]/g, '_');
     }
 
     public static invalidFile(file: string) {
         if (IED.windows)
-            return file.match(/[^0-9a-zA-Z^&'@\{\}\[\],$=!#\(\)%.+~_\s.-]/g);
+            return file.match(/[/\0<>:"\\\|\?\*]/g) || file.match(/[\x01-\x1F]/g);
+        //return file.match(/[^0-9a-zA-Z^&'@\{\}\[\],$=!#\(\)%.+~_\s.-]/g);
         return file.match(/[/\0]/g);
     }
 

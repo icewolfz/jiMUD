@@ -14,6 +14,8 @@
       - Display tab tooltips when hovered
     - Correctly remember last active open file when reopen is enabled
     - Fix drag and drop of tabs between two tab groups
+  - Immortal tools:
+    - Fix windows file name sanitize system, replaces invalid characters with _
 
 ## 0.4.58 2018-07-07
 
