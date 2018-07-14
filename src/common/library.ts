@@ -486,6 +486,36 @@ export function clone(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
 
+export function cloneObject(obj) {
+    const nObj = {};
+    let prop;
+    for (prop in this) {
+        if (!this.hasOwnProperty(prop)) continue;
+        if (typeof obj[prop] === 'object')
+            nObj[prop] = cloneObject(obj[prop]);
+        else if (Array.isArray(obj[prop]))
+            nObj[prop] = cloneArray(obj[prop]);
+        else
+            nObj[prop] = obj[prop];
+    }
+    return nObj;
+}
+
+export function cloneArray(arr) {
+    if (!arr || arr.length === 0) return new Array();
+    const nArr = new Array(arr.length);
+    let l = arr.length;
+    while (l--) {
+        if (typeof arr[l] === 'object')
+            nArr[l] = cloneObject(arr[l]);
+        else if (Array.isArray(arr[l]))
+            nArr[l] = cloneArray(arr[l]);
+        else
+            nArr[l] = cloneObject(arr[l]);
+    }
+    return nArr;
+}
+
 export function copy(o) {
     let output;
     let v;
@@ -494,7 +524,7 @@ export function copy(o) {
     for (key in o) {
         if (!o.hasOwnProperty(key)) continue;
         v = o[key];
-        output[key] = (typeof v === 'object') ? copy(v) : v;
+        output[key] = (typeof v === 'object' || Array.isArray(v)) ? copy(v) : v;
     }
     return output;
 }
