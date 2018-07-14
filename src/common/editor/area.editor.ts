@@ -3,7 +3,7 @@ import { Splitter, Orientation } from './../splitter';
 import { PropertyGrid } from './../propertygrid';
 import { EditorType, ValueEditor } from './../value.editors';
 import { DataGrid } from './../datagrid';
-import { formatString, existsSync, capitalize, wordwrap, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
+import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString } from './../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -63,10 +63,8 @@ export class Room {
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
-            if (prop === 'external')
-                r.external = cloneObject(this.external);
-            else if (prop === 'objects' || prop === 'monsters' || prop === 'items')
-                r[prop] = cloneArray(this[prop]);
+            if (prop === 'external' || prop === 'objects' || prop === 'monsters' || prop === 'items')
+                r[prop] = copy(this[prop]);
             else
                 r[prop] = this[prop];
         }
@@ -107,36 +105,6 @@ export class Room {
     }
 }
 
-function cloneObject(obj) {
-    const nObj = {};
-    let prop;
-    for (prop in this) {
-        if (!this.hasOwnProperty(prop)) continue;
-        if (typeof obj[prop] === 'object')
-            nObj[prop] = cloneObject(obj[prop]);
-        else if (Array.isArray(obj[prop]))
-            nObj[prop] = cloneArray(obj[prop]);
-        else
-            nObj[prop] = obj[prop];
-    }
-    return nObj;
-}
-
-function cloneArray(arr) {
-    if (!arr || arr.length === 0) return new Array();
-    const nArr = new Array(arr.length);
-    let l = arr.length;
-    while (l--) {
-        if (typeof arr[l] === 'object')
-            nArr[l] = cloneObject(arr[l]);
-        else if (Array.isArray(arr[l]))
-            nArr[l] = cloneArray(arr[l]);
-        else
-            nArr[l] = cloneObject(arr[l]);
-    }
-    return nArr;
-}
-
 enum View {
     map,
     monsters,
@@ -160,7 +128,7 @@ class Monster {
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
             if (prop === 'objects')
-                r.objects = cloneArray(this.objects);
+                r.objects = copy(this.objects);
             else
                 r[prop] = this[prop];
         }
