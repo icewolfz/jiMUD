@@ -983,9 +983,9 @@ export class DockPane extends EventEmitter {
                 if (this.panels[t].iconSrc)
                     icon = ` style="background-image: url(${this.panels[t].iconSrc})"`;
                 if (this.panels[t] === this.active)
-                    menu.append(`<li><a href="#" class="active ${this.panels[t].tab.className}" data-index="${t}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
+                    menu.append(`<li><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="active ${this.panels[t].tab.className}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
                 else
-                    menu.append(`<li><a href="#" data-index="${t}" class="${this.panels[t].tab.className}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
+                    menu.append(`<li><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="${this.panels[t].tab.className}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
             }
             //$(this.$scrollDropdown).trigger('click.bs.dropdown');
         };

@@ -9,7 +9,9 @@
     - When saving file as, add resulting file to recent
     - Fix issue with external exits and room editor doing data multiple times
     - Fix format document indenting of arrays if last element in a mapping was an array lookup using []
-    - Tabstrip drop down navigation menu now colorized to match tab colors
+    - Tabstrip drop down navigation menu:
+      - Colorized to match tab colors
+      - Display tab tooltips when hovered
     - Correctly remember last active open file when reopen is enabled
     - Fix drag and drop of tabs between two tab groups
 
