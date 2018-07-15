@@ -2,6 +2,9 @@
 
 ## 0.4.59
 
+- **New:**
+  - Code editor:
+    - Added copy remote path to tab context menu
 - **Fixed:**
   - Code editor:
     - Virtual area editor was not correctly firing resizing system to update offsets

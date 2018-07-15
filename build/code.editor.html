@@ -2341,6 +2341,14 @@
                 clipboard.writeText(e.panel.editor.file || '', 'selection');
             }
         });
+        if(e.panel.editor.remote && e.panel.editor.remote.length > 0)
+            temp.push({
+                label: '&Copy remote path',
+                click: () => {
+                    clipboard.writeText(e.panel.editor.remote || '');
+                    clipboard.writeText(e.panel.editor.remote || '', 'selection');
+                }
+            });        
         temp.push({ type: 'separator' });
         if (e.panel.editor.changed) {
             temp.push({
