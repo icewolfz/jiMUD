@@ -2341,14 +2341,14 @@
                 clipboard.writeText(e.panel.editor.file || '', 'selection');
             }
         });
-        if(e.panel.editor.remote && e.panel.editor.remote.length > 0)
+        if (e.panel.editor.remote && e.panel.editor.remote.length > 0)
             temp.push({
                 label: '&Copy remote path',
                 click: () => {
                     clipboard.writeText(e.panel.editor.remote || '');
                     clipboard.writeText(e.panel.editor.remote || '', 'selection');
                 }
-            });        
+            });
         temp.push({ type: 'separator' });
         if (e.panel.editor.changed) {
             temp.push({
@@ -3864,6 +3864,10 @@
             }
             else
                 openFiles(options.opened.concat(_open.map((l) => { return { file: l[0], remote: l[1], remoteEdit: l[2] }; })));
+            if (_open[_open.length - 1][2])
+                options.lastActive = 'remote:' + _open[_open.length - 1][0];
+            else
+                options.lastActive = _open[_open.length - 1][0];
             _open = 0;
         }
         else if (options.opened.length && Array.isArray(options.opened[0])) {
