@@ -45,6 +45,7 @@ export class Room {
     public items = [];
     public objects = [];
     public monsters = [];
+    public subArea = '';
 
     constructor(x, y, z, e?, s?) {
         e = +e;
@@ -177,6 +178,7 @@ class StdObject {
 class Settings {
     public light: number;
     public terrain: string;
+    public states: RoomStates;
 }
 
 class Size {
@@ -200,6 +202,7 @@ class Size {
 }
 
 class Area {
+    public name: string;
     public rooms: Room[][][];
     public monsters: Monster[];
     public objects: StdObject[];
