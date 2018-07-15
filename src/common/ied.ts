@@ -74,10 +74,21 @@ export class IED extends EventEmitter {
         this._worker = new Worker('./js/ied.background.js');
         this._worker.onmessage = (e) => {
             if (e.data.event === 'decoded-dir') {
-                const z = new ZLIB.InflateStream();
-                let files = Buffer.from(z.decompress(new Buffer(e.data.data, 'binary'))).toString();
-                files = JSON.parse(files);
-                this.emit('dir', e.data.path, files, e.data.tag || 'dir', e.data.local);
+                let files;
+                try {
+                    const z = new ZLIB.InflateStream();
+                    files = Buffer.from(z.decompress(new Buffer(e.data.data, 'binary'))).toString();
+                    files = JSON.parse(files);
+                    this.emit('dir', e.data.path, files, e.data.tag || 'dir', e.data.local);
+                }
+                catch (err) {
+                    this.emit('error', err);
+                    this.emit('error', files);
+                    if (e.data.tag.startsWith(this.prefix + 'dir:'))
+                        this.getDir(e.data.path, true, e.data.tag.substr(this.prefix.length + 4), e.data.local);
+                    else
+                        this.getDir(e.data.path, true, e.data.tag, e.data.local);
+                }
                 return;
             }
             if (!this.active) return;

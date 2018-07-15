@@ -21,6 +21,7 @@
     - Add line/column #s to errors when formatting
   - Immortal tools:
     - Fix windows file name sanitize system, replaces invalid characters with _
+    - Fix issue with compressed dir decoding, if it fails attempt to re-get data
 
 ## 0.4.58 2018-07-07
 
