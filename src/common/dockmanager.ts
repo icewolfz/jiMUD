@@ -844,6 +844,7 @@ export class DockPane extends EventEmitter {
             this.$scrollDropdown.classList.add('hidden');
             $('.dropdown.open').removeClass('open');
         }
+        this.updateScrollMenu();
     }
 
     public setParent(parent?: string | JQuery | HTMLElement) {
@@ -869,6 +870,36 @@ export class DockPane extends EventEmitter {
             this.$el.removeChild(this.$tabstrip);
             this.$el.removeChild(this.$tabpane);
             this.$parent.removeChild(this.$el);
+        }
+    }
+
+    private buildScrollMenu() {
+        const menu = $(this.$scrollMenu);
+        menu.empty();
+        const tl = this.panels.length;
+        const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropdown.offsetWidth;
+        const l = this._scroll + this.$scrollLeft.offsetWidth;
+        for (let t = 0; t < tl; t++) {
+            let icon = '';
+            if (this.panels[t].iconSrc)
+                icon = ` style="background-image: url(${this.panels[t].iconSrc})"`;
+            if (this.panels[t].tab.offsetLeft + this.panels[t].tab.clientWidth >= l && this.panels[t].tab.offsetLeft < w)
+                menu.append(`<li class="visible"><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="visible ${this.panels[t].tab.className}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
+            else
+                menu.append(`<li><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="${this.panels[t].tab.className}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
+        }
+    }
+
+    private updateScrollMenu() {
+        if (!this.$scrollMenu || this.$scrollMenu.children.length === 0) return;
+        const tl = this.panels.length;
+        const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropdown.offsetWidth;
+        const l = this._scroll + this.$scrollLeft.offsetWidth;
+        for (let t = 0; t < tl; t++) {
+            if (this.panels[t].tab.offsetLeft + this.panels[t].tab.clientWidth >= l && this.panels[t].tab.offsetLeft < w)
+                this.$scrollMenu.children[t].classList.add('visible');
+            else
+                this.$scrollMenu.children[t].classList.remove('visible');
         }
     }
 
@@ -975,18 +1006,7 @@ export class DockPane extends EventEmitter {
         this.$scrollDropdown.onclick = (e) => {
             e.stopPropagation();
             e.preventDefault();
-            const menu = $(this.$scrollMenu);
-            menu.empty();
-            const tl = this.panels.length;
-            for (let t = 0; t < tl; t++) {
-                let icon = '';
-                if (this.panels[t].iconSrc)
-                    icon = ` style="background-image: url(${this.panels[t].iconSrc})"`;
-                if (this.panels[t] === this.active)
-                    menu.append(`<li><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="active ${this.panels[t].tab.className}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
-                else
-                    menu.append(`<li><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="${this.panels[t].tab.className}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
-            }
+            this.buildScrollMenu();
             //$(this.$scrollDropdown).trigger('click.bs.dropdown');
         };
         d.appendChild(this.$scrollDropdown);

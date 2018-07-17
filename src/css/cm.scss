@@ -359,3 +359,7 @@ $tabHeight: 26;
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#ffe8e8e8', GradientType=0);
     background-repeat: repeat-x;
 }
+
+.dropdown-menu > li.visible {
+    border-right: 3px solid #999;
+}

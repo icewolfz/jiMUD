@@ -5,6 +5,7 @@
 - **New:**
   - Code editor:
     - Added copy remote path to tab context menu
+    - Tabstrip drop down navigation menu: Visible tabs now show an indicator in the drop down menu if visible
 - **Fixed:**
   - Code editor:
     - Virtual area editor was not correctly firing resizing system to update offsets
@@ -16,6 +17,7 @@
     - Tabstrip drop down navigation menu:
       - Colorized to match tab colors
       - Display tab tooltips when hovered
+      - Correctly updates when window resized
     - Correctly remember last active open file when reopen is enabled
     - Fix drag and drop of tabs between two tab groups
     - Add line/column #s to errors when formatting
