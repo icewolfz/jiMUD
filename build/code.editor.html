@@ -617,7 +617,12 @@
             </button>
         </div>
     </dialog>
-
+    <dialog id="update-progress" style="z-index:1000;text-align:center">
+        <div id="update-progress-title"></div>
+        <div>
+            <progress max="100" id="update-progressbar"></progress>
+        </div>
+    </dialog>
     <div style="display: none" id="wizard-pages">
         <div id="mon-wizard-welcome">
             <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
@@ -4023,6 +4028,19 @@
         remote.getCurrentWindow().close();
         return;
     };
+
+    ipcRenderer.on('update-progress', (event, progressObj) => {
+        if (!$("#update-progress")[0].open) {
+            $("#update-progress-title").html("Downloading update&hellip;");
+            $("#update-progress")[0].show();
+        }
+        $("#update-progressbar").val(value);
+    });
+
+    ipcRenderer.on('update-downloaded', () => {
+        if ($("#update-progress")[0].open)
+            $("#update-progress")[0].close();
+    });
 
     ipcRenderer.on('open-editor', (event, file, remoteFile, remoteEdit) => {
         if (_loading) {

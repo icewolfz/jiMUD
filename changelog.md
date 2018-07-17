@@ -2,6 +2,13 @@
 
 ## 0.4.60
 
+- **New:**
+  - Auto update:
+    - Show download progress in task bar for windows
+    - Display download progress in main window
+- **Fixed:**
+  - When loading the same character over ensure autoconnect is reran even if settings are the same and not reloaded
+
 ## 0.4.59 2018-07-16
 
 - **New:**

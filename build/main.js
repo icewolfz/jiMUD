@@ -2130,6 +2130,8 @@ ipcMain.on('set-overlay', (event, args) => {
 ipcMain.on('set-progress', (event, args) => {
   if (win)
     win.setProgressBar(args.value, args.options);
+  else if (global.editorOnly && winCode)
+    winCode.setProgressBar(args.value, args.options);
 });
 
 ipcMain.on('set-progress-window', (event, window, args) => {
@@ -3413,17 +3415,42 @@ function updateJumpList() {
   }
 }
 
+function createUpdater() {
+  const autoUpdater = require("electron-updater").autoUpdater;
+  autoUpdater.on('download-progress', progressObj => {
+    if (win) {
+      win.setProgressBar(progressObj.percent);
+      win.webContents.send('update-progress', progressObj);
+    }
+    else if (global.editorOnly && winCode) {
+      winCode.setProgressBar(progressObj.percent);
+      winCode.webContents.send('update-progress', progressObj);
+    }
+  });
+  return autoUpdater;
+}
+
 function checkForUpdates() {
   if (!set)
     set = settings.Settings.load(global.settingsFile);
   if (set.checkForUpdates) {
-    const autoUpdater = require("electron-updater").autoUpdater;
+    const autoUpdater = createUpdater();
+    autoUpdater.on('update-downloaded', () => {
+      if (win) {
+        win.setProgressBar(-1);
+        win.webContents.send('update-downloaded');
+      }
+      else if (global.editorOnly && winCode) {
+        winCode.setProgressBar(-1);
+        winCode.webContents.send('update-downloaded');
+      }
+    });
     autoUpdater.checkForUpdatesAndNotify();
   }
 }
 
 function checkForUpdatesManual() {
-  const autoUpdater = require("electron-updater").autoUpdater;
+  const autoUpdater = createUpdater();
   autoUpdater.autoDownload = false;
   autoUpdater.on('error', (error) => {
     dialog.showErrorBox('Error: ', error == null ? "unknown" : (error.stack || error).toString());
@@ -3472,10 +3499,16 @@ function checkForUpdatesManual() {
       setImmediate(() => autoUpdater.quitAndInstall());
     });
   });
-  if (global.editorOnly)
+  if (global.editorOnly) {
     winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: false });
-  else
+    winCode.setProgressBar(-1);
+    winCode.webContents.send('update-downloaded');
+  }
+  else {
     updateMenuItem({ menu: ['help', 'updater'], enabled: false });
+    win.setProgressBar(-1);
+    win.webContents.send('update-downloaded');
+  }
   autoUpdater.checkForUpdates();
 }
 
