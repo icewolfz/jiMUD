@@ -889,7 +889,7 @@ export class DockPane extends EventEmitter {
     }
 
     private updateScrollMenu() {
-        if (!this.$scrollMenu || this.$scrollMenu.children.length === 0) return;
+        if (!this.$scrollMenu || this.$scrollMenu.children.length !== this.panels.length || this.$scrollMenu.children.length === 0 || !this.$scrollMenu.parentElement.classList.contains('open')) return;
         const tl = this.panels.length;
         const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropdown.offsetWidth;
         const l = this._scroll + this.$scrollLeft.offsetWidth;

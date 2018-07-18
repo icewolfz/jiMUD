@@ -11,6 +11,7 @@
   - Code editor:
     - Tab navigation buttons and menu would not appear sometimes when using side by side views
     - Fix ctrl+w and ctrl+tab to use on current active tab group
+    - Error updating scroll dropdown menu when not open
   - Menu bars did not always re-enable correctly
 
 ## 0.4.59 2018-07-16
