@@ -2054,39 +2054,45 @@
         {
             label: '&Help',
             role: 'help',
+            id: 'help',
             submenu: [
                 {
                     label: '&Immortal',
                     click: () => {
                         shell.openExternal("http://www.shadowmud.com/tutorial", '_blank');
-                    }
+                    },
+                    enabled: true
                 },
                 { type: 'separator' },
                 {
                     label: '&Code editor',
                     click: () => {
                         shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs/codeeditor.md", '_blank');
-                    }
+                    },
+                    enabled: true
                 },
                 {
                     label: '&jiMUD',
                     click: () => {
                         shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
-                    }
+                    },
+                    enabled: true
                 },
                 { type: 'separator' },
                 {
                     label: 'Check for updates...',
                     click: () => {
                         ipcRenderer.send('check-for-updates');
-                    }
+                    },
+                    enabled: true
                 },
                 { type: 'separator' },
                 {
                     label: '&About...',
                     click: () => {
                         ipcRenderer.send('show-window', 'about');
-                    }
+                    },
+                    enabled: true
                 }
             ]
         }

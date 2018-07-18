@@ -23,6 +23,7 @@ export class Menubar {
             this.window = window;
         this.menu = (menu || []).map(i => {
             i.root = true;
+            i.enabled = true;
             return i;
         });
         this.rebuild();
@@ -78,8 +79,8 @@ export class Menubar {
         return item;
     }
 
-    public updateItem(menu: (string | string[]), options) {
-        if (this.$busy || (this.$updating & 1) === 1) {
+    public updateItem(menu: (string | string[]), options, noRebuild?) {
+        if ((this.$updating & 1) === 1) {
             setTimeout(() => {
                 this.updateItem(menu, options);
             }, 10);
@@ -117,7 +118,8 @@ export class Menubar {
         tItem.position = item.position;
         if (options.submenu != null) {
             tItem.submenu = options.submenu;
-            this.doUpdate(1);
+            if (!noRebuild)
+                this.doUpdate(1);
         }
         if (tItem.root && !tItem.enabled) {
             tItem.submenu.map(f => {
@@ -130,7 +132,8 @@ export class Menubar {
                 f.enabled = false;
                 return f;
             });
-            this.doUpdate(1);
+            if (!noRebuild)
+                this.doUpdate(1);
         }
         else if (tItem.root && tItem.enabled) {
             tItem.submenu.map(f => {
@@ -139,7 +142,8 @@ export class Menubar {
                 delete f.rootEnabled;
                 return f;
             });
-            this.doUpdate(1);
+            if (!noRebuild)
+                this.doUpdate(1);
         }
     }
 
@@ -157,9 +161,10 @@ export class Menubar {
         if (value === this.$enabled) return;
         this.$busy = true;
         this.$enabled = value;
-        this.menu.map(i => {
-            this.updateItem(i.label.replace(/&/g, ''), { enabled: value });
+        this.menu.forEach(i => {
+            this.updateItem(i.id || i.label.replace(/&/g, ''), { enabled: value }, true);
         });
+        this.doUpdate(1);
         this.$busy = false;
     }
 
