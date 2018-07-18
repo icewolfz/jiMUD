@@ -820,7 +820,7 @@ export class DockPane extends EventEmitter {
     }
 
     public updateScrollButtons() {
-        if (this.$tabstrip.scrollWidth > this.$parent.clientWidth) {
+        if (this.$tabstrip.scrollWidth > this.$el.clientWidth) {
             this.$scrollLeft.classList.remove('hidden');
             this.$scrollRight.classList.remove('hidden');
             this.$scrollDropdown.classList.remove('hidden');

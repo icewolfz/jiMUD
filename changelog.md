@@ -8,6 +8,8 @@
     - Display download progress in main window
 - **Fixed:**
   - When loading the same character over ensure autoconnect is reran even if settings are the same and not reloaded
+  - Code editor:
+    - Tab navigation buttons and menu would not appear sometimes when using side by side views
 
 ## 0.4.59 2018-07-16
 
