@@ -39,7 +39,7 @@ export class DockManager extends EventEmitter {
     public panes: DockPane[] = [];
     private $parent: HTMLElement;
     private $el: HTMLElement;
-    private $activePane;
+    private $activePane: DockPane;
     public dragPanel;
     private _updating: UpdateType = UpdateType.none;
     private $widths: number[] = [];
@@ -95,8 +95,6 @@ export class DockManager extends EventEmitter {
         pane.on('mousedown', (e) => {
             this.focusPane(pane);
         });
-        pane.on('keyup', e => this.emit('keyup', e, this.panes.indexOf(pane)));
-        pane.on('keydown', e => this.emit('keydown', e, this.panes.indexOf(pane)));
         pane.on('tab-strip-hidden', () => this.emit('tab-strip-hidden', this.panes.indexOf(pane)));
         pane.on('tab-strip-shown', () => this.emit('tab-strip-shown', this.panes.indexOf(pane)));
         pane.on('dragenter', e => {
@@ -398,6 +396,33 @@ export class DockManager extends EventEmitter {
             document.removeEventListener('mousemove', (<any>this.$ghostbar).move);
             this.$ghostbar = null;
             this.freePanes();
+        });
+        document.addEventListener('keyup', (e) => {
+            this.emit('keyup', e);
+            if (e.defaultPrevented)
+                return;
+        });
+        document.addEventListener('keydown', (e) => {
+            let idx;
+            const tl = this.panels.length;
+            this.emit('keydown', e);
+            if (e.defaultPrevented)
+                return;
+            if (!e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) {
+                if (e.which === 87) {
+                    this.$activePane.removePanel(this.$activePane.active);
+                    e.preventDefault();
+                }
+                else if (e.which === 9) {
+                    idx = this.$activePane.getPanelIndex(this.$activePane.active);
+                    if (idx === -1) return;
+                    idx++;
+                    if (idx === this.$activePane.panels.length)
+                        idx = 0;
+                    this.$activePane.switchToPanelByIndex(idx);
+                    e.preventDefault();
+                }
+            }
         });
     }
 
@@ -748,33 +773,6 @@ export class DockPane extends EventEmitter {
         });
         window.addEventListener('load', () => {
             this.doUpdate(UpdateType.resize);
-        });
-        document.addEventListener('keyup', (e) => {
-            this.emit('keyup', e);
-            if (e.defaultPrevented)
-                return;
-        });
-        document.addEventListener('keydown', (e) => {
-            let idx;
-            const tl = this.panels.length;
-            this.emit('keydown', e);
-            if (e.defaultPrevented)
-                return;
-            if (!e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) {
-                if (e.which === 87) {
-                    this.removePanel(this.active);
-                    e.preventDefault();
-                }
-                else if (e.which === 9) {
-                    idx = this.getPanelIndex(this.active);
-                    if (idx === -1) return;
-                    idx++;
-                    if (idx === this.panels.length)
-                        idx = 0;
-                    this.switchToPanelByIndex(idx);
-                    e.preventDefault();
-                }
-            }
         });
         window.addEventListener('blur', () => { $('.dropdown.open').removeClass('open'); });
         this.$measure = document.createElement('div');
