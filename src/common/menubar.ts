@@ -79,18 +79,20 @@ export class Menubar {
         return item;
     }
 
-    public updateItem(menu: (string | string[]), options, noRebuild?) {
-        if ((this.$updating & 1) === 1) {
+    public updateItem(menu: (string | string[]), options?) {
+        if (this.$busy || (this.$updating & 1) === 1) {
             setTimeout(() => {
                 this.updateItem(menu, options);
             }, 10);
-            return;
         }
+        else
+            this._updateItem(menu, options);
+    }
+
+    private _updateItem(menu: (string | string[]), options, noRebuild?) {
         let item;
         let items;
         let tItem;
-        if (!menu) return;
-
         items = this.getItem(menu, ItemType.both);
         if (!items) return;
         item = items[0];
@@ -162,7 +164,7 @@ export class Menubar {
         this.$busy = true;
         this.$enabled = value;
         this.menu.forEach(i => {
-            this.updateItem(i.id || i.label.replace(/&/g, ''), { enabled: value }, true);
+            this._updateItem(i.id || i.label.replace(/&/g, ''), { enabled: value }, true);
         });
         this.doUpdate(1);
         this.$busy = false;
