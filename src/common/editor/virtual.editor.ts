@@ -27,6 +27,16 @@ declare global {
     }
 }
 
+export enum shiftType {
+    none = 0,
+    top = 1,
+    left = 2,
+    right = 8,
+    bottom = 16,
+    up = 32,
+    down = 64
+}
+
 export enum UpdateType { none = 0, drawMap = 1, buildRooms = 2, buildMap = 4, resize = 8 }
 
 export enum DescriptionOnDelete { leave = 0, end = 1, endPlusOne = 2, start = 3 }

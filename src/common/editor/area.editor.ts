@@ -9,7 +9,7 @@ const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
 const path = require('path');
 const fs = require('fs-extra');
-import { MousePosition, RoomExits, FileOpenValueEditor, FileBrowseValueEditor, ExternalExitValueEditor, ItemsValueEditor, RoomExit, RoomStates } from './virtual.editor';
+import { MousePosition, RoomExits, shiftType, FileOpenValueEditor, FileBrowseValueEditor, ExternalExitValueEditor, ItemsValueEditor, RoomExit, RoomStates } from './virtual.editor';
 
 import RGBColor = require('rgbcolor');
 
@@ -847,6 +847,7 @@ export class AreaEditor extends EditorBase {
                         this.paste();
                     break;
                 case 38: //up
+                    //#region
                     if (e.shiftKey) {
                         let sf = this.$shiftRoom;
                         let ef = this.$focusedRoom;
@@ -887,8 +888,10 @@ export class AreaEditor extends EditorBase {
                         this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 40: //down
+                    //#region
                     if (e.shiftKey) {
                         let sf = this.$shiftRoom;
                         let ef = this.$focusedRoom;
@@ -929,8 +932,10 @@ export class AreaEditor extends EditorBase {
                         this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 37: //left
+                    //#region
                     if (e.shiftKey) {
                         let sf = this.$shiftRoom;
                         let ef = this.$focusedRoom;
@@ -971,8 +976,10 @@ export class AreaEditor extends EditorBase {
                         this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 39: //right
+                    //#region
                     if (e.shiftKey) {
                         let sf = this.$shiftRoom;
                         let ef = this.$focusedRoom;
@@ -1013,9 +1020,11 @@ export class AreaEditor extends EditorBase {
                         this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 110:
                 case 46: //delete
+                    //#region
                     if (this.$selectedRooms.length === 0)
                         return;
                     sl = this.$selectedRooms.length;
@@ -1189,8 +1198,10 @@ export class AreaEditor extends EditorBase {
                         }
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 97: //num1
+                    //#region southwest
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -1222,8 +1233,10 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 98: //num2
+                    //#region south
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -1252,8 +1265,10 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 99: //num3
+                    //#region souteast
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -1283,8 +1298,10 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 100: //num4
+                    //#region west
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -1313,10 +1330,12 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 101: //num5
                     break;
                 case 102: //num6
+                    //#region east
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -1345,8 +1364,10 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 103: //num7
+                    //#region northwest
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -1376,8 +1397,10 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 104: //num8
+                    //#region north
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -1405,8 +1428,10 @@ export class AreaEditor extends EditorBase {
                         this.$map.focus();
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 105: //num9
+                    //#region northeast
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -1436,12 +1461,14 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 107: //+
                     break;
                 case 109: //-
                     break;
                 case 111: // / up
+                    //#region
                     if (this.$selectedRooms.length === 0)
                         return;
                     if (this.$depth + 1 < this.$area.size.depth) {
@@ -1467,8 +1494,10 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 106: // * down
+                    //#region
                     if (this.$selectedRooms.length === 0)
                         return;
                     if (this.$depth - 1 >= 0) {
@@ -1494,6 +1523,7 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    //#endregion
                     break;
             }
         });
@@ -4491,5 +4521,67 @@ export class AreaEditor extends EditorBase {
             d += `   set_down(VIR+"${r.x},${r.y},${r.z - 1}");\n`;
         d += '}';
         return d;
+    }
+
+    public resizeMap(width, height, depth, shift: shiftType) {
+        Timer.start();
+        const zl = this.$area.size.depth;
+        const xl = this.$area.size.width;
+        const yl = this.$area.size.height;
+        this.$area.size.width += width;
+        this.$area.size.height += height;
+        this.$area.size.depth += depth;
+
+        const rooms = Array.from(Array(this.$area.size.depth),
+            (v, z) => Array.from(Array(this.$area.size.height),
+                (v2, y) => Array.from(Array(this.$area.size.width),
+                    (v3, x) => new Room(x, y, z))
+            ));
+
+        this.$rcount = 0;
+        for (let z = 0; z < zl; z++) {
+            for (let y = 0; y < yl; y++) {
+                for (let x = 0; x < xl; x++) {
+                    const room = this.$area.rooms[z][y][x];
+                    if (!room) continue;
+                    if ((shift & shiftType.right) === shiftType.right)
+                        room.x += width;
+                    else if ((shift & shiftType.left) === shiftType.left)
+                        room.x -= height;
+                    else
+                        room.y -= height / 2;
+                    if ((shift & shiftType.bottom) === shiftType.bottom)
+                        room.y += height;
+                    else if ((shift & shiftType.top) === shiftType.top)
+                        room.y -= width;
+                    else
+                        room.y += width / 2;
+                    if ((shift & shiftType.down) === shiftType.down)
+                        room.z += depth;
+                    else if ((shift & shiftType.up) === shiftType.up)
+                        room.z -= depth;
+                    else
+                        room.z += depth / 2;
+                    rooms[z][y][x] = room;
+                    const idx = this.$selectedRooms.indexOf(this.$area.rooms[z][y][x]);
+                    if (idx !== -1)
+                        this.$selectedRooms[idx] = rooms[z][y][x];
+                    if (this.$focusedRoom.at(x, y, z))
+                        this.$focusedRoom = rooms[z][y][x];
+                    if (room.exits) this.$rcount++;
+                }
+            }
+        }
+        this.$area.rooms = rooms;
+        this.UpdateEditor(this.$selectedRooms);
+        this.UpdatePreview(this.selectedFocusedRoom);
+        if (this.$depth >= this.$area.size.depth)
+            this.$depth = this.$area.size.depth - 1;
+        this.$map.width = this.$area.size.right;
+        this.$map.height = this.$area.size.bottom;
+        this.BuildAxises();
+        this.emit('resize-map');
+        Timer.end('Resize time');
+        this.doUpdate(UpdateType.drawMap);
     }
 }
