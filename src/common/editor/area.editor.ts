@@ -1673,6 +1673,24 @@ export class AreaEditor extends EditorBase {
                         this.setFocusedRoom(null);
                         this.doUpdate(UpdateType.drawMap);
                         this.$map.focus();
+                        this.emit('rebuild-buttons');
+                    }
+                    else if (!e.ctrlKey) {
+                        this.resizeMap(0, 0, 1, shiftType.down);
+                        this.$depth = this.selectedFocusedRoom.z + 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.Up;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y, this.$depth), true);
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.Down;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setFocusedRoom(null);
+                        this.doUpdate(UpdateType.drawMap);
+                        this.$map.focus();
+                        this.emit('rebuild-buttons');
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
@@ -1702,6 +1720,24 @@ export class AreaEditor extends EditorBase {
                         this.setFocusedRoom(null);
                         this.doUpdate(UpdateType.drawMap);
                         this.$map.focus();
+                        this.emit('rebuild-buttons');
+                    }
+                    else if (!e.ctrlKey) {
+                        this.resizeMap(0, 0, 1, shiftType.up);
+                        this.$depth = this.selectedFocusedRoom.z - 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.Down;
+                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        this.setSelectedRooms(this.getRoom(x, y, this.$depth), true);
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.Up;
+                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setFocusedRoom(null);
+                        this.doUpdate(UpdateType.drawMap);
+                        this.$map.focus();
+                        this.emit('rebuild-buttons');
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
@@ -2107,27 +2143,6 @@ export class AreaEditor extends EditorBase {
         this.changed = false;
         this.switchView(this.$view, true);
         this.emit('reverted');
-    }
-
-    private getRawSelected(raw) {
-        if (!raw) return '';
-        return raw.value.substring(raw.selectionStart, raw.selectionEnd);
-    }
-
-    private deleteRawSelected(raw, noChanged?, noDirty?) {
-        if (!raw) return;
-        const start = raw.selectionStart;
-        const end = raw.selectionEnd;
-        //nothing selected
-        if (start === end) return;
-        raw.value = raw.value.substring(0, start) + raw.value.substring(end);
-        raw.selectionStart = start;
-        raw.selectionEnd = start;
-        if (!noChanged) {
-            this.changed = true;
-            raw.dataset.dirty = !noDirty ? 'true' : null;
-            raw.dataset.changed = 'true';
-        }
     }
 
     private deleteRoom(room) {
@@ -4740,9 +4755,9 @@ export class AreaEditor extends EditorBase {
                         room.y += height;
                     else if ((shift & shiftType.top) !== shiftType.top)
                         room.y += Math.floor(height / 2);
-                    if ((shift & shiftType.down) === shiftType.down)
+                    if ((shift & shiftType.up) === shiftType.up)
                         room.z += depth;
-                    else if ((shift & shiftType.up) !== shiftType.up)
+                    else if ((shift & shiftType.down) !== shiftType.down)
                         room.z += Math.floor(depth / 2);
                     if (room.z >= 0 && room.z < zl2 && room.x >= 0 && room.x < xl2 && room.y >= 0 && room.y < yl2) {
                         rooms[room.z][room.y][room.x] = room;
@@ -4754,6 +4769,12 @@ export class AreaEditor extends EditorBase {
                         if (room.exits) this.$rcount++;
                     }
                     else {
+                        if (room.exits) {
+                            room.x = x;
+                            room.y = y;
+                            room.z = z;
+                            this.deleteRoom(room);
+                        }
                         idx = this.$selectedRooms.indexOf(this.$area.rooms[z][y][x]);
                         if (idx !== -1)
                             this.$selectedRooms.splice(idx, 1);
@@ -4771,6 +4792,27 @@ export class AreaEditor extends EditorBase {
         this.$map.width = this.$area.size.right;
         this.$map.height = this.$area.size.bottom;
         this.BuildAxises();
+        if (this.$area.size.depth < 2) {
+            this.$depth = 0;
+            this.$roomEditor.setPropertyOptions({
+                property: 'z',
+                group: 'Location',
+                readonly: true,
+                visible: false
+            });
+        }
+        else {
+            this.$depthToolbar.value = '' + this.$depth;
+            this.$depthToolbar.max = '' + (this.$area.size.depth - 1);
+            this.$depthToolbar.min = '' + 0;
+            this.$roomEditor.setPropertyOptions({
+                property: 'z',
+                group: 'Location',
+                readonly: true,
+                visible: true
+            });
+        }
+        this.emit('rebuild-buttons');
         this.emit('resize-map');
         Timer.end('Resize time');
         this.doUpdate(UpdateType.drawMap);
