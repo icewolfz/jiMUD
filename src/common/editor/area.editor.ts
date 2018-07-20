@@ -129,6 +129,7 @@ enum View {
 const Timer = new DebugTimer();
 
 class Monster {
+    public id;
     public name;
     public long;
     public short;
@@ -136,6 +137,11 @@ class Monster {
     public level;
     public race;
     public objects = [];
+
+    constructor(id?) {
+        if (!id)
+            this.id = new Date().getTime();
+    }
 
     public clone() {
         const r = new Monster();
@@ -163,9 +169,15 @@ class Monster {
 }
 
 class StdObject {
+    public id;
     public name;
     public long;
     public short;
+
+    constructor(id?) {
+        if (!id)
+            this.id = new Date().getTime();
+    }
 
     public clone() {
         const r = new StdObject();
@@ -276,17 +288,17 @@ class Area {
         if (data.monsters) {
             l = data.monsters.length;
             while (l--) {
-                area.monsters[l] = new Monster();
+                area.monsters[l] = new Monster(data.monsters[l].id);
                 for (prop in data.monsters[l]) {
                     if (!data.monsters[l].hasOwnProperty(prop)) continue;
                     area.monsters[l][prop] = data.monsters[l][prop];
                 }
             }
         }
-        if (data.items) {
-            l = data.items.length;
+        if (data.objects) {
+            l = data.objects.length;
             while (l--) {
-                area.objects[l] = new StdObject();
+                area.objects[l] = new StdObject(data.objects[l].id);
                 for (prop in data.objects[l]) {
                     if (!data.objects[l].hasOwnProperty(prop)) continue;
                     area.objects[l][prop] = data.objects[l][prop];
