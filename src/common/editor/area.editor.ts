@@ -48,8 +48,8 @@ export class Room {
     public subArea = '';
 
     constructor(x, y, z, e?, s?) {
-        e = +e;
-        s = +s;
+        e = +e || 0;
+        s = +s || 0;
         this.exits = e !== e ? 0 : e;
         this.x = x;
         this.y = y;
@@ -193,6 +193,16 @@ class Settings {
     public light: number;
     public terrain: string;
     public states: RoomStates;
+
+    public clone() {
+        const r = new Settings();
+        let prop;
+        for (prop in this) {
+            if (!this.hasOwnProperty(prop)) continue;
+            r[prop] = this[prop];
+        }
+        return r;
+    }
 }
 
 class Size {
@@ -223,13 +233,19 @@ class Area {
     public settings: Settings;
     public size: Size;
 
-    constructor(width, height, depth) {
-        this.size = new Size(width, height, depth);
-        this.rooms = Array.from(Array(depth),
-            (v, z) => Array.from(Array(height),
-                (v2, y) => Array.from(Array(width),
-                    (v3, x) => new Room(x, y, z, 0))
-            ));
+    constructor(width, height?, depth?, rooms?) {
+        if (width instanceof Size)
+            this.size = new Size(width.width, width.height, width.depth);
+        else
+            this.size = new Size(width, height, depth);
+        if (rooms)
+            this.rooms = rooms;
+        else
+            this.rooms = Array.from(Array(depth),
+                (v, z) => Array.from(Array(height),
+                    (v2, y) => Array.from(Array(width),
+                        (v3, x) => new Room(x, y, z))
+                ));
         this.monsters = new Array();
         this.objects = new Array();
         this.settings = new Settings();
@@ -294,12 +310,27 @@ class Area {
         }
         return area;
     }
+
     public save(file) {
         fs.writeFileSync(file, JSON.stringify(this));
     }
 
     public get raw() {
         return JSON.stringify(this);
+    }
+
+    public clone() {
+        const a = new Area(this.size.width, this.size.height, this.size.depth,
+            Array.from(Array(this.size.depth),
+                (v, z) => Array.from(Array(this.size.height),
+                    (v2, y) => Array.from(Array(this.size.width),
+                        (v3, x) => this.rooms[z][y][x].clone())
+                )));
+        a.name = this.name;
+        a.monsters = this.monsters.map(m => m.clone());
+        a.objects = this.objects.map(o => o.clone());
+        a.settings = this.settings.clone();
+        return a;
     }
 }
 
