@@ -420,6 +420,7 @@ export class AreaEditor extends EditorBase {
     private $resizer;
     private $resizerCache;
     private $observer: MutationObserver;
+    private $allowResize: boolean = true;
 
     private $mousePrevious: MousePosition = {
         x: 0,
@@ -538,6 +539,23 @@ export class AreaEditor extends EditorBase {
         return this.$selectedRooms;
     }
 
+    public get AllowResize(): boolean {
+        return this.$allowResize;
+    }
+
+    public set AllowResize(value) {
+        if (value === this.$allowResize) return;
+        this.$allowResize = value;
+        this.emit('menu-update', 'edit|allow resize', { checked: value });
+        if (document.getElementById('btn-Allow-resize')) {
+            if (value)
+                document.getElementById('btn-Allow-resize').classList.add('active');
+            else
+                document.getElementById('btn-Allow-resize').classList.remove('active');
+        }
+        this.emit('option-changed', 'allowResize', value);
+    }
+
     public get maxLevel() {
         if (!this.$area) return 0;
         return this.$area.size.depth;
@@ -566,6 +584,7 @@ export class AreaEditor extends EditorBase {
             this.options = options.options;
         else
             this.options = {
+                allowResize: true,
                 previewFontSize: 16,
                 previewFontFamily: 'Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace',
                 editorWidth: 200,
@@ -658,7 +677,7 @@ export class AreaEditor extends EditorBase {
             this.emit('room-splitter-collapsed', panel);
             this.emit('option-changed', 'showRoomEditor', panel !== 2);
             this.emit('menu-update', 'view|room editor', { checked: panel !== 2 });
-            this.setButtonState('room editor', panel !== 2);
+            this.setButtonState('show room editor', panel !== 2);
         });
         this.$splitterPreview = new Splitter({ parent: this.$splitterEditor.panel1 });
         this.$splitterPreview.on('splitter-moved', (e) => {
@@ -669,7 +688,7 @@ export class AreaEditor extends EditorBase {
             this.emit('room-splitter-collapsed', panel);
             this.emit('option-changed', 'showRoomPreview', panel !== 2);
             this.emit('menu-update', 'view|room preview', { checked: panel !== 2 });
-            this.setButtonState('room preview', panel !== 2);
+            this.setButtonState('show room preview', panel !== 2);
         });
         this.$mapParent = document.createElement('div');
         this.$mapParent.id = this.parent.id + '-map';
@@ -1428,7 +1447,7 @@ export class AreaEditor extends EditorBase {
                         this.ensureVisible(x, y);
                         this.$map.focus();
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         if (x === 0 && y === this.$area.size.height - 1)
                             this.resizeMap(1, 1, 0, shiftType.top | shiftType.right);
                         else if (x === 0)
@@ -1498,7 +1517,7 @@ export class AreaEditor extends EditorBase {
                         this.ensureVisible(x, y);
                         this.$map.focus();
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         this.resizeMap(0, 1, 0, shiftType.top | shiftType.left);
                         p = this.selectedFocusedRoom;
                         y = p.y + 1;
@@ -1563,7 +1582,7 @@ export class AreaEditor extends EditorBase {
                         this.ensureVisible(x, y);
                         this.$map.focus();
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         if (y === this.$area.size.height - 1 && x === this.$area.size.width - 1)
                             this.resizeMap(1, 1, 0, shiftType.top | shiftType.left);
                         else if (y === this.$area.size.height - 1)
@@ -1633,7 +1652,7 @@ export class AreaEditor extends EditorBase {
                         this.ensureVisible(x, y);
                         this.$map.focus();
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         this.resizeMap(1, 0, 0, shiftType.top | shiftType.right);
                         p = this.selectedFocusedRoom;
                         x = p.x - 1;
@@ -1696,7 +1715,7 @@ export class AreaEditor extends EditorBase {
                         this.ensureVisible(x, y);
                         this.$map.focus();
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         this.resizeMap(1, 0, 0, shiftType.top | shiftType.left);
                         p = this.selectedFocusedRoom;
                         x = p.x + 1;
@@ -1761,7 +1780,7 @@ export class AreaEditor extends EditorBase {
                         this.ensureVisible(x, y);
                         this.$map.focus();
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         if (x === 0 && y === 0)
                             this.resizeMap(1, 1, 0, shiftType.bottom | shiftType.right);
                         else if (y === 0)
@@ -1831,7 +1850,7 @@ export class AreaEditor extends EditorBase {
                         this.ensureVisible(x, y);
                         this.$map.focus();
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
                         p = this.selectedFocusedRoom;
                         y = p.y - 1;
@@ -1895,7 +1914,7 @@ export class AreaEditor extends EditorBase {
                         this.ensureVisible(x, y);
                         this.$map.focus();
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         if (x === this.$area.size.width - 1 && y === 0)
                             this.resizeMap(1, 1, 0, shiftType.bottom | shiftType.left);
                         else if (y === 0)
@@ -1964,7 +1983,7 @@ export class AreaEditor extends EditorBase {
                         this.$map.focus();
                         this.emit('rebuild-buttons');
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         this.resizeMap(0, 0, 1, shiftType.down);
                         this.$depth = this.selectedFocusedRoom.z + 1;
                         this.selectedFocusedRoom.exits |= RoomExit.Up;
@@ -2025,7 +2044,7 @@ export class AreaEditor extends EditorBase {
                         this.$map.focus();
                         this.emit('rebuild-buttons');
                     }
-                    else if (!e.ctrlKey) {
+                    else if (!e.ctrlKey && this.$allowResize) {
                         this.resizeMap(0, 0, 1, shiftType.up);
                         this.$depth = this.selectedFocusedRoom.z - 1;
                         this.selectedFocusedRoom.exits |= RoomExit.Down;
@@ -3197,6 +3216,7 @@ export class AreaEditor extends EditorBase {
                 return this.$view === View.map || this.$view === View.monsters || this.$view === View.objects;
             case 'buttons':
             case 'menu|view':
+            case 'menu|edit':
             case 'upload':
             case 'upload-as':
             case 'selectall':
@@ -3239,27 +3259,32 @@ export class AreaEditor extends EditorBase {
         group = document.createElement('div');
         group.classList.add('btn-group');
         group.setAttribute('role', 'group');
-        group.appendChild(this.createButton('room editor', 'columns', () => {
+        group.appendChild(this.createButton('Show room editor', 'columns', () => {
             this.$splitterEditor.panel2Collapsed = !this.$splitterEditor.panel2Collapsed;
         }, !this.$splitterEditor.panel2Collapsed, this.$view !== View.map));
-        group.appendChild(this.createButton('room preview', 'columns fa-rotate-90', () => {
+        group.appendChild(this.createButton('Show room preview', 'columns fa-rotate-90', () => {
             this.$splitterPreview.panel2Collapsed = !this.$splitterPreview.panel2Collapsed;
         }, !this.$splitterPreview.panel2Collapsed, this.$view !== View.map));
         frag.appendChild(group);
         group = document.createElement('div');
         group.classList.add('btn-group');
         group.setAttribute('role', 'group');
-        group.appendChild(this.createButton('map', 'map-o', () => {
+        group.appendChild(this.createButton('Show map', 'map-o', () => {
             this.switchView(View.map);
         }, this.$view === View.map));
-        group.appendChild(this.createButton('monsters', 'user', () => {
+        group.appendChild(this.createButton('Show monsters', 'user', () => {
             this.switchView(View.monsters);
         }, this.$view === View.monsters));
-        group.appendChild(this.createButton('items', 'list', () => {
+        group.appendChild(this.createButton('Show objects', 'list', () => {
             this.switchView(View.objects);
         }, this.$view === View.objects));
         frag.appendChild(group);
-
+        frag.appendChild(this.createButton('Allow resize', 'expand', () => {
+            this.AllowResize = !this.$allowResize;
+        }, this.$allowResize, this.$view !== View.map));
+        frag.appendChild(this.createButton('Resize map', 'arrows', () => {
+            this.showResizeMap();
+        }, false, this.$view !== View.map));
         if (this.$area.size.depth > 1) {
             el = document.createElement('label');
             el.setAttribute('for', this.parent.id + '-level');
@@ -3271,7 +3296,7 @@ export class AreaEditor extends EditorBase {
         return [frag];
     }
 
-    private createButton(id, icon, fun, active, disabled?) {
+    private createButton(id, icon, fun, active, disabled?, title?) {
         const el = document.createElement('button');
         el.id = 'btn-' + id.replace(/\s+/g, '-');
         el.type = 'button';
@@ -3280,7 +3305,7 @@ export class AreaEditor extends EditorBase {
             el.classList.add('active');
         if (disabled)
             el.setAttribute('disabled', 'true');
-        el.title = 'Show ' + id;
+        el.title = id;
         el.onclick = fun;
         el.innerHTML = '<i class="fa fa-' + icon + '"></i>';
         return el;
@@ -3325,7 +3350,7 @@ export class AreaEditor extends EditorBase {
                     }
                 },
                 {
-                    label: 'Items',
+                    label: 'Objects',
                     type: 'checkbox',
                     checked: this.$view === View.objects,
                     click: () => {
@@ -3351,6 +3376,24 @@ export class AreaEditor extends EditorBase {
                     this.$splitterPreview.panel2Collapsed = !this.$splitterPreview.panel2Collapsed;
                 }
             });
+        }
+        else if (menu === 'edit') {
+            m = [{ type: 'separator' },
+            {
+                label: 'Allow resize',
+                type: 'checkbox',
+                checked: this.$allowResize,
+                click: () => {
+                    this.AllowResize = !this.$allowResize;
+                }
+            },
+            {
+                label: 'Resize map',
+                click: () => {
+                    this.showResizeMap();
+                }
+            }
+        ];
         }
         return m;
     }
@@ -3459,6 +3502,7 @@ export class AreaEditor extends EditorBase {
             ]);
         }
 
+        this.AllowResize = value.allowResize;
         this.$roomPreview.container.style.fontSize = value.previewFontSize + 'px';
         this.$roomPreview.container.style.fontFamily = value.previewFontFamily;
         this.$splitterEditor.SplitterDistance = value.editorWidth;
@@ -3471,6 +3515,7 @@ export class AreaEditor extends EditorBase {
 
     public get options() {
         return {
+            allowResize: this.$allowResize,
             live: this.$splitterEditor.live,
             showRoomEditor: !this.$splitterEditor.panel2Collapsed,
             showRoomPreview: !this.$splitterPreview.panel2Collapsed
@@ -3743,11 +3788,15 @@ export class AreaEditor extends EditorBase {
         this.emit('menu-update', 'view|Items', { checked: view === View.objects });
         this.emit('menu-update', 'view|room editor', { enabled: view === View.map });
         this.emit('menu-update', 'view|room preview', { enabled: view === View.map });
-        this.setButtonDisabled('room editor', view !== View.map);
-        this.setButtonDisabled('room preview', view !== View.map);
-        this.setButtonState('map', view === View.map);
-        this.setButtonState('monsters', view === View.monsters);
-        this.setButtonState('items', view === View.objects);
+        this.emit('menu-update', 'edit|allow resize', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|resize map', { enabled: view === View.map });
+        this.setButtonDisabled('show room editor', view !== View.map);
+        this.setButtonDisabled('show room preview', view !== View.map);
+        this.setButtonDisabled('allow resize', view !== View.map);
+        this.setButtonDisabled('resize map', view !== View.map);
+        this.setButtonState('show-map', view === View.map);
+        this.setButtonState('show-monsters', view === View.monsters);
+        this.setButtonState('show-objects', view === View.objects);
         this.updateUI();
         this.emit('supports-changed');
         this.focus();
@@ -5428,5 +5477,9 @@ export class AreaEditor extends EditorBase {
         if ((shift & shiftType.down) === shiftType.down)
             nShift |= shiftType.up;
         return nShift;
+    }
+
+    public showResizeMap() {
+        //
     }
 }

@@ -87,6 +87,7 @@ export class EditorSettings {
     };
 
     public areaOptions = {
+        allowResize: true,
         previewFontSize: 15,
         previewFontFamily: 'Consolas, \'Courier New\', monospace',
         editorWidth: 200,
@@ -124,7 +125,7 @@ export class EditorSettings {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'editorOptions' || prop === 'modelOptions' || prop === 'virtualOptions') {
+            if (prop === 'areaOptions' || prop === 'editorOptions' || prop === 'modelOptions' || prop === 'virtualOptions') {
                 for (prop2 in data[prop]) {
                     if (!data[prop].hasOwnProperty(prop2)) {
                         continue;
