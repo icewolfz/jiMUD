@@ -1937,10 +1937,17 @@
                             click: newArea
                         },
                         {
-                            label: '&Virtual Area...',
+                            label: '&Virtual area...',
                             //accelerator: "CmdOrCtrl+N",
                             click: newVirtualArea
                         },
+                        /*
+                        {
+                            label: 'Area &design...',
+                            //accelerator: "CmdOrCtrl+N",
+                            click: newAreaDesign
+                        },
+                        */
                         { type: 'separator' },
                         {
                             label: '&Room...',
@@ -3893,6 +3900,13 @@
                     newVirtualArea();
                 }
             }));
+            /*
+            addMenu.append(new MenuItem({
+                label: 'New area design...', click() {
+                    clearButton('#btn-add-dropdown');
+                }
+            }));
+            */
             addMenu.append(new MenuItem({ type: 'separator' }));
             addMenu.append(new MenuItem({
                 label: 'New room...', click() {
