@@ -1276,6 +1276,18 @@ export function resetCursor(txtElement) {
     }
 }
 
+export function moveCursorToEnd(el) {
+    el.scrollTop = el.scrollHeight;
+    if (typeof el.selectionStart === 'number') {
+        el.selectionStart = el.selectionEnd = el.value.length;
+    } else if (typeof el.createTextRange !== 'undefined') {
+        el.focus();
+        const range = el.createTextRange();
+        range.collapse(false);
+        range.select();
+    }
+}
+
 export function stringToEnum(str, en, ignoreCase?) {
     if (!str || !en) return 0;
     if (ignoreCase)

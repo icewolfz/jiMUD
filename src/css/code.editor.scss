@@ -805,12 +805,14 @@ input[type=checkbox].property-grid-editor {
     outline: none;
     padding: 0;
     padding-left: 1px;
-    padding-right: 1px;
+    padding-right: 19px;
 }
 
 .property-grid-editor-dropdown textarea.single,
 .property-grid-editor-dropdown-fill textarea.single {
     white-space: normal;
+    word-break: break-all;
+    word-wrap: break-word;
 }
 
 .property-grid-editor-dropdown,
@@ -876,7 +878,7 @@ input[type=checkbox].property-grid-editor {
 .grid-editor-dropdown.no-wrap.single {
     white-space: pre-wrap;
     word-wrap: break-word;
-    word-break: break-all;
+    word-break: break-word;
 }
 
 .property-grid-editor-flag-dropdown {
