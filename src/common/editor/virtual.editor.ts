@@ -186,10 +186,18 @@ export interface MousePosition {
 
 const Timer = new DebugTimer();
 
+enum undoType { room, description, item, resize }
+enum undoAction { add, delete, edit }
+
 export class VirtualEditor extends EditorBase {
     private $files;
     private $saving = {};
     private $view: View = View.map;
+
+    private $undo = [];
+    private $redo = [];
+    private $undoGroup;
+    private $redoGroup;
 
     private $label: HTMLElement;
     private $mapRaw: HTMLTextAreaElement;
@@ -277,6 +285,68 @@ export class VirtualEditor extends EditorBase {
     private $exits;
     private $roomPreview;
     private $roomEditor;
+
+    private pushUndo(action: undoAction, type: undoType, data) {
+        const u = { type: type, action: action, view: this.$view, data: data, selection: this.$selectedRooms.map(m => [m.x, m.y, m.z]), focused: this.$focusedRoom ? [this.$focusedRoom.x, this.$focusedRoom.y, this.$focusedRoom.z] : [] };
+        if (this.$undoGroup)
+            this.$undoGroup.push(u);
+        else
+            this.$undo.push(u);
+        this.$redo = [];
+        this.emit('supports-changed');
+    }
+
+    private pushUndoObject(data) {
+        if (this.$undoGroup)
+            this.$undoGroup.push(data);
+        else
+            this.$undo.push(data);
+        this.emit('supports-changed');
+    }
+
+    private startUndoGroup(skipRedo?) {
+        if (this.$undoGroup && this.$undoGroup.length > 0) {
+            this.$undo.push(this.$undoGroup);
+            if (!skipRedo)
+                this.$redo = [];
+            this.emit('supports-changed');
+        }
+        this.$undoGroup = [];
+    }
+
+    private stopUndoGroup(skipRedo?) {
+        if (this.$undoGroup && this.$undoGroup.length > 0) {
+            this.$undo.push(this.$undoGroup);
+            if (!skipRedo)
+                this.$redo = [];
+            this.emit('supports-changed');
+        }
+        this.$undoGroup = null;
+    }
+
+    private pushRedo(data) {
+        if (this.$redoGroup)
+            this.$redoGroup.push(data);
+        else
+            this.$redo.push(data);
+        this.emit('supports-changed');
+    }
+
+    private startRedoGroup() {
+        if (this.$redoGroup && this.$redoGroup.length > 0) {
+            this.$redo.push(this.$undoGroup);
+            this.emit('supports-changed');
+        }
+        this.$redoGroup = [];
+    }
+
+    private stopRedoGroup() {
+        if (this.$redoGroup && this.$redoGroup.length > 0) {
+            this.$redo.push(this.$redoGroup);
+            this.emit('supports-changed');
+        }
+        this.$redoGroup = null;
+    }
 
     public get selectedRoom(): Room {
         if (this.$selectedRooms.length === 0)
@@ -3892,9 +3962,24 @@ export class VirtualEditor extends EditorBase {
                 break;
         }
     }
+
     public undo() {
         switch (this.$view) {
             case View.map:
+                if (this.$undo.length) {
+                    const u = this.$undo.pop();
+                    if (Array.isArray(u)) {
+                        this.startRedoGroup();
+                        let ul = u.length;
+                        while (ul--)
+                            this.undoAction(u[ul]);
+                        this.stopRedoGroup();
+                    }
+                    else
+                        this.undoAction(u);
+                    this.emit('supports-changed');
+                }
+                break;
             case View.terrains:
             case View.items:
             case View.exits:
@@ -3909,9 +3994,28 @@ export class VirtualEditor extends EditorBase {
                 break;
         }
     }
+
+    private undoAction(undo) {
+        if (!undo) return;
+    }
+
     public redo() {
         switch (this.$view) {
             case View.map:
+                if (this.$redo.length) {
+                    const u = this.$redo.pop();
+                    if (Array.isArray(u)) {
+                        this.startUndoGroup(true);
+                        let ul = u.length;
+                        while (ul--)
+                            this.redoAction(u[ul]);
+                        this.stopUndoGroup(true);
+                    }
+                    else
+                        this.redoAction(u);
+                    this.emit('supports-changed');
+                }
+                break;
             case View.terrains:
             case View.items:
             case View.exits:
@@ -3925,6 +4029,10 @@ export class VirtualEditor extends EditorBase {
                 document.execCommand('redo');
                 break;
         }
+    }
+
+    private redoAction(undo) {
+        if (!undo) return;
     }
 
     public close() {
