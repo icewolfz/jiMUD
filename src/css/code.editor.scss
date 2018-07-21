@@ -1082,3 +1082,19 @@ input[type=checkbox].property-grid-editor {
     color: red;
     font-weight: bold;
 }
+
+
+.resize-dialog .dialog-body button {
+    width:48px;
+    height:48px;
+    font-size: 20px;
+}
+
+.resize-dialog .dialog-body td {
+    padding: 2px;
+}
+
+.resize-dialog .dialog-body .form-group {
+    padding: 2px;
+    margin: 0px;
+}

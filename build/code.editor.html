@@ -331,6 +331,106 @@
         <span id="statusbar-location" class="right"></span>
         <span id="statusbar-size" class="right"></span>
     </div>
+    <dialog id="resize" class="resize-dialog" data-title="Resize map" style="width:250px;height:313px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('new-area').close();">&times;</button>
+            <div style="padding-top: 2px;">Create new area...</div>
+        </div>
+        <div class="dialog-body" style="padding-top:28px">
+            <table style="width:100%;height:100%">
+                <colgroup>
+                    <col>
+                    <col>
+                    <col>
+                    <col style="width:20px">
+                    <col>
+                </colgroup>
+                <tr>
+                    <td colspan="5">
+                        <div class="form-group col-sm-4">
+                            <label class="control-label">
+                                Width
+                                <input type="number" id="new-virtual-area-width" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                            </label>
+                        </div>
+                        <div class="form-group col-sm-4">
+                            <label class="control-label">
+                                Height
+                                <input type="number" id="new-virtual-area-height" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                            </label>
+                        </div>
+                        <div class="form-group col-sm-4">
+                            <label class="control-label">
+                                Depth
+                                <input type="number" id="new-virtual-area-depth" class="input-sm form-control" value="1" min="1" max="100" style="width: 100%" />
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                            &#8598; </button>
+                    </td>
+                    <td>
+                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                            &#8593; </button>
+                    </td>
+                    <td>
+                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                            &#8599; </button>
+                    </td>
+                    <td class="col-sm-4 form-group"></td>
+                    <td>
+                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                            &#8593;</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                            &#8592; </button>
+                    </td>
+                    <td>
+                        <button id="btn-add-dropdown" type="button" class="active btn btn-default" title="New...">
+                        </button>
+                    </td>
+                    <td>
+                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                            &#8594; </button>
+                    </td>
+                    <td></td>
+                    <td>
+                        <button id="btn-add-dropdown" type="button" class="active btn btn-default" title="New...">
+                        </button>
+                    </td>
+                </tr>
+                <td>
+                    <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                        &#8601; </button>
+                </td>
+                <td>
+                    <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                        &#8595; </button>
+                </td>
+                <td>
+                    <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                        &#8600; </button>
+                </td>
+                <td></td>
+                <td>
+                    <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
+                        &#8595; </button>
+                </td>
+                </tr>
+            </table>
+        </div>
+        <div class="dialog-footer">
+            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('new-area').close();">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-primary" onclick="createArea()">Ok</button>
+        </div>
+    </dialog>
+
     <dialog id="new-area" data-title="Create new area" style="width:400px;height:348px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('new-area').close();">&times;</button>
