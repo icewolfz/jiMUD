@@ -26,7 +26,7 @@ declare global {
     }
 }
 
-export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 5 }
+export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status = 8 }
 
 export class Room {
     public exits = 0;
@@ -77,7 +77,38 @@ export class Room {
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
-            if (this[prop] !== room[prop])
+            if (prop === 'items') {
+                if (this.items.length !== room.items.length)
+                    return false;
+                if (this.items.filter((v, i) => room.items[i].item !== v.item && room.items[i].description !== v.description).length !== 0)
+                    return false;
+            }
+            else if (prop === 'objects') {
+                if (this.objects.length !== room.objects.length)
+                    return false;
+                if (this.objects.filter((v, i) => room.objects[i] !== v).length !== 0)
+                    return false;
+            }
+            else if (prop === 'monsters') {
+                if (this.monsters.length !== room.monsters.length)
+                    return false;
+                if (this.monsters.filter((v, i) => room.monsters[i] !== v).length !== 0)
+                    return false;
+            }
+            else if (prop === 'external') {
+                const k = Object.keys(this.external).sort();
+                const k2 = Object.keys(room.external).sort();
+                if (k.length !== k2.length)
+                    return false;
+                let l = k.length;
+                while (l--) {
+                    if (k[l] !== k2[l])
+                        return false;
+                    if (this.external[k[l]] !== room.external[k[l]])
+                        return false;
+                }
+            }
+            else if (this[prop] !== room[prop])
                 return false;
         }
         return true;
@@ -355,6 +386,7 @@ export class AreaEditor extends EditorBase {
     private $undo = [];
     private $redo = [];
     private $undoGroup;
+    private $redoGroup;
 
     private $label: HTMLElement;
     private $splitterPreview: Splitter;
@@ -429,7 +461,7 @@ export class AreaEditor extends EditorBase {
     private $startOptions;
 
     private pushUndo(action: undoAction, type: undoType, data) {
-        const u = { type: type, action: action, data: data, selection: this.$selectedRooms.map(m => [m.x, m.y, m.z]), focused: this.$focusedRoom ? [this.$focusedRoom.x, this.$focusedRoom.y, this.$focusedRoom.z] : [] };
+        const u = { type: type, action: action, view: this.$view, data: data, selection: this.$selectedRooms.map(m => [m.x, m.y, m.z]), focused: this.$focusedRoom ? [this.$focusedRoom.x, this.$focusedRoom.y, this.$focusedRoom.z] : [] };
         if (this.$undoGroup)
             this.$undoGroup.push(u);
         else
@@ -438,22 +470,56 @@ export class AreaEditor extends EditorBase {
         this.emit('supports-changed');
     }
 
-    private startUndoGroup() {
-        if (!this.$undoGroup && this.$undoGroup.length > 0) {
+    private pushUndoObject(data) {
+        if (this.$undoGroup)
+            this.$undoGroup.push(data);
+        else
+            this.$undo.push(data);
+        this.emit('supports-changed');
+    }
+
+    private startUndoGroup(skipRedo?) {
+        if (this.$undoGroup && this.$undoGroup.length > 0) {
             this.$undo.push(this.$undoGroup);
-            this.$redo = [];
+            if (!skipRedo)
+                this.$redo = [];
             this.emit('supports-changed');
         }
         this.$undoGroup = [];
     }
 
-    private stopUndoGroup() {
-        if (!this.$undoGroup && this.$undoGroup.length > 0) {
+    private stopUndoGroup(skipRedo?) {
+        if (this.$undoGroup && this.$undoGroup.length > 0) {
             this.$undo.push(this.$undoGroup);
-            this.$redo = [];
+            if (!skipRedo)
+                this.$redo = [];
             this.emit('supports-changed');
         }
         this.$undoGroup = null;
+    }
+
+    private pushRedo(data) {
+        if (this.$redoGroup)
+            this.$redoGroup.push(data);
+        else
+            this.$redo.push(data);
+        this.emit('supports-changed');
+    }
+
+    private startRedoGroup() {
+        if (this.$redoGroup && this.$redoGroup.length > 0) {
+            this.$redo.push(this.$undoGroup);
+            this.emit('supports-changed');
+        }
+        this.$redoGroup = [];
+    }
+
+    private stopRedoGroup() {
+        if (this.$redoGroup && this.$redoGroup.length > 0) {
+            this.$redo.push(this.$redoGroup);
+            this.emit('supports-changed');
+        }
+        this.$redoGroup = null;
     }
 
     public get selectedRoom(): Room {
@@ -1529,6 +1595,7 @@ export class AreaEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
                     //#endregion
                     break;
                 case 100: //num4
@@ -2018,6 +2085,8 @@ export class AreaEditor extends EditorBase {
             const selected = this.$roomEditor.objects;
             let sl = selected.length;
             const oldValues = [];
+            const mx = this.$mouse.rx;
+            const my = this.$mouse.ry;
             while (sl--) {
                 const curr = selected[sl];
                 const old = this.getRoom(curr.x, curr.y, curr.z);
@@ -2039,9 +2108,9 @@ export class AreaEditor extends EditorBase {
                     default:
                         oldValues[sl] = old[prop];
                         curr[prop] = newValue;
-                        this.DrawRoom(this.$mapContext, curr, true, curr.at(this.$mouse.rx, this.$mouse.ry));
                         this.RoomChanged(curr, old, true);
                         old[prop] = newValue;
+                        this.DrawRoom(this.$mapContext, old, true, old.at(mx, my));
                         break;
                 }
             }
@@ -2875,8 +2944,107 @@ export class AreaEditor extends EditorBase {
     public undo() {
         switch (this.$view) {
             case View.map:
+                if (this.$undo.length) {
+                    const u = this.$undo.pop();
+                    if (Array.isArray(u)) {
+                        this.startRedoGroup();
+                        let ul = u.length;
+                        while (ul--)
+                            this.undoAction(u[ul]);
+                        this.stopRedoGroup();
+                    }
+                    else
+                        this.undoAction(u);
+                    this.emit('supports-changed');
+                }
+                break;
             case View.monsters:
             case View.objects:
+                break;
+        }
+    }
+
+    private undoAction(undo) {
+        if (!undo) return;
+        let l;
+        let room;
+        if (undo.view !== this.$view)
+            this.switchView(undo.view);
+        switch (undo.action) {
+            case undoAction.add:
+                switch (undo.type) {
+                    case undoType.room:
+                        room = this.getRoom(undo.data.x, undo.data.y, undo.data.z);
+                        this.setRoom(undo.data);
+                        this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
+                        undo.data = room;
+                        this.pushRedo(undo);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+            case undoAction.delete:
+                switch (undo.type) {
+                    case undoType.room:
+                        l = undo.data.length;
+                        const values = [];
+                        const mx = this.$mouse.rx;
+                        const my = this.$mouse.ry;
+                        while (l--) {
+                            values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z);
+                            this.setRoom(undo.data[l]);
+                            this.RoomChanged(undo.data[l]);
+                            if (values[l].exits) this.$rcount--;
+                            if (undo.data[l].exits) this.$rcount++;
+                            this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
+                        }
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.area:
+                        room = this.$area;
+                        this.$area = undo.data;
+                        undo.data = room;
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.buildMap);
+                        this.switchView(undo.view, true);
+                        this.changed = true;
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+            case undoAction.edit:
+                switch (undo.type) {
+                    case undoType.resize:
+                        this.resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.room:
+                        l = undo.data.values.length;
+                        const values = [];
+                        const mx = this.$mouse.rx;
+                        const my = this.$mouse.ry;
+                        while (l--) {
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            values[l] = room[undo.data.property];
+                            room[undo.data.property] = undo.data.values[l];
+                            this.RoomChanged(room);
+                            if (undo.data.property === 'exits') {
+                                if (values[l].exits) this.$rcount--;
+                                if (room.exits) this.$rcount++;
+                            }
+                            this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
+                        }
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data.values = values;
+                        this.pushRedo(undo);
+                        break;
+                }
                 break;
         }
     }
@@ -2884,8 +3052,107 @@ export class AreaEditor extends EditorBase {
     public redo() {
         switch (this.$view) {
             case View.map:
+                if (this.$redo.length) {
+                    const u = this.$redo.pop();
+                    if (Array.isArray(u)) {
+                        this.startUndoGroup(true);
+                        let ul = u.length;
+                        while (ul--)
+                            this.redoAction(u[ul]);
+                        this.stopUndoGroup(true);
+                    }
+                    else
+                        this.redoAction(u);
+                    this.emit('supports-changed');
+                }
+                break;
             case View.monsters:
             case View.objects:
+                break;
+        }
+    }
+
+    private redoAction(undo) {
+        if (!undo) return;
+        let l;
+        let room;
+        if (undo.view !== this.$view)
+            this.switchView(undo.view);
+        switch (undo.action) {
+            case undoAction.add:
+                switch (undo.type) {
+                    case undoType.room:
+                        room = this.getRoom(undo.data.x, undo.data.y, undo.data.z);
+                        this.setRoom(undo.data);
+                        this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
+                        undo.data = room;
+                        this.pushUndoObject(undo);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+            case undoAction.delete:
+                switch (undo.type) {
+                    case undoType.room:
+                        l = undo.data.length;
+                        const values = [];
+                        const mx = this.$mouse.rx;
+                        const my = this.$mouse.ry;
+                        while (l--) {
+                            values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z);
+                            this.setRoom(undo.data[l]);
+                            this.RoomChanged(undo.data[l]);
+                            if (values[l].exits) this.$rcount--;
+                            if (undo.data[l].exits) this.$rcount++;
+                            this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
+                        }
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.area:
+                        room = this.$area;
+                        this.$area = undo.data;
+                        undo.data = room;
+                        this.pushUndoObject(undo);
+                        this.doUpdate(UpdateType.buildMap);
+                        this.switchView(undo.view, true);
+                        this.changed = true;
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+            case undoAction.edit:
+                switch (undo.type) {
+                    case undoType.resize:
+                        this.resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.room:
+                        l = undo.data.values.length;
+                        const values = [];
+                        const mx = this.$mouse.rx;
+                        const my = this.$mouse.ry;
+                        while (l--) {
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            values[l] = room[undo.data.property];
+                            room[undo.data.property] = undo.data.values[l];
+                            this.RoomChanged(room);
+                            if (undo.data.property === 'exits') {
+                                if (values[l].exits) this.$rcount--;
+                                if (room.exits) this.$rcount++;
+                            }
+                            this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
+                        }
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data.values = values;
+                        this.pushUndoObject(undo);
+                        break;
+                }
                 break;
         }
     }
@@ -3916,6 +4183,10 @@ export class AreaEditor extends EditorBase {
                 this.resize();
                 this._updating &= ~UpdateType.resize;
             }
+            if ((this._updating & UpdateType.status) === UpdateType.status) {
+                this.updateStatus();
+                this._updating &= ~UpdateType.status;
+            }
             this.doUpdate(this._updating);
         });
     }
@@ -4672,11 +4943,11 @@ export class AreaEditor extends EditorBase {
 
     private RoomChanged(room, old?, silentUpdate?) {
         if (old) {
-            if (room.state === old.state && room.exits === old.exits && room.terrain === old.terrain && room.item === old.item)
+            if (room.equals(old))
                 return;
             if (old.exits) this.$rcount--;
             if (room.exits) this.$rcount++;
-            this.updateStatus();
+            this.doUpdate(UpdateType.status);
         }
         this.changed = true;
         if (!silentUpdate) {
@@ -4702,7 +4973,7 @@ export class AreaEditor extends EditorBase {
             }
         }
         this.changed = true;
-        this.updateStatus();
+        this.doUpdate(UpdateType.status);
     }
 
     private UpdateEditor(rooms) {
@@ -5042,7 +5313,7 @@ export class AreaEditor extends EditorBase {
         return d;
     }
 
-    public resizeMap(width, height, depth, shift: shiftType) {
+    public resizeMap(width, height, depth, shift: shiftType, noUndo?) {
         Timer.start();
         width = width || 0;
         height = height || 0;
@@ -5138,7 +5409,8 @@ export class AreaEditor extends EditorBase {
         this.emit('resize-map');
         Timer.end('Resize time');
         this.doUpdate(UpdateType.drawMap);
-        this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
+        if (!noUndo)
+            this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
     }
 
     private reverseShiftType(shift: shiftType) {
