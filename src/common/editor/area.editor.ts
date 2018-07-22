@@ -1708,7 +1708,10 @@ export class AreaEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.West;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.West;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
@@ -1955,9 +1958,9 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 111: // / up
                     //#region
-                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0)
                         return;
+                    this.startUndoGroup();
                     if (this.$depth + 1 < this.$area.size.depth) {
                         this.$depth++;
                         if (e.ctrlKey)
@@ -1976,7 +1979,10 @@ export class AreaEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.Down;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.Down;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                         }
                         this.setFocusedRoom(null);
                         this.doUpdate(UpdateType.drawMap);
@@ -2013,9 +2019,9 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 106: // * down
                     //#region
-                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0)
                         return;
+                    this.startUndoGroup();
                     if (this.$depth - 1 >= 0) {
                         this.$depth--;
                         if (e.ctrlKey)
@@ -3298,21 +3304,21 @@ export class AreaEditor extends EditorBase {
 
     private createButton(id, icon, fun, active, disabled?, title?) {
         const el = document.createElement('button');
-        el.id = 'btn-' + id.replace(/\s+/g, '-');
+        el.id = 'btn-' + id.replace(/\s+/g, '-').toLowerCase();
         el.type = 'button';
         el.classList.add('btn', 'btn-default', 'btn-xs');
         if (active)
             el.classList.add('active');
         if (disabled)
             el.setAttribute('disabled', 'true');
-        el.title = id;
+        el.title = title || id;
         el.onclick = fun;
         el.innerHTML = '<i class="fa fa-' + icon + '"></i>';
         return el;
     }
 
     private setButtonState(id, state) {
-        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-'));
+        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-').toLowerCase());
         if (!button) return;
         if (state)
             button.classList.add('active');
@@ -3321,7 +3327,7 @@ export class AreaEditor extends EditorBase {
     }
 
     private setButtonDisabled(id, state) {
-        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-'));
+        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-').toLowerCase());
         if (!button) return;
         if (state)
             button.setAttribute('disabled', 'true');
