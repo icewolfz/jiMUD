@@ -546,7 +546,7 @@ export class AreaEditor extends EditorBase {
     public set AllowResize(value) {
         if (value === this.$allowResize) return;
         this.$allowResize = value;
-        this.emit('menu-update', 'edit|allow resize', { checked: value });
+        this.emit('menu-update', 'edit|allow resize walk', { checked: value });
         if (document.getElementById('btn-Allow-resize')) {
             if (value)
                 document.getElementById('btn-Allow-resize').classList.add('active');
@@ -2887,7 +2887,6 @@ export class AreaEditor extends EditorBase {
                     const n = r.clone();
                     return n;
                 });
-                if (rooms.length === 0) return;
                 clipboard.writeBuffer('jiMUD/Area', Buffer.from(JSON.stringify({
                     rooms: rooms
                 })));
@@ -3285,11 +3284,11 @@ export class AreaEditor extends EditorBase {
             this.switchView(View.objects);
         }, this.$view === View.objects));
         frag.appendChild(group);
-        frag.appendChild(this.createButton('Allow resize', 'expand', () => {
+        frag.appendChild(this.createButton('Allow resize walk', 'expand', () => {
             this.AllowResize = !this.$allowResize;
         }, this.$allowResize, this.$view !== View.map));
         frag.appendChild(this.createButton('Resize map', 'arrows', () => {
-            this.showResizeMap();
+            this.emit('showResize');
         }, false, this.$view !== View.map));
         if (this.$area.size.depth > 1) {
             el = document.createElement('label');
@@ -3384,22 +3383,23 @@ export class AreaEditor extends EditorBase {
             });
         }
         else if (menu === 'edit') {
-            m = [{ type: 'separator' },
-            {
-                label: 'Allow resize',
-                type: 'checkbox',
-                checked: this.$allowResize,
-                click: () => {
-                    this.AllowResize = !this.$allowResize;
+            m = [
+                { type: 'separator' },
+                {
+                    label: 'Allow resize walk',
+                    type: 'checkbox',
+                    checked: this.$allowResize,
+                    click: () => {
+                        this.AllowResize = !this.$allowResize;
+                    }
+                },
+                {
+                    label: 'Resize map',
+                    click: () => {
+                        this.emit('showResize');
+                    }
                 }
-            },
-            {
-                label: 'Resize map',
-                click: () => {
-                    this.showResizeMap();
-                }
-            }
-        ];
+            ];
         }
         return m;
     }
@@ -3794,11 +3794,11 @@ export class AreaEditor extends EditorBase {
         this.emit('menu-update', 'view|Items', { checked: view === View.objects });
         this.emit('menu-update', 'view|room editor', { enabled: view === View.map });
         this.emit('menu-update', 'view|room preview', { enabled: view === View.map });
-        this.emit('menu-update', 'edit|allow resize', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|allow resize walk', { enabled: view === View.map });
         this.emit('menu-update', 'edit|resize map', { enabled: view === View.map });
         this.setButtonDisabled('show room editor', view !== View.map);
         this.setButtonDisabled('show room preview', view !== View.map);
-        this.setButtonDisabled('allow resize', view !== View.map);
+        this.setButtonDisabled('allow resize walk', view !== View.map);
         this.setButtonDisabled('resize map', view !== View.map);
         this.setButtonState('show-map', view === View.map);
         this.setButtonState('show-monsters', view === View.monsters);
@@ -5483,9 +5483,5 @@ export class AreaEditor extends EditorBase {
         if ((shift & shiftType.down) === shiftType.down)
             nShift |= shiftType.up;
         return nShift;
-    }
-
-    public showResizeMap() {
-        //
     }
 }
